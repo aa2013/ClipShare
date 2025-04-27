@@ -962,7 +962,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.clipboardListeningWithSystemLogs:
         return "System Logs";
       case TranslationKey.clipboardListeningWayTipsDetail:
-        return "Provide two listening modes, but not both are compatible with your device. The default is to use the system's logs for listening, but not all are applicable. It may be found to be invalid on some devices. \n\nFor example, hiding APIs may not work on Xiaomi phones, and system log monitoring may not work on OriginOS. Please enable it according to the actual situation";
+        return "Provide two listening modes, but not both are compatible with your device. The default is to use the system's logs for listening, but not all are applicable. It may be found to be invalid on some devices. \n\nFor example, system log monitoring may not work on OriginOS. Please enable it according to the actual situation";
       case TranslationKey.clipboardListeningWayToggleConfirmContent:
         return "Are you sure to switch to monitoring mode? \n\nWill switch to @way";
     }

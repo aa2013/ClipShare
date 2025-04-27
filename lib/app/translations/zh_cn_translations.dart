@@ -962,7 +962,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.clipboardListeningWayTips:
         return "说明";
       case TranslationKey.clipboardListeningWayTipsDetail:
-        return "提供两种监听模式，但可能不是都适用与您的设备，默认使用系统日志监听，但并不都适用，在某些设备上面发现可能无效。\n\n如：隐藏API在小米手机上可能不生效，系统日志监听则在 OriginOS 上无效，请根据实际情况启用";
+        return "提供两种监听模式，但可能不是都适用与您的设备，默认使用系统日志监听，但并不都适用，在某些设备上面发现可能无效。\n\n如：系统日志监听在 OriginOS 上无效，请根据实际情况启用";
       case TranslationKey.clipboardListeningWayToggleConfirmContent:
         return "你确认切换监听模式吗？\n\n将切换到 @way";
     }
