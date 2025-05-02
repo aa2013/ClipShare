@@ -166,9 +166,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                 title: Text(TranslationKey.forwardMode.tr),
                 onChanged: (checked) {
                   if (!sktService.forwardServerConnected) {
-                    Global.showTipsDialog(
-                        context: context,
-                        text: TranslationKey.forwardServerNotConnected.tr);
+                    Global.showTipsDialog(context: context, text: TranslationKey.forwardServerNotConnected.tr);
                     return;
                   }
                   setState(() {
@@ -211,9 +209,6 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                         // 194512ad29c18d3bdb4f86f30b257
                         setState(() {
                           _connectErr = false;
-                        });
-                        setState(() {
-                          _connecting = true;
                           _connectData = {
                             "stop": false,
                             "custom": true,
@@ -223,12 +218,10 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                           if (_forwardIdEditor.text == "") {
                             _showForwardIdErr = true;
                             setState(() {});
+                            return;
                           }
                           if (!sktService.forwardServerConnected) {
-                            Global.showTipsDialog(
-                                context: context,
-                                text: TranslationKey
-                                    .forwardServerNotConnected.tr);
+                            Global.showTipsDialog(context: context, text: TranslationKey.forwardServerNotConnected.tr);
                             return;
                           }
                         } else {
@@ -243,10 +236,12 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                             return;
                           }
                         }
+                        setState(() {
+                          _connecting = true;
+                        });
                         if (forwardMode) {
                           //尝试中转连接
-                          bool success = await sktService
-                              .manualConnectByForward(_forwardIdEditor.text);
+                          bool success = await sktService.manualConnectByForward(_forwardIdEditor.text);
                           if (success) {
                             Get.back();
                             return;

@@ -5,7 +5,6 @@ import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/forward_server_config.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
-import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -51,14 +50,12 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
   }
 
   bool checkHostEditor() {
-    hostErrText = !hostEditor.text.isDomain && !hostEditor.text.isIPv4
-        ? TranslationKey.pleaseInputValidDomainOrIpv4.tr
-        : null;
+    hostErrText = !hostEditor.text.isDomain && !hostEditor.text.isIPv4 ? TranslationKey.pleaseInputValidDomainOrIpv4.tr : null;
     return hostErrText == null;
   }
 
   bool checkPortEditor() {
-    portErrText = !portEditor.text.isPort ?TranslationKey.pleaseInputValidPort.tr  : null;
+    portErrText = !portEditor.text.isPort ? TranslationKey.pleaseInputValidPort.tr : null;
     return portErrText == null;
   }
 
@@ -68,7 +65,21 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
     return keyErrText == null;
   }
 
+  bool checkIsValid() {
+    var isValid = checkHostEditor();
+    isValid &= checkPortEditor();
+    isValid &= checkKeyEditor();
+    setState(() {});
+    return isValid;
+  }
+
   void checkConn() {
+    if (detecting || !checkIsValid()) {
+      return;
+    }
+    setState(() {
+      detecting = true;
+    });
     ForwardSocketClient.connect(
       ip: hostEditor.text,
       port: portEditor.text.toInt(),
@@ -101,14 +112,14 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
             Global.showTipsDialog(
               context: context,
               text: result,
-              title:TranslationKey.connectFailed.tr,
+              title: TranslationKey.connectFailed.tr,
             );
           } else {
             if (json.containsKey("unlimited")) {
               Global.showTipsDialog(
                 context: context,
                 text: TranslationKey.forwardServerUnlimitedDevices.tr,
-                title:TranslationKey.connectSuccess.tr,
+                title: TranslationKey.connectSuccess.tr,
               );
               return;
             }
@@ -119,7 +130,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
               } else if (json.containsKey("fileSyncNotAllowed")) {
                 content += TranslationKey.forwardServerCannotSyncFile.tr;
               } else {
-                content +=TranslationKey.forwardServerNoLimits.tr;
+                content += TranslationKey.forwardServerNoLimits.tr;
               }
               Global.showTipsDialog(
                 context: context,
@@ -148,10 +159,9 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
             }
             String remaining = json["remaining"];
             if (remaining == "-1") {
-              remaining =TranslationKey.forwardServerKeyNotStarted.tr;
+              remaining = TranslationKey.forwardServerKeyNotStarted.tr;
             } else if (remaining != "0") {
-              remaining =
-                  "${(remaining.toDouble() / (24 * 60 * 60)).toStringAsFixed(2)} 天";
+              remaining = "${(remaining.toDouble() / (24 * 60 * 60)).toStringAsFixed(2)} 天";
             } else {
               remaining = TranslationKey.exhausted.tr;
             }
@@ -233,13 +243,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                     child: TextField(
                       enabled: !detecting,
                       controller: portEditor,
-                      decoration: InputDecoration(
-                          hintText: TranslationKey.port.tr,
-                          labelText: TranslationKey.port.tr,
-                          border: const OutlineInputBorder(),
-                          errorText: portErrText,
-                          helperText: "",
-                          helperMaxLines: 2),
+                      decoration: InputDecoration(hintText: TranslationKey.port.tr, labelText: TranslationKey.port.tr, border: const OutlineInputBorder(), errorText: portErrText, helperText: "", helperMaxLines: 2),
                       onChanged: (str) {
                         checkPortEditor();
                         setState(() {});
@@ -276,7 +280,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                         maxLines: 3,
                         controller: keyEditor,
                         decoration: InputDecoration(
-                          hintText:  TranslationKey.accessKey.tr,
+                          hintText: TranslationKey.accessKey.tr,
                           labelText: TranslationKey.pleaseInputAccessKey.tr,
                           floatingLabelBehavior: FloatingLabelBehavior.always,
                           border: const OutlineInputBorder(),
@@ -307,8 +311,6 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
               ),
               child: TextButton(
                 onPressed: () {
-                  detecting = true;
-                  setState(() {});
                   checkConn();
                 },
                 child: Text(TranslationKey.forwardServerConnCheck.tr),
@@ -329,9 +331,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                     onPressed: detecting
                         ? null
                         : () {
-                            if (hostErrText != null ||
-                                portErrText != null ||
-                                keyErrText != null) {
+                            if (hostErrText != null || portErrText != null || keyErrText != null) {
                               return;
                             }
                             widget.onOk(
