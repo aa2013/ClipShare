@@ -32,7 +32,9 @@ abstract class HistoryDao {
       WHERE tagName IN (:tags)
     ))
     AND (:onlyNoSync = 1 AND sync = 0 OR :onlyNoSync != 1)
-  ORDER BY top DESC, id DESC
+  ORDER BY 
+    CASE WHEN :ignoreTop = 1 THEN 0 ELSE top END DESC, 
+    id DESC
   LIMIT 20
   """)
   Future<List<History>> getHistoriesPageByWhere(
@@ -45,9 +47,10 @@ abstract class HistoryDao {
     String startTime,
     String endTime,
     bool onlyNoSync,
+    bool ignoreTop,
   );
 
-  Future<List<History>> getHistoriesPageByFilter(int uid, SearchFilter filter, [int fromId = 0]) {
+  Future<List<History>> getHistoriesPageByFilter(int uid, SearchFilter filter, bool ignoreTop, [int fromId = 0]) {
     return getHistoriesPageByWhere(
       uid,
       fromId,
@@ -58,6 +61,7 @@ abstract class HistoryDao {
       filter.startDate,
       filter.endDate,
       filter.onlyNoSync,
+      ignoreTop,
     );
   }
 

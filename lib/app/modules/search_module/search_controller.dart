@@ -144,6 +144,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       searchStartDate,
       searchEndDate,
       searchOnlyNoSync,
+      minId != null,
     )
         .then((list) {
       return ClipData.fromList(list);

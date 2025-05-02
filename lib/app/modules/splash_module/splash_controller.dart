@@ -166,6 +166,7 @@ class SplashController extends GetxController {
           final lst = await historyDao.getHistoriesPageByFilter(
             appConfig.userId,
             filter,
+            fromId != 0,
             max(fromId, 0),
           );
           var devMap = devService.toIdNameMap();
