@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -68,14 +69,8 @@ class FileUtil {
     String? outputPath = await FilePicker.platform.saveFile(
       dialogTitle: title,
       fileName: fileName,
+      bytes: utf8.encode(content),
     );
-    if (outputPath == null) {
-      return null;
-    }
-
-    // 写入文件
-    File file = File(outputPath);
-    await file.writeAsString(content);
     return outputPath;
   }
 
