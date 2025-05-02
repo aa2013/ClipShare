@@ -495,6 +495,21 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                         show: (v) => true,
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.closeOnSameHotKeyTitle.tr),
+                        description: Text(TranslationKey.closeOnSameHotKeyDesc.tr),
+                        value: appConfig.closeOnSameHotKey,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setCloseOnSameHotKey(checked);
+                            },
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
                     ],
                   ),
                 ),

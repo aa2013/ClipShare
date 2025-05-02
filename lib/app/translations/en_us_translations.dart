@@ -965,6 +965,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Provide two listening modes, but not both are compatible with your device. The default is to use the system's logs for listening, but not all are applicable. It may be found to be invalid on some devices. \n\nFor example, system log monitoring may not work on OriginOS. Please enable it according to the actual situation";
       case TranslationKey.clipboardListeningWayToggleConfirmContent:
         return "Are you sure to switch to monitoring mode? \n\nWill switch to @way";
+      case TranslationKey.closeOnSameHotKeyTitle:
+        return "Close the pop-up window using the same shortcut key";
+      case TranslationKey.closeOnSameHotKeyDesc:
+        return "The default mouse click on the form close button allows you to use the same shortcut keys to open and close pop ups when enabled";
     }
   }
 }

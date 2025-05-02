@@ -965,6 +965,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "提供两种监听模式，但可能不是都适用与您的设备，默认使用系统日志监听，但并不都适用，在某些设备上面发现可能无效。\n\n如：系统日志监听在 OriginOS 上无效，请根据实际情况启用";
       case TranslationKey.clipboardListeningWayToggleConfirmContent:
         return "你确认切换监听模式吗？\n\n将切换到 @way";
+      case TranslationKey.closeOnSameHotKeyTitle:
+        return "使用相同快捷键关闭弹窗";
+      case TranslationKey.closeOnSameHotKeyDesc:
+        return "默认鼠标点击窗体关闭按钮，启用后可以使用相同的快捷键打开和关闭弹窗";
     }
   }
 }

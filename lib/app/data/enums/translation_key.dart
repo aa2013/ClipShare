@@ -474,7 +474,7 @@ enum TranslationKey {
   clipboardListeningWayTips,
   clipboardListeningWayTipsDetail,
   clipboardListeningWithSystemHiddenApi,
-  clipboardListeningWithSystemLogs;
+  clipboardListeningWithSystemLogs, closeOnSameHotKeyTitle, closeOnSameHotKeyDesc;
 
   String get tr => name.tr;
 

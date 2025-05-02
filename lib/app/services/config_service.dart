@@ -243,6 +243,11 @@ class ConfigService extends GetxService {
 
   bool get showMoreItemsInRow => _showMoreItemsInRow.value;
 
+  //桌面端使用同一快捷键关闭弹窗
+  final RxBool _closeOnSameHotKey = false.obs;
+
+  bool get closeOnSameHotKey => _closeOnSameHotKey.value;
+
   //主题
   late final RxString _appTheme;
 
@@ -393,161 +398,51 @@ class ConfigService extends GetxService {
 
   ///加载配置信息
   Future<void> loadConfigs() async {
+    //region 获取配置值
     var cfg = dbService.configDao;
-    var port = await cfg.getConfig(
-      "port",
-      userId,
-    );
-    var localName = await cfg.getConfig(
-      "localName",
-      userId,
-    );
-    var startMini = await cfg.getConfig(
-      "startMini",
-      userId,
-    );
-    var allowDiscover = await cfg.getConfig(
-      "allowDiscover",
-      userId,
-    );
-    var showHistoryFloat = await cfg.getConfig(
-      "showHistoryFloat",
-      userId,
-    );
-    var firstStartup = await cfg.getConfig(
-      "firstStartup",
-      userId,
-    );
-    var windowSize = await cfg.getConfig(
-      "windowSize",
-      userId,
-    );
-    var rememberWindowSize = await cfg.getConfig(
-      "rememberWindowSize",
-      userId,
-    );
-    var lockHistoryFloatLoc = await cfg.getConfig(
-      "lockHistoryFloatLoc",
-      userId,
-    );
-    var enableLogsRecord = await cfg.getConfig(
-      "enableLogsRecord",
-      userId,
-    );
-    var tagRules = await cfg.getConfig(
-      "tagRules",
-      userId,
-    );
-    var smsRules = await cfg.getConfig(
-      "smsRules",
-      userId,
-    );
-    var historyWindowHotKeys = await cfg.getConfig(
-      "historyWindowHotKeys",
-      userId,
-    );
-    var syncFileHotKeys = await cfg.getConfig(
-      "syncFileHotKeys",
-      userId,
-    );
-    var heartbeatInterval = await cfg.getConfig(
-      "heartbeatInterval",
-      userId,
-    );
-    var fileStorePath = await cfg.getConfig(
-      "fileStorePath",
-      userId,
-    );
-    var saveToPictures = await cfg.getConfig(
-      "saveToPictures",
-      userId,
-    );
-    var ignoreShizuku = await cfg.getConfig(
-      "ignoreShizuku",
-      userId,
-    );
-    var useAuthentication = await cfg.getConfig(
-      "useAuthentication",
-      userId,
-    );
-    var appRevalidateDuration = await cfg.getConfig(
-      "appRevalidateDuration",
-      userId,
-    );
-    var appPassword = await cfg.getConfig(
-      "appPassword",
-      userId,
-    );
-    var enableSmsSync = await cfg.getConfig(
-      "enableSmsSync",
-      userId,
-    );
-    var enableForward = await cfg.getConfig(
-      "enableForward",
-      userId,
-    );
-    var forwardServer = await cfg.getConfig(
-      "forwardServer",
-      userId,
-    );
-    var workingMode = await cfg.getConfig(
-          "workingMode",
-          userId,
-        ) ??
-        "none";
-    var onlyForwardMode = await cfg.getConfig(
-      "onlyForwardMode",
-      userId,
-    );
-    var appTheme = await cfg.getConfig(
-      "appTheme",
-      userId,
-    );
-    var autoCopyImageAfterSync = await cfg.getConfig(
-      "autoCopyImageAfterSync",
-      userId,
-    );
-    var autoCopyImageAfterScreenShot = await cfg.getConfig(
-      "autoCopyImageAfterScreenShot",
-      userId,
-    );
-    var ignoreUpdateVersion = await cfg.getConfig(
-      "ignoreUpdateVersion",
-      userId,
-    );
-    var appLanguage = await cfg.getConfig(
-      "appLanguage",
-      userId,
-    );
-    var recordHistoryDialogPosition = await cfg.getConfig(
-      "recordHistoryDialogPosition",
-      userId,
-    );
-    var historyDialogPosition = await cfg.getConfig(
-      "historyDialogPosition",
-      userId,
-    );
-    var showOnRecentTasks = await cfg.getConfig(
-      "showOnRecentTasks",
-      userId,
-    );
-    var autoCloseConnAfterScreenOff = await cfg.getConfig(
-      "autoCloseConnAfterScreenOff",
-      userId,
-    );
-    var cleanDataConfig = await cfg.getConfig(
-      "cleanDataConfig",
-      userId,
-    );
-    var showMoreItemsInRow = await cfg.getConfig(
-      "showMoreItemsInRow",
-      userId,
-    );
-    var clipboardListeningWay = await cfg.getConfig(
-      "clipboardListeningWay",
-      userId,
-    );
+    var port = await cfg.getConfig("port", userId);
+    var localName = await cfg.getConfig("localName", userId);
+    var startMini = await cfg.getConfig("startMini", userId);
+    var allowDiscover = await cfg.getConfig("allowDiscover", userId);
+    var showHistoryFloat = await cfg.getConfig("showHistoryFloat", userId);
+    var firstStartup = await cfg.getConfig("firstStartup", userId);
+    var windowSize = await cfg.getConfig("windowSize", userId);
+    var rememberWindowSize = await cfg.getConfig("rememberWindowSize", userId);
+    var lockHistoryFloatLoc = await cfg.getConfig("lockHistoryFloatLoc", userId);
+    var enableLogsRecord = await cfg.getConfig("enableLogsRecord", userId);
+    var tagRules = await cfg.getConfig("tagRules", userId);
+    var smsRules = await cfg.getConfig("smsRules", userId);
+    var historyWindowHotKeys = await cfg.getConfig("historyWindowHotKeys", userId);
+    var syncFileHotKeys = await cfg.getConfig("syncFileHotKeys", userId);
+    var heartbeatInterval = await cfg.getConfig("heartbeatInterval", userId);
+    var fileStorePath = await cfg.getConfig("fileStorePath", userId);
+    var saveToPictures = await cfg.getConfig("saveToPictures", userId);
+    var ignoreShizuku = await cfg.getConfig("ignoreShizuku", userId);
+    var useAuthentication = await cfg.getConfig("useAuthentication", userId);
+    var appRevalidateDuration = await cfg.getConfig("appRevalidateDuration", userId);
+    var appPassword = await cfg.getConfig("appPassword", userId);
+    var enableSmsSync = await cfg.getConfig("enableSmsSync", userId);
+    var enableForward = await cfg.getConfig("enableForward", userId);
+    var forwardServer = await cfg.getConfig("forwardServer", userId);
+    var workingMode = await cfg.getConfig("workingMode", userId) ?? "none";
+    var onlyForwardMode = await cfg.getConfig("onlyForwardMode", userId);
+    var appTheme = await cfg.getConfig("appTheme", userId);
+    var autoCopyImageAfterSync = await cfg.getConfig("autoCopyImageAfterSync", userId);
+    var autoCopyImageAfterScreenShot = await cfg.getConfig("autoCopyImageAfterScreenShot", userId);
+    var ignoreUpdateVersion = await cfg.getConfig("ignoreUpdateVersion", userId);
+    var appLanguage = await cfg.getConfig("appLanguage", userId);
+    var recordHistoryDialogPosition = await cfg.getConfig("recordHistoryDialogPosition", userId);
+    var historyDialogPosition = await cfg.getConfig("historyDialogPosition", userId);
+    var showOnRecentTasks = await cfg.getConfig("showOnRecentTasks", userId);
+    var autoCloseConnAfterScreenOff = await cfg.getConfig("autoCloseConnAfterScreenOff", userId);
+    var cleanDataConfig = await cfg.getConfig("cleanDataConfig", userId);
+    var showMoreItemsInRow = await cfg.getConfig("showMoreItemsInRow", userId);
+    var clipboardListeningWay = await cfg.getConfig("clipboardListeningWay", userId);
     var fileStoreDir = Directory(fileStorePath ?? await defaultFileStorePath);
+    var closeOnSameHotKey = await cfg.getConfig("closeOnSameHotKey", userId);
+    //endregion
+
+    //region 设置配置值
     _port = port?.toInt().obs ?? Constants.port.obs;
     _localName = localName.isNotNullAndEmpty ? localName!.obs : devInfo.name.obs;
     _startMini = startMini?.toBool().obs ?? false.obs;
@@ -605,6 +500,9 @@ class ConfigService extends GetxService {
     } catch (err) {
       print(err);
     }
+    _closeOnSameHotKey.value = closeOnSameHotKey?.toBool()??false;
+    //endregion
+
     Get.changeThemeMode(this.appTheme);
   }
 
@@ -960,6 +858,11 @@ class ConfigService extends GetxService {
   Future<void> setClipboardListeningWay(ClipboardListeningWay way) async {
     await _addOrUpdateDbConfig("clipboardListeningWay", way.name.toString());
     _clipboardListeningWay.value = way;
+  }
+
+  Future<void> setCloseOnSameHotKey(bool closeOnSameHotKey) async {
+    await _addOrUpdateDbConfig("closeOnSameHotKey", closeOnSameHotKey.toString());
+    _closeOnSameHotKey.value = closeOnSameHotKey;
   }
 
 //endregion
