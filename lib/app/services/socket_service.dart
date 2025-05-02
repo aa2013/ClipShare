@@ -24,10 +24,12 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:collection/collection.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -927,6 +929,8 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     var lst = await dbService.deviceDao.getAllDevices(appConfig.userId);
     var devices = lst.where((dev) => dev.address != null).toList();
+    final isWifi = appConfig.currentNetWorkType.value == ConnectivityResult.wifi;
+
     //region 查找中转服务的ip
     String? forwardIp;
     //存在且不为ipv4时才查询
@@ -947,10 +951,14 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       }
     }
     //endregion
+
     for (var dev in devices) {
       var [ip, port] = dev.address!.split(":");
-      //如果ip与中转相同则跳过
+      //检测当前网络环境,如果不是 WiFi 且设备是中转地址，直接连接中转而不是走完整设备发现流程
       if (forwardIp == ip) {
+        if (!isWifi && PlatformExt.isMobile && forwardServerPort != null) {
+          tasks.add(() => manualConnectByForward(dev.guid));
+        }
         continue;
       }
       tasks.add(() => manualConnect(ip, port: int.parse(port)));

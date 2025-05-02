@@ -31,6 +31,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
@@ -95,6 +96,9 @@ class ConfigService extends GetxService {
   //region 响应式
 
   //region 应用内配置
+
+  //当前网络环境
+  final currentNetWorkType = ConnectivityResult.none.obs;
 
   bool get isSmallScreen => Get.width <= Constants.smallScreenWidth;
   final isHistorySyncing = false.obs;
