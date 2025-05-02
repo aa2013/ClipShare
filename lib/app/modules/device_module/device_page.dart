@@ -253,6 +253,7 @@ class DevicePage extends GetView<DeviceController> {
           final listLength = list.length;
           final count = showMore && listLength >= 2 ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
           return MasonryGridView.count(
+            physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: count,
             mainAxisSpacing: 4,
             shrinkWrap: true,
