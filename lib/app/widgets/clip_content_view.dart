@@ -73,30 +73,27 @@ class _ClipContentViewState extends State<ClipContentView> {
         : widget.clipData.isImage
             ? LayoutBuilder(
                 builder: (context, constraints) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      MouseRegion(
-                        cursor: SystemMouseCursors.click,
-                        child: InkWell(
-                          child: Image.file(
-                            File(widget.clipData.data.content),
-                            fit: BoxFit.contain,
-                            width: constraints.maxWidth,
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PreviewPage(
-                                  clip: widget.clipData,
-                                ),
-                              ),
-                            );
-                          },
+                  return SingleChildScrollView(
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: InkWell(
+                        child: Image.file(
+                          File(widget.clipData.data.content),
+                          fit: BoxFit.contain,
+                          width: constraints.maxWidth,
                         ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PreviewPage(
+                                clip: widget.clipData,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    ],
+                    ),
                   );
                 },
               )
