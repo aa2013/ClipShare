@@ -4,6 +4,9 @@ import 'dart:math';
 
 import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
+import 'package:clipshare/app/data/enums/channelMethods/clip_channel_method.dart';
+import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
@@ -19,7 +22,6 @@ import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_p
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
-import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -158,7 +160,8 @@ class SplashController extends GetxController {
       int fromWindowId,
     ) async {
       var args = jsonDecode(call.arguments);
-      switch (call.method) {
+      var method = MultiWindowMethod.values.byName(call.method);
+      switch (method) {
         case MultiWindowMethod.getHistories:
           int fromId = args["fromId"];
           final filter = SearchFilter.fromJson(args["filter"]);
@@ -221,6 +224,7 @@ class SplashController extends GetxController {
           if (appConfig.recordHistoryDialogPosition) {
             appConfig.setHistoryDialogPosition(pos);
           }
+        default:
       }
       //都不符合，返回空
       return Future.value();
@@ -230,7 +234,8 @@ class SplashController extends GetxController {
   void initChannel() {
     appConfig.clipChannel.setMethodCallHandler((call) async {
       var arguments = call.arguments;
-      switch (call.method) {
+      var method = ClipChannelMethod.values.byName(call.method);
+      switch (method) {
         case ClipChannelMethod.ignoreNextCopy:
           appConfig.innerCopy = true;
           break;
@@ -271,12 +276,14 @@ class SplashController extends GetxController {
               )
               .toList();
           return Future(() => contentLst);
+        default:
       }
       return Future(() => false);
     });
     if (Platform.isAndroid) {
       appConfig.androidChannel.setMethodCallHandler((call) async {
-        switch (call.method) {
+        var method = AndroidChannelMethod.values.byName(call.method);
+        switch (method) {
           case AndroidChannelMethod.onScreenOpened:
             ScreenOpenedListener.inst.notify(true);
             break;
@@ -287,6 +294,7 @@ class SplashController extends GetxController {
             final content = call.arguments["content"]!;
             HistoryDataListener.inst.onChanged(HistoryContentType.sms, content);
             break;
+          default:
         }
         return Future(() => false);
       });

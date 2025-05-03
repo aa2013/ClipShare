@@ -94,8 +94,7 @@ extension FileExt on File {
       }
       //提取序号并+1
       final start = regExp.firstMatch(name)!.start;
-      var seq =
-          name.substring(start).replaceAll(RegExp(r"[\\(\\)]"), "").toInt() + 1;
+      var seq = name.substring(start).replaceAll(RegExp(r"[\\(\\)]"), "").toInt() + 1;
       name = name.replaceAll(regExp, "");
       return "$name($seq)${extName.isEmpty ? "" : "."}$extName";
     }
@@ -122,8 +121,6 @@ extension FileExt on File {
     const videoExtensions = ['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv'];
 
     // 判断文件是否属于以上三类之一
-    return imageExtensions.contains(extName) ||
-        audioExtensions.contains(extName) ||
-        videoExtensions.contains(extName);
+    return imageExtensions.contains(extName) || audioExtensions.contains(extName) || videoExtensions.contains(extName);
   }
 }

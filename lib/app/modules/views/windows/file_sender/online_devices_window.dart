@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_page.dart';
@@ -38,9 +39,9 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
     super.initState();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
-    if(widget.args.containsKey("files")){
+    if (widget.args.containsKey("files")) {
       var files = widget.args["files"] as List<dynamic>;
-      pendingFileService.addDropItems(files.cast<String>().map((path)=>DropItemFile(path)).toList());
+      pendingFileService.addDropItems(files.cast<String>().map((path) => DropItemFile(path)).toList());
     }
     //处理弹窗事件
     DesktopMultiWindow.setMethodHandler((
@@ -48,11 +49,13 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
       int fromWindowId,
     ) async {
       var args = jsonDecode(call.arguments);
-      switch (call.method) {
+      var method = MultiWindowMethod.values.byName(call.method);
+      switch (method) {
         //更新通知
         case MultiWindowMethod.notify:
           refresh();
           break;
+        default:
       }
       //都不符合，返回空
       return Future.value();
