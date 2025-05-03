@@ -255,7 +255,7 @@ class SplashController extends GetxController {
           var historyDao = dbService.historyDao;
           var lst = List<History>.empty();
           if (fromId == 0) {
-            lst = await historyDao.getHistoriesTop20(appConfig.userId);
+            lst = await historyDao.getHistoriesTop100(appConfig.userId);
           } else {
             lst = await historyDao.getHistoriesPage(appConfig.userId, fromId);
           }

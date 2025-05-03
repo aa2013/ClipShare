@@ -132,7 +132,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
 
   ///加载数据
   Future<List<ClipData>> loadData(int? minId) {
-    //加载搜索结果的前20条
+    //加载搜索结果的前100条
     return dbService.historyDao
         .getHistoriesPageByWhere(
       appConfig.userId,

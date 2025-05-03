@@ -156,7 +156,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   ///重新加载列表
   Future<void> refreshData() {
-    return dbService.historyDao.getHistoriesTop20(appConfig.userId).then((lst) {
+    return dbService.historyDao.getHistoriesTop100(appConfig.userId).then((lst) {
       _tempList.assignAll(ClipData.fromList(lst));
       debounceUpdate();
     });
