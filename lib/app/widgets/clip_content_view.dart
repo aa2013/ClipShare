@@ -6,8 +6,14 @@ import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
 import 'package:clipshare/app/widgets/largeText/large_text.dart';
+import 'package:clipshare/app/widgets/menu/my_menu.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:flutter_context_menu/src/widgets/menu_entry_widget.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
+
+import '../data/enums/translation_key.dart';
+import 'menu/my_menu_item.dart';
 
 class ClipContentView extends StatefulWidget {
   final ClipData clipData;
@@ -22,6 +28,7 @@ class ClipContentView extends StatefulWidget {
 
 class _ClipContentViewState extends State<ClipContentView> {
   static const tag = "ClipContentView";
+  String selection = "";
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +54,29 @@ class _ClipContentViewState extends State<ClipContentView> {
                   }
                 },
                 contextMenuBuilder: (context, editableTextState) {
+                  if (PlatformExt.isDesktop) {
+                    final menus = [
+                      MyMenuItem(
+                        label: TranslationKey.copyContent.tr,
+                        icon: Icons.copy,
+                        onSelected: () async {
+                          editableTextState.copySelection(
+                            SelectionChangedCause.toolbar,
+                          );
+                        },
+                      ),
+                      MyMenuItem(
+                        label: TranslationKey.selectAll.tr,
+                        icon: Icons.select_all,
+                        onSelected: () async {
+                          editableTextState.selectAll(
+                            SelectionChangedCause.toolbar,
+                          );
+                        },
+                      ),
+                    ];
+                    return MyMenu(menus: menus, position: editableTextState.contextMenuAnchors.primaryAnchor);
+                  }
                   return AdaptiveTextSelectionToolbar.buttonItems(
                     anchors: editableTextState.contextMenuAnchors,
                     buttonItems: <ContextMenuButtonItem>[
@@ -100,5 +130,56 @@ class _ClipContentViewState extends State<ClipContentView> {
             : widget.clipData.isFile
                 ? ClipSimpleDataContent(clip: widget.clipData)
                 : const SizedBox.shrink();
+  }
+
+  /// Builds the context menu view.
+  Widget _buildMenuView(BuildContext context, ContextMenuState state) {
+    // final parentItem = state.parentItem;
+    // if (parentItem?.isSubmenuItem == true) {
+    //   print(parentItem?.debugLabel);
+    // }
+
+    var boxDecoration = BoxDecoration(
+      color: Theme.of(context).colorScheme.surface,
+      boxShadow: [
+        BoxShadow(
+          color: Theme.of(context).shadowColor.withOpacity(0.5),
+          offset: const Offset(0.0, 2.0),
+          blurRadius: 10,
+          spreadRadius: -1,
+        )
+      ],
+      borderRadius: state.borderRadius ?? BorderRadius.circular(4.0),
+    );
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(
+        begin: 0.8,
+        end: 1.0,
+      ),
+      duration: const Duration(milliseconds: 60),
+      builder: (context, value, child) {
+        return Transform.scale(
+          alignment: state.spawnAlignment,
+          scale: value,
+          child: Container(
+            padding: state.padding,
+            constraints: BoxConstraints(
+              maxWidth: state.maxWidth,
+            ),
+            clipBehavior: state.clipBehavior,
+            decoration: state.boxDecoration ?? boxDecoration,
+            child: Material(
+              type: MaterialType.transparency,
+              child: IntrinsicWidth(
+                child: Column(
+                  children: [for (final item in state.entries) MenuEntryWidget(entry: item)],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

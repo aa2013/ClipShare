@@ -9,6 +9,23 @@ extension ListExt<T> on List<T> {
     }
     return result;
   }
+
+  List<T> separateWith(T separator, {bool first = false, bool last = false}) {
+    final result = <T>[];
+    if (first) {
+      result.add(separator);
+    }
+    for (var i = 0; i < length; i++) {
+      result.add(this[i]);
+      if (i != length - 1) {
+        result.add(separator);
+      }
+    }
+    if (last) {
+      result.add(separator);
+    }
+    return result;
+  }
 }
 
 extension ListEquals on List<int> {
