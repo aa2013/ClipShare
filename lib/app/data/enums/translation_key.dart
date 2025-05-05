@@ -182,6 +182,7 @@ enum TranslationKey {
   logSettingsEnableTitle,
   logSettingsEnableDesc,
   openFolder,
+  openFilePos,
   tips,
   logSettingsAckDelLogFiles,
   statisticsSettingsGroupName,
@@ -474,7 +475,11 @@ enum TranslationKey {
   clipboardListeningWayTips,
   clipboardListeningWayTipsDetail,
   clipboardListeningWithSystemHiddenApi,
-  clipboardListeningWithSystemLogs, closeOnSameHotKeyTitle, closeOnSameHotKeyDesc;
+  clipboardListeningWithSystemLogs,
+  closeOnSameHotKeyTitle,
+  closeOnSameHotKeyDesc,
+  openWithOtherApplications,
+  saveToAlbum;
 
   String get tr => name.tr;
 

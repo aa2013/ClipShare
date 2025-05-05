@@ -21,6 +21,7 @@ import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
@@ -31,7 +32,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
@@ -504,7 +504,7 @@ class ConfigService extends GetxService {
     } catch (err) {
       print(err);
     }
-    _closeOnSameHotKey.value = closeOnSameHotKey?.toBool()??false;
+    _closeOnSameHotKey.value = closeOnSameHotKey?.toBool() ?? false;
     //endregion
 
     Get.changeThemeMode(this.appTheme);

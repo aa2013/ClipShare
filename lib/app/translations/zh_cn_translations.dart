@@ -377,6 +377,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "将会占据额外空间，已产生 @size 日志";
       case TranslationKey.openFolder:
         return "打开文件夹";
+      case TranslationKey.openFilePos:
+        return "打开文件位置";
       case TranslationKey.tips:
         return "提示";
       case TranslationKey.logSettingsAckDelLogFiles:
@@ -969,6 +971,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "使用相同快捷键关闭弹窗";
       case TranslationKey.closeOnSameHotKeyDesc:
         return "默认鼠标点击窗体关闭按钮，启用后可以使用相同的快捷键打开和关闭弹窗";
+      case TranslationKey.saveToAlbum:
+        return "保存至相册";
+      case TranslationKey.openWithOtherApplications:
+        return "使用其它应用打开";
     }
   }
 }

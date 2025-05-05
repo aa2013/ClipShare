@@ -425,6 +425,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Will take up extra space, @size logs have been generated";
       case TranslationKey.openFolder:
         return "Open Folder";
+      case TranslationKey.openFilePos:
+        return "Open File Location";
       case TranslationKey.tips:
         return "Tips";
       case TranslationKey.logSettingsAckDelLogFiles:
@@ -969,6 +971,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Close the pop-up window using the same shortcut key";
       case TranslationKey.closeOnSameHotKeyDesc:
         return "The default mouse click on the form close button allows you to use the same shortcut keys to open and close pop ups when enabled";
+      case TranslationKey.saveToAlbum:
+        return "Save to album";
+      case TranslationKey.openWithOtherApplications:
+        return "Open With Other Applications";
     }
   }
 }

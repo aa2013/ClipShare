@@ -185,95 +185,100 @@ class ClipDataCardState extends State<ClipDataCard> {
     return GestureDetector(
       child: content,
       onSecondaryTapDown: (details) {
-        var menu = ContextMenu(
-          entries: [
-            MenuItem(
-              label: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
-              icon: widget.clip.data.top ? Icons.push_pin : Icons.push_pin_outlined,
-              onSelected: () {
-                var id = widget.clip.data.id;
-                //置顶取反
-                var isTop = !widget.clip.data.top;
-                widget.clip.data.top = isTop;
-                dbService.historyDao.setTop(id, isTop).then((v) {
-                  if (v == null || v <= 0) return;
-                  var opRecord = OperationRecord.fromSimple(
-                    Module.historyTop,
-                    OpMethod.update,
-                    id,
-                  );
-                  widget.onUpdate();
-                  setState(() {});
-                  dbService.opRecordDao.addAndNotify(opRecord);
-                });
-              },
-            ),
-            if (!widget.clip.isFile)
-              MenuItem(
-                label: TranslationKey.copyContent.tr,
-                icon: Icons.copy,
-                onSelected: () {
-                  appConfig.innerCopy = true;
-                  var type = ClipboardContentType.parse(widget.clip.data.type);
-                  clipboardManager.copy(type, widget.clip.data.content);
-                  Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-                },
-              ),
-            if (!widget.clip.isFile)
-              MenuItem(
-                label: widget.clip.data.sync ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
-                icon: Icons.sync,
-                onSelected: () {
-                  var opRecord = OperationRecord.fromSimple(
-                    Module.history,
-                    OpMethod.add,
-                    widget.clip.data.id.toString(),
-                  );
-                  dbService.opRecordDao.addAndNotify(opRecord);
-                },
-              ),
-            if (widget.clip.isFile)
-              MenuItem(
-                label: TranslationKey.openFile.tr,
-                icon: Icons.file_open,
-                onSelected: () async {
-                  final file = File(widget.clip.data.content);
-                  await OpenFile.open(file.normalizePath);
-                },
-              ),
-            if (widget.clip.isFile)
-              MenuItem(
-                label: TranslationKey.openFileFolder.tr,
-                icon: Icons.folder,
-                onSelected: () async {
-                  final file = File(widget.clip.data.content);
-                  await OpenFile.open(
-                    file.parent.normalizePath,
-                  );
-                },
-              ),
-            MenuItem(
-              label: TranslationKey.tagsManagement.tr,
-              icon: Icons.tag,
-              onSelected: () {
-                TagEditPage.goto(widget.clip.data.id);
-              },
-            ),
-            MenuItem(
-              label: TranslationKey.delete.tr,
-              icon: Icons.delete,
-              onSelected: () {
-                widget.onRemoveClicked(widget.clip);
-              },
-            ),
-          ],
-          position: details.globalPosition - const Offset(0, 70),
-          padding: const EdgeInsets.all(8.0),
-          borderRadius: BorderRadius.circular(8),
-        );
-        menu.show(context);
+        showMenu(details.globalPosition - const Offset(0, 70));
       },
     );
+  }
+
+  ///右键菜单
+  void showMenu(Offset? position) {
+    final menu = ContextMenu(
+      entries: [
+        MenuItem(
+          label: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
+          icon: widget.clip.data.top ? Icons.push_pin : Icons.push_pin_outlined,
+          onSelected: () {
+            var id = widget.clip.data.id;
+            //置顶取反
+            var isTop = !widget.clip.data.top;
+            widget.clip.data.top = isTop;
+            dbService.historyDao.setTop(id, isTop).then((v) {
+              if (v == null || v <= 0) return;
+              var opRecord = OperationRecord.fromSimple(
+                Module.historyTop,
+                OpMethod.update,
+                id,
+              );
+              widget.onUpdate();
+              setState(() {});
+              dbService.opRecordDao.addAndNotify(opRecord);
+            });
+          },
+        ),
+        if (!widget.clip.isFile)
+          MenuItem(
+            label: TranslationKey.copyContent.tr,
+            icon: Icons.copy,
+            onSelected: () {
+              appConfig.innerCopy = true;
+              var type = ClipboardContentType.parse(widget.clip.data.type);
+              clipboardManager.copy(type, widget.clip.data.content);
+              Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+            },
+          ),
+        if (!widget.clip.isFile)
+          MenuItem(
+            label: widget.clip.data.sync ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
+            icon: Icons.sync,
+            onSelected: () {
+              var opRecord = OperationRecord.fromSimple(
+                Module.history,
+                OpMethod.add,
+                widget.clip.data.id.toString(),
+              );
+              dbService.opRecordDao.addAndNotify(opRecord);
+            },
+          ),
+        if (widget.clip.isFile)
+          MenuItem(
+            label: TranslationKey.openFile.tr,
+            icon: Icons.file_open,
+            onSelected: () async {
+              final file = File(widget.clip.data.content);
+              await OpenFile.open(file.normalizePath);
+            },
+          ),
+        if (widget.clip.isFile)
+          MenuItem(
+            label: TranslationKey.openFileFolder.tr,
+            icon: Icons.folder,
+            onSelected: () async {
+              final file = File(widget.clip.data.content);
+              await OpenFile.open(
+                file.parent.normalizePath,
+              );
+            },
+          ),
+        MenuItem(
+          label: TranslationKey.tagsManagement.tr,
+          icon: Icons.tag,
+          onSelected: () {
+            TagEditPage.goto(widget.clip.data.id);
+          },
+        ),
+        MenuItem(
+          label: TranslationKey.delete.tr,
+          icon: Icons.delete,
+          onSelected: () {
+            widget.onRemoveClicked(widget.clip);
+          },
+        ),
+      ],
+      position: position,
+      padding: const EdgeInsets.all(8.0),
+      borderRadius: BorderRadius.circular(8),
+    );
+    menu.show(context);
   }
 
   ///删除数据

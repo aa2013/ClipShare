@@ -3,15 +3,22 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:get/get.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 class PreviewPage extends StatefulWidget {
@@ -34,6 +41,7 @@ class PreviewPage extends StatefulWidget {
 
 class _PreviewPageState extends State<PreviewPage> {
   final TransformationController _controller = TransformationController();
+  static const tag = "PreviewPage";
 
   bool get isImageZoomed {
     //row 2 column 3 => scale
@@ -45,8 +53,7 @@ class _PreviewPageState extends State<PreviewPage> {
   bool _initFinished = false;
   var checkedList = <int>{};
 
-  History get _currentImage =>
-      _images.isEmpty ? widget.clip.data : _images[_current - 1];
+  History get _currentImage => _images.isEmpty ? widget.clip.data : _images[_current - 1];
   late PageController _pageController;
 
   bool get _canPre => _current > 1;
@@ -152,13 +159,12 @@ class _PreviewPageState extends State<PreviewPage> {
                           color: Colors.white,
                         ),
                       ),
-                      onLongPress: () {
-                        Clipboard.setData(
-                          ClipboardData(text: _currentImage.content),
-                        );
+                      onDoubleTap: () {
+                        appConfig?.innerCopy = true;
+                        Clipboard.setData(ClipboardData(text: _currentImage.content));
                         Global.showSnackBarSuc(
                           text: TranslationKey.copyPathSuccess.tr,
-                          context: context,
+                          context: Get.context,
                         );
                       },
                     ),
@@ -170,9 +176,16 @@ class _PreviewPageState extends State<PreviewPage> {
                 ],
               ),
             ),
-            const SizedBox(
-              width: 5,
+            const SizedBox(width: 5),
+            IconButton(
+              hoverColor: Colors.white12,
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(
+                Icons.close,
+                color: Colors.white,
+              ),
             ),
+            const SizedBox(width: 5),
           ],
         ),
       ),
@@ -221,8 +234,7 @@ class _PreviewPageState extends State<PreviewPage> {
               child: IconButton(
                 onPressed: () {
                   final path = _currentImage.content;
-                  Share.shareXFiles([XFile(path)],
-                      text: TranslationKey.shareFile.tr);
+                  Share.shareXFiles([XFile(path)], text: TranslationKey.shareFile.tr);
                 },
                 hoverColor: Colors.white12,
                 icon: const Icon(
@@ -270,18 +282,31 @@ class _PreviewPageState extends State<PreviewPage> {
                               child: PageView.builder(
                                 itemCount: _images.length,
                                 controller: _pageController,
-                                physics: _pointerCnt == 2 || isImageZoomed
-                                    ? const NeverScrollableScrollPhysics()
-                                    : null,
+                                physics: _pointerCnt == 2 || isImageZoomed ? const NeverScrollableScrollPhysics() : null,
                                 onPageChanged: (idx) {
                                   _current = idx + 1;
                                   setState(() {});
                                 },
                                 itemBuilder: (ctx, idx) {
-                                  return InteractiveViewer(
-                                    maxScale: 15.0,
-                                    transformationController: _controller,
-                                    child: renderImageItem(idx, ct),
+                                  return GestureDetector(
+                                    child: InteractiveViewer(
+                                      maxScale: 15.0,
+                                      transformationController: _controller,
+                                      child: renderImageItem(idx, ct),
+                                    ),
+                                    onSecondaryTapDown: (details) {
+                                      final imgPath = _images[idx].content;
+                                      final position = details.globalPosition - const Offset(0, 70);
+                                      showMenu(imgPath, position);
+                                    },
+                                    onLongPressStart: (details) {
+                                      if (PlatformExt.isDesktop) {
+                                        return;
+                                      }
+                                      final imgPath = _images[idx].content;
+                                      final position = details.globalPosition;
+                                      showMenu(imgPath, position);
+                                    },
                                   );
                                 },
                               ),
@@ -293,9 +318,7 @@ class _PreviewPageState extends State<PreviewPage> {
                           ),
                           header,
                           Visibility(
-                            visible: _canPre &&
-                                MediaQuery.of(context).size.width >=
-                                    Constants.smallScreenWidth,
+                            visible: _canPre && MediaQuery.of(context).size.width >= Constants.smallScreenWidth,
                             child: Positioned(
                               left: 10,
                               top: 0,
@@ -325,9 +348,7 @@ class _PreviewPageState extends State<PreviewPage> {
                             ),
                           ),
                           Visibility(
-                            visible: _canNext &&
-                                MediaQuery.of(context).size.width >=
-                                    Constants.smallScreenWidth,
+                            visible: _canNext && MediaQuery.of(context).size.width >= Constants.smallScreenWidth,
                             child: Positioned(
                               right: 10,
                               top: 0,
@@ -349,8 +370,7 @@ class _PreviewPageState extends State<PreviewPage> {
                                         color: Colors.white,
                                         size: 30,
                                       ),
-                                      onPressed:
-                                          _canNext ? _loadNextImage : null,
+                                      onPressed: _canNext ? _loadNextImage : null,
                                     ),
                                   ),
                                 ],
@@ -375,6 +395,64 @@ class _PreviewPageState extends State<PreviewPage> {
         ),
       ),
     );
+  }
+
+  ///右键菜单
+  void showMenu(String imgPath, Offset? position) {
+    final menu = ContextMenu(
+      entries: [
+        if (Platform.isAndroid && !appConfig!.saveToPictures && imgPath.startsWith(appConfig!.androidPrivatePicturesPath))
+          MenuItem(
+            label: TranslationKey.saveToAlbum.tr,
+            icon: Icons.save_alt,
+            onSelected: () async {
+              //如果没有权限则请求
+              if (!(await PermissionHelper.testAndroidStoragePerm())) {
+                await PermissionHelper.reqAndroidStoragePerm();
+              }
+              final file = File(imgPath);
+              final fileName = file.fileName;
+              final newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+              try {
+                file.copySync(newPath);
+                Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+                final androidChannelService = Get.find<AndroidChannelService>();
+                androidChannelService.notifyMediaScan(newPath);
+              } catch (err, stack) {
+                Log.error(tag, "$err $stack");
+                Global.showSnackBarWarn(text: TranslationKey.saveFailed.tr, context: context);
+              }
+            },
+          ),
+        if (PlatformExt.isDesktop)
+          MenuItem(
+            label: TranslationKey.openWithOtherApplications.tr,
+            icon: Icons.open_in_new,
+            onSelected: () async {
+              await OpenFile.open(imgPath);
+            },
+          ),
+        MenuItem(
+          label: TranslationKey.openFilePos.tr,
+          icon: Icons.folder_outlined,
+          onSelected: () async {
+            await OpenFile.open(File(imgPath).parent.path);
+          },
+        ),
+        if (PlatformExt.isDesktop)
+          MenuItem(
+            label: TranslationKey.close.tr,
+            icon: Icons.close,
+            onSelected: () async {
+              Navigator.pop(context);
+            },
+          ),
+      ],
+      position: position,
+      padding: const EdgeInsets.all(8.0),
+      borderRadius: BorderRadius.circular(8),
+    );
+    menu.show(context);
   }
 
   void _toggleZoom(Offset focalPoint) {

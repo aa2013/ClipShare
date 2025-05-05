@@ -255,7 +255,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       appConfig.innerCopy = false;
       return;
     }
-    Log.debug(tag, "${DateTime.now().toString()},${last?.content}, $content");
     //和上次复制的内容相同
     if (last?.type == type.value && last?.content == content) {
       return;
