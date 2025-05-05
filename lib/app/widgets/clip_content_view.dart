@@ -28,7 +28,7 @@ class ClipContentView extends StatefulWidget {
 
 class _ClipContentViewState extends State<ClipContentView> {
   static const tag = "ClipContentView";
-  String selection = "";
+  bool hasSelection = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,18 +53,22 @@ class _ClipContentViewState extends State<ClipContentView> {
                     link.url.openUrl();
                   }
                 },
+                onSelectionChanged: (TextSelection selection, SelectionChangedCause? cause) {
+                  hasSelection = selection.extentOffset != selection.baseOffset;
+                },
                 contextMenuBuilder: (context, editableTextState) {
                   if (PlatformExt.isDesktop) {
                     final menus = [
-                      MyMenuItem(
-                        label: TranslationKey.copyContent.tr,
-                        icon: Icons.copy,
-                        onSelected: () async {
-                          editableTextState.copySelection(
-                            SelectionChangedCause.toolbar,
-                          );
-                        },
-                      ),
+                      if (hasSelection)
+                        MyMenuItem(
+                          label: TranslationKey.copyContent.tr,
+                          icon: Icons.copy,
+                          onSelected: () async {
+                            editableTextState.copySelection(
+                              SelectionChangedCause.toolbar,
+                            );
+                          },
+                        ),
                       MyMenuItem(
                         label: TranslationKey.selectAll.tr,
                         icon: Icons.select_all,
