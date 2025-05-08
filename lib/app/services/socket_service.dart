@@ -352,7 +352,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
   ///连接中转服务器
   Future<void> connectForwardServer([bool startDiscovery = false]) async {
-    disConnectForwardServer();
+    if (_forwardClient != null) {
+      disConnectForwardServer();
+    }
     //屏幕关闭且 设置了自动断连 且 定时器已到期 则不连接
     if (!screenOpened && appConfig.autoCloseConnAfterScreenOff && autoCloseConnTimer == null) {
       return;
@@ -428,6 +430,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
   ///断开中转服务器
   Future<void> disConnectForwardServer() async {
+    if (_forwardClient == null) {
+      return;
+    }
     Log.debug(tag, "disConnectForwardServer");
     _autoConnForwardServer = false;
     await _forwardClient?.close();
@@ -1300,6 +1305,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           disconnected = true;
         }
       }
+      Log.debug(tag, "startJudgeForwardClientAlivePeriod disconnected: $disconnected");
       if (!disconnected) return;
       _forwardClient?.destroy();
     });
