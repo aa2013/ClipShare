@@ -359,6 +359,10 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     if (!screenOpened && appConfig.autoCloseConnAfterScreenOff && autoCloseConnTimer == null) {
       return;
     }
+    if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
+      _autoConnForwardServer = false;
+      return;
+    }
     if (!appConfig.enableForward) return;
     if (forwardServerHost == null || forwardServerPort == null) return;
     if (_forwardClient != null) return;
@@ -814,6 +818,10 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   void startDiscoveryDevices([bool restart = false]) async {
     if (_discovering) {
       Log.debug(tag, "正在发现设备");
+      return;
+    }
+    if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
+      Log.debug(tag, "无网络");
       return;
     }
     _discovering = true;
