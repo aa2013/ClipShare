@@ -1290,9 +1290,8 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   ///定时判断中转服务连接存活状态
   void _startJudgeForwardClientAlivePeriod() {
     //先停止
-    _stopJudgeForwardClientAlive();
-    if (_forwardClient == null) {
-      return;
+    if (_forwardClientHeartbeatTimer != null) {
+      _stopJudgeForwardClientAlive();
     }
     //更新timer
     _forwardClientHeartbeatTimer = Timer.periodic(const Duration(seconds: 35), (timer) {
