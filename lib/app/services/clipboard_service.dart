@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
@@ -125,7 +126,7 @@ class ClipboardService extends GetxService with ClipboardListener {
   @override
   void onClipboardChanged(ClipboardContentType type, String content) {
     final contentType = HistoryContentType.parse(type.name);
-    Log.debug(tag, "onChange $content");
+    Log.debug(tag, "onChange ${content.substring(0, min(content.length, 200))}");
     HistoryDataListener.inst.onChanged(contentType, content);
   }
 

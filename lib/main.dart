@@ -82,10 +82,10 @@ Future<void> main(List<String> args) async {
   } else {
     await initMainServices();
     runZonedGuarded(
-      () {
+          () {
         runMain(home, title, null);
       },
-      (err, stack) {
+          (err, stack) {
         Log.error("globalError", "$err $stack");
       },
     );
@@ -103,7 +103,7 @@ Future<void> initMainServices() async {
   await Get.putAsync(() => DeviceService().init(), permanent: true);
   await Get.putAsync(() => TagService().init(), permanent: true);
   await Get.putAsync(
-    () => SyncingFileProgressService().init(),
+        () => SyncingFileProgressService().init(),
     permanent: true,
   );
   if (PlatformExt.isDesktop) {
@@ -139,20 +139,22 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
           translations: AppTranslation(),
           defaultTransition: Transition.native,
           builder: (ctx, child) {
-            return Scaffold(
-              appBar: null,
-              // backgroundColor: Colors.transparent,
-              body: CustomTitleBarLayout(
-                children: [
-                  const SizedBox(width: 5),
-                  logoImg,
-                  const SizedBox(width: 5),
-                  Text(
-                    title,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ],
-                child: child ?? const SizedBox.shrink(),
+            return ThemeSwitchingArea(
+              child: Scaffold(
+                appBar: null,
+                // backgroundColor: Colors.transparent,
+                body: CustomTitleBarLayout(
+                  children: [
+                    const SizedBox(width: 5),
+                    logoImg,
+                    const SizedBox(width: 5),
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ],
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
             );
           },
@@ -179,7 +181,8 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   // Override behavior methods like buildOverscrollIndicator and buildScrollbar
   @override
-  Set<PointerDeviceKind> get dragDevices => {
+  Set<PointerDeviceKind> get dragDevices =>
+      {
         PointerDeviceKind.touch,
         PointerDeviceKind.mouse,
       };

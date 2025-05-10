@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
@@ -65,11 +66,13 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
       int fromWindowId,
     ) async {
       var args = jsonDecode(call.arguments);
-      switch (call.method) {
+      var method = MultiWindowMethod.values.byName(call.method);
+      switch (method) {
         //更新通知
         case MultiWindowMethod.notify:
           refresh();
           break;
+        default:
       }
       //都不符合，返回空
       return Future.value();

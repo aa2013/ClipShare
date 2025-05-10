@@ -7,6 +7,7 @@ import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/sync_file_status.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -123,9 +124,9 @@ class SyncFilePage extends GetView<SyncFileController> {
                                     ),
                                     child: Text(
                                       "${controller.selected.length} / ${controller.recHistories.length}",
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 20,
-                                        color: Colors.black45,
+                                        color: appConfig.currentIsDarkMode ? Colors.white : Colors.black45,
                                       ),
                                     ),
                                   ),
@@ -144,6 +145,35 @@ class SyncFilePage extends GetView<SyncFileController> {
                                       appConfig.disableMultiSelectionMode(true);
                                     },
                                     child: const Icon(Icons.close),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Visibility(
+                              visible: controller.selectMode,
+                              child: Tooltip(
+                                message: controller.selected.length == controller.recHistories.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
+                                child: Container(
+                                  margin: const EdgeInsets.only(right: 10),
+                                  child: FloatingActionButton(
+                                    onPressed: () {
+                                      final selectAll = controller.selected.length == controller.recHistories.length;
+                                      if (selectAll) {
+                                        controller.selected.clear();
+                                      } else {
+                                        final list = controller.recHistories.toList();
+                                        var map = <int, SyncFileStatus>{};
+                                        for (var item in list) {
+                                          if (item.historyId != null) {
+                                            map[item.historyId!] = item;
+                                          }
+                                        }
+                                        controller.selected.addAll(map);
+                                      }
+                                    },
+                                    child: Icon(
+                                      controller.selected.length == controller.recHistories.length ? Icons.deselect : Icons.checklist,
+                                    ),
                                   ),
                                 ),
                               ),

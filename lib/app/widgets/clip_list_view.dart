@@ -22,8 +22,11 @@ import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/clip_data_card.dart';
 import 'package:clipshare/app/widgets/clip_detail_dialog.dart';
+import 'package:clipshare/app/widgets/condition_widget.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
@@ -71,7 +74,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
   final clipChannelService = Get.find<ClipChannelService>();
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
   final homeCtrl = Get.find<HomeController>();
-  static bool _loadNewData = false;
+  static bool _loadingNewData = false;
   var _showBackToTopButton = false;
   final String tag = "ClipListView";
   var _selectMode = false;
@@ -85,7 +88,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
   @override
   void initState() {
     super.initState();
-    _loadNewData = false;
+    _loadingNewData = false;
     if (widget.list.isNotEmpty) {
       _minId = widget.list.last.data.id;
     }
@@ -117,10 +120,10 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
 
   ///加载更多数据
   void _loadMoreData() {
-    if (_loadNewData || _minId == null) {
+    if (_loadingNewData || _minId == null) {
       return;
     }
-    _loadNewData = true;
+    _loadingNewData = true;
     Future<List<ClipData>> f;
     if (widget.onLoadMoreData == null) {
       f = dbService.historyDao.getHistoriesPage(appConfig.userId, _minId!).then((lst) => ClipData.fromList(lst));
@@ -135,7 +138,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         _sortList();
       }
       Future.delayed(const Duration(milliseconds: 500), () {
-        _loadNewData = false;
+        _loadingNewData = false;
       });
     });
   }
@@ -153,7 +156,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
   void _scrollListener() {
     if (_scrollController.offset == 0) {
       Future.delayed(const Duration(milliseconds: 100), () {
-        var tmpList = widget.list.sublist(0, min(widget.list.length, 20));
+        var tmpList = widget.list.sublist(0, min(widget.list.length, 100));
         widget.list.value = tmpList;
         if (tmpList.isNotEmpty) {
           _minId = tmpList.last.data.id;
@@ -162,7 +165,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
       });
     }
     // 判断是否快要滑动到底部
-    if (_scrollController.position.extentAfter <= 200 && !_loadNewData) {
+    if (_scrollController.position.extentAfter <= 200 && !_loadingNewData) {
       _loadMoreData();
     }
     if (_scrollController.offset >= 300) {
@@ -307,55 +310,72 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
       // backgroundColor: appConfig.bgColor,
       body: Stack(
         children: [
-          Positioned.fill(child: RefreshIndicator(
-            onRefresh: () async {
-              return Future.delayed(
-                const Duration(milliseconds: 500),
-                widget.onRefreshData,
-              );
-            },
-            child: widget.list.isEmpty
-                ? Stack(
-              children: [
-                ListView(),
-                EmptyContent(),
-              ],
-            )
-                : LayoutBuilder(
-              builder: (ctx, constraints) {
-                return Obx(() {
-                  final isImageMode = widget.imageMasonryGridViewLayout;
-                  final maxWidth = isImageMode ? 200.0 : 395;
-                  final showMore = (appConfig.showMoreItemsInRow && !appConfig.isSmallScreen) || isImageMode;
-                  final count = showMore ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
-                  return MasonryGridView.count(
-                    crossAxisCount: count,
-                    mainAxisSpacing: 4,
-                    shrinkWrap: true,
-                    itemCount: widget.list.length,
-                    controller: _scrollController,
-                    physics: _scrollPhysics,
-                    itemBuilder: (context, index) {
-                      if (isImageMode) {
-                        return renderItem(index);
-                      } else {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 2,
-                          ),
-                          constraints: const BoxConstraints(
-                            maxHeight: 150,
-                            minHeight: 80,
-                          ),
-                          child: renderItem(index),
-                        );
-                      }
-                    },
-                  );
-                });
+          Positioned.fill(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                return Future.delayed(
+                  const Duration(milliseconds: 500),
+                  widget.onRefreshData,
+                );
               },
+              child: Obx(
+                () => ConditionWidget(
+                  visible: widget.list.isEmpty,
+                  replacement: LayoutBuilder(
+                    builder: (ctx, constraints) {
+                      return Obx(() {
+                        final isImageMode = widget.imageMasonryGridViewLayout;
+                        final maxWidth = isImageMode ? 200.0 : 395;
+                        final showMore = (appConfig.showMoreItemsInRow && !appConfig.isSmallScreen) || isImageMode;
+                        final count = showMore ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
+                        return Listener(
+                          child: MasonryGridView.count(
+                            crossAxisCount: count,
+                            mainAxisSpacing: 4,
+                            shrinkWrap: true,
+                            itemCount: widget.list.length,
+                            controller: _scrollController,
+                            physics: _scrollPhysics,
+                            itemBuilder: (context, index) {
+                              if (isImageMode) {
+                                return renderItem(index);
+                              } else {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 2,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 150,
+                                    minHeight: 80,
+                                  ),
+                                  child: renderItem(index),
+                                );
+                              }
+                            },
+                          ),
+                          onPointerSignal: (e) {
+                            if (e is PointerScrollEvent) {
+                              // 已经滚动到底部，仍然尝试滚动
+                              if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+                                Log.debug(tag, "Try loading more data at the bottom");
+                                _loadMoreData();
+                              }
+                            }
+                          },
+                        );
+                      });
+                    },
+                  ),
+                  child: Stack(
+                    children: [
+                      ListView(),
+                      EmptyContent(),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),),
+          ),
           Positioned(
             bottom: 16,
             right: 16,
@@ -366,7 +386,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.lightBlue.withOpacity(0.2),
+                      color: Colors.lightBlue.withOpacity(0.4),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     margin: const EdgeInsets.only(right: 10),
@@ -375,9 +395,9 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           "${_selectedItems.length} / ${widget.list.length}",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
-                            color: Colors.black45,
+                            color: appConfig.currentIsDarkMode ? Colors.white : Colors.black45,
                           ),
                         ),
                       ),

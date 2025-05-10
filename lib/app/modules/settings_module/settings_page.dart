@@ -419,7 +419,7 @@ class SettingsPage extends GetView<SettingsController> {
 
                 ///endregion
 
-                //region 偏好
+                ///region 偏好
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.preference.tr,
@@ -495,10 +495,25 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                         show: (v) => true,
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.closeOnSameHotKeyTitle.tr),
+                        description: Text(TranslationKey.closeOnSameHotKeyDesc.tr),
+                        value: appConfig.closeOnSameHotKey,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setCloseOnSameHotKey(checked);
+                            },
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
                     ],
                   ),
                 ),
-                //endregion
+                ///endregion
 
                 ///region 发现
                 Obx(
@@ -702,6 +717,24 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
                               appConfig.setAutoCloseConnAfterScreenOff(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.enableAutoSyncOnScreenOpenedTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.enableAutoSyncOnScreenOpenedDesc.tr),
+                        value: appConfig.enableAutoSyncOnScreenOpened,
+                        show: (v) => Platform.isAndroid,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnableAutoSyncOnScreenOpened(checked);
                             },
                           );
                         },

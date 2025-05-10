@@ -52,6 +52,10 @@ class AppHotKeyHandler {
         //只允许弹窗一次
         if (ids.contains(appConfig.historyWindow?.windowId)) {
           await appConfig.historyWindow?.close();
+          //偏好为使用相同快捷键关闭，直接结束
+          if(appConfig.closeOnSameHotKey){
+            return;
+          }
         }
         //createWindow里面的参数必须传
         final title = TranslationKey.historyRecord.tr;
@@ -94,7 +98,6 @@ class AppHotKeyHandler {
       key,
       keyDownHandler: (hotKey) async {
         final appConfig = Get.find<ConfigService>();
-
         ///快捷键事件
         final res = await clipboardManager.getSelectedFiles();
         final files = res.list;
@@ -108,10 +111,6 @@ class AppHotKeyHandler {
             default:
           }
         }
-        // no files
-        // if (filePaths.isEmpty) {
-        //   return;
-        // }
 
         var ids = List.empty();
         try {
@@ -121,7 +120,11 @@ class AppHotKeyHandler {
         }
         //只允许弹窗一次
         if (ids.contains(appConfig.onlineDevicesWindow?.windowId)) {
-          await appConfig.historyWindow?.close();
+          await appConfig.onlineDevicesWindow?.close();
+          //偏好为使用相同快捷键关闭，直接结束
+          if(appConfig.closeOnSameHotKey){
+            return;
+          }
         }
         final title = TranslationKey.syncFile.tr;
         //createWindow里面的参数必须传

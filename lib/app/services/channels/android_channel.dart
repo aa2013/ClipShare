@@ -2,31 +2,11 @@ import 'dart:io';
 
 import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-
-class AndroidChannelMethod {
-  AndroidChannelMethod._private();
-
-  static const onScreenOpened = "onScreenOpened";
-  static const onScreenClosed = "onScreenClosed";
-  static const notifyMediaScan = "notifyMediaScan";
-  static const showHistoryFloatWindow = "showHistoryFloatWindow";
-  static const closeHistoryFloatWindow = "closeHistoryFloatWindow";
-  static const lockHistoryFloatLoc = "lockHistoryFloatLoc";
-  static const moveToBg = "moveToBg";
-  static const toast = "toast";
-  static const sendNotify = "sendNotify";
-  static const copyFileFromUri = "copyFileFromUri";
-  static const startSmsListen = "startSmsListen";
-  static const stopSmsListen = "stopSmsListen";
-  static const onSmsChanged = "onSmsChanged";
-  static const showOnRecentTasks = "showOnRecentTasks";
-  static const getImageUriRealPath = "getImageUriRealPath";
-  static const getLatestImagePath = "getLatestImagePath";
-}
 
 class AndroidChannelService extends GetxService {
   late final MethodChannel androidChannel;
@@ -48,7 +28,7 @@ class AndroidChannelService extends GetxService {
   /// 通知 Android 媒体库刷新
   void notifyMediaScan(String path) {
     if (!Platform.isAndroid) return;
-    androidChannel.invokeMethod(AndroidChannelMethod.notifyMediaScan, {
+    androidChannel.invokeMethod(AndroidChannelMethod.notifyMediaScan.name, {
       "imagePath": path,
     });
   }
@@ -69,7 +49,7 @@ class AndroidChannelService extends GetxService {
   void showHistoryFloatWindow() {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
-      AndroidChannelMethod.showHistoryFloatWindow,
+      AndroidChannelMethod.showHistoryFloatWindow.name,
     );
   }
 
@@ -77,7 +57,7 @@ class AndroidChannelService extends GetxService {
   void closeHistoryFloatWindow() {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
-      AndroidChannelMethod.closeHistoryFloatWindow,
+      AndroidChannelMethod.closeHistoryFloatWindow.name,
     );
   }
 
@@ -85,7 +65,7 @@ class AndroidChannelService extends GetxService {
   void lockHistoryFloatLoc(dynamic data) {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
-      AndroidChannelMethod.lockHistoryFloatLoc,
+      AndroidChannelMethod.lockHistoryFloatLoc.name,
       data,
     );
   }
@@ -94,7 +74,7 @@ class AndroidChannelService extends GetxService {
   void moveToBg() {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
-      AndroidChannelMethod.moveToBg,
+      AndroidChannelMethod.moveToBg.name,
     );
   }
 
@@ -102,7 +82,7 @@ class AndroidChannelService extends GetxService {
   void toast(String text) {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
-      AndroidChannelMethod.toast,
+      AndroidChannelMethod.toast.name,
       {"content": text},
     );
   }
@@ -111,7 +91,7 @@ class AndroidChannelService extends GetxService {
   void sendNotify(String content) {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
-      AndroidChannelMethod.sendNotify,
+      AndroidChannelMethod.sendNotify.name,
       {"content": content},
     );
   }
@@ -120,7 +100,7 @@ class AndroidChannelService extends GetxService {
   Future<String?> copyFileFromUri(String content, String savedPath) {
     if (!Platform.isAndroid) return Future(() => null);
     return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.copyFileFromUri,
+      AndroidChannelMethod.copyFileFromUri.name,
       {
         "content": content,
         "savedPath": savedPath,
@@ -132,7 +112,7 @@ class AndroidChannelService extends GetxService {
   Future<void> startSmsListen() {
     if (!Platform.isAndroid) return Future(() => null);
     return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.startSmsListen,
+      AndroidChannelMethod.startSmsListen.name,
     );
   }
 
@@ -140,7 +120,7 @@ class AndroidChannelService extends GetxService {
   Future<void> stopSmsListen() {
     if (!Platform.isAndroid) return Future(() => null);
     return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.stopSmsListen,
+      AndroidChannelMethod.stopSmsListen.name,
     );
   }
 
@@ -148,7 +128,7 @@ class AndroidChannelService extends GetxService {
   Future<bool> showOnRecentTasks(bool show) {
     if (!Platform.isAndroid) return Future.value(false);
     return androidChannel.invokeMethod<bool?>(
-      AndroidChannelMethod.showOnRecentTasks,
+      AndroidChannelMethod.showOnRecentTasks.name,
       {
         "show": show,
       },
@@ -159,7 +139,7 @@ class AndroidChannelService extends GetxService {
   Future<String?> getImageUriRealPath(String uri) {
     if (!Platform.isAndroid) return Future.value(null);
     return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.getImageUriRealPath,
+      AndroidChannelMethod.getImageUriRealPath.name,
       {
         "uri": uri,
       },
@@ -170,7 +150,7 @@ class AndroidChannelService extends GetxService {
   Future<String?> getLatestImagePath() {
     if (!Platform.isAndroid) return Future.value(null);
     return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.getLatestImagePath,
+      AndroidChannelMethod.getLatestImagePath.name,
       {},
     );
   }

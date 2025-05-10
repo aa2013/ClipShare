@@ -156,7 +156,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   ///重新加载列表
   Future<void> refreshData() {
-    return dbService.historyDao.getHistoriesTop20(appConfig.userId).then((lst) {
+    return dbService.historyDao.getHistoriesTop100(appConfig.userId).then((lst) {
       _tempList.assignAll(ClipData.fromList(lst));
       debounceUpdate();
     });
@@ -255,7 +255,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       appConfig.innerCopy = false;
       return;
     }
-    Log.debug(tag, "${DateTime.now().toString()},${last?.content}, $content");
     //和上次复制的内容相同
     if (last?.type == type.value && last?.content == content) {
       return;

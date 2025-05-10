@@ -1,24 +1,12 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:get/get.dart';
-
-class MultiWindowMethod {
-  MultiWindowMethod._private();
-
-  static const getHistories = "getHistories";
-  static const getAllDevices = "getAllDevices";
-  static const getAllTagNames = "getAllTagNames";
-  static const copy = "copy";
-  static const notify = "notify";
-  static const getCompatibleOnlineDevices = "getCompatibleOnlineDevices";
-  static const syncFiles = "syncFiles";
-  static const storeWindowPos = "storeWindowPos";
-}
 
 class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
@@ -28,7 +16,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future(() => "[]");
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.getHistories,
+      MultiWindowMethod.getHistories.name,
       jsonEncode({
         "fromId": fromId,
         "filter": filter,
@@ -41,7 +29,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future(() => "[]");
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.getAllDevices,
+      MultiWindowMethod.getAllDevices.name,
       "{}",
     );
   }
@@ -51,7 +39,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future(() => "[]");
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.getAllTagNames,
+      MultiWindowMethod.getAllTagNames.name,
       "{}",
     );
   }
@@ -61,7 +49,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future(() => false);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.copy,
+      MultiWindowMethod.copy.name,
       jsonEncode({"id": historyId}),
     );
   }
@@ -71,7 +59,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future(() => false);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.notify,
+      MultiWindowMethod.notify.name,
       "{}",
     );
   }
@@ -81,7 +69,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future(() => []);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.getCompatibleOnlineDevices,
+      MultiWindowMethod.getCompatibleOnlineDevices.name,
       "{}",
     );
   }
@@ -95,7 +83,7 @@ class MultiWindowChannelService extends GetxService {
     if (!PlatformExt.isDesktop) return Future.value();
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.syncFiles,
+      MultiWindowMethod.syncFiles.name,
       jsonEncode({
         "devices": devices,
         "files": files,
@@ -107,7 +95,7 @@ class MultiWindowChannelService extends GetxService {
   Future storeWindowPos(int targetWindowId, String type, Offset pos) {
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
-      MultiWindowMethod.storeWindowPos,
+      MultiWindowMethod.storeWindowPos.name,
       jsonEncode({
         "type": type,
         "pos": "${pos.dx}x${pos.dy}",

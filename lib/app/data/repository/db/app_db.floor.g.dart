@@ -394,8 +394,9 @@ class _$HistoryDao extends HistoryDao {
     String startTime,
     String endTime,
     bool onlyNoSync,
+    bool ignoreTop,
   ) async {
-    int offset = 8;
+    int offset = 9;
     final _sqliteVariablesForTags =
         Iterable<String>.generate(tags.length, (i) => '?${i + offset}')
             .join(',');
@@ -412,7 +413,7 @@ class _$HistoryDao extends HistoryDao {
             _sqliteVariablesForTags +
             ')) = 1 OR id IN (       SELECT DISTINCT hisId       FROM HistoryTag       WHERE tagName IN (' +
             _sqliteVariablesForTags +
-            ')     ))     AND (?7 = 1 AND sync = 0 OR ?7 != 1)   ORDER BY top DESC, id DESC   LIMIT 20',
+            ')     ))     AND (?7 = 1 AND sync = 0 OR ?7 != 1)   ORDER BY      CASE WHEN ?8 = 1 THEN 0 ELSE top END DESC,      id DESC   LIMIT 100',
         mapper: (Map<String, Object?> row) => History(
             id: row['id'] as int,
             uid: row['uid'] as int,
@@ -431,6 +432,7 @@ class _$HistoryDao extends HistoryDao {
           startTime,
           endTime,
           onlyNoSync ? 1 : 0,
+          ignoreTop ? 1 : 0,
           ...tags,
           ...devIds
         ]);
@@ -445,9 +447,9 @@ class _$HistoryDao extends HistoryDao {
   }
 
   @override
-  Future<List<History>> getHistoriesTop20(int uid) async {
+  Future<List<History>> getHistoriesTop100(int uid) async {
     return _queryAdapter.queryList(
-        'select * from history where uid = ?1 order by top desc,id desc limit 20',
+        'select * from history where uid = ?1 order by top desc,id desc limit 100',
         mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, size: row['size'] as int),
         arguments: [uid]);
   }
@@ -458,7 +460,7 @@ class _$HistoryDao extends HistoryDao {
     int fromId,
   ) async {
     return _queryAdapter.queryList(
-        'select * from history where uid = ?1 and id < ?2 order by top desc,id desc limit 20',
+        'select * from history where uid = ?1 and id < ?2 order by top desc,id desc limit 100',
         mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, size: row['size'] as int),
         arguments: [uid, fromId]);
   }
@@ -623,7 +625,7 @@ class _$HistoryDao extends HistoryDao {
         Iterable<String>.generate(devIds.length, (i) => '?${i + offset}')
             .join(',');
     return _queryAdapter.queryList(
-        'select * from history        WHERE uid = ?1     AND (?2 = \'\' OR ?3 = \'\' OR date(time) BETWEEN ?2 AND ?3)     AND (?4 <> 1 OR top = 0)     AND (length(null in (' +
+        'select * from history     WHERE uid = ?1     AND (?2 = \'\' OR ?3 = \'\' OR date(time) BETWEEN ?2 AND ?3)     AND (?4 <> 1 OR top = 0)     AND (length(null in (' +
             _sqliteVariablesForTypes +
             ')) = 1 OR type IN (' +
             _sqliteVariablesForTypes +

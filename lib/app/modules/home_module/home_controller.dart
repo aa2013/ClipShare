@@ -219,6 +219,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     //初始化socket
     sktService.init();
     _networkListener = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+      appConfig.currentNetWorkType.value = result;
       Log.debug(tag, "网络变化 -> ${result.name}");
       sktService.disConnectAllConnections();
       if (result != ConnectivityResult.none) {

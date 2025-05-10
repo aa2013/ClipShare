@@ -1,0 +1,18 @@
+enum AndroidChannelMethod {
+  onScreenOpened,
+  onScreenClosed,
+  notifyMediaScan,
+  showHistoryFloatWindow,
+  closeHistoryFloatWindow,
+  lockHistoryFloatLoc,
+  moveToBg,
+  toast,
+  sendNotify,
+  copyFileFromUri,
+  startSmsListen,
+  stopSmsListen,
+  onSmsChanged,
+  showOnRecentTasks,
+  getImageUriRealPath,
+  getLatestImagePath;
+}

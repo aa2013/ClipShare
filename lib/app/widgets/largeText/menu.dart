@@ -1,8 +1,9 @@
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:re_editor/re_editor.dart';
 
-class ContextMenuItemWidget extends PopupMenuItem<void>
-    implements PreferredSizeWidget {
+class ContextMenuItemWidget extends PopupMenuItem<void> implements PreferredSizeWidget {
   ContextMenuItemWidget({
     super.key,
     required String text,
@@ -31,28 +32,29 @@ class ContextMenuControllerImpl implements SelectionToolbarController {
     required ValueNotifier<bool> visibility,
   }) async {
     final selection = controller.selection;
-    showMenu(
-      context: context,
-      position: RelativeRect.fromSize(
-        (anchors.secondaryAnchor ?? anchors.primaryAnchor) &
-            const Size(150, double.infinity),
-        MediaQuery.of(context).size,
-      ),
-      items: [
-        ContextMenuItemWidget(
-          text: '复制',
-          onTap: () {
-            controller.copy();
-          },
-        ),
-        ContextMenuItemWidget(
-          text: '选择所有',
-          onTap: () {
+    final menu = ContextMenu(
+      entries: [
+        if (selection.extentOffset != selection.baseOffset)
+          MenuItem(
+            label: TranslationKey.copyContent.tr,
+            icon: Icons.copy,
+            onSelected: () async {
+              controller.copy();
+            },
+          ),
+        MenuItem(
+          label: TranslationKey.selectAll.tr,
+          icon: Icons.select_all,
+          onSelected: () async {
             controller.selectAll();
           },
         ),
       ],
+      position: (anchors.secondaryAnchor ?? anchors.primaryAnchor) - Offset(0, 70),
+      padding: const EdgeInsets.all(8.0),
+      borderRadius: BorderRadius.circular(8),
     );
+    menu.show(context);
     Future.delayed(const Duration(milliseconds: 100), () {
       controller.selection = selection;
     });

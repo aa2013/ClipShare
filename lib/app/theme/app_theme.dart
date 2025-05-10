@@ -24,6 +24,7 @@ final lightThemeData = ThemeData.light().copyWith(
   dialogBackgroundColor: const Color(0xffdde1e3),
   canvasColor: Colors.white,
 );
+const darkBackgroundColor2 = Color(0xff2e3b42);
 final darkThemeData = ThemeData.dark().copyWith(
   colorScheme: ColorScheme.fromSeed(
     seedColor: Colors.lightBlueAccent,
@@ -35,8 +36,8 @@ final darkThemeData = ThemeData.dark().copyWith(
       ? ThemeData.dark().textTheme.apply(fontFamily: 'Microsoft YaHei')
       : null,
   chipTheme: ChipThemeData(
-    backgroundColor: const Color(0xff2e3b42),
+    backgroundColor: darkBackgroundColor2,
     selectedColor: Colors.blue[800],
   ),
-  dialogBackgroundColor: const Color(0xff2e3b42),
+  dialogBackgroundColor: darkBackgroundColor2,
 );

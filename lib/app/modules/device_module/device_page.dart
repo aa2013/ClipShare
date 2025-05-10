@@ -159,20 +159,18 @@ class DevicePage extends GetView<DeviceController> {
                       ),
                     ),
                   ),
-                  Obx(() {
+                  Expanded(child: Obx(() {
                     if (appConfig.deviceDiscoveryStatus.value == null) {
                       return const SizedBox.shrink();
                     }
                     return Padding(
                       padding: const EdgeInsets.only(right: 15, left: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          LoadingDots(text: Text(appConfig.deviceDiscoveryStatus.value!)),
-                        ],
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: LoadingDots(text: Text(appConfig.deviceDiscoveryStatus.value!)),
                       ),
                     );
-                  }),
+                  }),),
                 ],
               ),
             ),
@@ -180,6 +178,7 @@ class DevicePage extends GetView<DeviceController> {
             Obx(
               () => ConditionWidget(
                 visible: controller.discoverList.isEmpty,
+                replacement: renderGridView(controller.discoverList),
                 child: DeviceCard(
                   dev: null,
                   isPaired: false,
@@ -188,7 +187,6 @@ class DevicePage extends GetView<DeviceController> {
                   minVersion: null,
                   version: null,
                 ),
-                replacement: renderGridView(controller.discoverList),
               ),
             ),
             //查看本机IP
@@ -253,6 +251,7 @@ class DevicePage extends GetView<DeviceController> {
           final listLength = list.length;
           final count = showMore && listLength >= 2 ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
           return MasonryGridView.count(
+            physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: count,
             mainAxisSpacing: 4,
             shrinkWrap: true,
