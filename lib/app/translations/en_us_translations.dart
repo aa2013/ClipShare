@@ -975,6 +975,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Save to album";
       case TranslationKey.openWithOtherApplications:
         return "Open With Other Applications";
+      case TranslationKey.enableAutoSyncOnScreenOpenedTitle:
+        return "Device detected when screen lights up";
+      case TranslationKey.enableAutoSyncOnScreenOpenedDesc:
+        return "When the screen lights up, it will scan the network to discover devices. If the option to disconnect from the network after turning off the screen is enabled, the device may not automatically connect after switching to the network when the screen is turned off";
+      case TranslationKey.deviceDiscoveryStatusViaPaired:
+        return "Connecting paired devices";
     }
   }
 }

@@ -384,6 +384,10 @@ class ConfigService extends GetxService {
 
   ClipboardListeningWay get clipboardListeningWay => _clipboardListeningWay.value ?? ClipboardListeningWay.hiddenApi;
 
+  //屏幕亮起时发现设备
+  final _enableAutoSyncOnScreenOpened = true.obs;
+
+  bool get enableAutoSyncOnScreenOpened => _enableAutoSyncOnScreenOpened.value;
   //endregion
 
   //endregion
@@ -444,6 +448,7 @@ class ConfigService extends GetxService {
     var clipboardListeningWay = await cfg.getConfig("clipboardListeningWay", userId);
     var fileStoreDir = Directory(fileStorePath ?? await defaultFileStorePath);
     var closeOnSameHotKey = await cfg.getConfig("closeOnSameHotKey", userId);
+    var enableAutoSyncOnScreenOpened = await cfg.getConfig("enableAutoSyncOnScreenOpened", userId);
     //endregion
 
     //region 设置配置值
@@ -505,6 +510,7 @@ class ConfigService extends GetxService {
       print(err);
     }
     _closeOnSameHotKey.value = closeOnSameHotKey?.toBool() ?? false;
+    _enableAutoSyncOnScreenOpened.value = enableAutoSyncOnScreenOpened?.toBool() ?? true;
     //endregion
 
     Get.changeThemeMode(this.appTheme);
@@ -867,6 +873,11 @@ class ConfigService extends GetxService {
   Future<void> setCloseOnSameHotKey(bool closeOnSameHotKey) async {
     await _addOrUpdateDbConfig("closeOnSameHotKey", closeOnSameHotKey.toString());
     _closeOnSameHotKey.value = closeOnSameHotKey;
+  }
+
+  Future<void> setEnableAutoSyncOnScreenOpened(bool enable) async {
+    await _addOrUpdateDbConfig("enableAutoSyncOnScreenOpened", enable.toString());
+    _enableAutoSyncOnScreenOpened.value = enable;
   }
 
 //endregion

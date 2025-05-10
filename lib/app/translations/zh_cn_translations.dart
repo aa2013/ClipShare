@@ -975,6 +975,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return "保存至相册";
       case TranslationKey.openWithOtherApplications:
         return "使用其它应用打开";
+      case TranslationKey.enableAutoSyncOnScreenOpenedTitle:
+        return "屏幕亮起时发现设备";
+      case TranslationKey.enableAutoSyncOnScreenOpenedDesc:
+        return "当屏幕亮起将会扫描网络以发现设备，若启用了熄屏后断开网络连接选项，当熄屏时切换网络后可能不会自动连接设备";
+      case TranslationKey.deviceDiscoveryStatusViaPaired:
+        return "连接已配对设备";
     }
   }
 }

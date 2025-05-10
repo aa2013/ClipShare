@@ -410,7 +410,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           self.send(connData);
           if (startDiscovery) {
             Future.delayed(const Duration(seconds: 1), () async {
-              final list = await _forwardDiscover();
+              final list = await _forwardDiscovering();
               //发现中转设备
               TaskRunner<void>(
                 initialTasks: list,
@@ -815,7 +815,10 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   TaskRunner? _taskRunner;
 
   ///发现设备
-  void startDiscoveryDevices([bool restart = false]) async {
+  void startDiscoveryDevices({
+    bool restart = false,
+    bool scan = true,
+  }) async {
     if (_discovering) {
       Log.debug(tag, "正在发现设备");
       return;
@@ -836,49 +839,68 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       tasks = []; //测试屏蔽发现用
     } else {
       //先发现自添加设备
-      tasks.addAll(await _customDiscover());
-      //广播发现
-      tasks.addAll(_multicastDiscover());
+      tasks.addAll(await _pairedDiscovering());
     }
-    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
     //尝试连接中转服务器
     if (_forwardClient == null) {
       await connectForwardServer();
     }
     //并行处理
-    _taskRunner = TaskRunner<void>(
+    TaskRunner<void>(
       initialTasks: tasks,
-      onFinish: () async {
-        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
-        if (appConfig.onlyForwardMode) {
-          tasks = []; //测试屏蔽发现用
+      onFinish: () {
+        if (scan) {
+          //广播发现
+          tasks.addAll(_multicastDiscovering());
         } else {
-          //发现子网设备
-          tasks = await _subNetDiscover();
+          tasks = [];
         }
+        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
         _taskRunner = TaskRunner<void>(
           initialTasks: tasks,
           onFinish: () async {
-            appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
-            //发现中转设备
-            tasks = await _forwardDiscover();
+            appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
+            if (appConfig.onlyForwardMode) {
+              tasks = []; //测试屏蔽发现用
+            } else {
+              if (scan) {
+                //发现子网设备
+                tasks = await _subNetDiscovering();
+              } else {
+                tasks = [];
+              }
+            }
             _taskRunner = TaskRunner<void>(
               initialTasks: tasks,
               onFinish: () async {
-                appConfig.deviceDiscoveryStatus.value = null;
-                _taskRunner = null;
-                _discovering = false;
-                for (var listener in _discoverListeners) {
-                  listener.onDiscoverFinished();
+                appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
+                if (scan) {
+                  //发现中转设备
+                  tasks = await _forwardDiscovering();
+                } else {
+                  tasks = [];
                 }
+                _taskRunner = TaskRunner<void>(
+                  initialTasks: tasks,
+                  onFinish: () async {
+                    appConfig.deviceDiscoveryStatus.value = null;
+                    _taskRunner = null;
+                    _discovering = false;
+                    for (var listener in _discoverListeners) {
+                      listener.onDiscoverFinished();
+                    }
+                  },
+                  concurrency: 50,
+                );
               },
               concurrency: 50,
             );
           },
-          concurrency: 50,
+          concurrency: 1,
         );
       },
-      concurrency: 1,
+      concurrency: 50,
     );
   }
 
@@ -900,11 +922,11 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   void restartDiscoveryDevices() async {
     Log.debug(tag, "重新开始发现设备");
     await stopDiscoveryDevices(true);
-    startDiscoveryDevices(true);
+    startDiscoveryDevices(restart: true);
   }
 
   ///组播发现设备
-  List<Future<void> Function()> _multicastDiscover() {
+  List<Future<void> Function()> _multicastDiscovering() {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     for (var ms in const [100, 500, 2000, 5000]) {
       f() {
@@ -921,7 +943,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   ///发现子网设备
-  Future<List<Future<void> Function()>> _subNetDiscover() async {
+  Future<List<Future<void> Function()>> _subNetDiscovering() async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     var interfaces = await NetworkInterface.list();
     var expendAddress = interfaces.map((networkInterface) => networkInterface.addresses).expand((ip) => ip);
@@ -938,7 +960,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   ///发现已配对设备
-  Future<List<Future<void> Function()>> _customDiscover() async {
+  Future<List<Future<void> Function()>> _pairedDiscovering() async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     var lst = await dbService.deviceDao.getAllDevices(appConfig.userId);
     var devices = lst.where((dev) => dev.address != null).toList();
@@ -980,7 +1002,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   ///中转连接
-  Future<List<Future<void> Function()>> _forwardDiscover() async {
+  Future<List<Future<void> Function()>> _forwardDiscovering() async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     if (_forwardClient == null) return tasks;
     var lst = await dbService.deviceDao.getAllDevices(appConfig.userId);
@@ -1349,7 +1371,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     if (_forwardClient == null) {
       connectForwardServer();
     }
-    startDiscoveryDevices();
+    startDiscoveryDevices(scan: appConfig.enableAutoSyncOnScreenOpened);
     startHeartbeatTest();
     Log.debug(tag, "屏幕打开");
     // autoCloseConnTimer

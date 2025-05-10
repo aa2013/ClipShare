@@ -479,7 +479,10 @@ enum TranslationKey {
   closeOnSameHotKeyTitle,
   closeOnSameHotKeyDesc,
   openWithOtherApplications,
-  saveToAlbum;
+  saveToAlbum,
+  enableAutoSyncOnScreenOpenedTitle,
+  enableAutoSyncOnScreenOpenedDesc,
+  deviceDiscoveryStatusViaPaired;
 
   String get tr => name.tr;
 
