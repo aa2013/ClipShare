@@ -124,9 +124,9 @@ class SyncFilePage extends GetView<SyncFileController> {
                                     ),
                                     child: Text(
                                       "${controller.selected.length} / ${controller.recHistories.length}",
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 20,
-                                        color: Colors.black45,
+                                        color: appConfig.currentIsDarkMode ? Colors.white : Colors.black45,
                                       ),
                                     ),
                                   ),

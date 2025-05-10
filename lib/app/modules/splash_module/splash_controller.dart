@@ -113,7 +113,7 @@ class SplashController extends GetxController {
     initChannel();
     initShareHandler();
     initLanguage();
-    Get.changeThemeMode(appConfig.appTheme);
+    appConfig.changeThemeMode(appConfig.appTheme);
   }
 
   void initLanguage() {

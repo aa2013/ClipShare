@@ -87,6 +87,7 @@ class _PreviewPageState extends State<PreviewPage> {
         setState(() {});
       });
     }
+    appConfig?.setSystemUIOverlayDarkStyle();
   }
 
   Future<void> _loadPreImage() async {
@@ -176,15 +177,16 @@ class _PreviewPageState extends State<PreviewPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 5),
-            IconButton(
-              hoverColor: Colors.white12,
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.close,
-                color: Colors.white,
+            if (!(appConfig?.isSmallScreen ?? true)) const SizedBox(width: 5),
+            if (!(appConfig?.isSmallScreen ?? true))
+              IconButton(
+                hoverColor: Colors.white12,
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                ),
               ),
-            ),
             const SizedBox(width: 5),
           ],
         ),
@@ -469,11 +471,6 @@ class _PreviewPageState extends State<PreviewPage> {
   @override
   void dispose() {
     super.dispose();
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle.light.copyWith(
-        systemNavigationBarColor: const Color.fromRGBO(245, 245, 245, 1),
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
+    appConfig?.setSystemUIOverlayAutoStyle();
   }
 }

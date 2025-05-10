@@ -386,7 +386,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.lightBlue.withOpacity(0.2),
+                      color: Colors.lightBlue.withOpacity(0.4),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     margin: const EdgeInsets.only(right: 10),
@@ -395,9 +395,9 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: Text(
                           "${_selectedItems.length} / ${widget.list.length}",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 20,
-                            color: Colors.black45,
+                            color: appConfig.currentIsDarkMode ? Colors.white : Colors.black45,
                           ),
                         ),
                       ),

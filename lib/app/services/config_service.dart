@@ -97,6 +97,14 @@ class ConfigService extends GetxService {
 
   //region 应用内配置
 
+  //当前是否是深色模式
+  bool get currentIsDarkMode {
+    if (appTheme == ThemeMode.system) {
+      return Get.isDarkMode;
+    }
+    return appTheme == ThemeMode.dark;
+  }
+
   //当前网络环境
   final currentNetWorkType = ConnectivityResult.none.obs;
 
@@ -388,6 +396,7 @@ class ConfigService extends GetxService {
   final _enableAutoSyncOnScreenOpened = true.obs;
 
   bool get enableAutoSyncOnScreenOpened => _enableAutoSyncOnScreenOpened.value;
+
   //endregion
 
   //endregion
@@ -512,8 +521,7 @@ class ConfigService extends GetxService {
     _closeOnSameHotKey.value = closeOnSameHotKey?.toBool() ?? false;
     _enableAutoSyncOnScreenOpened.value = enableAutoSyncOnScreenOpened?.toBool() ?? true;
     //endregion
-
-    Get.changeThemeMode(this.appTheme);
+    changeThemeMode(this.appTheme);
   }
 
   ///初始化路径信息
@@ -830,14 +838,19 @@ class ConfigService extends GetxService {
     _appTheme.value = appTheme.name;
     var theme = appTheme == ThemeMode.dark ? darkThemeData : lightThemeData;
     if (appTheme == ThemeMode.system) {
-      print("Get.isPlatformDarkMode ${Get.isPlatformDarkMode}");
       theme = Get.isPlatformDarkMode ? darkThemeData : lightThemeData;
     }
+    final isDarkTheme = theme == darkThemeData;
     ThemeSwitcher.of(context).changeTheme(
       theme: theme,
       isReversed: false,
       onAnimationFinish: onAnimationFinish,
     );
+    if (isDarkTheme) {
+      setSystemUIOverlayDarkStyle();
+    } else {
+      setSystemUIOverlayLightStyle();
+    }
   }
 
   Future<void> setIgnoreUpdateVersion(String versionCode) async {
@@ -884,6 +897,46 @@ class ConfigService extends GetxService {
 
   //region 其他方法
 
+  ///将底部导航栏设置为深色
+  void setSystemUIOverlayDarkStyle() {
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle.dark.copyWith(
+          systemNavigationBarColor: Colors.black,
+          systemNavigationBarIconBrightness: Brightness.light,
+        ),
+      );
+    });
+  }
+
+  ///将底部导航栏设置为浅色
+  void setSystemUIOverlayLightStyle() {
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle.light.copyWith(
+          systemNavigationBarColor: lightBackgroundColor,
+          systemNavigationBarIconBrightness: Brightness.dark,
+        ),
+      );
+    });
+  }
+
+  ///根据当前主题设置底部导航栏样式
+  void setSystemUIOverlayAutoStyle() {
+    if (currentIsDarkMode) {
+      setSystemUIOverlayDarkStyle();
+    } else {
+      setSystemUIOverlayLightStyle();
+    }
+  }
+
+  ///修改主题模式
+  void changeThemeMode(ThemeMode theme) {
+    Get.changeThemeMode(theme);
+    setSystemUIOverlayAutoStyle();
+  }
+
+  ///更新语言选项
   void updateLanguage() {
     if (language == "auto") {
       Get.updateLocale(Get.deviceLocale ?? Constants.defaultLocale);
