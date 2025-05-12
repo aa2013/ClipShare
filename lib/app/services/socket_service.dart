@@ -360,6 +360,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       return;
     }
     if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
+      if(_autoConnForwardServer){
+        Log.debug(tag, "中转连接取消重连(无网络)");
+      }
       _autoConnForwardServer = false;
       return;
     }
@@ -382,6 +385,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           _stopJudgeForwardClientAlive();
           Log.debug(tag, "forwardClient done");
           if (_autoConnForwardServer) {
+            Log.debug(tag, "尝试重连中转");
             Future.delayed(
               const Duration(milliseconds: 1000),
               () => connectForwardServer(true),
@@ -424,6 +428,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     } catch (e) {
       Log.debug(tag, "connect forward server failed $e");
       if (_autoConnForwardServer) {
+        Log.debug(tag, "尝试重连中转");
         Future.delayed(
           const Duration(milliseconds: 1000),
           () => connectForwardServer(true),
@@ -1230,6 +1235,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
   ///断开所有连接
   void disConnectAllConnections([bool onlyNotPaired = false]) {
+    Log.debug(tag, "开始断开所有连接");
     disConnectForwardServer();
     var skts = _devSockets.values.toList();
     for (var devSkt in skts) {
