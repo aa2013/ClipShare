@@ -77,7 +77,7 @@ class SplashController extends GetxController {
 
   Future<void> init() async {
     //加载配置后初始化窗体配置
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux) {
       await initWindowsManager();
       await initHotKey();
       initMultiWindowEvent();

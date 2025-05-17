@@ -137,7 +137,7 @@ class SettingsPage extends GetView<SettingsController> {
                                       appConfig.setClipboardListeningWay(ClipboardListeningWay.hiddenApi);
                                       await clipboardManager.stopListening();
                                       clipboardManager.startListening(
-                                        startEnv: appConfig.workingMode,
+                                        env: appConfig.workingMode,
                                         way: ClipboardListeningWay.hiddenApi,
                                         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
                                       );
@@ -166,7 +166,7 @@ class SettingsPage extends GetView<SettingsController> {
                                       appConfig.setClipboardListeningWay(ClipboardListeningWay.logs);
                                       await clipboardManager.stopListening();
                                       clipboardManager.startListening(
-                                        startEnv: appConfig.workingMode,
+                                        env: appConfig.workingMode,
                                         way: ClipboardListeningWay.logs,
                                         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
                                       );
@@ -211,7 +211,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setLaunchAtStartup(!enabled);
                           },
                         ),
-                        show: (v) => Platform.isWindows,
+                        show: (v) => Platform.isWindows || Platform.isLinux,
                       ),
                       SettingCard(
                         title: Text(TranslationKey.commonSettingsRunMinimize.tr),
@@ -440,7 +440,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setRememberWindowSize(checked);
                           },
                         ),
-                        show: (v) => PlatformExt.isDesktop,
+                        show: (v) => Platform.isWindows || Platform.isMacOS,
                       ),
                       //历史记录弹窗记住上次位置
                       SettingCard(
@@ -1026,7 +1026,7 @@ class SettingsPage extends GetView<SettingsController> {
                               },
                             );
                           },
-                          show: (v) => Platform.isWindows,
+                          show: (v) => true,
                         ),
                         SettingCard(
                           title: Text(
@@ -1082,7 +1082,7 @@ class SettingsPage extends GetView<SettingsController> {
                               },
                             );
                           },
-                          show: (v) => Platform.isWindows,
+                          show: (v) => true,
                         ),
                       ],
                     )),

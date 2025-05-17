@@ -45,6 +45,7 @@ class WindowService extends GetxService with WindowListener {
     if (!appConfig.rememberWindowSize) {
       return;
     }
+    print("111");
     windowManager.getSize().then((size) {
       appConfig.setWindowSize(size);
     });

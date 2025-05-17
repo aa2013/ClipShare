@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
@@ -35,6 +36,7 @@ import 'app/services/db_service.dart';
 import 'app/theme/app_theme.dart';
 
 Future<void> main(List<String> args) async {
+  var isMultiWindow = args.firstOrNull == 'multi_window';
   WidgetsFlutterBinding.ensureInitialized();
   if (PlatformExt.isDesktop) {
     // Must add this line.
@@ -43,7 +45,6 @@ Future<void> main(List<String> args) async {
   await Get.putAsync(() => WindowControlService().initWindows());
   Widget home = SplashPage();
   String title = Constants.appName;
-  var isMultiWindow = args.firstOrNull == 'multi_window';
   DesktopMultiWindowArgs? multiWindowArgs;
   if (isMultiWindow) {
     //子窗口
@@ -53,7 +54,10 @@ Future<void> main(List<String> args) async {
       case MultiWindowTag.history:
         final wcs = Get.find<WindowControlService>();
         wcs.setAlwaysOnTop(true);
-        wcs.setResizable(false);
+        //linux会导致窗口变成初始大小
+        if (Platform.isWindows) {
+          wcs.setResizable(false);
+        }
         wcs.setMinimizable(false);
         wcs.setMaximizable(false);
         home = HistoryWindow(
@@ -65,7 +69,10 @@ Future<void> main(List<String> args) async {
       case MultiWindowTag.devices:
         final wcs = Get.find<WindowControlService>();
         wcs.setAlwaysOnTop(true);
-        wcs.setResizable(false);
+        //linux会导致窗口变成初始大小
+        if (Platform.isWindows) {
+          wcs.setResizable(false);
+        }
         wcs.setMinimizable(false);
         wcs.setMaximizable(false);
         home = FileSenderWindow(
@@ -82,10 +89,10 @@ Future<void> main(List<String> args) async {
   } else {
     await initMainServices();
     runZonedGuarded(
-          () {
+      () {
         runMain(home, title, null);
       },
-          (err, stack) {
+      (err, stack) {
         Log.error("globalError", "$err $stack");
       },
     );
@@ -103,7 +110,7 @@ Future<void> initMainServices() async {
   await Get.putAsync(() => DeviceService().init(), permanent: true);
   await Get.putAsync(() => TagService().init(), permanent: true);
   await Get.putAsync(
-        () => SyncingFileProgressService().init(),
+    () => SyncingFileProgressService().init(),
     permanent: true,
   );
   if (PlatformExt.isDesktop) {
@@ -181,8 +188,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
 class MyCustomScrollBehavior extends MaterialScrollBehavior {
   // Override behavior methods like buildOverscrollIndicator and buildScrollbar
   @override
-  Set<PointerDeviceKind> get dragDevices =>
-      {
+  Set<PointerDeviceKind> get dragDevices => {
         PointerDeviceKind.touch,
         PointerDeviceKind.mouse,
       };

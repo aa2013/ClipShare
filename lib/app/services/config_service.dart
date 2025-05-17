@@ -572,35 +572,36 @@ class ConfigService extends GetxService {
     version = AppVersion(pkgInfo.version, pkgInfo.buildNumber);
     //读取设备id信息
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    var guid = "";
+    var name = "";
+    var type = "";
     if (Platform.isAndroid) {
       var androidInfo = await deviceInfo.androidInfo;
-      var guid = CryptoUtil.toMD5(androidInfo.id);
-      var name = androidInfo.model;
-      var type = "Android";
-      devInfo = DevInfo(guid, name, type);
-      device = Device(
-        guid: guid,
-        devName: "本机",
-        uid: 0,
-        type: type,
-      );
+      guid = CryptoUtil.toMD5(androidInfo.id);
+      name = androidInfo.model;
+      type = "Android";
       var release = androidInfo.version.release;
       osVersion = RegExp(r"\d+").firstMatch(release)!.group(0)!.toDouble();
     } else if (Platform.isWindows) {
       var windowsInfo = await deviceInfo.windowsInfo;
-      var guid = CryptoUtil.toMD5(windowsInfo.deviceId);
-      var name = windowsInfo.computerName;
-      var type = "Windows";
-      devInfo = DevInfo(guid, name, type);
-      device = Device(
-        guid: guid,
-        devName: "本机",
-        uid: userId,
-        type: type,
-      );
+      guid = CryptoUtil.toMD5(windowsInfo.deviceId);
+      name = windowsInfo.computerName;
+      type = "Windows";
+    } else if (Platform.isLinux) {
+      var linuxInfo = await deviceInfo.linuxInfo;
+      guid = CryptoUtil.toMD5(linuxInfo.id);
+      name = linuxInfo.name;
+      type = "Linux";
     } else {
       throw Exception("Not Support Platform");
     }
+    devInfo = DevInfo(guid, name, type);
+    device = Device(
+      guid: guid,
+      devName: "本机",
+      uid: 0,
+      type: type,
+    );
   }
 
 //endregion
@@ -899,7 +900,7 @@ class ConfigService extends GetxService {
 
   ///将底部导航栏设置为深色
   void setSystemUIOverlayDarkStyle() {
-    WidgetsBinding.instance.addPostFrameCallback((_){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle.dark.copyWith(
           systemNavigationBarColor: Colors.black,
@@ -911,7 +912,7 @@ class ConfigService extends GetxService {
 
   ///将底部导航栏设置为浅色
   void setSystemUIOverlayLightStyle() {
-    WidgetsBinding.instance.addPostFrameCallback((_){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle.light.copyWith(
           systemNavigationBarColor: lightBackgroundColor,
