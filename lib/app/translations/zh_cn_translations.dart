@@ -893,6 +893,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "保存成功！";
       case TranslationKey.saveFailed:
         return "保存失败！";
+      case TranslationKey.updateSuccess:
+        return "更新成功！";
+      case TranslationKey.updateFailed:
+        return "更新失败！";
       case TranslationKey.pleaseSaveFilterConfig:
         return "请先保存过滤器配置";
       case TranslationKey.monday:
@@ -989,6 +993,16 @@ class ZhCNTranslation extends AbstractTranslations {
         return "导出中...";
       case TranslationKey.export2ExcelFileName:
         return "历史记录导出.xlsx";
+      case TranslationKey.modifyContent:
+        return "修改内容";
+      case TranslationKey.confirmModifyContent:
+        return "确认更新内容？";
+      case TranslationKey.unsavedTips:
+        return "内容未提交，是否确认退出该页面？";
+      case TranslationKey.modifyContentConfirmExitAndNoSave:
+        return "退出且不保存";
+      case TranslationKey.done:
+        return "完成";
     }
   }
 }

@@ -8,13 +8,18 @@ import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:clipshare/app/modules/history_module/history_controller.dart';
+import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
+import 'package:clipshare/app/modules/views/modify_history_content_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/clip_content_view.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
@@ -49,6 +54,8 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
   final appConfig = Get.find<ConfigService>();
   final sktService = Get.find<SocketService>();
   final dbService = Get.find<DbService>();
+  final historyController = Get.find<HistoryController>();
+  final searchController = Get.find<search_module.SearchController>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final clipChannelService = Get.find<ClipChannelService>();
 
@@ -76,8 +83,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                   padding: const EdgeInsets.only(left: 7, top: 7, bottom: 7),
                   child: Text(
                     TranslationKey.clipboard.tr,
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.w700),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ),
                 Row(
@@ -94,9 +100,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                     ),
                     IconButton(
                       icon: Icon(
-                        widget.clip.data.top
-                            ? Icons.push_pin
-                            : Icons.push_pin_outlined,
+                        widget.clip.data.top ? Icons.push_pin : Icons.push_pin_outlined,
                         color: Colors.blueGrey,
                       ),
                       onPressed: () {
@@ -117,9 +121,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                           dbService.opRecordDao.addAndNotify(opRecord);
                         });
                       },
-                      tooltip: widget.clip.data.top
-                          ? TranslationKey.cancelTopUp.tr
-                          : TranslationKey.topUp.tr,
+                      tooltip: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
                     ),
                     Visibility(
                       visible: !widget.clip.isFile,
@@ -140,8 +142,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                           Future.delayed(const Duration(milliseconds: 500), () {
                             setState(() {});
                           });
-                          var type =
-                              ClipboardContentType.parse(widget.clip.data.type);
+                          var type = ClipboardContentType.parse(widget.clip.data.type);
                           clipboardManager.copy(type, widget.clip.data.content);
                         },
                         tooltip: TranslationKey.copyContent.tr,
@@ -173,9 +174,41 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                             );
                           });
                         },
-                        tooltip: widget.clip.data.top
-                            ? TranslationKey.resyncRecord.tr
-                            : TranslationKey.syncRecord.tr,
+                        tooltip: widget.clip.data.top ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
+                      ),
+                    ),
+                    Visibility(
+                      visible: widget.clip.isText,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.edit_note,
+                          color: Colors.blueGrey,
+                        ),
+                        onPressed: () {
+                          Get.off(
+                            () => ModifyHistoryContentPage(
+                              data: widget.clip.data,
+                              onDone: (bool didUpdate, String? newData) {
+                                if (newData == null || !didUpdate) return;
+                                widget.clip.data.content = newData;
+                                widget.clip.data.updateTime = DateTime.now().toString();
+                                dbService.historyDao.updateHistory(widget.clip.data).then((res) {
+                                  final success = res == 1;
+                                  if (success) {
+                                    Global.showSnackBarSuc(text: TranslationKey.updateSuccess.tr, context: Get.context!);
+                                    whereFunc(History item) => item.id == widget.clip.data.id;
+                                    callbackFunc(History item) => item.content = newData;
+                                    historyController.updateData(whereFunc, callbackFunc);
+                                    searchController.updateData(whereFunc, callbackFunc);
+                                  } else {
+                                    Global.showSnackBarSuc(text: TranslationKey.updateFailed.tr, context: Get.context!);
+                                  }
+                                });
+                              },
+                            ),
+                          );
+                        },
+                        tooltip: TranslationKey.modifyContent.tr,
                       ),
                     ),
                     Visibility(

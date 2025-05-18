@@ -442,6 +442,8 @@ enum TranslationKey {
   pleaseSaveFilterConfig,
   saveSuccess,
   saveFailed,
+  updateSuccess,
+  updateFailed,
   filter,
   monday,
   tuesday,
@@ -486,7 +488,12 @@ enum TranslationKey {
   saveToAlbum,
   enableAutoSyncOnScreenOpenedTitle,
   enableAutoSyncOnScreenOpenedDesc,
-  deviceDiscoveryStatusViaPaired;
+  deviceDiscoveryStatusViaPaired,
+  modifyContent,
+  unsavedTips,
+  modifyContentConfirmExitAndNoSave,
+  confirmModifyContent,
+  done;
 
   String get tr => name.tr;
 

@@ -7,6 +7,8 @@ import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/modules/views/clipboard_detail_drawer.dart';
 import 'package:clipshare/app/modules/views/preview_page.dart';
 import 'package:clipshare/app/modules/views/tag_edit_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
@@ -76,7 +78,6 @@ class ClipDataCardState extends State<ClipDataCard> {
   Widget build(BuildContext context) {
     _selected = widget.selected;
     final content = Card(
-      // color: Colors.white,
       elevation: 0,
       child: InkWell(
         mouseCursor: SystemMouseCursors.basic,
@@ -264,6 +265,19 @@ class ClipDataCardState extends State<ClipDataCard> {
           icon: Icons.tag,
           onSelected: () {
             TagEditPage.goto(widget.clip.data.id);
+          },
+        ),
+        MenuItem(
+          label: TranslationKey.modifyContent.tr,
+          icon: Icons.edit_note,
+          onSelected: () {
+            final homCtl = Get.find<HomeController>();
+            homCtl.openEndDrawer(
+              drawer: ClipboardDetailDrawer(
+                clipData: widget.clip,
+                modifyMode: true,
+              ),
+            );
           },
         ),
         MenuItem(

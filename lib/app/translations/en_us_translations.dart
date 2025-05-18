@@ -193,7 +193,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Please save filter config";
       case TranslationKey.saveFailed:
         return "Save failed";
-
+      case TranslationKey.updateSuccess:
+        return "Successfully update!";
+      case TranslationKey.updateFailed:
+        return "Update failed！";
       case TranslationKey.searchPageMoreFilterByDateJudgeText:
         return "Date";
       case TranslationKey.confirm:
@@ -989,6 +992,16 @@ class EnUSTranslation extends AbstractTranslations {
         return "Export with current filters?\n\n(Excludes file sync records)";
       case TranslationKey.exporting:
         return "Exporting...";
+      case TranslationKey.modifyContent:
+        return "Modify Content";
+      case TranslationKey.confirmModifyContent:
+        return "Confirm the update content?";
+      case TranslationKey.modifyContentConfirmExitAndNoSave:
+        return "Don't save";
+      case TranslationKey.unsavedTips:
+        return "You have unsaved changes. Leave this page?";
+      case TranslationKey.done:
+        return "Done";
     }
   }
 }

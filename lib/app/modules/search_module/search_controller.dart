@@ -94,7 +94,28 @@ class SearchController extends GetxController with WidgetsBindingObserver {
 
   //region 页面方法
 
-  //根据外部参数刷新数据
+  void updateData(
+    bool Function(History history) where,
+    void Function(History history) cb, [
+    bool shouldRefresh = false,
+  ]) {
+    var matchData = false;
+    for (var i = 0; i < list.length; i++) {
+      final item = list[i];
+      //查找符合条件的数据
+      if (where(item.data)) {
+        //更新数据
+        cb(item.data);
+        matchData = true;
+      }
+    }
+    if (matchData) {
+      final tmpList = List.of(list);
+      list.value = tmpList;
+    }
+  }
+
+  ///根据外部参数刷新数据
   void loadFromExternalParams(String? devId, String? tagName) {
     //初始化搜索参数
     if (devId != null) {
@@ -201,9 +222,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         _add2ExcelSheet(sheet, item, rowNum++, dateTimeStyle);
       }
     }
-    Log.debug(tag,"add2ExcelSheet finished");
+    Log.debug(tag, "add2ExcelSheet finished");
     final List<int> bytes = workbook.saveAsStream();
-    Log.debug(tag,"workbook bytes: ${bytes.length}(${bytes.length.sizeStr})");
+    Log.debug(tag, "workbook bytes: ${bytes.length}(${bytes.length.sizeStr})");
     await FileUtil.exportFileBytes(
       TranslationKey.export2Excel.tr,
       TranslationKey.export2ExcelFileName.tr,
