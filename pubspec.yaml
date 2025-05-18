@@ -140,6 +140,8 @@ dependencies:
   easy_cron : ^0.9.2
   # 文件拖拽
   desktop_drop: ^0.5.0
+  # excel导出
+  syncfusion_flutter_xlsio: ^29.2.4
 
 dev_dependencies:
   flutter_test:

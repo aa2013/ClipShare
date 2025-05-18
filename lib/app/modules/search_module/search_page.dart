@@ -1,7 +1,8 @@
 import 'package:clipshare/app/data/enums/history_content_type.dart';
-import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_list_view.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';
@@ -35,6 +36,49 @@ class SearchPage extends GetView<search_module.SearchController> {
             onChanged: (filter) {
               controller.filter.value = filter;
               controller.refreshData();
+            },
+            onExportBtnClicked: () {
+              Global.showTipsDialog(
+                context: context,
+                text: TranslationKey.historyOutputTips.tr,
+                onOk: () {
+                  Global.showLoadingDialog(
+                    context: context,
+                    loadingText: TranslationKey.exporting.tr,
+                    showCancel: true,
+                    onCancel: () {
+                      controller.cancelExporting = true;
+                      controller.exporting = false;
+                    },
+                  );
+                  controller.export2Excel().then((result) {
+                    //关闭进度动画
+                    Get.back();
+                    //手动取消
+                    if (!controller.exporting) {
+                      return;
+                    }
+                    if (result) {
+                      Global.showSnackBarSuc(context: context, text: TranslationKey.outputSuccess.tr);
+                    } else {
+                      Global.showSnackBarWarn(context: context, text: TranslationKey.outputFailed.tr);
+                    }
+                  }).catchError((err, stack) {
+                    //关闭进度动画
+                    Get.back();
+                    Global.showTipsDialog(
+                      context: context,
+                      title: TranslationKey.outputFailed.tr,
+                      text: "$err. $stack",
+                    );
+                  }).whenComplete(() {
+                    //更新状态
+                    controller.exporting = false;
+                    controller.cancelExporting = false;
+                  });
+                },
+                showCancel: true,
+              );
             },
           ),
         ),

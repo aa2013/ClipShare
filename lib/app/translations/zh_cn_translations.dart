@@ -981,6 +981,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return "当屏幕亮起将会扫描网络以发现设备，若启用了熄屏后断开网络连接选项，当熄屏时切换网络后可能不会自动连接设备";
       case TranslationKey.deviceDiscoveryStatusViaPaired:
         return "连接已配对设备";
+      case TranslationKey.export2Excel:
+        return "导出为Excel";
+      case TranslationKey.historyOutputTips:
+        return "确认按当前筛选条件导出吗？\n不会导出文件同步记录";
+      case TranslationKey.exporting:
+        return "导出中...";
+      case TranslationKey.export2ExcelFileName:
+        return "历史记录导出.xlsx";
     }
   }
 }

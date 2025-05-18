@@ -265,5 +265,15 @@ class LicensesController extends GetxController {
       "license": "GPL-3.0",
       "url": "https://pub.dev/packages/animated_snack_bar",
     },
+    {
+      "name": "sqlite3_flutter_libs",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/sqlite3_flutter_libs",
+    },
+    {
+      "name": "syncfusion_flutter_xlsio",
+      "license": "unknown",
+      "url": "https://pub.dev/packages/syncfusion_flutter_xlsio",
+    },
   ]..sort((a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
 }
