@@ -140,12 +140,12 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       _initAndroid();
     }
     _initSearchPageShow();
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux) {
       clipboardManager.startListening();
     } else {
       clipboardManager
           .startListening(
-        startEnv: appConfig.workingMode,
+        env: appConfig.workingMode,
         way: appConfig.clipboardListeningWay,
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       )

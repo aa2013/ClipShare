@@ -36,7 +36,9 @@ dependencies:
   # 数据库框架
   floor: ^1.4.2
   sqflite: any
-  # 托盘插件
+  # sqlite3
+  sqlite3_flutter_libs: ^0.5.32
+  # 托盘插件 linux上需要安裝：sudo apt-get install libayatana-appindicator3-dev
   tray_manager: ^0.2.0
   # 窗体管理
   window_manager: ^0.4.3
@@ -72,7 +74,7 @@ dependencies:
   # 代码高亮
   flutter_highlighting: ^0.9.0+11.8.0
   # 多窗口
-  desktop_multi_window: ^0.2.0
+  desktop_multi_window: ^0.2.1
   # 解析 windows 快捷方式实际地址
   resolve_windows_shortcut: ^2.0.0
   # 快捷键
@@ -138,13 +140,7 @@ dependencies:
   easy_cron : ^0.9.2
   # 文件拖拽
   desktop_drop: ^0.5.0
-#    git:
-#      url: https://github.com/aa2013/screenshot_detector.git
-#      ref: main
-#  screen_shot_listen_plugin:
-#    git:
-#      url: https://github.com/fish89757/screen_shot_listen_plugin
-#      ref: master
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

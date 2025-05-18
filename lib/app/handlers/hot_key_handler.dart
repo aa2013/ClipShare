@@ -5,6 +5,7 @@ import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/desktop_multi_window_args.dart';
+import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -41,6 +42,7 @@ class AppHotKeyHandler {
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
+        final multiWindowService = Get.find<MultiWindowChannelService>();
         clipboardManager.storeCurrentWindowHwnd();
         final appConfig = Get.find<ConfigService>();
         var ids = List.empty();
@@ -50,12 +52,35 @@ class AppHotKeyHandler {
           ids = List.empty();
         }
         //只允许弹窗一次
-        if (ids.contains(appConfig.historyWindow?.windowId)) {
-          await appConfig.historyWindow?.close();
+        var windowId = appConfig.onlineDevicesWindow?.windowId;
+        if (ids.contains(windowId)) {
+          // await appConfig.historyWindow?.close();
+          await multiWindowService.closeWindow(windowId!, MultiWindowTag.history);
           //偏好为使用相同快捷键关闭，直接结束
-          if(appConfig.closeOnSameHotKey){
+          if (appConfig.closeOnSameHotKey) {
             return;
           }
+        }
+        var posCfg = appConfig.historyDialogPosition;
+        var radio = windowManager.getDevicePixelRatio();
+        var offset = await screenRetriever.getCursorScreenPoint();
+        //存储的位置配置不为空则按配置显示
+        if (posCfg != Offset.zero && appConfig.recordHistoryDialogPosition) {
+          offset = posCfg;
+        }
+        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
+        Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
+        final [width, height] = [370.0 * radio, 630.0 * radio];
+        final maxX = max(screenSize.width - width, 0.0);
+        final maxY = max(screenSize.height - height, 0.0);
+        //限制在屏幕范围内
+        final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
+        if (appConfig.historyWindow != null) {
+          await multiWindowService.showWindowFromHide(
+            appConfig.historyWindow!.windowId,
+            position: [x,y],
+          );
+          return;
         }
         //createWindow里面的参数必须传
         final title = TranslationKey.historyRecord.tr;
@@ -67,20 +92,6 @@ class AppHotKeyHandler {
           ).toString(),
         );
         appConfig.historyWindow = window;
-        var posCfg = appConfig.historyDialogPosition;
-        var radio = windowManager.getDevicePixelRatio();
-        var offset = await screenRetriever.getCursorScreenPoint();
-        //存储的位置配置不为空则按配置显示
-        if (posCfg != Offset.zero && appConfig.recordHistoryDialogPosition) {
-          offset = posCfg;
-        }
-        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
-        Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
-        final [width, height] = [370.0 * radio, 630.0  * radio];
-        final maxX = max(screenSize.width - width, 0.0);
-        final maxY = max(screenSize.height - height, 0.0);
-        //限制在屏幕范围内
-        final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
         window
           ..setFrame(Offset(x, y) & Size(width, height))
           ..setTitle(title)
@@ -98,6 +109,7 @@ class AppHotKeyHandler {
       key,
       keyDownHandler: (hotKey) async {
         final appConfig = Get.find<ConfigService>();
+        final multiWindowService = Get.find<MultiWindowChannelService>();
         ///快捷键事件
         final res = await clipboardManager.getSelectedFiles();
         final files = res.list;
@@ -118,16 +130,35 @@ class AppHotKeyHandler {
         } catch (e) {
           ids = List.empty();
         }
+        var windowId = appConfig.onlineDevicesWindow?.windowId;
         //只允许弹窗一次
-        if (ids.contains(appConfig.onlineDevicesWindow?.windowId)) {
-          await appConfig.onlineDevicesWindow?.close();
+        if (ids.contains(windowId)) {
+          // await appConfig.onlineDevicesWindow?.close();
+          multiWindowService.closeWindow(windowId!, MultiWindowTag.devices);
           //偏好为使用相同快捷键关闭，直接结束
-          if(appConfig.closeOnSameHotKey){
+          if (appConfig.closeOnSameHotKey) {
             return;
           }
         }
-        final title = TranslationKey.syncFile.tr;
+        var radio = windowManager.getDevicePixelRatio();
+        var offset = await screenRetriever.getCursorScreenPoint();
+        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
+        Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
+        final [width, height] = [355.0 * radio, 630.0 * radio];
+        final maxX = max(screenSize.width - width, 0.0);
+        final maxY = max(screenSize.height - height, 0.0);
+        //限制在屏幕范围内
+        final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
+        if (appConfig.onlineDevicesWindow != null) {
+          await multiWindowService.showWindowFromHide(
+            appConfig.onlineDevicesWindow!.windowId,
+            position: [x,y],
+          );
+          return;
+        }
+
         //createWindow里面的参数必须传
+        final title = TranslationKey.syncFile.tr;
         final window = await DesktopMultiWindow.createWindow(
           DesktopMultiWindowArgs.init(
             title: title,
@@ -139,15 +170,6 @@ class AppHotKeyHandler {
           ).toString(),
         );
         appConfig.onlineDevicesWindow = window;
-        var radio = windowManager.getDevicePixelRatio();
-        var offset = await screenRetriever.getCursorScreenPoint();
-        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
-        Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
-        final [width, height] = [355.0 * radio, 630.0 * radio];
-        final maxX = max(screenSize.width - width, 0.0);
-        final maxY = max(screenSize.height - height, 0.0);
-        //限制在屏幕范围内
-        final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
         window
           ..setFrame(Offset(x, y) & Size(width, height))
           ..setTitle(title)

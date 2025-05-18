@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/widgets/clip_data_card_compact.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
@@ -42,13 +45,14 @@ class CompactClipData {
   const CompactClipData({required this.devName, required this.data});
 }
 
-class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
+class _HistoryWindowState extends State<HistoryWindow> with WindowListener, WindowControlClickedListener {
   final ScrollController _scrollController = ScrollController();
   List<CompactClipData> _list = [];
   bool _loadNewData = false;
   bool _loading = true;
   bool _showBackToTopButton = false;
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
+  final windowControlService = Get.find<WindowControlService>();
   Timer? _timer;
   var searchFilter = SearchFilter();
   List<Device> allDevices = [];
@@ -60,6 +64,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
     windowManager.addListener(this);
     // 监听滚动事件
     _scrollController.addListener(_scrollListener);
+    windowControlService.addListener(this);
     //处理弹窗事件
     DesktopMultiWindow.setMethodHandler((
       MethodCall call,
@@ -71,6 +76,22 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
         //更新通知
         case MultiWindowMethod.notify:
           refresh();
+          break;
+        //关闭（隐藏）窗口
+        case MultiWindowMethod.showWindowFromHide:
+          var position = args["position"];
+          if (position != null) {
+            var [x, y] = (position as List<dynamic>).cast<double>();
+            windowManager.setPosition(Offset(x, y));
+          }
+          widget.windowController.show();
+          windowManager.setAlwaysOnTop(true);
+          searchFilter = SearchFilter();
+          refresh();
+          break;
+        //关闭（隐藏）窗口
+        case MultiWindowMethod.closeWindow:
+          widget.windowController.hide();
           break;
         default:
       }
@@ -89,6 +110,11 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
         multiWindowChannelService.storeWindowPos(0, "history", pos);
       });
     });
+  }
+
+  @override
+  void onCloseBtnClicked() {
+    multiWindowChannelService.closeWindow(0, MultiWindowTag.history);
   }
 
   void _scrollListener() {
@@ -162,6 +188,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
   void dispose() {
     super.dispose();
     windowManager.removeListener(this);
+    windowControlService.removeListener(this);
     _scrollController.removeListener(_scrollListener);
   }
 
@@ -240,7 +267,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener {
                   );
                 });
               },
-              child: const Icon(Icons.arrow_upward), // 可以选择其他图标
+              child: const Icon(Icons.arrow_upward),
             )
           : null,
     );
