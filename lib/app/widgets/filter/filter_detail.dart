@@ -30,6 +30,10 @@ class FilterDetail extends StatefulWidget {
 
 class _FilterDetailState extends State<FilterDetail> {
   SearchFilter get filter => widget.filter;
+  final bold18Style = const TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.bold,
+  );
 
   void onDateRangeClick() async {
     //显示时间选择器
@@ -54,48 +58,72 @@ class _FilterDetailState extends State<FilterDetail> {
     var end = filter.endDate == "" ? TranslationKey.endDate.tr : filter.endDate;
     var now = DateTime.now();
     var nowDayStr = now.toString().substring(0, 10);
+
     final confirmBtn = TextButton(
       onPressed: () {
         widget.onConfirm(filter.copy());
       },
       child: Text(TranslationKey.confirm.tr),
     );
-    final list = ListView(
+    final header = Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.filter_alt_rounded,
+                color: Colors.blueGrey,
+                size: 20,
+              ),
+              const SizedBox(
+                width: 5,
+              ),
+              Text(
+                TranslationKey.filter.tr,
+                style: bold18Style.copyWith(color: Colors.blueGrey),
+              )
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            Row(
+              children: [
+                TextButton.icon(
+                  icon: Icon(
+                    filter.onlyNoSync ? Icons.check_box : Icons.check_box_outline_blank_sharp,
+                  ),
+                  label: Text(
+                    TranslationKey.onlyNotSync.tr,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      filter.onlyNoSync = !filter.onlyNoSync;
+                    });
+                  },
+                ),
+              ],
+            ),
+            Visibility(
+              visible: !widget.isBigScreen,
+              child: confirmBtn,
+            ),
+          ],
+        ),
+      ],
+    );
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         //筛选日期 label
         Container(
           margin: const EdgeInsets.only(bottom: 5),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  TranslationKey.filterByDate.tr,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  TextButton.icon(
-                    icon: Icon(
-                      filter.onlyNoSync ? Icons.check_box : Icons.check_box_outline_blank_sharp,
-                    ),
-                    label: Text(
-                      TranslationKey.onlyNotSync.tr,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        filter.onlyNoSync = !filter.onlyNoSync;
-                      });
-                    },
-                  ),
-                ],
-              ),
-              Visibility(
-                visible: !widget.isBigScreen,
-                child: confirmBtn,
+              Text(
+                TranslationKey.filterByDate.tr,
+                style: bold18Style,
               ),
             ],
           ),
@@ -124,7 +152,7 @@ class _FilterDetailState extends State<FilterDetail> {
                       setState(() {});
                     }
                   : () {
-                      filter.startDate = TranslationKey.startDate.tr;
+                      filter.startDate = "";
                       setState(() {});
                     },
             ),
@@ -153,7 +181,7 @@ class _FilterDetailState extends State<FilterDetail> {
                       setState(() {});
                     }
                   : () {
-                      filter.endDate = TranslationKey.endDate.tr;
+                      filter.endDate = "";
                       setState(() {});
                     },
             ),
@@ -166,10 +194,7 @@ class _FilterDetailState extends State<FilterDetail> {
               margin: const EdgeInsets.only(top: 10, bottom: 10),
               child: Text(
                 TranslationKey.filterByDevice.tr,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: bold18Style,
               ),
             ),
             const SizedBox(
@@ -227,10 +252,7 @@ class _FilterDetailState extends State<FilterDetail> {
               margin: const EdgeInsets.only(top: 10, bottom: 10),
               child: Text(
                 TranslationKey.filterByTag.tr,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: bold18Style,
               ),
             ),
             const SizedBox(width: 5),
@@ -260,7 +282,7 @@ class _FilterDetailState extends State<FilterDetail> {
         Wrap(
           direction: Axis.horizontal,
           children: [
-            for (var tag in widget.allTagNames)
+            for (var tag in [...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames])
               Container(
                 margin: const EdgeInsets.only(right: 5, bottom: 5),
                 child: RoundedChip(
@@ -278,10 +300,6 @@ class _FilterDetailState extends State<FilterDetail> {
               ),
           ],
         ),
-        Visibility(
-          visible: widget.isBigScreen,
-          child: confirmBtn,
-        ),
       ],
     );
     const padding = EdgeInsets.all(8);
@@ -292,7 +310,12 @@ class _FilterDetailState extends State<FilterDetail> {
         padding: padding,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxHeight: 300),
-          child: list,
+          child: Column(
+            children: [
+              header,
+              Expanded(child: SingleChildScrollView(child: body)),
+            ],
+          ),
         ),
       ),
       child: Card(
@@ -301,7 +324,13 @@ class _FilterDetailState extends State<FilterDetail> {
         margin: padding,
         child: Container(
           padding: padding,
-          child: list,
+          child: Column(
+            children: [
+              header,
+              Expanded(child: SingleChildScrollView(child: body)),
+              SizedBox(width: 150, child: confirmBtn),
+            ],
+          ),
         ),
       ),
     );
