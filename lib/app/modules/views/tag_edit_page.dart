@@ -174,6 +174,7 @@ class _TagEditPageState extends State<TagEditPage> {
                     var tagHold = VHistoryTagHold(widget.hisId, text, true);
                     _tags.add(tagHold);
                     _selected.add(tagHold);
+                    _textController.clear();
                     setState(() {
                       exists = true;
                     });
@@ -185,7 +186,7 @@ class _TagEditPageState extends State<TagEditPage> {
               : const SizedBox.shrink(),
           Column(
             children: [
-              for (var item in _tags)
+              for (var item in _tags.where((item) => _textController.text.isEmpty || item.tagName.toLowerCase().contains(_textController.text.toLowerCase())))
                 Column(
                   children: [
                     InkWell(

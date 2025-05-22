@@ -26,60 +26,62 @@ class SearchPage extends GetView<search_module.SearchController> {
           scrolledUnderElevation: controller.isBigScreen ? 0 : null,
           automaticallyImplyLeading: !controller.isBigScreen,
           backgroundColor: controller.isBigScreen ? Colors.transparent : Theme.of(context).colorScheme.inversePrimary,
-          title: HistoryFilter(
-            allDevices: controller.allDevices,
-            allTagNames: controller.allTagNames,
-            loadSearchCondition: controller.loadSearchCondition,
-            isBigScreen: controller.isBigScreen,
-            showContentTypeFilter: false,
-            filter: controller.filter.value,
-            onChanged: (filter) {
-              controller.filter.value = filter;
-              controller.refreshData();
-            },
-            onExportBtnClicked: () {
-              Global.showTipsDialog(
-                context: context,
-                text: TranslationKey.historyOutputTips.tr,
-                onOk: () {
-                  Global.showLoadingDialog(
-                    context: context,
-                    loadingText: TranslationKey.exporting.tr,
-                    showCancel: true,
-                    onCancel: () {
-                      controller.cancelExporting = true;
-                      controller.exporting = false;
-                    },
-                  );
-                  controller.export2Excel().then((result) {
-                    //关闭进度动画
-                    Get.back();
-                    //手动取消
-                    if (!controller.exporting) {
-                      return;
-                    }
-                    if (result) {
-                      Global.showSnackBarSuc(context: context, text: TranslationKey.outputSuccess.tr);
-                    } else {
-                      Global.showSnackBarWarn(context: context, text: TranslationKey.outputFailed.tr);
-                    }
-                  }).catchError((err, stack) {
-                    //关闭进度动画
-                    Get.back();
-                    Global.showTipsDialog(
+          title: Obx(
+            () => HistoryFilter(
+              allDevices: controller.allDevices,
+              allTagNames: controller.allTagNames,
+              loadSearchCondition: controller.loadSearchCondition,
+              isBigScreen: controller.isBigScreen,
+              showContentTypeFilter: false,
+              filter: controller.filter.value,
+              onChanged: (filter) {
+                controller.filter.value = filter;
+                controller.refreshData();
+              },
+              onExportBtnClicked: () {
+                Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.historyOutputTips.tr,
+                  onOk: () {
+                    Global.showLoadingDialog(
                       context: context,
-                      title: TranslationKey.outputFailed.tr,
-                      text: "$err. $stack",
+                      loadingText: TranslationKey.exporting.tr,
+                      showCancel: true,
+                      onCancel: () {
+                        controller.cancelExporting = true;
+                        controller.exporting = false;
+                      },
                     );
-                  }).whenComplete(() {
-                    //更新状态
-                    controller.exporting = false;
-                    controller.cancelExporting = false;
-                  });
-                },
-                showCancel: true,
-              );
-            },
+                    controller.export2Excel().then((result) {
+                      //关闭进度动画
+                      Get.back();
+                      //手动取消
+                      if (!controller.exporting) {
+                        return;
+                      }
+                      if (result) {
+                        Global.showSnackBarSuc(context: context, text: TranslationKey.outputSuccess.tr);
+                      } else {
+                        Global.showSnackBarWarn(context: context, text: TranslationKey.outputFailed.tr);
+                      }
+                    }).catchError((err, stack) {
+                      //关闭进度动画
+                      Get.back();
+                      Global.showTipsDialog(
+                        context: context,
+                        title: TranslationKey.outputFailed.tr,
+                        text: "$err. $stack",
+                      );
+                    }).whenComplete(() {
+                      //更新状态
+                      controller.exporting = false;
+                      controller.cancelExporting = false;
+                    });
+                  },
+                  showCancel: true,
+                );
+              },
+            ),
           ),
         ),
         body: Padding(

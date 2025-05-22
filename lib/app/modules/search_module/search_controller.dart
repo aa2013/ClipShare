@@ -30,8 +30,10 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   //region 属性
   static const tag = "SearchController";
   final list = List<ClipData>.empty(growable: true).obs;
-  List<Device> allDevices = List.empty();
-  List<String> allTagNames = List.empty();
+  final _allDevices = <Device>[].obs;
+  final _allTagNames = <String>[].obs;
+  List<Device> get allDevices => _allDevices.value;
+  List<String> get allTagNames => _allTagNames.value;
   int? _minId;
   final loading = true.obs;
   var exporting = false;
@@ -152,14 +154,14 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   Future<void> loadSearchCondition() async {
     //加载所有标签名
     await dbService.historyTagDao.getAllTagNames().then((lst) {
-      allTagNames = lst;
+      _allTagNames.value = lst;
     });
     //加载所有设备名
     await dbService.deviceDao.getAllDevices(appConfig.userId).then((lst) {
       var tmpLst = List<Device>.empty(growable: true);
       tmpLst.add(appConfig.device);
       tmpLst.addAll(lst);
-      allDevices = tmpLst;
+      _allDevices.value = tmpLst;
     });
   }
 
