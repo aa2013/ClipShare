@@ -437,8 +437,8 @@ class _PreviewPageState extends State<PreviewPage> {
         MenuItem(
           label: TranslationKey.openFilePos.tr,
           icon: Icons.folder_outlined,
-          onSelected: () async {
-            await OpenFile.open(File(imgPath).parent.path);
+          onSelected: () {
+            File(imgPath).openPath();
           },
         ),
         if (PlatformExt.isDesktop)

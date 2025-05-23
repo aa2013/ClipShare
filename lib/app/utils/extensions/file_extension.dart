@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:crypto/crypto.dart' as crypto;
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
 
 extension DirectoryExt on Directory {
@@ -122,5 +123,13 @@ extension FileExt on File {
 
     // 判断文件是否属于以上三类之一
     return imageExtensions.contains(extName) || audioExtensions.contains(extName) || videoExtensions.contains(extName);
+  }
+
+  Future<void> openPath() async {
+    if(Platform.isWindows){
+      await Process.run("explorer /select,\"$path\"", []);
+    }else{
+      await OpenFile.open(parent.path);
+    }
   }
 }

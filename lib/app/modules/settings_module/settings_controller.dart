@@ -41,6 +41,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasIgnoreBattery = false.obs;
   final hasSmsReadPerm = true.obs;
   final forwardServerConnected = false.obs;
+  final updater = 0.obs;
 
   //region environment status widgets
   final Rx<Widget> envStatusIcon = Rx<Widget>(const Loading(width: 32));

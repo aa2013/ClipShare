@@ -236,9 +236,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                         ),
                         onPressed: () async {
                           final file = File(widget.clip.data.content);
-                          await OpenFile.open(
-                            file.parent.normalizePath,
-                          );
+                          file.openPath();
                         },
                         tooltip: TranslationKey.openFileFolder.tr,
                       ),

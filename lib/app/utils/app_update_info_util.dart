@@ -6,14 +6,19 @@ import 'package:clipshare/app/data/models/update_log.dart';
 import 'package:clipshare/app/exceptions/fetch_update_logs_exception.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:open_file_plus/open_file_plus.dart';
 
 class AppUpdateInfoUtil {
   //上次检测app更新的时间
   static DateTime? _lastCheckUpdateTime;
+  static const tag = "AppUpdateInfoUtil";
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
     final resp = await http.get(Uri.parse(Constants.appUpdateInfoUtl));
@@ -30,9 +35,8 @@ class AppUpdateInfoUtil {
     for (var log in logs) {
       log['url'] = body["downloads"][system.upperFirst()]["url"];
       final ul = UpdateLog.fromJson(log);
-      if ((ul.platform.toLowerCase() != system &&
-              ul.platform.toLowerCase() != 'all') ||
-          ul.version <= currentVersion) {
+      final platform = ul.platform.toLowerCase();
+      if ((platform != system && platform != 'all') || ul.version <= currentVersion) {
         continue;
       }
       updateLogs.add(ul);
@@ -61,8 +65,13 @@ class AppUpdateInfoUtil {
       return false;
     }
     String content = "";
+    String latestVersion = "";
     for (var log in logs) {
-      content += "🏷️${log.version}\n";
+      final version = log.version;
+      if (latestVersion == "") {
+        latestVersion = "ClipShare-${version.name}_${version.code}";
+      }
+      content += "🏷️${version}\n";
       content += "${log.desc}\n\n";
     }
     Global.showTipsDialog(
@@ -78,8 +87,35 @@ class AppUpdateInfoUtil {
         appConfig.setIgnoreUpdateVersion(latestVersionCode);
       },
       okText: TranslationKey.newVersionDialogOkText.tr,
-      onOk: () {
-        logs.first.downloadUrl.askOpenUrl();
+      onOk: () async {
+        try {
+          final fileName = Uri.parse(logs.first.downloadUrl).path.replaceAll("\\", "/").split("/").last;
+          var downPath = "";
+
+          if (Platform.isAndroid) {
+            downPath = "${Constants.androidDownloadPath}/$fileName";
+          } else {
+            downPath = "${await Constants.documentsPath}/update/$fileName";
+          }
+          await File(downPath).parent.create();
+          Global.showDownloadingDialog(
+            context: Get.context!,
+            url: logs.first.downloadUrl,
+            filePath: downPath,
+            content: Text(fileName),
+            onFinished: (success) {
+              if (success) {
+                OpenFile.open(downPath);
+              }
+            },
+            onError: (error, stack) {
+              Global.showTipsDialog(context: Get.context!, text: "error $error,$stack");
+            },
+          );
+        } catch (err, stack) {
+          Log.error(tag, "error: $err. $stack");
+          logs.first.downloadUrl.askOpenUrl();
+        }
       },
     );
     return true;

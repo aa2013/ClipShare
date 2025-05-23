@@ -1002,6 +1002,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "You have unsaved changes. Leave this page?";
       case TranslationKey.done:
         return "Done";
+      case TranslationKey.download:
+        return "Download";
+      case TranslationKey.downloading:
+        return "Downloading";
     }
   }
 }

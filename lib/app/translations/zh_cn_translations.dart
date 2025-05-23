@@ -1003,6 +1003,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "退出且不保存";
       case TranslationKey.done:
         return "完成";
+      case TranslationKey.download:
+        return "下载";
+      case TranslationKey.downloading:
+        return "下载中";
     }
   }
 }

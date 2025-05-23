@@ -493,7 +493,9 @@ enum TranslationKey {
   unsavedTips,
   modifyContentConfirmExitAndNoSave,
   confirmModifyContent,
-  done;
+  done,
+  download,
+  downloading;
 
   String get tr => name.tr;
 

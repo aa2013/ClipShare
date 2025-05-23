@@ -255,9 +255,7 @@ class ClipDataCardState extends State<ClipDataCard> {
             icon: Icons.folder,
             onSelected: () async {
               final file = File(widget.clip.data.content);
-              await OpenFile.open(
-                file.parent.normalizePath,
-              );
+              file.openPath();
             },
           ),
         MenuItem(

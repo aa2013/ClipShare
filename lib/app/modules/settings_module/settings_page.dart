@@ -513,6 +513,7 @@ class SettingsPage extends GetView<SettingsController> {
                     ],
                   ),
                 ),
+
                 ///endregion
 
                 ///region 发现
@@ -1383,7 +1384,16 @@ class SettingsPage extends GetView<SettingsController> {
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.logSettingsEnableDesc.trParams({"size": FileUtil.getDirectorySize(appConfig.logsDirPath).sizeStr})),
+                        description: Obx(() {
+                          final tmp = controller.updater;
+                          final emptyStr = tmp.value != 0 ? "" : "";
+                          final size = FileUtil.getDirectorySize(appConfig.logsDirPath);
+                          return Text(
+                            "${TranslationKey.logSettingsEnableDesc.trParams({
+                                  "size": size.sizeStr,
+                                })}$emptyStr",
+                          );
+                        }),
                         value: appConfig.enableLogsRecord,
                         onTap: () {
                           if (appConfig.isSmallScreen) {
@@ -1422,6 +1432,7 @@ class SettingsPage extends GetView<SettingsController> {
                                             FileUtil.deleteDirectoryFiles(
                                               appConfig.logsDirPath,
                                             );
+                                            controller.updater.value++;
                                             Navigator.pop(context);
                                           },
                                           child: Text(TranslationKey.dialogConfirmText.tr),
