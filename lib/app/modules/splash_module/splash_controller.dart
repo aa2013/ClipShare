@@ -89,6 +89,7 @@ class SplashController extends GetxController {
         appPath: Platform.resolvedExecutable,
       );
       var isLaunchAtStartup = await launchAtStartup.isEnabled();
+      final isSystem = isLaunchAtStartup;
       if (Platform.isWindows) {
         final startupPaths = <String>[
           Constants.windowsStartUpPath,
@@ -106,8 +107,8 @@ class SplashController extends GetxController {
           isLaunchAtStartup = isLaunchAtStartup || hasShortcut;
         }
       }
-
-      appConfig.setLaunchAtStartup(isLaunchAtStartup);
+      Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
+      appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
     }
     // 初始化channel
     initChannel();

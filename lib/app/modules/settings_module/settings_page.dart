@@ -202,13 +202,12 @@ class SettingsPage extends GetView<SettingsController> {
                               appName: appName,
                               appPath: appPath,
                             );
-                            var enabled = await launchAtStartup.isEnabled();
-                            if (!enabled) {
+                            if (checked) {
                               await launchAtStartup.enable();
                             } else {
                               await launchAtStartup.disable();
                             }
-                            appConfig.setLaunchAtStartup(!enabled);
+                            appConfig.setLaunchAtStartup(checked, true);
                           },
                         ),
                         show: (v) => Platform.isWindows || Platform.isLinux,

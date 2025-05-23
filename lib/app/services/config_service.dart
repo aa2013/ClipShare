@@ -20,6 +20,7 @@ import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -35,7 +36,7 @@ import 'package:window_manager/window_manager.dart';
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
-
+  final tag = "ConfigService";
   //region 属性
 
   //region 常量
@@ -627,9 +628,10 @@ class ConfigService extends GetxService {
     _startMini.value = startMini;
   }
 
-  Future<void> setLaunchAtStartup(bool launchAtStartup) async {
+  Future<void> setLaunchAtStartup(bool launchAtStartup, [bool deleteWindowsShortcut = false]) async {
     _launchAtStartup.value = launchAtStartup;
-    if (launchAtStartup) return;
+    Log.debug(tag, "launchAtStartup $launchAtStartup, deleteWindowsShortcut $deleteWindowsShortcut");
+    if (launchAtStartup && !deleteWindowsShortcut) return;
     if (Platform.isWindows) {
       final startupPaths = <String>[
         Constants.windowsStartUpPath,
