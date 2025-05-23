@@ -1,6 +1,9 @@
+import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
@@ -107,6 +110,12 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
                                         setState(() {
                                           modifyMode = false;
                                         });
+                                        var opRecord = OperationRecord.fromSimple(
+                                          Module.history,
+                                          OpMethod.update,
+                                          widget.clipData.data.id.toString(),
+                                        );
+                                        dbService.opRecordDao.addAndNotify(opRecord);
                                         Global.showSnackBarSuc(text: TranslationKey.updateSuccess.tr, context: context);
                                         whereFunc(History item) => item.id == widget.clipData.data.id;
                                         callbackFunc(History item) => item.content = editController.text;

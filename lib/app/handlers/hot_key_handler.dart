@@ -78,7 +78,7 @@ class AppHotKeyHandler {
         if (appConfig.historyWindow != null) {
           await multiWindowService.showWindowFromHide(
             appConfig.historyWindow!.windowId,
-            position: [x,y],
+            position: [x, y],
           );
           return;
         }
@@ -110,6 +110,7 @@ class AppHotKeyHandler {
       keyDownHandler: (hotKey) async {
         final appConfig = Get.find<ConfigService>();
         final multiWindowService = Get.find<MultiWindowChannelService>();
+
         ///快捷键事件
         final res = await clipboardManager.getSelectedFiles();
         final files = res.list;
@@ -149,10 +150,14 @@ class AppHotKeyHandler {
         final maxY = max(screenSize.height - height, 0.0);
         //限制在屏幕范围内
         final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
+        Map<String, dynamic> args = {
+          "files": filePaths,
+        };
         if (appConfig.onlineDevicesWindow != null) {
           await multiWindowService.showWindowFromHide(
             appConfig.onlineDevicesWindow!.windowId,
-            position: [x,y],
+            position: [x, y],
+            args: args,
           );
           return;
         }
@@ -164,9 +169,7 @@ class AppHotKeyHandler {
             title: title,
             tag: MultiWindowTag.devices,
             themeMode: appConfig.appTheme,
-            otherArgs: {
-              "files": filePaths,
-            },
+            otherArgs: args,
           ).toString(),
         );
         appConfig.onlineDevicesWindow = window;

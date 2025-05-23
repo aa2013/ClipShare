@@ -6,7 +6,6 @@ import 'package:clipshare/app/data/models/update_log.dart';
 import 'package:clipshare/app/exceptions/fetch_update_logs_exception.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -89,10 +88,11 @@ class AppUpdateInfoUtil {
       okText: TranslationKey.newVersionDialogOkText.tr,
       onOk: () async {
         try {
-          final fileName = Uri.parse(logs.first.downloadUrl).path.replaceAll("\\", "/").split("/").last;
+          var fileName = Uri.parse(logs.first.downloadUrl).path.replaceAll("\\", "/").split("/").last;
           var downPath = "";
 
           if (Platform.isAndroid) {
+            fileName = "${latestVersion}_$fileName";
             downPath = "${Constants.androidDownloadPath}/$fileName";
           } else {
             downPath = "${await Constants.documentsPath}/update/$fileName";

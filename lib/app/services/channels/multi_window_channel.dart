@@ -13,14 +13,18 @@ class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
 
   ///显示弹窗（从隐藏状态恢复）
-  Future showWindowFromHide(int targetWindowId, {List<double>? position}) {
+  Future showWindowFromHide(int targetWindowId, {List<double>? position, Map<String, dynamic>? args}) {
     if (!PlatformExt.isDesktop) return Future.value();
+    Map<String, dynamic> data = {
+      "position": position,
+    };
+    if (args != null) {
+      data["args"] = args;
+    }
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
       MultiWindowMethod.showWindowFromHide.name,
-      jsonEncode({
-        "position": position,
-      }),
+      jsonEncode(data),
     );
   }
 

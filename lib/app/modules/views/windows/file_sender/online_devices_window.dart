@@ -47,7 +47,7 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     if (widget.args.containsKey("files")) {
       var files = widget.args["files"] as List<dynamic>;
-      pendingFileService.addDropItems(files.cast<String>().map((path) => DropItemFile(path)).toList());
+      addPendingFiles(files.cast<String>());
     }
     //处理弹窗事件
     DesktopMultiWindow.setMethodHandler((
@@ -70,6 +70,9 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
           }
           widget.windowController.show();
           windowManager.setAlwaysOnTop(true);
+          var otherArgs = args["args"] as Map<String, dynamic>;
+          var files = otherArgs["files"] as List<dynamic>;
+          addPendingFiles(files.cast<String>());
           refresh();
           break;
         //关闭（隐藏）窗口
@@ -83,6 +86,10 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
       return Future.value();
     });
     refresh();
+  }
+
+  void addPendingFiles(List<String> filePaths) {
+    pendingFileService.addDropItems(filePaths.map((path) => DropItemFile(path)).toList());
   }
 
   @override

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,7 +46,10 @@ class DebugPage extends GetView<DebugController> {
         ),
         TextButton(
           onPressed: () async {
-            OpenFile.open("pubspec.lock");
+            final path = "${Constants.androidDownloadPath}/app-arm64-v8a-release.apk";
+            File(path).openPath();
+            final result = await OpenFile.open(path);
+            print("result ${result.type.name}.${result.message}");
             // Process.run("explorer /select,\"pubspec.lock\"", []);
           },
           child: Text("open file path"),

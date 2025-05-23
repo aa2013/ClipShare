@@ -195,6 +195,12 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                                 dbService.historyDao.updateHistory(widget.clip.data).then((res) {
                                   final success = res == 1;
                                   if (success) {
+                                    var opRecord = OperationRecord.fromSimple(
+                                      Module.history,
+                                      OpMethod.update,
+                                      widget.clip.data.id.toString(),
+                                    );
+                                    dbService.opRecordDao.addAndNotify(opRecord);
                                     Global.showSnackBarSuc(text: TranslationKey.updateSuccess.tr, context: Get.context!);
                                     whereFunc(History item) => item.id == widget.clip.data.id;
                                     callbackFunc(History item) => item.content = newData;
