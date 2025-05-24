@@ -92,14 +92,14 @@ class CleanDataPage extends GetView<CleanDataController> {
                     height: 4,
                   ),
                   Obx(
-                        () => Visibility(
+                    () => Visibility(
                       replacement: Row(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [controller.emptyFilter],
                       ),
                       visible: controller.allTags.isNotEmpty,
                       child: Obx(
-                            () => Wrap(
+                        () => Wrap(
                           direction: Axis.horizontal,
                           children: [
                             for (var tag in controller.allTags)
@@ -150,26 +150,25 @@ class CleanDataPage extends GetView<CleanDataController> {
                     height: 4,
                   ),
                   Obx(
-                        () => Wrap(
+                    () => Wrap(
                       direction: Axis.horizontal,
-                      children: [
-                        for (var dev in controller.allDevices)
-                          Container(
-                            margin: const EdgeInsets.only(right: 5, bottom: 5),
-                            child: RoundedChip(
-                              onPressed: () {
-                                final selected = controller.selectedDevs.contains(dev.guid);
-                                if (selected) {
-                                  controller.selectedDevs.remove(dev.guid);
-                                } else {
-                                  controller.selectedDevs.add(dev.guid);
-                                }
-                              },
-                              selected: controller.selectedDevs.contains(dev.guid),
-                              label: Text(dev.name),
-                            ),
+                      children: controller.allDevices.map((dev) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 5, bottom: 5),
+                          child: RoundedChip(
+                            onPressed: () {
+                              final selected = controller.selectedDevs.contains(dev.guid);
+                              if (selected) {
+                                controller.selectedDevs.remove(dev.guid);
+                              } else {
+                                controller.selectedDevs.add(dev.guid);
+                              }
+                            },
+                            selected: controller.selectedDevs.contains(dev.guid),
+                            label: Text(dev.name),
                           ),
-                      ],
+                        );
+                      }).toList(),
                     ),
                   ),
 
@@ -199,10 +198,10 @@ class CleanDataPage extends GetView<CleanDataController> {
                   Row(
                     children: [
                       Obx(
-                            () => RoundedChip(
+                        () => RoundedChip(
                           onPressed: controller.showDateRangeSelectDialog,
                           label: Obx(
-                                () => Text(
+                            () => Text(
                               controller.startDate.value ?? TranslationKey.startDate.tr,
                               style: const TextStyle(
                                 color: Colors.blueGrey,
@@ -211,7 +210,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                           ),
                           avatar: const Icon(Icons.date_range_outlined),
                           deleteIcon: Obx(
-                                () => Visibility(
+                            () => Visibility(
                               visible: controller.startDate.value == null,
                               replacement: const Icon(
                                 Icons.close,
@@ -241,10 +240,10 @@ class CleanDataPage extends GetView<CleanDataController> {
                         child: const Text("-"),
                       ),
                       Obx(
-                            () => RoundedChip(
+                        () => RoundedChip(
                           onPressed: controller.showDateRangeSelectDialog,
                           label: Obx(
-                                () => Text(
+                            () => Text(
                               controller.endDate.value ?? TranslationKey.endDate.tr,
                               style: const TextStyle(
                                 color: Colors.blueGrey,
@@ -253,7 +252,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                           ),
                           avatar: const Icon(Icons.date_range_outlined),
                           deleteIcon: Obx(
-                                () => Visibility(
+                            () => Visibility(
                               visible: controller.endDate.value == null,
                               replacement: const Icon(
                                 Icons.close,
@@ -304,7 +303,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                     height: 4,
                   ),
                   Obx(
-                        () => SingleChildScrollView(
+                    () => SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
                         children: [
@@ -350,7 +349,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                         style: const TextStyle(fontSize: 16),
                       ),
                       Obx(
-                            () => Switch(
+                        () => Switch(
                           value: controller.saveTopData.value,
                           onChanged: (checked) {
                             HapticFeedback.mediumImpact();
@@ -368,7 +367,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                         style: const TextStyle(fontSize: 16),
                       ),
                       Obx(
-                            () => Switch(
+                        () => Switch(
                           value: controller.removeFiles.value,
                           onChanged: (checked) {
                             HapticFeedback.mediumImpact();
@@ -408,14 +407,14 @@ class CleanDataPage extends GetView<CleanDataController> {
                         child: TextButton(
                           onPressed: () async {
                             final cnt = await dbService.historyDao.count(
-                              appConfig.userId,
-                              controller.selectedContentTypes.map((item) => item.value).toList(),
-                              controller.selectedTags.toList(),
-                              controller.selectedDevs.toList(),
-                              controller.startDate.value ?? "",
-                              controller.endDate.value ?? "",
-                              controller.saveTopData.value,
-                            ) ??
+                                  appConfig.userId,
+                                  controller.selectedContentTypes.map((item) => item.value).toList(),
+                                  controller.selectedTags.toList(),
+                                  controller.selectedDevs.toList(),
+                                  controller.startDate.value ?? "",
+                                  controller.endDate.value ?? "",
+                                  controller.saveTopData.value,
+                                ) ??
                                 0;
                             if (cnt == 0) {
                               Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.noDataFromFilter.tr);
@@ -543,7 +542,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       Row(
                         children: [
                           Obx(
-                                () => Switch(
+                            () => Switch(
                               value: controller.autoClean.value,
                               onChanged: (checked) {
                                 HapticFeedback.mediumImpact();
@@ -577,7 +576,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ),
                   const SizedBox(height: 6),
                   Obx(
-                        () => CupertinoSegmentedControl(
+                    () => CupertinoSegmentedControl(
                       //子标签
                       children: controller.freqSegmented,
                       //当前选中的索引
@@ -613,7 +612,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 8),
                     child: Obx(
-                          () => Visibility(
+                      () => Visibility(
                         visible: controller.frequency.value == CleanDataFreq.cron,
                         replacement: Row(
                           children: [
@@ -668,7 +667,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                     ),
                   ),
                   Obx(
-                        () => Visibility(
+                    () => Visibility(
                       visible: controller.nextExecTime.value != null,
                       replacement: Container(
                         color: const Color(0xD4FBE7DC),
@@ -731,13 +730,13 @@ class CleanDataPage extends GetView<CleanDataController> {
         ],
       ),
     );
-    if(showAppBar){
+    if (showAppBar) {
       return Scaffold(
         appBar: showAppBar
             ? AppBar(
-          title: Text(TranslationKey.cleanData.tr),
-          backgroundColor: currentTheme.colorScheme.inversePrimary,
-        )
+                title: Text(TranslationKey.cleanData.tr),
+                backgroundColor: currentTheme.colorScheme.inversePrimary,
+              )
             : null,
         body: content,
       );

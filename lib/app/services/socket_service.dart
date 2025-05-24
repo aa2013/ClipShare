@@ -176,6 +176,17 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     ScreenOpenedListener.inst.remove(this);
   }
 
+  ///判断设备是否在线
+  bool isOnline(String devId, bool requiredPaired) {
+    var online = _devSockets.containsKey(devId);
+    var isPaired = false;
+    if (online) {
+      isPaired = _devSockets[devId]!.isPaired;
+    }
+    if (!requiredPaired) return online;
+    return online && isPaired;
+  }
+
   ///监听广播
   Future<void> _startListenMulticast() async {
     //关闭原本的监听
@@ -360,7 +371,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       return;
     }
     if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
-      if(_autoConnForwardServer){
+      if (_autoConnForwardServer) {
         Log.debug(tag, "中转连接取消重连(无网络)");
       }
       _autoConnForwardServer = false;

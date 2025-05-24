@@ -282,7 +282,7 @@ class _FilterDetailState extends State<FilterDetail> {
         Wrap(
           direction: Axis.horizontal,
           children: [
-            for (var tag in [...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames, ...widget.allTagNames])
+            for (var tag in widget.allTagNames)
               Container(
                 margin: const EdgeInsets.only(right: 5, bottom: 5),
                 child: RoundedChip(

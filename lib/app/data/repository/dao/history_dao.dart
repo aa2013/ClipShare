@@ -232,6 +232,11 @@ abstract class HistoryDao {
     bool saveTop,
   );
 
+  ///根据设备id统计数量
+  Future<int> countByDevId(String devId, int uid) {
+    return count(uid, [], [], [devId], "", "", false).then((res) => res ?? 0);
+  }
+
   ///根据过滤器获取历史数据
   @Query("select * from history $dataCleanFilter")
   Future<List<History>> getHistoriesWithFileContent(
