@@ -470,7 +470,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     for (var devId in keys) {
       var skt = _devSockets[devId];
       if (skt == null || !skt.socket.isForwardMode) continue;
-      _onDevDisconnected(devId, false);
+      _onDevDisconnected(devId, autoReconnect: true);
       skt.socket.destroy();
     }
   }
@@ -631,7 +631,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
       ///主动断开连接
       case MsgType.disConnect:
-        _onDevDisconnected(dev.guid, false);
+        _onDevDisconnected(dev.guid, autoReconnect: false);
         client.destroy();
         break;
 
@@ -705,7 +705,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         int code = 100000 + random.nextInt(900000);
         DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
         //发送通知
-        Global.notify(TranslationKey.newParingRequest.tr);
+        Global.notify(content: TranslationKey.newParingRequest.tr);
         if (pairing) {
           Get.back();
         }
@@ -1314,7 +1314,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     if (backSend) {
       sendData(dev, MsgType.disConnect, {});
     }
-    _onDevDisconnected(id, false);
+    _onDevDisconnected(id, autoReconnect: false);
     _devSockets[id]?.socket.destroy();
     return true;
   }
@@ -1423,6 +1423,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         //心跳超时
         Log.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");
         disconnectDevice(ds.dev, true);
+        _showDevDisConnectNotification(ds.dev.name);
       }
     }
   }
@@ -1469,12 +1470,18 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
   //endregion
   ///设备断开连接
-  void _onDevDisconnected(String devId, [bool autoReconnect = true]) {
+  void _onDevDisconnected(
+    String devId, {
+    bool autoReconnect = true,
+  }) {
     if (!_devSockets.containsKey(devId)) {
       return;
     }
     Log.debug(tag, "$devId 断开连接");
     final ds = _devSockets[devId];
+    if (ds != null && ds.isPaired) {
+      _showDevDisConnectNotification(ds.dev.name);
+    }
     //移除socket
     _devSockets.remove(devId);
     if (ds != null && ds.socket.isForwardMode) {
@@ -1497,6 +1504,14 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     if (ds != null && autoReconnect) {
       _attemptReconnect(ds);
     }
+  }
+
+  void _showDevDisConnectNotification(String devName) {
+    Global.notify(
+      content: TranslationKey.devDisconnectNotifyContent.trParams({
+        "devName": devName,
+      }),
+    );
   }
 
   ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）

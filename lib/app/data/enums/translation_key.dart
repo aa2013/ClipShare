@@ -495,7 +495,8 @@ enum TranslationKey {
   confirmModifyContent,
   done,
   download,
-  downloading;
+  downloading,
+  devDisconnectNotifyContent;
 
   String get tr => name.tr;
 

@@ -206,4 +206,10 @@ class Constants {
     "screen cap",
     "screenshots",
   ];
+
+  //包名
+  static const String pkgName = "clipshare.coclyun.top";
+
+  //Windows上使用，与项目中的 windows/packaging.exe/make_config.yaml 保持一致
+  static const String appGuid = "B72665DE-3DB5-B0E9-0EF9-55CCB65D3D62";
 }
