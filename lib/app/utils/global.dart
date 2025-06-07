@@ -162,7 +162,7 @@ class Global {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -176,6 +176,7 @@ class Global {
     bool showCancel = false,
     void Function()? onCancel,
     String? loadingText,
+    LadingProgressController? controller,
   }) {
     showDialog(
       context: context,
@@ -195,6 +196,7 @@ class Global {
                         child: Loading(
                           width: 32,
                           description: loadingText != null ? Text(loadingText) : null,
+                          controller: controller,
                         ),
                       ),
                       const SizedBox(height: 10),

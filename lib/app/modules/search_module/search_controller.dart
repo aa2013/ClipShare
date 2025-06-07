@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -12,9 +13,11 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
@@ -32,7 +35,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   final list = List<ClipData>.empty(growable: true).obs;
   final _allDevices = <Device>[].obs;
   final _allTagNames = <String>[].obs;
+
   List<Device> get allDevices => _allDevices.value;
+
   List<String> get allTagNames => _allTagNames.value;
   int? _minId;
   final loading = true.obs;
@@ -189,18 +194,14 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   //region 导出
 
   ///导出为 excel
-  Future<bool> export2Excel() async {
+  Future<bool> export2Excel(LadingProgressController loadingController) async {
     if (exporting) return false;
     exporting = true;
-    final Workbook workbook = Workbook();
-    final Worksheet sheet = workbook.worksheets[0];
-    final Style dateTimeStyle = workbook.styles.add('CustomDateTimeStyle');
-    dateTimeStyle.numberFormat = 'yyyy-MM-dd HH:mm:ss';
     int lastId = 0;
     //第一行是标题头，内容从第二行开始
     int rowNum = 2;
     bool ignoreTop = false;
-    _addExcelHeader(sheet);
+    var histories = List<History>.empty(growable: true);
     while (true) {
       if (cancelExporting) {
         return false;
@@ -218,12 +219,37 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       if (list.isEmpty) {
         break;
       }
+      histories.addAll(list);
       lastId = list.map((item) => item.id).reduce(min);
-      for (var item in list) {
-        //转换为excel数据
-        _add2ExcelSheet(sheet, item, rowNum++, dateTimeStyle);
+    }
+    final Workbook workbook = Workbook();
+    final Worksheet sheet = workbook.worksheets[0];
+    _addExcelHeader(sheet);
+    final Style dateTimeStyle = workbook.styles.add('CustomDateTimeStyle');
+    dateTimeStyle.numberFormat = 'yyyy-MM-dd HH:mm:ss';
+
+    var lastTime = DateTime.now();
+    loadingController.update(0, histories.length);
+
+    for (var i = 0; i < histories.length; i++) {
+      var item = histories[i];
+      if (cancelExporting) {
+        return false;
+      }
+      //转换为excel数据
+      await _add2ExcelSheet(sheet, item, rowNum++, dateTimeStyle);
+
+      var now = DateTime.now();
+      if (now.difference(lastTime).inMilliseconds.abs() > 10) {
+        loadingController.update(i + 1);
+      }
+      lastTime = now;
+
+      if (ClipData(item).isImage) {
+        await Future.delayed(const Duration(milliseconds: 50));
       }
     }
+    loadingController.update(histories.length);
     Log.debug(tag, "add2ExcelSheet finished");
     final List<int> bytes = workbook.saveAsStream();
     Log.debug(tag, "workbook bytes: ${bytes.length}(${bytes.length.sizeStr})");
@@ -249,7 +275,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   }
 
   ///将历史数据添加到excel对象中
-  void _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle) {
+  Future<void> _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle) async {
     if (rowNum <= 0) {
       throw ArgumentError("rowNum cannot less than 0");
     }
@@ -290,3 +316,19 @@ class SearchController extends GetxController with WidgetsBindingObserver {
 //endregion
 //endregion
 }
+
+// Future<void> _export2ExcelIsolate(SendPort sendPort)async{
+//
+//   final port = ReceivePort();
+//   sendPort.send(port.sendPort);
+//   port.listen((message) {
+//     final List<Map<String,dynamic>> batch = message[0];
+//     final SendPort replyTo = message[1];
+//
+//     // 模拟处理：计算一批数据的总和
+//     final int batchSum = batch.fold(0, (prev, e) => prev + e);
+//
+//   });
+//   // 把结果发回主线程
+//   replyTo.send(batchSum);
+// }

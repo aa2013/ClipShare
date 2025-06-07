@@ -39,6 +39,7 @@ class SearchPage extends GetView<search_module.SearchController> {
                 controller.refreshData();
               },
               onExportBtnClicked: () {
+                var loadingController = LadingProgressController();
                 Global.showTipsDialog(
                   context: context,
                   text: TranslationKey.historyOutputTips.tr,
@@ -47,12 +48,13 @@ class SearchPage extends GetView<search_module.SearchController> {
                       context: context,
                       loadingText: TranslationKey.exporting.tr,
                       showCancel: true,
+                      controller: loadingController,
                       onCancel: () {
                         controller.cancelExporting = true;
                         controller.exporting = false;
                       },
                     );
-                    controller.export2Excel().then((result) {
+                    controller.export2Excel(loadingController).then((result) {
                       //关闭进度动画
                       Get.back();
                       //手动取消
