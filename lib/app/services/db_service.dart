@@ -109,7 +109,9 @@ class DbService extends GetxService {
     return this;
   }
 
-  Future<void> close() {
+  @override
+  Future<void> onClose() {
+    print("dbservice onClose");
     return _db.close();
   }
 

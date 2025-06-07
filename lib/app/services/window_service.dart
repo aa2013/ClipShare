@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
@@ -6,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 class WindowService extends GetxService with WindowListener {
   final tag = "WindowService";
   final appConfig = Get.find<ConfigService>();
+  final dbService = Get.find<DbService>();
 
   Future<WindowService> init() async {
     windowManager.addListener(this);
@@ -23,8 +27,11 @@ class WindowService extends GetxService with WindowListener {
   void exitApp() {
     windowManager.setPreventClose(false).then((value) {
       appConfig.historyWindow?.close();
+      appConfig.onlineDevicesWindow?.close();
       windowManager.hide();
-      WindowManager.instance.destroy();
+      windowManager.close();
+      Get.deleteAll(force: true);
+      exit(0);
     });
   }
 
@@ -45,7 +52,6 @@ class WindowService extends GetxService with WindowListener {
     if (!appConfig.rememberWindowSize) {
       return;
     }
-    print("111");
     windowManager.getSize().then((size) {
       appConfig.setWindowSize(size);
     });
