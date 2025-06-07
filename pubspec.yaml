@@ -144,6 +144,8 @@ dependencies:
   syncfusion_flutter_xlsio: 27.1.48
   # http request
   dio: ^5.8.0+1
+  # 系统通知
+  flutter_local_notifications: ^19.2.1
 
 dev_dependencies:
   flutter_test:

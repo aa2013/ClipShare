@@ -1006,6 +1006,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Download";
       case TranslationKey.downloading:
         return "Downloading";
+      case TranslationKey.devDisconnectNotifyContent:
+        return "Device @devName disconnected";
     }
   }
 }

@@ -11,6 +11,11 @@ class LicensesController extends GetxController {
       "url": "https://pub.dev/packages/dio",
     },
     {
+      "name": "flutter_local_notifications",
+      "license": "BSD-3-Clause",
+      "url": "https://pub.dev/packages/flutter_local_notifications",
+    },
+    {
       "name": "get",
       "license": "MIT",
       "url": "https://pub.dev/packages/get",

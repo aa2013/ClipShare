@@ -1007,6 +1007,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "下载";
       case TranslationKey.downloading:
         return "下载中";
+      case TranslationKey.devDisconnectNotifyContent:
+        return "设备 @devName 连接断开";
     }
   }
 }
