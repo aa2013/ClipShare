@@ -35,7 +35,7 @@ part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
 ///
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
-  version: 3,
+  version: 4,
   entities: [
     Config,
     Device,
@@ -104,11 +104,14 @@ class DbService extends GetxService {
     _db = await $Floor_AppDb.databaseBuilder(databasesPath).addMigrations([
       migration1to2,
       migration2to3,
+      migration3to4,
     ]).build();
     return this;
   }
 
-  Future<void> close() {
+  @override
+  Future<void> onClose() {
+    print("dbservice onClose");
     return _db.close();
   }
 
@@ -141,5 +144,11 @@ class DbService extends GetxService {
     await database.execute(
       'ALTER TABLE OperationSyncNew RENAME TO OperationSync;',
     );
+  });
+
+  ///数据库版本 3 -> 4
+  ///历史表增加更新时间自动
+  final migration3to4 = Migration(3, 4, (database) async {
+    await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
   });
 }

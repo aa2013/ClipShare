@@ -137,7 +137,7 @@ class SettingsPage extends GetView<SettingsController> {
                                       appConfig.setClipboardListeningWay(ClipboardListeningWay.hiddenApi);
                                       await clipboardManager.stopListening();
                                       clipboardManager.startListening(
-                                        startEnv: appConfig.workingMode,
+                                        env: appConfig.workingMode,
                                         way: ClipboardListeningWay.hiddenApi,
                                         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
                                       );
@@ -166,7 +166,7 @@ class SettingsPage extends GetView<SettingsController> {
                                       appConfig.setClipboardListeningWay(ClipboardListeningWay.logs);
                                       await clipboardManager.stopListening();
                                       clipboardManager.startListening(
-                                        startEnv: appConfig.workingMode,
+                                        env: appConfig.workingMode,
                                         way: ClipboardListeningWay.logs,
                                         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
                                       );
@@ -202,16 +202,15 @@ class SettingsPage extends GetView<SettingsController> {
                               appName: appName,
                               appPath: appPath,
                             );
-                            var enabled = await launchAtStartup.isEnabled();
-                            if (!enabled) {
+                            if (checked) {
                               await launchAtStartup.enable();
                             } else {
                               await launchAtStartup.disable();
                             }
-                            appConfig.setLaunchAtStartup(!enabled);
+                            appConfig.setLaunchAtStartup(checked, true);
                           },
                         ),
-                        show: (v) => Platform.isWindows,
+                        show: (v) => Platform.isWindows || Platform.isLinux,
                       ),
                       SettingCard(
                         title: Text(TranslationKey.commonSettingsRunMinimize.tr),
@@ -440,7 +439,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setRememberWindowSize(checked);
                           },
                         ),
-                        show: (v) => PlatformExt.isDesktop,
+                        show: (v) => Platform.isWindows || Platform.isMacOS,
                       ),
                       //历史记录弹窗记住上次位置
                       SettingCard(
@@ -513,6 +512,7 @@ class SettingsPage extends GetView<SettingsController> {
                     ],
                   ),
                 ),
+
                 ///endregion
 
                 ///region 发现
@@ -1026,7 +1026,7 @@ class SettingsPage extends GetView<SettingsController> {
                               },
                             );
                           },
-                          show: (v) => Platform.isWindows,
+                          show: (v) => true,
                         ),
                         SettingCard(
                           title: Text(
@@ -1082,7 +1082,7 @@ class SettingsPage extends GetView<SettingsController> {
                               },
                             );
                           },
-                          show: (v) => Platform.isWindows,
+                          show: (v) => true,
                         ),
                       ],
                     )),
@@ -1383,7 +1383,16 @@ class SettingsPage extends GetView<SettingsController> {
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.logSettingsEnableDesc.trParams({"size": FileUtil.getDirectorySize(appConfig.logsDirPath).sizeStr})),
+                        description: Obx(() {
+                          final tmp = controller.updater;
+                          final emptyStr = tmp.value != 0 ? "" : "";
+                          final size = FileUtil.getDirectorySize(appConfig.logsDirPath);
+                          return Text(
+                            "${TranslationKey.logSettingsEnableDesc.trParams({
+                                  "size": size.sizeStr,
+                                })}$emptyStr",
+                          );
+                        }),
                         value: appConfig.enableLogsRecord,
                         onTap: () {
                           if (appConfig.isSmallScreen) {
@@ -1422,6 +1431,7 @@ class SettingsPage extends GetView<SettingsController> {
                                             FileUtil.deleteDirectoryFiles(
                                               appConfig.logsDirPath,
                                             );
+                                            controller.updater.value++;
                                             Navigator.pop(context);
                                           },
                                           child: Text(TranslationKey.dialogConfirmText.tr),

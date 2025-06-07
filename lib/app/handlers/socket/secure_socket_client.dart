@@ -17,22 +17,6 @@ import 'package:synchronized/synchronized.dart';
 
 import 'data_packet_splitter.dart';
 
-class AsyncLock {
-  Completer? _completer;
-
-  Future<void> acquire() async {
-    while (_completer != null) {
-      await _completer!.future;
-    }
-    _completer = Completer();
-  }
-
-  void release() {
-    _completer?.complete();
-    _completer = null;
-  }
-}
-
 class SecureSocketClient {
   final String ip;
   late final int _port;

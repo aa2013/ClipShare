@@ -1,18 +1,51 @@
+import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
+import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_content_view.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
+import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class ClipboardDetailDrawer extends StatelessWidget {
-  final BorderRadiusGeometry? detailBorderRadius;
+class ClipboardDetailDrawer extends StatefulWidget {
   final ClipData clipData;
+  final bool modifyMode;
 
-  const ClipboardDetailDrawer({super.key, this.detailBorderRadius, required this.clipData});
+  const ClipboardDetailDrawer({
+    super.key,
+    required this.clipData,
+    this.modifyMode = false,
+  });
+
+  @override
+  State<StatefulWidget> createState() {
+    return _ClipboardDetailDrawerState();
+  }
+}
+
+class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
+  bool modifyMode = false;
+  final editController = TextEditingController();
+  final dbService = Get.find<DbService>();
+  final historyController = Get.find<HistoryController>();
+  final searchController = Get.find<search_module.SearchController>();
+
+  @override
+  void initState() {
+    super.initState();
+    modifyMode = widget.modifyMode;
+    editController.text = widget.clipData.data.content;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +89,57 @@ class ClipboardDetailDrawer extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (widget.clipData.isText)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 5),
+                        child: Tooltip(
+                          message: modifyMode ? TranslationKey.done.tr : TranslationKey.modifyContent.tr,
+                          child: IconButton(
+                            onPressed: () {
+                              if (modifyMode) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.confirmModifyContent.tr,
+                                  showCancel: true,
+                                  onOk: () {
+                                    widget.clipData.data.content = editController.text;
+                                    widget.clipData.data.updateTime = DateTime.now().toString();
+                                    dbService.historyDao.updateHistory(widget.clipData.data).then((res) {
+                                      final success = res == 1;
+                                      if (success) {
+                                        setState(() {
+                                          modifyMode = false;
+                                        });
+                                        var opRecord = OperationRecord.fromSimple(
+                                          Module.history,
+                                          OpMethod.update,
+                                          widget.clipData.data.id.toString(),
+                                        );
+                                        dbService.opRecordDao.addAndNotify(opRecord);
+                                        Global.showSnackBarSuc(text: TranslationKey.updateSuccess.tr, context: context);
+                                        whereFunc(History item) => item.id == widget.clipData.data.id;
+                                        callbackFunc(History item) => item.content = editController.text;
+                                        historyController.updateData(whereFunc, callbackFunc);
+                                        searchController.updateData(whereFunc, callbackFunc);
+                                      } else {
+                                        Global.showSnackBarSuc(text: TranslationKey.updateFailed.tr, context: context);
+                                      }
+                                    });
+                                  },
+                                );
+                              } else {
+                                setState(() {
+                                  modifyMode = true;
+                                });
+                              }
+                            },
+                            icon: Icon(
+                              modifyMode ? Icons.check : Icons.edit_note,
+                              color: modifyMode ? Colors.blueAccent : Colors.blueGrey,
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 Tooltip(
@@ -78,23 +162,20 @@ class ClipboardDetailDrawer extends StatelessWidget {
                 children: [
                   ///来源设备
                   Obx(
-                        () => RoundedChip(
+                    () => RoundedChip(
                       avatar: const Icon(Icons.devices_rounded),
                       label: Text(
-                        devService.getName(clipData.data.devId),
+                        devService.getName(widget.clipData.data.devId),
                         style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ),
-                  const SizedBox(
-                    width: 5,
-                  ),
+                  const SizedBox(width: 5),
 
                   ///持有标签
                   Expanded(
                     child: ClipTagRowView(
-                      // key: _clipTagRowKey,
-                      hisId: clipData.data.id,
+                      hisId: widget.clipData.data.id,
                       clipBgColor: const Color(0x1a000000),
                     ),
                   ),
@@ -107,9 +188,29 @@ class ClipboardDetailDrawer extends StatelessWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(top: 5, bottom: 5),
-                child: ClipContentView(
-                  // key: _clipTagRowKey,
-                  clipData: clipData,
+                child: ConditionWidget(
+                  visible: modifyMode,
+                  replacement: ClipContentView(
+                    clipData: widget.clipData,
+                  ),
+                  child: SizedBox.expand(
+                    child: TextField(
+                      textAlignVertical: TextAlignVertical.top,
+                      textAlign: TextAlign.left,
+                      controller: editController,
+                      decoration: const InputDecoration(
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue, width: 1),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: Colors.blue, width: 1.5),
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: null,
+                      expands: true,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -126,7 +227,7 @@ class ClipboardDetailDrawer extends StatelessWidget {
                     child: IconButton(
                       onPressed: () {
                         homeCtl.openEndDrawer(
-                          drawer: ClipboardDetailDrawer(clipData: clipData),
+                          drawer: ClipboardDetailDrawer(clipData: widget.clipData),
                           width: showFullPage ? 400 : fullPageWidth,
                         );
                       },
@@ -135,8 +236,8 @@ class ClipboardDetailDrawer extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(clipData.timeStr),
-                  Text(clipData.sizeText),
+                  Text(widget.clipData.timeStr),
+                  Text(widget.clipData.sizeText),
                 ],
               ),
             ),

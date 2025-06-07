@@ -50,10 +50,7 @@ class HistoryTopSyncHandler implements SyncListener {
     bool success = false;
     switch (opRecord.method) {
       case OpMethod.update:
-        success = await dbService.historyDao
-                .setTop(history.id, history.top)
-                .then((cnt) => cnt ?? 0) >
-            0;
+        success = await dbService.historyDao.setTop(history.id, history.top).then((cnt) => cnt ?? 0) > 0;
         break;
       default:
     }

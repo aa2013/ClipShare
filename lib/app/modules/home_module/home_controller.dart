@@ -89,6 +89,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   late HistoryTopSyncHandler _historyTopSyncer;
   late RulesSyncHandler _rulesSyncer;
   late StreamSubscription _networkListener;
+  DateTime? _lastNetworkChangeTime;
   DateTime? pausedTime;
   final logoImg = Image.asset(
     'assets/images/logo/logo.png',
@@ -139,12 +140,12 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       _initAndroid();
     }
     _initSearchPageShow();
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux) {
       clipboardManager.startListening();
     } else {
       clipboardManager
           .startListening(
-        startEnv: appConfig.workingMode,
+        env: appConfig.workingMode,
         way: appConfig.clipboardListeningWay,
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       )
@@ -218,12 +219,24 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   void _initCommon() async {
     //初始化socket
     sktService.init();
-    _networkListener = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-      appConfig.currentNetWorkType.value = result;
+    _networkListener = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
+      _lastNetworkChangeTime = DateTime.now();
       Log.debug(tag, "网络变化 -> ${result.name}");
-      sktService.disConnectAllConnections();
+      if (appConfig.currentNetWorkType.value != ConnectivityResult.none) {
+        sktService.disConnectAllConnections();
+      }
+      appConfig.currentNetWorkType.value = result;
       if (result != ConnectivityResult.none) {
-        sktService.restartDiscoveryDevices();
+        var delayMs = 0;
+        if (_lastNetworkChangeTime != null) {
+          var now = DateTime.now();
+          final diffMs = (now.difference(_lastNetworkChangeTime!).inMilliseconds).abs();
+          if (diffMs < 1000) {
+            Log.debug(tag, "Delay execution due to less than 1000ms(act ${diffMs}ms) since the last network change");
+            delayMs = 1000;
+          }
+        }
+        await Future.delayed(Duration(milliseconds: delayMs), sktService.restartDiscoveryDevices);
       }
     });
     _tagSyncer = TagSyncHandler();

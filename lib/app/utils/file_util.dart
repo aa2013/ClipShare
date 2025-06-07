@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:file_picker/file_picker.dart';
@@ -70,6 +71,20 @@ class FileUtil {
       dialogTitle: title,
       fileName: fileName,
       bytes: utf8.encode(content),
+    );
+    return outputPath;
+  }
+
+  ///导出文件
+  static Future<String?> exportFileBytes(
+    String title,
+    String fileName,
+    Uint8List bytes,
+  ) async {
+    String? outputPath = await FilePicker.platform.saveFile(
+      dialogTitle: title,
+      fileName: fileName,
+      bytes: bytes,
     );
     return outputPath;
   }

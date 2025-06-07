@@ -252,10 +252,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
           var data = widget.list[i];
           if (isBigScreen) {
             homeCtrl.openEndDrawer(
-              drawer: ClipboardDetailDrawer(
-                clipData: data,
-                detailBorderRadius: widget.detailBorderRadius,
-              ),
+              drawer: ClipboardDetailDrawer(clipData: data),
             );
           } else {
             showModalBottomSheet(

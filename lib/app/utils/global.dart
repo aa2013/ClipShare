@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
+import 'package:clipshare/app/widgets/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -161,7 +162,7 @@ class Global {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -175,6 +176,7 @@ class Global {
     bool showCancel = false,
     void Function()? onCancel,
     String? loadingText,
+    LadingProgressController? controller,
   }) {
     showDialog(
       context: context,
@@ -194,11 +196,10 @@ class Global {
                         child: Loading(
                           width: 32,
                           description: loadingText != null ? Text(loadingText) : null,
+                          controller: controller,
                         ),
                       ),
-                      const SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
                       Visibility(
                         visible: showCancel,
                         child: Row(
@@ -219,6 +220,33 @@ class Global {
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  static void showDownloadingDialog({
+    required BuildContext context,
+    required String url,
+    required String filePath,
+    required Widget content,
+    required void Function(bool) onFinished,
+    void Function(dynamic error, dynamic stack)? onError,
+    void Function()? onCancel,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return PopScope(
+          canPop: false,
+          child: DownloadDialog(
+            url: url,
+            savePath: filePath,
+            content: content,
+            onCancel: onCancel,
+            onFinished: onFinished,
+            onError: onError,
           ),
         );
       },

@@ -138,7 +138,7 @@ class ClipboardService extends GetxService with ClipboardListener {
     final settingsController = Get.find<SettingsController>();
     if (isGranted && environment != EnvironmentType.none && environment != EnvironmentType.androidPre10) {
       await clipboardManager.startListening(
-        startEnv: environment,
+        env: environment,
         way: appConfig.clipboardListeningWay,
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       );

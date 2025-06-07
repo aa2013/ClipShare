@@ -193,7 +193,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Please save filter config";
       case TranslationKey.saveFailed:
         return "Save failed";
-
+      case TranslationKey.updateSuccess:
+        return "Successfully update!";
+      case TranslationKey.updateFailed:
+        return "Update failed！";
       case TranslationKey.searchPageMoreFilterByDateJudgeText:
         return "Date";
       case TranslationKey.confirm:
@@ -981,6 +984,28 @@ class EnUSTranslation extends AbstractTranslations {
         return "When the screen lights up, it will scan the network to discover devices. If the option to disconnect from the network after turning off the screen is enabled, the device may not automatically connect after switching to the network when the screen is turned off";
       case TranslationKey.deviceDiscoveryStatusViaPaired:
         return "Connecting paired devices";
+      case TranslationKey.export2Excel:
+        return "Export to Excel";
+      case TranslationKey.export2ExcelFileName:
+        return "HistoryRecordsExport.xlsx";
+      case TranslationKey.historyOutputTips:
+        return "Export with current filters?\n\n(Excludes file sync records)";
+      case TranslationKey.exporting:
+        return "Exporting...";
+      case TranslationKey.modifyContent:
+        return "Modify Content";
+      case TranslationKey.confirmModifyContent:
+        return "Confirm the update content?";
+      case TranslationKey.modifyContentConfirmExitAndNoSave:
+        return "Don't save";
+      case TranslationKey.unsavedTips:
+        return "You have unsaved changes. Leave this page?";
+      case TranslationKey.done:
+        return "Done";
+      case TranslationKey.download:
+        return "Download";
+      case TranslationKey.downloading:
+        return "Downloading";
     }
   }
 }

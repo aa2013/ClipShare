@@ -32,6 +32,9 @@ class History implements Comparable {
   ///内容大小、长度
   late int size;
 
+  ///更新时间
+  String? updateTime;
+
   History({
     required this.id,
     required this.uid,
@@ -39,9 +42,10 @@ class History implements Comparable {
     required this.content,
     required this.type,
     required this.devId,
+    required this.size,
     this.top = false,
     this.sync = false,
-    required this.size,
+    this.updateTime,
   });
 
   @override
@@ -67,9 +71,10 @@ class History implements Comparable {
     this.top = false,
     this.sync = false,
     this.size = 0,
+    this.updateTime,
   });
 
-  static History fromJson(map) {
+  static History fromJson(Map<String, dynamic> map) {
     var id = map["id"];
     var uid = map["uid"];
     var time = map["time"];
@@ -89,6 +94,7 @@ class History implements Comparable {
       size: size,
       top: top,
       sync: sync,
+      updateTime: map.containsKey("updateTime") ? map["updateTime"] : null,
     );
   }
 
@@ -111,6 +117,7 @@ class History implements Comparable {
       "top": top,
       "sync": sync,
       "size": size,
+      "updateTime": updateTime,
     };
   }
 

@@ -164,7 +164,7 @@ class _ClipContentViewState extends State<ClipContentView> {
       duration: const Duration(milliseconds: 60),
       builder: (context, value, child) {
         return Transform.scale(
-          alignment: state.spawnAlignment,
+          alignment: state.spawnAnchor,
           scale: value,
           child: Container(
             padding: state.padding,

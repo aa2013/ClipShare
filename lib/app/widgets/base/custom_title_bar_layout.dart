@@ -45,7 +45,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                     },
                     onDoubleTap: () {
                       if (windowControlService.maxWindow.value) {
-                        windowControlService.restore();
+                        windowControlService.unMaximize();
                       } else {
                         windowControlService.maximize();
                       }
@@ -86,7 +86,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                               onTap: windowControlService.maximizable.value
                                   ? () {
                                       if (windowControlService.maxWindow.value) {
-                                        windowControlService.restore();
+                                        windowControlService.unMaximize();
                                       } else {
                                         windowControlService.maximize();
                                       }

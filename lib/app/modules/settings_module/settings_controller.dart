@@ -41,6 +41,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasIgnoreBattery = false.obs;
   final hasSmsReadPerm = true.obs;
   final forwardServerConnected = false.obs;
+  final updater = 0.obs;
 
   //region environment status widgets
   final Rx<Widget> envStatusIcon = Rx<Widget>(const Loading(width: 32));
@@ -199,7 +200,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     await clipboardManager.requestPermission(appConfig.workingMode!);
     clipboardManager.stopListening();
     clipboardManager.startListening(
-      startEnv: appConfig.workingMode,
+      env: appConfig.workingMode,
       way: appConfig.clipboardListeningWay,
       notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
     );
@@ -267,7 +268,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     if (restart) {
       await clipboardManager.stopListening();
       clipboardManager.startListening(
-        startEnv: mode,
+        env: mode,
         way: appConfig.clipboardListeningWay,
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       );

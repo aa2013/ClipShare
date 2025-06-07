@@ -1,17 +1,21 @@
 import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
+import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_page.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
+import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:window_manager/window_manager.dart';
 
 class FileSenderWindow extends StatefulWidget {
   final WindowController windowController;
@@ -29,19 +33,21 @@ class FileSenderWindow extends StatefulWidget {
   }
 }
 
-class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBindingObserver {
+class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBindingObserver, WindowControlClickedListener {
   List<Device> _devices = [];
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
   final pendingFileService = Get.find<PendingFileService>();
+  final windowControlService = Get.find<WindowControlService>();
 
   @override
   void initState() {
     super.initState();
+    windowControlService.addListener(this);
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
     if (widget.args.containsKey("files")) {
       var files = widget.args["files"] as List<dynamic>;
-      pendingFileService.addDropItems(files.cast<String>().map((path) => DropItemFile(path)).toList());
+      addPendingFiles(files.cast<String>());
     }
     //处理弹窗事件
     DesktopMultiWindow.setMethodHandler((
@@ -55,6 +61,25 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
         case MultiWindowMethod.notify:
           refresh();
           break;
+        //关闭（隐藏）窗口
+        case MultiWindowMethod.showWindowFromHide:
+          var position = args["position"];
+          if (position != null) {
+            var [x, y] = (position as List<dynamic>).cast<double>();
+            windowManager.setPosition(Offset(x, y));
+          }
+          widget.windowController.show();
+          windowManager.setAlwaysOnTop(true);
+          var otherArgs = args["args"] as Map<String, dynamic>;
+          var files = otherArgs["files"] as List<dynamic>;
+          addPendingFiles(files.cast<String>());
+          refresh();
+          break;
+        //关闭（隐藏）窗口
+        case MultiWindowMethod.closeWindow:
+          widget.windowController.hide();
+          pendingFileService.clearPendingInfo();
+          break;
         default:
       }
       //都不符合，返回空
@@ -63,15 +88,19 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
     refresh();
   }
 
+  void addPendingFiles(List<String> filePaths) {
+    pendingFileService.addDropItems(filePaths.map((path) => DropItemFile(path)).toList());
+  }
+
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    switch (state) {
-      case AppLifecycleState.inactive:
-        // widget.windowController.close();
-        break;
-      default:
-    }
+  void onCloseBtnClicked() {
+    multiWindowChannelService.closeWindow(0, MultiWindowTag.history);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    windowControlService.removeListener(this);
   }
 
   void refresh() async {

@@ -61,6 +61,7 @@ enum TranslationKey {
   image,
   file,
   moreFilter,
+  export2Excel,
   startDate,
   endDate,
   filterByDate,
@@ -287,6 +288,9 @@ enum TranslationKey {
   fileHistoryContentType,
   dialogConfirmText,
   dialogNeutralText,
+  historyOutputTips,
+  exporting,
+  export2ExcelFileName,
   open,
   openLink,
   moment,
@@ -438,6 +442,8 @@ enum TranslationKey {
   pleaseSaveFilterConfig,
   saveSuccess,
   saveFailed,
+  updateSuccess,
+  updateFailed,
   filter,
   monday,
   tuesday,
@@ -482,7 +488,14 @@ enum TranslationKey {
   saveToAlbum,
   enableAutoSyncOnScreenOpenedTitle,
   enableAutoSyncOnScreenOpenedDesc,
-  deviceDiscoveryStatusViaPaired;
+  deviceDiscoveryStatusViaPaired,
+  modifyContent,
+  unsavedTips,
+  modifyContentConfirmExitAndNoSave,
+  confirmModifyContent,
+  done,
+  download,
+  downloading;
 
   String get tr => name.tr;
 

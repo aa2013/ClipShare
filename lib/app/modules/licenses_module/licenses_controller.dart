@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "dio",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/dio",
+    },
+    {
       "name": "get",
       "license": "MIT",
       "url": "https://pub.dev/packages/get",
@@ -264,6 +269,16 @@ class LicensesController extends GetxController {
       "name": "animated_snack_bar",
       "license": "GPL-3.0",
       "url": "https://pub.dev/packages/animated_snack_bar",
+    },
+    {
+      "name": "sqlite3_flutter_libs",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/sqlite3_flutter_libs",
+    },
+    {
+      "name": "syncfusion_flutter_xlsio",
+      "license": "unknown",
+      "url": "https://pub.dev/packages/syncfusion_flutter_xlsio",
     },
   ]..sort((a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
 }

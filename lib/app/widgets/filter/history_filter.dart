@@ -8,6 +8,7 @@ import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class HistoryFilter extends StatefulWidget {
   List<Device> allDevices;
@@ -16,6 +17,7 @@ class HistoryFilter extends StatefulWidget {
   bool isBigScreen;
   bool showContentTypeFilter;
   SearchFilter? filter;
+  void Function()? onExportBtnClicked;
   void Function(SearchFilter filter) onChanged;
 
   HistoryFilter({
@@ -26,6 +28,7 @@ class HistoryFilter extends StatefulWidget {
     required this.isBigScreen,
     this.showContentTypeFilter = true,
     required this.onChanged,
+    this.onExportBtnClicked,
     this.filter,
   });
 
@@ -150,6 +153,18 @@ class _HistoryFilterState extends State<HistoryFilter> {
                   ),
                 ),
               ),
+              if (widget.onExportBtnClicked != null)
+                Container(
+                  margin: const EdgeInsets.only(left: 5, right: 5),
+                  child: IconButton(
+                    onPressed: widget.onExportBtnClicked,
+                    tooltip: TranslationKey.export2Excel.tr,
+                    icon: Icon(
+                      MdiIcons.export,
+                      size: 20,
+                    ),
+                  ),
+                ),
             ],
           ),
           if (widget.showContentTypeFilter)

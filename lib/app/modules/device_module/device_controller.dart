@@ -10,6 +10,7 @@ import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -29,7 +30,7 @@ import 'package:pinput/pinput.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class DeviceController extends GetxController with GetSingleTickerProviderStateMixin implements DevAliveListener, SyncListener, DiscoverListener, ForwardStatusListener {
+class DeviceController extends GetxController with GetSingleTickerProviderStateMixin implements DevAliveListener, DeviceRemoveListener, SyncListener, DiscoverListener, ForwardStatusListener {
   final appConfig = Get.find<ConfigService>();
   final sktService = Get.find<SocketService>();
   final dbService = Get.find<DbService>();
@@ -67,6 +68,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     sktService.addDiscoverListener(this);
     sktService.addForwardStatusListener(this);
     sktService.addSyncListener(Module.device, this);
+    devService.addDevRemoveListener(this);
     // 旋转动画
     _rotationController = AnimationController(
       vsync: this,
@@ -120,6 +122,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     sktService.removeDiscoverListener(this);
     sktService.removeForwardStatusListener(this);
     sktService.removeSyncListener(Module.device, this);
+    devService.removeDevRemoveListener(this);
     _rotationController.dispose();
     super.onClose();
   }
@@ -153,7 +156,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           f = dbService.deviceDao.add(dev);
           break;
         case OpMethod.delete:
-          dbService.deviceDao.remove(dev.guid, appConfig.userId);
+          devService.remove(dev.guid);
           break;
         case OpMethod.update:
           f = dbService.deviceDao.updateDevice(dev);
@@ -344,9 +347,15 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     Get.back();
   }
 
+  @override
+  void onRemove(String devId) {
+    print("removeDevice $devId");
+    pairedList.removeWhere((dev) => dev.dev?.guid == devId);
+  }
+
 //endregion
 
-//region 页面方法
+  //region 页面方法
 
   ///显示底部弹窗
   void _showBottomDetailSheet(

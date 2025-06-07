@@ -8,10 +8,16 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/week_day.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/data/models/version.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
+import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/cron_util.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
@@ -27,12 +33,14 @@ import '../../widgets/empty_content.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class CleanDataController extends GetxController {
+class CleanDataController extends GetxController implements DeviceRemoveListener, DevAliveListener {
   final dbService = Get.find<DbService>();
   final appConfig = Get.find<ConfigService>();
+  final devService = Get.find<DeviceService>();
+  final sktService = Get.find<SocketService>();
   final logTag = "CleanDataController";
-  final allDevices = List.empty().obs;
-  final allTags = List.empty().obs;
+  final allDevices = <Device>{}.obs;
+  final allTags = <String>{}.obs;
 
   //region 搜索条件
   final selectedDevs = <String>{}.obs;
@@ -77,6 +85,8 @@ class CleanDataController extends GetxController {
   @override
   void onReady() {
     super.onReady();
+    devService.addDevRemoveListener(this);
+    sktService.addDevAliveListener(this);
     final cfg = appConfig.cleanDataConfig;
     if (cfg != null) {
       selectedDevs.addAll(cfg.devIds);
@@ -90,14 +100,21 @@ class CleanDataController extends GetxController {
     loadData();
   }
 
+  @override
+  void onClose() {
+    devService.removeDevRemoveListener(this);
+    sktService.removeDevAliveListener(this);
+  }
+
   ///加载搜索条件
   Future<void> loadData() async {
     //加载所有标签名
-    allTags.value = await dbService.historyTagDao.getAllTagNames();
+    allTags.value = <String>{}..addAll(await dbService.historyTagDao.getAllTagNames());
     //加载所有设备名
     var tmpLst = await dbService.deviceDao.getAllDevices(appConfig.userId);
+    print("load data");
     tmpLst.add(appConfig.device);
-    allDevices.value = tmpLst;
+    allDevices.value = <Device>{}..addAll(tmpLst);
     updateNextExecTime();
   }
 
@@ -189,13 +206,33 @@ class CleanDataController extends GetxController {
       endTime: endDate.value,
       removeFiles: removeFiles.value,
       saveTop: saveTopData.value,
-    ).then((cnt) {
+    ).then((cnt) async {
       if (!mute) {
         //关闭加载弹窗
         Get.back();
         Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt ${TranslationKey.deleteItemsUnit.tr}");
       }
       refreshHistoryPage();
+      final devs = selectedDevs.toList();
+      for (var devId in devs) {
+        //本机跳过
+        if (devId == appConfig.device.guid) {
+          return;
+        }
+        final cnt = await dbService.historyDao.countByDevId(devId, appConfig.userId);
+        if (cnt > 0) {
+          //数据未清空，跳过
+          return;
+        }
+        //如果设备离线并未配对则删除，否则不能删
+        if (sktService.isOnline(devId, true)) {
+          print("is online");
+          return;
+        }
+        var success = await devService.remove(devId);
+        print("delete device success $success");
+        if (success) {}
+      }
     }).catchError((err, stack) {
       Log.error(logTag, "$err: $stack");
       if (!mute) {
@@ -412,5 +449,39 @@ class CleanDataController extends GetxController {
     Log.debug(logTag, "set clean data timer, next execute time: $newNextTime");
     final diff = now.difference(newNextTime);
     cleanDataTimer = Timer(Duration(seconds: diff.inSeconds.abs() + 1), initAutoClean);
+  }
+
+  //region ignore
+
+  @override
+  void onCancelPairing(DevInfo dev) {
+    return;
+  }
+
+  @override
+  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, bool isForward) {
+    return;
+  }
+
+  @override
+  void onDisconnected(String devId) {
+    return;
+  }
+
+  @override
+  void onForget(DevInfo dev, int uid) {
+    return;
+  }
+
+  //endregion
+
+  @override
+  void onPaired(DevInfo dev, int uid, bool result, String? address) {}
+
+  @override
+  void onRemove(String devId) {
+    print("on remove $devId");
+    allDevices.removeWhere((item) => item.guid == devId);
+    selectedDevs.remove(devId);
   }
 }

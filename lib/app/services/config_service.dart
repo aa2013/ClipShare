@@ -20,6 +20,7 @@ import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -35,7 +36,7 @@ import 'package:window_manager/window_manager.dart';
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
-
+  final tag = "ConfigService";
   //region 属性
 
   //region 常量
@@ -572,35 +573,36 @@ class ConfigService extends GetxService {
     version = AppVersion(pkgInfo.version, pkgInfo.buildNumber);
     //读取设备id信息
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    var guid = "";
+    var name = "";
+    var type = "";
     if (Platform.isAndroid) {
       var androidInfo = await deviceInfo.androidInfo;
-      var guid = CryptoUtil.toMD5(androidInfo.id);
-      var name = androidInfo.model;
-      var type = "Android";
-      devInfo = DevInfo(guid, name, type);
-      device = Device(
-        guid: guid,
-        devName: "本机",
-        uid: 0,
-        type: type,
-      );
+      guid = CryptoUtil.toMD5(androidInfo.id);
+      name = androidInfo.model;
+      type = "Android";
       var release = androidInfo.version.release;
       osVersion = RegExp(r"\d+").firstMatch(release)!.group(0)!.toDouble();
     } else if (Platform.isWindows) {
       var windowsInfo = await deviceInfo.windowsInfo;
-      var guid = CryptoUtil.toMD5(windowsInfo.deviceId);
-      var name = windowsInfo.computerName;
-      var type = "Windows";
-      devInfo = DevInfo(guid, name, type);
-      device = Device(
-        guid: guid,
-        devName: "本机",
-        uid: userId,
-        type: type,
-      );
+      guid = CryptoUtil.toMD5(windowsInfo.deviceId);
+      name = windowsInfo.computerName;
+      type = "Windows";
+    } else if (Platform.isLinux) {
+      var linuxInfo = await deviceInfo.linuxInfo;
+      guid = CryptoUtil.toMD5(linuxInfo.id);
+      name = linuxInfo.name;
+      type = "Linux";
     } else {
       throw Exception("Not Support Platform");
     }
+    devInfo = DevInfo(guid, name, type);
+    device = Device(
+      guid: guid,
+      devName: "本机",
+      uid: 0,
+      type: type,
+    );
   }
 
 //endregion
@@ -626,9 +628,10 @@ class ConfigService extends GetxService {
     _startMini.value = startMini;
   }
 
-  Future<void> setLaunchAtStartup(bool launchAtStartup) async {
+  Future<void> setLaunchAtStartup(bool launchAtStartup, [bool deleteWindowsShortcut = false]) async {
     _launchAtStartup.value = launchAtStartup;
-    if (launchAtStartup) return;
+    Log.debug(tag, "launchAtStartup $launchAtStartup, deleteWindowsShortcut $deleteWindowsShortcut");
+    if (launchAtStartup && !deleteWindowsShortcut) return;
     if (Platform.isWindows) {
       final startupPaths = <String>[
         Constants.windowsStartUpPath,
@@ -899,7 +902,7 @@ class ConfigService extends GetxService {
 
   ///将底部导航栏设置为深色
   void setSystemUIOverlayDarkStyle() {
-    WidgetsBinding.instance.addPostFrameCallback((_){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle.dark.copyWith(
           systemNavigationBarColor: Colors.black,
@@ -911,7 +914,7 @@ class ConfigService extends GetxService {
 
   ///将底部导航栏设置为浅色
   void setSystemUIOverlayLightStyle() {
-    WidgetsBinding.instance.addPostFrameCallback((_){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle.light.copyWith(
           systemNavigationBarColor: lightBackgroundColor,

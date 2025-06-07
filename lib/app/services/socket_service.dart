@@ -26,6 +26,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:collection/collection.dart';
@@ -84,7 +85,7 @@ class DevSocket {
   bool isPaired;
   AppVersion? minVersion;
   AppVersion? version;
-  DateTime? lastPingTime;
+  DateTime lastPingTime = DateTime.now();
 
   DevSocket({
     required this.dev,
@@ -174,6 +175,17 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   void onClose() {
     super.onClose();
     ScreenOpenedListener.inst.remove(this);
+  }
+
+  ///判断设备是否在线
+  bool isOnline(String devId, bool requiredPaired) {
+    var online = _devSockets.containsKey(devId);
+    var isPaired = false;
+    if (online) {
+      isPaired = _devSockets[devId]!.isPaired;
+    }
+    if (!requiredPaired) return online;
+    return online && isPaired;
   }
 
   ///监听广播
@@ -360,6 +372,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       return;
     }
     if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
+      if (_autoConnForwardServer) {
+        Log.debug(tag, "中转连接取消重连(无网络)");
+      }
       _autoConnForwardServer = false;
       return;
     }
@@ -382,6 +397,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           _stopJudgeForwardClientAlive();
           Log.debug(tag, "forwardClient done");
           if (_autoConnForwardServer) {
+            Log.debug(tag, "尝试重连中转");
             Future.delayed(
               const Duration(milliseconds: 1000),
               () => connectForwardServer(true),
@@ -424,6 +440,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     } catch (e) {
       Log.debug(tag, "connect forward server failed $e");
       if (_autoConnForwardServer) {
+        Log.debug(tag, "尝试重连中转");
         Future.delayed(
           const Duration(milliseconds: 1000),
           () => connectForwardServer(true),
@@ -553,8 +570,19 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     var address = ipSetTemp.firstWhereOrNull((ip) => ip.split(":")[0] == client.ip);
     switch (msg.key) {
       case MsgType.ping:
+        var skt = _devSockets[dev.guid];
         if (_devSockets.containsKey(dev.guid)) {
-          _devSockets[dev.guid]!.updatePingTime();
+          skt!.updatePingTime();
+          if (msg.data.containsKey("result")) {
+            sendData(dev, MsgType.pingResult, {});
+          }
+        }
+        break;
+
+      case MsgType.pingResult:
+        var skt = _devSockets[dev.guid];
+        if (_devSockets.containsKey(dev.guid)) {
+          skt!.updatePingTime();
         }
         break;
 
@@ -989,12 +1017,15 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
     for (var dev in devices) {
       var [ip, port] = dev.address!.split(":");
-      //检测当前网络环境,如果不是 WiFi 且设备是中转地址，直接连接中转而不是走完整设备发现流程
-      if (forwardIp == ip) {
-        if (!isWifi && PlatformExt.isMobile && forwardServerPort != null) {
+      //检测当前网络环境，以下条件直接直接连接中转，而不是走完整设备发现流程
+      //1. 不是 WiFi 且为移动设备
+      //2. 不是 WiFi 且地址为中转地址
+      if (!isWifi) {
+        if (PlatformExt.isMobile || forwardIp == ip) {
+          print("connect by forward ${dev.name}(${dev.guid})");
           tasks.add(() => manualConnectByForward(dev.guid));
+          continue;
         }
-        continue;
       }
       tasks.add(() => manualConnect(ip, port: int.parse(port)));
     }
@@ -1014,8 +1045,41 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     return tasks;
   }
 
+  ///检查是否已经掉线，如果掉线则移除
+  Future<bool> testIsOnline(String devId) async {
+    if (!_devSockets.containsKey(devId)) return false;
+    var skt = _devSockets[devId]!;
+    //发送一个ping事件，但是要求对方给回复
+    await sendData(skt.dev, MsgType.ping, {
+      "result": null,
+    });
+    print("testIsOnline: send ping result");
+    //等待500ms
+    const waitTime = Duration(milliseconds: 500);
+    await Future.delayed(waitTime);
+    print("testIsOnline: waitTime finished");
+    //等待过程中已经掉线
+    if (_devSockets.containsKey(devId)) {
+      print("testIsOnline: offline in waitTime");
+      _onDevDisconnected(devId);
+      return false;
+    }
+    skt = _devSockets[devId]!;
+    //检查上次ping的时间是否在误差范围内，如果不在这个范围说明可能已经掉线
+    final online = skt.lastPingTime.isWithinRange(waitTime);
+    print("testIsOnline: isWithinRange $online");
+    if (!online) {
+      _onDevDisconnected(devId);
+    }
+    return online;
+  }
+
   ///中转连接设备
-  Future<bool> manualConnectByForward(String devId) {
+  Future<bool> manualConnectByForward(String devId) async {
+    if (await testIsOnline(devId)) {
+      Log.debug(tag, "dev($devId) online, cancel connect by forward");
+      return false;
+    }
     return manualConnect(
       forwardServerHost!,
       port: forwardServerPort,
@@ -1230,6 +1294,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
   ///断开所有连接
   void disConnectAllConnections([bool onlyNotPaired = false]) {
+    Log.debug(tag, "开始断开所有连接");
     disConnectForwardServer();
     var skts = _devSockets.values.toList();
     for (var devSkt in skts) {
@@ -1353,10 +1418,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     final now = DateTime.now();
     var skts = _devSockets.values.toList();
     for (var ds in skts) {
-      if (ds.lastPingTime == null) {
-        continue;
-      }
-      final diff = now.difference(ds.lastPingTime!);
+      final diff = now.difference(ds.lastPingTime);
       if (diff.inSeconds > interval) {
         //心跳超时
         Log.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");

@@ -171,8 +171,8 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   void debounceUpdate() {
     // 如果已有计时器，则取消它
     if (_debounce?.isActive ?? false) _debounce?.cancel();
-    // 重新设置计时器，延迟 500 毫秒执行
-    _debounce = Timer(const Duration(milliseconds: 500), () {
+    // 重新设置计时器，延迟 200 毫秒执行
+    _debounce = Timer(const Duration(milliseconds: 200), () {
       final lst = [..._tempList];
       lst.sort((a, b) => b.data.compareTo(a.data));
       list.assignAll(lst);

@@ -32,6 +32,7 @@ enum MsgType {
   //忘记设备
   forgetDev,
   ping,
+  pingResult,
   //文件同步
   file,
   //未知key

@@ -24,4 +24,10 @@ extension DateTimeExt on DateTime {
     }
     return time;
   }
+
+  bool isWithinRange(Duration duration) {
+    var now = DateTime.now();
+    var micros = now.difference(this).inMicroseconds;
+    return micros.abs() < duration.inMicroseconds;
+  }
 }

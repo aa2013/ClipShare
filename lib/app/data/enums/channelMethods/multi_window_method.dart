@@ -6,5 +6,7 @@ enum MultiWindowMethod {
   notify,
   getCompatibleOnlineDevices,
   syncFiles,
-  storeWindowPos;
+  storeWindowPos,
+  showWindowFromHide,
+  closeWindow;
 }

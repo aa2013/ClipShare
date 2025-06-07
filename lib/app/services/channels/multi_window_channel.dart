@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -10,6 +11,34 @@ import 'package:get/get.dart';
 
 class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
+
+  ///显示弹窗（从隐藏状态恢复）
+  Future showWindowFromHide(int targetWindowId, {List<double>? position, Map<String, dynamic>? args}) {
+    if (!PlatformExt.isDesktop) return Future.value();
+    Map<String, dynamic> data = {
+      "position": position,
+    };
+    if (args != null) {
+      data["args"] = args;
+    }
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.showWindowFromHide.name,
+      jsonEncode(data),
+    );
+  }
+
+  ///关闭（隐藏）弹窗
+  Future closeWindow(int targetWindowId, MultiWindowTag tag) {
+    if (!PlatformExt.isDesktop) return Future.value();
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.closeWindow.name,
+      jsonEncode({
+        "tag": tag.name,
+      }),
+    );
+  }
 
   ///获取历史数据
   Future getHistories(int targetWindowId, int fromId, SearchFilter filter) {
