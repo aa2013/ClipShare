@@ -1479,7 +1479,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
     Log.debug(tag, "$devId 断开连接");
     final ds = _devSockets[devId];
-    if (ds != null) {
+    if (ds != null && ds.isPaired) {
       _showDevDisConnectNotification(ds.dev.name);
     }
     //移除socket
