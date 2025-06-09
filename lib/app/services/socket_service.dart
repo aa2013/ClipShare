@@ -22,6 +22,7 @@ import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -602,6 +603,11 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           client.destroy();
           return;
         }
+        //设备是自身
+        if (dev.guid == appConfig.device.guid) {
+          client.destroy();
+          return;
+        }
         if (_devSockets.containsKey(dev.guid)) {
           //已经链接，跳过
           break;
@@ -874,11 +880,14 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     if (_forwardClient == null) {
       await connectForwardServer();
     }
+    final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile;
     //并行处理
     TaskRunner<void>(
       initialTasks: tasks,
       onFinish: () {
-        if (scan) {
+        if (PlatformExt.isMobile && isMobileNetwork) {
+          tasks = [];
+        } else if (scan) {
           //广播发现
           tasks.addAll(_multicastDiscovering());
         } else {
@@ -892,7 +901,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
             if (appConfig.onlyForwardMode) {
               tasks = []; //测试屏蔽发现用
             } else {
-              if (scan) {
+              if (PlatformExt.isMobile && isMobileNetwork) {
+                tasks = [];
+              } else if (scan) {
                 //发现子网设备
                 tasks = await _subNetDiscovering();
               } else {
@@ -1053,21 +1064,23 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     await sendData(skt.dev, MsgType.ping, {
       "result": null,
     });
-    print("testIsOnline: send ping result");
-    //等待500ms
-    const waitTime = Duration(milliseconds: 500);
+    Log.debug(tag, "testIsOnline: send ping result");
+    //等待2000ms
+    const waitTime = Duration(milliseconds: 2000);
     await Future.delayed(waitTime);
-    print("testIsOnline: waitTime finished");
+    Log.debug(tag, "testIsOnline: waitTime finished");
     //等待过程中已经掉线
-    if (_devSockets.containsKey(devId)) {
-      print("testIsOnline: offline in waitTime");
+    if (!_devSockets.containsKey(devId)) {
+      Log.debug(tag, "testIsOnline: offline in waitTime");
       _onDevDisconnected(devId);
       return false;
     }
     skt = _devSockets[devId]!;
     //检查上次ping的时间是否在误差范围内，如果不在这个范围说明可能已经掉线
     final online = skt.lastPingTime.isWithinRange(waitTime);
-    print("testIsOnline: isWithinRange $online");
+    final now = DateTime.now();
+    final offsetMs = now.difference(skt.lastPingTime).inMilliseconds;
+    Log.debug(tag, "testIsOnline: isWithinRange $online, offset $offsetMs ms");
     if (!online) {
       _onDevDisconnected(devId);
     }
@@ -1080,6 +1093,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       Log.debug(tag, "dev($devId) online, cancel connect by forward");
       return false;
     }
+    Log.debug(tag, "connecting $devId");
     return manualConnect(
       forwardServerHost!,
       port: forwardServerPort,
@@ -1423,7 +1437,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         //心跳超时
         Log.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");
         disconnectDevice(ds.dev, true);
-        _showDevDisConnectNotification(ds.dev.name);
+        _showDevDisConnectNotification(ds.dev.guid);
       }
     }
   }
@@ -1437,7 +1451,6 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     startDiscoveryDevices(scan: appConfig.enableAutoSyncOnScreenOpened);
     startHeartbeatTest();
     Log.debug(tag, "屏幕打开");
-    // autoCloseConnTimer
     autoCloseConnTimer = null;
   }
 
@@ -1479,8 +1492,8 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
     Log.debug(tag, "$devId 断开连接");
     final ds = _devSockets[devId];
-    if (ds != null && ds.isPaired) {
-      _showDevDisConnectNotification(ds.dev.name);
+    if (ds != null && ds.isPaired && autoReconnect) {
+      _showDevDisConnectNotification(ds.dev.guid);
     }
     //移除socket
     _devSockets.remove(devId);
@@ -1506,10 +1519,11 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
   }
 
-  void _showDevDisConnectNotification(String devName) {
+  void _showDevDisConnectNotification(String devId) {
+    final devService = Get.find<DeviceService>();
     Global.notify(
       content: TranslationKey.devDisconnectNotifyContent.trParams({
-        "devName": devName,
+        "devName": devService.getName(devId),
       }),
     );
   }

@@ -118,6 +118,7 @@ class AppUpdateInfoUtil {
         }
       },
     );
+    Global.notify(content: "新版本 ${logs.first.version}");
     return true;
   }
 }
