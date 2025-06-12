@@ -5,6 +5,8 @@ import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/permission_handler.dart';
+import 'package:clipshare/app/handlers/sync/app_info_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/history_source_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_top_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/rules_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/tag_sync_handler.dart';
@@ -87,6 +89,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   var leftMenuExtend = true.obs;
   late TagSyncHandler _tagSyncer;
   late HistoryTopSyncHandler _historyTopSyncer;
+  late HistorySourceSyncHandler _historySourceSyncer;
+  late AppInfoSyncHandler _appInfoSyncer;
   late RulesSyncHandler _rulesSyncer;
   late StreamSubscription _networkListener;
   DateTime? _lastNetworkChangeTime;
@@ -150,7 +154,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       )
           .then((started) {
-        settingsController.checkPermissions();
+        settingsController.checkAndroidEnvPermission();
       });
     }
     AppUpdateInfoUtil.showUpdateInfo(true);
@@ -171,6 +175,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     ScreenOpenedListener.inst.remove(this);
     _tagSyncer.dispose();
     _historyTopSyncer.dispose();
+    _historySourceSyncer.dispose();
+    _appInfoSyncer.dispose();
     _rulesSyncer.dispose();
     _networkListener.cancel();
     super.onClose();
@@ -241,6 +247,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     });
     _tagSyncer = TagSyncHandler();
     _historyTopSyncer = HistoryTopSyncHandler();
+    _historySourceSyncer = HistorySourceSyncHandler();
+    _appInfoSyncer = AppInfoSyncHandler();
     _rulesSyncer = RulesSyncHandler();
     //进入主页面后标记为不是第一次进入
     if (appConfig.firstStartup) {

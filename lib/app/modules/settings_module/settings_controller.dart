@@ -11,6 +11,7 @@ import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/auth_password_input.dart';
 import 'package:clipshare/app/widgets/loading.dart';
@@ -40,6 +41,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasFloatPerm = false.obs;
   final hasIgnoreBattery = false.obs;
   final hasSmsReadPerm = true.obs;
+  final hasAccessibilityPerm = false.obs;
   final forwardServerConnected = false.obs;
   final updater = 0.obs;
 
@@ -164,14 +166,16 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       onPressed: onEnvironmentStatusCardActionClick,
     );
     checkPermissions();
+    checkAndroidEnvPermission();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
+      checkPermissions();
       if (envStatusIcon.value == warningIcon) {
-        checkPermissions();
+        checkAndroidEnvPermission();
       }
     }
   }
@@ -212,7 +216,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   }
 
   ///检查必要权限
-  Future<void> checkPermissions([bool restart = false]) async {
+  Future<void> checkPermissions() async {
     if (!Platform.isAndroid) {
       return;
     }
@@ -225,12 +229,31 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     ignoreBatteryHandler.hasPermission().then((v) {
       hasIgnoreBattery.value = v;
     });
-    PermissionHelper.testAndroidReadSms().then(
-      (granted) {
-        //有权限或者不需要读取短信则视为有权限
-        hasSmsReadPerm.value = granted || !appConfig.enableSmsSync;
-      },
-    );
+    PermissionHelper.testAndroidReadSms().then((granted) {
+      //有权限或者不需要读取短信则视为有权限
+      hasSmsReadPerm.value = granted || !appConfig.enableSmsSync;
+    });
+    PermissionHelper.testAndroidAccessibilityPerm().then((granted) {
+      hasAccessibilityPerm.value = granted;
+      if (!granted && appConfig.sourceRecord) {
+        Global.showTipsDialog(
+          context: Get.context!,
+          text: TranslationKey.noAccessibilityPermTips.tr,
+          showCancel: true,
+          okText: TranslationKey.goAuthorize.tr,
+          onOk: () {
+            PermissionHelper.reqAndroidAccessibilityPerm();
+          },
+        );
+      }
+    });
+  }
+
+  ///检查 Android 工作环境必要权限
+  Future<void> checkAndroidEnvPermission([bool restart = false]) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
     final mode = appConfig.workingMode;
     bool hasPermission = true;
     bool listening = await clipboardManager.checkIsRunning();
@@ -272,7 +295,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         way: appConfig.clipboardListeningWay,
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       );
-      checkPermissions();
+      checkAndroidEnvPermission();
     }
   }
 

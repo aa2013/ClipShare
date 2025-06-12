@@ -37,6 +37,7 @@ import 'package:window_manager/window_manager.dart';
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
   final tag = "ConfigService";
+
   //region 属性
 
   //region 常量
@@ -398,6 +399,16 @@ class ConfigService extends GetxService {
 
   bool get enableAutoSyncOnScreenOpened => _enableAutoSyncOnScreenOpened.value;
 
+  //剪贴板来源记录
+  final _sourceRecord = false.obs;
+
+  bool get sourceRecord => _sourceRecord.value;
+
+  //剪贴板来源记录（通过dumpsys）
+  final _sourceRecordViaDumpsys = false.obs;
+
+  bool get sourceRecordViaDumpsys => _sourceRecordViaDumpsys.value && sourceRecord;
+
   //endregion
 
   //endregion
@@ -459,6 +470,8 @@ class ConfigService extends GetxService {
     var fileStoreDir = Directory(fileStorePath ?? await defaultFileStorePath);
     var closeOnSameHotKey = await cfg.getConfig("closeOnSameHotKey", userId);
     var enableAutoSyncOnScreenOpened = await cfg.getConfig("enableAutoSyncOnScreenOpened", userId);
+    var sourceRecord = await cfg.getConfig("sourceRecord", userId);
+    var sourceRecordViaDumpsys = await cfg.getConfig("sourceRecordViaDumpsys", userId);
     //endregion
 
     //region 设置配置值
@@ -521,6 +534,8 @@ class ConfigService extends GetxService {
     }
     _closeOnSameHotKey.value = closeOnSameHotKey?.toBool() ?? false;
     _enableAutoSyncOnScreenOpened.value = enableAutoSyncOnScreenOpened?.toBool() ?? true;
+    _sourceRecord.value = sourceRecord?.toBool() ?? false;
+    _sourceRecordViaDumpsys.value = sourceRecordViaDumpsys?.toBool() ?? false;
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -868,7 +883,7 @@ class ConfigService extends GetxService {
     final homeController = Get.find<HomeController>();
     homeController.initNavBarItems();
     final settingController = Get.find<SettingsController>();
-    settingController.checkPermissions();
+    settingController.checkAndroidEnvPermission();
   }
 
   Future<void> setCleanDataConfig(CleanDataConfig cleanDataConfig) async {
@@ -894,6 +909,16 @@ class ConfigService extends GetxService {
   Future<void> setEnableAutoSyncOnScreenOpened(bool enable) async {
     await _addOrUpdateDbConfig("enableAutoSyncOnScreenOpened", enable.toString());
     _enableAutoSyncOnScreenOpened.value = enable;
+  }
+
+  Future<void> setEnableSourceRecord(bool enable) async {
+    await _addOrUpdateDbConfig("sourceRecord", enable.toString());
+    _sourceRecord.value = enable;
+  }
+
+  Future<void> setEnableSourceRecordViaDumpsys(bool enable) async {
+    await _addOrUpdateDbConfig("sourceRecordViaDumpsys", enable.toString());
+    _sourceRecordViaDumpsys.value = enable;
   }
 
 //endregion

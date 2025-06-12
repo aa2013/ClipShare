@@ -293,7 +293,7 @@ class SplashController extends GetxController {
             break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;
-            HistoryDataListener.inst.onChanged(HistoryContentType.sms, content);
+            HistoryDataListener.inst.onChanged(HistoryContentType.sms, content, null);
             break;
           default:
         }

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -101,5 +102,17 @@ class PermissionHelper {
     if (!Platform.isAndroid) return;
     var status = await Permission.camera.request();
     Log.info(tag, "request Android camera: $status");
+  }
+
+  ///测试无障碍权限
+  static Future<bool> testAndroidAccessibilityPerm() async {
+    if (!Platform.isAndroid) return false;
+    return await clipboardManager.checkAccessibility();
+  }
+
+  ///请求无障碍权限
+  static Future<void> reqAndroidAccessibilityPerm() async {
+    if (!Platform.isAndroid) return;
+    return await clipboardManager.requestAccessibility();
   }
 }

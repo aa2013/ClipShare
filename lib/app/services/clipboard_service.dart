@@ -3,7 +3,8 @@ import 'dart:math';
 
 import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
-import 'package:clipboard_listener/notification_content_config.dart';
+import 'package:clipboard_listener/models/clipboard_source.dart';
+import 'package:clipboard_listener/models/notification_content_config.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/listeners/history_data_listener.dart';
@@ -110,7 +111,7 @@ class ClipboardService extends GetxService with ClipboardListener {
             androidChannelService.copyFileFromUri(event.path!, appConfig.cachePath).then((res) {
               Log.debug(tag, "ScreenshotDetect: $realPath");
               if (res != null) {
-                HistoryDataListener.inst.onChanged(HistoryContentType.image, res);
+                HistoryDataListener.inst.onChanged(HistoryContentType.image, res, null);
               }
             });
           });
@@ -124,10 +125,10 @@ class ClipboardService extends GetxService with ClipboardListener {
   }
 
   @override
-  void onClipboardChanged(ClipboardContentType type, String content) {
+  void onClipboardChanged(ClipboardContentType type, String content, ClipboardSource? source) {
     final contentType = HistoryContentType.parse(type.name);
     Log.debug(tag, "onChange ${content.substring(0, min(content.length, 200))}");
-    HistoryDataListener.inst.onChanged(contentType, content);
+    HistoryDataListener.inst.onChanged(contentType, content, source);
   }
 
   @override
@@ -143,7 +144,7 @@ class ClipboardService extends GetxService with ClipboardListener {
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       );
     }
-    settingsController.checkPermissions();
+    settingsController.checkAndroidEnvPermission();
   }
 
   @override

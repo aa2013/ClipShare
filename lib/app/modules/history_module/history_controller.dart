@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
+import 'package:clipboard_listener/models/clipboard_source.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
@@ -11,6 +12,7 @@ import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
@@ -19,6 +21,7 @@ import 'package:clipshare/app/listeners/history_data_listener.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
@@ -27,6 +30,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
@@ -44,6 +48,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final clipChannelService = Get.find<ClipChannelService>();
+  final sourceService = Get.find<ClipboardSourceService>();
   final tagService = Get.find<TagService>();
 
   //region 属性
@@ -240,9 +245,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   Future f = Future.value();
 
   @override
-  Future<void> onChanged(HistoryContentType type, String content) async {
+  Future<void> onChanged(HistoryContentType type, String content, ClipboardSource? source) async {
     _onChangeLock.synchronized(
-      () => _onChanged(type, content).catchError(
+      () => _onChanged(type, content, source).catchError(
         (err, stack) {
           Log.warn(tag, "onChanged $err, $stack");
         },
@@ -250,7 +255,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     );
   }
 
-  Future<void> _onChanged(HistoryContentType type, String content) async {
+  Future<void> _onChanged(HistoryContentType type, String content, ClipboardSource? source) async {
     if (appConfig.innerCopy) {
       appConfig.innerCopy = false;
       return;
@@ -435,9 +440,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     });
   }
 
-  ///添加页面数据
+  ///添加页面和数据库数据
   Future<int> addData(History history, bool shouldSync) async {
     var clip = ClipData(history);
+    final contentType = HistoryContentType.parse(history.type);
     var cnt = await dbService.historyDao.add(clip.data);
     if (cnt <= 0) return cnt;
     notifyHistoryWindow();
@@ -451,7 +457,61 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       history.id.toString(),
     );
     dbService.opRecordDao.addAndNotify(opRecord);
-    switch (HistoryContentType.parse(history.type)) {
+
+    //region update source on Android
+    if (Platform.isAndroid && shouldSync && appConfig.sourceRecordViaDumpsys && contentType.isClipboard) {
+      var start = DateTime.now();
+      clipboardManager.getLatestWriteClipboardSource().then((source) async {
+        Log.debug(tag, "source $source");
+        if (source == null) return;
+        //一般获取时间不会超过2s，超过该时间视为无效
+        final isTimeout = source.isTimeout(2000);
+        Log.debug(tag, "source time: ${source.time?.toString()}, timeout: $isTimeout");
+        var end = DateTime.now();
+        Log.debug(tag, "source: ${source.name}, offset: ${end.difference(start).inMilliseconds}");
+        if (isTimeout) {
+          return;
+        }
+        const offset = Duration(milliseconds: 500);
+        final historyCreateTime = DateTime.parse(history.time);
+        //如果获取的最新的剪贴板时间不在指定的误差时间，则跳过 todo 考虑提供设置项自行设置
+        if (!(source.time?.isWithinRange(offset, historyCreateTime) ?? false)) {
+          Log.debug(tag, "latest write clipboard source not in range(${offset.inMilliseconds}ms) time: ${source.time}, id: ${source.id}");
+          return;
+        }
+
+        history.source = source.id;
+        // add source icon
+        if (!sourceService.contains(source.id)) {
+          sourceService.addOrUpdate(
+            AppInfo(
+              id: appConfig.snowflake.nextId(),
+              appId: source.id,
+              devId: appConfig.device.guid,
+              name: source.name,
+              iconB64: source.iconB64!,
+            ),
+            true,
+          );
+        }
+        final cnt = await dbService.historyDao.updateHistorySource(history.id, source.id);
+        if ((cnt ?? 0) > 0) {
+          //更新剪贴板来源
+          //先将之前的剪贴板来源操作记录删除再添加操作记录
+          await dbService.opRecordDao.deleteHistorySourceRecords(history.id, Module.historySource.moduleName);
+          dbService.opRecordDao.addAndNotify(
+            OperationRecord.fromSimple(
+              Module.historySource,
+              OpMethod.update,
+              history.id.toString(),
+            ),
+          );
+        }
+      });
+    }
+    //endregion
+
+    switch (contentType) {
       case HistoryContentType.text:
         var rules = jsonDecode(appConfig.tagRules)["data"];
         for (var rule in rules) {

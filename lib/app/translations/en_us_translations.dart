@@ -854,6 +854,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Remember last position";
       case TranslationKey.showOnRecentTasks:
         return "Show on recent tasks";
+      case TranslationKey.showOnRecentTasksTips:
+        return "Hiding recent tasks in higher versions of Android may cause the system to kill the app when switching to other apps. Still want to try hiding?";
       case TranslationKey.showOnRecentTasksDesc:
         return "Hiding the backend on some systems may result in the backend being killed after switching applications（e.g. Xiaomi）, and the current reason is unknown";
       case TranslationKey.showLocalIpAddress:
@@ -1008,6 +1010,32 @@ class EnUSTranslation extends AbstractTranslations {
         return "Downloading";
       case TranslationKey.devDisconnectNotifyContent:
         return "Device @devName disconnected";
+      case TranslationKey.clipboardSettingsGroupName:
+        return "Clipboard";
+      case TranslationKey.clipboardSettingsSourceRecordTitle:
+        return "Record clipboard content source";
+      case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:
+        return "Accessibility services need to be enabled to assist with recording";
+      case TranslationKey.permissionSettingsAccessibilityTitle:
+        return "Accessibility";
+      case TranslationKey.permissionSettingsAccessibilityDesc:
+        return "Enable accessibility permission to assist in recording clipboard sources";
+      case TranslationKey.noAccessibilityPermTips:
+        return "Accessibility service is not enabled. Unable to detect the source of user-initiated copies. Would you like to grant accessibility permission?";
+      case TranslationKey.appIconLoadError:
+        return "Failed to load app icon (@appName)";
+      case TranslationKey.clipboardSettingsSourceRecordTitleTooltip:
+        return "Tips";
+      case TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent:
+        return "Source detection is divided into two types: foreground copying and background copying from other apps. Foreground copying requires accessibility permissions to detect, while background copying can be obtained via dumpsys (with a delay of several hundred milliseconds).\n\nSource detection cannot guarantee complete accuracy, as it mainly relies on accessibility recognition and may mistakenly tag other apps.";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle:
+        return "Record background copy source via dumpsys";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip:
+        return "Description";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
+        return "Background copying may be misidentified. Using dumpsys to detect which app wrote to clipboard for correction";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
+        return "Requires Root or Shizuku permissions, with several hundred milliseconds of delay";
     }
   }
 }

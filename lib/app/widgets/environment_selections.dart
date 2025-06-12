@@ -1,5 +1,6 @@
 import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
+import 'package:clipboard_listener/models/clipboard_source.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -78,7 +79,7 @@ class _EnvironmentSelectionsState extends State<EnvironmentSelections>
   }
 
   @override
-  void onClipboardChanged(ClipboardContentType type, String content) {
+  void onClipboardChanged(ClipboardContentType type, String content, ClipboardSource? source) {
     // TODO: implement onClipboardChanged
   }
 

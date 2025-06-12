@@ -249,5 +249,12 @@ abstract class HistoryDao {
     bool saveTop,
   );
 
+  ///更新历史记录来源
+  @Query("update history set source = :source where id = :id")
+  Future<int?> updateHistorySource(int id, String source);
+
+  ///清除历史记录来源
+  @Query("update history set source = null where id = :id")
+  Future<int?> clearHistorySource(int id);
 //endregion
 }

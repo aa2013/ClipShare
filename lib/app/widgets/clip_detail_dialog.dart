@@ -21,6 +21,7 @@ import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_content_view.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
 import 'package:flutter/material.dart';
@@ -269,9 +270,18 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
             ),
 
             /// 标签栏
-            ClipTagRowView(
-              hisId: widget.clip.data.id,
-              showAddIcon: true,
+            Row(
+              children: [
+                //剪贴板来源
+                if (widget.clip.data.source != null) AppIcon(appId: widget.clip.data.source!),
+
+                Expanded(
+                  child: ClipTagRowView(
+                    hisId: widget.clip.data.id,
+                    showAddIcon: true,
+                  ),
+                ),
+              ],
             ),
 
             ///剪贴板内容部分

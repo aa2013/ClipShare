@@ -1,7 +1,13 @@
+import 'dart:typed_data';
+
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +19,7 @@ class ClipSimpleDataHeader extends StatelessWidget {
   final bool routeToSearchOnClickChip;
   final devService = Get.find<DeviceService>();
   final tagService = Get.find<TagService>();
+  final sourceService = Get.find<ClipboardSourceService>();
   final homeController = Get.find<HomeController>();
 
   ClipSimpleDataHeader({
@@ -25,6 +32,12 @@ class ClipSimpleDataHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        //剪贴板来源
+        if (clip.data.source != null)
+          Container(
+            margin: const EdgeInsets.only(right: 5),
+            child: AppIcon(appId: clip.data.source!),
+          ),
         //来源设备
         RoundedChip(
           avatar: const Icon(Icons.devices_rounded),

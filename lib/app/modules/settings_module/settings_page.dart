@@ -43,6 +43,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 /**
@@ -412,6 +413,19 @@ class SettingsPage extends GetView<SettingsController> {
                           PermissionHelper.reqAndroidReadSms();
                         },
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
+                        value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord,
+                        action: (val) => const Icon(
+                          Icons.help,
+                          color: Colors.orange,
+                        ),
+                        show: (v) => Platform.isAndroid && v,
+                        onTap: () {
+                          PermissionHelper.reqAndroidAccessibilityPerm();
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -469,11 +483,26 @@ class SettingsPage extends GetView<SettingsController> {
                             value: v,
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
-                              androidChannelService.showOnRecentTasks(checked).then((v) {
-                                if (v) {
-                                  appConfig.setShowOnRecentTasks(checked);
-                                }
-                              });
+                              if (!checked) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.showOnRecentTasksTips.tr,
+                                  showCancel: true,
+                                  onOk: () {
+                                    androidChannelService.showOnRecentTasks(checked).then((v) {
+                                      if (v) {
+                                        appConfig.setShowOnRecentTasks(checked);
+                                      }
+                                    });
+                                  },
+                                );
+                              } else {
+                                androidChannelService.showOnRecentTasks(checked).then((v) {
+                                  if (v) {
+                                    appConfig.setShowOnRecentTasks(checked);
+                                  }
+                                });
+                              }
                             },
                           );
                         },
@@ -508,6 +537,114 @@ class SettingsPage extends GetView<SettingsController> {
                           );
                         },
                         show: (v) => PlatformExt.isDesktop,
+                      ),
+                    ],
+                  ),
+                ),
+
+                ///endregion
+
+                ///region 剪贴板设置
+
+                Obx(
+                  () => SettingCardGroup(
+                    groupName: TranslationKey.clipboardSettingsGroupName.tr,
+                    icon: Icon(MdiIcons.clipboardOutline),
+                    cardList: [
+                      SettingCard(
+                        title: Row(
+                          children: [
+                            Text(
+                              TranslationKey.clipboardSettingsSourceRecordTitle.tr,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(width: 5),
+                            Tooltip(
+                              message: TranslationKey.clipboardSettingsSourceRecordTitleTooltip.tr,
+                              child: GestureDetector(
+                                child: const MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blueGrey,
+                                    size: 15,
+                                  ),
+                                ),
+                                onTap: () async {
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent.tr,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.clipboardSettingsSourceRecordAndroidDesc.tr),
+                        value: appConfig.sourceRecord,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnableSourceRecord(checked);
+                              if (Platform.isAndroid && checked && !controller.hasAccessibilityPerm.value) {
+                                //检查无障碍
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.noAccessibilityPermTips.tr,
+                                  showCancel: true,
+                                  okText: TranslationKey.goAuthorize.tr,
+                                  onOk: () {
+                                    PermissionHelper.reqAndroidAccessibilityPerm();
+                                  },
+                                );
+                              }
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Row(
+                          children: [
+                            Text(
+                              TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle.tr,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(width: 5),
+                            Tooltip(
+                              message: TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip.tr,
+                              child: GestureDetector(
+                                child: const MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blueGrey,
+                                    size: 15,
+                                  ),
+                                ),
+                                onTap: () async {
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent.tr,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc.tr),
+                        value: appConfig.sourceRecordViaDumpsys,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnableSourceRecordViaDumpsys(checked);
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isAndroid && appConfig.sourceRecord,
                       ),
                     ],
                   ),
@@ -1026,7 +1163,7 @@ class SettingsPage extends GetView<SettingsController> {
                               },
                             );
                           },
-                          show: (v) => true,
+                          show: (v) => PlatformExt.isDesktop,
                         ),
                         SettingCard(
                           title: Text(
@@ -1082,7 +1219,7 @@ class SettingsPage extends GetView<SettingsController> {
                               },
                             );
                           },
-                          show: (v) => true,
+                          show: (v) => PlatformExt.isDesktop,
                         ),
                       ],
                     )),

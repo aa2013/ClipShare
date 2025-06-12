@@ -26,8 +26,7 @@ class SecureSocketClient {
   bool _listening = false;
   bool _keyIsExchanged = false;
   late final void Function(SecureSocketClient)? _onConnected;
-  late final void Function(
-      SecureSocketClient client, Map<String, dynamic> data)? _onMessage;
+  late final void Function(SecureSocketClient client, Map<String, dynamic> data)? _onMessage;
   void Function(Exception e, SecureSocketClient client)? _onError;
   void Function(SecureSocketClient client)? _onDone;
   bool? _cancelOnError;
@@ -68,8 +67,7 @@ class SecureSocketClient {
     String? targetDevId,
     String? selfDevId,
     void Function(SecureSocketClient)? onConnected,
-    void Function(SecureSocketClient client, Map<String, dynamic> data)?
-        onMessage,
+    void Function(SecureSocketClient client, Map<String, dynamic> data)? onMessage,
     void Function(Exception e, SecureSocketClient client)? onError,
     void Function(SecureSocketClient client)? onDone,
     bool? cancelOnError,
@@ -114,9 +112,7 @@ class SecureSocketClient {
     String? selfDevId,
     int? serverPort,
     void Function(SecureSocketClient)? onConnected,
-    required void Function(
-            SecureSocketClient client, Map<String, dynamic> data)?
-        onMessage,
+    required void Function(SecureSocketClient client, Map<String, dynamic> data)? onMessage,
     void Function(Exception e, SecureSocketClient client)? onError,
     void Function(SecureSocketClient client)? onDone,
     bool? cancelOnError,
@@ -196,8 +192,7 @@ class SecureSocketClient {
           }
           if (_onMessage != null) {
             final map = m2.deserialize(decrypt);
-            _onMessage(
-                this, (map as Map<dynamic, dynamic>).cast<String, dynamic>());
+            _onMessage(this, (map as Map<dynamic, dynamic>).cast<String, dynamic>());
           }
         } else {
           //密钥未交换
@@ -224,7 +219,7 @@ class SecureSocketClient {
           _recDataLock.synchronized(() => _onDataReceive(bytes));
         },
         onError: (e) {
-          Log.error("SecureSocketClient", "error:$e");
+          Log.error(tag, "error:$e");
           if (_onError != null) {
             _onError!(e, this);
           }
@@ -233,7 +228,7 @@ class SecureSocketClient {
           if (_keyIsExchanged) {
             _onDone?.call(this);
           }
-          Log.debug("SecureSocketClient", "_onDone");
+          Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
           _socket.close();
         },
         cancelOnError: _cancelOnError,
@@ -336,7 +331,7 @@ class SecureSocketClient {
       });
     } catch (e, stack) {
       Log.debug(tag, "发送失败：$e");
-      Log.debug(tag, "_onDone ${_onDone == null}");
+      Log.debug(tag, "send, _onDone = ${_onDone == null}");
       Log.debug(tag, "$stack");
       if (_onDone != null) {
         _onDone!.call(this);

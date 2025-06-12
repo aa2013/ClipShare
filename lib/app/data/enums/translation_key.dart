@@ -106,6 +106,8 @@ enum TranslationKey {
   permissionSettingsBatteryOptimiseDesc,
   permissionSettingsSmsTitle,
   permissionSettingsSmsDesc,
+  permissionSettingsAccessibilityTitle,
+  permissionSettingsAccessibilityDesc,
   discoveringSettingsGroupName,
   discoveringSettingsLocalDeviceName,
   discoveringSettingsDeviceNameCopyTip,
@@ -496,7 +498,19 @@ enum TranslationKey {
   done,
   download,
   downloading,
-  devDisconnectNotifyContent;
+  devDisconnectNotifyContent,
+  clipboardSettingsSourceRecordTitle,
+  clipboardSettingsSourceRecordAndroidDesc,
+  clipboardSettingsGroupName,
+  noAccessibilityPermTips,
+  appIconLoadError,
+  showOnRecentTasksTips,
+  clipboardSettingsSourceRecordTitleTooltip,
+  clipboardSettingsSourceRecordTitleTooltipDialogContent,
+  clipboardSettingsSourceRecordViaDumpsysTitle,
+  clipboardSettingsSourceRecordViaDumpsysTitleTooltip,
+  clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent,
+  clipboardSettingsSourceRecordViaDumpsysAndroidDesc;
 
   String get tr => name.tr;
 

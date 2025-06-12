@@ -12,6 +12,7 @@ import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
@@ -109,10 +110,8 @@ Future<void> initMainServices() async {
   Get.put(PendingFileService());
   await Get.putAsync(() => DeviceService().init(), permanent: true);
   await Get.putAsync(() => TagService().init(), permanent: true);
-  await Get.putAsync(
-    () => SyncingFileProgressService().init(),
-    permanent: true,
-  );
+  await Get.putAsync(() => SyncingFileProgressService().init(), permanent: true);
+  await Get.putAsync(() => ClipboardSourceService().init(), permanent: true);
   if (PlatformExt.isDesktop) {
     await Get.putAsync(() => WindowService().init());
     await Get.putAsync(() => TrayService().init());
