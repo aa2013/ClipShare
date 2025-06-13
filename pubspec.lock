@@ -978,6 +978,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.5.0"
+  no_screenshot:
+    dependency: "direct main"
+    description:
+      name: no_screenshot
+      sha256: ec3d86d7ee89a09c3a3939c1003012536ba4b3fcb4f8cbd23d87ada595c99258
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.3.1"
   open_file_plus:
     dependency: "direct main"
     description:

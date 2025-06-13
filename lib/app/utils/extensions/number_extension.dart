@@ -1,3 +1,9 @@
+extension NumberExt on num {
+  bool between(num start, num end) {
+    return this >= start && this <= end;
+  }
+}
+
 extension IntExt on int {
   String get sizeStr {
     if (this < 0) {

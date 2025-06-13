@@ -311,6 +311,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
             return true;
           },
           again: true,
+          showCancelBtn: true,
         ),
       ),
     );

@@ -19,9 +19,6 @@ class AuthenticationPage extends GetView<AuthenticationController> {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> args = Get.arguments as Map<String, dynamic>;
-    controller.backPage.value = !args['lock'];
-    controller.localizedReason = args['localizedReason'];
     return PopScope(
       canPop: controller.backPage.value,
       onPopInvoked: controller.backPage.value
@@ -32,14 +29,17 @@ class AuthenticationPage extends GetView<AuthenticationController> {
               }
             },
       child: Scaffold(
-        body: AuthPasswordInput(
-          onFinished: (String input, String? second) {
-            return CryptoUtil.toMD5(input) == appConfig.appPassword;
-          },
-          onOk: (input) {
-            controller.onAuthenticated();
-            return false;
-          },
+        body: Obx(
+          () => AuthPasswordInput(
+            onFinished: (String input, String? second) {
+              return CryptoUtil.toMD5(input) == appConfig.appPassword;
+            },
+            onOk: (input) {
+              controller.onAuthenticated();
+              return false;
+            },
+            showCancelBtn: controller.backPage.value,
+          ),
         ),
       ),
     );

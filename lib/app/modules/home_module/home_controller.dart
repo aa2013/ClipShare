@@ -28,14 +28,18 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/app_update_info_util.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
+
+final _noScreenshot = NoScreenshot.instance;
 
 class HomeController extends GetxController with WidgetsBindingObserver, ScreenOpenedObserver {
   final appConfig = Get.find<ConfigService>();
@@ -185,6 +189,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    Log.debug(tag, "AppLifecycleState $state");
     switch (state) {
       case AppLifecycleState.resumed:
         AppUpdateInfoUtil.showUpdateInfo(true);
@@ -207,6 +212,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         );
         break;
       case AppLifecycleState.paused:
+      // case AppLifecycleState.inactive:
+      //   if (pausedTime != null) {
+      //     print("skip!!");
+      //     break;
+      //   }
         if (appConfig.authenticating.value) {
           pausedTime = null;
         } else {
@@ -255,6 +265,9 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       appConfig.setNotFirstStartup();
     }
     initAutoCleanDataTimer();
+    if (appConfig.useAuthentication) {
+      gotoAuthenticationPage(TranslationKey.authenticationPageTitle.tr, lock: true);
+    }
   }
 
   void initAutoCleanDataTimer() {
@@ -282,6 +295,9 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       androidChannelService.startSmsListen();
     }
     androidChannelService.showOnRecentTasks(appConfig.showOnRecentTasks);
+    if (appConfig.useAuthentication) {
+      _noScreenshot.screenshotOff();
+    }
   }
 
   ///初始化导航栏
@@ -357,11 +373,17 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   //region 页面跳转相关
 
   ///跳转验证页面
-  Future? gotoAuthenticationPage(localizedReason, [bool lock = true]) {
+  Future? gotoAuthenticationPage(
+    localizedReason, {
+    bool lock = true,
+  }) {
     appConfig.authenticating.value = true;
     return Get.toNamed(
       Routes.AUTHENTICATION,
-      arguments: {"lock": lock, "localizedReason": localizedReason},
+      arguments: {
+        "lock": lock,
+        "localizedReason": localizedReason,
+      },
     );
   }
 

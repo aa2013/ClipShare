@@ -1031,7 +1031,7 @@ class SettingsPage extends GetView<SettingsController> {
                             },
                           );
                         },
-                        show: (v) => Platform.isAndroid,
+                        show: (v) => true,
                       ),
                       SettingCard(
                         title: Text(
@@ -1049,7 +1049,12 @@ class SettingsPage extends GetView<SettingsController> {
                                 //第一步验证
                                 appConfig.authenticating.value = true;
                                 final homeController = Get.find<HomeController>();
-                                homeController.gotoAuthenticationPage(TranslationKey.authenticationPageTitle.tr, false)?.then((v) {
+                                homeController
+                                    .gotoAuthenticationPage(
+                                  TranslationKey.authenticationPageTitle.tr,
+                                  lock: false,
+                                )
+                                    ?.then((v) {
                                   //null为正常验证，设置密码，否则主动退出
                                   if (v != null) {
                                     controller.gotoSetPwd();
@@ -1062,7 +1067,7 @@ class SettingsPage extends GetView<SettingsController> {
                             ),
                           );
                         },
-                        show: (v) => Platform.isAndroid,
+                        show: (v) => true,
                       ),
                       SettingCard(
                         title: Text(
@@ -1095,7 +1100,7 @@ class SettingsPage extends GetView<SettingsController> {
                             duration <= 0 ? TranslationKey.immediately.tr : TranslationKey.securitySettingsReverificationValue.trParams({"value": duration.toString()}),
                           );
                         },
-                        show: (v) => Platform.isAndroid,
+                        show: (v) => true,
                       ),
                     ],
                   ),

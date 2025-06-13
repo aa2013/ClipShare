@@ -18,6 +18,7 @@ import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -33,6 +34,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:no_screenshot/no_screenshot.dart';
+
+final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
@@ -698,11 +702,11 @@ class ConfigService extends GetxService {
     );
     Size size = await windowManager.getSize();
     _rememberWindowSize.value = rememberWindowSize;
-    _windowSize.value = "${size.width}x${size.height}";
+    _windowSize.value = "${size.width.toInt()}x${size.height.toInt()}";
   }
 
   Future<void> setWindowSize(Size windowSize) async {
-    var size = "${windowSize.width}x${windowSize.height}";
+    var size = "${windowSize.width.toInt()}x${windowSize.height.toInt()}";
     await _addOrUpdateDbConfig("windowSize", size);
     _windowSize.value = size;
   }
@@ -788,6 +792,13 @@ class ConfigService extends GetxService {
   Future<void> setUseAuthentication(bool useAuthentication) async {
     await _addOrUpdateDbConfig("useAuthentication", useAuthentication.toString());
     _useAuthentication.value = useAuthentication;
+    if (PlatformExt.isMobile) {
+      if (useAuthentication) {
+        _noScreenshot.screenshotOff();
+      } else {
+        _noScreenshot.screenshotOn();
+      }
+    }
   }
 
   Future<void> setAppRevalidateDuration(int appRevalidateDuration) async {

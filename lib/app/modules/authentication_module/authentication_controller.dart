@@ -17,7 +17,7 @@ class AuthenticationController extends GetxController {
   var authenticating = false;
   final tag = "AuthenticationPage";
   var backPage = false.obs;
-  late final String localizedReason;
+  String? localizedReason;
   final appConfig = Get.find<ConfigService>();
   final homeController = Get.find<HomeController>();
   final androidChannelService = Get.find<AndroidChannelService>();
@@ -32,6 +32,9 @@ class AuthenticationController extends GetxController {
       }
       showBottomSheetAuthentication();
     });
+    final Map<String, dynamic> args = Get.arguments as Map<String, dynamic>;
+    backPage.value = !args['lock'];
+    localizedReason = args['localizedReason'];
   }
 
   void showBottomSheetAuthentication() {
@@ -75,10 +78,13 @@ class AuthenticationController extends GetxController {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.fingerprint_outlined,
-                      color: Colors.blueAccent,
-                      size: 100,
+                    GestureDetector(
+                      onTap: authenticate,
+                      child: const Icon(
+                        Icons.fingerprint_outlined,
+                        color: Colors.blueAccent,
+                        size: 100,
+                      ),
                     ),
                     TextButton(
                       onPressed: authenticate,
@@ -99,12 +105,12 @@ class AuthenticationController extends GetxController {
       authenticating = true;
       var authenticated = await auth.authenticate(
         authMessages: [
-           AndroidAuthMessages(
+          AndroidAuthMessages(
             biometricHint: "",
             signInTitle: TranslationKey.authenticationPageRequireAuthentication.tr,
           ),
         ],
-        localizedReason: localizedReason,
+        localizedReason: localizedReason ?? TranslationKey.authenticationPageTitle.tr,
       );
       authenticating = false;
       Log.debug(tag, "authenticated $authenticated");

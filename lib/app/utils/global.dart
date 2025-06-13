@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
+import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ import 'constants.dart';
 class Global {
   Global._private();
 
+  static const tag = "GlobalUtils";
   static var _notificationReady = false;
 
   static final _notification = FlutterLocalNotificationsPlugin();
@@ -64,12 +67,7 @@ class Global {
     if (!_notificationReady) {
       await _initNotifications();
     }
-    const NotificationDetails notificationDetails = NotificationDetails(
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
-      linux: LinuxNotificationDetails(),
-      windows: WindowsNotificationDetails()
-    );
+    const NotificationDetails notificationDetails = NotificationDetails(iOS: DarwinNotificationDetails(), macOS: DarwinNotificationDetails(), linux: LinuxNotificationDetails(), windows: WindowsNotificationDetails());
 
     await _notification.show(
       0,
@@ -159,6 +157,13 @@ class Global {
     void Function()? onNeutral,
     bool autoDismiss = true,
   }) {
+    try {
+      final appConfig = Get.find<ConfigService>();
+      if (appConfig.authenticating.value) {
+        Log.warn(tag, "cancel show tips dialog because of authenticating");
+        return;
+      }
+    } catch (_) {}
     title = title ?? TranslationKey.tips.tr;
     okText = okText ?? TranslationKey.dialogConfirmText.tr;
     cancelText = cancelText ?? TranslationKey.dialogCancelText.tr;
