@@ -398,6 +398,7 @@ enum TranslationKey {
   syncFile,
   preference,
   preferenceSettingsRecordsDialogLocation,
+  notification,
   current,
   followMousePos,
   rememberLastPos,
@@ -516,7 +517,8 @@ enum TranslationKey {
   clearSuccess,
   clearFailed,
   selectApplication,
-  filterBySource;
+  filterBySource,
+  preferenceSettingsDevDisconnNotification;
 
   String get tr => name.tr;
 

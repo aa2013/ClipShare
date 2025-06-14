@@ -1049,6 +1049,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "清除失败";
       case TranslationKey.selectApplication:
         return "选择应用";
+      case TranslationKey.preferenceSettingsDevDisconnNotification:
+        return "设备连接断开时发起系统通知";
+      case TranslationKey.notification:
+        return "通知";
     }
   }
 }

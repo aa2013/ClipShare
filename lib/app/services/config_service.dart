@@ -413,6 +413,11 @@ class ConfigService extends GetxService {
 
   bool get sourceRecordViaDumpsys => _sourceRecordViaDumpsys.value && sourceRecord;
 
+  //剪贴板来源记录（通过dumpsys）
+  final _notifyOnDevDisconn = true.obs;
+
+  bool get notifyOnDevDisconn => _notifyOnDevDisconn.value;
+
   //endregion
 
   //endregion
@@ -476,6 +481,7 @@ class ConfigService extends GetxService {
     var enableAutoSyncOnScreenOpened = await cfg.getConfig("enableAutoSyncOnScreenOpened", userId);
     var sourceRecord = await cfg.getConfig("sourceRecord", userId);
     var sourceRecordViaDumpsys = await cfg.getConfig("sourceRecordViaDumpsys", userId);
+    var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
     //endregion
 
     //region 设置配置值
@@ -540,6 +546,7 @@ class ConfigService extends GetxService {
     _enableAutoSyncOnScreenOpened.value = enableAutoSyncOnScreenOpened?.toBool() ?? true;
     _sourceRecord.value = sourceRecord?.toBool() ?? false;
     _sourceRecordViaDumpsys.value = sourceRecordViaDumpsys?.toBool() ?? false;
+    _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -930,6 +937,11 @@ class ConfigService extends GetxService {
   Future<void> setEnableSourceRecordViaDumpsys(bool enable) async {
     await _addOrUpdateDbConfig("sourceRecordViaDumpsys", enable.toString());
     _sourceRecordViaDumpsys.value = enable;
+  }
+
+  Future<void> setNotifyOnDevDisconn(bool enable) async {
+    await _addOrUpdateDbConfig("notifyOnDevDisconn", enable.toString());
+    _notifyOnDevDisconn.value = enable;
   }
 
 //endregion

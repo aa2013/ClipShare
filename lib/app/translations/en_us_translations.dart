@@ -1048,6 +1048,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Failed to clear";
       case TranslationKey.selectApplication:
         return "Select Applications";
+        case TranslationKey.preferenceSettingsDevDisconnNotification:
+      return "System notification when device disconnection";
+      case TranslationKey.notification:
+        return "Notification";
     }
   }
 }

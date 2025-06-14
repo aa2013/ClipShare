@@ -433,6 +433,7 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 偏好
+
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.preference.tr,
@@ -543,6 +544,35 @@ class SettingsPage extends GetView<SettingsController> {
                 ),
 
                 ///endregion
+
+                ///region 通知
+
+                Obx(
+                  () => SettingCardGroup(
+                    groupName: TranslationKey.notification.tr,
+                    icon: const Icon(Icons.notifications_active_outlined),
+                    cardList: [
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.preferenceSettingsDevDisconnNotification.tr,
+                        ),
+                        value: appConfig.notifyOnDevDisconn,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) {
+                            HapticFeedback.mediumImpact();
+                            appConfig.setNotifyOnDevDisconn(checked);
+                          },
+                        ),
+                        show: (v) => true,
+                      ),
+                    ],
+                  ),
+                ),
+
+                ///endregion
+
+
 
                 ///region 剪贴板设置
 

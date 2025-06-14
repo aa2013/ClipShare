@@ -1521,6 +1521,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   void _showDevDisConnectNotification(String devId) {
+    if (!appConfig.notifyOnDevDisconn) {
+      return;
+    }
     final devService = Get.find<DeviceService>();
     Global.notify(
       content: TranslationKey.devDisconnectNotifyContent.trParams({
