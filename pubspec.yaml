@@ -108,7 +108,7 @@ dependencies:
   calendar_date_picker2: ^1.1.6
   # 月份选择
   month_picker_dialog: ^5.1.2
-  clipboard_listener:
+  clipshare_clipboard_listener:
     path: ../clipboard_listener
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
