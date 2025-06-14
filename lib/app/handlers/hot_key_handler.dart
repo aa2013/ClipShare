@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/desktop_multi_window_args.dart';

@@ -1,5 +1,5 @@
-import 'package:clipboard_listener/clipboard_manager.dart';
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:get/get.dart';

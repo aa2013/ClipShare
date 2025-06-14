@@ -1,4 +1,4 @@
-import 'package:clipboard_listener/models/app_info.dart';
+import 'package:clipshare_clipboard_listener/models/app_info.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';

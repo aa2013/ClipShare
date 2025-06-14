@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:clipboard_listener/clipboard_manager.dart';
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/permission_handler.dart';
 import 'package:clipshare/app/modules/clean_data_module/clean_data_controller.dart';

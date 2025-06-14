@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/log.dart';

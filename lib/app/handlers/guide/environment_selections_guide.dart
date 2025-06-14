@@ -1,4 +1,4 @@
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/guide/base_guide.dart';
 import 'package:clipshare/app/modules/user_guide_module/user_guide_controller.dart';
