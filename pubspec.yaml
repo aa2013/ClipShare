@@ -109,10 +109,7 @@ dependencies:
   # 月份选择
   month_picker_dialog: ^5.1.2
   # 剪贴板监听
-  clipboard_listener:
-    git:
-      url: https://github.com/aa2013/ClipboardListener.git
-      ref: master
+  clipshare_clipboard_listener: ^1.0.0
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
   # 大文本编辑器
