@@ -18,6 +18,7 @@ import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -33,10 +34,14 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:no_screenshot/no_screenshot.dart';
+
+final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
   final tag = "ConfigService";
+
   //region 属性
 
   //region 常量
@@ -398,6 +403,21 @@ class ConfigService extends GetxService {
 
   bool get enableAutoSyncOnScreenOpened => _enableAutoSyncOnScreenOpened.value;
 
+  //剪贴板来源记录
+  final _sourceRecord = false.obs;
+
+  bool get sourceRecord => _sourceRecord.value;
+
+  //剪贴板来源记录（通过dumpsys）
+  final _sourceRecordViaDumpsys = false.obs;
+
+  bool get sourceRecordViaDumpsys => _sourceRecordViaDumpsys.value && sourceRecord;
+
+  //剪贴板来源记录（通过dumpsys）
+  final _notifyOnDevDisconn = true.obs;
+
+  bool get notifyOnDevDisconn => _notifyOnDevDisconn.value;
+
   //endregion
 
   //endregion
@@ -459,6 +479,9 @@ class ConfigService extends GetxService {
     var fileStoreDir = Directory(fileStorePath ?? await defaultFileStorePath);
     var closeOnSameHotKey = await cfg.getConfig("closeOnSameHotKey", userId);
     var enableAutoSyncOnScreenOpened = await cfg.getConfig("enableAutoSyncOnScreenOpened", userId);
+    var sourceRecord = await cfg.getConfig("sourceRecord", userId);
+    var sourceRecordViaDumpsys = await cfg.getConfig("sourceRecordViaDumpsys", userId);
+    var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
     //endregion
 
     //region 设置配置值
@@ -521,6 +544,9 @@ class ConfigService extends GetxService {
     }
     _closeOnSameHotKey.value = closeOnSameHotKey?.toBool() ?? false;
     _enableAutoSyncOnScreenOpened.value = enableAutoSyncOnScreenOpened?.toBool() ?? true;
+    _sourceRecord.value = sourceRecord?.toBool() ?? false;
+    _sourceRecordViaDumpsys.value = sourceRecordViaDumpsys?.toBool() ?? false;
+    _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -683,11 +709,11 @@ class ConfigService extends GetxService {
     );
     Size size = await windowManager.getSize();
     _rememberWindowSize.value = rememberWindowSize;
-    _windowSize.value = "${size.width}x${size.height}";
+    _windowSize.value = "${size.width.toInt()}x${size.height.toInt()}";
   }
 
   Future<void> setWindowSize(Size windowSize) async {
-    var size = "${windowSize.width}x${windowSize.height}";
+    var size = "${windowSize.width.toInt()}x${windowSize.height.toInt()}";
     await _addOrUpdateDbConfig("windowSize", size);
     _windowSize.value = size;
   }
@@ -773,6 +799,13 @@ class ConfigService extends GetxService {
   Future<void> setUseAuthentication(bool useAuthentication) async {
     await _addOrUpdateDbConfig("useAuthentication", useAuthentication.toString());
     _useAuthentication.value = useAuthentication;
+    if (PlatformExt.isMobile) {
+      if (useAuthentication) {
+        _noScreenshot.screenshotOff();
+      } else {
+        _noScreenshot.screenshotOn();
+      }
+    }
   }
 
   Future<void> setAppRevalidateDuration(int appRevalidateDuration) async {
@@ -868,7 +901,7 @@ class ConfigService extends GetxService {
     final homeController = Get.find<HomeController>();
     homeController.initNavBarItems();
     final settingController = Get.find<SettingsController>();
-    settingController.checkPermissions();
+    settingController.checkAndroidEnvPermission();
   }
 
   Future<void> setCleanDataConfig(CleanDataConfig cleanDataConfig) async {
@@ -894,6 +927,21 @@ class ConfigService extends GetxService {
   Future<void> setEnableAutoSyncOnScreenOpened(bool enable) async {
     await _addOrUpdateDbConfig("enableAutoSyncOnScreenOpened", enable.toString());
     _enableAutoSyncOnScreenOpened.value = enable;
+  }
+
+  Future<void> setEnableSourceRecord(bool enable) async {
+    await _addOrUpdateDbConfig("sourceRecord", enable.toString());
+    _sourceRecord.value = enable;
+  }
+
+  Future<void> setEnableSourceRecordViaDumpsys(bool enable) async {
+    await _addOrUpdateDbConfig("sourceRecordViaDumpsys", enable.toString());
+    _sourceRecordViaDumpsys.value = enable;
+  }
+
+  Future<void> setNotifyOnDevDisconn(bool enable) async {
+    await _addOrUpdateDbConfig("notifyOnDevDisconn", enable.toString());
+    _notifyOnDevDisconn.value = enable;
   }
 
 //endregion

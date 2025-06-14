@@ -6,7 +6,9 @@ enum Module {
   tag(moduleName: "标签管理"),
   history(moduleName: "历史记录"),
   rules(moduleName: "规则设置"),
-  historyTop(moduleName: "历史记录置顶");
+  historyTop(moduleName: "历史记录置顶"),
+  historySource(moduleName: "历史记录来源"),
+  appInfo(moduleName: "App信息");
 
   const Module({required this.moduleName});
 

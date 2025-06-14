@@ -2,6 +2,7 @@ enum MultiWindowMethod {
   getHistories,
   getAllDevices,
   getAllTagNames,
+  getAllSources,
   copy,
   notify,
   getCompatibleOnlineDevices,

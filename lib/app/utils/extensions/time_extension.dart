@@ -25,9 +25,9 @@ extension DateTimeExt on DateTime {
     return time;
   }
 
-  bool isWithinRange(Duration duration) {
-    var now = DateTime.now();
-    var micros = now.difference(this).inMicroseconds;
+  bool isWithinRange(Duration duration, [DateTime? other]) {
+    other ??= DateTime.now();
+    var micros = other.difference(this).inMicroseconds;
     return micros.abs() < duration.inMicroseconds;
   }
 }

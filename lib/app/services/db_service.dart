@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/data/repository/dao/app_info_dao.dart';
 import 'package:clipshare/app/data/repository/dao/config_dao.dart';
 import 'package:clipshare/app/data/repository/dao/device_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_dao.dart';
@@ -8,6 +9,7 @@ import 'package:clipshare/app/data/repository/dao/history_tag_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
 import 'package:clipshare/app/data/repository/dao/user_dao.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/config.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
@@ -35,7 +37,7 @@ part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
 ///
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
-  version: 4,
+  version: 5,
   entities: [
     Config,
     Device,
@@ -44,6 +46,7 @@ part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
     OperationSync,
     HistoryTag,
     OperationRecord,
+    AppInfo,
   ],
   views: [
     VHistoryTagHold,
@@ -63,6 +66,8 @@ abstract class _AppDb extends FloorDatabase {
   HistoryTagDao get historyTagDao;
 
   OperationRecordDao get operationRecordDao;
+
+  AppInfoDao get appInfoDao;
 }
 
 class DbService extends GetxService {
@@ -82,7 +87,12 @@ class DbService extends GetxService {
   HistoryTagDao get historyTagDao => _db.historyTagDao;
 
   OperationRecordDao get opRecordDao => _db.operationRecordDao;
+
+  AppInfoDao get appInfoDao => _db.appInfoDao;
+
   final tag = "DbService";
+
+  late final int version;
 
   sqflite.DatabaseExecutor get dbExecutor => _db.database;
   Future _queue = Future.value();
@@ -105,13 +115,15 @@ class DbService extends GetxService {
       migration1to2,
       migration2to3,
       migration3to4,
+      migration4to5,
     ]).build();
+    version = await _db.database.database.getVersion();
     return this;
   }
 
   @override
   Future<void> onClose() {
-    print("dbservice onClose");
+    print("db service onClose");
     return _db.close();
   }
 
@@ -147,8 +159,17 @@ class DbService extends GetxService {
   });
 
   ///数据库版本 3 -> 4
-  ///历史表增加更新时间自动
+  ///历史表增加更新时间字段
   final migration3to4 = Migration(3, 4, (database) async {
     await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
+  });
+
+  ///数据库版本 4 -> 5
+  ///新增 app 信息表
+  ///历史表增加来源字段
+  final migration4to5 = Migration(4, 5, (database) async {
+    await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
+    await database.execute("CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));");
+    await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);');
   });
 }

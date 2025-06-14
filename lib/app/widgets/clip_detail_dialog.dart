@@ -15,12 +15,14 @@ import 'package:clipshare/app/modules/search_module/search_controller.dart' as s
 import 'package:clipshare/app/modules/views/modify_history_content_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_content_view.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
 import 'package:flutter/material.dart';
@@ -269,9 +271,45 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
             ),
 
             /// 标签栏
-            ClipTagRowView(
-              hisId: widget.clip.data.id,
-              showAddIcon: true,
+            Row(
+              children: [
+                //剪贴板来源
+                if (widget.clip.data.source != null)
+                  AppIcon(
+                    appId: widget.clip.data.source!,
+                    onDeleteClicked: () {
+                      Global.showTipsDialog(
+                        context: context,
+                        text: TranslationKey.clearSourceConfirmText.tr,
+                        onOk: () async {
+                          final id = widget.clip.data.id;
+                          final cnt = await dbService.historyDao.clearHistorySource(id);
+                          if ((cnt ?? 0) > 0) {
+                            final historyController = Get.find<HistoryController>();
+                            historyController.updateData(
+                              (history) => history.id == id,
+                              (history) => history.source = null,
+                              true,
+                            );
+                            //移除未使用的剪贴板来源信息
+                            final sourceService = Get.find<ClipboardSourceService>();
+                            await sourceService.removeNotUsed();
+                            Global.showSnackBarSuc(context: context, text: TranslationKey.clearSuccess.tr);
+                          } else {
+                            Global.showSnackBarErr(context: context, text: TranslationKey.clearFailed.tr);
+                          }
+                        },
+                        showCancel: true,
+                      );
+                    },
+                  ),
+                Expanded(
+                  child: ClipTagRowView(
+                    hisId: widget.clip.data.id,
+                    showAddIcon: true,
+                  ),
+                ),
+              ],
             ),
 
             ///剪贴板内容部分

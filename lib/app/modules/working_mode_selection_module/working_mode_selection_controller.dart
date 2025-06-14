@@ -31,7 +31,7 @@ class WorkingModeSelectionController extends GetxController {
     if (selected.value == EnvironmentType.none) {
       clipboardManager.stopListening();
     }
-    settingController.checkPermissions(true);
+    settingController.checkAndroidEnvPermission(true);
     Get.back();
   }
 }

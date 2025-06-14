@@ -37,8 +37,18 @@ enum HistoryContentType {
     }
   }
 
-  static HistoryContentType parse(String value) =>
-      HistoryContentType.values.firstWhere(
+  bool get isClipboard {
+    switch (this) {
+      case HistoryContentType.text:
+      case HistoryContentType.image:
+      case HistoryContentType.richText:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  static HistoryContentType parse(String value) => HistoryContentType.values.firstWhere(
         (e) => e.value.toUpperCase() == value.toUpperCase(),
         orElse: () {
           Log.debug("ContentType", "key '$value' unknown");
@@ -47,9 +57,7 @@ enum HistoryContentType {
       );
 
   static Map<String, String> get typeMap {
-    var lst = HistoryContentType.values
-        .where((e) => e != HistoryContentType.unknown)
-        .toList();
+    var lst = HistoryContentType.values.where((e) => e != HistoryContentType.unknown).toList();
     Map<String, String> res = {};
     for (var t in lst) {
       res[t.label] = t.value;

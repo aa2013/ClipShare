@@ -35,6 +35,9 @@ class History implements Comparable {
   ///更新时间
   String? updateTime;
 
+  ///来源
+  String? source;
+
   History({
     required this.id,
     required this.uid,
@@ -46,6 +49,7 @@ class History implements Comparable {
     this.top = false,
     this.sync = false,
     this.updateTime,
+    this.source,
   });
 
   @override
@@ -72,6 +76,7 @@ class History implements Comparable {
     this.sync = false,
     this.size = 0,
     this.updateTime,
+    this.source,
   });
 
   static History fromJson(Map<String, dynamic> map) {
@@ -95,6 +100,7 @@ class History implements Comparable {
       top: top,
       sync: sync,
       updateTime: map.containsKey("updateTime") ? map["updateTime"] : null,
+      source: map.containsKey("source") ? map["source"] : null,
     );
   }
 
@@ -118,6 +124,7 @@ class History implements Comparable {
       "sync": sync,
       "size": size,
       "updateTime": updateTime,
+      "source": source,
     };
   }
 

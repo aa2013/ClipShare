@@ -12,16 +12,12 @@
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <!-- Android 14 detect screenshot-->
     <uses-permission android:name="android.permission.DETECT_SCREEN_CAPTURE" />
 
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <application
         android:name="${applicationName}"
@@ -32,12 +28,6 @@
             android:name=".service.HistoryFloatService"
             android:enabled="true"
             android:exported="false" />
-        <!--    声明前台服务 android 需要声明 foregroundServiceType-->
-        <service
-            android:name="top.coclyun.clipshare.clipboard_listener.service.ForegroundService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse" />
 
         <receiver
             android:name=".broadcast.ScreenReceiver"
@@ -99,18 +89,6 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <provider
-            android:name="top.coclyun.clipshare.clipboard_listener.FileProvider"
-            android:authorities="${applicationId}.FileProvider"
-            android:exported="true"
-            android:multiprocess="true" />
-        <provider
-            android:name="rikka.shizuku.ShizukuProvider"
-            android:authorities="${applicationId}.shizuku"
-            android:enabled="true"
-            android:exported="true"
-            android:multiprocess="false"
-            android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.FileProvider"

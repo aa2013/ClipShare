@@ -96,4 +96,9 @@ abstract class OperationRecordDao {
     //再删除操作记录
     await deleteByData(data);
   }
+
+  @Query(
+    r"delete from OperationRecord where data = :historyId and module = :moduleName",
+  )
+  Future<void> deleteHistorySourceRecords(int historyId,String moduleName);
 }

@@ -5,6 +5,8 @@ import 'package:clipboard_listener/clipboard_manager.dart';
 import 'package:clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/permission_handler.dart';
+import 'package:clipshare/app/handlers/sync/app_info_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/history_source_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_top_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/rules_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/tag_sync_handler.dart';
@@ -26,14 +28,18 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/app_update_info_util.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
+
+final _noScreenshot = NoScreenshot.instance;
 
 class HomeController extends GetxController with WidgetsBindingObserver, ScreenOpenedObserver {
   final appConfig = Get.find<ConfigService>();
@@ -87,6 +93,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   var leftMenuExtend = true.obs;
   late TagSyncHandler _tagSyncer;
   late HistoryTopSyncHandler _historyTopSyncer;
+  late HistorySourceSyncHandler _historySourceSyncer;
+  late AppInfoSyncHandler _appInfoSyncer;
   late RulesSyncHandler _rulesSyncer;
   late StreamSubscription _networkListener;
   DateTime? _lastNetworkChangeTime;
@@ -150,7 +158,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
       )
           .then((started) {
-        settingsController.checkPermissions();
+        settingsController.checkAndroidEnvPermission();
       });
     }
     AppUpdateInfoUtil.showUpdateInfo(true);
@@ -171,6 +179,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     ScreenOpenedListener.inst.remove(this);
     _tagSyncer.dispose();
     _historyTopSyncer.dispose();
+    _historySourceSyncer.dispose();
+    _appInfoSyncer.dispose();
     _rulesSyncer.dispose();
     _networkListener.cancel();
     super.onClose();
@@ -179,6 +189,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    Log.debug(tag, "AppLifecycleState $state");
     switch (state) {
       case AppLifecycleState.resumed:
         AppUpdateInfoUtil.showUpdateInfo(true);
@@ -201,6 +212,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         );
         break;
       case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+        if (pausedTime != null) {
+          Log.debug(tag, "$state skip!!");
+          break;
+        }
         if (appConfig.authenticating.value) {
           pausedTime = null;
         } else {
@@ -241,12 +257,17 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     });
     _tagSyncer = TagSyncHandler();
     _historyTopSyncer = HistoryTopSyncHandler();
+    _historySourceSyncer = HistorySourceSyncHandler();
+    _appInfoSyncer = AppInfoSyncHandler();
     _rulesSyncer = RulesSyncHandler();
     //进入主页面后标记为不是第一次进入
     if (appConfig.firstStartup) {
       appConfig.setNotFirstStartup();
     }
     initAutoCleanDataTimer();
+    if (appConfig.useAuthentication) {
+      gotoAuthenticationPage(TranslationKey.authenticationPageTitle.tr, lock: true);
+    }
   }
 
   void initAutoCleanDataTimer() {
@@ -274,6 +295,9 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       androidChannelService.startSmsListen();
     }
     androidChannelService.showOnRecentTasks(appConfig.showOnRecentTasks);
+    if (appConfig.useAuthentication) {
+      _noScreenshot.screenshotOff();
+    }
   }
 
   ///初始化导航栏
@@ -349,11 +373,17 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   //region 页面跳转相关
 
   ///跳转验证页面
-  Future? gotoAuthenticationPage(localizedReason, [bool lock = true]) {
+  Future? gotoAuthenticationPage(
+    localizedReason, {
+    bool lock = true,
+  }) {
     appConfig.authenticating.value = true;
     return Get.toNamed(
       Routes.AUTHENTICATION,
-      arguments: {"lock": lock, "localizedReason": localizedReason},
+      arguments: {
+        "lock": lock,
+        "localizedReason": localizedReason,
+      },
     );
   }
 

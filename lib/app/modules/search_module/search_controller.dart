@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -48,6 +49,8 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   Set<String> get selectedTags => filter.value.tags;
 
   Set<String> get selectedDevIds => filter.value.devIds;
+
+  Set<String> get selectedAppIds => filter.value.appIds;
 
   String get searchStartDate => filter.value.startDate;
 
@@ -181,6 +184,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       typeValue,
       selectedTags.toList(),
       selectedDevIds.toList(),
+      selectedAppIds.toList(),
       searchStartDate,
       searchEndDate,
       searchOnlyNoSync,
@@ -268,10 +272,11 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     sheet.setColumnWidthInPixels(1, 150);
     sheet.getRangeByName("B1").setText("类型");
     sheet.getRangeByName("C1").setText("设备");
-    sheet.getRangeByName("D1").setText("是否置顶");
-    sheet.getRangeByName("E1").setText("内容");
-    sheet.setColumnWidthInPixels(5, 570);
-    sheet.getRangeByName("F1").setText("内容长度");
+    sheet.getRangeByName("D1").setText("来源");
+    sheet.getRangeByName("E1").setText("是否置顶");
+    sheet.getRangeByName("F1").setText("内容");
+    sheet.setColumnWidthInPixels(6, 570);
+    sheet.getRangeByName("G1").setText("内容长度");
   }
 
   ///将历史数据添加到excel对象中
@@ -293,10 +298,19 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       ..setDateTime(time);
     sheet.getRangeByName("B$rowNum").setText(type.label);
     sheet.getRangeByName("C$rowNum").setText(devName);
-    sheet.getRangeByName("D$rowNum").setNumber(history.top ? 1 : 0);
+    final sourceService = Get.find<ClipboardSourceService>();
+    var source = "";
+    if (history.source != null) {
+      final app = sourceService.getAppInfoByAppId(history.source!);
+      if (app != null) {
+        source = app.name;
+      }
+    }
+    sheet.getRangeByName("D$rowNum").setText(source);
+    sheet.getRangeByName("E$rowNum").setNumber(history.top ? 1 : 0);
     if (clip.isImage) {
       final file = File(history.content);
-      final cell = sheet.getRangeByName("E$rowNum");
+      final cell = sheet.getRangeByName("F$rowNum");
       sheet.setRowHeightInPixels(rowNum, 100);
       final rowHeight = cell.rowHeight;
       final cellWidth = cell.columnWidth;
@@ -309,9 +323,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         picture.width = min(cellWidth * 1.33, 200).toInt(); // 限制宽度
       }
     } else {
-      sheet.getRangeByName("E$rowNum").setText(history.content);
+      sheet.getRangeByName("F$rowNum").setText(history.content);
     }
-    sheet.getRangeByName("F$rowNum").setText(size);
+    sheet.getRangeByName("G$rowNum").setText(size);
   }
 //endregion
 //endregion

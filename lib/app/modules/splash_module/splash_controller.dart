@@ -22,6 +22,7 @@ import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_p
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -50,6 +51,7 @@ class SplashController extends GetxController {
   static const tag = "SplashController";
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
+  final sourceService = Get.find<ClipboardSourceService>();
   final clipChannelService = Get.find<ClipChannelService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final devService = Get.find<DeviceService>();
@@ -188,6 +190,9 @@ class SplashController extends GetxController {
           //加载所有标签名
           final tagNames = await dbService.historyTagDao.getAllTagNames();
           return jsonEncode(tagNames);
+        case MultiWindowMethod.getAllSources:
+          //加载所有设备信息
+          return jsonEncode(sourceService.appInfos);
         case MultiWindowMethod.copy:
           int id = args["id"];
           dbService.historyDao.getById(id).then(
@@ -293,7 +298,7 @@ class SplashController extends GetxController {
             break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;
-            HistoryDataListener.inst.onChanged(HistoryContentType.sms, content);
+            HistoryDataListener.inst.onChanged(HistoryContentType.sms, content, null);
             break;
           default:
         }

@@ -823,6 +823,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   ///数据同步处理
   void _onSyncMsg(MessageData msg, [MissingDataSyncProgress? progress]) {
     Module module = Module.getValue(msg.data["module"]);
+    Log.debug(tag, "module ${module.moduleName}");
     if (progress?.firstHistory ?? false) {
       final historyController = Get.find<HistoryController>();
       historyController.setMissingDataCopyMsg(MessageData.fromJson(msg.toJson()));
@@ -1520,6 +1521,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   void _showDevDisConnectNotification(String devId) {
+    if (!appConfig.notifyOnDevDisconn) {
+      return;
+    }
     final devService = Get.find<DeviceService>();
     Global.notify(
       content: TranslationKey.devDisconnectNotifyContent.trParams({

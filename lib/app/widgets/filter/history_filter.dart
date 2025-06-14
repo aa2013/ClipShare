@@ -1,6 +1,7 @@
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -13,6 +14,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 class HistoryFilter extends StatefulWidget {
   List<Device> allDevices;
   List<String> allTagNames;
+  List<AppInfo> allSources;
   Future<void> Function() loadSearchCondition;
   bool isBigScreen;
   bool showContentTypeFilter;
@@ -24,6 +26,7 @@ class HistoryFilter extends StatefulWidget {
     super.key,
     required this.allDevices,
     required this.allTagNames,
+    required this.allSources,
     required this.loadSearchCondition,
     required this.isBigScreen,
     this.showContentTypeFilter = true,
@@ -126,6 +129,7 @@ class _HistoryFilterState extends State<HistoryFilter> {
                       searchFilter: filter,
                       allDevices: widget.allDevices,
                       allTagNames: widget.allTagNames,
+                      allSources: widget.allSources,
                       isBigScreen: widget.isBigScreen,
                       onConfirm: (filter) {
                         this.filter = filter;

@@ -2,6 +2,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/about_module/about_controller.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -25,10 +26,11 @@ class AboutPage extends GetView<AboutController> {
   );
   static const padding = EdgeInsets.all(16);
   static const fontSize = TextStyle(fontSize: 16);
+  final appConfig = Get.find<ConfigService>();
+  final dbService = Get.find<DbService>();
 
   @override
   Widget build(BuildContext context) {
-    final appConfig = Get.find<ConfigService>();
     return Scaffold(
       appBar: AppBar(title: Text(TranslationKey.about.tr)),
       body: Padding(
@@ -188,7 +190,6 @@ class AboutPage extends GetView<AboutController> {
                 },
               ),
               SettingCard(
-                borderRadius: bottomBorderRadius,
                 padding: padding,
                 title: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -219,6 +220,37 @@ class AboutPage extends GetView<AboutController> {
                 action: (v) {
                   return const CheckUpdateButton();
                 },
+                value: null,
+              ),
+              SettingCard(
+                borderRadius: bottomBorderRadius,
+                padding: padding,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Icon(
+                      MdiIcons.databaseOutline,
+                      color: Colors.blueGrey,
+                      size: 28,
+                    ),
+                    const SizedBox(
+                      width: 16,
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          TranslationKey.aboutPageDatabaseVersionItemName.tr,
+                          style: fontSize,
+                        ),
+                        Text(
+                          dbService.version.toString(),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
                 value: null,
               ),
             ],

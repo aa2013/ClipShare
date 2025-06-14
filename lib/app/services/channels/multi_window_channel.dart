@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -71,6 +72,18 @@ class MultiWindowChannelService extends GetxService {
       MultiWindowMethod.getAllTagNames.name,
       "{}",
     );
+  }
+
+  ///获取所有 app 信息
+  Future<List<AppInfo>> getAllSources(int targetWindowId) async {
+    if (!PlatformExt.isDesktop) return Future(() => []);
+    final json = await DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.getAllSources.name,
+      "{}",
+    );
+    var lst = (jsonDecode(json) as List<dynamic>).cast<Map<String, dynamic>>();
+    return lst.map(AppInfo.fromJson).toList(growable: false);
   }
 
   ///通知主窗体复制

@@ -22,8 +22,7 @@ class MissingDataSyncHandler {
   static void sendMissingData(DevInfo targetDev, List<String> devIds) async {
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
-    final lst = await dbService.opRecordDao
-        .getSyncRecord(appConfig.userId, targetDev.guid, devIds);
+    final lst = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devIds);
     final sktService = Get.find<SocketService>();
     for (var i = 0; i < lst.length; i++) {
       var item = lst[i];
@@ -123,6 +122,26 @@ class MissingDataSyncHandler {
         break;
       case Module.rules:
         //什么都不做
+        break;
+      case Module.historySource:
+        final history = await dbService.historyDao.getById(int.parse(id));
+        if (history == null) {
+          if (opRecord.method != OpMethod.delete) {
+            shouldRemove = true;
+          }
+        } else {
+          //更新来源，将内容设为空，提高传输效率
+          history.content = "";
+          result["data"] = history.toJson();
+        }
+        break;
+      case Module.appInfo:
+        final appInfo = await dbService.appInfoDao.getById(int.parse(id));
+        if (appInfo == null) {
+          shouldRemove = true;
+        } else {
+          result["data"] = appInfo.toString();
+        }
         break;
       default:
     }

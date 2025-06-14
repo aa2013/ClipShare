@@ -1,8 +1,9 @@
+import 'package:clipboard_listener/models/clipboard_source.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/log.dart';
 
 abstract class HistoryDataObserver {
-  void onChanged(HistoryContentType type, String content);
+  void onChanged(HistoryContentType type, String content, ClipboardSource? source);
 }
 
 class HistoryDataListener {
@@ -25,10 +26,10 @@ class HistoryDataListener {
     return this;
   }
 
-  void onChanged(HistoryContentType type, String content) {
+  void onChanged(HistoryContentType type, String content, ClipboardSource? source) {
     for (var observer in _list) {
       try {
-        observer.onChanged(type, content);
+        observer.onChanged(type, content, source);
       } catch (e, stacktrace) {
         Log.debug(tag, e);
         Log.debug(tag, stacktrace);

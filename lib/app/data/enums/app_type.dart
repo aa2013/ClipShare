@@ -1,0 +1,1 @@
+enum AppType { user, system }

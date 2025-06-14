@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 class SearchFilter {
   String content;
@@ -8,6 +9,7 @@ class SearchFilter {
   String endDate;
   Set<String> tags = {};
   Set<String> devIds = {};
+  Set<String> appIds = {};
   bool onlyNoSync;
   HistoryContentType type;
 
@@ -17,11 +19,13 @@ class SearchFilter {
     this.endDate = "",
     Set<String>? tags,
     Set<String>? devIds,
+    Set<String>? appIds,
     this.onlyNoSync = false,
     this.type = HistoryContentType.all,
   }) {
     this.tags = tags ?? {};
     this.devIds = devIds ?? {};
+    this.appIds = appIds ?? {};
   }
 
   factory SearchFilter.fromJson(Map<String, dynamic> json) {
@@ -31,6 +35,7 @@ class SearchFilter {
       ..endDate = json["endDate"]
       ..tags = (json["tags"] as List<dynamic>? ?? []).map((e) => e.toString()).toSet()
       ..devIds = (json["devIds"] as List<dynamic>? ?? []).map((e) => e.toString()).toSet()
+      ..appIds = (json["appIds"] as List<dynamic>? ?? []).map((e) => e.toString()).toSet()
       ..onlyNoSync = json["onlyNoSync"]
       ..type = HistoryContentType.parse(json["type"]);
   }
@@ -42,6 +47,7 @@ class SearchFilter {
     newFilter.endDate = endDate;
     newFilter.tags.addAll(tags);
     newFilter.devIds.addAll(devIds);
+    newFilter.appIds.addAll(appIds);
     newFilter.onlyNoSync = onlyNoSync;
     newFilter.type = type;
     return newFilter;
@@ -59,6 +65,7 @@ class SearchFilter {
       "endDate": endDate,
       "tags": tags.toList(),
       "devIds": devIds.toList(),
+      "appIds": appIds.toList(),
       "onlyNoSync": onlyNoSync,
       "type": type.value,
     };

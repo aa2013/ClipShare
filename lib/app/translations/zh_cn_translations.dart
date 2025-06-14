@@ -155,6 +155,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "筛选设备";
       case TranslationKey.filterByTag:
         return "筛选标签";
+      case TranslationKey.filterBySource:
+        return "筛选来源";
       case TranslationKey.envStatusLoadingText:
         // "Loading Environment Status..."
         return "正在加载环境状态";
@@ -803,6 +805,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "记住上次位置";
       case TranslationKey.showOnRecentTasks:
         return "在最近任务中显示";
+      case TranslationKey.showOnRecentTasksTips:
+        return "在高版本Android系统中隐藏最近任务可能会导致在切换到其他app时被系统杀死，仍要尝试隐藏吗？";
       case TranslationKey.showOnRecentTasksDesc:
         return "在部分系统上隐藏后台后可能导致切换应用后会被杀掉后台（如小米），当前原因未知";
       case TranslationKey.showLocalIpAddress:
@@ -1009,6 +1013,48 @@ class ZhCNTranslation extends AbstractTranslations {
         return "下载中";
       case TranslationKey.devDisconnectNotifyContent:
         return "设备 @devName 连接断开";
+      case TranslationKey.clipboardSettingsGroupName:
+        return "剪贴板";
+      case TranslationKey.clipboardSettingsSourceRecordTitle:
+        return "记录剪贴板内容来源";
+      case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:
+        return "需要开启无障碍服务辅助记录";
+      case TranslationKey.permissionSettingsAccessibilityTitle:
+        return "无障碍权限";
+      case TranslationKey.permissionSettingsAccessibilityDesc:
+        return "启用无障碍权限以辅助记录剪贴板来源";
+      case TranslationKey.noAccessibilityPermTips:
+        return "无障碍服务未启动，无法检测到用户主动复制的来源，是否授权无障碍服务权限？";
+      case TranslationKey.appIconLoadError:
+        return "App图标加载失败(@appName)";
+      case TranslationKey.clipboardSettingsSourceRecordTitleTooltip:
+        return "说明";
+      case TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent:
+        return "来源检测分为两种：前台复制和其他app后台复制，前台复制需要借助无障碍权限来检测，后台复制可通过dumpsys来获取（有数百毫秒的延迟）。\n\n来源检测不能保证完全准确，主要通过无障碍识别，有可能会误标记到其他应用上面";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle:
+        return "通过 dumpsys 记录后台复制来源";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip:
+        return "说明";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
+        return "如果有应用在后台复制有可能会误识别，通过 dumpsys 检测是谁写入了剪贴板以纠正";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
+        return "需要 Root 或 Shizuku 权限，同时会有数百毫秒的延迟";
+      case TranslationKey.source:
+        return "来源";
+      case TranslationKey.clearSourceConfirmText:
+        return "确认清除该记录的来源信息吗？";
+      case TranslationKey.clearSuccess:
+        return "清除成功";
+      case TranslationKey.clearFailed:
+        return "清除失败";
+      case TranslationKey.selectApplication:
+        return "选择应用";
+      case TranslationKey.preferenceSettingsDevDisconnNotification:
+        return "设备连接断开时发起系统通知";
+      case TranslationKey.notification:
+        return "通知";
+      case TranslationKey.aboutPageDatabaseVersionItemName:
+        return "数据库版本";
     }
   }
 }

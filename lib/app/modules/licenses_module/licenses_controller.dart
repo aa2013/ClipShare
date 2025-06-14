@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "no_screenshot",
+      "license": "BSD-3-Clause",
+      "url": "https://pub.dev/packages/no_screenshot",
+    },
+    {
       "name": "dio",
       "license": "MIT",
       "url": "https://pub.dev/packages/dio",
