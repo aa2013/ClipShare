@@ -1037,6 +1037,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return "如果有应用在后台复制有可能会误识别，通过 dumpsys 检测是谁写入了剪贴板以纠正";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
         return "需要 Root 或 Shizuku 权限，同时会有数百毫秒的延迟";
+      case TranslationKey.source:
+        return "来源";
+      case TranslationKey.clearSourceConfirmText:
+        return "确认清除该记录的来源信息吗？";
+      case TranslationKey.clearSuccess:
+        return "清除成功";
+      case TranslationKey.clearFailed:
+        return "清除失败";
     }
   }
 }

@@ -510,7 +510,11 @@ enum TranslationKey {
   clipboardSettingsSourceRecordViaDumpsysTitle,
   clipboardSettingsSourceRecordViaDumpsysTitleTooltip,
   clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent,
-  clipboardSettingsSourceRecordViaDumpsysAndroidDesc;
+  clipboardSettingsSourceRecordViaDumpsysAndroidDesc,
+  source,
+  clearSourceConfirmText,
+  clearSuccess,
+  clearFailed;
 
   String get tr => name.tr;
 

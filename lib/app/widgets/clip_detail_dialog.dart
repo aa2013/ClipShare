@@ -273,8 +273,32 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
             Row(
               children: [
                 //剪贴板来源
-                if (widget.clip.data.source != null) AppIcon(appId: widget.clip.data.source!),
-
+                if (widget.clip.data.source != null)
+                  AppIcon(
+                    appId: widget.clip.data.source!,
+                    onDeleteClicked: () {
+                      Global.showTipsDialog(
+                        context: context,
+                        text: TranslationKey.clearSourceConfirmText.tr,
+                        onOk: () async {
+                          final id = widget.clip.data.id;
+                          final cnt = await dbService.historyDao.clearHistorySource(id);
+                          if ((cnt ?? 0) > 0) {
+                            final historyController = Get.find<HistoryController>();
+                            historyController.updateData(
+                              (history) => history.id == id,
+                              (history) => history.source = null,
+                              true,
+                            );
+                            Global.showSnackBarSuc(context: context, text: TranslationKey.clearSuccess.tr);
+                          } else {
+                            Global.showSnackBarErr(context: context, text: TranslationKey.clearFailed.tr);
+                          }
+                        },
+                        showCancel: true,
+                      );
+                    },
+                  ),
                 Expanded(
                   child: ClipTagRowView(
                     hisId: widget.clip.data.id,

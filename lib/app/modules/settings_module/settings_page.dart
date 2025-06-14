@@ -580,7 +580,10 @@ class SettingsPage extends GetView<SettingsController> {
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.clipboardSettingsSourceRecordAndroidDesc.tr),
+                        description: Visibility(
+                          visible: Platform.isAndroid,
+                          child: Text(TranslationKey.clipboardSettingsSourceRecordAndroidDesc.tr),
+                        ),
                         value: appConfig.sourceRecord,
                         action: (v) {
                           return Switch(

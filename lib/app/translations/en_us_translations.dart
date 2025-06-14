@@ -1036,6 +1036,14 @@ class EnUSTranslation extends AbstractTranslations {
         return "Background copying may be misidentified. Using dumpsys to detect which app wrote to clipboard for correction";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
         return "Requires Root or Shizuku permissions, with several hundred milliseconds of delay";
+      case TranslationKey.source:
+        return "Source";
+      case TranslationKey.clearSourceConfirmText:
+        return "Are you sure you want to clear the source information of this record?";
+      case TranslationKey.clearSuccess:
+        return "Cleared successfully";
+      case TranslationKey.clearFailed:
+        return "Failed to clear";
     }
   }
 }

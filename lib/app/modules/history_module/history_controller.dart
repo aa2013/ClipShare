@@ -319,7 +319,20 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       content: content,
       type: type.value,
       size: size,
+      source: source?.id,
     );
+    if (source != null && appConfig.sourceRecord) {
+      await sourceService.addOrUpdate(
+        AppInfo(
+          id: appConfig.snowflake.nextId(),
+          appId: source.id,
+          devId: appConfig.device.guid,
+          name: source.name,
+          iconB64: source.iconB64!,
+        ),
+        true,
+      );
+    }
     await addData(history, true);
   }
 
@@ -459,7 +472,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     dbService.opRecordDao.addAndNotify(opRecord);
 
     //region update source on Android
-    if (Platform.isAndroid && shouldSync && appConfig.sourceRecordViaDumpsys && contentType.isClipboard) {
+    if (Platform.isAndroid && shouldSync && appConfig.sourceRecordViaDumpsys) {
       var start = DateTime.now();
       clipboardManager.getLatestWriteClipboardSource().then((source) async {
         Log.debug(tag, "source $source");
@@ -482,18 +495,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
         history.source = source.id;
         // add source icon
-        if (!sourceService.contains(source.id)) {
-          sourceService.addOrUpdate(
-            AppInfo(
-              id: appConfig.snowflake.nextId(),
-              appId: source.id,
-              devId: appConfig.device.guid,
-              name: source.name,
-              iconB64: source.iconB64!,
-            ),
-            true,
-          );
-        }
+        sourceService.addOrUpdate(
+          AppInfo(
+            id: appConfig.snowflake.nextId(),
+            appId: source.id,
+            devId: appConfig.device.guid,
+            name: source.name,
+            iconB64: source.iconB64!,
+          ),
+          true,
+        );
         final cnt = await dbService.historyDao.updateHistorySource(history.id, source.id);
         if ((cnt ?? 0) > 0) {
           //更新剪贴板来源
