@@ -6,7 +6,7 @@
 
 #include "generated_plugin_registrant.h"
 
-#include <clipboard_listener/clipboard_listener_plugin_c_api.h>
+#include <clipshare_clipboard_listener/clipboard_listener_plugin_c_api.h>
 #include <connectivity_plus/connectivity_plus_windows_plugin.h>
 #include <desktop_drop/desktop_drop_plugin.h>
 #include <desktop_multi_window/desktop_multi_window_plugin.h>
