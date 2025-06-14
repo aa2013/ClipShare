@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';

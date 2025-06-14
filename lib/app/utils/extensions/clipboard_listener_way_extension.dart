@@ -1,4 +1,4 @@
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 
 extension ClipboardListeningWayExt on ClipboardListeningWay {

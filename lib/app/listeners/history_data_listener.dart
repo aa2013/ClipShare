@@ -1,4 +1,4 @@
-import 'package:clipboard_listener/models/clipboard_source.dart';
+import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/log.dart';
 

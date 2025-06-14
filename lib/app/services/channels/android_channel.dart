@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:clipboard_listener/clipboard_manager.dart';
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:flutter/cupertino.dart';

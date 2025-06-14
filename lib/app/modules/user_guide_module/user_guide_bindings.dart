@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:clipboard_listener/enums.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/handlers/guide/battery_perm_guide.dart';
 import 'package:clipshare/app/handlers/guide/environment_selections_guide.dart';
 import 'package:clipshare/app/handlers/guide/finish_guide.dart';
