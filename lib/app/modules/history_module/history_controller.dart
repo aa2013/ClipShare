@@ -423,6 +423,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       case OpMethod.delete:
         f = dbService.historyDao.delete(history.id).then((cnt) {
           if (cnt == null || cnt == 0) return 0;
+          sourceService.removeNotUsed();
           _tempList.removeWhere((element) => element.data.id == history.id);
           debounceUpdate();
           return cnt;

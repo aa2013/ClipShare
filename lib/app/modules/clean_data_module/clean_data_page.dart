@@ -21,6 +21,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 class CleanDataPage extends GetView<CleanDataController> {
   final sourceService = Get.find<ClipboardSourceService>();
+
   @override
   Widget build(BuildContext context) {
     final currentTheme = Theme.of(context);
@@ -199,27 +200,36 @@ class CleanDataPage extends GetView<CleanDataController> {
                     height: 4,
                   ),
                   Obx(
-                    () => Wrap(
-                      direction: Axis.horizontal,
-                      children: sourceService.appInfos.map((app) {
-                        return Container(
-                          margin: const EdgeInsets.only(right: 5, bottom: 5),
-                          child: RoundedChip(
-                            onPressed: () {
-                              final appId = app.appId;
-                              final selected = controller.selectedSources.contains(appId);
-                              if (selected) {
-                                controller.selectedSources.remove(appId);
-                              } else {
-                                controller.selectedSources.add(appId);
-                              }
-                            },
-                            selected: controller.selectedSources.contains(app.appId),
-                            label: Text(app.name),
-                            avatar: AppIcon(appId: app.appId),
-                          ),
-                        );
-                      }).toList(),
+                    () => Visibility(
+                      replacement: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [controller.emptyFilter],
+                      ),
+                      visible: sourceService.appInfos.isNotEmpty,
+                      child: Obx(
+                        () => Wrap(
+                          direction: Axis.horizontal,
+                          children: sourceService.appInfos.map((app) {
+                            return Container(
+                              margin: const EdgeInsets.only(right: 5, bottom: 5),
+                              child: RoundedChip(
+                                onPressed: () {
+                                  final appId = app.appId;
+                                  final selected = controller.selectedSources.contains(appId);
+                                  if (selected) {
+                                    controller.selectedSources.remove(appId);
+                                  } else {
+                                    controller.selectedSources.add(appId);
+                                  }
+                                },
+                                selected: controller.selectedSources.contains(app.appId),
+                                label: Text(app.name),
+                                avatar: AppIcon(appId: app.appId),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
                   ),
 
@@ -462,6 +472,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                                   controller.selectedContentTypes.map((item) => item.value).toList(),
                                   controller.selectedTags.toList(),
                                   controller.selectedDevs.toList(),
+                                  controller.selectedSources.toList(),
                                   controller.startDate.value ?? "",
                                   controller.endDate.value ?? "",
                                   controller.saveTopData.value,

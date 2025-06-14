@@ -518,7 +518,8 @@ enum TranslationKey {
   clearFailed,
   selectApplication,
   filterBySource,
-  preferenceSettingsDevDisconnNotification;
+  preferenceSettingsDevDisconnNotification,
+  aboutPageDatabaseVersionItemName;
 
   String get tr => name.tr;
 

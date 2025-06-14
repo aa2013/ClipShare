@@ -15,6 +15,7 @@ import 'package:clipshare/app/modules/search_module/search_controller.dart' as s
 import 'package:clipshare/app/modules/views/modify_history_content_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
@@ -290,6 +291,9 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                               (history) => history.source = null,
                               true,
                             );
+                            //移除未使用的剪贴板来源信息
+                            final sourceService = Get.find<ClipboardSourceService>();
+                            await sourceService.removeNotUsed();
                             Global.showSnackBarSuc(context: context, text: TranslationKey.clearSuccess.tr);
                           } else {
                             Global.showSnackBarErr(context: context, text: TranslationKey.clearFailed.tr);

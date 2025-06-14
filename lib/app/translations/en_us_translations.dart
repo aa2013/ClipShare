@@ -1052,6 +1052,8 @@ class EnUSTranslation extends AbstractTranslations {
       return "System notification when device disconnection";
       case TranslationKey.notification:
         return "Notification";
+      case TranslationKey.aboutPageDatabaseVersionItemName:
+        return "Database version";
     }
   }
 }

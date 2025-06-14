@@ -13,6 +13,7 @@ import 'package:clipshare/app/modules/views/preview_page.dart';
 import 'package:clipshare/app/modules/views/tag_edit_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
@@ -301,6 +302,9 @@ class ClipDataCardState extends State<ClipDataCard> {
     //删除历史
     return dbService.historyDao.delete(id).then((v) {
       if (v == null || v <= 0) return false;
+      //移除未使用的剪贴板来源信息
+      final sourceService = Get.find<ClipboardSourceService>();
+      sourceService.removeNotUsed();
       //添加删除记录
       var opRecord = OperationRecord.fromSimple(
         Module.history,

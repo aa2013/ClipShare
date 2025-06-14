@@ -1053,6 +1053,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "设备连接断开时发起系统通知";
       case TranslationKey.notification:
         return "通知";
+      case TranslationKey.aboutPageDatabaseVersionItemName:
+        return "数据库版本";
     }
   }
 }

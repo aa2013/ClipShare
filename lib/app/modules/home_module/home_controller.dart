@@ -212,11 +212,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         );
         break;
       case AppLifecycleState.paused:
-      // case AppLifecycleState.inactive:
-      //   if (pausedTime != null) {
-      //     print("skip!!");
-      //     break;
-      //   }
+      case AppLifecycleState.inactive:
+        if (pausedTime != null) {
+          Log.debug(tag, "$state skip!!");
+          break;
+        }
         if (appConfig.authenticating.value) {
           pausedTime = null;
         } else {

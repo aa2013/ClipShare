@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
@@ -17,6 +18,7 @@ class HistorySourceSyncHandler implements SyncListener {
   final dbService = Get.find<DbService>();
   final sktService = Get.find<SocketService>();
   final historyController = Get.find<HistoryController>();
+  final sourceService = Get.find<ClipboardSourceService>();
 
   HistorySourceSyncHandler() {
     sktService.addSyncListener(Module.historySource, this);
@@ -58,6 +60,10 @@ class HistorySourceSyncHandler implements SyncListener {
           cnt = await dbService.historyDao.clearHistorySource(history.id) ?? 0;
         }
         success = cnt > 0;
+        if(success){
+          //移除未使用的剪贴板来源信息
+          await sourceService.removeNotUsed();
+        }
         break;
       default:
     }

@@ -92,6 +92,8 @@ class DbService extends GetxService {
 
   final tag = "DbService";
 
+  late final int version;
+
   sqflite.DatabaseExecutor get dbExecutor => _db.database;
   Future _queue = Future.value();
 
@@ -115,12 +117,13 @@ class DbService extends GetxService {
       migration3to4,
       migration4to5,
     ]).build();
+    version = await _db.database.database.getVersion();
     return this;
   }
 
   @override
   Future<void> onClose() {
-    print("dbservice onClose");
+    print("db service onClose");
     return _db.close();
   }
 
@@ -157,17 +160,16 @@ class DbService extends GetxService {
 
   ///数据库版本 3 -> 4
   ///历史表增加更新时间字段
-  ///历史表增加来源字段
   final migration3to4 = Migration(3, 4, (database) async {
     await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
-    await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
   });
 
   ///数据库版本 4 -> 5
   ///新增 app 信息表
+  ///历史表增加来源字段
   final migration4to5 = Migration(4, 5, (database) async {
+    await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
     await database.execute("CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));");
     await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);');
   });
-
 }

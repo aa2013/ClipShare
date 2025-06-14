@@ -16,11 +16,18 @@ class ClipboardSourceService extends GetxService {
   List<AppInfo> get appInfos => _appInfos.values.toList(growable: false)..sort((a, b) => a.name.compareTo(b.name));
 
   Future<ClipboardSourceService> init() async {
+    await _loadAll();
+    return this;
+  }
+
+  Future<void> _loadAll()async{
+    final tmpMap = <String, AppInfo>{};
     var appInfos = await _dbService.appInfoDao.getAllAppInfos();
     for (var item in appInfos) {
-      _appInfos[item.appId] = item;
+      tmpMap[item.appId] = item;
     }
-    return this;
+    _appInfos.clear();
+    _appInfos.addAll(tmpMap);
   }
 
   Future<bool> addOrUpdate(AppInfo appInfo, [bool notify = false]) async {
@@ -59,5 +66,10 @@ class ClipboardSourceService extends GetxService {
       return _appInfos[appId];
     }
     return null;
+  }
+
+  Future<void> removeNotUsed() async {
+    await _dbService.appInfoDao.removeNotUsed();
+    await _loadAll();
   }
 }

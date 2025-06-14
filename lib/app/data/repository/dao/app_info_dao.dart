@@ -17,4 +17,13 @@ abstract class AppInfoDao {
 
   @delete
   Future<int> remove(AppInfo appInfo);
+
+  @Query("""
+  delete from AppInfo as app
+  where not exists (
+      select 1 from History as his where his.devId=app.devId and his.source=app.appId
+  )
+  """)
+  Future<int?> removeNotUsed();
+
 }

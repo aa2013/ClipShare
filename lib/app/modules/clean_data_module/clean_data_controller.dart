@@ -14,6 +14,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -38,6 +39,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   final appConfig = Get.find<ConfigService>();
   final devService = Get.find<DeviceService>();
   final sktService = Get.find<SocketService>();
+  final sourceService = Get.find<ClipboardSourceService>();
   final logTag = "CleanDataController";
   final allDevices = <Device>{}.obs;
   final allTags = <String>{}.obs;
@@ -203,6 +205,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       types: selectedContentTypes.map((item) => item.value).toList(),
       tags: selectedTags.toList(),
       devIds: selectedDevs.toList(),
+      appIds: selectedSources.toList(),
       startTime: startDate.value,
       endTime: endDate.value,
       removeFiles: removeFiles.value,
@@ -365,6 +368,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
     List<String>? types,
     List<String>? tags,
     List<String>? devIds,
+    List<String>? appIds,
     String? startTime,
     String? endTime,
     bool removeFiles = false,
@@ -375,6 +379,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       types ?? [],
       tags ?? [],
       devIds ?? [],
+      appIds ?? [],
       startTime ?? "",
       endTime ?? "",
       saveTop,
@@ -391,6 +396,8 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       await dbService.historyTagDao.deleteByHisIds(ids);
       //删除历史
       await dbService.historyDao.deleteByIds(ids, uid);
+      //移除未使用的剪贴板来源信息
+      await sourceService.removeNotUsed();
       //删除文件
       if (removeFiles) {
         //提取所有文件路径

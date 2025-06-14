@@ -468,6 +468,150 @@ class _$HistoryDao extends HistoryDao {
   }
 
   @override
+  Future<int?> count(
+    int uid,
+    List<String> types,
+    List<String> tags,
+    List<String> devIds,
+    List<String> appIds,
+    String startTime,
+    String endTime,
+    bool saveTop,
+  ) async {
+    int offset = 5;
+    final _sqliteVariablesForTypes =
+        Iterable<String>.generate(types.length, (i) => '?${i + offset}')
+            .join(',');
+    offset += types.length;
+    final _sqliteVariablesForTags =
+        Iterable<String>.generate(tags.length, (i) => '?${i + offset}')
+            .join(',');
+    offset += tags.length;
+    final _sqliteVariablesForDevIds =
+        Iterable<String>.generate(devIds.length, (i) => '?${i + offset}')
+            .join(',');
+    offset += devIds.length;
+    final _sqliteVariablesForAppIds =
+        Iterable<String>.generate(appIds.length, (i) => '?${i + offset}')
+            .join(',');
+    return _queryAdapter.query(
+        'select count(1) from history     WHERE uid = ?1     AND (?2 = \'\' OR ?3 = \'\' OR date(time) BETWEEN ?2 AND ?3)     AND (?4 <> 1 OR top = 0)     AND (length(null in (' +
+            _sqliteVariablesForTypes +
+            ')) = 1 OR type IN (' +
+            _sqliteVariablesForTypes +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForDevIds +
+            ')) = 1 OR devId IN (' +
+            _sqliteVariablesForDevIds +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForAppIds +
+            ')) = 1 OR source IN (' +
+            _sqliteVariablesForAppIds +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForTags +
+            ')) = 1 OR id IN (       SELECT DISTINCT hisId       FROM HistoryTag       WHERE tagName IN (' +
+            _sqliteVariablesForTags +
+            ')     ))',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [
+          uid,
+          startTime,
+          endTime,
+          saveTop ? 1 : 0,
+          ...types,
+          ...tags,
+          ...devIds,
+          ...appIds
+        ]);
+  }
+
+  @override
+  Future<List<History>> getHistoriesWithFileContent(
+    int uid,
+    List<String> types,
+    List<String> tags,
+    List<String> devIds,
+    List<String> appIds,
+    String startTime,
+    String endTime,
+    bool saveTop,
+  ) async {
+    int offset = 5;
+    final _sqliteVariablesForTypes =
+        Iterable<String>.generate(types.length, (i) => '?${i + offset}')
+            .join(',');
+    offset += types.length;
+    final _sqliteVariablesForTags =
+        Iterable<String>.generate(tags.length, (i) => '?${i + offset}')
+            .join(',');
+    offset += tags.length;
+    final _sqliteVariablesForDevIds =
+        Iterable<String>.generate(devIds.length, (i) => '?${i + offset}')
+            .join(',');
+    offset += devIds.length;
+    final _sqliteVariablesForAppIds =
+        Iterable<String>.generate(appIds.length, (i) => '?${i + offset}')
+            .join(',');
+    return _queryAdapter.queryList(
+        'select * from history     WHERE uid = ?1     AND (?2 = \'\' OR ?3 = \'\' OR date(time) BETWEEN ?2 AND ?3)     AND (?4 <> 1 OR top = 0)     AND (length(null in (' +
+            _sqliteVariablesForTypes +
+            ')) = 1 OR type IN (' +
+            _sqliteVariablesForTypes +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForDevIds +
+            ')) = 1 OR devId IN (' +
+            _sqliteVariablesForDevIds +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForAppIds +
+            ')) = 1 OR source IN (' +
+            _sqliteVariablesForAppIds +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForTags +
+            ')) = 1 OR id IN (       SELECT DISTINCT hisId       FROM HistoryTag       WHERE tagName IN (' +
+            _sqliteVariablesForTags +
+            ')     ))',
+        mapper: (Map<String, Object?> row) => History(
+            id: row['id'] as int,
+            uid: row['uid'] as int,
+            time: row['time'] as String,
+            content: row['content'] as String,
+            type: row['type'] as String,
+            devId: row['devId'] as String,
+            size: row['size'] as int,
+            top: (row['top'] as int) != 0,
+            sync: (row['sync'] as int) != 0,
+            updateTime: row['updateTime'] as String?,
+            source: row['source'] as String?),
+        arguments: [
+          uid,
+          startTime,
+          endTime,
+          saveTop ? 1 : 0,
+          ...types,
+          ...tags,
+          ...devIds,
+          ...appIds
+        ]);
+  }
+
+  @override
+  Future<int?> updateHistorySource(
+    int id,
+    String source,
+  ) async {
+    return _queryAdapter.query('update history set source = ?2 where id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [id, source]);
+  }
+
+  @override
+  Future<int?> clearHistorySource(int id) async {
+    return _queryAdapter.query('update history set source = null where id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [id]);
+  }
+
+  @override
   Future<List<History>> getMissingHistory(String devId) async {
     return _queryAdapter.queryList(
         'SELECT * FROM history h WHERE NOT EXISTS (SELECT 1 FROM SyncHistory sh WHERE sh.hisId = h.id AND sh.devId = ?1) and h.devId != ?1',
@@ -512,13 +656,6 @@ class _$HistoryDao extends HistoryDao {
     return _queryAdapter.query('update history set sync = ?2 where id = ?1',
         mapper: (Map<String, Object?> row) => row.values.first as int,
         arguments: [id, sync ? 1 : 0]);
-  }
-
-  @override
-  Future<int?> delete(int id) async {
-    return _queryAdapter.query('delete from history where id = ?1',
-        mapper: (Map<String, Object?> row) => row.values.first as int,
-        arguments: [id]);
   }
 
   @override
@@ -569,6 +706,13 @@ class _$HistoryDao extends HistoryDao {
   }
 
   @override
+  Future<int?> delete(int id) async {
+    return _queryAdapter.query('delete from history where id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [id]);
+  }
+
+  @override
   Future<int?> deleteByIds(
     List<int> ids,
     int uid,
@@ -583,119 +727,6 @@ class _$HistoryDao extends HistoryDao {
             ')',
         mapper: (Map<String, Object?> row) => row.values.first as int,
         arguments: [uid, ...ids]);
-  }
-
-  @override
-  Future<int?> count(
-    int uid,
-    List<String> types,
-    List<String> tags,
-    List<String> devIds,
-    String startTime,
-    String endTime,
-    bool saveTop,
-  ) async {
-    int offset = 5;
-    final _sqliteVariablesForTypes =
-        Iterable<String>.generate(types.length, (i) => '?${i + offset}')
-            .join(',');
-    offset += types.length;
-    final _sqliteVariablesForTags =
-        Iterable<String>.generate(tags.length, (i) => '?${i + offset}')
-            .join(',');
-    offset += tags.length;
-    final _sqliteVariablesForDevIds =
-        Iterable<String>.generate(devIds.length, (i) => '?${i + offset}')
-            .join(',');
-    return _queryAdapter.query(
-        'select count(1) from history     WHERE uid = ?1     AND (?2 = \'\' OR ?3 = \'\' OR date(time) BETWEEN ?2 AND ?3)     AND (?4 <> 1 OR top = 0)     AND (length(null in (' +
-            _sqliteVariablesForTypes +
-            ')) = 1 OR type IN (' +
-            _sqliteVariablesForTypes +
-            '))     AND (length(null in (' +
-            _sqliteVariablesForDevIds +
-            ')) = 1 OR devId IN (' +
-            _sqliteVariablesForDevIds +
-            '))     AND (length(null in (' +
-            _sqliteVariablesForTags +
-            ')) = 1 OR id IN (       SELECT DISTINCT hisId       FROM HistoryTag       WHERE tagName IN (' +
-            _sqliteVariablesForTags +
-            ')     ))',
-        mapper: (Map<String, Object?> row) => row.values.first as int,
-        arguments: [
-          uid,
-          startTime,
-          endTime,
-          saveTop ? 1 : 0,
-          ...types,
-          ...tags,
-          ...devIds
-        ]);
-  }
-
-  @override
-  Future<List<History>> getHistoriesWithFileContent(
-    int uid,
-    List<String> types,
-    List<String> tags,
-    List<String> devIds,
-    String startTime,
-    String endTime,
-    bool saveTop,
-  ) async {
-    int offset = 5;
-    final _sqliteVariablesForTypes =
-        Iterable<String>.generate(types.length, (i) => '?${i + offset}')
-            .join(',');
-    offset += types.length;
-    final _sqliteVariablesForTags =
-        Iterable<String>.generate(tags.length, (i) => '?${i + offset}')
-            .join(',');
-    offset += tags.length;
-    final _sqliteVariablesForDevIds =
-        Iterable<String>.generate(devIds.length, (i) => '?${i + offset}')
-            .join(',');
-    return _queryAdapter.queryList(
-        'select * from history     WHERE uid = ?1     AND (?2 = \'\' OR ?3 = \'\' OR date(time) BETWEEN ?2 AND ?3)     AND (?4 <> 1 OR top = 0)     AND (length(null in (' +
-            _sqliteVariablesForTypes +
-            ')) = 1 OR type IN (' +
-            _sqliteVariablesForTypes +
-            '))     AND (length(null in (' +
-            _sqliteVariablesForDevIds +
-            ')) = 1 OR devId IN (' +
-            _sqliteVariablesForDevIds +
-            '))     AND (length(null in (' +
-            _sqliteVariablesForTags +
-            ')) = 1 OR id IN (       SELECT DISTINCT hisId       FROM HistoryTag       WHERE tagName IN (' +
-            _sqliteVariablesForTags +
-            ')     ))',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
-        arguments: [
-          uid,
-          startTime,
-          endTime,
-          saveTop ? 1 : 0,
-          ...types,
-          ...tags,
-          ...devIds
-        ]);
-  }
-
-  @override
-  Future<int?> updateHistorySource(
-    int id,
-    String source,
-  ) async {
-    return _queryAdapter.query('update history set source = ?2 where id = ?1',
-        mapper: (Map<String, Object?> row) => row.values.first as int,
-        arguments: [id, source]);
-  }
-
-  @override
-  Future<int?> clearHistorySource(int id) async {
-    return _queryAdapter.query('update history set source = null where id = ?1',
-        mapper: (Map<String, Object?> row) => row.values.first as int,
-        arguments: [id]);
   }
 
   @override
@@ -1295,6 +1326,13 @@ class _$AppInfoDao extends AppInfoDao {
             name: row['name'] as String,
             iconB64: row['iconB64'] as String),
         arguments: [id]);
+  }
+
+  @override
+  Future<int?> removeNotUsed() async {
+    return _queryAdapter.query(
+        'delete from AppInfo as app   where not exists (       select 1 from History as his where his.devId=app.devId and his.source=app.appId   )',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
   }
 
   @override
