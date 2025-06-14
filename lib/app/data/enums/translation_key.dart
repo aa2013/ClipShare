@@ -514,7 +514,9 @@ enum TranslationKey {
   source,
   clearSourceConfirmText,
   clearSuccess,
-  clearFailed;
+  clearFailed,
+  selectApplication,
+  filterBySource;
 
   String get tr => name.tr;
 

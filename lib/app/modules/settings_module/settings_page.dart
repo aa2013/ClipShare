@@ -558,26 +558,29 @@ class SettingsPage extends GetView<SettingsController> {
                               TranslationKey.clipboardSettingsSourceRecordTitle.tr,
                               maxLines: 1,
                             ),
-                            const SizedBox(width: 5),
-                            Tooltip(
-                              message: TranslationKey.clipboardSettingsSourceRecordTitleTooltip.tr,
-                              child: GestureDetector(
-                                child: const MouseRegion(
-                                  cursor: SystemMouseCursors.click,
-                                  child: Icon(
-                                    Icons.info_outline,
-                                    color: Colors.blueGrey,
-                                    size: 15,
+                            if (Platform.isAndroid)
+                              Container(
+                                margin: const EdgeInsets.only(left: 5),
+                                child: Tooltip(
+                                  message: TranslationKey.clipboardSettingsSourceRecordTitleTooltip.tr,
+                                  child: GestureDetector(
+                                    child: const MouseRegion(
+                                      cursor: SystemMouseCursors.click,
+                                      child: Icon(
+                                        Icons.info_outline,
+                                        color: Colors.blueGrey,
+                                        size: 15,
+                                      ),
+                                    ),
+                                    onTap: () async {
+                                      Global.showTipsDialog(
+                                        context: context,
+                                        text: TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent.tr,
+                                      );
+                                    },
                                   ),
                                 ),
-                                onTap: () async {
-                                  Global.showTipsDialog(
-                                    context: context,
-                                    text: TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent.tr,
-                                  );
-                                },
                               ),
-                            ),
                           ],
                         ),
                         description: Visibility(

@@ -1,6 +1,7 @@
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_list_view.dart';
@@ -16,6 +17,7 @@ import 'package:get/get.dart';
 
 class SearchPage extends GetView<search_module.SearchController> {
   final appConfig = Get.find<ConfigService>();
+  final sourceService = Get.find<ClipboardSourceService>();
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,7 @@ class SearchPage extends GetView<search_module.SearchController> {
             () => HistoryFilter(
               allDevices: controller.allDevices,
               allTagNames: controller.allTagNames,
+              allSources: sourceService.appInfos,
               loadSearchCondition: controller.loadSearchCondition,
               isBigScreen: controller.isBigScreen,
               showContentTypeFilter: false,

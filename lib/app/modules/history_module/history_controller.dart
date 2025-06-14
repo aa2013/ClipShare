@@ -321,17 +321,21 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       size: size,
       source: source?.id,
     );
-    if (source != null && appConfig.sourceRecord) {
-      await sourceService.addOrUpdate(
-        AppInfo(
-          id: appConfig.snowflake.nextId(),
-          appId: source.id,
-          devId: appConfig.device.guid,
-          name: source.name,
-          iconB64: source.iconB64!,
-        ),
-        true,
-      );
+    if (appConfig.sourceRecord) {
+      if (source != null) {
+        await sourceService.addOrUpdate(
+          AppInfo(
+            id: appConfig.snowflake.nextId(),
+            appId: source.id,
+            devId: appConfig.device.guid,
+            name: source.name,
+            iconB64: source.iconB64!,
+          ),
+          true,
+        );
+      }
+    } else {
+      history.source = null;
     }
     await addData(history, true);
   }

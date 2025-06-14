@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
@@ -57,6 +58,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   var searchFilter = SearchFilter();
   List<Device> allDevices = [];
   List<String> allTagNames = [];
+  List<AppInfo> allSources = [];
 
   @override
   void initState() {
@@ -195,6 +197,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   Future<void> loadSearchCondition() async {
     final devices = <Device>[];
     final tags = <String>[];
+    final sources = <AppInfo>[];
     await multiWindowChannelService.getAllDevices(0).then(
       ((json) {
         final data = (jsonDecode(json) as List<dynamic>).cast<Map<String, dynamic>>();
@@ -205,9 +208,13 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       var lst = (jsonDecode(json) as List<dynamic>).cast<String>();
       tags.addAll(lst);
     });
+    await multiWindowChannelService.getAllSources(0).then((list) {
+      sources.addAll(list);
+    });
     setState(() {
       allDevices = devices;
       allTagNames = tags;
+      allSources = sources;
     });
   }
 
@@ -219,6 +226,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
           HistoryFilter(
             allDevices: allDevices,
             allTagNames: allTagNames,
+            allSources: allSources,
             filter: searchFilter,
             loadSearchCondition: loadSearchCondition,
             isBigScreen: false,

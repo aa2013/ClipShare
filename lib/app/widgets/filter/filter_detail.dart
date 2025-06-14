@@ -1,6 +1,7 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -12,6 +13,7 @@ class FilterDetail extends StatefulWidget {
   final SearchFilter filter;
   final List<Device> allDevices;
   final List<String> allTagNames;
+  final List<AppInfo> allSources;
   final bool isBigScreen;
   final void Function(SearchFilter filter) onConfirm;
 
@@ -20,6 +22,7 @@ class FilterDetail extends StatefulWidget {
     required SearchFilter searchFilter,
     required this.allDevices,
     required this.allTagNames,
+    required this.allSources,
     required this.onConfirm,
     required this.isBigScreen,
   }) : filter = searchFilter.copy();
@@ -30,6 +33,7 @@ class FilterDetail extends StatefulWidget {
 
 class _FilterDetailState extends State<FilterDetail> {
   SearchFilter get filter => widget.filter;
+  static final emptyContent = EmptyContent(size: 40);
   final bold18Style = const TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.bold,
@@ -221,7 +225,7 @@ class _FilterDetailState extends State<FilterDetail> {
                 : const SizedBox.shrink(),
           ],
         ),
-        if (widget.allDevices.isEmpty) EmptyContent(size: 40),
+        if (widget.allDevices.isEmpty) emptyContent,
         const SizedBox(height: 5),
         Wrap(
           direction: Axis.horizontal,
@@ -277,7 +281,7 @@ class _FilterDetailState extends State<FilterDetail> {
                 : const SizedBox.shrink(),
           ],
         ),
-        if (widget.allTagNames.isEmpty) EmptyContent(size: 40),
+        if (widget.allTagNames.isEmpty) emptyContent,
         const SizedBox(height: 5),
         Wrap(
           direction: Axis.horizontal,
@@ -296,6 +300,62 @@ class _FilterDetailState extends State<FilterDetail> {
                   },
                   selected: filter.tags.contains(tag),
                   label: Text(tag),
+                ),
+              ),
+          ],
+        ),
+        //筛选来源
+        Row(
+          children: <Widget>[
+            Container(
+              margin: const EdgeInsets.only(top: 10, bottom: 10),
+              child: Text(
+                TranslationKey.filterBySource.tr,
+                style: bold18Style,
+              ),
+            ),
+            const SizedBox(width: 5),
+            filter.appIds.isNotEmpty
+                ? SizedBox(
+                    height: 25,
+                    width: 25,
+                    child: IconButton(
+                      padding: const EdgeInsets.all(2),
+                      tooltip: TranslationKey.clear.tr,
+                      iconSize: 13,
+                      color: Colors.blueGrey,
+                      onPressed: () {
+                        filter.appIds.clear();
+                        setState(() {});
+                      },
+                      icon: const Icon(
+                        Icons.cleaning_services_sharp,
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ],
+        ),
+        if (widget.allSources.isEmpty) emptyContent,
+        const SizedBox(height: 5),
+        Wrap(
+          direction: Axis.horizontal,
+          children: [
+            for (var app in widget.allSources)
+              Container(
+                margin: const EdgeInsets.only(right: 5, bottom: 5),
+                child: RoundedChip(
+                  onPressed: () {
+                    if (filter.appIds.contains(app.appId)) {
+                      filter.appIds.remove(app.appId);
+                    } else {
+                      filter.appIds.add(app.appId);
+                    }
+                    setState(() {});
+                  },
+                  selected: filter.appIds.contains(app.appId),
+                  label: Text(app.name),
+                  avatar: Image.memory(app.iconBytes),
                 ),
               ),
           ],

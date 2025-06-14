@@ -45,6 +45,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   //region 搜索条件
   final selectedDevs = <String>{}.obs;
   final selectedTags = <String>{}.obs;
+  final selectedSources = <String>{}.obs;
   final selectedContentTypes = <HistoryContentType>{}.obs;
 
   //endregion

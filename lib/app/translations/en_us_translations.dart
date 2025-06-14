@@ -143,6 +143,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Filter by Date";
       case TranslationKey.filterByContentType:
         return "Filter by Type";
+      case TranslationKey.filterBySource:
+        return "Filter by Source";
       case TranslationKey.saveTopData:
         return "Save top data";
       case TranslationKey.removeLocalFiles:
@@ -1044,6 +1046,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Cleared successfully";
       case TranslationKey.clearFailed:
         return "Failed to clear";
+      case TranslationKey.selectApplication:
+        return "Select Applications";
     }
   }
 }

@@ -155,6 +155,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "筛选设备";
       case TranslationKey.filterByTag:
         return "筛选标签";
+      case TranslationKey.filterBySource:
+        return "筛选来源";
       case TranslationKey.envStatusLoadingText:
         // "Loading Environment Status..."
         return "正在加载环境状态";
@@ -1045,6 +1047,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "清除成功";
       case TranslationKey.clearFailed:
         return "清除失败";
+      case TranslationKey.selectApplication:
+        return "选择应用";
     }
   }
 }

@@ -3,20 +3,24 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/week_day.dart';
 import 'package:clipshare/app/modules/clean_data_module/clean_data_controller.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
 
 class CleanDataPage extends GetView<CleanDataController> {
+  final sourceService = Get.find<ClipboardSourceService>();
   @override
   Widget build(BuildContext context) {
     final currentTheme = Theme.of(context);
@@ -166,6 +170,53 @@ class CleanDataPage extends GetView<CleanDataController> {
                             },
                             selected: controller.selectedDevs.contains(dev.guid),
                             label: Text(dev.name),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+
+                  ///endregion
+
+                  ///region 来源过滤
+                  Row(
+                    children: [
+                      Icon(
+                        MdiIcons.listBoxOutline,
+                        color: Colors.blueGrey,
+                        size: 16,
+                      ),
+                      const SizedBox(
+                        width: 2,
+                      ),
+                      Text(
+                        TranslationKey.filterBySource.tr,
+                        style: const TextStyle(color: Colors.blueGrey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 4,
+                  ),
+                  Obx(
+                    () => Wrap(
+                      direction: Axis.horizontal,
+                      children: sourceService.appInfos.map((app) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 5, bottom: 5),
+                          child: RoundedChip(
+                            onPressed: () {
+                              final appId = app.appId;
+                              final selected = controller.selectedSources.contains(appId);
+                              if (selected) {
+                                controller.selectedSources.remove(appId);
+                              } else {
+                                controller.selectedSources.add(appId);
+                              }
+                            },
+                            selected: controller.selectedSources.contains(app.appId),
+                            label: Text(app.name),
+                            avatar: AppIcon(appId: app.appId),
                           ),
                         );
                       }).toList(),

@@ -1,6 +1,8 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
+import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
+import 'package:clipshare/app/widgets/memory_image_with_not_found.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -22,13 +24,32 @@ class AppIcon extends StatefulWidget {
 }
 
 class _AppIconState extends State<AppIcon> {
+  final multiWindowService = Get.find<MultiWindowChannelService>();
   Widget? appIconImage;
 
   Key? appIconImageKey;
 
   AppInfo? appInfo;
-  final sourceService = Get.find<ClipboardSourceService>();
   static const iconSize = 20.0;
+  static var caches = <String, AppInfo>{};
+
+  AppInfo? getAppInfoByAppId(String appId) {
+    try {
+      final sourceService = Get.find<ClipboardSourceService>();
+      return sourceService.getAppInfoByAppId(appId);
+    } catch (_) {
+      if (caches.containsKey(appId)) {
+        return caches[appId];
+      }
+      multiWindowService.getAllSources(0).then((list) {
+        caches.clear();
+        for (var item in list) {
+          caches[item.appId] = item;
+        }
+      });
+      return null;
+    }
+  }
 
   Widget get notFoundIcon {
     return Tooltip(
@@ -46,21 +67,18 @@ class _AppIconState extends State<AppIcon> {
   @override
   Widget build(BuildContext context) {
     final source = widget.appId;
-    final appInfo = sourceService.getAppInfoByAppId(source);
+    final appInfo = getAppInfoByAppId(source);
     if (appInfo == null) return notFoundIcon;
     if (appInfo.iconB64 == this.appInfo?.iconB64 && appIconImage != null) {
       return appIconImage!;
     }
     this.appInfo = appInfo;
     appIconImageKey = Key(appInfo.iconB64);
-    final image = Image.memory(
-      appInfo.iconBytes,
-      key: appIconImageKey,
+    final image = MemImageWithNotFound(
+      bytes: appInfo.iconBytes,
+      notFoundIcon: notFoundIcon,
       width: iconSize,
       height: iconSize,
-      errorBuilder: (context, Object error, StackTrace? stackTrace) {
-        return notFoundIcon;
-      },
     );
     if (widget.onDeleteClicked != null) {
       return RoundedChip(

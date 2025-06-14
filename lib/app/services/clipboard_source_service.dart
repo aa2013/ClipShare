@@ -13,6 +13,8 @@ class ClipboardSourceService extends GetxService {
   //appId -> AppInfo
   final _appInfos = <String, AppInfo>{}.obs;
 
+  List<AppInfo> get appInfos => _appInfos.values.toList(growable: false)..sort((a, b) => a.name.compareTo(b.name));
+
   Future<ClipboardSourceService> init() async {
     var appInfos = await _dbService.appInfoDao.getAllAppInfos();
     for (var item in appInfos) {

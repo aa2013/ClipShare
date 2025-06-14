@@ -26,6 +26,7 @@ abstract class HistoryDao {
     AND (:type = '' OR type = :type)
     AND (:startTime = '' OR :endTime = '' OR date(time) BETWEEN :startTime AND :endTime)
     AND (length(null in (:devIds)) = 1 OR devId IN (:devIds))
+    AND (length(null in (:appIds)) = 1 OR source IN (:appIds))
     AND (length(null in (:tags)) = 1 OR id IN (
       SELECT DISTINCT hisId
       FROM HistoryTag
@@ -44,6 +45,7 @@ abstract class HistoryDao {
     String type,
     List<String> tags,
     List<String> devIds,
+    List<String> appIds,
     String startTime,
     String endTime,
     bool onlyNoSync,
@@ -58,6 +60,7 @@ abstract class HistoryDao {
       filter.type.value,
       filter.tags.toList(),
       filter.devIds.toList(),
+      filter.appIds.toList(),
       filter.startDate,
       filter.endDate,
       filter.onlyNoSync,

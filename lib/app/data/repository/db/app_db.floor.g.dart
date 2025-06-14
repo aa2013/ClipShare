@@ -408,6 +408,7 @@ class _$HistoryDao extends HistoryDao {
     String type,
     List<String> tags,
     List<String> devIds,
+    List<String> appIds,
     String startTime,
     String endTime,
     bool onlyNoSync,
@@ -421,11 +422,19 @@ class _$HistoryDao extends HistoryDao {
     final _sqliteVariablesForDevIds =
         Iterable<String>.generate(devIds.length, (i) => '?${i + offset}')
             .join(',');
+    offset += devIds.length;
+    final _sqliteVariablesForAppIds =
+        Iterable<String>.generate(appIds.length, (i) => '?${i + offset}')
+            .join(',');
     return _queryAdapter.queryList(
         'SELECT * FROM History   WHERE uid = ?1     AND (?2 = 0 OR id < ?2)     AND (?3 = \'\' OR content LIKE \'%\' || ?3 || \'%\')     AND (?4 = \'\' OR type = ?4)     AND (?5 = \'\' OR ?6 = \'\' OR date(time) BETWEEN ?5 AND ?6)     AND (length(null in (' +
             _sqliteVariablesForDevIds +
             ')) = 1 OR devId IN (' +
             _sqliteVariablesForDevIds +
+            '))     AND (length(null in (' +
+            _sqliteVariablesForAppIds +
+            ')) = 1 OR source IN (' +
+            _sqliteVariablesForAppIds +
             '))     AND (length(null in (' +
             _sqliteVariablesForTags +
             ')) = 1 OR id IN (       SELECT DISTINCT hisId       FROM HistoryTag       WHERE tagName IN (' +
@@ -453,7 +462,8 @@ class _$HistoryDao extends HistoryDao {
           onlyNoSync ? 1 : 0,
           ignoreTop ? 1 : 0,
           ...tags,
-          ...devIds
+          ...devIds,
+          ...appIds
         ]);
   }
 

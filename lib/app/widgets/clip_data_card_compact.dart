@@ -1,7 +1,9 @@
+import 'package:clipboard_listener/models/app_info.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_extra_info.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -62,6 +64,11 @@ class ClipDataCardCompact extends StatelessWidget {
               children: [
                 Row(
                   children: [
+                    if (_clip.data.source != null)
+                      Container(
+                        margin: const EdgeInsets.only(right: 5),
+                        child: AppIcon(appId: _clip.data.source!),
+                      ),
                     RoundedChip(
                       avatar: const Icon(Icons.devices_rounded),
                       backgroundColor: const Color(0x1a000000),
