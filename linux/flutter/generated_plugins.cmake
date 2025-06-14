@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  clipboard_listener
+  clipshare_clipboard_listener
   desktop_drop
   desktop_multi_window
   hotkey_manager_linux
