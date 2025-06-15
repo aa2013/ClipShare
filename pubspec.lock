@@ -201,10 +201,9 @@ packages:
   clipshare_clipboard_listener:
     dependency: "direct main"
     description:
-      name: clipshare_clipboard_listener
-      sha256: dc0e49ce06c02721876858339cadaa45a90b8f286466ea0e950ecd1d3739e567
-      url: "https://pub.dev"
-    source: hosted
+      path: "../clipboard_listener"
+      relative: true
+    source: path
     version: "1.0.0"
   clock:
     dependency: transitive
