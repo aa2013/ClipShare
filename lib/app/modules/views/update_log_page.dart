@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,7 +12,7 @@ class UpdateLogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: rootBundle.loadString("assets/md/updateLogs.md"),
+      future: rootBundle.loadString("assets/md/updateLogs-${Platform.operatingSystem.upperFirst()}.md"),
       builder: (context, v) {
         return RoundedScaffold(
           title: Row(
