@@ -202,10 +202,10 @@ packages:
     dependency: "direct main"
     description:
       name: clipshare_clipboard_listener
-      sha256: "6ee92a02584f36ae82bc9a45add1b97f02409816a63ee87bb9f960f263fcd35c"
-      url: "https://pub.dev"
+      sha256: "625345c8bf1059a4238579607729aa82df19160b7f81dce77fd6f819fbaa91ac"
+      url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.0.1"
+    version: "1.0.3"
   clock:
     dependency: transitive
     description:
