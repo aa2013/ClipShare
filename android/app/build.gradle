@@ -57,8 +57,20 @@ android {
         versionName flutterVersionName
         // bundle分包时默认会增加versionCode，这里重新复写 https://github.com/flutter/flutter/issues/49544
         project.android.applicationVariants.all { variant ->
-            variant.outputs.each { output ->
+            variant.outputs.all { output ->
                 output.versionCodeOverride = flutterVersionCode.toInteger()
+                def versionName = variant.versionName
+                def buildType = variant.buildType.name
+                def abi = output.getFilter(com.android.build.OutputFile.ABI) // 获取架构名称
+
+                // 3. 修改 APK 文件名，保留架构名称
+                if (abi != null) {
+                    // 带架构名称的 APK（如 app_release_v1.0.0_arm64-v8a.apk）
+                    output.outputFileName = "app-${abi}-${buildType}-v${versionName}.apk"
+                } else {
+                    // 通用 APK（无架构名称）
+                    output.outputFileName = "app-${buildType}-v${versionName}.apk"
+                }
             }
         }
     }
