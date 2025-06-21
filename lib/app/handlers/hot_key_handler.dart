@@ -52,9 +52,9 @@ class AppHotKeyHandler {
           ids = List.empty();
         }
         //只允许弹窗一次
-        var windowId = appConfig.onlineDevicesWindow?.windowId;
-        if (ids.contains(windowId)) {
-          // await appConfig.historyWindow?.close();
+        final windowId = appConfig.historyWindow?.windowId;
+        final isHide = true && multiWindowService.isHideWindow(windowId);
+        if (ids.contains(windowId) && !isHide) {
           await multiWindowService.closeWindow(windowId!, MultiWindowTag.history);
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {
@@ -131,10 +131,10 @@ class AppHotKeyHandler {
         } catch (e) {
           ids = List.empty();
         }
-        var windowId = appConfig.onlineDevicesWindow?.windowId;
+        final windowId = appConfig.onlineDevicesWindow?.windowId;
+        final isHide = multiWindowService.isHideWindow(windowId);
         //只允许弹窗一次
-        if (ids.contains(windowId)) {
-          // await appConfig.onlineDevicesWindow?.close();
+        if (ids.contains(windowId) && !isHide) {
           multiWindowService.closeWindow(windowId!, MultiWindowTag.devices);
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {

@@ -12,6 +12,7 @@ import 'package:get/get.dart';
 
 class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
+  final _hideWindowIds = <int>{};
 
   ///显示弹窗（从隐藏状态恢复）
   Future showWindowFromHide(int targetWindowId, {List<double>? position, Map<String, dynamic>? args}) {
@@ -22,6 +23,7 @@ class MultiWindowChannelService extends GetxService {
     if (args != null) {
       data["args"] = args;
     }
+    _hideWindowIds.remove(targetWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
       MultiWindowMethod.showWindowFromHide.name,
@@ -32,6 +34,7 @@ class MultiWindowChannelService extends GetxService {
   ///关闭（隐藏）弹窗
   Future closeWindow(int targetWindowId, MultiWindowTag tag) {
     if (!PlatformExt.isDesktop) return Future.value();
+    _hideWindowIds.add(targetWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
       MultiWindowMethod.closeWindow.name,
@@ -39,6 +42,10 @@ class MultiWindowChannelService extends GetxService {
         "tag": tag.name,
       }),
     );
+  }
+
+  bool isHideWindow(int? windowId){
+    return _hideWindowIds.contains(windowId);
   }
 
   ///获取历史数据
