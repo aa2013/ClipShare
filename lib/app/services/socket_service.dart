@@ -7,10 +7,12 @@ import 'package:clipshare/app/data/enums/connection_mode.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
 import 'package:clipshare/app/data/models/version.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/handlers/dev_pairing_handler.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
@@ -20,6 +22,7 @@ import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/handlers/task_runner.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -661,6 +664,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         final total = msg.data["total"];
         int seq = msg.data["seq"];
         Module module = Module.getValue(copyMsg.data["module"]);
+        final opMethod = OpMethod.getValue(copyMsg.data["method"]);
         MissingDataSyncProgress? newProgress;
         //如果已经存在同步记录则更新或者移除
         if (missingDataSyncProgress.containsKey(devId)) {
@@ -668,7 +672,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           progress.seq = seq;
           progress.total = total;
           progress.syncedCount++;
-          if (module == Module.history) {
+          if (progress.firstHistory == true) {
+            progress.firstHistory = false;
+          } else if (module == Module.history && opMethod == OpMethod.add) {
             if (progress.firstHistory == null) {
               progress.firstHistory = true;
             } else {
@@ -701,8 +707,22 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
       ///请求批量同步
       case MsgType.reqMissingData:
-        // var devIds = (msg.data["devIds"] as List<dynamic>).cast<String>();
-        MissingDataSyncHandler.sendMissingData(dev, [appConfig.device.guid]);
+        var syncedAppIds = ((msg.data["appIds"] ?? []) as List<dynamic>).cast<String>();
+        MissingDataSyncHandler.sendMissingData(dev, appConfig.device.guid, syncedAppIds);
+        break;
+      case MsgType.reqAppInfo:
+        final appId = msg.data["appId"];
+        final sourceService = Get.find<ClipboardSourceService>();
+        final appInfo = sourceService.appInfos.firstWhereOrNull((item) => item.devId == appConfig.device.guid && appId == item.appId);
+        if (appInfo == null) {
+          break;
+        }
+        sendData(dev, MsgType.appInfo, appInfo.toJson());
+        break;
+      case MsgType.appInfo:
+        final appInfo = AppInfo.fromJson(msg.data);
+        final sourceService = Get.find<ClipboardSourceService>();
+        sourceService.addOrUpdate(appInfo);
         break;
 
       ///请求配对我方，生成四位配对码
@@ -1270,12 +1290,15 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   Future<void> reqMissingData() async {
-    // var devices = await dbService.deviceDao.getAllDevices(appConfig.userId);
-    // var devIds =
-    //     devices.where((dev) => dev.isPaired).map((e) => e.guid).toList();
-    sendData(null, MsgType.reqMissingData, {
-      "devIds": [],
-    });
+    final sourceService = Get.find<ClipboardSourceService>();
+    final devs = _devSockets.values.where((dev) => dev.isPaired).map(((item) => item.dev)).toList();
+    final allAppInfos = sourceService.appInfos;
+    for (var dev in devs) {
+      final ownedAppIds = allAppInfos.where((item) => item.devId == dev.guid).map((item) => item.appId).toList();
+      await sendData(dev, MsgType.reqMissingData, {
+        "appIds": ownedAppIds,
+      });
+    }
   }
 
   ///设备连接成功
@@ -1615,6 +1638,20 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       Log.debug(tag, skt.dev.name);
       await skt.socket.send(msg.toJson());
     }
+  }
+
+  ///通过设备 id 发送数据
+  Future<void> sendDataByDevId(
+    String devId,
+    MsgType key,
+    Map<String, dynamic> data, [
+    bool onlyPaired = true,
+  ]) {
+    final devSkt = _devSockets[devId];
+    if (devSkt == null) {
+      return Future.value();
+    }
+    return sendData(devSkt.dev, key, data, onlyPaired);
   }
 
   /// 发送组播消息

@@ -467,7 +467,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     notifyHistoryWindow();
     _tempList.add(clip);
     debounceUpdate();
-    if (!shouldSync) return cnt;
+    if (!shouldSync) {
+      final source = history.source;
+      final appInfo = sourceService.getAppInfoByAppId(source);
+      //若同步的数据有来源信息但是本地未缓存，则请求同步该来源信息
+      if (source != null && appInfo == null) {
+        sktService.sendDataByDevId(
+          history.devId,
+          MsgType.reqAppInfo,
+          {"appId": source},
+        );
+      }
+      return cnt;
+    }
     //添加历史操作记录
     var opRecord = OperationRecord.fromSimple(
       Module.history,

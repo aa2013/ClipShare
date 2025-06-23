@@ -59,6 +59,13 @@ class AppInfo {
     return jsonEncode(toJson());
   }
 
+  ///判断内容是否相同（不含id）
+  ///场景：当app更新等情况导致图标变化，就需要做更新操作
+  bool hasSameContent(AppInfo? appInfo) {
+    if (appInfo == null) return false;
+    return appInfo.appId == appId && appInfo.devId == devId && appInfo.name == name && appInfo.iconB64 == iconB64;
+  }
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is AppInfo && runtimeType == other.runtimeType && id == other.id;
 

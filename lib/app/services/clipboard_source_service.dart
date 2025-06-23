@@ -8,7 +8,6 @@ import 'package:get/get.dart';
 
 class ClipboardSourceService extends GetxService {
   final _dbService = Get.find<DbService>();
-  final _appConfig = Get.find<ConfigService>();
 
   //appId -> AppInfo
   final _appInfos = <String, AppInfo>{}.obs;
@@ -20,7 +19,7 @@ class ClipboardSourceService extends GetxService {
     return this;
   }
 
-  Future<void> _loadAll()async{
+  Future<void> _loadAll() async {
     final tmpMap = <String, AppInfo>{};
     var appInfos = await _dbService.appInfoDao.getAllAppInfos();
     for (var item in appInfos) {
@@ -31,7 +30,11 @@ class ClipboardSourceService extends GetxService {
   }
 
   Future<bool> addOrUpdate(AppInfo appInfo, [bool notify = false]) async {
-    final data = await _dbService.appInfoDao.getById(appInfo.id);
+    //如果已缓存该app信息判断内容，直接返回
+    if (isCached(appInfo)) {
+      return true;
+    }
+    final data = await _dbService.appInfoDao.getByUniqueIndex(appInfo.devId, appInfo.appId);
     var cnt = 0;
     if (data == null) {
       cnt = await _dbService.appInfoDao.addAppInfo(appInfo);
@@ -46,22 +49,29 @@ class ClipboardSourceService extends GetxService {
     if (!notify) {
       return success;
     }
+    final opMethod = data == null ? OpMethod.add : OpMethod.update;
     //通知其他设备更新数据
     _dbService.opRecordDao.addAndNotify(
       OperationRecord.fromSimple(
         Module.appInfo,
-        data == null ? OpMethod.add : OpMethod.update,
+        opMethod,
         appInfo.id.toString(),
       ),
     );
     return cnt > 0;
   }
 
-  bool contains(String appId) {
-    return _appInfos.containsKey(appId);
+  ///判断是否缓存某 app 信息
+  bool isCached(AppInfo appInfo) {
+    if (!_appInfos.containsKey(appInfo.appId)) {
+      return false;
+    }
+    //判断内容是否相同（不含id）
+    return appInfo.hasSameContent(_appInfos[appInfo.appId]);
   }
 
-  AppInfo? getAppInfoByAppId(String appId) {
+  AppInfo? getAppInfoByAppId(String? appId) {
+    if (appId == null) return null;
     if (_appInfos.containsKey(appId)) {
       return _appInfos[appId];
     }

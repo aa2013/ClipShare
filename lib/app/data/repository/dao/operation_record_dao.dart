@@ -34,13 +34,13 @@ abstract class OperationRecordDao {
   where not exists (
     select 1 from OperationSync opsync
     where opsync.uid = :uid and opsync.devId = :toDevId and opsync.opId = record.id
-  ) and devId in (:fromDevIds)
+  ) and devId = :fromDevId
   order by id desc
   """)
   Future<List<OperationRecord>> getSyncRecord(
     int uid,
     String toDevId,
-    List<String> fromDevIds,
+    String fromDevId,
   );
 
   ///删除当前用户的所有操作记录

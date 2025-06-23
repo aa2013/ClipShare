@@ -1130,18 +1130,12 @@ class _$OperationRecordDao extends OperationRecordDao {
   Future<List<OperationRecord>> getSyncRecord(
     int uid,
     String toDevId,
-    List<String> fromDevIds,
+    String fromDevId,
   ) async {
-    const offset = 3;
-    final _sqliteVariablesForFromDevIds =
-        Iterable<String>.generate(fromDevIds.length, (i) => '?${i + offset}')
-            .join(',');
     return _queryAdapter.queryList(
-        'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId in (' +
-            _sqliteVariablesForFromDevIds +
-            ')   order by id desc',
+        'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId = ?3   order by id desc',
         mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String),
-        arguments: [uid, toDevId, ...fromDevIds]);
+        arguments: [uid, toDevId, fromDevId]);
   }
 
   @override
@@ -1329,9 +1323,25 @@ class _$AppInfoDao extends AppInfoDao {
   }
 
   @override
+  Future<AppInfo?> getByUniqueIndex(
+    String devId,
+    String appId,
+  ) async {
+    return _queryAdapter.query(
+        'select * from AppInfo where appId = ?2 and devId = ?1',
+        mapper: (Map<String, Object?> row) => AppInfo(
+            id: row['id'] as int,
+            appId: row['appId'] as String,
+            devId: row['devId'] as String,
+            name: row['name'] as String,
+            iconB64: row['iconB64'] as String),
+        arguments: [devId, appId]);
+  }
+
+  @override
   Future<int?> removeNotUsed() async {
     return _queryAdapter.query(
-        'delete from AppInfo as app   where not exists (       select 1 from History as his where his.devId=app.devId and his.source=app.appId   )',
+        'delete from AppInfo   where not exists (       select 1 from History as his where his.devId = AppInfo.devId and his.source = AppInfo.appId   )',
         mapper: (Map<String, Object?> row) => row.values.first as int);
   }
 
