@@ -888,7 +888,11 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
     Log.debug(tag, "开始发现设备");
     //重新更新广播监听
-    await _startListenMulticast();
+    try{
+      await _startListenMulticast();
+    }catch(err, stack){
+      Log.error(tag, "error: $e, $stack");
+    }
     List<Future<void> Function()> tasks = [];
     if (appConfig.onlyForwardMode) {
       tasks = []; //测试屏蔽发现用
