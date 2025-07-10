@@ -55,7 +55,7 @@ class AppHotKeyHandler {
         final windowId = appConfig.historyWindow?.windowId;
         final isHide = true && multiWindowService.isHideWindow(windowId);
         if (ids.contains(windowId) && !isHide) {
-          await multiWindowService.closeWindow(windowId!, MultiWindowTag.history);
+          await multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.history);
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {
             return;
@@ -135,7 +135,7 @@ class AppHotKeyHandler {
         final isHide = multiWindowService.isHideWindow(windowId);
         //只允许弹窗一次
         if (ids.contains(windowId) && !isHide) {
-          multiWindowService.closeWindow(windowId!, MultiWindowTag.devices);
+          multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.devices);
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {
             return;

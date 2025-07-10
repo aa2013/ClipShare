@@ -55,10 +55,8 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
   final windowControlService = Get.find<WindowControlService>();
   Timer? _timer;
-  var searchFilter = SearchFilter();
-  List<Device> allDevices = [];
-  List<String> allTagNames = [];
-  List<AppInfo> allSources = [];
+  bool filterLoading = true;
+  late final HistoryFilterController historyFilterController;
 
   @override
   void initState() {
@@ -67,6 +65,18 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     // 监听滚动事件
     _scrollController.addListener(_scrollListener);
     windowControlService.addListener(this);
+    historyFilterController = HistoryFilterController(
+      allDevices: [],
+      allTagNames: [],
+      allSources: [],
+      isBigScreen: false,
+      loadSearchCondition: loadSearchCondition,
+      onChanged: (filter) {
+        refresh();
+      },
+      onSearchBtnClicked: refresh,
+      filter: SearchFilter(),
+    );
     //处理弹窗事件
     DesktopMultiWindow.setMethodHandler((
       MethodCall call,
@@ -88,7 +98,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
           }
           widget.windowController.show();
           windowManager.setAlwaysOnTop(true);
-          searchFilter = SearchFilter();
+          historyFilterController.resetFilter();
           refresh();
           break;
         //关闭（隐藏）窗口
@@ -100,6 +110,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       //都不符合，返回空
       return Future.value();
     });
+    loadSearchCondition();
     refresh();
   }
 
@@ -115,8 +126,8 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   }
 
   @override
-  void onCloseBtnClicked() {
-    multiWindowChannelService.closeWindow(0, MultiWindowTag.history);
+  void onCloseBtnClicked(bool isHide) {
+    multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
   }
 
   void _scrollListener() {
@@ -146,16 +157,21 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   }
 
   Future<void> refresh([bool loadMore = false]) async {
-    setState(() {
-      _loadNewData = true;
-    });
-    await loadSearchCondition();
+    if (loadMore) {
+      setState(() {
+        _loadNewData = true;
+      });
+    } else {
+      setState(() {
+        _loading = true;
+      });
+    }
     return Future.delayed(const Duration(milliseconds: 500), () {
       var fromId = 0;
       if (loadMore) {
         fromId = _list.isEmpty ? 0 : _list.last.data.data.id;
       }
-      return multiWindowChannelService.getHistories(0, fromId, searchFilter).then(
+      return multiWindowChannelService.getHistories(0, fromId, historyFilterController.filter).then(
         (json) {
           var data = jsonDecode(json);
           var devInfos = data["devInfos"] as Map<String, dynamic>;
@@ -211,11 +227,14 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     await multiWindowChannelService.getAllSources(0).then((list) {
       sources.addAll(list);
     });
-    setState(() {
-      allDevices = devices;
-      allTagNames = tags;
-      allSources = sources;
-    });
+    historyFilterController.setAllDevices(devices);
+    historyFilterController.setAllTagNames(tags);
+    historyFilterController.setAllSources(sources);
+    if (filterLoading) {
+      setState(() {
+        filterLoading = false;
+      });
+    }
   }
 
   @override
@@ -223,24 +242,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     return Scaffold(
       body: Column(
         children: [
-          HistoryFilter(
-            allDevices: allDevices,
-            allTagNames: allTagNames,
-            allSources: allSources,
-            filter: searchFilter,
-            loadSearchCondition: loadSearchCondition,
-            isBigScreen: false,
-            onChanged: (filter) {
-              searchFilter = filter;
-              setState(() {
-                _loading = true;
-              });
-              refresh();
-            },
-          ),
+          if (!filterLoading) HistoryFilter(controller: historyFilterController),
           Expanded(
             child: RefreshIndicator(
-              onRefresh: refresh,
+              onRefresh: () => Future.wait<void>([loadSearchCondition(), refresh()]),
               child: ConditionWidget(
                 visible: _loading,
                 replacement: ConditionWidget(

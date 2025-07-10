@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -57,6 +58,7 @@ class SplashController extends GetxController {
   final devService = Get.find<DeviceService>();
   final devController = Get.find<DeviceController>();
   final pendingFileService = Get.find<PendingFileService>();
+  final multiWindowService = Get.find<MultiWindowChannelService>();
 
   @override
   void onReady() {
@@ -230,6 +232,11 @@ class SplashController extends GetxController {
           if (appConfig.recordHistoryDialogPosition) {
             appConfig.setHistoryDialogPosition(pos);
           }
+          break;
+        case MultiWindowMethod.closeWindow:
+          var windowId = args["closeWindowId"] as int;
+          multiWindowService.addHideWindow(windowId);
+          break;
         default:
       }
       //都不符合，返回空

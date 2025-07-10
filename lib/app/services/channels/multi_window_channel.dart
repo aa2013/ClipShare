@@ -32,19 +32,24 @@ class MultiWindowChannelService extends GetxService {
   }
 
   ///关闭（隐藏）弹窗
-  Future closeWindow(int targetWindowId, MultiWindowTag tag) {
+  Future closeWindow(int targetWindowId, int closeWindowId, MultiWindowTag tag) {
     if (!PlatformExt.isDesktop) return Future.value();
-    _hideWindowIds.add(targetWindowId);
+    _hideWindowIds.add(closeWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
       MultiWindowMethod.closeWindow.name,
       jsonEncode({
         "tag": tag.name,
+        "closeWindowId": closeWindowId,
       }),
     );
   }
 
-  bool isHideWindow(int? windowId){
+  void addHideWindow(int windowId) {
+    _hideWindowIds.add(windowId);
+  }
+
+  bool isHideWindow(int? windowId) {
     return _hideWindowIds.contains(windowId);
   }
 

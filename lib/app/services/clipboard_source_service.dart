@@ -27,6 +27,8 @@ class ClipboardSourceService extends GetxService {
     }
     _appInfos.clear();
     _appInfos.addAll(tmpMap);
+    var idSet = tmpMap.values.map((item) => item.id).toSet();
+    AppInfoExt.removeWhere((id, _) => !idSet.contains(id));
   }
 
   Future<bool> addOrUpdate(AppInfo appInfo, [bool notify = false]) async {

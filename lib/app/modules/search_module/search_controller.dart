@@ -17,7 +17,9 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -30,6 +32,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final devService = Get.find<DeviceService>();
+  final sourceService = Get.find<ClipboardSourceService>();
 
   //region 属性
   static const tag = "SearchController";
@@ -42,27 +45,27 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   List<String> get allTagNames => _allTagNames.value;
   int? _minId;
   final loading = true.obs;
+  final filterLoading = true.obs;
   var exporting = false;
   var cancelExporting = false;
 
   //region 搜索相关
-  Set<String> get selectedTags => filter.value.tags;
+  Set<String> get selectedTags => filterController.selectedTags.value;
 
-  Set<String> get selectedDevIds => filter.value.devIds;
+  Set<String> get selectedDevIds => filterController.selectedDevIds.value;
 
-  Set<String> get selectedAppIds => filter.value.appIds;
+  Set<String> get selectedAppIds => filterController.selectedAppIds.value;
 
-  String get searchStartDate => filter.value.startDate;
+  String get searchStartDate => filterController.startDate.value;
 
-  String get searchEndDate => filter.value.endDate;
+  String get searchEndDate => filterController.endDate.value;
   final _searchType = HistoryContentType.all.obs;
 
   HistoryContentType get searchType => _searchType.value;
 
   set searchType(value) => _searchType.value = value;
 
-  bool get searchOnlyNoSync => filter.value.onlyNoSync;
-  final filter = SearchFilter().obs;
+  bool get searchOnlyNoSync => filterController.onlyNoSync.value;
 
   //endregion
 
@@ -75,16 +78,37 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   double get screenWidth => _screenWidth.value;
 
   bool get isBigScreen => screenWidth >= Constants.smallScreenWidth;
+  late final HistoryFilterController filterController;
 
   //endregion
 
   //region 生命周期
   @override
   void onInit() {
-    super.onInit();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
-    loadFromExternalParams(null, null);
+    loadSearchCondition().whenComplete(
+      () {
+        filterController = HistoryFilterController(
+          allDevices: allDevices,
+          allTagNames: allTagNames,
+          allSources: sourceService.appInfos,
+          isBigScreen: isBigScreen,
+          loadSearchCondition: loadSearchCondition,
+          showContentTypeFilter: false,
+          onChanged: (filter) {
+            refreshData();
+          },
+          onSearchBtnClicked: refreshData,
+          filter: SearchFilter(),
+          onExportBtnClicked: _export,
+        );
+        filterLoading.value = false;
+        loadFromExternalParams(null, null);
+        refreshData();
+        super.onInit();
+      },
+    );
   }
 
   @override
@@ -140,15 +164,13 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         selectedDevIds.clear();
       }
     }
-    //加载数据
-    refreshData();
   }
 
   ///重新加载列表
-  void refreshData() {
+  Future<void> refreshData() async {
     _minId = null;
-    loadSearchCondition();
-    loadData(_minId).then((lst) {
+    await loadSearchCondition();
+    await loadData(_minId).then((lst) {
       list.value = lst;
       loading.value = false;
     });
@@ -180,7 +202,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         .getHistoriesPageByWhere(
       appConfig.userId,
       minId ?? 0,
-      filter.value.content,
+      filterController.content.value,
       typeValue,
       selectedTags.toList(),
       selectedDevIds.toList(),
@@ -196,6 +218,51 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   }
 
   //region 导出
+  void _export() {
+    var loadingController = LadingProgressController();
+    Global.showTipsDialog(
+      context: Get.context!,
+      text: TranslationKey.historyOutputTips.tr,
+      onOk: () {
+        Global.showLoadingDialog(
+          context: Get.context!,
+          loadingText: TranslationKey.exporting.tr,
+          showCancel: true,
+          controller: loadingController,
+          onCancel: () {
+            cancelExporting = true;
+            exporting = false;
+          },
+        );
+        export2Excel(loadingController).then((result) {
+          //关闭进度动画
+          Get.back();
+          //手动取消
+          if (!exporting) {
+            return;
+          }
+          if (result) {
+            Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
+          } else {
+            Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
+          }
+        }).catchError((err, stack) {
+          //关闭进度动画
+          Get.back();
+          Global.showTipsDialog(
+            context: Get.context!,
+            title: TranslationKey.outputFailed.tr,
+            text: "$err. $stack",
+          );
+        }).whenComplete(() {
+          //更新状态
+          exporting = false;
+          cancelExporting = false;
+        });
+      },
+      showCancel: true,
+    );
+  }
 
   ///导出为 excel
   Future<bool> export2Excel(LadingProgressController loadingController) async {
@@ -212,7 +279,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       }
       var list = await dbService.historyDao.getHistoriesPageByFilter(
         appConfig.userId,
-        filter.value,
+        filterController.filter,
         ignoreTop,
         lastId,
       );

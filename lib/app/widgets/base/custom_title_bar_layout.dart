@@ -131,7 +131,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                         ),
                       ),
                       onTap: () {
-                        windowManager.hide();
+                        windowControlService.close(true);
                       },
                     ),
                   ),

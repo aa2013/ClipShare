@@ -74,5 +74,16 @@ class AppInfo {
 }
 
 extension AppInfoExt on AppInfo {
-  Uint8List get iconBytes => base64.decode(iconB64);
+  static final Map<int, Uint8List> _bytes = {};
+
+  static void removeWhere(bool Function(int, Uint8List) func) {
+    return _bytes.removeWhere(func);
+  }
+
+  Uint8List get iconBytes {
+    if (!_bytes.containsKey(id)) {
+      _bytes[id] = base64.decode(iconB64);
+    }
+    return _bytes[id]!;
+  }
 }
