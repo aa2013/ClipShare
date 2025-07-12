@@ -271,7 +271,6 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     int lastId = 0;
     //第一行是标题头，内容从第二行开始
     int rowNum = 2;
-    bool ignoreTop = false;
     var histories = List<History>.empty(growable: true);
     while (true) {
       if (cancelExporting) {
@@ -280,19 +279,23 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       var list = await dbService.historyDao.getHistoriesPageByFilter(
         appConfig.userId,
         filterController.filter,
-        ignoreTop,
+        false,
         lastId,
       );
-      //首次查询加载置顶，后续就不要重复加载了
-      if (ignoreTop == false) {
-        ignoreTop = true;
-      }
       if (list.isEmpty) {
         break;
       }
       histories.addAll(list);
-      lastId = list.map((item) => item.id).reduce(min);
+      lastId = list.last.id;
     }
+    histories.sort((a, b) {
+      // 首先按 top 排序（true 在前，false 在后）
+      if (a.top != b.top) {
+        return a.top ? -1 : 1; // true 在前，所以返回 -1
+      }
+      // 如果 top 相同，则按 id 降序排列
+      return b.id.compareTo(a.id); // 降序：b.id - a.id
+    });
     final Workbook workbook = Workbook();
     final Worksheet sheet = workbook.worksheets[0];
     _addExcelHeader(sheet);
