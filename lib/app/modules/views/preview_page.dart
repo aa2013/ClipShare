@@ -403,7 +403,7 @@ class _PreviewPageState extends State<PreviewPage> {
   void showMenu(String imgPath, Offset? position) {
     final menu = ContextMenu(
       entries: [
-        if (Platform.isAndroid && !appConfig!.saveToPictures && imgPath.startsWith(appConfig!.androidPrivatePicturesPath))
+        if (Platform.isAndroid && !appConfig!.saveToPictures && imgPath.startsWith(Constants.androidDataPath))
           MenuItem(
             label: TranslationKey.saveToAlbum.tr,
             icon: Icons.save_alt,

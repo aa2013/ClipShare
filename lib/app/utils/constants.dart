@@ -80,6 +80,7 @@ class Constants {
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
+  static const androidDataPath = "/storage/emulated/0/Android/data";
 
   static Future<String> get documentsPath async {
     final dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";

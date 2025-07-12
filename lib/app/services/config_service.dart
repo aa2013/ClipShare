@@ -559,6 +559,7 @@ class ConfigService extends GetxService {
         type: StorageDirectory.documents,
       ))![0]
           .path;
+      // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/pictures
       androidPrivatePicturesPath = (await getExternalStorageDirectories(
         type: StorageDirectory.pictures,
       ))![0]

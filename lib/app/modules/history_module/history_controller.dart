@@ -36,6 +36,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:synchronized/synchronized.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
@@ -382,8 +383,12 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           var fileName = historyContent["fileName"];
           var data = historyContent["data"].cast<int>();
           var path = "${appConfig.fileStorePath}/$fileName";
-          if (appConfig.saveToPictures) {
-            path = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+          if (Platform.isAndroid) {
+            if (appConfig.saveToPictures) {
+              path = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+            } else {
+              path = "${appConfig.androidPrivatePicturesPath}/$fileName";
+            }
             Log.debug(tag, "newPath $path");
           }
           history.content = path;
