@@ -146,8 +146,13 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   @override
   Future onSync(MessageData msg) {
     var send = msg.send;
+    var data = <dynamic,dynamic>{};
+    if(msg.data["data"] is Map){
+      data = msg.data["data"];
+      msg.data["data"] = "";
+    }
     var opRecord = OperationRecord.fromJson(msg.data);
-    Map<String, dynamic> json = jsonDecode(opRecord.data);
+    Map<String, dynamic> json = data.cast();
     Device dev = Device.fromJson(json);
     Future f = Future(() => null);
     if (dev.guid != appConfig.devInfo.guid) {
