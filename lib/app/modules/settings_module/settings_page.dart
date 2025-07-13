@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/services/tray_service.dart';
+import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
+import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -571,8 +575,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ),
 
                 ///endregion
-
-
 
                 ///region 剪贴板设置
 
@@ -1146,40 +1148,30 @@ class SettingsPage extends GetView<SettingsController> {
 
                 ///region 快捷键
 
-                Obx(() => SettingCardGroup(
-                      groupName: TranslationKey.hotKeySettingsGroupName.tr,
-                      icon: const Icon(Icons.keyboard_alt_outlined),
-                      cardList: [
-                        SettingCard(
-                          title: Text(
-                            TranslationKey.hotKeySettingsHistoryTitle.tr,
-                            maxLines: 1,
-                          ),
-                          description: Text(TranslationKey.hotKeySettingsHistoryDesc.tr),
-                          value: appConfig.historyWindowHotKeys,
-                          action: (v) {
-                            var keyText = HotKeyEditor.toText(v);
-                            return HotKeyEditor(
-                              hotKey: keyText,
-                              onDone: (modifiers, key, showText, keyCodes) {
-                                if (showText == keyText) return;
-                                if (modifiers.isEmpty || key == null) {
-                                  Global.showTipsDialog(
-                                    context: context,
-                                    text: TranslationKey.hotKeySettingsCombinationInvalidText.tr,
-                                  );
-                                } else {
-                                  Global.showTipsDialog(
-                                    context: context,
-                                    text: TranslationKey.hotKeySettingsSaveKeysDialogText.trParams({"keys": showText}),
-                                    showCancel: true,
-                                    onOk: () {
-                                      var hotkey = AppHotKeyHandler.toSystemHotKey(
-                                        keyCodes,
-                                      );
-                                      AppHotKeyHandler.registerHistoryWindow(
-                                        hotkey,
-                                      ).then((v) {
+                Obx(
+                  () => SettingCardGroup(
+                    groupName: TranslationKey.hotKeySettingsGroupName.tr,
+                    icon: const Icon(Icons.keyboard_alt_outlined),
+                    cardList: [
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.hotKeySettingsHistoryTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.hotKeySettingsHistoryDesc.tr),
+                        value: appConfig.historyWindowHotKeys,
+                        action: (v) {
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)!.desc;
+                          return Tooltip(
+                            message: TranslationKey.modify.tr,
+                            child: TextButton(
+                              onPressed: () {
+                                Get.dialog(
+                                  HotKeyEditorDialog(
+                                    hotKeyType: HotKeyType.historyWindow,
+                                    initContent: desc,
+                                    onDone: (hotKey, keyCodes) {
+                                      AppHotKeyHandler.registerHistoryWindow(hotKey).then((v) {
                                         //设置为新值
                                         appConfig.setHistoryWindowHotKeys(keyCodes);
                                       }).catchError((err) {
@@ -1187,55 +1179,36 @@ class SettingsPage extends GetView<SettingsController> {
                                           context: context,
                                           text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
                                         );
-                                        //设置为原始值
-                                        appConfig.setHistoryWindowHotKeys(
-                                          appConfig.historyWindowHotKeys,
-                                        );
                                       });
                                     },
-                                    onCancel: () {
-                                      //设置为原始值
-                                      appConfig.setHistoryWindowHotKeys(
-                                        appConfig.historyWindowHotKeys,
-                                      );
-                                    },
-                                  );
-                                }
+                                  ),
+                                );
                               },
-                            );
-                          },
-                          show: (v) => PlatformExt.isDesktop,
+                              child: Text(desc),
+                            ),
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.sendFile.tr,
+                          maxLines: 1,
                         ),
-                        SettingCard(
-                          title: Text(
-                            TranslationKey.sendFile.tr,
-                            maxLines: 1,
-                          ),
-                          description: Text(TranslationKey.hotKeySettingsFileDesc.tr),
-                          value: appConfig.syncFileHotKeys,
-                          action: (v) {
-                            var keyText = HotKeyEditor.toText(v);
-                            return HotKeyEditor(
-                              hotKey: keyText,
-                              onDone: (modifiers, key, showText, keyCodes) {
-                                if (showText == keyText) return;
-                                if (modifiers.isEmpty || key == null) {
-                                  Global.showTipsDialog(
-                                    context: context,
-                                    text: TranslationKey.hotKeySettingsCombinationInvalidText.tr,
-                                  );
-                                } else {
-                                  Global.showTipsDialog(
-                                    context: context,
-                                    text: TranslationKey.hotKeySettingsSaveKeysDialogText.trParams({"keys": showText}),
-                                    showCancel: true,
-                                    onOk: () {
-                                      var hotkey = AppHotKeyHandler.toSystemHotKey(
-                                        keyCodes,
-                                      );
-                                      AppHotKeyHandler.registerFileSync(
-                                        hotkey,
-                                      ).then((v) {
+                        description: Text(TranslationKey.hotKeySettingsFileDesc.tr),
+                        value: appConfig.syncFileHotKeys,
+                        action: (v) {
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)!.desc;
+                          return Tooltip(
+                            message: TranslationKey.modify.tr,
+                            child: TextButton(
+                              onPressed: () {
+                                Get.dialog(
+                                  HotKeyEditorDialog(
+                                    hotKeyType: HotKeyType.fileSender,
+                                    initContent: desc,
+                                    onDone: (hotKey, keyCodes) {
+                                      AppHotKeyHandler.registerFileSync(hotKey).then((v) {
                                         //设置为新值
                                         appConfig.setSyncFileHotKeys(keyCodes);
                                       }).catchError((err) {
@@ -1243,27 +1216,92 @@ class SettingsPage extends GetView<SettingsController> {
                                           context: context,
                                           text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
                                         );
-                                        //设置为原始值
-                                        appConfig.setSyncFileHotKeys(
-                                          appConfig.syncFileHotKeys,
+                                      });
+                                    },
+                                  ),
+                                );
+                              },
+                              child: Text(desc),
+                            ),
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.showMainWindow.tr),
+                        value: appConfig.showMainWindowHotKeys,
+                        action: (v) {
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.showMainWindows)!.desc;
+                          return Tooltip(
+                            message: TranslationKey.modify.tr,
+                            child: TextButton(
+                              onPressed: () {
+                                Get.dialog(
+                                  HotKeyEditorDialog(
+                                    hotKeyType: HotKeyType.showMainWindows,
+                                    initContent: desc,
+                                    onDone: (hotKey, keyCodes) {
+                                      AppHotKeyHandler.registerShowMainWindow(hotKey).then((v) {
+                                        //设置为新值
+                                        appConfig.setShowMainWindowHotKeys(keyCodes);
+                                        //更新托盘菜单
+                                        final trayService = Get.find<TrayService>();
+                                        trayService.updateTrayMenus(false);
+                                      }).catchError((err) {
+                                        Global.showTipsDialog(
+                                          context: context,
+                                          text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
                                         );
                                       });
                                     },
-                                    onCancel: () {
-                                      //设置为原始值
-                                      appConfig.setSyncFileHotKeys(
-                                        appConfig.syncFileHotKeys,
-                                      );
-                                    },
-                                  );
-                                }
+                                  ),
+                                );
                               },
-                            );
-                          },
-                          show: (v) => PlatformExt.isDesktop,
-                        ),
-                      ],
-                    )),
+                              child: Text(desc),
+                            ),
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.exitApp.tr),
+                        value: appConfig.exitAppHotKeys,
+                        action: (v) {
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.exitApp)!.desc;
+                          return Tooltip(
+                            message: TranslationKey.modify.tr,
+                            child: TextButton(
+                              onPressed: () {
+                                Get.dialog(
+                                  HotKeyEditorDialog(
+                                    hotKeyType: HotKeyType.exitApp,
+                                    initContent: desc,
+                                    onDone: (hotKey, keyCodes) {
+                                      AppHotKeyHandler.registerExitApp(hotKey).then((v) {
+                                        //设置为新值
+                                        appConfig.setExitAppHotKeys(keyCodes);
+                                        //更新托盘菜单
+                                        final trayService = Get.find<TrayService>();
+                                        trayService.updateTrayMenus(false);
+                                      }).catchError((err) {
+                                        Global.showTipsDialog(
+                                          context: context,
+                                          text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                        );
+                                      });
+                                    },
+                                  ),
+                                );
+                              },
+                              child: Text(desc),
+                            ),
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
+                    ],
+                  ),
+                ),
 
                 ///endregion
 

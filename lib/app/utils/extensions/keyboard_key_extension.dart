@@ -380,6 +380,6 @@ extension HotKeyExt on HotKey {
       descList.add(item.label);
     }
     descList.add(key.keyLabel);
-    return descList.join("+");
+    return descList.join(" + ");
   }
 }

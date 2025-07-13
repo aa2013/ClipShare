@@ -198,6 +198,9 @@ class AppHotKeyHandler {
         Log.debug(tag, "ShowMainWindow HotKey Down");
         final trayService = Get.find<TrayService>();
         trayService.clickShowWindowItem();
+        //临时让其置顶显示然后再恢复，否则可能被其他应用盖住
+        await windowManager.setAlwaysOnTop(true);
+        await windowManager.setAlwaysOnTop(false);
       },
     );
     _hotkeyMap[HotKeyType.showMainWindows] = key;

@@ -322,7 +322,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.securitySettingsReverificationValue:
         return "@value 分钟";
       case TranslationKey.hotKeySettingsGroupName:
-        return "热键";
+        return "快捷键";
       case TranslationKey.hotKeySettingsHistoryTitle:
         return "历史弹窗";
       case TranslationKey.hotKeySettingsHistoryDesc:

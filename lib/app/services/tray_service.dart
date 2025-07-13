@@ -17,6 +17,7 @@ class TrayService extends GetxService with TrayListener {
   bool _trayClick = false;
   static const tag = "TrayService";
   final windowService = Get.find<WindowService>();
+  final appConfig = Get.find<ConfigService>();
 
   Future<TrayService> init() async {
     await _initTrayManager();
@@ -33,15 +34,16 @@ class TrayService extends GetxService with TrayListener {
     updateTrayMenus();
   }
 
-  Future<void> updateTrayMenus() async {
-    final showMainWindowKeys = Constants.defaultShowMainWindowHotKeys;
-    final exitAppKeys = Constants.defaultExitAppHotKeys;
-    await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
-    await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
+  Future<void> updateTrayMenus([bool registerKey = true]) async {
+    final showMainWindowKeys = appConfig.showMainWindowHotKeys;
+    final exitAppKeys = appConfig.exitAppHotKeys;
+    if (registerKey) {
+      await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
+      await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
+    }
     List<MenuItem> items = [
       MenuItem(
         key: 'show_window',
-        toolTip: "111",
         label: '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}',
       ),
       MenuItem.separator(),

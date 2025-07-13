@@ -313,6 +313,16 @@ class ConfigService extends GetxService {
 
   String get syncFileHotKeys => _syncFileHotKeys.value;
 
+  //显示主窗体快捷键
+  late final RxString _showMainWindowHotKeys;
+
+  String get showMainWindowHotKeys => _showMainWindowHotKeys.value;
+
+  //退出程序快捷键
+  late final RxString _exitAppHotKeys;
+
+  String get exitAppHotKeys => _exitAppHotKeys.value;
+
   //心跳间隔时长
   late final RxInt _heartbeatInterval;
 
@@ -452,6 +462,8 @@ class ConfigService extends GetxService {
     var smsRules = await cfg.getConfig("smsRules", userId);
     var historyWindowHotKeys = await cfg.getConfig("historyWindowHotKeys", userId);
     var syncFileHotKeys = await cfg.getConfig("syncFileHotKeys", userId);
+    var showMainWindowHotKeys = await cfg.getConfig("showMainWindowHotKeys", userId);
+    var exitAppHotKeys = await cfg.getConfig("exitAppHotKeys", userId);
     var heartbeatInterval = await cfg.getConfig("heartbeatInterval", userId);
     var fileStorePath = await cfg.getConfig("fileStorePath", userId);
     var saveToPictures = await cfg.getConfig("saveToPictures", userId);
@@ -508,6 +520,8 @@ class ConfigService extends GetxService {
     }
     _historyWindowHotKeys = historyWindowHotKeys?.obs ?? Constants.defaultHistoryWindowKeys.obs;
     _syncFileHotKeys = syncFileHotKeys?.obs ?? Constants.defaultSyncFileHotKeys.obs;
+    _showMainWindowHotKeys = showMainWindowHotKeys?.obs ?? Constants.defaultShowMainWindowHotKeys.obs;
+    _exitAppHotKeys = exitAppHotKeys?.obs ?? Constants.defaultExitAppHotKeys.obs;
     _heartbeatInterval = heartbeatInterval?.toInt().obs ?? Constants.heartbeatInterval.obs;
     _fileStorePath = fileStoreDir.absolute.normalizePath.obs;
     _saveToPictures = saveToPictures?.toBool().obs ?? false.obs;
@@ -775,6 +789,14 @@ class ConfigService extends GetxService {
   Future<void> setSyncFileHotKeys(String syncFileHotKeys) async {
     await _addOrUpdateDbConfig("syncFileHotKeys", syncFileHotKeys);
     _syncFileHotKeys.value = syncFileHotKeys;
+  }
+  Future<void> setShowMainWindowHotKeys(String showMainWindowHotKeys) async {
+    await _addOrUpdateDbConfig("showMainWindowHotKeys", showMainWindowHotKeys);
+    _showMainWindowHotKeys.value = showMainWindowHotKeys;
+  }
+  Future<void> setExitAppHotKeys(String exitAppHotKeys) async {
+    await _addOrUpdateDbConfig("exitAppHotKeys", exitAppHotKeys);
+    _exitAppHotKeys.value = exitAppHotKeys;
   }
 
   Future<void> setHeartbeatInterval(String heartbeatInterval) async {
