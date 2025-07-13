@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -113,6 +114,9 @@ class SplashController extends GetxController {
       }
       Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
       appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
+      if (PlatformExt.isDesktop) {
+        Get.putAsync(() => TrayService().init(), permanent: true);
+      }
     }
     // 初始化channel
     initChannel();

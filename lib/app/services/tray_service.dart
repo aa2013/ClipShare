@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/handlers/hot_key_handler.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
+import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 
 import 'window_service.dart';
@@ -11,7 +16,7 @@ import 'window_service.dart';
 class TrayService extends GetxService with TrayListener {
   bool _trayClick = false;
   static const tag = "TrayService";
-  final WindowService windowService = Get.find<WindowService>();
+  final windowService = Get.find<WindowService>();
 
   Future<TrayService> init() async {
     await _initTrayManager();
@@ -25,15 +30,24 @@ class TrayService extends GetxService with TrayListener {
     await trayManager.setIcon(
       Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
     );
+    updateTrayMenus();
+  }
+
+  Future<void> updateTrayMenus() async {
+    final showMainWindowKeys = Constants.defaultShowMainWindowHotKeys;
+    final exitAppKeys = Constants.defaultExitAppHotKeys;
+    await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
+    await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
     List<MenuItem> items = [
       MenuItem(
         key: 'show_window',
-        label: '显示主窗口',
+        toolTip: "111",
+        label: '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}',
       ),
       MenuItem.separator(),
       MenuItem(
         key: 'exit_app',
-        label: '退出程序',
+        label: '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}',
       ),
     ];
     await trayManager.setContextMenu(Menu(items: items));
@@ -64,12 +78,20 @@ class TrayService extends GetxService with TrayListener {
     Log.debug(tag, '你选择了${menuItem.label}');
     switch (menuItem.key) {
       case 'show_window':
-        windowService.showApp();
+        clickShowWindowItem();
         break;
       case 'exit_app':
-        windowService.exitApp();
+        clickExitAppItem();
         break;
     }
+  }
+
+  void clickShowWindowItem() {
+    windowService.showApp();
+  }
+
+  void clickExitAppItem() {
+    windowService.exitApp();
   }
 
   @override

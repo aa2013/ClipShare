@@ -101,20 +101,19 @@ Future<void> main(List<String> args) async {
 }
 
 Future<void> initMainServices() async {
-  await Get.putAsync(() => DbService().init());
-  await Get.putAsync(() => ConfigService().init());
+  await Get.putAsync(() => DbService().init(), permanent: true);
+  await Get.putAsync(() => ConfigService().init(), permanent: true);
   Get.put<SocketService>(SocketService(), permanent: true);
-  Get.put(AndroidChannelService().init());
-  Get.put(ClipChannelService().init());
-  Get.put(MultiWindowChannelService());
-  Get.put(PendingFileService());
+  Get.put(AndroidChannelService().init(), permanent: true);
+  Get.put(ClipChannelService().init(), permanent: true);
+  Get.put(MultiWindowChannelService(), permanent: true);
+  Get.put(PendingFileService(), permanent: true);
   await Get.putAsync(() => DeviceService().init(), permanent: true);
   await Get.putAsync(() => TagService().init(), permanent: true);
   await Get.putAsync(() => SyncingFileProgressService().init(), permanent: true);
   await Get.putAsync(() => ClipboardSourceService().init(), permanent: true);
   if (PlatformExt.isDesktop) {
-    await Get.putAsync(() => WindowService().init());
-    await Get.putAsync(() => TrayService().init());
+    await Get.putAsync(() => WindowService().init(), permanent: true);
   }
 }
 

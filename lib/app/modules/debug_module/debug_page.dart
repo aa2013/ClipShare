@@ -7,6 +7,7 @@ import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -35,18 +36,6 @@ class DebugPage extends GetView<DebugController> {
             }
           },
           child: Text("Copy 100 items"),
-        ),
-        TextButton(
-          onPressed: () {
-            Global.showDownloadingDialog(
-              context: context,
-              url: "url",
-              filePath: "",
-              content: Text("...."),
-              onFinished: (bool success) {},
-            );
-          },
-          child: Text("show download dialog"),
         ),
         TextButton(
           onPressed: () async {

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -72,10 +73,16 @@ class Constants {
   static const clipshareSite = "https://clipshare.coclyun.top";
 
   //默认历史弹窗快捷键（Ctrl + Alt + H）
-  static const defaultHistoryWindowKeys = "458976,458978;458763";
+  static final defaultHistoryWindowKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
 
   //文件同步快捷键（Ctrl + Shift + C）
-  static const defaultSyncFileHotKeys = "458976,458977;458758";
+  static final defaultSyncFileHotKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
+
+  //显示主窗体快捷键（Ctrl + Shift + S）
+  static final defaultShowMainWindowHotKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
+
+  //退出程序快捷键（Ctrl + Shift + Q）
+  static final defaultExitAppHotKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
 
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";

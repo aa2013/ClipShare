@@ -1057,6 +1057,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return "数据库版本";
       case TranslationKey.newVersionAvailable:
         return "发现新版本";
+      case TranslationKey.showMainWindow:
+        return "显示主窗口";
+      case TranslationKey.exitApp:
+        return "退出程序";
+      case TranslationKey.exitAppViaHotKey:
+        return "正在通过快捷键退出 ${Constants.appName}";
     }
   }
 }

@@ -1056,6 +1056,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Database version";
       case TranslationKey.newVersionAvailable:
         return "New version available";
+      case TranslationKey.showMainWindow:
+        return "Main Window";
+      case TranslationKey.exitApp:
+        return "Exit";
+      case TranslationKey.exitAppViaHotKey:
+        return "Exiting ${Constants.appName} via hotkey";
     }
   }
 }

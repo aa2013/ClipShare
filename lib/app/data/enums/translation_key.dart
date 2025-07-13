@@ -520,7 +520,10 @@ enum TranslationKey {
   filterBySource,
   preferenceSettingsDevDisconnNotification,
   aboutPageDatabaseVersionItemName,
-  newVersionAvailable;
+  newVersionAvailable,
+  showMainWindow,
+  exitApp,
+  exitAppViaHotKey;
 
   String get tr => name.tr;
 

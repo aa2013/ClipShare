@@ -352,4 +352,34 @@ extension PhysicalKeyboardKeyExt on PhysicalKeyboardKey {
   }
 }
 
-extension HotKeyModifierExt on HotKeyModifier {}
+extension HotKeyModifierExt on HotKeyModifier {
+  String get label {
+    switch (this) {
+      case HotKeyModifier.alt:
+        return "Alt";
+      case HotKeyModifier.capsLock:
+        return "CapsLock";
+      case HotKeyModifier.control:
+        return "Ctrl";
+      case HotKeyModifier.fn:
+        return "Fn";
+      case HotKeyModifier.meta:
+        return "Meta";
+      case HotKeyModifier.shift:
+        return "Shift";
+      default:
+        throw Exception("Unknown HotKeyModifier $name");
+    }
+  }
+}
+
+extension HotKeyExt on HotKey {
+  String get desc {
+    var descList = List<String>.empty(growable: true);
+    for (var item in modifiers ?? <HotKeyModifier>[]) {
+      descList.add(item.label);
+    }
+    descList.add(key.keyLabel);
+    return descList.join("+");
+  }
+}
