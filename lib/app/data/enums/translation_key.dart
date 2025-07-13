@@ -519,7 +519,8 @@ enum TranslationKey {
   selectApplication,
   filterBySource,
   preferenceSettingsDevDisconnNotification,
-  aboutPageDatabaseVersionItemName;
+  aboutPageDatabaseVersionItemName,
+  newVersionAvailable;
 
   String get tr => name.tr;
 

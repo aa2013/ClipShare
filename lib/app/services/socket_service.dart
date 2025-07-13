@@ -731,7 +731,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         int code = 100000 + random.nextInt(900000);
         DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
         //发送通知
-        Global.notify(content: TranslationKey.newParingRequest.tr);
+        Global.notify(content: "${TranslationKey.newParingRequest.tr}: $code");
         if (pairing) {
           Get.back();
         }

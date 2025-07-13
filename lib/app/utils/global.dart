@@ -25,15 +25,16 @@ class Global {
   static Future<void> _initNotifications() async {
     if (_notificationReady) return;
     const iosSettings = DarwinInitializationSettings();
-
-    const windowsSettings = WindowsInitializationSettings(
+    var iconPath = File.fromUri(WindowsImage.getAssetUri(Constants.logoPngPath)).absolute.path;
+    final windowsSettings = WindowsInitializationSettings(
       appName: Constants.appName,
       appUserModelId: Constants.pkgName,
       guid: Constants.appGuid,
+      iconPath: iconPath,
     );
     const linuxSettings = LinuxInitializationSettings(defaultActionName: 'Open notification');
 
-    const settings = InitializationSettings(
+    final settings = InitializationSettings(
       iOS: iosSettings,
       macOS: iosSettings,
       linux: linuxSettings,
@@ -67,7 +68,12 @@ class Global {
     if (!_notificationReady) {
       await _initNotifications();
     }
-    const NotificationDetails notificationDetails = NotificationDetails(iOS: DarwinNotificationDetails(), macOS: DarwinNotificationDetails(), linux: LinuxNotificationDetails(), windows: WindowsNotificationDetails());
+    const NotificationDetails notificationDetails = NotificationDetails(
+      iOS: DarwinNotificationDetails(),
+      macOS: DarwinNotificationDetails(),
+      linux: LinuxNotificationDetails(),
+      windows: WindowsNotificationDetails(),
+    );
 
     await _notification.show(
       0,

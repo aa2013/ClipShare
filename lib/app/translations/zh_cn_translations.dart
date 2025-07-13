@@ -1055,6 +1055,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "通知";
       case TranslationKey.aboutPageDatabaseVersionItemName:
         return "数据库版本";
+      case TranslationKey.newVersionAvailable:
+        return "发现新版本";
     }
   }
 }

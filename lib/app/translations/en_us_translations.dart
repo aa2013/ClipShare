@@ -1054,6 +1054,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Notification";
       case TranslationKey.aboutPageDatabaseVersionItemName:
         return "Database version";
+      case TranslationKey.newVersionAvailable:
+        return "New version available";
     }
   }
 }
