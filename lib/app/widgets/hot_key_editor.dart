@@ -1,3 +1,4 @@
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -45,7 +46,9 @@ class _HotKeyEditorState extends State<HotKeyEditor> {
 
   @override
   void initState() {
-    _editor.text = widget.hotKey;
+    if (widget.hotKey.trim().isNotEmpty) {
+      _editor.text = widget.hotKey;
+    }
     super.initState();
   }
 
@@ -99,10 +102,11 @@ class _HotKeyEditorState extends State<HotKeyEditor> {
         readOnly: true,
         controller: _editor,
         autofocus: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          border: const OutlineInputBorder(),
           isDense: true,
-          focusedBorder: OutlineInputBorder(
+          hintText: TranslationKey.pleaseEnterHotKey.tr,
+          focusedBorder: const OutlineInputBorder(
             borderSide: BorderSide(color: Colors.blue),
           ),
         ),

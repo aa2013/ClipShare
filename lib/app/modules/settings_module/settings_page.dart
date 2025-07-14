@@ -1231,31 +1231,53 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Text(TranslationKey.showMainWindow.tr),
                         value: appConfig.showMainWindowHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.showMainWindows)!.desc;
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.showMainWindows)?.desc;
+                          final dialog = HotKeyEditorDialog(
+                            hotKeyType: HotKeyType.showMainWindows,
+                            initContent: desc ?? "",
+                            clearable: desc != null,
+                            onDone: (hotKey, keyCodes) {
+                              AppHotKeyHandler.registerShowMainWindow(hotKey).then((v) {
+                                //设置为新值
+                                appConfig.setShowMainWindowHotKeys(keyCodes);
+                                //更新托盘菜单
+                                final trayService = Get.find<TrayService>();
+                                trayService.updateTrayMenus(false);
+                              }).catchError((err) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                );
+                              });
+                            },
+                            onClear: () {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.clearHotKeyConfirm.tr,
+                                showCancel: true,
+                                onOk: () {
+                                  appConfig.setShowMainWindowHotKeys("");
+                                  AppHotKeyHandler.unRegister(HotKeyType.showMainWindows);
+                                  final trayService = Get.find<TrayService>();
+                                  trayService.updateTrayMenus(false);
+                                  Get.back();
+                                },
+                              );
+                            },
+                          );
+                          if (desc == null) {
+                            return TextButton(
+                              onPressed: () {
+                                Get.dialog(dialog);
+                              },
+                              child: Text(TranslationKey.create.tr),
+                            );
+                          }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(
-                                  HotKeyEditorDialog(
-                                    hotKeyType: HotKeyType.showMainWindows,
-                                    initContent: desc,
-                                    onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerShowMainWindow(hotKey).then((v) {
-                                        //设置为新值
-                                        appConfig.setShowMainWindowHotKeys(keyCodes);
-                                        //更新托盘菜单
-                                        final trayService = Get.find<TrayService>();
-                                        trayService.updateTrayMenus(false);
-                                      }).catchError((err) {
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                        );
-                                      });
-                                    },
-                                  ),
-                                );
+                                Get.dialog(dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1267,31 +1289,53 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Text(TranslationKey.exitApp.tr),
                         value: appConfig.exitAppHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.exitApp)!.desc;
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.exitApp)?.desc;
+                          final dialog = HotKeyEditorDialog(
+                            hotKeyType: HotKeyType.exitApp,
+                            initContent: desc ?? "",
+                            clearable: desc != null,
+                            onDone: (hotKey, keyCodes) {
+                              AppHotKeyHandler.registerExitApp(hotKey).then((v) {
+                                //设置为新值
+                                appConfig.setExitAppHotKeys(keyCodes);
+                                //更新托盘菜单
+                                final trayService = Get.find<TrayService>();
+                                trayService.updateTrayMenus(false);
+                              }).catchError((err) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                );
+                              });
+                            },
+                            onClear: () {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.clearHotKeyConfirm.tr,
+                                showCancel: true,
+                                onOk: () {
+                                  appConfig.setExitAppHotKeys("");
+                                  AppHotKeyHandler.unRegister(HotKeyType.exitApp);
+                                  final trayService = Get.find<TrayService>();
+                                  trayService.updateTrayMenus(false);
+                                  Get.back();
+                                },
+                              );
+                            },
+                          );
+                          if (desc == null) {
+                            return TextButton(
+                              onPressed: () {
+                                Get.dialog(dialog);
+                              },
+                              child: Text(TranslationKey.create.tr),
+                            );
+                          }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(
-                                  HotKeyEditorDialog(
-                                    hotKeyType: HotKeyType.exitApp,
-                                    initContent: desc,
-                                    onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerExitApp(hotKey).then((v) {
-                                        //设置为新值
-                                        appConfig.setExitAppHotKeys(keyCodes);
-                                        //更新托盘菜单
-                                        final trayService = Get.find<TrayService>();
-                                        trayService.updateTrayMenus(false);
-                                      }).catchError((err) {
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                        );
-                                      });
-                                    },
-                                  ),
-                                );
+                                Get.dialog(dialog);
                               },
                               child: Text(desc),
                             ),

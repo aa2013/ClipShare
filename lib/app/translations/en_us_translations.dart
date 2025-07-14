@@ -1062,6 +1062,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Exit";
       case TranslationKey.exitAppViaHotKey:
         return "Exiting ${Constants.appName} via hotkey";
+      case TranslationKey.clearHotKeyConfirm:
+        return "Are you sure you want to clear this shortcut key?";
+      case TranslationKey.pleaseEnterHotKey:
+        return "Please enter hotkey";
     }
   }
 }

@@ -12,14 +12,18 @@ class HotKeyEditorDialog extends StatefulWidget {
   final HotKeyType hotKeyType;
   final String initContent;
   final bool requiredModifierKey;
+  final bool clearable;
   final void Function(HotKey key, String keyCodes) onDone;
+  final void Function()? onClear;
 
   const HotKeyEditorDialog({
     super.key,
     required this.hotKeyType,
     required this.initContent,
     required this.onDone,
+    this.onClear,
     this.requiredModifierKey = true,
+    this.clearable = false,
   });
 
   @override
@@ -44,36 +48,54 @@ class _HotKeyEditorDialogState extends State<HotKeyEditorDialog> {
       content: HotKeyEditor(hotKey: widget.initContent, controller: hotkeyController),
       actions: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(TranslationKey.dialogCancelText.tr),
+            Visibility(
+              visible: widget.clearable,
+              child: Tooltip(
+                message: TranslationKey.clear.tr,
+                child: TextButton(
+                  onPressed: () {
+                    widget.onClear?.call();
+                  },
+                  child: Text(TranslationKey.clear.tr),
+                ),
+              ),
             ),
-            TextButton(
-              onPressed: () {
-                final verify = verifyInput();
-                if (verify) {
-                  final keyCodes = hotkeyController.keyCodes;
-                  final showText = hotkeyController.keysDesc;
-                  Global.showTipsDialog(
-                    context: context,
-                    text: TranslationKey.hotKeySettingsSaveKeysDialogText.trParams({"keys": showText}),
-                    showCancel: true,
-                    onOk: () {
-                      var hotkey = AppHotKeyHandler.toSystemHotKey(keyCodes);
-                      widget.onDone(hotkey, keyCodes);
-                      Get.back();
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: Get.back,
+                    child: Text(TranslationKey.dialogCancelText.tr),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      final verify = verifyInput();
+                      if (verify) {
+                        final keyCodes = hotkeyController.keyCodes;
+                        final showText = hotkeyController.keysDesc;
+                        Global.showTipsDialog(
+                          context: context,
+                          text: TranslationKey.hotKeySettingsSaveKeysDialogText.trParams({"keys": showText}),
+                          showCancel: true,
+                          onOk: () {
+                            var hotkey = AppHotKeyHandler.toSystemHotKey(keyCodes);
+                            widget.onDone(hotkey, keyCodes);
+                            Get.back();
+                          },
+                        );
+                      } else {
+                        Global.showTipsDialog(
+                          context: context,
+                          text: verifyErrorTips,
+                        );
+                      }
                     },
-                  );
-                } else {
-                  Global.showTipsDialog(
-                    context: context,
-                    text: verifyErrorTips,
-                  );
-                }
-              },
-              child: Text(TranslationKey.dialogConfirmText.tr),
+                    child: Text(TranslationKey.dialogConfirmText.tr),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

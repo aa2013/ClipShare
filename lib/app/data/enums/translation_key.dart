@@ -523,7 +523,9 @@ enum TranslationKey {
   newVersionAvailable,
   showMainWindow,
   exitApp,
-  exitAppViaHotKey;
+  exitAppViaHotKey,
+  clearHotKeyConfirm,
+  pleaseEnterHotKey;
 
   String get tr => name.tr;
 

@@ -1063,6 +1063,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "退出程序";
       case TranslationKey.exitAppViaHotKey:
         return "正在通过快捷键退出 ${Constants.appName}";
+      case TranslationKey.clearHotKeyConfirm:
+        return "确认要清除该快捷键吗？";
+      case TranslationKey.pleaseEnterHotKey:
+        return "请按下快捷键";
     }
   }
 }

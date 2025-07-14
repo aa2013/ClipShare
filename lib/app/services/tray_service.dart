@@ -38,8 +38,20 @@ class TrayService extends GetxService with TrayListener {
     final showMainWindowKeys = appConfig.showMainWindowHotKeys;
     final exitAppKeys = appConfig.exitAppHotKeys;
     if (registerKey) {
-      await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
-      await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
+      try {
+        if (showMainWindowKeys.isNotEmpty) {
+          await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
+        }
+      } catch (err, stack) {
+        Log.error(tag, "$err,$stack");
+      }
+      try {
+        if (exitAppKeys.isNotEmpty) {
+          await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
+        }
+      } catch (err, stack) {
+        Log.error(tag, "$err,$stack");
+      }
     }
     List<MenuItem> items = [
       MenuItem(
