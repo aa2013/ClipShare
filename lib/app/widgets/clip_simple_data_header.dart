@@ -41,7 +41,6 @@ class ClipSimpleDataHeader extends StatelessWidget {
         //来源设备
         RoundedChip(
           avatar: const Icon(Icons.devices_rounded),
-          // backgroundColor: const Color(0x1a000000),
           onPressed: () {
             if (routeToSearchOnClickChip) {
               //导航至搜索页面

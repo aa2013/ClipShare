@@ -527,19 +527,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           ),
           true,
         );
-        final cnt = await dbService.historyDao.updateHistorySource(history.id, source.id);
-        if ((cnt ?? 0) > 0) {
-          //更新剪贴板来源
-          //先将之前的剪贴板来源操作记录删除再添加操作记录
-          await dbService.opRecordDao.deleteHistorySourceRecords(history.id, Module.historySource.moduleName);
-          dbService.opRecordDao.addAndNotify(
-            OperationRecord.fromSimple(
-              Module.historySource,
-              OpMethod.update,
-              history.id.toString(),
-            ),
-          );
-        }
+        await dbService.historyDao.updateHistorySourceAndNotify(history.id, source.id);
       });
     }
     //endregion

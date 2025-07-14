@@ -19,7 +19,7 @@ class TagEditPage extends StatefulWidget {
 
   static void goto(int hisId) {
     var isBigScreen = MediaQuery.of(Get.context!).size.width >= Constants.smallScreenWidth;
-    if (isBigScreen || PlatformExt.isDesktop) {
+    if (isBigScreen) {
       Get.dialog(
         DynamicSizeWidget(
           child: TagEditPage(hisId),

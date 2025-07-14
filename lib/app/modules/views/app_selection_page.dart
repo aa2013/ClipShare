@@ -4,6 +4,7 @@ import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/widgets/memory_image_with_not_found.dart';
+import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/scheduler/ticker.dart';
@@ -12,6 +13,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 class AppSelectionPage extends StatefulWidget {
   final bool distinguishSystemApps;
+  final int limit;
   final Future<List<LocalAppInfo>> Function() loadAppInfos;
   final void Function(List<LocalAppInfo> selected) onSelectedDone;
 
@@ -20,6 +22,7 @@ class AppSelectionPage extends StatefulWidget {
     this.distinguishSystemApps = false,
     required this.loadAppInfos,
     required this.onSelectedDone,
+    this.limit = -1,
   });
 
   @override
@@ -72,10 +75,19 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
             elevation: 0,
             child: InkWell(
               onTap: () {
-                if (selected.contains(app.appId)) {
-                  selected.remove(app.appId);
-                } else {
+                if(widget.limit==1){
+                  selected.clear();
                   selected.add(app.appId);
+                }else{
+                  if (selected.contains(app.appId)) {
+                    selected.remove(app.appId);
+                  } else {
+                    if (widget.limit > 0 && selected.length >= widget.limit) {
+                      //达到选择的数量上限
+                      return;
+                    }
+                    selected.add(app.appId);
+                  }
                 }
               },
               borderRadius: borderRadius,
@@ -93,17 +105,20 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
                             height: defaultSize * 1.5,
                           ),
                           const SizedBox(width: 10),
-                          Column(
+                          Expanded(child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 app.name,
-                                style: TextStyle(fontSize: 18),
+                                style: const TextStyle(fontSize: 18),
                               ),
-                              Text(app.appId),
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Text(app.appId),
+                              ),
                             ],
-                          ),
+                          ),),
                         ],
                       ),
                     ),
@@ -167,37 +182,28 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final currentTheme = Theme.of(context);
-    final isSmallScreen = MediaQuery.of(context).size.width <= Constants.smallScreenWidth;
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: isSmallScreen,
-        backgroundColor: currentTheme.colorScheme.inversePrimary,
-        title: Row(
-          children: [
-            Expanded(
-              child: Row(children: [
-                Icon(MdiIcons.listBoxOutline),
-                const SizedBox(width: 5),
-                Text(TranslationKey.selectApplication.tr),
-              ],),
+    return RoundedScaffold(
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(TranslationKey.selectApplication.tr),
+          ),
+          Obx(
+                () => IconButton(
+              onPressed: selected.isEmpty
+                  ? null
+                  : () {
+                final result = appList.where((item) => selected.contains(item.appId)).toList(growable: false);
+                widget.onSelectedDone(result);
+                Get.back();
+              },
+              icon: const Icon(Icons.check),
             ),
-            Obx(
-              () => IconButton(
-                onPressed: selected.isEmpty
-                    ? null
-                    : () {
-                        final result = appList.where((item) => selected.contains(item.appId)).toList(growable: false);
-                        widget.onSelectedDone(result);
-                        Get.back();
-                      },
-                icon: const Icon(Icons.check),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-      body: renderBody(),
+      icon: Icon(MdiIcons.listBoxOutline),
+      child: renderBody(),
     );
   }
 }

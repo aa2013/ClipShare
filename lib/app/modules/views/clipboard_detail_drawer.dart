@@ -13,6 +13,7 @@ import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_content_view.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
+import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
@@ -161,11 +162,18 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
               padding: const EdgeInsets.only(top: 5, bottom: 5),
               child: Row(
                 children: [
-                  if (widget.clipData.data.source != null)
-                    Container(
-                      margin: const EdgeInsets.only(right: 5),
-                      child: AppIcon(appId: widget.clipData.data.source!),
+                  Container(
+                    margin: const EdgeInsets.only(right: 5),
+                    child: ClipboardSourceChip(
+                      clip: widget.clipData,
+                      onAdded: (appInfo) {
+                        setState(() {});
+                      },
+                      onDeleted: () {
+                        setState(() {});
+                      },
                     ),
+                  ),
 
                   ///来源设备
                   Obx(

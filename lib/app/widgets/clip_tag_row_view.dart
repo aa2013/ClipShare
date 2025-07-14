@@ -61,9 +61,7 @@ class ClipTagRowView extends StatelessWidget {
                 ),
               ConditionWidget(
                 visible: showAddIcon == true,
-                child: const SizedBox(
-                  width: 5,
-                ),
+                child: const SizedBox(width: 5),
               ),
               ConditionWidget(
                 visible: showAddIcon == true,
@@ -75,10 +73,7 @@ class ClipTagRowView extends StatelessWidget {
                   icon: Row(
                     children: [
                       Text(TranslationKey.tag.tr),
-                      const Icon(
-                        Icons.add,
-                        size: 22,
-                      ),
+                      const Icon(Icons.add, size: 22),
                     ],
                   ),
                 ),

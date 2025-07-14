@@ -50,6 +50,7 @@ class DebugPage extends GetView<DebugController> {
         Expanded(
           child: AppSelectionPage(
             distinguishSystemApps: true,
+            limit: 1,
             loadAppInfos: () {
               final sourceService = Get.find<ClipboardSourceService>();
               final result = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, Random().nextInt(10) > 5)).toList(growable: false);
