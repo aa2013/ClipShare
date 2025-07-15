@@ -65,6 +65,10 @@ class HistorySourceSyncHandler implements SyncListener {
           await sourceService.removeNotUsed();
         }
         break;
+      case OpMethod.delete:
+        var id = history.id;
+        await dbService.historyDao.clearHistorySource(id);
+        await sourceService.removeNotUsed();
       default:
     }
     if (success) {

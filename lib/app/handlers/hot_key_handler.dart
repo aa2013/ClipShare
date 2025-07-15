@@ -222,9 +222,10 @@ class AppHotKeyHandler {
   }
 
   static Future<void> unRegister(HotKeyType type) async {
-    if (_hotkeyMap[type] == null) return;
-    await hotKeyManager.unregister(_hotkeyMap[type]!);
+    var key = _hotkeyMap[type];
+    if (key == null) return;
     _hotkeyMap.remove(type);
+    await hotKeyManager.unregister(key);
   }
 
   static Future<void> unRegisterAll() async {

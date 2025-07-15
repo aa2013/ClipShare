@@ -124,7 +124,7 @@ abstract class HistoryDao {
 
   ///更新历史记录来源并通知设备
   Future<bool> updateHistorySourceAndNotify(int id, String source) async {
-    var cnt = await dbService.historyDao.updateHistorySource(id, source);
+    var cnt = await updateHistorySource(id, source);
     if ((cnt ?? 0) > 0) {
       //更新剪贴板来源
       //先将之前的剪贴板来源操作记录删除再添加操作记录
@@ -144,6 +144,23 @@ abstract class HistoryDao {
   ///清除历史记录来源，调用方记得删除未使用的来源信息
   @Query("update history set source = null where id = :id")
   Future<int?> clearHistorySource(int id);
+
+  ///删除历史记录来源并通知，调用方记得删除未使用的来源信息
+  Future<bool> clearHistorySourceAndNotify(int id) async {
+    var cnt = await clearHistorySource(id);
+    if ((cnt ?? 0) > 0){
+      await dbService.opRecordDao.deleteHistorySourceRecords(id, Module.historySource.moduleName);
+      cnt = await dbService.opRecordDao.addAndNotify(
+        OperationRecord.fromSimple(
+          Module.historySource,
+          OpMethod.delete,
+          id.toString(),
+        ),
+      );
+      return cnt > 0;
+    }
+    return false;
+  }
 
 //endregion
 

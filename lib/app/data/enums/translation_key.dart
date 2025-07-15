@@ -525,7 +525,9 @@ enum TranslationKey {
   exitApp,
   exitAppViaHotKey,
   clearHotKeyConfirm,
-  pleaseEnterHotKey;
+  pleaseEnterHotKey,
+  userApp,
+  systemApp;
 
   String get tr => name.tr;
 

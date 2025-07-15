@@ -1067,6 +1067,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "确认要清除该快捷键吗？";
       case TranslationKey.pleaseEnterHotKey:
         return "请按下快捷键";
+      case TranslationKey.userApp:
+        return '用户应用';
+      case TranslationKey.systemApp:
+        return '系统应用';
     }
   }
 }

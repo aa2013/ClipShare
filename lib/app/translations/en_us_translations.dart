@@ -1048,8 +1048,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Failed to clear";
       case TranslationKey.selectApplication:
         return "Select Applications";
-        case TranslationKey.preferenceSettingsDevDisconnNotification:
-      return "System notification when device disconnection";
+      case TranslationKey.preferenceSettingsDevDisconnNotification:
+        return "System notification when device disconnection";
       case TranslationKey.notification:
         return "Notification";
       case TranslationKey.aboutPageDatabaseVersionItemName:
@@ -1066,6 +1066,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Are you sure you want to clear this shortcut key?";
       case TranslationKey.pleaseEnterHotKey:
         return "Please enter hotkey";
+      case TranslationKey.userApp:
+        return 'User';
+      case TranslationKey.systemApp:
+        return 'System';
     }
   }
 }

@@ -26,8 +26,10 @@ class MissingDataSyncHandler {
     final dbService = Get.find<DbService>();
     final sourceService = Get.find<ClipboardSourceService>();
     final syncRecords = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devId);
-    final notIncludesAppInfos = sourceService.appInfos.where((item) => item.devId == devId && !syncedAppIds.contains(item.appId)).map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id)).toList();
-    Log.debug(tag, "notIncludesAppInfos $notIncludesAppInfos");
+    final notIncludesAppInfos = sourceService.appInfos
+        .where((item) => item.devId == devId && !syncedAppIds.contains(item.appId))
+        .map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id))
+        .toList();
     final lst = [...notIncludesAppInfos, ...syncRecords];
     final sktService = Get.find<SocketService>();
     for (var i = 0; i < lst.length; i++) {

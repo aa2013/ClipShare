@@ -40,7 +40,10 @@ class ClipboardSourceChip extends StatelessWidget {
           final page = AppSelectionPage(
             limit: 1,
             loadAppInfos: () {
-              final list = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
+              final list = sourceService.appInfos
+                  .where((item)=>item.devId==appConfig.device.guid)
+                  .map((item) => LocalAppInfo.fromAppInfo(item, false))
+                  .toList();
               return Future<List<LocalAppInfo>>.value(list);
             },
             onSelectedDone: (selected) async {
@@ -81,8 +84,8 @@ class ClipboardSourceChip extends StatelessWidget {
           text: TranslationKey.clearSourceConfirmText.tr,
           onOk: () async {
             final id = clip.data.id;
-            final cnt = await dbService.historyDao.clearHistorySource(id);
-            if ((cnt ?? 0) > 0) {
+            final success = await dbService.historyDao.clearHistorySourceAndNotify(id);
+            if (success) {
               historyController.updateData(
                 (history) => history.id == id,
                 (history) => history.source = null,

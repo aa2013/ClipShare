@@ -3,6 +3,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/memory_image_with_not_found.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/cupertino.dart';
@@ -44,8 +45,8 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   late final TabController tabController;
 
   List<Tab> get tabs => [
-        Tab(text: '用户应用'),
-        Tab(text: '系统应用'),
+        Tab(text: TranslationKey.userApp.tr),
+        Tab(text: TranslationKey.systemApp.tr),
       ];
 
   List<LocalAppInfo> get systemApps => appList.where((item) => item.isSystemApp).toList();
@@ -146,6 +147,9 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   }
 
   Widget renderBody() {
+    if(appList.isEmpty){
+      return EmptyContent();
+    }
     Widget body;
     if (widget.distinguishSystemApps) {
       body = Column(
