@@ -108,6 +108,7 @@ class Constants {
   static const channelCommon = "top.coclyun.clipshare/common";
   static const channelClip = "top.coclyun.clipshare/clip";
   static const channelAndroid = "top.coclyun.clipshare/android";
+  static const androidReadFileEventChannel = "top.coclyun.clipshare/read_file";
 
   static const smallScreenWidth = 640.0;
   static const showHistoryRightWidth = 840.0;

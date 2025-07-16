@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -9,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class AndroidChannelService extends GetxService {
+  static const tag = "AndroidChannelService";
   late final MethodChannel androidChannel;
   final appConfig = Get.find<ConfigService>();
 
@@ -133,17 +136,6 @@ class AndroidChannelService extends GetxService {
         "show": show,
       },
     ).then((v) => v ?? false);
-  }
-
-  ///返回指定Uri的真实路径
-  Future<String?> getImageUriRealPath(String uri) {
-    if (!Platform.isAndroid) return Future.value(null);
-    return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.getImageUriRealPath.name,
-      {
-        "uri": uri,
-      },
-    );
   }
 
   ///返回媒体库中的最新一张图片路径

@@ -148,7 +148,9 @@ dependencies:
   flutter_local_notifications: ^19.2.1
   # 禁止截屏
   no_screenshot: ^0.3.1
-
+  # Android uri读取
+  uri_file_reader:
+    path: ../uri_file_reader
 dev_dependencies:
   flutter_test:
     sdk: flutter

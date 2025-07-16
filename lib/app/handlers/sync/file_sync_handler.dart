@@ -7,6 +7,7 @@ import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/syncing_file_state.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/pending_file.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
@@ -23,10 +24,12 @@ import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
+import 'package:uri_file_reader/uri_file_reader.dart';
 
 import '../../utils/log.dart';
 
@@ -40,12 +43,14 @@ class FileSyncHandler {
   Socket? _forwardSkt;
   late final int _fileId;
   bool hasClient = false;
-  late final File _file;
+  File? _file;
+  PendingFile pendingFile;
   late final BuildContext context;
   late final void Function() _onDone;
+  late final bool isUri;
 
   FileSyncHandler._private({
-    required String path,
+    required this.pendingFile,
     required void Function(FileSyncHandler) onReady,
     required void Function() onDone,
     required this.context,
@@ -53,10 +58,14 @@ class FileSyncHandler {
     String? targetDevId,
   }) {
     _fileId = appConfig.snowflake.nextId();
-    _file = File(path);
     _onDone = onDone;
-    if (!_file.existsSync()) {
-      throw Exception("file not found: $path");
+    isUri = pendingFile.isUri;
+    if (!isUri) {
+      final path = pendingFile.filePath;
+      _file = File(path);
+      if (!_file!.existsSync()) {
+        throw Exception("file not found: $path");
+      }
     }
     if (useForward) {
       //检查中转设置
@@ -68,6 +77,8 @@ class FileSyncHandler {
       }
       //连接中转服务器
       Socket.connect(host, port).then((skt) async {
+        final fileName = isUri ? pendingFile.fileName : _file!.fileName;
+        final size = isUri ? pendingFile.size : await _file!.length();
         _forwardSkt = skt;
         var baseMsg = ForwardSocketClient.baseMsg;
         //向中转服务器发送基本信息
@@ -75,8 +86,8 @@ class FileSyncHandler {
           json.encode(
             baseMsg
               ..addAll({
-                "fileName": _file.fileName,
-                "size": (await _file.length()).toString(),
+                "fileName": fileName,
+                "size": size.toString(),
                 "fileId": _fileId.toString(),
                 "target": targetDevId!,
                 "connType": ForwardConnType.sendFile.name,
@@ -113,8 +124,15 @@ class FileSyncHandler {
         onReady(this);
         _server!.listen((client) async {
           hasClient = true;
-          //向客户端发送文件
-          sendFile2Socket(client);
+          try {
+            //向客户端发送文件
+            sendFile2Socket(client);
+          } catch (err, stack) {
+            Log.error(tag, "$err,$stack");
+            hasClient = false;
+            client.close();
+            _server?.close();
+          }
         });
         _delayedClientCheck(_onDone);
       });
@@ -125,37 +143,61 @@ class FileSyncHandler {
   void onForwardReceiverConnected() {
     sktService.removeSendFileRecordByForward(this, _fileId, null);
     hasClient = true;
-    //向 中转服务器 发送文件
-    sendFile2Socket(_forwardSkt!);
+    try {
+      //向 中转服务器 发送文件
+      sendFile2Socket(_forwardSkt!);
+    } catch (err, stack) {
+      Log.error(tag, "$err,$stack");
+    }
   }
 
   ///向 socket 发送文件
   void sendFile2Socket(Socket client) {
     DateTime start = DateTime.now();
-    SyncingFile syncingFile = SyncingFile(
-      totalSize: _file.lengthSync(),
+    final filePath = isUri ? pendingFile.filePath : _file!.normalizePath;
+    final fileSize = isUri ? pendingFile.size! : _file!.lengthSync();
+    final fileName = isUri ? pendingFile.fileName : _file!.fileName;
+    final syncingFile = SyncingFile(
+      totalSize: fileSize,
       context: context,
-      filePath: _file.normalizePath,
+      filePath: filePath,
       fromDev: appConfig.device,
       isSender: true,
-      startTime: DateTime.now().format("yyyy-MM-dd HH:mm:ss"),
+      startTime: DateTime.now().format(),
       onClose: (done) {
         if (done) {
           return;
         }
         client.destroy();
-        syncingFileService.removeSyncingFile(_file.path);
+        syncingFileService.removeSyncingFile(filePath);
       },
     );
     syncingFileService.updateSyncingFile(syncingFile);
-    var stream = _file.openRead().transform(
-      StreamTransformer<List<int>, List<int>>.fromHandlers(
-        handleData: (data, sink) {
-          syncingFile.addBytes(data);
-          sink.add(data);
-        },
-      ),
-    );
+    Stream<List<int>> stream;
+    if (isUri) {
+      final nullableStream = uriFileReader.readFileAsBytesStream(pendingFile.filePath);
+      if (nullableStream == null) {
+        Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
+        throw TranslationKey.failedToLoad.tr;
+      }
+      stream = nullableStream.transform(
+        StreamTransformer<Uint8List, List<int>>.fromHandlers(
+          handleData: (data, sink) {
+            syncingFile.addBytes(data);
+            sink.add(data);
+          },
+        ),
+      );
+    } else {
+      stream = _file!.openRead().transform(
+        StreamTransformer<List<int>, List<int>>.fromHandlers(
+          handleData: (data, sink) {
+            syncingFile.addBytes(data);
+            sink.add(data);
+          },
+        ),
+      );
+    }
     syncingFile.setState(SyncingFileState.syncing);
     client.addStream(stream).then((value) {
       var history = History(
@@ -163,9 +205,9 @@ class FileSyncHandler {
         uid: appConfig.userId,
         devId: appConfig.devInfo.guid,
         time: start.toString(),
-        content: _file.path,
+        content: filePath,
         type: HistoryContentType.file.value,
-        size: _file.lengthSync(),
+        size: fileSize,
         sync: true,
       );
       final historyController = Get.find<HistoryController>();
@@ -173,9 +215,9 @@ class FileSyncHandler {
       syncingFile.setState(SyncingFileState.done);
     }).catchError((err, stack) {
       syncingFile.setState(SyncingFileState.error);
-      Log.error(tag, "send file failed: ${_file.path}. $err $stack");
+      Log.error(tag, "send file failed: $filePath. $err $stack");
     }).whenComplete(() {
-      Log.info(tag, "rec file(${_file.fileName}) completed");
+      Log.info(tag, "send file($fileName) completed");
       client.close();
       _server?.close();
       _onDone();
@@ -266,14 +308,21 @@ class FileSyncHandler {
     final sktService = Get.find<SocketService>();
     final useForward = sktService.isUseForward(device.guid);
     FileSyncHandler._private(
-      path: pendingFile.filePath,
+      pendingFile: pendingFile,
       context: context,
       useForward: useForward,
       targetDevId: useForward ? device.guid : null,
       onReady: (syncer) async {
-        final file = File(pendingFile.filePath);
-        int totalSize = await file.length();
-        var fileName = file.fileName;
+        int totalSize;
+        String fileName;
+        if (syncer.isUri) {
+          totalSize = pendingFile.size!;
+          fileName = pendingFile.fileName!;
+        } else {
+          final file = File(pendingFile.filePath);
+          totalSize = await file.length();
+          fileName = file.fileName;
+        }
         //如果存在多级文件夹就拼接上文件夹
         if (pendingFile.directories.isNotEmpty) {
           fileName = "${pendingFile.directories.join("/")}/$fileName";
@@ -313,7 +362,7 @@ class FileSyncHandler {
     var socket = await Socket.connect(ip, port);
     String filePath = "${appConfig.fileStorePath}/$fileName";
     File file = File(filePath);
-    print("receive file $filePath");
+    Log.debug(tag, "receive file $filePath");
     final dir = file.parent;
     //如果父级文件夹不存在则创建
     if (!await dir.exists()) {
@@ -328,7 +377,7 @@ class FileSyncHandler {
       file = File(filePath);
     }
     final syncingFileService = Get.find<SyncingFileProgressService>();
-    SyncingFile syncingFile = SyncingFile(
+    final syncingFile = SyncingFile(
       totalSize: size,
       context: context,
       filePath: filePath,
@@ -347,7 +396,7 @@ class FileSyncHandler {
     syncingFileService.updateSyncingFile(syncingFile);
     var start = DateTime.now();
     if (isForward) {
-      //todo 告知发送方接收方已经连接
+      //告知发送方接收方已经连接
       Map<String, String> data = {
         "connType": ForwardConnType.recFile.name,
         "target": targetId!,

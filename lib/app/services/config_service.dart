@@ -790,10 +790,12 @@ class ConfigService extends GetxService {
     await _addOrUpdateDbConfig("syncFileHotKeys", syncFileHotKeys);
     _syncFileHotKeys.value = syncFileHotKeys;
   }
+
   Future<void> setShowMainWindowHotKeys(String showMainWindowHotKeys) async {
     await _addOrUpdateDbConfig("showMainWindowHotKeys", showMainWindowHotKeys);
     _showMainWindowHotKeys.value = showMainWindowHotKeys;
   }
+
   Future<void> setExitAppHotKeys(String exitAppHotKeys) async {
     await _addOrUpdateDbConfig("exitAppHotKeys", exitAppHotKeys);
     _exitAppHotKeys.value = exitAppHotKeys;

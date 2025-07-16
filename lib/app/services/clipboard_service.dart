@@ -16,6 +16,7 @@ import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter_screenshot_detect/flutter_screenshot_detect.dart';
 import 'package:get/get.dart';
+import 'package:uri_file_reader/uri_file_reader.dart';
 
 class ClipboardService extends GetxService with ClipboardListener {
   final tag = "ClipboardService";
@@ -61,8 +62,9 @@ class ClipboardService extends GetxService with ClipboardListener {
         _lastScreenshotContent = event.path;
         final androidChannelService = Get.find<AndroidChannelService>();
         Future.delayed(const Duration(milliseconds: 500), () {
-          androidChannelService.getImageUriRealPath(event.path!).then((realPath) async {
+          uriFileReader.getFileInfoFromUri(event.path!).then((info) async {
             Log.debug(tag, "content uri: ${event.path!}");
+            var realPath = info?.path;
             Log.debug(tag, "realPath: $realPath");
             realPath = realPath?.toLowerCase();
             bool checkLatestImage = false;

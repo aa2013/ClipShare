@@ -14,5 +14,7 @@ enum AndroidChannelMethod {
   onSmsChanged,
   showOnRecentTasks,
   getImageUriRealPath,
-  getLatestImagePath;
+  getLatestImagePath,
+  getFileNameFromUri,
+  readFileAsBytes;
 }

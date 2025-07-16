@@ -22,6 +22,8 @@ import androidx.core.app.NotificationCompat
 import androidx.documentfile.provider.DocumentFile
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugins.GeneratedPluginRegistrant
 import top.coclyun.clipshare.broadcast.ScreenReceiver
@@ -30,6 +32,9 @@ import top.coclyun.clipshare.service.HistoryFloatService
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
+import androidx.core.net.toUri
+import java.io.BufferedInputStream
+import java.net.URLDecoder
 
 
 class MainActivity : FlutterFragmentActivity() {
@@ -37,10 +42,12 @@ class MainActivity : FlutterFragmentActivity() {
     private lateinit var screenReceiver: ScreenReceiver
     private val TAG: String = "MainActivity";
     private var smsObserver: SmsObserver? = null;
+    private lateinit var binaryMessenger: BinaryMessenger
 
     companion object {
         lateinit var commonChannel: MethodChannel;
         lateinit var androidChannel: MethodChannel;
+        lateinit var androidEventChannel: EventChannel;
         lateinit var clipChannel: MethodChannel;
         lateinit var applicationContext: Context
         lateinit var pendingIntent: PendingIntent
@@ -59,12 +66,9 @@ class MainActivity : FlutterFragmentActivity() {
         fun commonNotify(content: String) {
             // 构建通知
             val builder = NotificationCompat.Builder(applicationContext, commonNotifyChannelId)
-                .setSmallIcon(R.drawable.launcher_icon)
-                .setContentTitle("ClipShare")
-                .setContentText(content)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent)
-                .setFullScreenIntent(pendingIntent, true)
+                .setSmallIcon(R.drawable.launcher_icon).setContentTitle("ClipShare")
+                .setContentText(content).setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent).setFullScreenIntent(pendingIntent, true)
                 // 点击通知后自动关闭
                 .setAutoCancel(true)
                 // 设置为公开可见通知
@@ -81,20 +85,21 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        this.binaryMessenger = flutterEngine.dartExecutor.binaryMessenger
         MainActivity.applicationContext = applicationContext
         MainActivity.pendingIntent = createPendingIntent()
         GeneratedPluginRegistrant.registerWith(flutterEngine)
         commonChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            "top.coclyun.clipshare/common"
+            binaryMessenger, "top.coclyun.clipshare/common"
         )
         androidChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            "top.coclyun.clipshare/android"
+            binaryMessenger, "top.coclyun.clipshare/android"
         )
         clipChannel = MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            "top.coclyun.clipshare/clip"
+            binaryMessenger, "top.coclyun.clipshare/clip"
+        )
+        androidEventChannel = EventChannel(
+            binaryMessenger, "top.coclyun.clipshare/read_file"
         )
         initCommonChannel()
         initAndroidChannel()
@@ -125,9 +130,7 @@ class MainActivity : FlutterFragmentActivity() {
         // 创建通知渠道（仅适用于 Android 8.0 及更高版本）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
-                commonNotifyChannelId,
-                "普通通知",
-                NotificationManager.IMPORTANCE_HIGH
+                commonNotifyChannelId, "普通通知", NotificationManager.IMPORTANCE_HIGH
             )
             val notificationManager =
                 Companion.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
@@ -197,8 +200,7 @@ class MainActivity : FlutterFragmentActivity() {
                 //授权悬浮窗权限
                 "grantAlertWindowPermission" -> {
                     val intent = Intent(
-                        ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:$packageName")
+                        ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")
                     );
                     startActivityForResult(intent, requestOverlayResultCode);
                 }
@@ -253,7 +255,7 @@ class MainActivity : FlutterFragmentActivity() {
                     var savedPath: String? = null
                     try {
                         val content = args["content"].toString()
-                        val uri = Uri.parse(content);
+                        val uri = content.toUri();
                         val documentFile = DocumentFile.fromSingleUri(this, uri)
                         val fileName = documentFile!!.name
                         savedPath = args["savedPath"].toString() + "/${fileName}";
@@ -278,13 +280,25 @@ class MainActivity : FlutterFragmentActivity() {
                     }
                     result.success(savedPath)
                 }
+                //从uri中获取文件名称和大小
+                "getFileNameFromUri" -> {
+                    try {
+                        val content = args["uri"].toString()
+                        val uri = content.toUri()
+                        val documentFile = DocumentFile.fromSingleUri(this, uri)
+                        val fileName = URLDecoder.decode(documentFile!!.name, "UTF-8")
+                        val length = documentFile.length()
+                        result.success("$fileName,$length")
+                    } catch (e: Exception) {
+                        e.printStackTrace();
+                        result.success(null)
+                    }
+                }
                 //图片更新后通知媒体库扫描
                 "notifyMediaScan" -> {
                     val imagePath = args["imagePath"].toString();
                     MediaScannerConnection.scanFile(
-                        applicationContext,
-                        arrayOf(imagePath),
-                        null
+                        applicationContext, arrayOf(imagePath), null
                     ) { path, uri ->
                         Log.i(TAG, "initAndroidChannel: MediaScanner Completed")
                     }
@@ -312,7 +326,7 @@ class MainActivity : FlutterFragmentActivity() {
                 //获取指定Uri的真实路径
                 "getImageUriRealPath" -> {
                     val uriStr = args["uri"].toString()
-                    val uri = Uri.parse(uriStr);
+                    val uri = uriStr.toUri();
                     val path = getImagePathFromUri(this, uri)
                     result.success(path)
                 }
@@ -323,7 +337,92 @@ class MainActivity : FlutterFragmentActivity() {
                 }
             }
         }
+        androidEventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+            val sinkMap: MutableMap<String, EventChannel.EventSink> = hashMapOf()
+            override fun onListen(
+                arguments: Any?,
+                events: EventChannel.EventSink?,
+            ) {
+                if (arguments is Map<*, *>) {
+                    val uri = arguments["uri"] as? String
+                    if (uri == null || events == null) {
+                        runOnUiThread {
+                            events?.error("1", "uri is empty.", null)
+                        }
+                        return
+                    }
+                    try {
+                        sinkMap[uri] = events
+                        startSendFileBytes2Flutter(uri, sinkMap)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        runOnUiThread {
+                            events.error("1", "uri is empty.", null)
+                        }
+                    }
+                }
+            }
+
+            override fun onCancel(arguments: Any?) {
+                if (arguments is Map<*, *>) {
+                    val uri = arguments["uri"] as? String
+                    if (uri != null) {
+                        sinkMap.remove(uri)
+                    }
+                }
+            }
+
+        })
     }
+
+    fun startSendFileBytes2Flutter(
+        uriStr: String,
+        sinkMap: MutableMap<String, EventChannel.EventSink>,
+    ) {
+        val uri = uriStr.toUri();
+        val inputStream = contentResolver.openInputStream(uri)
+        if (inputStream == null) {
+            if (sinkMap.contains(uriStr)) {
+                runOnUiThread {
+                    sinkMap[uriStr]?.error("2", "inputStream is null", null)
+                }
+                sinkMap.remove(uriStr)
+            }
+            return
+        }
+        Thread {
+            try {
+                inputStream.use {
+                    val buffer = ByteArray(1024 * 10)
+                    var length: Int
+                    while (inputStream.read(buffer).also { length = it } > 0) {
+                        if (!sinkMap.contains(uriStr)) {
+                            throw Exception("Not found sink for uri: $uriStr")
+                        }
+                        val data = buffer.copyOf(length)
+                        runOnUiThread {
+                            sinkMap[uriStr]?.success(data)
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                runOnUiThread {
+                    sinkMap[uriStr]?.error("3", e.message, null)
+                }
+                sinkMap.remove(uriStr)
+            } finally {
+                runOnUiThread {
+                    try {
+                        sinkMap[uriStr]?.endOfStream()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }.start()
+    }
+
 
     /**
      * 根据uri获取图片真实路径
@@ -355,11 +454,7 @@ class MainActivity : FlutterFragmentActivity() {
             val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
             val cursor = context.contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                projection,
-                null,
-                null,
-                sortOrder
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, null, null, sortOrder
             ) ?: return null
 
             if (cursor.moveToFirst()) {
@@ -391,8 +486,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun isIgnoringBatteryOptimizations(): Boolean {
         var isIgnoring = false
-        val powerManager: PowerManager? =
-            getSystemService(Context.POWER_SERVICE) as PowerManager?
+        val powerManager: PowerManager? = getSystemService(Context.POWER_SERVICE) as PowerManager?
         if (powerManager != null) {
             isIgnoring = powerManager.isIgnoringBatteryOptimizations(packageName)
         }
@@ -415,9 +509,7 @@ class MainActivity : FlutterFragmentActivity() {
             if (resultCode != Activity.RESULT_OK) {
                 if (!Settings.canDrawOverlays(this)) {
                     Toast.makeText(
-                        this,
-                        "请授予悬浮窗权限，否则无法后台读取剪贴板！",
-                        Toast.LENGTH_LONG
+                        this, "请授予悬浮窗权限，否则无法后台读取剪贴板！", Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -431,8 +523,7 @@ class MainActivity : FlutterFragmentActivity() {
 
     fun onSmsChanged(content: String) {
         androidChannel.invokeMethod(
-            "onSmsChanged",
-            mapOf("content" to content)
+            "onSmsChanged", mapOf("content" to content)
         )
     }
 

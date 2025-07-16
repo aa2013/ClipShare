@@ -147,7 +147,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
             return ThemeSwitchingArea(
               child: Scaffold(
                 appBar: null,
-                // backgroundColor: Colors.transparent,
+                backgroundColor: Colors.transparent,
                 body: CustomTitleBarLayout(
                   children: [
                     const SizedBox(width: 5),

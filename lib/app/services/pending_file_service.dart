@@ -4,12 +4,12 @@ import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/models/pending_file.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:get/get.dart';
 
-class PendingFileService extends GetxService{
-
+class PendingFileService extends GetxService {
   final _pendingItems = <MyDropItem>{};
 
   final pendingItems = <DropItem>[].obs;
@@ -74,6 +74,19 @@ class PendingFileService extends GetxService{
     if (items.isEmpty) return [];
     final list = <PendingFile>[];
     for (var item in items) {
+      if (item.isUri && item is DropItemFileUri) {
+        list.add(
+          PendingFile(
+            isUri: true,
+            isDirectory: false,
+            filePath: item.path,
+            fileName: item.name,
+            size: item.size,
+            directories: [],
+          ),
+        );
+        continue;
+      }
       final type = await FileSystemEntity.type(item.path);
       if (type == FileSystemEntityType.file) {
         list.add(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -44,6 +45,7 @@ import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_handler/share_handler.dart';
+import 'package:uri_file_reader/uri_file_reader.dart';
 import 'package:window_manager/window_manager.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
@@ -324,8 +326,8 @@ class SplashController extends GetxController {
     }
     final handler = ShareHandlerPlatform.instance;
     appConfig.shareHandlerStream?.cancel();
-    appConfig.shareHandlerStream = handler.sharedMediaStream.listen((SharedMedia media) {
-      Log.info(tag, media);
+    appConfig.shareHandlerStream = handler.sharedMediaStream.listen((SharedMedia media) async {
+      Log.info(tag, "ShareMedia: ${media.attachments}, content: ${media.content}");
       if (media.attachments != null) {
         var files = media.attachments!
             .where((attachment) => attachment != null)
@@ -340,31 +342,16 @@ class SplashController extends GetxController {
         }
         gotoOnlineDevicesPage(files);
       } else if (media.content != null) {
-        Global.showTipsDialog(
-          context: Get.context!,
-          text: TranslationKey.saveFileToPathForSettingDialogText.tr,
-          okText: TranslationKey.save.tr,
-          autoDismiss: false,
-          onOk: () async {
-            var filePath = await androidChannelService.copyFileFromUri(
-              media.content!,
-              appConfig.fileStorePath,
-            );
-            if (Get.context!.mounted) {
-              Get.back();
-            }
-
-            Log.debug(tag, filePath);
-            if (filePath != null) {
-              gotoOnlineDevicesPage(
-                [DropItemFile(filePath)],
-              );
-            }
-          },
-          onCancel: () {
-            Get.back();
-          },
-        );
+        final fileInfo = await uriFileReader.getFileInfoFromUri(media.content!);
+        if (fileInfo == null) {
+          Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
+          Log.debug(tag, "未从uri中获取到文件名称和大小：uri = ${media.content}");
+          return;
+        }
+        final fileName = fileInfo.fileName;
+        final size = fileInfo.size;
+        Log.info(tag, "ShareMedia fileName $fileName, size $size");
+        gotoOnlineDevicesPage([DropItemFileUri(media.content!, fileName, size)]);
       } else {
         Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveFileNotSupportDialogText.tr);
         return;

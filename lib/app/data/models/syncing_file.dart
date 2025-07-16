@@ -60,7 +60,7 @@ class SyncingFile {
     if (!isSender) {
       try {
         _sink!.add(bytes);
-        _sink.flush();
+        // await _sink.flush();
       } catch (err, stack) {
         Log.error(tag, "$filePath sync error. $err $stack");
         _state = SyncingFileState.error;
