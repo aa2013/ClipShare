@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -36,6 +37,14 @@ class DebugPage extends GetView<DebugController> {
             }
           },
           child: Text("Copy 100 items"),
+        ),
+        TextButton(
+          onPressed: () async {
+            final byteData = await rootBundle.load(Constants.emptyPngPath);
+            final bytes = byteData.buffer.asUint8List();
+            print(base64.encode(bytes));
+          },
+          child: Text("GetEmptyContentPngBytes"),
         ),
         TextButton(
           onPressed: () async {

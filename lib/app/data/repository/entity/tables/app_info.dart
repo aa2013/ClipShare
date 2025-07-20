@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:floor/floor.dart';
 
 ///app信息
@@ -82,7 +84,11 @@ extension AppInfoExt on AppInfo {
 
   Uint8List get iconBytes {
     if (!_bytes.containsKey(id)) {
-      _bytes[id] = base64.decode(iconB64);
+      if(iconB64.isEmpty){
+        return Constants.emptyPngBytes;
+      }else{
+        _bytes[id] = base64.decode(iconB64);
+      }
     }
     return _bytes[id]!;
   }

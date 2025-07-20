@@ -1,4 +1,5 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 
 class EmptyContent extends StatelessWidget {
@@ -27,7 +28,7 @@ class EmptyContent extends StatelessWidget {
         Center(
           child: icon ??
               Image.asset(
-                'assets/images/empty.png',
+                Constants.emptyPngPath,
                 width: size,
                 height: size,
               ),
