@@ -26,8 +26,7 @@ extension StringExt on String {
   }
 
   bool get isDomain {
-    return matchRegExp(
-        r'^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?$');
+    return matchRegExp(r'^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?$');
   }
 
   String substringMinLen(int start, int end) {
@@ -78,7 +77,7 @@ extension StringExt on String {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                     Text(
+                    Text(
                       TranslationKey.openLink.tr,
                       style: const TextStyle(
                         fontSize: 18,
@@ -124,6 +123,14 @@ extension StringExt on String {
       lastIndex + target.length,
       replacement,
     );
+  }
+
+  bool equalsIgnoreCase(String input) {
+    return toLowerCase() == input.toLowerCase();
+  }
+
+  bool containsIgnoreCase(String input) {
+    return toLowerCase().contains(input.toLowerCase());
   }
 }
 

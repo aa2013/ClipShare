@@ -3,6 +3,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/memory_image_with_not_found.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
@@ -31,7 +32,8 @@ class AppSelectionPage extends StatefulWidget {
 }
 
 class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerProviderStateMixin {
-  var appList = List<LocalAppInfo>.empty(growable: true);
+  var originAppList = List<LocalAppInfo>.empty(growable: true);
+  var searchResultList = List<LocalAppInfo>.empty(growable: true);
   final selected = <String>{}.obs;
   static final borderRadius = BorderRadius.circular(12.0);
   static const itemPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
@@ -43,15 +45,16 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
     ),
   );
   late final TabController tabController;
+  final emptyContent = EmptyContent();
 
   List<Tab> get tabs => [
         Tab(text: TranslationKey.userApp.tr),
         Tab(text: TranslationKey.systemApp.tr),
       ];
 
-  List<LocalAppInfo> get systemApps => appList.where((item) => item.isSystemApp).toList();
+  List<LocalAppInfo> get systemApps => searchResultList.where((item) => item.isSystemApp).toList();
 
-  List<LocalAppInfo> get userApps => appList.where((item) => !item.isSystemApp).toList();
+  List<LocalAppInfo> get userApps => searchResultList.where((item) => !item.isSystemApp).toList();
 
   @override
   void initState() {
@@ -59,13 +62,18 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
     tabController = TabController(length: tabs.length, vsync: this, initialIndex: 0);
     widget.loadAppInfos().then((list) {
       setState(() {
-        appList = list;
+        list.sort((a, b) => a.name.compareTo(b.name));
+        originAppList = list;
+        searchResultList = list;
       });
     });
   }
 
-  ListView renderAppList(List<LocalAppInfo> list) {
+  Widget renderAppList(List<LocalAppInfo> list) {
     const defaultSize = MemImageWithNotFound.defaultIconSize;
+    if (list.isEmpty) {
+      return emptyContent;
+    }
     return ListView.builder(
       itemCount: list.length,
       itemBuilder: (BuildContext context, int i) {
@@ -76,10 +84,10 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
             elevation: 0,
             child: InkWell(
               onTap: () {
-                if(widget.limit==1){
+                if (widget.limit == 1) {
                   selected.clear();
                   selected.add(app.appId);
-                }else{
+                } else {
                   if (selected.contains(app.appId)) {
                     selected.remove(app.appId);
                   } else {
@@ -106,20 +114,31 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
                             height: defaultSize * 1.5,
                           ),
                           const SizedBox(width: 10),
-                          Expanded(child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                app.name,
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Text(app.appId),
-                              ),
-                            ],
-                          ),),
+                          Expanded(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Tooltip(
+                                  message: app.name,
+                                  child: Text(
+                                    app.name,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
+                                ),
+                                Tooltip(
+                                  message: app.appId,
+                                  child: Text(
+                                    app.appId,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -142,13 +161,13 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   Future<void> onRefresh() async {
     final list = await widget.loadAppInfos();
     setState(() {
-      appList = list;
+      originAppList = list;
     });
   }
 
   Widget renderBody() {
-    if(appList.isEmpty){
-      return EmptyContent();
+    if (originAppList.isEmpty) {
+      return emptyContent;
     }
     Widget body;
     if (widget.distinguishSystemApps) {
@@ -181,7 +200,30 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
         child: renderAppList(userApps),
       );
     }
-    return body;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(5),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: TranslationKey.search.tr,
+              hintStyle: const TextStyle(color: Colors.grey),
+            ),
+            onChanged: (text) {
+              setState(() {
+                searchResultList = originAppList.where((appInfo) {
+                  if (appInfo.appId.containsIgnoreCase(text)) {
+                    return true;
+                  }
+                  return appInfo.name.containsIgnoreCase(text);
+                }).toList();
+              });
+            },
+          ),
+        ),
+        Expanded(child: body),
+      ],
+    );
   }
 
   @override
@@ -192,16 +234,19 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
           Expanded(
             child: Text(TranslationKey.selectApplication.tr),
           ),
-          Obx(
-                () => IconButton(
-              onPressed: selected.isEmpty
-                  ? null
-                  : () {
-                final result = appList.where((item) => selected.contains(item.appId)).toList(growable: false);
-                widget.onSelectedDone(result);
-                Get.back();
-              },
-              icon: const Icon(Icons.check),
+          Tooltip(
+            message: TranslationKey.confirm.tr,
+            child: Obx(
+              () => IconButton(
+                onPressed: selected.isEmpty
+                    ? null
+                    : () {
+                        final result = originAppList.where((item) => selected.contains(item.appId)).toList(growable: false);
+                        widget.onSelectedDone(result);
+                        Get.back();
+                      },
+                icon: const Icon(Icons.check),
+              ),
             ),
           ),
         ],
