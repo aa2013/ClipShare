@@ -99,6 +99,12 @@ class HistoryFilterController {
     onlyNoSync.value = filter.onlyNoSync;
     selectedType.value = filter.type;
   }
+
+  String getDevNameById(devId) {
+    return allDevices
+        .firstWhereOrNull((item) => item.guid == devId)
+        ?.name ?? "Unknown";
+  }
 }
 
 class HistoryFilter extends StatelessWidget {

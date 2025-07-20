@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "sliver_sticky_collapsable_panel",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/sliver_sticky_collapsable_panel",
+    },
+    {
       "name": "uri_file_reader",
       "license": "MIT",
       "url": "https://pub.dev/packages/uri_file_reader",

@@ -19,7 +19,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.1.1+16
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
+  # At least Flutter 3.32.1
+  sdk: '>=3.6.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -141,7 +142,7 @@ dependencies:
   # 文件拖拽
   desktop_drop: ^0.5.0
   # excel导出
-  syncfusion_flutter_xlsio: 27.1.48
+  syncfusion_flutter_xlsio: ^29.2.11
   # http request
   dio: ^5.8.0+1
   # 系统通知
@@ -151,6 +152,8 @@ dependencies:
   # Android uri读取
   uri_file_reader:
     path: ../uri_file_reader
+  # 粘性折叠分组，该版本至少 SDK 3.8.0
+  sliver_sticky_collapsable_panel: ^3.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -7,6 +7,7 @@ import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
@@ -21,6 +22,7 @@ class ClipboardSourceChip extends StatelessWidget {
   final Function(AppInfo appInfo) onAdded;
   final Function() onDeleted;
   final dbService = Get.find<DbService>();
+  final devService = Get.find<DeviceService>();
   final appConfig = Get.find<ConfigService>();
   final historyController = Get.find<HistoryController>();
   final sourceService = Get.find<ClipboardSourceService>();
@@ -39,6 +41,7 @@ class ClipboardSourceChip extends StatelessWidget {
         onPressed: () {
           final page = AppSelectionPage(
             limit: 1,
+            loadDeviceName: devService.getName,
             loadAppInfos: () {
               final list = sourceService.appInfos
                   .where((item)=>item.devId==appConfig.device.guid)

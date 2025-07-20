@@ -56,20 +56,6 @@ class DebugPage extends GetView<DebugController> {
           },
           child: Text("open file path"),
         ),
-        Expanded(
-          child: AppSelectionPage(
-            distinguishSystemApps: true,
-            limit: 1,
-            loadAppInfos: () {
-              final sourceService = Get.find<ClipboardSourceService>();
-              final result = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, Random().nextInt(10) > 5)).toList(growable: false);
-              return Future.value(result);
-            },
-            onSelectedDone: (list) {
-              print("onSelectedDone: ${list.length}");
-            },
-          ),
-        ),
       ],
     );
   }

@@ -12,7 +12,7 @@ const darkBackgroundColor = Colors.black;
 final lightThemeData = ThemeData.light().copyWith(
   colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.lightBlueAccent, surfaceBright: Colors.white),
-  cardTheme: const CardTheme(color: Colors.white),
+  cardTheme: const CardThemeData(color: Colors.white),
   scaffoldBackgroundColor: lightBackgroundColor,
   textTheme: Platform.isWindows
       ? ThemeData.light().textTheme.apply(fontFamily: 'Microsoft YaHei')

@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart' as collection;
+
 extension ListExt<T> on List<T> {
   List<List<T>> partition(int size) {
     List<List<T>> result = [];
@@ -25,6 +27,11 @@ extension ListExt<T> on List<T> {
       result.add(separator);
     }
     return result;
+  }
+
+  /// 将列表按指定键分组（返回 Map<K, List<T>>）
+  Map<K, List<T>> groupBy<K>(K Function(T) keySelector) {
+    return collection.groupBy(this, keySelector);
   }
 }
 
