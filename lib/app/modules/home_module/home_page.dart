@@ -46,7 +46,7 @@ class HomePage extends GetView<HomeController> {
           controller.notifyMultiSelectionPopScopeDisable();
           return;
         }
-        if (Platform.isAndroid) {
+        if (Platform.isAndroid && !controller.showPendingItemsDetail.value) {
           androidChannelService.moveToBg();
         }
       },

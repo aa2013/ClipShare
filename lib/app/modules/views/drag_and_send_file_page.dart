@@ -50,14 +50,22 @@ class _DragAndSendFilePageState extends State<DragAndSendFilePage> {
   Widget build(BuildContext context) {
     ///mobile
     if (appConfig.isSmallScreen) {
-      return Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-        child: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(height: 155, child: Obx(() => buildOnlineDevices())),
-              Expanded(child: Obx(() => buildPendingItems())),
-            ],
+      return PopScope(
+        canPop: !homeController.showPendingItemsDetail.value,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (!didPop) {
+            homeController.showPendingItemsDetail.value = false;
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+          child: SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 155, child: Obx(() => buildOnlineDevices())),
+                Expanded(child: Obx(() => buildPendingItems())),
+              ],
+            ),
           ),
         ),
       );
