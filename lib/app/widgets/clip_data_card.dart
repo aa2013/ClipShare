@@ -266,19 +266,20 @@ class ClipDataCardState extends State<ClipDataCard> {
             TagEditPage.goto(widget.clip.data.id);
           },
         ),
-        MenuItem(
-          label: TranslationKey.modifyContent.tr,
-          icon: Icons.edit_note,
-          onSelected: () {
-            final homCtl = Get.find<HomeController>();
-            homCtl.openEndDrawer(
-              drawer: ClipboardDetailDrawer(
-                clipData: widget.clip,
-                modifyMode: true,
-              ),
-            );
-          },
-        ),
+        if (!widget.clip.isFile && !widget.clip.isImage)
+          MenuItem(
+            label: TranslationKey.modifyContent.tr,
+            icon: Icons.edit_note,
+            onSelected: () {
+              final homCtl = Get.find<HomeController>();
+              homCtl.openEndDrawer(
+                drawer: ClipboardDetailDrawer(
+                  clipData: widget.clip,
+                  modifyMode: true,
+                ),
+              );
+            },
+          ),
         MenuItem(
           label: TranslationKey.delete.tr,
           icon: Icons.delete,

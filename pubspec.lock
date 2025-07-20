@@ -401,10 +401,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: "09b474c0c8117484b80cbebc043801ff91e05cfbd2874d512825c899e1754694"
+      sha256: ef9908739bdd9c476353d6adff72e88fd00c625f5b959ae23f7567bd5137db0a
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "9.2.3"
+    version: "10.2.0"
   fixnum:
     dependency: transitive
     description:
@@ -1663,7 +1663,7 @@ packages:
       path: "../uri_file_reader"
       relative: true
     source: path
-    version: "0.0.1"
+    version: "1.0.1"
   url_launcher:
     dependency: "direct main"
     description:

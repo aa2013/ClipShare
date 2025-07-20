@@ -90,7 +90,7 @@ dependencies:
   # markdown 渲染
   flutter_markdown: ^0.6.22+1
   # 文件选择
-  file_picker: ^9.2.1
+  file_picker: ^10.2.0
   # 权限请求
   permission_handler: ^11.3.1
   # 瀑布流布局
