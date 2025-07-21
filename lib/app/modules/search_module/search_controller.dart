@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:math';
@@ -80,6 +81,8 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   bool get isBigScreen => screenWidth >= Constants.smallScreenWidth;
   late final HistoryFilterController filterController;
 
+  SearchFilter get searchFilter => filterController.filter..type = _searchType.value;
+
   //endregion
 
   //region 生命周期
@@ -124,7 +127,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed && Platform.isAndroid) {}
   }
 
-//endregion
+  //endregion
 
   //region 页面方法
 
@@ -200,21 +203,21 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     //加载搜索结果的前100条
     return dbService.historyDao
         .getHistoriesPageByWhere(
-      appConfig.userId,
-      minId ?? 0,
-      filterController.content.value,
-      typeValue,
-      selectedTags.toList(),
-      selectedDevIds.toList(),
-      selectedAppIds.toList(),
-      searchStartDate,
-      searchEndDate,
-      searchOnlyNoSync,
-      minId != null,
-    )
+          appConfig.userId,
+          minId ?? 0,
+          filterController.content.value,
+          typeValue,
+          selectedTags.toList(),
+          selectedDevIds.toList(),
+          selectedAppIds.toList(),
+          searchStartDate,
+          searchEndDate,
+          searchOnlyNoSync,
+          minId != null,
+        )
         .then((list) {
-      return ClipData.fromList(list);
-    });
+          return ClipData.fromList(list);
+        });
   }
 
   //region 导出
@@ -234,31 +237,34 @@ class SearchController extends GetxController with WidgetsBindingObserver {
             exporting = false;
           },
         );
-        export2Excel(loadingController).then((result) {
-          //关闭进度动画
-          Get.back();
-          //手动取消
-          if (!exporting) {
-            return;
-          }
-          if (result) {
-            Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
-          } else {
-            Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
-          }
-        }).catchError((err, stack) {
-          //关闭进度动画
-          Get.back();
-          Global.showTipsDialog(
-            context: Get.context!,
-            title: TranslationKey.outputFailed.tr,
-            text: "$err. $stack",
-          );
-        }).whenComplete(() {
-          //更新状态
-          exporting = false;
-          cancelExporting = false;
-        });
+        export2Excel(loadingController)
+            .then((result) {
+              //关闭进度动画
+              Get.back();
+              //手动取消
+              if (!exporting) {
+                return;
+              }
+              if (result) {
+                Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
+              } else {
+                Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
+              }
+            })
+            .catchError((err, stack) {
+              //关闭进度动画
+              Get.back();
+              Global.showTipsDialog(
+                context: Get.context!,
+                title: TranslationKey.outputFailed.tr,
+                text: "$err. $stack",
+              );
+            })
+            .whenComplete(() {
+              //更新状态
+              exporting = false;
+              cancelExporting = false;
+            });
       },
       showCancel: true,
     );
@@ -278,8 +284,8 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       }
       var list = await dbService.historyDao.getHistoriesPageByFilter(
         appConfig.userId,
-        filterController.filter,
-        false,
+        searchFilter,
+        true,
         lastId,
       );
       if (list.isEmpty) {
@@ -301,6 +307,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     _addExcelHeader(sheet);
     final Style dateTimeStyle = workbook.styles.add('CustomDateTimeStyle');
     dateTimeStyle.numberFormat = 'yyyy-MM-dd HH:mm:ss';
+    dateTimeStyle.vAlign = VAlignType.center;
+    final Style vAlign = workbook.styles.add('verticalCenter');
+    vAlign.vAlign = VAlignType.center;
 
     var lastTime = DateTime.now();
     loadingController.update(0, histories.length);
@@ -310,9 +319,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       if (cancelExporting) {
         return false;
       }
-      //转换为excel数据
-      await _add2ExcelSheet(sheet, item, rowNum++, dateTimeStyle);
-
+      //转换为excel数据(对于内容超过32767字符的会合并单元格，统计使用了多少行)
+      final useRows = await _add2ExcelSheet(sheet, item, rowNum, dateTimeStyle, vAlign);
+      rowNum += useRows;
       var now = DateTime.now();
       if (now.difference(lastTime).inMilliseconds.abs() > 10) {
         loadingController.update(i + 1);
@@ -349,8 +358,8 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     sheet.getRangeByName("G1").setText("内容长度");
   }
 
-  ///将历史数据添加到excel对象中
-  Future<void> _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle) async {
+  ///将历史数据添加到excel对象中，返回值为使用的行数
+  Future<int> _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle, Style vAlignStyle) async {
     if (rowNum <= 0) {
       throw ArgumentError("rowNum cannot less than 0");
     }
@@ -359,15 +368,34 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     final type = HistoryContentType.parse(history.type);
     if (type == HistoryContentType.file) {
       //文件同步跳过
-      return;
+      return 0;
+    }
+    var rowsOffset = 0;
+    const maxCellLength = 32767;
+    //转换 unicode 控制字符 \u0000 ~ \u001f，这些字符会导致 excel 打开失败
+    //需要替换为 _x0000_ 这样的
+    final content = history.content.replaceAllMapped(
+      RegExp(r'[\x00-\x1F]'),
+      (match) => '_x${match.group(0)!.codeUnitAt(0).toRadixString(16).padLeft(4, '0')}_',
+    );
+    if (content.length > maxCellLength) {
+      //单个单元格最多支持32767字符，否则会导致excel打开失败
+      rowsOffset = (content.length / maxCellLength).ceil() - 1;
     }
     final devName = devService.getName(history.devId);
     final size = clip.sizeText;
-    sheet.getRangeByName("A$rowNum")
+    sheet.getRangeByName("A$rowNum:A${rowNum + rowsOffset}")
+      ..merge()
       ..cellStyle = timeStyle
       ..setDateTime(time);
-    sheet.getRangeByName("B$rowNum").setText(type.label);
-    sheet.getRangeByName("C$rowNum").setText(devName);
+    sheet.getRangeByName("B$rowNum:B${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(type.label);
+    sheet.getRangeByName("C$rowNum:C${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(devName);
     final sourceService = Get.find<ClipboardSourceService>();
     var source = "";
     if (history.source != null) {
@@ -376,8 +404,14 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         source = app.name;
       }
     }
-    sheet.getRangeByName("D$rowNum").setText(source);
-    sheet.getRangeByName("E$rowNum").setNumber(history.top ? 1 : 0);
+    sheet.getRangeByName("D$rowNum:D${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(source);
+    sheet.getRangeByName("E$rowNum:E${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setNumber(history.top ? 1 : 0);
     if (clip.isImage) {
       final file = File(history.content);
       final cell = sheet.getRangeByName("F$rowNum");
@@ -385,7 +419,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       final rowHeight = cell.rowHeight;
       final cellWidth = cell.columnWidth;
       if (file.existsSync()) {
-        final List<int> bytes = file.readAsBytesSync();
+        final List<int> bytes = await file.readAsBytes();
         //only supports png and jpeg
         final picture = sheet.pictures.addStream(rowNum, 5, bytes);
         //rowHeight取出来是单位pt，转为像素需要 * 1.33
@@ -393,26 +427,19 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         picture.width = min(cellWidth * 1.33, 200).toInt(); // 限制宽度
       }
     } else {
-      sheet.getRangeByName("F$rowNum").setText(history.content);
+      for (var i = 0; i <= rowsOffset; i++) {
+        final start = i * maxCellLength;
+        final end = min((i + 1) * maxCellLength, content.length);
+        sheet.getRangeByName("F${rowNum + i}").setText(content.substring(start, end));
+      }
     }
-    sheet.getRangeByName("G$rowNum").setText(size);
+    sheet.getRangeByName("G$rowNum:G${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(size);
+    return rowsOffset + 1;
   }
-//endregion
-//endregion
-}
 
-// Future<void> _export2ExcelIsolate(SendPort sendPort)async{
-//
-//   final port = ReceivePort();
-//   sendPort.send(port.sendPort);
-//   port.listen((message) {
-//     final List<Map<String,dynamic>> batch = message[0];
-//     final SendPort replyTo = message[1];
-//
-//     // 模拟处理：计算一批数据的总和
-//     final int batchSum = batch.fold(0, (prev, e) => prev + e);
-//
-//   });
-//   // 把结果发回主线程
-//   replyTo.send(batchSum);
-// }
+  //endregion
+  //endregion
+}
