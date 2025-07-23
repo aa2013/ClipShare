@@ -1074,6 +1074,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'User';
       case TranslationKey.systemApp:
         return 'System';
+      case TranslationKey.fileNotFound:
+        return 'File not found';
+      case TranslationKey.openingFile:
+        return 'Opening File';
     }
   }
 }

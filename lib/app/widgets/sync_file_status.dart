@@ -12,6 +12,7 @@ import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/segmented_color.dart';
 import 'package:flutter/material.dart';
@@ -80,6 +81,7 @@ class SyncFileStatus extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
+          mouseCursor: SystemMouseCursors.basic,
           onTap: selectMode
               ? null
               : () async {
@@ -98,6 +100,11 @@ class SyncFileStatus extends StatelessWidget {
                     return;
                   }
                   final file = File(syncingFile.filePath);
+                  if (!file.existsSync()) {
+                    Global.showSnackBarWarn(context: context, text: TranslationKey.fileNotFound.tr);
+                  } else {
+                    Global.showSnackBarSuc(context: context, text: TranslationKey.openingFile.tr);
+                  }
                   await OpenFile.open(
                     file.normalizePath,
                   );
@@ -124,8 +131,7 @@ class SyncFileStatus extends StatelessWidget {
                               Visibility(
                                 visible: isLocal,
                                 child: Visibility(
-                                  visible: syncingFile.fromDev.guid ==
-                                      appConfig.device.guid,
+                                  visible: syncingFile.fromDev.guid == appConfig.device.guid,
                                   replacement: const Icon(
                                     Icons.download,
                                     color: Colors.blue,
@@ -142,9 +148,7 @@ class SyncFileStatus extends StatelessWidget {
                                   visible: selectMode,
                                   child: IconButton(
                                     icon: Icon(
-                                      selected
-                                          ? Icons.check_box
-                                          : Icons.check_box_outline_blank,
+                                      selected ? Icons.check_box : Icons.check_box_outline_blank,
                                       color: const Color(0xFF33A0E3),
                                     ),
                                     onPressed: null,
@@ -154,9 +158,7 @@ class SyncFileStatus extends StatelessWidget {
                                   message: TranslationKey.openFolder.tr,
                                   child: IconButton(
                                     onPressed: () async {
-                                      final path = File(syncingFile.filePath)
-                                          .parent
-                                          .normalizePath;
+                                      final path = File(syncingFile.filePath).parent.normalizePath;
                                       var result = await OpenFile.open(path);
                                       Log.debug(
                                         tag,
@@ -207,25 +209,19 @@ class SyncFileStatus extends StatelessWidget {
                               LinearProgressIndicator(
                                 value: value,
                                 minHeight: 20,
-                                color:
-                                    syncingFile.state == SyncingFileState.error
-                                        ? Colors.red
-                                        : null,
+                                color: syncingFile.state == SyncingFileState.error ? Colors.red : null,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 5),
+                                padding: const EdgeInsets.symmetric(horizontal: 5),
                                 child: SizedBox(
                                   height: 20,
                                   child: SegmentedTextColorContainer(
                                     segmentedColor: Colors.white,
                                     widthFactor: value,
-                                    defaultTextStyle:
-                                        const TextStyle(color: Colors.black),
+                                    defaultTextStyle: const TextStyle(color: Colors.black),
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Row(
                                           children: [
@@ -239,8 +235,7 @@ class SyncFileStatus extends StatelessWidget {
                                                   Container(
                                                     width: 1,
                                                     height: 10,
-                                                    margin:
-                                                        const EdgeInsets.only(
+                                                    margin: const EdgeInsets.only(
                                                       left: 5,
                                                       right: 5,
                                                     ),
@@ -255,16 +250,14 @@ class SyncFileStatus extends StatelessWidget {
                                                   Container(
                                                     width: 1,
                                                     height: 10,
-                                                    margin:
-                                                        const EdgeInsets.only(
+                                                    margin: const EdgeInsets.only(
                                                       left: 5,
                                                       right: 5,
                                                     ),
                                                     color: Colors.grey,
                                                   ),
                                                   Text(
-                                                    syncingFile.lessTime
-                                                        .to24HFormatStr,
+                                                    syncingFile.lessTime.to24HFormatStr,
                                                   ),
                                                 ],
                                               ),
@@ -274,10 +267,7 @@ class SyncFileStatus extends StatelessWidget {
                                         Visibility(
                                           visible: !isLocal,
                                           child: Text(
-                                            syncingFile.state ==
-                                                    SyncingFileState.error
-                                                ? TranslationKey.failed.tr
-                                                : "${(factor * 10000).round() / 100}%",
+                                            syncingFile.state == SyncingFileState.error ? TranslationKey.failed.tr : "${(factor * 10000).round() / 100}%",
                                           ),
                                         ),
                                         Row(

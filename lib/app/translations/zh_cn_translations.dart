@@ -1075,6 +1075,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '用户应用';
       case TranslationKey.systemApp:
         return '系统应用';
+      case TranslationKey.fileNotFound:
+        return '未找到文件';
+      case TranslationKey.openingFile:
+        return '正在打开文件';
     }
   }
 }

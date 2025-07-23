@@ -529,7 +529,9 @@ enum TranslationKey {
   clearHotKeyConfirm,
   pleaseEnterHotKey,
   userApp,
-  systemApp;
+  systemApp,
+  fileNotFound,
+  openingFile;
 
   String get tr => name.tr;
 
