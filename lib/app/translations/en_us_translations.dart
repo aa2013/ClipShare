@@ -1012,6 +1012,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Downloading";
       case TranslationKey.devDisconnectNotifyContent:
         return "Device @devName disconnected";
+      case TranslationKey.devConnectedNotifyContent:
+        return "Device @devName connected";
       case TranslationKey.clipboardSettingsGroupName:
         return "Clipboard";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
@@ -1050,6 +1052,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Select Applications";
       case TranslationKey.preferenceSettingsDevDisconnNotification:
         return "System notification when device disconnection";
+      case TranslationKey.preferenceSettingsDevConnNotification:
+        return "System notification when device connected";
       case TranslationKey.notification:
         return "Notification";
       case TranslationKey.aboutPageDatabaseVersionItemName:

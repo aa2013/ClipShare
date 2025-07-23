@@ -558,6 +558,20 @@ class SettingsPage extends GetView<SettingsController> {
                     cardList: [
                       SettingCard(
                         title: Text(
+                          TranslationKey.preferenceSettingsDevConnNotification.tr,
+                        ),
+                        value: appConfig.notifyOnDevConn,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) {
+                            HapticFeedback.mediumImpact();
+                            appConfig.setNotifyOnDevConn(checked);
+                          },
+                        ),
+                        show: (v) => true,
+                      ),
+                      SettingCard(
+                        title: Text(
                           TranslationKey.preferenceSettingsDevDisconnNotification.tr,
                         ),
                         value: appConfig.notifyOnDevDisconn,

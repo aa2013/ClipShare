@@ -162,6 +162,14 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
   List<RawDatagramSocket> multicasts = [];
 
+  //正在通知的设备，用于防抖，devId => (notifyId,isDisconnected)
+  //时常为 2s，如果 2s 内，该 map 有 key 且 id 仍然为发起通知时创建的 id 则允许通知，否则取消通知
+  final _devNotifyIdMap = <String, bool>{};
+  Timer? _devNotifyTimer;
+
+  //通知防抖时长
+  static const _debounceTime = Duration(milliseconds: 1500);
+
   Future<SocketService> init() async {
     if (_isInit) throw Exception("已初始化");
     // 初始化，创建socket监听
@@ -888,9 +896,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
     Log.debug(tag, "开始发现设备");
     //重新更新广播监听
-    try{
+    try {
       await _startListenMulticast();
-    }catch(err, stack){
+    } catch (err, stack) {
       Log.error(tag, "error: $e, $stack");
     }
     List<Future<void> Function()> tasks = [];
@@ -1275,12 +1283,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       );
       _devSockets[dev.guid] = ds;
     }
-    _onDevConnected(
-      dev,
-      client,
-      minVersion,
-      version,
-    );
+    _onDevConnected(dev, client, minVersion, version);
     if (paired) {
       //已配对，请求所有缺失数据
       reqMissingData();
@@ -1312,6 +1315,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     AppVersion minVersion,
     AppVersion version,
   ) async {
+    showDevConnectedNotification(dev.guid);
     final ip = client.ip;
     final port = client.isForwardMode ? forwardServerPort : client.port;
 
@@ -1465,7 +1469,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         //心跳超时
         Log.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");
         disconnectDevice(ds.dev, true);
-        _showDevDisConnectNotification(ds.dev.guid);
+        showDevDisConnectNotification(ds.dev.guid);
       }
     }
   }
@@ -1521,7 +1525,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     Log.debug(tag, "$devId 断开连接");
     final ds = _devSockets[devId];
     if (ds != null && ds.isPaired && autoReconnect) {
-      _showDevDisConnectNotification(ds.dev.guid);
+      showDevDisConnectNotification(ds.dev.guid);
     }
     //移除socket
     _devSockets.remove(devId);
@@ -1547,16 +1551,53 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
   }
 
-  void _showDevDisConnectNotification(String devId) {
+  ///设备连接后发起通知
+  void showDevConnectedNotification(String devId) {
+    if (!appConfig.notifyOnDevConn) {
+      return;
+    }
+    if (!(_devSockets[devId]?.isPaired ?? false)) {
+      //未配对的不理会
+      return;
+    }
+    _devNotifyTimer?.cancel();
+    //如果短时间内断开并重连，就同时取消通知
+    if (_devNotifyIdMap[devId] == true) {
+      _devNotifyIdMap.remove(devId);
+      return;
+    }
+    _devNotifyIdMap[devId] = false;
+    _devNotifyTimer = Timer(_debounceTime, () {
+      _devNotifyIdMap.remove(devId);
+      final devService = Get.find<DeviceService>();
+      Global.notify(
+        content: TranslationKey.devConnectedNotifyContent.trParams({
+          "devName": devService.getName(devId),
+        }),
+      );
+    });
+  }
+
+  ///设备断开后发起通知
+  void showDevDisConnectNotification(String devId) {
     if (!appConfig.notifyOnDevDisconn) {
       return;
     }
-    final devService = Get.find<DeviceService>();
-    Global.notify(
-      content: TranslationKey.devDisconnectNotifyContent.trParams({
-        "devName": devService.getName(devId),
-      }),
-    );
+    if (!(_devSockets[devId]?.isPaired ?? false)) {
+      //未配对的不理会
+      return;
+    }
+    _devNotifyTimer?.cancel();
+    _devNotifyIdMap[devId] = true;
+    _devNotifyTimer = Timer(_debounceTime, () {
+      _devNotifyIdMap.remove(devId);
+      final devService = Get.find<DeviceService>();
+      Global.notify(
+        content: TranslationKey.devDisconnectNotifyContent.trParams({
+          "devName": devService.getName(devId),
+        }),
+      );
+    });
   }
 
   ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）

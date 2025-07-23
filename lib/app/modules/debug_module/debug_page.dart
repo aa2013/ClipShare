@@ -8,6 +8,7 @@ import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
@@ -45,16 +46,6 @@ class DebugPage extends GetView<DebugController> {
             print(base64.encode(bytes));
           },
           child: Text("GetEmptyContentPngBytes"),
-        ),
-        TextButton(
-          onPressed: () async {
-            final path = "${Constants.androidDownloadPath}/app-arm64-v8a-release.apk";
-            File(path).openPath();
-            final result = await OpenFile.open(path);
-            print("result ${result.type.name}.${result.message}");
-            // Process.run("explorer /select,\"pubspec.lock\"", []);
-          },
-          child: Text("open file path"),
         ),
       ],
     );

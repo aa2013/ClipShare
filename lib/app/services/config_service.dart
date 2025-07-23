@@ -423,10 +423,15 @@ class ConfigService extends GetxService {
 
   bool get sourceRecordViaDumpsys => _sourceRecordViaDumpsys.value && sourceRecord;
 
-  //剪贴板来源记录（通过dumpsys）
+  //设备断开连接后通知
   final _notifyOnDevDisconn = true.obs;
 
   bool get notifyOnDevDisconn => _notifyOnDevDisconn.value;
+
+  //设备连接后通知
+  final _notifyOnDevConn = true.obs;
+
+  bool get notifyOnDevConn => _notifyOnDevConn.value;
 
   //endregion
 
@@ -494,6 +499,7 @@ class ConfigService extends GetxService {
     var sourceRecord = await cfg.getConfig("sourceRecord", userId);
     var sourceRecordViaDumpsys = await cfg.getConfig("sourceRecordViaDumpsys", userId);
     var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
+    var notifyOnDevConn = await cfg.getConfig("notifyOnDevConn", userId);
     //endregion
 
     //region 设置配置值
@@ -561,6 +567,7 @@ class ConfigService extends GetxService {
     _sourceRecord.value = sourceRecord?.toBool() ?? false;
     _sourceRecordViaDumpsys.value = sourceRecordViaDumpsys?.toBool() ?? false;
     _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
+    _notifyOnDevConn.value = notifyOnDevConn?.toBool() ?? true;
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -967,6 +974,11 @@ class ConfigService extends GetxService {
   Future<void> setNotifyOnDevDisconn(bool enable) async {
     await _addOrUpdateDbConfig("notifyOnDevDisconn", enable.toString());
     _notifyOnDevDisconn.value = enable;
+  }
+
+  Future<void> setNotifyOnDevConn(bool enable) async {
+    await _addOrUpdateDbConfig("notifyOnDevConn", enable.toString());
+    _notifyOnDevConn.value = enable;
   }
 
 //endregion

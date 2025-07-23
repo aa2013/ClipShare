@@ -1013,6 +1013,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "下载中";
       case TranslationKey.devDisconnectNotifyContent:
         return "设备 @devName 连接断开";
+      case TranslationKey.devConnectedNotifyContent:
+        return "设备 @devName 已连接";
       case TranslationKey.clipboardSettingsGroupName:
         return "剪贴板";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
@@ -1051,6 +1053,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "选择应用";
       case TranslationKey.preferenceSettingsDevDisconnNotification:
         return "设备连接断开时发起系统通知";
+      case TranslationKey.preferenceSettingsDevConnNotification:
+        return "设备连接后发起系统通知";
       case TranslationKey.notification:
         return "通知";
       case TranslationKey.aboutPageDatabaseVersionItemName:
