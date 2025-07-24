@@ -156,4 +156,13 @@ class MultiWindowChannelService extends GetxService {
       }),
     );
   }
+
+  ///通知窗体更新基础数据，如所有的设备信息，所有的标签信息，所有的来源信息
+  Future updateAllBaseData(int targetWindowId) {
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.updateAllBaseData.name,
+      jsonEncode({}),
+    );
+  }
 }

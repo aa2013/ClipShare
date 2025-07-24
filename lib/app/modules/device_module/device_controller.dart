@@ -63,7 +63,6 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   @override
   void onInit() {
     super.onInit();
-
     sktService.addDevAliveListener(this);
     sktService.addDiscoverListener(this);
     sktService.addForwardStatusListener(this);

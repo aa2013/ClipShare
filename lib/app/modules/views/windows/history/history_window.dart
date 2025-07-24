@@ -105,6 +105,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
         case MultiWindowMethod.closeWindow:
           widget.windowController.hide();
           break;
+        //更新基础信息，如设备信息，来源信息，标签信息
+        case MultiWindowMethod.updateAllBaseData:
+          loadSearchCondition();
+          break;
         default:
       }
       //都不符合，返回空
@@ -171,34 +175,37 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       if (loadMore) {
         fromId = _list.isEmpty ? 0 : _list.last.data.data.id;
       }
-      return multiWindowChannelService.getHistories(0, fromId, historyFilterController.filter).then(
-        (json) {
-          var data = jsonDecode(json);
-          var devInfos = data["devInfos"] as Map<String, dynamic>;
-          var lst = History.fromJsonList(data["list"]);
-          var res = List<CompactClipData>.empty(growable: true);
-          for (var history in lst) {
-            res.add(
-              CompactClipData(
-                devName: devInfos[history.devId] ?? "unknown",
-                data: ClipData(history),
-              ),
-            );
-          }
-          setState(() {
-            if (loadMore) {
-              _list.addAll(res);
-            } else {
-              _list = res;
-            }
-            _loadNewData = false;
-          });
-        },
-      ).whenComplete(
-        () => setState(() {
-          _loading = false;
-        }),
-      );
+      return multiWindowChannelService
+          .getHistories(0, fromId, historyFilterController.filter)
+          .then(
+            (json) {
+              var data = jsonDecode(json);
+              var devInfos = data["devInfos"] as Map<String, dynamic>;
+              var lst = History.fromJsonList(data["list"]);
+              var res = List<CompactClipData>.empty(growable: true);
+              for (var history in lst) {
+                res.add(
+                  CompactClipData(
+                    devName: devInfos[history.devId] ?? "unknown",
+                    data: ClipData(history),
+                  ),
+                );
+              }
+              setState(() {
+                if (loadMore) {
+                  _list.addAll(res);
+                } else {
+                  _list = res;
+                }
+                _loadNewData = false;
+              });
+            },
+          )
+          .whenComplete(
+            () => setState(() {
+              _loading = false;
+            }),
+          );
     });
   }
 

@@ -3,6 +3,7 @@ enum MultiWindowMethod {
   getAllDevices,
   getAllTagNames,
   getAllSources,
+  updateAllBaseData,
   copy,
   notify,
   getCompatibleOnlineDevices,

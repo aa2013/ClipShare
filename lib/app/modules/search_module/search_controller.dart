@@ -1,21 +1,25 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/listeners/device_remove_listener.dart';
+import 'package:clipshare/app/listeners/tag_changed_listener.dart';
+import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -29,10 +33,13 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class SearchController extends GetxController with WidgetsBindingObserver {
+class SearchController extends GetxController with WidgetsBindingObserver implements DeviceRemoveListener, DevAliveListener, TagChangedListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final devService = Get.find<DeviceService>();
+  final sktService = Get.find<SocketService>();
+  final tagService = Get.find<TagService>();
+  final multiWindowService = Get.find<MultiWindowChannelService>();
   final sourceService = Get.find<ClipboardSourceService>();
 
   //region 属性
@@ -90,6 +97,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   void onInit() {
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
+    sktService.addDevAliveListener(this);
+    devService.addDevRemoveListener(this);
+    tagService.addListener(this);
     loadSearchCondition().whenComplete(
       () {
         filterController = HistoryFilterController(
@@ -118,6 +128,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
     appConfig.disableMultiSelectionMode(true);
+    sktService.removeDevAliveListener(this);
+    devService.removeDevRemoveListener(this);
+    tagService.removeListener(this);
     super.onClose();
   }
 
@@ -441,5 +454,70 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   }
 
   //endregion
+  //endregion
+
+  //region 设备变更监听
+
+  @override
+  Future<void> onPaired(DevInfo dev, int uid, bool result, String? address) async {
+    await loadSearchCondition();
+    filterController.setAllDevices(_allDevices);
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  @override
+  void onRemove(String devId) {
+    filterController.setAllDevices(_allDevices);
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  @override
+  void onCancelPairing(DevInfo dev) {
+    // ignored
+  }
+
+  @override
+  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, bool isForward) {
+    // ignored
+  }
+
+  @override
+  void onDisconnected(String devId) {
+    // ignored
+  }
+
+  @override
+  void onForget(DevInfo dev, int uid) {
+    // ignored
+  }
+
+  //endregion
+
+  //region 新标签变更监听
+
+  @override
+  Future<void> onDistinctAdd(String tagName) async {
+    await loadSearchCondition();
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  @override
+  Future<void> onDistinctRemove(String tagName) async {
+    await loadSearchCondition();
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
   //endregion
 }
