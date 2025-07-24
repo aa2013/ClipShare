@@ -531,7 +531,11 @@ enum TranslationKey {
   userApp,
   systemApp,
   fileNotFound,
-  openingFile;
+  openingFile,
+  syncData,
+  syncSettingsAutoSyncMissingDataTitle,
+  syncSettingsAutoSyncMissingDataDesc,
+  syncingData;
 
   String get tr => name.tr;
 

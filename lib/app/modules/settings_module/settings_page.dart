@@ -275,44 +275,46 @@ class SettingsPage extends GetView<SettingsController> {
                             icon = Icons.dark_mode_outlined;
                             toolTip = TranslationKey.themeDark.name.tr;
                           }
-                          return ThemeSwitcher(builder: (switcherContext) {
-                            return PopupMenuButton<ThemeMode>(
-                              icon: Icon(icon),
-                              tooltip: toolTip,
-                              itemBuilder: (BuildContext context) {
-                                return ThemeMode.values.map(
-                                  (mode) {
-                                    var icon = Icons.brightness_auto_outlined;
-                                    if (mode == ThemeMode.light) {
-                                      icon = Icons.light_mode_outlined;
-                                    } else if (mode == ThemeMode.dark) {
-                                      icon = Icons.dark_mode_outlined;
+                          return ThemeSwitcher(
+                            builder: (switcherContext) {
+                              return PopupMenuButton<ThemeMode>(
+                                icon: Icon(icon),
+                                tooltip: toolTip,
+                                itemBuilder: (BuildContext context) {
+                                  return ThemeMode.values.map(
+                                    (mode) {
+                                      var icon = Icons.brightness_auto_outlined;
+                                      if (mode == ThemeMode.light) {
+                                        icon = Icons.light_mode_outlined;
+                                      } else if (mode == ThemeMode.dark) {
+                                        icon = Icons.dark_mode_outlined;
+                                      }
+                                      return PopupMenuItem<ThemeMode>(
+                                        value: mode,
+                                        child: Row(
+                                          children: <Widget>[
+                                            Padding(
+                                              padding: const EdgeInsets.only(right: 8),
+                                              child: Icon(icon),
+                                            ),
+                                            Text(mode.tk.name.tr),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ).toList();
+                                },
+                                onSelected: (mode) async {
+                                  await appConfig.setAppTheme(mode, switcherContext, () {
+                                    final currentBg = controller.envStatusBgColor.value;
+                                    if (currentBg != null) {
+                                      controller.envStatusBgColor.value = controller.warningBgColor;
                                     }
-                                    return PopupMenuItem<ThemeMode>(
-                                      value: mode,
-                                      child: Row(
-                                        children: <Widget>[
-                                          Padding(
-                                            padding: const EdgeInsets.only(right: 8),
-                                            child: Icon(icon),
-                                          ),
-                                          Text(mode.tk.name.tr),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ).toList();
-                              },
-                              onSelected: (mode) async {
-                                await appConfig.setAppTheme(mode, switcherContext, () {
-                                  final currentBg = controller.envStatusBgColor.value;
-                                  if (currentBg != null) {
-                                    controller.envStatusBgColor.value = controller.warningBgColor;
-                                  }
-                                });
-                              },
-                            );
-                          });
+                                  });
+                                },
+                              );
+                            },
+                          );
                         },
                       ),
                       SettingCard<String?>(
@@ -353,7 +355,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 权限
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.permissionSettingsGroupName.tr,
@@ -437,7 +438,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 偏好
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.preference.tr,
@@ -550,7 +550,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 通知
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.notification.tr,
@@ -591,7 +590,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 剪贴板设置
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.clipboardSettingsGroupName.tr,
@@ -935,7 +933,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 中转
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.forwardSettingsGroupName.tr,
@@ -1050,7 +1047,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 安全设置
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.securitySettingsGroupName.tr,
@@ -1103,15 +1099,15 @@ class SettingsPage extends GetView<SettingsController> {
                                 final homeController = Get.find<HomeController>();
                                 homeController
                                     .gotoAuthenticationPage(
-                                  TranslationKey.authenticationPageTitle.tr,
-                                  lock: false,
-                                )
+                                      TranslationKey.authenticationPageTitle.tr,
+                                      lock: false,
+                                    )
                                     ?.then((v) {
-                                  //null为正常验证，设置密码，否则主动退出
-                                  if (v != null) {
-                                    controller.gotoSetPwd();
-                                  }
-                                });
+                                      //null为正常验证，设置密码，否则主动退出
+                                      if (v != null) {
+                                        controller.gotoSetPwd();
+                                      }
+                                    });
                               }
                             },
                             child: Text(
@@ -1161,7 +1157,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 快捷键
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.hotKeySettingsGroupName.tr,
@@ -1185,15 +1180,17 @@ class SettingsPage extends GetView<SettingsController> {
                                     hotKeyType: HotKeyType.historyWindow,
                                     initContent: desc,
                                     onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerHistoryWindow(hotKey).then((v) {
-                                        //设置为新值
-                                        appConfig.setHistoryWindowHotKeys(keyCodes);
-                                      }).catchError((err) {
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                        );
-                                      });
+                                      AppHotKeyHandler.registerHistoryWindow(hotKey)
+                                          .then((v) {
+                                            //设置为新值
+                                            appConfig.setHistoryWindowHotKeys(keyCodes);
+                                          })
+                                          .catchError((err) {
+                                            Global.showTipsDialog(
+                                              context: context,
+                                              text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                            );
+                                          });
                                     },
                                   ),
                                 );
@@ -1222,15 +1219,17 @@ class SettingsPage extends GetView<SettingsController> {
                                     hotKeyType: HotKeyType.fileSender,
                                     initContent: desc,
                                     onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerFileSync(hotKey).then((v) {
-                                        //设置为新值
-                                        appConfig.setSyncFileHotKeys(keyCodes);
-                                      }).catchError((err) {
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                        );
-                                      });
+                                      AppHotKeyHandler.registerFileSync(hotKey)
+                                          .then((v) {
+                                            //设置为新值
+                                            appConfig.setSyncFileHotKeys(keyCodes);
+                                          })
+                                          .catchError((err) {
+                                            Global.showTipsDialog(
+                                              context: context,
+                                              text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                            );
+                                          });
                                     },
                                   ),
                                 );
@@ -1251,18 +1250,20 @@ class SettingsPage extends GetView<SettingsController> {
                             initContent: desc ?? "",
                             clearable: desc != null,
                             onDone: (hotKey, keyCodes) {
-                              AppHotKeyHandler.registerShowMainWindow(hotKey).then((v) {
-                                //设置为新值
-                                appConfig.setShowMainWindowHotKeys(keyCodes);
-                                //更新托盘菜单
-                                final trayService = Get.find<TrayService>();
-                                trayService.updateTrayMenus(false);
-                              }).catchError((err) {
-                                Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                );
-                              });
+                              AppHotKeyHandler.registerShowMainWindow(hotKey)
+                                  .then((v) {
+                                    //设置为新值
+                                    appConfig.setShowMainWindowHotKeys(keyCodes);
+                                    //更新托盘菜单
+                                    final trayService = Get.find<TrayService>();
+                                    trayService.updateTrayMenus(false);
+                                  })
+                                  .catchError((err) {
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                    );
+                                  });
                             },
                             onClear: () {
                               Global.showTipsDialog(
@@ -1309,18 +1310,20 @@ class SettingsPage extends GetView<SettingsController> {
                             initContent: desc ?? "",
                             clearable: desc != null,
                             onDone: (hotKey, keyCodes) {
-                              AppHotKeyHandler.registerExitApp(hotKey).then((v) {
-                                //设置为新值
-                                appConfig.setExitAppHotKeys(keyCodes);
-                                //更新托盘菜单
-                                final trayService = Get.find<TrayService>();
-                                trayService.updateTrayMenus(false);
-                              }).catchError((err) {
-                                Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                );
-                              });
+                              AppHotKeyHandler.registerExitApp(hotKey)
+                                  .then((v) {
+                                    //设置为新值
+                                    appConfig.setExitAppHotKeys(keyCodes);
+                                    //更新托盘菜单
+                                    final trayService = Get.find<TrayService>();
+                                    trayService.updateTrayMenus(false);
+                                  })
+                                  .catchError((err) {
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                    );
+                                  });
                             },
                             onClear: () {
                               Global.showTipsDialog(
@@ -1364,12 +1367,28 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 同步设置
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.syncSettingsGroupName.tr,
                     icon: const Icon(Icons.sync_rounded),
                     cardList: [
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.syncSettingsAutoSyncMissingDataTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.syncSettingsAutoSyncMissingDataDesc.tr),
+                        value: appConfig.autoSyncMissingData,
+                        show: (v) => true,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              appConfig.setAutoSyncMissingData(checked);
+                            },
+                          );
+                        },
+                      ),
                       SettingCard(
                         title: Text(
                           TranslationKey.syncSettingsSmsTitle.tr,
@@ -1554,7 +1573,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 规则设置
-
                 SettingCardGroup(
                   groupName: TranslationKey.ruleSettingsGroupName.tr,
                   icon: const Icon(Icons.assignment_outlined),
@@ -1618,7 +1636,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 日志
-
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.logSettingsGroupName.tr,
@@ -1663,8 +1680,8 @@ class SettingsPage extends GetView<SettingsController> {
                           final size = FileUtil.getDirectorySize(appConfig.logsDirPath);
                           return Text(
                             "${TranslationKey.logSettingsEnableDesc.trParams({
-                                  "size": size.sizeStr,
-                                })}$emptyStr",
+                              "size": size.sizeStr,
+                            })}$emptyStr",
                           );
                         }),
                         value: appConfig.enableLogsRecord,
@@ -1756,7 +1773,6 @@ class SettingsPage extends GetView<SettingsController> {
                 ///endregion
 
                 ///region 关于
-
                 SettingCardGroup(
                   groupName: TranslationKey.about.tr,
                   icon: const Icon(Icons.info_outline),

@@ -1078,6 +1078,14 @@ class EnUSTranslation extends AbstractTranslations {
         return 'File not found';
       case TranslationKey.openingFile:
         return 'Opening File';
+      case TranslationKey.syncData:
+        return "Sync Data";
+      case TranslationKey.syncSettingsAutoSyncMissingDataTitle:
+        return "Auto Sync Data";
+      case TranslationKey.syncSettingsAutoSyncMissingDataDesc:
+        return "Automatically sync missing data during disconnection after device connection";
+      case TranslationKey.syncingData:
+        return "Syncing data";
     }
   }
 }

@@ -133,6 +133,8 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   final List<DiscoverListener> _discoverListeners = List.empty(growable: true);
   final List<ForwardStatusListener> _forwardStatusListener = List.empty(growable: true);
   final missingDataSyncProgress = <String, MissingDataSyncProgress>{}.obs;
+
+  // devId => DevSocket
   final Map<String, DevSocket> _devSockets = {};
   late SecureSocketServer _server;
   ForwardSocketClient? _forwardClient;
@@ -1296,8 +1298,22 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     return _devSockets[guid]!.socket.isForwardMode;
   }
 
-  Future<void> reqMissingData() async {
+  Future<void> reqMissingData([String? devId]) async {
     final sourceService = Get.find<ClipboardSourceService>();
+    if (devId != null) {
+      final devSkt = _devSockets[devId];
+      if (devSkt == null) {
+        return;
+      }
+      final allAppInfos = sourceService.appInfos;
+      final ownedAppIds = allAppInfos.where((item) => item.devId == devId).map((item) => item.appId).toList();
+      await sendData(devSkt.dev, MsgType.reqMissingData, {
+        "appIds": ownedAppIds,
+      });
+    }
+    if (!appConfig.autoSyncMissingData) {
+      return;
+    }
     final devs = _devSockets.values.where((dev) => dev.isPaired).map(((item) => item.dev)).toList();
     final allAppInfos = sourceService.appInfos;
     for (var dev in devs) {

@@ -1079,6 +1079,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return '未找到文件';
       case TranslationKey.openingFile:
         return '正在打开文件';
+      case TranslationKey.syncData:
+        return "同步数据";
+      case TranslationKey.syncSettingsAutoSyncMissingDataTitle:
+        return "自动同步数据";
+      case TranslationKey.syncSettingsAutoSyncMissingDataDesc:
+        return "在设备连接后自动同步断连期间缺失的数据";
+      case TranslationKey.syncingData:
+        return "同步数据中";
     }
   }
 }

@@ -433,6 +433,11 @@ class ConfigService extends GetxService {
 
   bool get notifyOnDevConn => _notifyOnDevConn.value;
 
+  //自动同步缺失的数据
+  final _autoSyncMissingData = true.obs;
+
+  bool get autoSyncMissingData => _autoSyncMissingData.value;
+
   //endregion
 
   //endregion
@@ -500,6 +505,7 @@ class ConfigService extends GetxService {
     var sourceRecordViaDumpsys = await cfg.getConfig("sourceRecordViaDumpsys", userId);
     var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
     var notifyOnDevConn = await cfg.getConfig("notifyOnDevConn", userId);
+    var autoSyncMissingData = await cfg.getConfig("autoSyncMissingData", userId);
     //endregion
 
     //region 设置配置值
@@ -568,6 +574,7 @@ class ConfigService extends GetxService {
     _sourceRecordViaDumpsys.value = sourceRecordViaDumpsys?.toBool() ?? false;
     _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
     _notifyOnDevConn.value = notifyOnDevConn?.toBool() ?? true;
+    _autoSyncMissingData.value = autoSyncMissingData?.toBool() ?? true;
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -979,6 +986,11 @@ class ConfigService extends GetxService {
   Future<void> setNotifyOnDevConn(bool enable) async {
     await _addOrUpdateDbConfig("notifyOnDevConn", enable.toString());
     _notifyOnDevConn.value = enable;
+  }
+
+  Future<void> setAutoSyncMissingData(bool enable) async {
+    await _addOrUpdateDbConfig("autoSyncMissingData", enable.toString());
+    _autoSyncMissingData.value = enable;
   }
 
 //endregion
