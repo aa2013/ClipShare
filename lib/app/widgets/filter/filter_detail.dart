@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/widgets/app_info_groups_view.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
@@ -306,55 +307,16 @@ class FilterDetail extends StatelessWidget {
         Obx(() {
           final selectedAppIds = controller.selectedAppIds;
           final selectedApps = controller.allSources.where((app) => selectedAppIds.contains(app.appId)).toList();
-          final groups = selectedApps.groupBy((item) => item.devId);
-          if (selectedApps.isEmpty) {
-            return emptyContent;
-          }
-          return Column(
-            children: groups.keys.map((devId) {
-              final appList = groups[devId]!;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsetsGeometry.only(bottom: 8),
-                    child: DefaultTextStyle(
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey),
-                      child: Row(
-                        children: [
-                          const Text("#"),
-                          const SizedBox(width: 5),
-                          Text(
-                            controller.getDevNameById(devId),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Wrap(
-                    direction: Axis.horizontal,
-                    children: [
-                      for (var app in appList)
-                        Container(
-                          margin: const EdgeInsets.only(right: 5, bottom: 5),
-                          child: RoundedChip(
-                            onPressed: () {
-                              if (controller.selectedAppIds.contains(app.appId)) {
-                                controller.selectedAppIds.remove(app.appId);
-                              } else {
-                                controller.selectedAppIds.add(app.appId);
-                              }
-                            },
-                            selected: true,
-                            label: Text(app.name),
-                            avatar: Image.memory(app.iconBytes),
-                          ),
-                        ),
-                    ],
-                  ),
-                ],
-              );
-            }).toList(),
+          return AppInfoGroupsView(
+            appInfos: selectedApps,
+            loadDevName: controller.getDevNameById,
+            onPress: (app) {
+              if (controller.selectedAppIds.contains(app.appId)) {
+                controller.selectedAppIds.remove(app.appId);
+              } else {
+                controller.selectedAppIds.add(app.appId);
+              }
+            },
           );
         }),
         //endregion

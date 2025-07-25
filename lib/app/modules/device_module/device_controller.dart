@@ -514,21 +514,26 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
-                          sktService.reqMissingData(device.guid);
-                        },
-                        splashColor: Colors.black12,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 5, bottom: 5),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.sync_rounded),
-                              Text(TranslationKey.syncData.tr),
-                            ],
+                    Obx(
+                      () => Visibility(
+                        visible: appConfig.autoSyncMissingData && isConnected,
+                        child: Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
+                              sktService.reqMissingData(device.guid);
+                            },
+                            splashColor: Colors.black12,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.sync_rounded),
+                                  Text(TranslationKey.syncData.tr),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),

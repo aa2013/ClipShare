@@ -2,13 +2,18 @@ import 'package:clipshare/app/data/enums/clean_data_freq.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/week_day.dart';
+import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/modules/clean_data_module/clean_data_controller.dart';
+import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
+import 'package:clipshare/app/widgets/app_info_groups_view.dart';
+import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +26,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 
 class CleanDataPage extends GetView<CleanDataController> {
   final sourceService = Get.find<ClipboardSourceService>();
+  final devService = Get.find<DeviceService>();
+  final appConfig = Get.find<ConfigService>();
 
   @override
   Widget build(BuildContext context) {
@@ -182,56 +189,66 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 来源过滤
                   Row(
                     children: [
-                      Icon(
-                        MdiIcons.listBoxOutline,
-                        color: Colors.blueGrey,
-                        size: 16,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Icon(
+                              MdiIcons.listBoxOutline,
+                              color: Colors.blueGrey,
+                              size: 16,
+                            ),
+                            const SizedBox(
+                              width: 2,
+                            ),
+                            Text(
+                              TranslationKey.filterBySource.tr,
+                              style: const TextStyle(color: Colors.blueGrey),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(
-                        width: 2,
-                      ),
-                      Text(
-                        TranslationKey.filterBySource.tr,
-                        style: const TextStyle(color: Colors.blueGrey),
+                      RoundedChip(
+                        avatar: const Icon(Icons.add),
+                        label: Text(TranslationKey.selection.tr),
+                        onPressed: () {
+                          final page = AppSelectionPage(
+                            loadDeviceName: devService.getName,
+                            selectedIds: controller.selectedSources,
+                            loadAppInfos: () {
+                              final list = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
+                              return Future<List<LocalAppInfo>>.value(list);
+                            },
+                            onSelectedDone: (selected) {
+                              controller.selectedSources.addAll(selected.map((item) => item.appId));
+                            },
+                          );
+                          if (appConfig.isSmallScreen) {
+                            Get.to(page);
+                          } else {
+                            Get.dialog(DynamicSizeWidget(child: page));
+                          }
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Obx(
-                    () => Visibility(
-                      replacement: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [controller.emptyFilter],
-                      ),
-                      visible: sourceService.appInfos.isNotEmpty,
-                      child: Obx(
-                        () => Wrap(
-                          direction: Axis.horizontal,
-                          children: sourceService.appInfos.map((app) {
-                            return Container(
-                              margin: const EdgeInsets.only(right: 5, bottom: 5),
-                              child: RoundedChip(
-                                onPressed: () {
-                                  final appId = app.appId;
-                                  final selected = controller.selectedSources.contains(appId);
-                                  if (selected) {
-                                    controller.selectedSources.remove(appId);
-                                  } else {
-                                    controller.selectedSources.add(appId);
-                                  }
-                                },
-                                selected: controller.selectedSources.contains(app.appId),
-                                label: Text(app.name),
-                                avatar: AppIcon(appId: app.appId),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 4),
+                  Obx(() {
+                    final selectedAppIds = controller.selectedSources;
+                    final selectedApps = sourceService.appInfos.where((app) => selectedAppIds.contains(app.appId)).toList();
+                    return AppInfoGroupsView(
+                      appInfos: selectedApps,
+                      onPress: (app) {
+                        final appId = app.appId;
+                        final selected = controller.selectedSources.contains(appId);
+                        if (selected) {
+                          controller.selectedSources.remove(appId);
+                        } else {
+                          controller.selectedSources.add(appId);
+                        }
+                      },
+                      loadDevName: devService.getName,
+                    );
+                  }),
 
                   ///endregion
 
@@ -467,7 +484,8 @@ class CleanDataPage extends GetView<CleanDataController> {
                       Expanded(
                         child: TextButton(
                           onPressed: () async {
-                            final cnt = await dbService.historyDao.count(
+                            final cnt =
+                                await dbService.historyDao.count(
                                   appConfig.userId,
                                   controller.selectedContentTypes.map((item) => item.value).toList(),
                                   controller.selectedTags.toList(),
