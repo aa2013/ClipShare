@@ -7,6 +7,7 @@ class RoundedScaffold extends StatelessWidget {
   final Widget icon;
   final Widget child;
   final Widget? floatingActionButton;
+
   const RoundedScaffold({
     super.key,
     required this.title,
@@ -17,10 +18,8 @@ class RoundedScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isSmallScreen =
-        MediaQuery.of(context).size.width <= Constants.smallScreenWidth;
+    bool isSmallScreen = MediaQuery.of(context).size.width <= Constants.smallScreenWidth;
     final scaffold = Scaffold(
-      // backgroundColor: Get.isDarkMode ? Colors.black : null,
       appBar: isSmallScreen
           ? AppBar(
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,

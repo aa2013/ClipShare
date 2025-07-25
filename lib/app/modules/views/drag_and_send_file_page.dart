@@ -1,4 +1,5 @@
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
+import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/utils/file_util.dart';
@@ -6,6 +7,7 @@ import 'package:clipshare/app/widgets/dragAndSendFiles/online_devices.dart';
 import 'package:clipshare/app/widgets/dragAndSendFiles/pending_file_list.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 class DragAndSendFilePage extends StatefulWidget {
@@ -21,24 +23,49 @@ class _DragAndSendFilePageState extends State<DragAndSendFilePage> {
   final devController = Get.find<DeviceController>();
   final pendingFileService = Get.find<PendingFileService>();
   final appConfig = Get.find<ConfigService>();
+  final homeController = Get.find<HomeController>();
 
   @override
   void initState() {
     super.initState();
+    HardwareKeyboard.instance.addHandler(handleKeyEvent);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    HardwareKeyboard.instance.removeHandler(handleKeyEvent);
+  }
+
+  bool handleKeyEvent(KeyEvent event) {
+    if (!appConfig.isSmallScreen) {
+      if (event.physicalKey == PhysicalKeyboardKey.escape) {
+        homeController.showPendingItemsDetail.value = false;
+      }
+    }
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
     ///mobile
     if (appConfig.isSmallScreen) {
-      return Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
-        child: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(height: 155, child: Obx(() => buildOnlineDevices())),
-              Expanded(child: Obx(() => buildPendingItems())),
-            ],
+      return PopScope(
+        canPop: !homeController.showPendingItemsDetail.value,
+        onPopInvokedWithResult: (bool didPop, dynamic result) {
+          if (!didPop) {
+            homeController.showPendingItemsDetail.value = false;
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 10),
+          child: SafeArea(
+            child: Column(
+              children: [
+                SizedBox(height: 155, child: Obx(() => buildOnlineDevices())),
+                Expanded(child: Obx(() => buildPendingItems())),
+              ],
+            ),
           ),
         ),
       );

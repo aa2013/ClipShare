@@ -10,19 +10,27 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
 
 class MissingDataSyncHandler {
   static const tag = "SyncDataHandler";
 
-  static void sendMissingData(DevInfo targetDev, List<String> devIds) async {
+  static void sendMissingData(DevInfo targetDev, String devId, List<String> syncedAppIds) async {
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
-    final lst = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devIds);
+    final sourceService = Get.find<ClipboardSourceService>();
+    final syncRecords = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devId);
+    final notIncludesAppInfos = sourceService.appInfos
+        .where((item) => item.devId == devId && !syncedAppIds.contains(item.appId))
+        .map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id))
+        .toList();
+    final lst = [...notIncludesAppInfos, ...syncRecords];
     final sktService = Get.find<SocketService>();
     for (var i = 0; i < lst.length; i++) {
       var item = lst[i];

@@ -23,6 +23,10 @@ enum MsgType {
   reqMissingData,
   //同步缺失数据
   missingData,
+  //请求app来源信息
+  reqAppInfo,
+  //app来源信息
+  appInfo,
   //删除记录
   rmHistory,
   //配对情况

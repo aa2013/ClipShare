@@ -391,6 +391,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   void gotoSearchPage(String? devId, String? tagName) {
     final searchController = Get.find<search_module.SearchController>();
     searchController.loadFromExternalParams(devId, tagName);
+    searchController.refreshData();
     if (isBigScreen) {
       var i = _navBarItems.indexWhere((element) => (element.icon as Icon).icon == Icons.search);
       _index.value = i;

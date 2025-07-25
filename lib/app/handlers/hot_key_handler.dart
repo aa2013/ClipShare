@@ -1,6 +1,11 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/services/tray_service.dart';
+import 'package:clipshare/app/services/window_service.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -17,10 +22,10 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:window_manager/window_manager.dart';
 
 class AppHotKeyHandler {
+  AppHotKeyHandler._private();
+
   static const tag = "AppHotKeyHandler";
-  static const historyWindow = "HistoryWindow";
-  static const fileSync = "fileSync";
-  static final Map<String, HotKey> _map = {};
+  static final Map<HotKeyType, HotKey> _hotkeyMap = {};
 
   static HotKey toSystemHotKey(String keyCodes) {
     var [modifiers, key] = keyCodes.split(";");
@@ -35,10 +40,13 @@ class AppHotKeyHandler {
     );
   }
 
+  static HotKey? getByType(HotKeyType type) {
+    return _hotkeyMap[type];
+  }
+
   /// 历史弹窗
   static Future<void> registerHistoryWindow(HotKey key) async {
-    String hotkeyName = historyWindow;
-    await unRegister(hotkeyName);
+    await unRegister(HotKeyType.historyWindow);
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
@@ -52,10 +60,10 @@ class AppHotKeyHandler {
           ids = List.empty();
         }
         //只允许弹窗一次
-        var windowId = appConfig.onlineDevicesWindow?.windowId;
-        if (ids.contains(windowId)) {
-          // await appConfig.historyWindow?.close();
-          await multiWindowService.closeWindow(windowId!, MultiWindowTag.history);
+        final windowId = appConfig.historyWindow?.windowId;
+        final isHide = true && multiWindowService.isHideWindow(windowId);
+        if (ids.contains(windowId) && !isHide) {
+          await multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.history);
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {
             return;
@@ -98,13 +106,12 @@ class AppHotKeyHandler {
           ..show();
       },
     );
-    _map[hotkeyName] = key;
+    _hotkeyMap[HotKeyType.historyWindow] = key;
   }
 
   ///同步文件
   static Future<void> registerFileSync(HotKey key) async {
-    String hotkeyName = fileSync;
-    await unRegister(hotkeyName);
+    await unRegister(HotKeyType.fileSender);
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
@@ -131,11 +138,11 @@ class AppHotKeyHandler {
         } catch (e) {
           ids = List.empty();
         }
-        var windowId = appConfig.onlineDevicesWindow?.windowId;
+        final windowId = appConfig.onlineDevicesWindow?.windowId;
+        final isHide = multiWindowService.isHideWindow(windowId);
         //只允许弹窗一次
-        if (ids.contains(windowId)) {
-          // await appConfig.onlineDevicesWindow?.close();
-          multiWindowService.closeWindow(windowId!, MultiWindowTag.devices);
+        if (ids.contains(windowId) && !isHide) {
+          multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.devices);
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {
             return;
@@ -179,17 +186,50 @@ class AppHotKeyHandler {
           ..show();
       },
     );
-    _map[hotkeyName] = key;
+    _hotkeyMap[HotKeyType.fileSender] = key;
   }
 
-  static Future<void> unRegister(String name) async {
-    if (_map[name] == null) return;
-    await hotKeyManager.unregister(_map[name]!);
-    _map.remove(name);
+  ///显示主窗口
+  static Future<void> registerShowMainWindow(HotKey key) async {
+    await unRegister(HotKeyType.showMainWindows);
+    await hotKeyManager.register(
+      key,
+      keyDownHandler: (hotKey) async {
+        Log.debug(tag, "ShowMainWindow HotKey Down");
+        final trayService = Get.find<TrayService>();
+        trayService.clickShowWindowItem();
+        //临时让其置顶显示然后再恢复，否则可能被其他应用盖住
+        await windowManager.setAlwaysOnTop(true);
+        await windowManager.setAlwaysOnTop(false);
+      },
+    );
+    _hotkeyMap[HotKeyType.showMainWindows] = key;
+  }
+
+  ///退出程序
+  static Future<void> registerExitApp(HotKey key) async {
+    await unRegister(HotKeyType.exitApp);
+    await hotKeyManager.register(
+      key,
+      keyDownHandler: (hotKey) async {
+        Log.debug(tag, "ExitApp HotKey Down");
+        Global.notify(content: TranslationKey.exitAppViaHotKey.tr);
+        final trayService = Get.find<TrayService>();
+        trayService.clickExitAppItem();
+      },
+    );
+    _hotkeyMap[HotKeyType.exitApp] = key;
+  }
+
+  static Future<void> unRegister(HotKeyType type) async {
+    var key = _hotkeyMap[type];
+    if (key == null) return;
+    _hotkeyMap.remove(type);
+    await hotKeyManager.unregister(key);
   }
 
   static Future<void> unRegisterAll() async {
-    _map.clear();
+    _hotkeyMap.clear();
     await hotKeyManager.unregisterAll();
   }
 }

@@ -17,7 +17,6 @@ import 'package:get/get.dart';
 
 class SearchPage extends GetView<search_module.SearchController> {
   final appConfig = Get.find<ConfigService>();
-  final sourceService = Get.find<ClipboardSourceService>();
 
   @override
   Widget build(BuildContext context) {
@@ -29,64 +28,12 @@ class SearchPage extends GetView<search_module.SearchController> {
           automaticallyImplyLeading: !controller.isBigScreen,
           backgroundColor: controller.isBigScreen ? Colors.transparent : Theme.of(context).colorScheme.inversePrimary,
           title: Obx(
-            () => HistoryFilter(
-              allDevices: controller.allDevices,
-              allTagNames: controller.allTagNames,
-              allSources: sourceService.appInfos,
-              loadSearchCondition: controller.loadSearchCondition,
-              isBigScreen: controller.isBigScreen,
-              showContentTypeFilter: false,
-              filter: controller.filter.value,
-              onChanged: (filter) {
-                controller.filter.value = filter;
-                controller.refreshData();
-              },
-              onExportBtnClicked: () {
-                var loadingController = LadingProgressController();
-                Global.showTipsDialog(
-                  context: context,
-                  text: TranslationKey.historyOutputTips.tr,
-                  onOk: () {
-                    Global.showLoadingDialog(
-                      context: context,
-                      loadingText: TranslationKey.exporting.tr,
-                      showCancel: true,
-                      controller: loadingController,
-                      onCancel: () {
-                        controller.cancelExporting = true;
-                        controller.exporting = false;
-                      },
-                    );
-                    controller.export2Excel(loadingController).then((result) {
-                      //关闭进度动画
-                      Get.back();
-                      //手动取消
-                      if (!controller.exporting) {
-                        return;
-                      }
-                      if (result) {
-                        Global.showSnackBarSuc(context: context, text: TranslationKey.outputSuccess.tr);
-                      } else {
-                        Global.showSnackBarWarn(context: context, text: TranslationKey.outputFailed.tr);
-                      }
-                    }).catchError((err, stack) {
-                      //关闭进度动画
-                      Get.back();
-                      Global.showTipsDialog(
-                        context: context,
-                        title: TranslationKey.outputFailed.tr,
-                        text: "$err. $stack",
-                      );
-                    }).whenComplete(() {
-                      //更新状态
-                      controller.exporting = false;
-                      controller.cancelExporting = false;
-                    });
-                  },
-                  showCancel: true,
-                );
-              },
-            ),
+            () {
+              if (controller.filterLoading.value) {
+                return const SizedBox.shrink();
+              }
+              return HistoryFilter(controller: controller.filterController);
+            },
           ),
         ),
         body: Padding(

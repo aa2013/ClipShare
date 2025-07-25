@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:floor/floor.dart';
 
 ///app信息
@@ -59,6 +61,13 @@ class AppInfo {
     return jsonEncode(toJson());
   }
 
+  ///判断内容是否相同（不含id）
+  ///场景：当app更新等情况导致图标变化，就需要做更新操作
+  bool hasSameContent(AppInfo? appInfo) {
+    if (appInfo == null) return false;
+    return appInfo.appId == appId && appInfo.devId == devId && appInfo.name == name && appInfo.iconB64 == iconB64;
+  }
+
   @override
   bool operator ==(Object other) => identical(this, other) || other is AppInfo && runtimeType == other.runtimeType && id == other.id;
 
@@ -67,5 +76,20 @@ class AppInfo {
 }
 
 extension AppInfoExt on AppInfo {
-  Uint8List get iconBytes => base64.decode(iconB64);
+  static final Map<int, Uint8List> _bytes = {};
+
+  static void removeWhere(bool Function(int, Uint8List) func) {
+    return _bytes.removeWhere(func);
+  }
+
+  Uint8List get iconBytes {
+    if (!_bytes.containsKey(id)) {
+      if(iconB64.isEmpty){
+        return Constants.emptyPngBytes;
+      }else{
+        _bytes[id] = base64.decode(iconB64);
+      }
+    }
+    return _bytes[id]!;
+  }
 }

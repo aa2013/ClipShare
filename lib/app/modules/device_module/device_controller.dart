@@ -63,7 +63,6 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   @override
   void onInit() {
     super.onInit();
-
     sktService.addDevAliveListener(this);
     sktService.addDiscoverListener(this);
     sktService.addForwardStatusListener(this);
@@ -146,8 +145,13 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   @override
   Future onSync(MessageData msg) {
     var send = msg.send;
+    var data = <dynamic, dynamic>{};
+    if (msg.data["data"] is Map) {
+      data = msg.data["data"];
+      msg.data["data"] = "";
+    }
     var opRecord = OperationRecord.fromJson(msg.data);
-    Map<String, dynamic> json = jsonDecode(opRecord.data);
+    Map<String, dynamic> json = data.cast();
     Device dev = Device.fromJson(json);
     Future f = Future(() => null);
     if (dev.guid != appConfig.devInfo.guid) {
@@ -201,7 +205,8 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         return;
       }
     }
-    var hasSame = discoverList.firstWhereOrNull(
+    var hasSame =
+        discoverList.firstWhereOrNull(
           (element) => element.dev?.guid == info.guid,
         ) !=
         null;
@@ -353,7 +358,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     pairedList.removeWhere((dev) => dev.dev?.guid == devId);
   }
 
-//endregion
+  //endregion
 
   //region 页面方法
 
@@ -505,6 +510,30 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                               const Icon(Icons.block_flipped),
                               Text(TranslationKey.devicePageUnpairedButtonText.tr),
                             ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Obx(
+                      () => Visibility(
+                        visible: appConfig.autoSyncMissingData && isConnected,
+                        child: Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
+                              sktService.reqMissingData(device.guid);
+                            },
+                            splashColor: Colors.black12,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 5, bottom: 5),
+                              child: Column(
+                                children: [
+                                  const Icon(Icons.sync_rounded),
+                                  Text(TranslationKey.syncData.tr),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -719,5 +748,6 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
       ),
     );
   }
-//endregion
+
+  //endregion
 }

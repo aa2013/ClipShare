@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -7,6 +8,8 @@ import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -37,39 +40,12 @@ class DebugPage extends GetView<DebugController> {
           child: Text("Copy 100 items"),
         ),
         TextButton(
-          onPressed: () {
-            Global.showDownloadingDialog(
-              context: context,
-              url: "url",
-              filePath: "",
-              content: Text("...."),
-              onFinished: (bool success) {},
-            );
-          },
-          child: Text("show download dialog"),
-        ),
-        TextButton(
           onPressed: () async {
-            final path = "${Constants.androidDownloadPath}/app-arm64-v8a-release.apk";
-            File(path).openPath();
-            final result = await OpenFile.open(path);
-            print("result ${result.type.name}.${result.message}");
-            // Process.run("explorer /select,\"pubspec.lock\"", []);
+            final byteData = await rootBundle.load(Constants.emptyPngPath);
+            final bytes = byteData.buffer.asUint8List();
+            print(base64.encode(bytes));
           },
-          child: Text("open file path"),
-        ),
-        Expanded(
-          child: AppSelectionPage(
-            distinguishSystemApps: true,
-            loadAppInfos: () {
-              final sourceService = Get.find<ClipboardSourceService>();
-              final result = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, Random().nextInt(10) > 5)).toList(growable: false);
-              return Future.value(result);
-            },
-            onSelectedDone: (list) {
-              print("onSelectedDone: ${list.length}");
-            },
-          ),
+          child: Text("GetEmptyContentPngBytes"),
         ),
       ],
     );

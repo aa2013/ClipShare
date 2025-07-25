@@ -313,6 +313,16 @@ class ConfigService extends GetxService {
 
   String get syncFileHotKeys => _syncFileHotKeys.value;
 
+  //显示主窗体快捷键
+  late final RxString _showMainWindowHotKeys;
+
+  String get showMainWindowHotKeys => _showMainWindowHotKeys.value;
+
+  //退出程序快捷键
+  late final RxString _exitAppHotKeys;
+
+  String get exitAppHotKeys => _exitAppHotKeys.value;
+
   //心跳间隔时长
   late final RxInt _heartbeatInterval;
 
@@ -413,10 +423,20 @@ class ConfigService extends GetxService {
 
   bool get sourceRecordViaDumpsys => _sourceRecordViaDumpsys.value && sourceRecord;
 
-  //剪贴板来源记录（通过dumpsys）
+  //设备断开连接后通知
   final _notifyOnDevDisconn = true.obs;
 
   bool get notifyOnDevDisconn => _notifyOnDevDisconn.value;
+
+  //设备连接后通知
+  final _notifyOnDevConn = true.obs;
+
+  bool get notifyOnDevConn => _notifyOnDevConn.value;
+
+  //自动同步缺失的数据
+  final _autoSyncMissingData = true.obs;
+
+  bool get autoSyncMissingData => _autoSyncMissingData.value;
 
   //endregion
 
@@ -452,6 +472,8 @@ class ConfigService extends GetxService {
     var smsRules = await cfg.getConfig("smsRules", userId);
     var historyWindowHotKeys = await cfg.getConfig("historyWindowHotKeys", userId);
     var syncFileHotKeys = await cfg.getConfig("syncFileHotKeys", userId);
+    var showMainWindowHotKeys = await cfg.getConfig("showMainWindowHotKeys", userId);
+    var exitAppHotKeys = await cfg.getConfig("exitAppHotKeys", userId);
     var heartbeatInterval = await cfg.getConfig("heartbeatInterval", userId);
     var fileStorePath = await cfg.getConfig("fileStorePath", userId);
     var saveToPictures = await cfg.getConfig("saveToPictures", userId);
@@ -482,6 +504,8 @@ class ConfigService extends GetxService {
     var sourceRecord = await cfg.getConfig("sourceRecord", userId);
     var sourceRecordViaDumpsys = await cfg.getConfig("sourceRecordViaDumpsys", userId);
     var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
+    var notifyOnDevConn = await cfg.getConfig("notifyOnDevConn", userId);
+    var autoSyncMissingData = await cfg.getConfig("autoSyncMissingData", userId);
     //endregion
 
     //region 设置配置值
@@ -508,6 +532,8 @@ class ConfigService extends GetxService {
     }
     _historyWindowHotKeys = historyWindowHotKeys?.obs ?? Constants.defaultHistoryWindowKeys.obs;
     _syncFileHotKeys = syncFileHotKeys?.obs ?? Constants.defaultSyncFileHotKeys.obs;
+    _showMainWindowHotKeys = showMainWindowHotKeys?.obs ?? Constants.defaultShowMainWindowHotKeys.obs;
+    _exitAppHotKeys = exitAppHotKeys?.obs ?? Constants.defaultExitAppHotKeys.obs;
     _heartbeatInterval = heartbeatInterval?.toInt().obs ?? Constants.heartbeatInterval.obs;
     _fileStorePath = fileStoreDir.absolute.normalizePath.obs;
     _saveToPictures = saveToPictures?.toBool().obs ?? false.obs;
@@ -547,6 +573,8 @@ class ConfigService extends GetxService {
     _sourceRecord.value = sourceRecord?.toBool() ?? false;
     _sourceRecordViaDumpsys.value = sourceRecordViaDumpsys?.toBool() ?? false;
     _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
+    _notifyOnDevConn.value = notifyOnDevConn?.toBool() ?? true;
+    _autoSyncMissingData.value = autoSyncMissingData?.toBool() ?? true;
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -559,6 +587,7 @@ class ConfigService extends GetxService {
         type: StorageDirectory.documents,
       ))![0]
           .path;
+      // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/pictures
       androidPrivatePicturesPath = (await getExternalStorageDirectories(
         type: StorageDirectory.pictures,
       ))![0]
@@ -776,6 +805,16 @@ class ConfigService extends GetxService {
     _syncFileHotKeys.value = syncFileHotKeys;
   }
 
+  Future<void> setShowMainWindowHotKeys(String showMainWindowHotKeys) async {
+    await _addOrUpdateDbConfig("showMainWindowHotKeys", showMainWindowHotKeys);
+    _showMainWindowHotKeys.value = showMainWindowHotKeys;
+  }
+
+  Future<void> setExitAppHotKeys(String exitAppHotKeys) async {
+    await _addOrUpdateDbConfig("exitAppHotKeys", exitAppHotKeys);
+    _exitAppHotKeys.value = exitAppHotKeys;
+  }
+
   Future<void> setHeartbeatInterval(String heartbeatInterval) async {
     await _addOrUpdateDbConfig("heartbeatInterval", heartbeatInterval);
     _heartbeatInterval.value = heartbeatInterval.toInt();
@@ -942,6 +981,16 @@ class ConfigService extends GetxService {
   Future<void> setNotifyOnDevDisconn(bool enable) async {
     await _addOrUpdateDbConfig("notifyOnDevDisconn", enable.toString());
     _notifyOnDevDisconn.value = enable;
+  }
+
+  Future<void> setNotifyOnDevConn(bool enable) async {
+    await _addOrUpdateDbConfig("notifyOnDevConn", enable.toString());
+    _notifyOnDevConn.value = enable;
+  }
+
+  Future<void> setAutoSyncMissingData(bool enable) async {
+    await _addOrUpdateDbConfig("autoSyncMissingData", enable.toString());
+    _autoSyncMissingData.value = enable;
   }
 
 //endregion

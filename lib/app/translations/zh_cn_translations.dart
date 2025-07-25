@@ -322,7 +322,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.securitySettingsReverificationValue:
         return "@value 分钟";
       case TranslationKey.hotKeySettingsGroupName:
-        return "热键";
+        return "快捷键";
       case TranslationKey.hotKeySettingsHistoryTitle:
         return "历史弹窗";
       case TranslationKey.hotKeySettingsHistoryDesc:
@@ -1013,6 +1013,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "下载中";
       case TranslationKey.devDisconnectNotifyContent:
         return "设备 @devName 连接断开";
+      case TranslationKey.devConnectedNotifyContent:
+        return "设备 @devName 已连接";
       case TranslationKey.clipboardSettingsGroupName:
         return "剪贴板";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
@@ -1051,10 +1053,40 @@ class ZhCNTranslation extends AbstractTranslations {
         return "选择应用";
       case TranslationKey.preferenceSettingsDevDisconnNotification:
         return "设备连接断开时发起系统通知";
+      case TranslationKey.preferenceSettingsDevConnNotification:
+        return "设备连接后发起系统通知";
       case TranslationKey.notification:
         return "通知";
       case TranslationKey.aboutPageDatabaseVersionItemName:
         return "数据库版本";
+      case TranslationKey.newVersionAvailable:
+        return "发现新版本";
+      case TranslationKey.showMainWindow:
+        return "显示主窗口";
+      case TranslationKey.exitApp:
+        return "退出程序";
+      case TranslationKey.exitAppViaHotKey:
+        return "正在通过快捷键退出 ${Constants.appName}";
+      case TranslationKey.clearHotKeyConfirm:
+        return "确认要清除该快捷键吗？";
+      case TranslationKey.pleaseEnterHotKey:
+        return "请按下快捷键";
+      case TranslationKey.userApp:
+        return '用户应用';
+      case TranslationKey.systemApp:
+        return '系统应用';
+      case TranslationKey.fileNotFound:
+        return '未找到文件';
+      case TranslationKey.openingFile:
+        return '正在打开文件';
+      case TranslationKey.syncData:
+        return "同步数据";
+      case TranslationKey.syncSettingsAutoSyncMissingDataTitle:
+        return "自动同步数据";
+      case TranslationKey.syncSettingsAutoSyncMissingDataDesc:
+        return "在设备连接后自动同步断连期间缺失的数据";
+      case TranslationKey.syncingData:
+        return "同步数据中";
     }
   }
 }

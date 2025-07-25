@@ -7,10 +7,12 @@ import 'package:clipshare/app/data/enums/connection_mode.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
 import 'package:clipshare/app/data/models/version.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/handlers/dev_pairing_handler.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
@@ -20,6 +22,7 @@ import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/handlers/task_runner.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -130,6 +133,8 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   final List<DiscoverListener> _discoverListeners = List.empty(growable: true);
   final List<ForwardStatusListener> _forwardStatusListener = List.empty(growable: true);
   final missingDataSyncProgress = <String, MissingDataSyncProgress>{}.obs;
+
+  // devId => DevSocket
   final Map<String, DevSocket> _devSockets = {};
   late SecureSocketServer _server;
   ForwardSocketClient? _forwardClient;
@@ -158,6 +163,14 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   }
 
   List<RawDatagramSocket> multicasts = [];
+
+  //正在通知的设备，用于防抖，devId => (notifyId,isDisconnected)
+  //时常为 2s，如果 2s 内，该 map 有 key 且 id 仍然为发起通知时创建的 id 则允许通知，否则取消通知
+  final _devNotifyIdMap = <String, bool>{};
+  Timer? _devNotifyTimer;
+
+  //通知防抖时长
+  static const _debounceTime = Duration(milliseconds: 1500);
 
   Future<SocketService> init() async {
     if (_isInit) throw Exception("已初始化");
@@ -661,6 +674,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         final total = msg.data["total"];
         int seq = msg.data["seq"];
         Module module = Module.getValue(copyMsg.data["module"]);
+        final opMethod = OpMethod.getValue(copyMsg.data["method"]);
         MissingDataSyncProgress? newProgress;
         //如果已经存在同步记录则更新或者移除
         if (missingDataSyncProgress.containsKey(devId)) {
@@ -668,7 +682,9 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           progress.seq = seq;
           progress.total = total;
           progress.syncedCount++;
-          if (module == Module.history) {
+          if (progress.firstHistory == true) {
+            progress.firstHistory = false;
+          } else if (module == Module.history && opMethod == OpMethod.add) {
             if (progress.firstHistory == null) {
               progress.firstHistory = true;
             } else {
@@ -701,8 +717,22 @@ class SocketService extends GetxService with ScreenOpenedObserver {
 
       ///请求批量同步
       case MsgType.reqMissingData:
-        // var devIds = (msg.data["devIds"] as List<dynamic>).cast<String>();
-        MissingDataSyncHandler.sendMissingData(dev, [appConfig.device.guid]);
+        var syncedAppIds = ((msg.data["appIds"] ?? []) as List<dynamic>).cast<String>();
+        MissingDataSyncHandler.sendMissingData(dev, appConfig.device.guid, syncedAppIds);
+        break;
+      case MsgType.reqAppInfo:
+        final appId = msg.data["appId"];
+        final sourceService = Get.find<ClipboardSourceService>();
+        final appInfo = sourceService.appInfos.firstWhereOrNull((item) => item.devId == appConfig.device.guid && appId == item.appId);
+        if (appInfo == null) {
+          break;
+        }
+        sendData(dev, MsgType.appInfo, appInfo.toJson());
+        break;
+      case MsgType.appInfo:
+        final appInfo = AppInfo.fromJson(msg.data);
+        final sourceService = Get.find<ClipboardSourceService>();
+        sourceService.addOrUpdate(appInfo);
         break;
 
       ///请求配对我方，生成四位配对码
@@ -711,7 +741,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         int code = 100000 + random.nextInt(900000);
         DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
         //发送通知
-        Global.notify(content: TranslationKey.newParingRequest.tr);
+        Global.notify(content: "${TranslationKey.newParingRequest.tr}: $code");
         if (pairing) {
           Get.back();
         }
@@ -868,7 +898,11 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
     Log.debug(tag, "开始发现设备");
     //重新更新广播监听
-    await _startListenMulticast();
+    try {
+      await _startListenMulticast();
+    } catch (err, stack) {
+      Log.error(tag, "error: $e, $stack");
+    }
     List<Future<void> Function()> tasks = [];
     if (appConfig.onlyForwardMode) {
       tasks = []; //测试屏蔽发现用
@@ -1251,12 +1285,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       );
       _devSockets[dev.guid] = ds;
     }
-    _onDevConnected(
-      dev,
-      client,
-      minVersion,
-      version,
-    );
+    _onDevConnected(dev, client, minVersion, version);
     if (paired) {
       //已配对，请求所有缺失数据
       reqMissingData();
@@ -1269,13 +1298,30 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     return _devSockets[guid]!.socket.isForwardMode;
   }
 
-  Future<void> reqMissingData() async {
-    // var devices = await dbService.deviceDao.getAllDevices(appConfig.userId);
-    // var devIds =
-    //     devices.where((dev) => dev.isPaired).map((e) => e.guid).toList();
-    sendData(null, MsgType.reqMissingData, {
-      "devIds": [],
-    });
+  Future<void> reqMissingData([String? devId]) async {
+    final sourceService = Get.find<ClipboardSourceService>();
+    if (devId != null) {
+      final devSkt = _devSockets[devId];
+      if (devSkt == null) {
+        return;
+      }
+      final allAppInfos = sourceService.appInfos;
+      final ownedAppIds = allAppInfos.where((item) => item.devId == devId).map((item) => item.appId).toList();
+      await sendData(devSkt.dev, MsgType.reqMissingData, {
+        "appIds": ownedAppIds,
+      });
+    }
+    if (!appConfig.autoSyncMissingData) {
+      return;
+    }
+    final devs = _devSockets.values.where((dev) => dev.isPaired).map(((item) => item.dev)).toList();
+    final allAppInfos = sourceService.appInfos;
+    for (var dev in devs) {
+      final ownedAppIds = allAppInfos.where((item) => item.devId == dev.guid).map((item) => item.appId).toList();
+      await sendData(dev, MsgType.reqMissingData, {
+        "appIds": ownedAppIds,
+      });
+    }
   }
 
   ///设备连接成功
@@ -1285,6 +1331,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     AppVersion minVersion,
     AppVersion version,
   ) async {
+    showDevConnectedNotification(dev.guid);
     final ip = client.ip;
     final port = client.isForwardMode ? forwardServerPort : client.port;
 
@@ -1438,7 +1485,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         //心跳超时
         Log.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");
         disconnectDevice(ds.dev, true);
-        _showDevDisConnectNotification(ds.dev.guid);
+        showDevDisConnectNotification(ds.dev.guid);
       }
     }
   }
@@ -1494,7 +1541,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     Log.debug(tag, "$devId 断开连接");
     final ds = _devSockets[devId];
     if (ds != null && ds.isPaired && autoReconnect) {
-      _showDevDisConnectNotification(ds.dev.guid);
+      showDevDisConnectNotification(ds.dev.guid);
     }
     //移除socket
     _devSockets.remove(devId);
@@ -1520,16 +1567,53 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     }
   }
 
-  void _showDevDisConnectNotification(String devId) {
+  ///设备连接后发起通知
+  void showDevConnectedNotification(String devId) {
+    if (!appConfig.notifyOnDevConn) {
+      return;
+    }
+    if (!(_devSockets[devId]?.isPaired ?? false)) {
+      //未配对的不理会
+      return;
+    }
+    _devNotifyTimer?.cancel();
+    //如果短时间内断开并重连，就同时取消通知
+    if (_devNotifyIdMap[devId] == true) {
+      _devNotifyIdMap.remove(devId);
+      return;
+    }
+    _devNotifyIdMap[devId] = false;
+    _devNotifyTimer = Timer(_debounceTime, () {
+      _devNotifyIdMap.remove(devId);
+      final devService = Get.find<DeviceService>();
+      Global.notify(
+        content: TranslationKey.devConnectedNotifyContent.trParams({
+          "devName": devService.getName(devId),
+        }),
+      );
+    });
+  }
+
+  ///设备断开后发起通知
+  void showDevDisConnectNotification(String devId) {
     if (!appConfig.notifyOnDevDisconn) {
       return;
     }
-    final devService = Get.find<DeviceService>();
-    Global.notify(
-      content: TranslationKey.devDisconnectNotifyContent.trParams({
-        "devName": devService.getName(devId),
-      }),
-    );
+    if (!(_devSockets[devId]?.isPaired ?? false)) {
+      //未配对的不理会
+      return;
+    }
+    _devNotifyTimer?.cancel();
+    _devNotifyIdMap[devId] = true;
+    _devNotifyTimer = Timer(_debounceTime, () {
+      _devNotifyIdMap.remove(devId);
+      final devService = Get.find<DeviceService>();
+      Global.notify(
+        content: TranslationKey.devDisconnectNotifyContent.trParams({
+          "devName": devService.getName(devId),
+        }),
+      );
+    });
   }
 
   ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）
@@ -1615,6 +1699,20 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       Log.debug(tag, skt.dev.name);
       await skt.socket.send(msg.toJson());
     }
+  }
+
+  ///通过设备 id 发送数据
+  Future<void> sendDataByDevId(
+    String devId,
+    MsgType key,
+    Map<String, dynamic> data, [
+    bool onlyPaired = true,
+  ]) {
+    final devSkt = _devSockets[devId];
+    if (devSkt == null) {
+      return Future.value();
+    }
+    return sendData(devSkt.dev, key, data, onlyPaired);
   }
 
   /// 发送组播消息

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -274,35 +275,15 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
             Row(
               children: [
                 //剪贴板来源
-                if (widget.clip.data.source != null)
-                  AppIcon(
-                    appId: widget.clip.data.source!,
-                    onDeleteClicked: () {
-                      Global.showTipsDialog(
-                        context: context,
-                        text: TranslationKey.clearSourceConfirmText.tr,
-                        onOk: () async {
-                          final id = widget.clip.data.id;
-                          final cnt = await dbService.historyDao.clearHistorySource(id);
-                          if ((cnt ?? 0) > 0) {
-                            final historyController = Get.find<HistoryController>();
-                            historyController.updateData(
-                              (history) => history.id == id,
-                              (history) => history.source = null,
-                              true,
-                            );
-                            //移除未使用的剪贴板来源信息
-                            final sourceService = Get.find<ClipboardSourceService>();
-                            await sourceService.removeNotUsed();
-                            Global.showSnackBarSuc(context: context, text: TranslationKey.clearSuccess.tr);
-                          } else {
-                            Global.showSnackBarErr(context: context, text: TranslationKey.clearFailed.tr);
-                          }
-                        },
-                        showCancel: true,
-                      );
-                    },
-                  ),
+                ClipboardSourceChip(
+                  clip: widget.clip,
+                  onAdded: (appInfo) {
+                    setState(() {});
+                  },
+                  onDeleted: () {
+                    setState(() {});
+                  },
+                ),
                 Expanded(
                   child: ClipTagRowView(
                     hisId: widget.clip.data.id,

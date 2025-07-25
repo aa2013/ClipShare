@@ -93,8 +93,8 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
   }
 
   @override
-  void onCloseBtnClicked() {
-    multiWindowChannelService.closeWindow(0, MultiWindowTag.history);
+  void onCloseBtnClicked(bool isHide) {
+    multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
   }
 
   @override

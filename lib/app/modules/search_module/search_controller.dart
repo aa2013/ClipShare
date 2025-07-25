@@ -1,23 +1,30 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/listeners/device_remove_listener.dart';
+import 'package:clipshare/app/listeners/tag_changed_listener.dart';
+import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,10 +33,14 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class SearchController extends GetxController with WidgetsBindingObserver {
+class SearchController extends GetxController with WidgetsBindingObserver implements DeviceRemoveListener, DevAliveListener, TagChangedListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final devService = Get.find<DeviceService>();
+  final sktService = Get.find<SocketService>();
+  final tagService = Get.find<TagService>();
+  final multiWindowService = Get.find<MultiWindowChannelService>();
+  final sourceService = Get.find<ClipboardSourceService>();
 
   //region 属性
   static const tag = "SearchController";
@@ -42,27 +53,27 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   List<String> get allTagNames => _allTagNames.value;
   int? _minId;
   final loading = true.obs;
+  final filterLoading = true.obs;
   var exporting = false;
   var cancelExporting = false;
 
   //region 搜索相关
-  Set<String> get selectedTags => filter.value.tags;
+  Set<String> get selectedTags => filterController.selectedTags.value;
 
-  Set<String> get selectedDevIds => filter.value.devIds;
+  Set<String> get selectedDevIds => filterController.selectedDevIds.value;
 
-  Set<String> get selectedAppIds => filter.value.appIds;
+  Set<String> get selectedAppIds => filterController.selectedAppIds.value;
 
-  String get searchStartDate => filter.value.startDate;
+  String get searchStartDate => filterController.startDate.value;
 
-  String get searchEndDate => filter.value.endDate;
+  String get searchEndDate => filterController.endDate.value;
   final _searchType = HistoryContentType.all.obs;
 
   HistoryContentType get searchType => _searchType.value;
 
   set searchType(value) => _searchType.value = value;
 
-  bool get searchOnlyNoSync => filter.value.onlyNoSync;
-  final filter = SearchFilter().obs;
+  bool get searchOnlyNoSync => filterController.onlyNoSync.value;
 
   //endregion
 
@@ -75,22 +86,51 @@ class SearchController extends GetxController with WidgetsBindingObserver {
   double get screenWidth => _screenWidth.value;
 
   bool get isBigScreen => screenWidth >= Constants.smallScreenWidth;
+  late final HistoryFilterController filterController;
+
+  SearchFilter get searchFilter => filterController.filter..type = _searchType.value;
 
   //endregion
 
   //region 生命周期
   @override
   void onInit() {
-    super.onInit();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
-    loadFromExternalParams(null, null);
+    sktService.addDevAliveListener(this);
+    devService.addDevRemoveListener(this);
+    tagService.addListener(this);
+    loadSearchCondition().whenComplete(
+      () {
+        filterController = HistoryFilterController(
+          allDevices: allDevices,
+          allTagNames: allTagNames,
+          allSources: sourceService.appInfos,
+          isBigScreen: isBigScreen,
+          loadSearchCondition: loadSearchCondition,
+          showContentTypeFilter: false,
+          onChanged: (filter) {
+            refreshData();
+          },
+          onSearchBtnClicked: refreshData,
+          filter: SearchFilter(),
+          onExportBtnClicked: _export,
+        );
+        filterLoading.value = false;
+        loadFromExternalParams(null, null);
+        refreshData();
+        super.onInit();
+      },
+    );
   }
 
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
     appConfig.disableMultiSelectionMode(true);
+    sktService.removeDevAliveListener(this);
+    devService.removeDevRemoveListener(this);
+    tagService.removeListener(this);
     super.onClose();
   }
 
@@ -100,7 +140,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed && Platform.isAndroid) {}
   }
 
-//endregion
+  //endregion
 
   //region 页面方法
 
@@ -140,15 +180,13 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         selectedDevIds.clear();
       }
     }
-    //加载数据
-    refreshData();
   }
 
   ///重新加载列表
-  void refreshData() {
+  Future<void> refreshData() async {
     _minId = null;
-    loadSearchCondition();
-    loadData(_minId).then((lst) {
+    await loadSearchCondition();
+    await loadData(_minId).then((lst) {
       list.value = lst;
       loading.value = false;
     });
@@ -178,24 +216,72 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     //加载搜索结果的前100条
     return dbService.historyDao
         .getHistoriesPageByWhere(
-      appConfig.userId,
-      minId ?? 0,
-      filter.value.content,
-      typeValue,
-      selectedTags.toList(),
-      selectedDevIds.toList(),
-      selectedAppIds.toList(),
-      searchStartDate,
-      searchEndDate,
-      searchOnlyNoSync,
-      minId != null,
-    )
+          appConfig.userId,
+          minId ?? 0,
+          filterController.content.value,
+          typeValue,
+          selectedTags.toList(),
+          selectedDevIds.toList(),
+          selectedAppIds.toList(),
+          searchStartDate,
+          searchEndDate,
+          searchOnlyNoSync,
+          minId != null,
+        )
         .then((list) {
-      return ClipData.fromList(list);
-    });
+          return ClipData.fromList(list);
+        });
   }
 
   //region 导出
+  void _export() {
+    var loadingController = LadingProgressController();
+    Global.showTipsDialog(
+      context: Get.context!,
+      text: TranslationKey.historyOutputTips.tr,
+      onOk: () {
+        Global.showLoadingDialog(
+          context: Get.context!,
+          loadingText: TranslationKey.exporting.tr,
+          showCancel: true,
+          controller: loadingController,
+          onCancel: () {
+            cancelExporting = true;
+            exporting = false;
+          },
+        );
+        export2Excel(loadingController)
+            .then((result) {
+              //关闭进度动画
+              Get.back();
+              //手动取消
+              if (!exporting) {
+                return;
+              }
+              if (result) {
+                Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
+              } else {
+                Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
+              }
+            })
+            .catchError((err, stack) {
+              //关闭进度动画
+              Get.back();
+              Global.showTipsDialog(
+                context: Get.context!,
+                title: TranslationKey.outputFailed.tr,
+                text: "$err. $stack",
+              );
+            })
+            .whenComplete(() {
+              //更新状态
+              exporting = false;
+              cancelExporting = false;
+            });
+      },
+      showCancel: true,
+    );
+  }
 
   ///导出为 excel
   Future<bool> export2Excel(LadingProgressController loadingController) async {
@@ -204,7 +290,6 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     int lastId = 0;
     //第一行是标题头，内容从第二行开始
     int rowNum = 2;
-    bool ignoreTop = false;
     var histories = List<History>.empty(growable: true);
     while (true) {
       if (cancelExporting) {
@@ -212,25 +297,32 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       }
       var list = await dbService.historyDao.getHistoriesPageByFilter(
         appConfig.userId,
-        filter.value,
-        ignoreTop,
+        searchFilter,
+        true,
         lastId,
       );
-      //首次查询加载置顶，后续就不要重复加载了
-      if (ignoreTop == false) {
-        ignoreTop = true;
-      }
       if (list.isEmpty) {
         break;
       }
       histories.addAll(list);
-      lastId = list.map((item) => item.id).reduce(min);
+      lastId = list.last.id;
     }
+    histories.sort((a, b) {
+      // 首先按 top 排序（true 在前，false 在后）
+      if (a.top != b.top) {
+        return a.top ? -1 : 1; // true 在前，所以返回 -1
+      }
+      // 如果 top 相同，则按 id 降序排列
+      return b.id.compareTo(a.id); // 降序：b.id - a.id
+    });
     final Workbook workbook = Workbook();
     final Worksheet sheet = workbook.worksheets[0];
     _addExcelHeader(sheet);
     final Style dateTimeStyle = workbook.styles.add('CustomDateTimeStyle');
     dateTimeStyle.numberFormat = 'yyyy-MM-dd HH:mm:ss';
+    dateTimeStyle.vAlign = VAlignType.center;
+    final Style vAlign = workbook.styles.add('verticalCenter');
+    vAlign.vAlign = VAlignType.center;
 
     var lastTime = DateTime.now();
     loadingController.update(0, histories.length);
@@ -240,9 +332,9 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       if (cancelExporting) {
         return false;
       }
-      //转换为excel数据
-      await _add2ExcelSheet(sheet, item, rowNum++, dateTimeStyle);
-
+      //转换为excel数据(对于内容超过32767字符的会合并单元格，统计使用了多少行)
+      final useRows = await _add2ExcelSheet(sheet, item, rowNum, dateTimeStyle, vAlign);
+      rowNum += useRows;
       var now = DateTime.now();
       if (now.difference(lastTime).inMilliseconds.abs() > 10) {
         loadingController.update(i + 1);
@@ -279,8 +371,8 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     sheet.getRangeByName("G1").setText("内容长度");
   }
 
-  ///将历史数据添加到excel对象中
-  Future<void> _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle) async {
+  ///将历史数据添加到excel对象中，返回值为使用的行数
+  Future<int> _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle, Style vAlignStyle) async {
     if (rowNum <= 0) {
       throw ArgumentError("rowNum cannot less than 0");
     }
@@ -289,15 +381,34 @@ class SearchController extends GetxController with WidgetsBindingObserver {
     final type = HistoryContentType.parse(history.type);
     if (type == HistoryContentType.file) {
       //文件同步跳过
-      return;
+      return 0;
+    }
+    var rowsOffset = 0;
+    const maxCellLength = 32767;
+    //转换 unicode 控制字符 \u0000 ~ \u001f，这些字符会导致 excel 打开失败
+    //需要替换为 _x0000_ 这样的
+    final content = history.content.replaceAllMapped(
+      RegExp(r'[\x00-\x1F]'),
+      (match) => '_x${match.group(0)!.codeUnitAt(0).toRadixString(16).padLeft(4, '0')}_',
+    );
+    if (content.length > maxCellLength) {
+      //单个单元格最多支持32767字符，否则会导致excel打开失败
+      rowsOffset = (content.length / maxCellLength).ceil() - 1;
     }
     final devName = devService.getName(history.devId);
     final size = clip.sizeText;
-    sheet.getRangeByName("A$rowNum")
+    sheet.getRangeByName("A$rowNum:A${rowNum + rowsOffset}")
+      ..merge()
       ..cellStyle = timeStyle
       ..setDateTime(time);
-    sheet.getRangeByName("B$rowNum").setText(type.label);
-    sheet.getRangeByName("C$rowNum").setText(devName);
+    sheet.getRangeByName("B$rowNum:B${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(type.label);
+    sheet.getRangeByName("C$rowNum:C${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(devName);
     final sourceService = Get.find<ClipboardSourceService>();
     var source = "";
     if (history.source != null) {
@@ -306,8 +417,14 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         source = app.name;
       }
     }
-    sheet.getRangeByName("D$rowNum").setText(source);
-    sheet.getRangeByName("E$rowNum").setNumber(history.top ? 1 : 0);
+    sheet.getRangeByName("D$rowNum:D${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(source);
+    sheet.getRangeByName("E$rowNum:E${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setNumber(history.top ? 1 : 0);
     if (clip.isImage) {
       final file = File(history.content);
       final cell = sheet.getRangeByName("F$rowNum");
@@ -315,7 +432,7 @@ class SearchController extends GetxController with WidgetsBindingObserver {
       final rowHeight = cell.rowHeight;
       final cellWidth = cell.columnWidth;
       if (file.existsSync()) {
-        final List<int> bytes = file.readAsBytesSync();
+        final List<int> bytes = await file.readAsBytes();
         //only supports png and jpeg
         final picture = sheet.pictures.addStream(rowNum, 5, bytes);
         //rowHeight取出来是单位pt，转为像素需要 * 1.33
@@ -323,26 +440,84 @@ class SearchController extends GetxController with WidgetsBindingObserver {
         picture.width = min(cellWidth * 1.33, 200).toInt(); // 限制宽度
       }
     } else {
-      sheet.getRangeByName("F$rowNum").setText(history.content);
+      for (var i = 0; i <= rowsOffset; i++) {
+        final start = i * maxCellLength;
+        final end = min((i + 1) * maxCellLength, content.length);
+        sheet.getRangeByName("F${rowNum + i}").setText(content.substring(start, end));
+      }
     }
-    sheet.getRangeByName("G$rowNum").setText(size);
+    sheet.getRangeByName("G$rowNum:G${rowNum + rowsOffset}")
+      ..merge()
+      ..cellStyle = vAlignStyle
+      ..setText(size);
+    return rowsOffset + 1;
   }
-//endregion
-//endregion
-}
 
-// Future<void> _export2ExcelIsolate(SendPort sendPort)async{
-//
-//   final port = ReceivePort();
-//   sendPort.send(port.sendPort);
-//   port.listen((message) {
-//     final List<Map<String,dynamic>> batch = message[0];
-//     final SendPort replyTo = message[1];
-//
-//     // 模拟处理：计算一批数据的总和
-//     final int batchSum = batch.fold(0, (prev, e) => prev + e);
-//
-//   });
-//   // 把结果发回主线程
-//   replyTo.send(batchSum);
-// }
+  //endregion
+  //endregion
+
+  //region 设备变更监听
+
+  @override
+  Future<void> onPaired(DevInfo dev, int uid, bool result, String? address) async {
+    await loadSearchCondition();
+    filterController.setAllDevices(_allDevices);
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  @override
+  void onRemove(String devId) {
+    filterController.setAllDevices(_allDevices);
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  @override
+  void onCancelPairing(DevInfo dev) {
+    // ignored
+  }
+
+  @override
+  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, bool isForward) {
+    // ignored
+  }
+
+  @override
+  void onDisconnected(String devId) {
+    // ignored
+  }
+
+  @override
+  void onForget(DevInfo dev, int uid) {
+    // ignored
+  }
+
+  //endregion
+
+  //region 新标签变更监听
+
+  @override
+  Future<void> onDistinctAdd(String tagName) async {
+    await loadSearchCondition();
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  @override
+  Future<void> onDistinctRemove(String tagName) async {
+    await loadSearchCondition();
+    filterController.setAllTagNames(_allTagNames);
+    if (appConfig.historyWindow != null) {
+      multiWindowService.updateAllBaseData(appConfig.historyWindow!.windowId);
+    }
+  }
+
+  //endregion
+}

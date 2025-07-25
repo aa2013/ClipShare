@@ -118,7 +118,7 @@ class AppUpdateInfoUtil {
         }
       },
     );
-    Global.notify(content: "新版本 ${logs.first.version}");
+    Global.notify(content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}");
     return true;
   }
 }

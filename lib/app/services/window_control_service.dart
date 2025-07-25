@@ -99,6 +99,19 @@ class WindowControlService extends GetxService {
     }
   }
 
+  Future<void> close([bool isHide = false]) async {
+    if (isHide) {
+      await windowManager.hide();
+    } else {
+      await windowManager.close();
+    }
+    for (var listener in _listeners) {
+      try {
+        listener.onCloseBtnClicked(isHide);
+      } catch (_) {}
+    }
+  }
+
   Future<void> setAlwaysOnTop(bool top) async {
     if (!PlatformExt.isDesktop) return;
     await windowManager.setAlwaysOnTop(top);

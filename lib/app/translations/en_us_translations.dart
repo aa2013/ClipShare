@@ -1012,6 +1012,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Downloading";
       case TranslationKey.devDisconnectNotifyContent:
         return "Device @devName disconnected";
+      case TranslationKey.devConnectedNotifyContent:
+        return "Device @devName connected";
       case TranslationKey.clipboardSettingsGroupName:
         return "Clipboard";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
@@ -1048,12 +1050,42 @@ class EnUSTranslation extends AbstractTranslations {
         return "Failed to clear";
       case TranslationKey.selectApplication:
         return "Select Applications";
-        case TranslationKey.preferenceSettingsDevDisconnNotification:
-      return "System notification when device disconnection";
+      case TranslationKey.preferenceSettingsDevDisconnNotification:
+        return "System notification when device disconnection";
+      case TranslationKey.preferenceSettingsDevConnNotification:
+        return "System notification when device connected";
       case TranslationKey.notification:
         return "Notification";
       case TranslationKey.aboutPageDatabaseVersionItemName:
         return "Database version";
+      case TranslationKey.newVersionAvailable:
+        return "New version available";
+      case TranslationKey.showMainWindow:
+        return "Main Window";
+      case TranslationKey.exitApp:
+        return "Exit";
+      case TranslationKey.exitAppViaHotKey:
+        return "Exiting ${Constants.appName} via hotkey";
+      case TranslationKey.clearHotKeyConfirm:
+        return "Are you sure you want to clear this shortcut key?";
+      case TranslationKey.pleaseEnterHotKey:
+        return "Please enter hotkey";
+      case TranslationKey.userApp:
+        return 'User';
+      case TranslationKey.systemApp:
+        return 'System';
+      case TranslationKey.fileNotFound:
+        return 'File not found';
+      case TranslationKey.openingFile:
+        return 'Opening File';
+      case TranslationKey.syncData:
+        return "Sync Data";
+      case TranslationKey.syncSettingsAutoSyncMissingDataTitle:
+        return "Auto Sync Data";
+      case TranslationKey.syncSettingsAutoSyncMissingDataDesc:
+        return "Automatically sync missing data during disconnection after device connection";
+      case TranslationKey.syncingData:
+        return "Syncing data";
     }
   }
 }

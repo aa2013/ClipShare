@@ -11,59 +11,109 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
-class HistoryFilter extends StatefulWidget {
-  List<Device> allDevices;
-  List<String> allTagNames;
-  List<AppInfo> allSources;
-  Future<void> Function() loadSearchCondition;
-  bool isBigScreen;
-  bool showContentTypeFilter;
-  SearchFilter? filter;
-  void Function()? onExportBtnClicked;
-  void Function(SearchFilter filter) onChanged;
+class HistoryFilterController {
+  final allDevices = <Device>[].obs;
+  final allTagNames = <String>[].obs;
+  final allSources = <AppInfo>[].obs;
+  final bool isBigScreen;
+  final bool showContentTypeFilter;
+  final void Function()? onExportBtnClicked;
+  final void Function() onSearchBtnClicked;
+  final Future<void> Function() loadSearchCondition;
+  final void Function(SearchFilter filter) onChanged;
+  final focusNode = FocusNode();
+  final TextEditingController textController = TextEditingController();
+  final loading = false.obs;
 
-  HistoryFilter({
-    super.key,
-    required this.allDevices,
-    required this.allTagNames,
-    required this.allSources,
-    required this.loadSearchCondition,
-    required this.isBigScreen,
-    this.showContentTypeFilter = true,
-    required this.onChanged,
-    this.onExportBtnClicked,
-    this.filter,
-  });
+  SearchFilter get filter => SearchFilter(
+        content: content.value,
+        startDate: startDate.value,
+        endDate: endDate.value,
+        tags: selectedTags.value,
+        devIds: selectedDevIds.value,
+        appIds: selectedAppIds.value,
+        onlyNoSync: onlyNoSync.value,
+        type: selectedType.value,
+      );
 
-  @override
-  State<StatefulWidget> createState() => _HistoryFilterState();
-}
+  ///region filter
+  final content = "".obs;
+  final startDate = "".obs;
+  final endDate = "".obs;
+  final selectedTags = <String>{}.obs;
+  final selectedDevIds = <String>{}.obs;
+  final selectedAppIds = <String>{}.obs;
+  final onlyNoSync = false.obs;
+  final selectedType = HistoryContentType.all.obs;
 
-class _HistoryFilterState extends State<HistoryFilter> {
-  bool loading = true;
-  TextEditingController textController = TextEditingController();
-  FocusNode searchFocus = FocusNode();
-  var filter = SearchFilter();
+  ///endregion
+
+  String get startDateStr => startDate.value == "" ? TranslationKey.startDate.tr : startDate.value;
+
+  String get endDateStr => endDate.value == "" ? TranslationKey.endDate.tr : endDate.value;
+
+  String get nowDayStr => DateTime.now().toString().substring(0, 10);
 
   bool get hasMoreCondition {
-    return filter.tags.isNotEmpty || filter.devIds.isNotEmpty || filter.onlyNoSync || filter.endDate.isNotEmpty || filter.startDate.isNotEmpty;
+    return selectedTags.isNotEmpty || selectedDevIds.isNotEmpty || onlyNoSync.value || endDate.isNotEmpty || startDate.isNotEmpty || selectedAppIds.isNotEmpty;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    if (widget.filter != null) {
-      filter = widget.filter!;
-      textController.text = filter.content;
-    }
+  HistoryFilterController({
+    required List<Device> allDevices,
+    required List<String> allTagNames,
+    required List<AppInfo> allSources,
+    required this.isBigScreen,
+    required this.loadSearchCondition,
+    required this.onChanged,
+    required SearchFilter filter,
+    required this.onSearchBtnClicked,
+    this.showContentTypeFilter = true,
+    this.onExportBtnClicked,
+  }) {
+    this.allDevices.addAll(allDevices);
+    this.allTagNames.addAll(allTagNames);
+    this.allSources.addAll(allSources);
+    resetFilter(filter: filter);
   }
 
-  void notifyChanged() {
-    widget.onChanged(filter.copy());
-    if (PlatformExt.isDesktop) {
-      searchFocus.requestFocus();
-    }
+  void setAllDevices(List<Device> devices) {
+    allDevices.value = devices;
   }
+
+  void setAllTagNames(List<String> tagNames) {
+    allTagNames.value = tagNames;
+  }
+
+  void setAllSources(List<AppInfo> sources) {
+    allSources.value = sources;
+  }
+
+  void resetFilter({SearchFilter? filter}) {
+    filter ??= SearchFilter();
+    content.value = filter.content;
+    startDate.value = filter.startDate;
+    endDate.value = filter.endDate;
+    selectedTags.addAll(filter.tags);
+    selectedDevIds.addAll(filter.devIds);
+    selectedAppIds.addAll(filter.appIds);
+    onlyNoSync.value = filter.onlyNoSync;
+    selectedType.value = filter.type;
+  }
+
+  String getDevNameById(devId) {
+    return allDevices
+        .firstWhereOrNull((item) => item.guid == devId)
+        ?.name ?? "Unknown";
+  }
+}
+
+class HistoryFilter extends StatelessWidget {
+  final HistoryFilterController controller;
+
+  const HistoryFilter({
+    super.key,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,8 +126,8 @@ class _HistoryFilterState extends State<HistoryFilter> {
                 child: Padding(
                   padding: const EdgeInsets.only(left: 5),
                   child: TextField(
-                    controller: textController,
-                    focusNode: searchFocus,
+                    controller: controller.textController,
+                    focusNode: controller.focusNode,
                     autofocus: true,
                     textAlignVertical: TextAlignVertical.center,
                     decoration: InputDecoration(
@@ -87,7 +137,7 @@ class _HistoryFilterState extends State<HistoryFilter> {
                         right: 8,
                       ),
                       hintText: TranslationKey.search.tr,
-                      border: widget.isBigScreen || PlatformExt.isDesktop
+                      border: controller.isBigScreen || PlatformExt.isDesktop
                           ? OutlineInputBorder(
                               borderRadius: BorderRadius.circular(4), // 边框圆角
                               borderSide: const BorderSide(
@@ -98,8 +148,9 @@ class _HistoryFilterState extends State<HistoryFilter> {
                           : InputBorder.none,
                       suffixIcon: InkWell(
                         onTap: () {
-                          filter.content = textController.text;
-                          notifyChanged();
+                          controller.content.value = controller.textController.text;
+                          controller.onSearchBtnClicked();
+                          controller.focusNode.requestFocus();
                         },
                         splashColor: Colors.black12,
                         highlightColor: Colors.black12,
@@ -114,8 +165,9 @@ class _HistoryFilterState extends State<HistoryFilter> {
                       ),
                     ),
                     onSubmitted: (value) {
-                      filter.content = value;
-                      notifyChanged();
+                      controller.content.value = value;
+                      controller.focusNode.requestFocus();
+                      controller.onSearchBtnClicked();
                     },
                   ),
                 ),
@@ -124,21 +176,15 @@ class _HistoryFilterState extends State<HistoryFilter> {
                 margin: const EdgeInsets.only(left: 5, right: 5),
                 child: IconButton(
                   onPressed: () async {
-                    await widget.loadSearchCondition();
+                    await controller.loadSearchCondition();
                     final filterDetail = FilterDetail(
-                      searchFilter: filter,
-                      allDevices: widget.allDevices,
-                      allTagNames: widget.allTagNames,
-                      allSources: widget.allSources,
-                      isBigScreen: widget.isBigScreen,
+                      controller: controller,
                       onConfirm: (filter) {
-                        this.filter = filter;
-                        setState(() {});
-                        notifyChanged();
+                        controller.onChanged(filter);
                         Get.back();
                       },
                     );
-                    if (widget.isBigScreen) {
+                    if (controller.isBigScreen) {
                       final homeController = Get.find<HomeController>();
                       homeController.openEndDrawer(drawer: filterDetail);
                     } else {
@@ -151,17 +197,19 @@ class _HistoryFilterState extends State<HistoryFilter> {
                     }
                   },
                   tooltip: TranslationKey.moreFilter.tr,
-                  icon: Icon(
-                    hasMoreCondition ? Icons.playlist_add_check_outlined : Icons.menu_rounded,
-                    color: hasMoreCondition ? Colors.blueAccent : null,
+                  icon: Obx(
+                    () => Icon(
+                      controller.hasMoreCondition ? Icons.playlist_add_check_outlined : Icons.menu_rounded,
+                      color: controller.hasMoreCondition ? Colors.blueAccent : null,
+                    ),
                   ),
                 ),
               ),
-              if (widget.onExportBtnClicked != null)
+              if (controller.onExportBtnClicked != null)
                 Container(
                   margin: const EdgeInsets.only(left: 5, right: 5),
                   child: IconButton(
-                    onPressed: widget.onExportBtnClicked,
+                    onPressed: controller.onExportBtnClicked,
                     tooltip: TranslationKey.export2Excel.tr,
                     icon: Icon(
                       MdiIcons.export,
@@ -171,7 +219,7 @@ class _HistoryFilterState extends State<HistoryFilter> {
                 ),
             ],
           ),
-          if (widget.showContentTypeFilter)
+          if (controller.showContentTypeFilter)
             Container(
               margin: const EdgeInsets.only(top: 5),
               child: SingleChildScrollView(
@@ -187,23 +235,25 @@ class _HistoryFilterState extends State<HistoryFilter> {
                     ])
                       Row(
                         children: [
-                          RoundedChip(
-                            selected: filter.type.label == type.label,
-                            onPressed: () {
-                              if (filter.type.label == type.label) {
-                                return;
-                              }
-                              setState(() {
-                                loading = true;
-                                filter.type = type;
-                              });
-                              Future.delayed(
-                                const Duration(milliseconds: 200),
-                                notifyChanged,
-                              );
-                            },
-                            selectedColor: filter.type == type ? Theme.of(context).chipTheme.selectedColor : null,
-                            label: Text(type.label),
+                          Obx(
+                            () => RoundedChip(
+                              selected: controller.selectedType.value.label == type.label,
+                              onPressed: () {
+                                if (controller.selectedType.value.label == type.label) {
+                                  return;
+                                }
+                                controller.loading.value = true;
+                                controller.selectedType.value = type;
+                                Future.delayed(
+                                  const Duration(milliseconds: 200),
+                                  () {
+                                    controller.onChanged(controller.filter);
+                                  },
+                                );
+                              },
+                              selectedColor: controller.selectedType.value == type ? Theme.of(context).chipTheme.selectedColor : null,
+                              label: Text(type.label),
+                            ),
                           ),
                           const SizedBox(width: 5),
                         ],

@@ -20,6 +20,7 @@ import 'package:clipshare/app/data/repository/entity/tables/user.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:floor/floor.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
@@ -98,7 +99,7 @@ class DbService extends GetxService {
   Future _queue = Future.value();
 
   void execSequentially(Future Function() f) {
-    _queue = _queue.whenComplete(() => f());
+    _queue = _queue.whenComplete(() => f().catchError((err) => Log.error(tag, err)));
   }
 
   Future<DbService> init() async {

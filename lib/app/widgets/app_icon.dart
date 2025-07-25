@@ -46,6 +46,7 @@ class _AppIconState extends State<AppIcon> {
         for (var item in list) {
           caches[item.appId] = item;
         }
+        setState(() {});
       });
       return null;
     }

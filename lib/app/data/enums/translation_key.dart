@@ -500,6 +500,7 @@ enum TranslationKey {
   download,
   downloading,
   devDisconnectNotifyContent,
+  devConnectedNotifyContent,
   clipboardSettingsSourceRecordTitle,
   clipboardSettingsSourceRecordAndroidDesc,
   clipboardSettingsGroupName,
@@ -519,7 +520,22 @@ enum TranslationKey {
   selectApplication,
   filterBySource,
   preferenceSettingsDevDisconnNotification,
-  aboutPageDatabaseVersionItemName;
+  preferenceSettingsDevConnNotification,
+  aboutPageDatabaseVersionItemName,
+  newVersionAvailable,
+  showMainWindow,
+  exitApp,
+  exitAppViaHotKey,
+  clearHotKeyConfirm,
+  pleaseEnterHotKey,
+  userApp,
+  systemApp,
+  fileNotFound,
+  openingFile,
+  syncData,
+  syncSettingsAutoSyncMissingDataTitle,
+  syncSettingsAutoSyncMissingDataDesc,
+  syncingData;
 
   String get tr => name.tr;
 

@@ -16,6 +16,7 @@ import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter_screenshot_detect/flutter_screenshot_detect.dart';
 import 'package:get/get.dart';
+import 'package:uri_file_reader/uri_file_reader.dart';
 
 class ClipboardService extends GetxService with ClipboardListener {
   final tag = "ClipboardService";
@@ -61,10 +62,10 @@ class ClipboardService extends GetxService with ClipboardListener {
         _lastScreenshotContent = event.path;
         final androidChannelService = Get.find<AndroidChannelService>();
         Future.delayed(const Duration(milliseconds: 500), () {
-          androidChannelService.getImageUriRealPath(event.path!).then((realPath) async {
+          uriFileReader.getFileInfoFromUri(event.path!).then((info) async {
             Log.debug(tag, "content uri: ${event.path!}");
+            var realPath = info?.path;
             Log.debug(tag, "realPath: $realPath");
-            realPath = realPath?.toLowerCase();
             bool checkLatestImage = false;
             if (realPath == null) {
               Log.debug(
@@ -100,7 +101,7 @@ class ClipboardService extends GetxService with ClipboardListener {
             bool isScreenShot = false;
             for (var screenshotKey in Constants.screenshotKeywords) {
               screenshotKey = screenshotKey.toLowerCase();
-              if (realPath.contains(screenshotKey)) {
+              if (realPath.toLowerCase().contains(screenshotKey)) {
                 isScreenShot = true;
                 break;
               }
@@ -108,7 +109,7 @@ class ClipboardService extends GetxService with ClipboardListener {
             if (!isScreenShot) {
               return;
             }
-            androidChannelService.copyFileFromUri(event.path!, appConfig.cachePath).then((res) {
+            uriFileReader.copyFileFromUri(event.path!, appConfig.cachePath).then((res) {
               Log.debug(tag, "ScreenshotDetect: $realPath");
               if (res != null) {
                 HistoryDataListener.inst.onChanged(HistoryContentType.image, res, null);

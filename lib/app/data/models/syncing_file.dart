@@ -60,6 +60,7 @@ class SyncingFile {
     if (!isSender) {
       try {
         _sink!.add(bytes);
+        // await _sink.flush();
       } catch (err, stack) {
         Log.error(tag, "$filePath sync error. $err $stack");
         _state = SyncingFileState.error;
@@ -98,7 +99,7 @@ class SyncingFile {
     }
     final syncingFileService = Get.find<SyncingFileProgressService>();
     syncingFileService.updateSyncingFile(this);
-    onClose?.call(done);
     _sink?.close();
+    onClose?.call(done);
   }
 }

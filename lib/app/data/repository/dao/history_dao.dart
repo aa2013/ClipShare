@@ -1,6 +1,9 @@
+import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/models/statistics/history_cnt_for_device.dart';
 import 'package:clipshare/app/data/models/statistics/history_type_cnt.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -119,9 +122,45 @@ abstract class HistoryDao {
   @Query("update history set source = :source where id = :id")
   Future<int?> updateHistorySource(int id, String source);
 
+  ///更新历史记录来源并通知设备
+  Future<bool> updateHistorySourceAndNotify(int id, String source) async {
+    var cnt = await updateHistorySource(id, source);
+    if ((cnt ?? 0) > 0) {
+      //更新剪贴板来源
+      //先将之前的剪贴板来源操作记录删除再添加操作记录
+      await dbService.opRecordDao.deleteHistorySourceRecords(id, Module.historySource.moduleName);
+      cnt = await dbService.opRecordDao.addAndNotify(
+        OperationRecord.fromSimple(
+          Module.historySource,
+          OpMethod.update,
+          id.toString(),
+        ),
+      );
+      return cnt > 0;
+    }
+    return false;
+  }
+
   ///清除历史记录来源，调用方记得删除未使用的来源信息
   @Query("update history set source = null where id = :id")
   Future<int?> clearHistorySource(int id);
+
+  ///删除历史记录来源并通知，调用方记得删除未使用的来源信息
+  Future<bool> clearHistorySourceAndNotify(int id) async {
+    var cnt = await clearHistorySource(id);
+    if ((cnt ?? 0) > 0){
+      await dbService.opRecordDao.deleteHistorySourceRecords(id, Module.historySource.moduleName);
+      cnt = await dbService.opRecordDao.addAndNotify(
+        OperationRecord.fromSimple(
+          Module.historySource,
+          OpMethod.delete,
+          id.toString(),
+        ),
+      );
+      return cnt > 0;
+    }
+    return false;
+  }
 
 //endregion
 

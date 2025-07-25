@@ -36,6 +36,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:synchronized/synchronized.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
@@ -282,7 +283,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         //移动到设置的路径然后删除临时文件
         var tempFile = File(content);
         size = await tempFile.length();
-        var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : appConfig.fileStorePath}/${tempFile.fileName}";
+        var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : "${appConfig.fileStorePath}/Screenshots"}/${tempFile.fileName}";
         var newFile = File(newPath);
         FileUtil.moveFile(content, newPath);
         content = newFile.normalizePath;
@@ -382,8 +383,12 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           var fileName = historyContent["fileName"];
           var data = historyContent["data"].cast<int>();
           var path = "${appConfig.fileStorePath}/$fileName";
-          if (appConfig.saveToPictures) {
-            path = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+          if (Platform.isAndroid) {
+            if (appConfig.saveToPictures) {
+              path = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+            } else {
+              path = "${appConfig.androidPrivatePicturesPath}/$fileName";
+            }
             Log.debug(tag, "newPath $path");
           }
           history.content = path;
@@ -467,7 +472,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     notifyHistoryWindow();
     _tempList.add(clip);
     debounceUpdate();
-    if (!shouldSync) return cnt;
+    if (!shouldSync) {
+      final source = history.source;
+      final appInfo = sourceService.getAppInfoByAppId(source);
+      //若同步的数据有来源信息但是本地未缓存，则请求同步该来源信息
+      if (source != null && appInfo == null) {
+        sktService.sendDataByDevId(
+          history.devId,
+          MsgType.reqAppInfo,
+          {"appId": source},
+        );
+      }
+      return cnt;
+    }
     //添加历史操作记录
     var opRecord = OperationRecord.fromSimple(
       Module.history,
@@ -510,19 +527,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           ),
           true,
         );
-        final cnt = await dbService.historyDao.updateHistorySource(history.id, source.id);
-        if ((cnt ?? 0) > 0) {
-          //更新剪贴板来源
-          //先将之前的剪贴板来源操作记录删除再添加操作记录
-          await dbService.opRecordDao.deleteHistorySourceRecords(history.id, Module.historySource.moduleName);
-          dbService.opRecordDao.addAndNotify(
-            OperationRecord.fromSimple(
-              Module.historySource,
-              OpMethod.update,
-              history.id.toString(),
-            ),
-          );
-        }
+        await dbService.historyDao.updateHistorySourceAndNotify(history.id, source.id);
       });
     }
     //endregion
