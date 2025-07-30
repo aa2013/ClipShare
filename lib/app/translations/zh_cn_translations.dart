@@ -1087,6 +1087,28 @@ class ZhCNTranslation extends AbstractTranslations {
         return "在设备连接后自动同步断连期间缺失的数据";
       case TranslationKey.syncingData:
         return "同步数据中";
+      case TranslationKey.enableBlackList:
+        return "启用黑名单功能";
+      case TranslationKey.enableBlackListTips:
+        return "启用后命中规则的内容不会被记录";
+      case TranslationKey.contentCannotEmpty:
+        return "内容不能为空";
+      case TranslationKey.contentAndSourceCannotEmpty:
+        return "内容和来源不能都为空";
+      case TranslationKey.ruleList:
+        return "规则列表";
+      case TranslationKey.blacklistRules:
+        return "黑名单规则";
+      case TranslationKey.blacklistDetectTips:
+        return "当前仅对文本内容生效";
+      case TranslationKey.ignoreCase:
+        return "忽略大小写";
+      case TranslationKey.application:
+        return "应用";
+      case TranslationKey.supportRegex:
+        return "支持正则表达式";
+      case TranslationKey.content:
+        return "内容";
     }
   }
 }

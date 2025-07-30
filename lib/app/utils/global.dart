@@ -5,7 +5,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/widgets/downloading_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

@@ -1086,6 +1086,28 @@ class EnUSTranslation extends AbstractTranslations {
         return "Automatically sync missing data during disconnection after device connection";
       case TranslationKey.syncingData:
         return "Syncing data";
+      case TranslationKey.enableBlackList:
+        return "Enable Blacklist";
+      case TranslationKey.enableBlackListTips:
+        return "When enabled, content matching rules will not be recorded";
+      case TranslationKey.contentCannotEmpty:
+        return "Content cannot be empty";
+      case TranslationKey.contentAndSourceCannotEmpty:
+        return "Both content and source cannot be empty";
+      case TranslationKey.ruleList:
+        return "Rule List";
+      case TranslationKey.blacklistRules:
+        return "Blacklist Rules";
+      case TranslationKey.blacklistDetectTips:
+        return "Currently only applies to Text";
+      case TranslationKey.ignoreCase:
+        return "Case insensitive";
+      case TranslationKey.application:
+        return "App";
+      case TranslationKey.supportRegex:
+        return "Regex supported";
+      case TranslationKey.content:
+        return "Content";
     }
   }
 }

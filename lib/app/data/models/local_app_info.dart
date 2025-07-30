@@ -22,4 +22,6 @@ class LocalAppInfo extends AppInfo {
       iconB64: appInfo.iconB64,
     );
   }
+
+
 }

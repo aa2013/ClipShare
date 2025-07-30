@@ -1,16 +1,17 @@
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
-import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
+import 'package:clipshare/app/widgets/loading.dart';
 import 'package:clipshare/app/widgets/memory_image_with_not_found.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/scheduler/ticker.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:sliver_sticky_collapsable_panel/utils/sliver_sticky_collapsable_panel_controller.dart';
@@ -44,12 +45,13 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   static const checkIcon = IconButton(onPressed: null, icon: Icon(Icons.check_circle, color: Colors.lightBlue));
   static const aniDuration = Duration(milliseconds: 200);
   final emptyContent = EmptyContent();
-
+  final appIconBytesCached = <String, Uint8List>{};
   var originAppList = List<LocalAppInfo>.empty(growable: true);
   var searchResultList = List<LocalAppInfo>.empty(growable: true);
   final selected = <String>{}.obs;
   final scrollController = ScrollController();
   late final TabController tabController;
+  var loading = true;
 
   List<Tab> get tabs => [Tab(text: TranslationKey.userApp.tr), Tab(text: TranslationKey.systemApp.tr)];
 
@@ -69,6 +71,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
         list.sort((a, b) => a.name.compareTo(b.name));
         originAppList = list;
         searchResultList = list;
+        loading = false;
       });
     });
   }
@@ -105,8 +108,17 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
           },
           sliverPanel: SliverList.list(
             children: groups[devId]!.map((app) {
+              Uint8List iconBytes;
+              if (app.id == 0) {
+                if (!appIconBytesCached.containsKey(app.appId)) {
+                  appIconBytesCached[app.appId] = base64Decode(app.iconB64);
+                }
+                iconBytes = appIconBytesCached[app.appId]!;
+              }else{
+                iconBytes=app.iconBytes;
+              }
               return SizedBox(
-                height: 70,
+                height: 75,
                 child: Card(
                   elevation: 0,
                   child: InkWell(
@@ -135,7 +147,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
                           Expanded(
                             child: Row(
                               children: [
-                                MemImageWithNotFound(bytes: app.iconBytes, width: defaultSize * 1.5, height: defaultSize * 1.5),
+                                MemImageWithNotFound(bytes: iconBytes, width: defaultSize * 1.5, height: defaultSize * 1.5),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
@@ -171,9 +183,13 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   }
 
   Future<void> onRefresh() async {
+    setState(() {
+      loading = true;
+    });
     final list = await widget.loadAppInfos();
     setState(() {
       originAppList = list;
+      loading = false;
     });
   }
 
@@ -219,7 +235,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
                       isDense: true,
                       hintText: TranslationKey.search.tr,
                       hintStyle: const TextStyle(fontSize: 13),
-                      contentPadding: const EdgeInsets.only(left: 5,right: 5,bottom: 2),
+                      contentPadding: const EdgeInsets.only(left: 5, right: 5, bottom: 2),
                     ),
                     onChanged: (text) {
                       setState(() {
@@ -254,7 +270,13 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
         ],
       ),
       icon: Icon(MdiIcons.listBoxOutline),
-      child: renderBody(),
+      child: Visibility(
+        visible: !loading,
+        replacement: const Loading(
+          width: 40,
+        ),
+        child: renderBody(),
+      ),
     );
   }
 }

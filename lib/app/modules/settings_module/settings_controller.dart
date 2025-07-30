@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipshare/app/modules/views/blacklist_page.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -70,69 +71,69 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   //region Shizuku
   Widget get shizukuEnvNormalTipContent => Text(
-        TranslationKey.shizukuModeStatusTitle.tr,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.blueGrey,
-        ),
-      );
+    TranslationKey.shizukuModeStatusTitle.tr,
+    style: const TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Colors.blueGrey,
+    ),
+  );
 
   Widget get shizukuEnvErrorTipContent => Text(
-        TranslationKey.shizukuModeStatusTitle.tr,
-        style: const TextStyle(fontSize: 16),
-      );
+    TranslationKey.shizukuModeStatusTitle.tr,
+    style: const TextStyle(fontSize: 16),
+  );
   final Rx<int?> shizukuVersion = Rx<int?>(null);
 
   Widget get shizukuEnvNormalTipDesc => Obx(
-        () => Text(
-          TranslationKey.shizukuModeRunningDescription.trParams({
-            'version': shizukuVersion.value?.toString() ?? "",
-          }),
-          style: const TextStyle(fontSize: 14, color: Color(0xff6d6d70)),
-        ),
-      );
+    () => Text(
+      TranslationKey.shizukuModeRunningDescription.trParams({
+        'version': shizukuVersion.value?.toString() ?? "",
+      }),
+      style: const TextStyle(fontSize: 14, color: Color(0xff6d6d70)),
+    ),
+  );
 
   Widget get shizukuEnvErrorTipDesc => Text(
-        TranslationKey.serverNotRunningDescription.tr,
-        style: const TextStyle(fontSize: 14),
-      );
+    TranslationKey.serverNotRunningDescription.tr,
+    style: const TextStyle(fontSize: 14),
+  );
 
   //endregion
 
   //region Root
   Widget get rootEnvNormalTipContent => Text(
-        TranslationKey.rootModeStatusTitle.tr,
-        style: const TextStyle(fontSize: 16),
-      );
+    TranslationKey.rootModeStatusTitle.tr,
+    style: const TextStyle(fontSize: 16),
+  );
 
   Widget get rootEnvErrorTipContent => Text(
-        TranslationKey.rootModeStatusTitle.tr,
-        style: const TextStyle(fontSize: 16),
-      );
+    TranslationKey.rootModeStatusTitle.tr,
+    style: const TextStyle(fontSize: 16),
+  );
 
   Widget get rootEnvNormalTipDesc => Text(
-        TranslationKey.rootModeRunningDescription.tr,
-        style: const TextStyle(fontSize: 14),
-      );
+    TranslationKey.rootModeRunningDescription.tr,
+    style: const TextStyle(fontSize: 14),
+  );
 
   Widget get rootEnvErrorTipDesc => Text(
-        TranslationKey.serverNotRunningDescription.tr,
-        style: const TextStyle(fontSize: 14),
-      );
+    TranslationKey.serverNotRunningDescription.tr,
+    style: const TextStyle(fontSize: 14),
+  );
 
   //endregion
 
   //region Android Pre 10
   Widget get androidPre10TipContent => Text(
-        TranslationKey.noSpecialPermissionRequired.tr,
-        style: const TextStyle(fontSize: 16),
-      );
+    TranslationKey.noSpecialPermissionRequired.tr,
+    style: const TextStyle(fontSize: 16),
+  );
 
   Widget get androidPre10EnvNormalTipDesc => Text(
-        "Android ${appConfig.osVersion}",
-        style: const TextStyle(fontSize: 14),
-      );
+    "Android ${appConfig.osVersion}",
+    style: const TextStyle(fontSize: 14),
+  );
 
   //endregion
 
@@ -194,6 +195,21 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         onDrawerClosed: () {
           Get.delete<CleanDataController>();
         },
+      );
+    }
+  }
+
+  void gotoBlacklistPage() {
+    if (appConfig.isSmallScreen) {
+      Get.to(const BlackListPage());
+    } else {
+      final homeController = Get.find<HomeController>();
+      homeController.openEndDrawer(
+        drawer: BlackListPage(
+          onDone: () {
+            homeController.closeEndDrawer();
+          },
+        ),
       );
     }
   }
@@ -326,5 +342,6 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   void onForwardServerDisconnected() {
     forwardServerConnected.value = false;
   }
-//endregion
+
+  //endregion
 }

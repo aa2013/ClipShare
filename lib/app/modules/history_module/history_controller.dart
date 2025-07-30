@@ -269,6 +269,11 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     switch (type) {
       case HistoryContentType.text:
         //文本无特殊实现，此处留空
+        final matchResult = appConfig.matchesBlacklist(type, content, source);
+        if (matchResult.matched) {
+          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
+          return;
+        }
         break;
       case HistoryContentType.image:
         //如果上次也是复制的图片/文件，判断其md5与本次比较，若相同则跳过
@@ -294,9 +299,11 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         break;
       case HistoryContentType.sms:
         //判断是否符合短信同步规则，符合则继续，否则终止
-        var rules = jsonDecode(
-          appConfig.smsRules,
-        )["data"] as List<dynamic>;
+        var rules =
+            jsonDecode(
+                  appConfig.smsRules,
+                )["data"]
+                as List<dynamic>;
         var hasMatch = false;
         for (var rule in rules) {
           if (content.matchRegExp(rule["rule"])) {
@@ -560,5 +567,5 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     return cnt;
   }
 
-//endregion
+  //endregion
 }

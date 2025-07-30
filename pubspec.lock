@@ -594,6 +594,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.7.2"
+  get_apps:
+    dependency: "direct main"
+    description:
+      name: get_apps
+      sha256: "06a4194d1073631c4ff8009cce8a7bf665060ff8457f775be00076d309376b7e"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.9"
   glob:
     dependency: transitive
     description:

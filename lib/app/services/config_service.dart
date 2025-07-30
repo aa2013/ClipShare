@@ -1,7 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/data/models/blacklist_item.dart';
+import 'package:clipshare/app/data/models/blacklist_match_result.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -23,6 +27,7 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
+import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -438,6 +443,16 @@ class ConfigService extends GetxService {
 
   bool get autoSyncMissingData => _autoSyncMissingData.value;
 
+  //黑名单功能
+  final _enableBlackList = false.obs;
+
+  bool get enableBlackList => _enableBlackList.value;
+
+  //黑名单列表
+  final _blackList = <BlackListRule>[].obs;
+
+  List<BlackListRule> get blackList => _blackList.value;
+
   //endregion
 
   //endregion
@@ -506,6 +521,8 @@ class ConfigService extends GetxService {
     var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
     var notifyOnDevConn = await cfg.getConfig("notifyOnDevConn", userId);
     var autoSyncMissingData = await cfg.getConfig("autoSyncMissingData", userId);
+    var enableBlackList = await cfg.getConfig("enableBlackList", userId);
+    var blacklist = await cfg.getConfig("blacklist", userId);
     //endregion
 
     //region 设置配置值
@@ -575,6 +592,19 @@ class ConfigService extends GetxService {
     _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
     _notifyOnDevConn.value = notifyOnDevConn?.toBool() ?? true;
     _autoSyncMissingData.value = autoSyncMissingData?.toBool() ?? true;
+    _enableBlackList.value = enableBlackList?.toBool() ?? false;
+    try {
+      if (blacklist.isNullOrEmpty) {
+        _blackList.value = [];
+      } else {
+        List<Map<String, dynamic>> jsonList = (jsonDecode(blacklist!) as List<dynamic>).cast();
+        _blackList.value = jsonList.map((item) => BlackListRule.fromJson(item)).toList();
+      }
+    } catch (err, stack) {
+      print(err);
+      debugPrintStack(stackTrace: stack);
+      _blackList.value = [];
+    }
     //endregion
     changeThemeMode(this.appTheme);
   }
@@ -585,13 +615,11 @@ class ConfigService extends GetxService {
       // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/documents
       documentPath = (await getExternalStorageDirectories(
         type: StorageDirectory.documents,
-      ))![0]
-          .path;
+      ))![0].path;
       // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/pictures
       androidPrivatePicturesPath = (await getExternalStorageDirectories(
         type: StorageDirectory.pictures,
-      ))![0]
-          .path;
+      ))![0].path;
       // /storage/emulated/0/Android/data/top.coclyun.clipshare/cache
       cachePath = (await getExternalCacheDirectories())![0].path;
     } else {
@@ -660,7 +688,7 @@ class ConfigService extends GetxService {
     );
   }
 
-//endregion
+  //endregion
 
   //region 更新存储于数据库的配置
   Future<void> _addOrUpdateDbConfig(String key, String value) async {
@@ -993,7 +1021,18 @@ class ConfigService extends GetxService {
     _autoSyncMissingData.value = enable;
   }
 
-//endregion
+  Future<void> setEnableBlackList(bool enable) async {
+    await _addOrUpdateDbConfig("enableBlackList", enable.toString());
+    _enableBlackList.value = enable;
+  }
+
+  ///更新黑名单数据
+  Future<void> setBlacklist(List<BlackListRule> rules) async {
+    await _addOrUpdateDbConfig("blacklist", jsonEncode(rules));
+    _blackList.value = rules;
+  }
+
+  //endregion
 
   //region 其他方法
 
@@ -1045,5 +1084,32 @@ class ConfigService extends GetxService {
       Get.updateLocale(Locale(codes[0], codes.length == 1 ? null : codes[1]));
     }
   }
-//endregion
+
+  ///判断是否命中黑名单
+  BlackListMatchResult matchesBlacklist(HistoryContentType type, String content, ClipboardSource? source) {
+    if (!enableBlackList) {
+      return BlackListMatchResult.notMatched;
+    }
+    // 遍历所有黑名单规则
+    for (final rule in blackList) {
+      // 跳过未启用的规则
+      if (!rule.enable) continue;
+
+      // 检查内容匹配
+      final contentMatched = rule.isAllContent || content.matchRegExp(rule.content, rule.ignoreCase);
+
+      // 检查应用匹配
+      final appMatched = rule.isAllApp || (source != null && rule.appIds.contains(source.id));
+
+      // 如果内容和应用都匹配，则命中黑名单
+      if (contentMatched && appMatched) {
+        return BlackListMatchResult.matched(rule);
+      }
+    }
+
+    // 没有命中任何黑名单规则
+    return BlackListMatchResult.notMatched;
+  }
+
+  //endregion
 }

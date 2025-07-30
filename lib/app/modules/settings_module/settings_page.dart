@@ -40,7 +40,7 @@ import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_header.dart';
 import 'package:clipshare/app/widgets/settings/forward_server_edit_dialog.dart';
 import 'package:clipshare/app/widgets/settings/text_edit_dialog.dart';
-import 'package:clipshare/app/widgets/single_select_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/single_select_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -1629,6 +1629,21 @@ class SettingsPage extends GetView<SettingsController> {
                           child: Text(TranslationKey.configure.tr),
                         );
                       },
+                    ),
+                    SettingCard(
+                      title: Text(
+                        TranslationKey.blacklistRules.tr,
+                        maxLines: 1,
+                      ),
+                      value: false,
+                      action: (v) => IconButton(
+                        onPressed: controller.gotoBlacklistPage,
+                        icon: const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                      onTap: controller.gotoBlacklistPage,
                     ),
                   ],
                 ),

@@ -24,7 +24,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/clip_data_card.dart';
-import 'package:clipshare/app/widgets/clip_detail_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/clip_detail_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';

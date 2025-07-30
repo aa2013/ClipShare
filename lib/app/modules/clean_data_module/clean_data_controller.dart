@@ -25,7 +25,7 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/radio_group.dart';
-import 'package:clipshare/app/widgets/single_select_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/single_select_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

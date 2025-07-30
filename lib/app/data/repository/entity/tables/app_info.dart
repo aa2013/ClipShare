@@ -69,27 +69,30 @@ class AppInfo {
   }
 
   @override
-  bool operator ==(Object other) => identical(this, other) || other is AppInfo && runtimeType == other.runtimeType && id == other.id;
+  bool operator ==(Object other) {
+    return identical(this, other) || other is AppInfo && runtimeType == other.runtimeType && (id == other.id && appId == other.appId);
+  }
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => id.hashCode & appId.hashCode;
 }
 
 extension AppInfoExt on AppInfo {
-  static final Map<int, Uint8List> _bytes = {};
+  static final Map<String, Uint8List> _bytes = {};
 
-  static void removeWhere(bool Function(int, Uint8List) func) {
+  static void removeWhere(bool Function(String, Uint8List) func) {
     return _bytes.removeWhere(func);
   }
 
   Uint8List get iconBytes {
-    if (!_bytes.containsKey(id)) {
-      if(iconB64.isEmpty){
+    if (!_bytes.containsKey(appId)) {
+      if (iconB64.isEmpty) {
         return Constants.emptyPngBytes;
-      }else{
-        _bytes[id] = base64.decode(iconB64);
+      } else {
+        final bytes = base64.decode(iconB64);
+        _bytes[appId] = bytes;
       }
     }
-    return _bytes[id]!;
+    return _bytes[appId]!;
   }
 }

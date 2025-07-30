@@ -535,7 +535,18 @@ enum TranslationKey {
   syncData,
   syncSettingsAutoSyncMissingDataTitle,
   syncSettingsAutoSyncMissingDataDesc,
-  syncingData;
+  syncingData,
+  enableBlackList,
+  enableBlackListTips,
+  contentCannotEmpty,
+  contentAndSourceCannotEmpty,
+  ruleList,
+  blacklistRules,
+  blacklistDetectTips,
+  ignoreCase,
+  application,
+  supportRegex,
+  content;
 
   String get tr => name.tr;
 

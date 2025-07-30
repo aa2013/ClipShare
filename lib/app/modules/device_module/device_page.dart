@@ -10,7 +10,7 @@ import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/device_card.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';
-import 'package:clipshare/app/widgets/network_address_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/network_address_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
