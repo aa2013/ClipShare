@@ -143,7 +143,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     }
     // 判断是否快要滑动到底部
     if (_scrollController.position.extentAfter <= 200 && !_loadNewData) {
-      refresh(true);
+      refresh(loadMore: true);
     }
     if (_scrollController.offset >= 300) {
       if (!_showBackToTopButton) {
@@ -160,15 +160,20 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     }
   }
 
-  Future<void> refresh([bool loadMore = false]) async {
+  Future<void> refresh({
+    bool loadMore = false,
+    bool showLoading = false,
+  }) async {
     if (loadMore) {
       setState(() {
         _loadNewData = true;
       });
     } else {
-      setState(() {
-        _loading = true;
-      });
+      if (showLoading) {
+        setState(() {
+          _loading = true;
+        });
+      }
     }
     return Future.delayed(const Duration(milliseconds: 500), () {
       var fromId = 0;
@@ -249,7 +254,11 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     return Scaffold(
       body: Column(
         children: [
-          if (!filterLoading) HistoryFilter(controller: historyFilterController),
+          if (!filterLoading)
+            Container(
+              margin: const EdgeInsets.only(top: 10),
+              child: HistoryFilter(controller: historyFilterController),
+            ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () => Future.wait<void>([loadSearchCondition(), refresh()]),

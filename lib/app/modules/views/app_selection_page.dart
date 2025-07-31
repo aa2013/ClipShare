@@ -52,6 +52,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   final scrollController = ScrollController();
   late final TabController tabController;
   var loading = true;
+  var showSearchTextInput = false;
 
   List<Tab> get tabs => [Tab(text: TranslationKey.userApp.tr), Tab(text: TranslationKey.systemApp.tr)];
 
@@ -114,8 +115,8 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
                   appIconBytesCached[app.appId] = base64Decode(app.iconB64);
                 }
                 iconBytes = appIconBytesCached[app.appId]!;
-              }else{
-                iconBytes=app.iconBytes;
+              } else {
+                iconBytes = app.iconBytes;
               }
               return SizedBox(
                 height: 75,
@@ -225,31 +226,51 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
       title: Row(
         children: [
           Expanded(
-            child: Row(
-              children: [
-                Text(TranslationKey.selectApplication.tr),
-                const SizedBox(width: 5),
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      isDense: true,
-                      hintText: TranslationKey.search.tr,
-                      hintStyle: const TextStyle(fontSize: 13),
-                      contentPadding: const EdgeInsets.only(left: 5, right: 5, bottom: 2),
-                    ),
-                    onChanged: (text) {
+            child: Visibility(
+              visible: showSearchTextInput,
+              replacement: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(TranslationKey.selectApplication.tr),
+                  IconButton(
+                    onPressed: () {
                       setState(() {
-                        searchResultList = originAppList.where((appInfo) {
-                          if (appInfo.appId.containsIgnoreCase(text)) {
-                            return true;
-                          }
-                          return appInfo.name.containsIgnoreCase(text);
-                        }).toList();
+                        showSearchTextInput = true;
                       });
                     },
+                    icon: const Icon(Icons.search),
+                  ),
+                ],
+              ),
+              child: TextField(
+                autofocus: true,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: TranslationKey.search.tr,
+                  hintStyle: const TextStyle(fontSize: 13),
+                  border: InputBorder.none,
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      setState(() {
+                        showSearchTextInput = false;
+                        searchResultList = originAppList;
+                      });
+                    },
+                    icon: const Icon(Icons.clear),
                   ),
                 ),
-              ],
+                onChanged: (text) {
+                  setState(() {
+                    searchResultList = originAppList.where((appInfo) {
+                      if (appInfo.appId.containsIgnoreCase(text)) {
+                        return true;
+                      }
+                      return appInfo.name.containsIgnoreCase(text);
+                    }).toList();
+                  });
+                },
+              ),
             ),
           ),
           Tooltip(
