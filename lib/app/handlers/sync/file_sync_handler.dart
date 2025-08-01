@@ -152,7 +152,7 @@ class FileSyncHandler {
   }
 
   ///向 socket 发送文件
-  void sendFile2Socket(Socket client) {
+  Future<void> sendFile2Socket(Socket client) async {
     DateTime start = DateTime.now();
     final filePath = isUri ? pendingFile.filePath : _file!.normalizePath;
     final fileSize = isUri ? pendingFile.size! : _file!.lengthSync();
@@ -175,7 +175,7 @@ class FileSyncHandler {
     syncingFileService.updateSyncingFile(syncingFile);
     Stream<List<int>> stream;
     if (isUri) {
-      final nullableStream = uriFileReader.readFileAsBytesStream(pendingFile.filePath);
+      final nullableStream = await uriFileReader.readFileAsBytesStream(pendingFile.filePath);
       if (nullableStream == null) {
         Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
         throw TranslationKey.failedToLoad.tr;
@@ -205,7 +205,7 @@ class FileSyncHandler {
         uid: appConfig.userId,
         devId: appConfig.devInfo.guid,
         time: start.toString(),
-        content: filePath,
+        content: Uri.decodeComponent(filePath),
         type: HistoryContentType.file.value,
         size: fileSize,
         sync: true,
