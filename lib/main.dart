@@ -28,6 +28,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -37,65 +38,108 @@ import 'app/services/db_service.dart';
 import 'app/theme/app_theme.dart';
 
 Future<void> main(List<String> args) async {
-  var isMultiWindow = args.firstOrNull == 'multi_window';
-  WidgetsFlutterBinding.ensureInitialized();
-  if (PlatformExt.isDesktop) {
-    // Must add this line.
-    await windowManager.ensureInitialized();
-  }
-  await Get.putAsync(() => WindowControlService().initWindows());
-  Widget home = SplashPage();
-  String title = Constants.appName;
-  DesktopMultiWindowArgs? multiWindowArgs;
-  if (isMultiWindow) {
-    //子窗口
-    final windowId = int.parse(args[1]);
-    multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
-    switch (multiWindowArgs.tag) {
-      case MultiWindowTag.history:
-        final wcs = Get.find<WindowControlService>();
-        wcs.setAlwaysOnTop(true);
-        //linux会导致窗口变成初始大小
-        if (Platform.isWindows) {
-          wcs.setResizable(false);
-        }
-        wcs.setMinimizable(false);
-        wcs.setMaximizable(false);
-        home = HistoryWindow(
-          windowController: WindowController.fromWindowId(windowId),
-          args: multiWindowArgs.otherArgs,
-        );
-        title = multiWindowArgs.title;
-        break;
-      case MultiWindowTag.devices:
-        final wcs = Get.find<WindowControlService>();
-        wcs.setAlwaysOnTop(true);
-        //linux会导致窗口变成初始大小
-        if (Platform.isWindows) {
-          wcs.setResizable(false);
-        }
-        wcs.setMinimizable(false);
-        wcs.setMaximizable(false);
-        home = FileSenderWindow(
-          windowController: WindowController.fromWindowId(windowId),
-          args: multiWindowArgs.otherArgs,
-        );
-        title = multiWindowArgs.title;
-        break;
+  try {
+    var isMultiWindow = args.firstOrNull == 'multi_window';
+    WidgetsFlutterBinding.ensureInitialized();
+    if (PlatformExt.isDesktop) {
+      // Must add this line.
+      await windowManager.ensureInitialized();
     }
-  }
-  if (isMultiWindow) {
-    await initMultiWindowServices();
-    runMain(home, title, multiWindowArgs);
-  } else {
-    await initMainServices();
-    runZonedGuarded(
-      () {
-        runMain(home, title, null);
-      },
-      (err, stack) {
-        Log.error("globalError", "$err $stack");
-      },
+    await Get.putAsync(() => WindowControlService().initWindows());
+    Widget home = SplashPage();
+    String title = Constants.appName;
+    DesktopMultiWindowArgs? multiWindowArgs;
+    if (isMultiWindow) {
+      //子窗口
+      final windowId = int.parse(args[1]);
+      multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
+      switch (multiWindowArgs.tag) {
+        case MultiWindowTag.history:
+          final wcs = Get.find<WindowControlService>();
+          wcs.setAlwaysOnTop(true);
+          //linux会导致窗口变成初始大小
+          if (Platform.isWindows) {
+            wcs.setResizable(false);
+          }
+          wcs.setMinimizable(false);
+          wcs.setMaximizable(false);
+          home = HistoryWindow(
+            windowController: WindowController.fromWindowId(windowId),
+            args: multiWindowArgs.otherArgs,
+          );
+          title = multiWindowArgs.title;
+          break;
+        case MultiWindowTag.devices:
+          final wcs = Get.find<WindowControlService>();
+          wcs.setAlwaysOnTop(true);
+          //linux会导致窗口变成初始大小
+          if (Platform.isWindows) {
+            wcs.setResizable(false);
+          }
+          wcs.setMinimizable(false);
+          wcs.setMaximizable(false);
+          home = FileSenderWindow(
+            windowController: WindowController.fromWindowId(windowId),
+            args: multiWindowArgs.otherArgs,
+          );
+          title = multiWindowArgs.title;
+          break;
+      }
+    }
+    if (isMultiWindow) {
+      await initMultiWindowServices();
+      runMain(home, title, multiWindowArgs);
+    } else {
+      await initMainServices();
+      runZonedGuarded(
+        () {
+          runMain(home, title, null);
+        },
+        (err, stack) {
+          Log.error("globalError", "$err $stack");
+        },
+      );
+    }
+  } catch (err, stack) {
+    if (Platform.isWindows) {
+      windowManager.show();
+    }
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text("Initialization failed! Error: $err"),
+                    Tooltip(
+                      message: 'Copy error detail',
+                      child: IconButton(
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: "$err\n$stack"));
+                        },
+                        icon: const Icon(
+                          Icons.copy,
+                          color: Colors.blueGrey,
+                          size: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Text(stack.toString()),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -187,7 +231,7 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
   // Override behavior methods like buildOverscrollIndicator and buildScrollbar
   @override
   Set<PointerDeviceKind> get dragDevices => {
-        PointerDeviceKind.touch,
-        PointerDeviceKind.mouse,
-      };
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+  };
 }
