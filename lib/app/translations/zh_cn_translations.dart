@@ -1088,18 +1088,22 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.syncingData:
         return "同步数据中";
       case TranslationKey.enableBlackList:
-        return "启用黑名单功能";
+        return "黑名单";
       case TranslationKey.enableBlackListTips:
         return "启用后命中规则的内容不会被记录";
+      case TranslationKey.enableWhiteList:
+        return "白名单";
+      case TranslationKey.enableWhiteListTips:
+        return "启用后命中规则的内容才会被记录";
       case TranslationKey.contentCannotEmpty:
         return "内容不能为空";
       case TranslationKey.contentAndSourceCannotEmpty:
         return "内容和来源不能都为空";
-      case TranslationKey.ruleList:
-        return "规则列表";
       case TranslationKey.blacklistRules:
         return "黑名单规则";
-      case TranslationKey.blacklistDetectTips:
+      case TranslationKey.whitelistRules:
+        return "白名单规则";
+      case TranslationKey.filterRuleDetectTips:
         return "当前仅对文本内容生效";
       case TranslationKey.ignoreCase:
         return "忽略大小写";
@@ -1109,6 +1113,28 @@ class ZhCNTranslation extends AbstractTranslations {
         return "支持正则表达式";
       case TranslationKey.content:
         return "内容";
+      case TranslationKey.title:
+        return "标题";
+      case TranslationKey.addWhitelistRule:
+        return "添加白名单";
+      case TranslationKey.addBlacklistRule:
+        return "添加黑名单";
+      case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
+        return "接收移动端设备通知";
+      case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
+        return "已连接的移动端设备的通知将显示在本设备（需在源设备开启通知记录功能）";
+      case TranslationKey.notificationRules:
+        return "通知历史记录规则";
+      case TranslationKey.permissionSettingsNotificationRecordTitle:
+        return "通知历史访问权限";
+      case TranslationKey.permissionSettingsNotificationRecordDesc:
+        return "请求该权限以记录通知历史";
+      case TranslationKey.noNotificationRecordPermTips:
+        return "无通知历史访问权限，无法记录通知历史";
+      case TranslationKey.recordNotification:
+        return "记录通知历史";
+      case TranslationKey.notificationFromDevice:
+        return "来自 @devName 的通知";
     }
   }
 }

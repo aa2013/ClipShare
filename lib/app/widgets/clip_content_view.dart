@@ -33,107 +33,145 @@ class _ClipContentViewState extends State<ClipContentView> {
   @override
   Widget build(BuildContext context) {
     final showText = widget.clipData.data.content;
-    return widget.clipData.isText || widget.clipData.isSms
-        ? showText.length > 10000
-            ? LargeText(
-                text: showText,
-                readonly: true,
-              )
-            : SelectableLinkify(
-                textAlign: TextAlign.left,
-                text: showText,
-                options: const LinkifyOptions(humanize: false),
-                linkStyle: const TextStyle(
-                  decoration: TextDecoration.none,
-                ),
-                onOpen: (link) async {
-                  if (!PlatformExt.isDesktop) {
-                    link.url.askOpenUrl();
-                  } else {
-                    link.url.openUrl();
-                  }
-                },
-                onSelectionChanged: (TextSelection selection, SelectionChangedCause? cause) {
-                  hasSelection = selection.extentOffset != selection.baseOffset;
-                },
-                contextMenuBuilder: (context, editableTextState) {
-                  if (PlatformExt.isDesktop) {
-                    final menus = [
-                      if (hasSelection)
-                        MyMenuItem(
-                          label: TranslationKey.copyContent.tr,
-                          icon: Icons.copy,
-                          onSelected: () async {
-                            editableTextState.copySelection(
-                              SelectionChangedCause.toolbar,
-                            );
-                          },
-                        ),
-                      MyMenuItem(
-                        label: TranslationKey.selectAll.tr,
-                        icon: Icons.select_all,
-                        onSelected: () async {
-                          editableTextState.selectAll(
-                            SelectionChangedCause.toolbar,
-                          );
-                        },
-                      ),
-                    ];
-                    return MyMenu(menus: menus, position: editableTextState.contextMenuAnchors.primaryAnchor);
-                  }
-                  return AdaptiveTextSelectionToolbar.buttonItems(
-                    anchors: editableTextState.contextMenuAnchors,
-                    buttonItems: <ContextMenuButtonItem>[
-                      ContextMenuButtonItem(
-                        onPressed: () {
-                          editableTextState.copySelection(
-                            SelectionChangedCause.toolbar,
-                          );
-                        },
-                        type: ContextMenuButtonType.copy,
-                      ),
-                      ContextMenuButtonItem(
-                        onPressed: () {
-                          editableTextState.selectAll(
-                            SelectionChangedCause.toolbar,
-                          );
-                        },
-                        type: ContextMenuButtonType.selectAll,
-                      ),
-                    ],
+    if (widget.clipData.isText || widget.clipData.isSms) {
+      if (showText.length > 10000) {
+        return LargeText(
+          text: showText,
+          readonly: true,
+        );
+      } else {
+        return _buildSelectableLinkify(showText);
+      }
+    } else if (widget.clipData.isImage) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: _buildImage(constraints.maxWidth),
+          );
+        },
+      );
+    } else if (widget.clipData.isFile) {
+      return ClipSimpleDataContent(clip: widget.clipData);
+    } else if (widget.clipData.isNotification) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildSelectableLinkify(widget.clipData.notificationContent!),
+                _buildImage(constraints.maxWidth),
+              ],
+            ),
+          );
+        },
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+  }
+
+  Widget _buildSelectableLinkify(String text) {
+    return SelectableLinkify(
+      textAlign: TextAlign.left,
+      text: text,
+      options: const LinkifyOptions(humanize: false),
+      linkStyle: const TextStyle(
+        decoration: TextDecoration.none,
+      ),
+      onOpen: (link) async {
+        if (!PlatformExt.isDesktop) {
+          link.url.askOpenUrl();
+        } else {
+          link.url.openUrl();
+        }
+      },
+      onSelectionChanged: (TextSelection selection, SelectionChangedCause? cause) {
+        hasSelection = selection.extentOffset != selection.baseOffset;
+      },
+      contextMenuBuilder: (context, editableTextState) {
+        if (PlatformExt.isDesktop) {
+          final menus = [
+            if (hasSelection)
+              MyMenuItem(
+                label: TranslationKey.copyContent.tr,
+                icon: Icons.copy,
+                onSelected: () async {
+                  editableTextState.copySelection(
+                    SelectionChangedCause.toolbar,
                   );
                 },
-              )
-        : widget.clipData.isImage
-            ? LayoutBuilder(
-                builder: (context, constraints) {
-                  return SingleChildScrollView(
-                    child: MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      child: InkWell(
-                        child: Image.file(
-                          File(widget.clipData.data.content),
-                          fit: BoxFit.contain,
-                          width: constraints.maxWidth,
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PreviewPage(
-                                clip: widget.clipData,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  );
-                },
-              )
-            : widget.clipData.isFile
-                ? ClipSimpleDataContent(clip: widget.clipData)
-                : const SizedBox.shrink();
+              ),
+            MyMenuItem(
+              label: TranslationKey.selectAll.tr,
+              icon: Icons.select_all,
+              onSelected: () async {
+                editableTextState.selectAll(
+                  SelectionChangedCause.toolbar,
+                );
+              },
+            ),
+          ];
+          return MyMenu(menus: menus, position: editableTextState.contextMenuAnchors.primaryAnchor);
+        }
+        return AdaptiveTextSelectionToolbar.buttonItems(
+          anchors: editableTextState.contextMenuAnchors,
+          buttonItems: <ContextMenuButtonItem>[
+            ContextMenuButtonItem(
+              onPressed: () {
+                editableTextState.copySelection(
+                  SelectionChangedCause.toolbar,
+                );
+              },
+              type: ContextMenuButtonType.copy,
+            ),
+            ContextMenuButtonItem(
+              onPressed: () {
+                editableTextState.selectAll(
+                  SelectionChangedCause.toolbar,
+                );
+              },
+              type: ContextMenuButtonType.selectAll,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildImage(double maxWidth) {
+    Widget image;
+    if (widget.clipData.isImage) {
+      image = Image.file(
+        File(widget.clipData.data.content),
+        fit: BoxFit.contain,
+        width: maxWidth,
+      );
+    } else {
+      if (widget.clipData.notificationImage == null) {
+        return const SizedBox.shrink();
+      }
+      image = Image.memory(
+        widget.clipData.notificationImage!,
+        fit: BoxFit.contain,
+        width: maxWidth,
+      );
+    }
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: InkWell(
+        child: image,
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PreviewPage(
+                clip: widget.clipData,
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   /// Builds the context menu view.
@@ -151,7 +189,7 @@ class _ClipContentViewState extends State<ClipContentView> {
           offset: const Offset(0.0, 2.0),
           blurRadius: 10,
           spreadRadius: -1,
-        )
+        ),
       ],
       borderRadius: state.borderRadius ?? BorderRadius.circular(4.0),
     );

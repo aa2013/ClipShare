@@ -5,7 +5,7 @@ import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_extra_info.dart';
+import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -86,7 +86,7 @@ class ClipDataCardCompact extends StatelessWidget {
                     imgSingleView: true,
                   ),
                 ),
-                ClipSimpleDataExtraInfo(clip: _clip),
+                ClipSimpleDataFooter(clip: _clip),
               ],
             ),
           ),

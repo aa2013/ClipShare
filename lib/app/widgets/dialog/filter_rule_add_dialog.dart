@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/blacklist_item.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
@@ -17,21 +18,23 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get_apps/get_apps.dart';
 
-class BlackListAddRuleDialog extends StatefulWidget {
-  final BlackListRule? data;
-  final void Function(BlackListRule rule) onDone;
+class FilterRuleAddDialog extends StatefulWidget {
+  final FilterRule? data;
+  final WhiteBlackMode mode;
+  final void Function(FilterRule rule) onDone;
 
-  const BlackListAddRuleDialog({
+  const FilterRuleAddDialog({
     super.key,
     required this.onDone,
+    required this.mode,
     this.data,
   });
 
   @override
-  State<StatefulWidget> createState() => _BlackListAddRuleDialogState();
+  State<StatefulWidget> createState() => _FilterRuleAddDialogState();
 }
 
-class _BlackListAddRuleDialogState extends State<BlackListAddRuleDialog> {
+class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
   final appConfig = Get.find<ConfigService>();
   final contentText = TextEditingController();
   final allLocalAppList = <LocalAppInfo>[].obs;
@@ -39,10 +42,12 @@ class _BlackListAddRuleDialogState extends State<BlackListAddRuleDialog> {
   final ignoreCase = false.obs;
   final iconBytesMap = <String, Uint8List>{};
   final sourceService = Get.find<ClipboardSourceService>();
+  late final bool isBlacklist;
 
   @override
   void initState() {
     super.initState();
+    isBlacklist = widget.mode == WhiteBlackMode.black;
     if (widget.data != null) {
       contentText.text = widget.data!.content;
       ignoreCase.value = widget.data!.ignoreCase;
@@ -66,7 +71,7 @@ class _BlackListAddRuleDialogState extends State<BlackListAddRuleDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(TranslationKey.addRule.tr),
+      title: Text(isBlacklist ? TranslationKey.addBlacklistRule.tr : TranslationKey.addWhitelistRule.tr),
       content: IntrinsicHeight(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +80,7 @@ class _BlackListAddRuleDialogState extends State<BlackListAddRuleDialog> {
               controller: contentText,
               autofocus: true,
               decoration: InputDecoration(
-                labelText: TranslationKey.connect.tr,
+                labelText: TranslationKey.content.tr,
                 hintText: TranslationKey.supportRegex.tr,
                 border: const OutlineInputBorder(),
               ),
@@ -156,7 +161,7 @@ class _BlackListAddRuleDialogState extends State<BlackListAddRuleDialog> {
             TextButton(
               onPressed: () {
                 widget.onDone(
-                  BlackListRule(
+                  FilterRule(
                     content: contentText.text,
                     appIds: selectedAppList.map((item) => item.appId).toSet(),
                     enable: true,

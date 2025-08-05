@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -269,7 +271,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     switch (type) {
       case HistoryContentType.text:
         //文本无特殊实现，此处留空
-        final matchResult = appConfig.matchesBlacklist(type, content, source);
+        final matchResult = appConfig.matchesContentBlacklist(type, content, source);
         if (matchResult.matched) {
           Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
           return;
@@ -299,11 +301,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         break;
       case HistoryContentType.sms:
         //判断是否符合短信同步规则，符合则继续，否则终止
-        var rules =
-            jsonDecode(
-                  appConfig.smsRules,
-                )["data"]
-                as List<dynamic>;
+        var rules = jsonDecode(appConfig.smsRules)["data"] as List<dynamic>;
         var hasMatch = false;
         for (var rule in rules) {
           if (content.matchRegExp(rule["rule"])) {
@@ -313,6 +311,24 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         }
         //规则列表不为空且未匹配成功，忽略
         if (rules.isNotEmpty && !hasMatch) {
+          return;
+        }
+        break;
+      case HistoryContentType.notification:
+        if (!appConfig.enableRecordNotification) {
+          Log.warn(tag, "Not allow to record notification");
+          return;
+        }
+        final matchResult = appConfig.matchesNotificationRuleList(content, source!.id);
+        final isBlacklistMode = appConfig.currentNotificationWhiteBlackMode == WhiteBlackMode.black;
+        //匹配到黑名单，结束
+        if (matchResult.matched && isBlacklistMode) {
+          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
+          return;
+        }
+        //白名单模式，但未匹配到，结束
+        if (!isBlacklistMode && !matchResult.matched) {
+          Log.info(tag, "not matched whitelist, content $content");
           return;
         }
         break;
@@ -329,7 +345,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       size: size,
       source: source?.id,
     );
-    if (appConfig.sourceRecord) {
+    if (appConfig.sourceRecord || type == HistoryContentType.notification) {
       if (source != null) {
         await sourceService.addOrUpdate(
           AppInfo(
@@ -408,6 +424,29 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             file.writeAsBytesSync(data);
             if (appConfig.saveToPictures) {
               androidChannelService.notifyMediaScan(path);
+            }
+          }
+          break;
+        case HistoryContentType.notification:
+          if (appConfig.enableShowMobileNotification) {
+            final now = DateTime.now();
+            final hisTime = DateTime.parse(history.time);
+            final offsetMs = now.difference(hisTime).inMilliseconds.abs();
+            Log.info(tag, "show mobile notification, time offset ${offsetMs}ms");
+            const maxTimeoutMs = 2000;
+            if (offsetMs <= maxTimeoutMs) {
+              try {
+                final json = jsonDecode(history.content);
+                final notificationContent = json["content"];
+                Global.notify(
+                  title: TranslationKey.notificationFromDevice.trParams({"devName": msg.send.name}),
+                  content: notificationContent,
+                );
+              } catch (err, stack) {
+                Log.error(tag, "show mobile notification error: $err, $stack");
+              }
+            } else {
+              Log.debug(tag, "The sync notification is outdated (${offsetMs}ms exceeds ${maxTimeoutMs}ms), skipping.");
             }
           }
           break;
@@ -545,22 +584,18 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         for (var rule in rules) {
           if (history.content.matchRegExp(rule["rule"])) {
             //添加标签
-            var tag = HistoryTag(
-              rule["name"],
-              history.id,
-            );
+            var tag = HistoryTag(rule["name"], history.id);
             tagService.add(tag);
           }
         }
         break;
       case HistoryContentType.sms:
         //添加标签
-        tagService.add(
-          HistoryTag(
-            TranslationKey.sms.tr,
-            history.id,
-          ),
-        );
+        tagService.add(HistoryTag(TranslationKey.sms.tr, history.id));
+        break;
+      case HistoryContentType.notification:
+        //添加通知标签
+        tagService.add(HistoryTag(TranslationKey.notification.tr, history.id));
         break;
       default:
     }

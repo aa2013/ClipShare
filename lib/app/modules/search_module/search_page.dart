@@ -53,6 +53,7 @@ class SearchPage extends GetView<search_module.SearchController> {
                       HistoryContentType.image,
                       HistoryContentType.file,
                       HistoryContentType.sms,
+                      HistoryContentType.notification,
                     ])
                       Row(
                         children: [

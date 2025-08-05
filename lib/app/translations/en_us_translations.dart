@@ -1087,18 +1087,22 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.syncingData:
         return "Syncing data";
       case TranslationKey.enableBlackList:
-        return "Enable Blacklist";
+        return "Blacklist";
       case TranslationKey.enableBlackListTips:
         return "When enabled, content matching rules will not be recorded";
+      case TranslationKey.enableWhiteList:
+        return "Whitelist";
+      case TranslationKey.enableWhiteListTips:
+        return "When enabled, only content matching rules will be recorded";
       case TranslationKey.contentCannotEmpty:
         return "Content cannot be empty";
       case TranslationKey.contentAndSourceCannotEmpty:
         return "Both content and source cannot be empty";
-      case TranslationKey.ruleList:
-        return "Rule List";
       case TranslationKey.blacklistRules:
         return "Blacklist Rules";
-      case TranslationKey.blacklistDetectTips:
+      case TranslationKey.whitelistRules:
+        return "Whitelist Rules";
+      case TranslationKey.filterRuleDetectTips:
         return "Currently only applies to Text";
       case TranslationKey.ignoreCase:
         return "Case insensitive";
@@ -1108,6 +1112,28 @@ class EnUSTranslation extends AbstractTranslations {
         return "Regex supported";
       case TranslationKey.content:
         return "Content";
+      case TranslationKey.title:
+        return "Title";
+      case TranslationKey.addWhitelistRule:
+        return "Add Whitelist";
+      case TranslationKey.addBlacklistRule:
+        return "Add Blacklist";
+      case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
+        return "Receive Mobile Device Notifications";
+      case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
+        return "Notifications from connected mobile devices will display on this device (requires enabling notification logging on source device)";
+      case TranslationKey.notificationRules:
+        return "Notification History Rules";
+      case TranslationKey.permissionSettingsNotificationRecordTitle:
+        return "Notification History";
+      case TranslationKey.permissionSettingsNotificationRecordDesc:
+        return "Request this permission to record notification history";
+      case TranslationKey.noNotificationRecordPermTips:
+        return "No notification history access permission, unable to record notification history";
+      case TranslationKey.recordNotification:
+        return "Record notification history";
+      case TranslationKey.notificationFromDevice:
+        return "Notification from @devName";
     }
   }
 }

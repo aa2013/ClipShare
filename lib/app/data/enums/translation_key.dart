@@ -538,15 +538,28 @@ enum TranslationKey {
   syncingData,
   enableBlackList,
   enableBlackListTips,
+  enableWhiteList,
+  enableWhiteListTips,
   contentCannotEmpty,
   contentAndSourceCannotEmpty,
-  ruleList,
   blacklistRules,
-  blacklistDetectTips,
+  whitelistRules,
+  notificationRules,
+  addWhitelistRule,
+  addBlacklistRule,
+  filterRuleDetectTips,
   ignoreCase,
   application,
   supportRegex,
-  content;
+  content,
+  title,
+  preferenceSettingsShowMobileNotificationDesc,
+  preferenceSettingsShowMobileNotificationTitle,
+  permissionSettingsNotificationRecordTitle,
+  permissionSettingsNotificationRecordDesc,
+  noNotificationRecordPermTips,
+  recordNotification,
+  notificationFromDevice;
 
   String get tr => name.tr;
 

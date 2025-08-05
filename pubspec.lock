@@ -321,10 +321,10 @@ packages:
     dependency: "direct main"
     description:
       name: device_info_plus
-      sha256: "77f757b789ff68e4eaf9c56d1752309bd9f7ad557cb105b938a7f8eb89e59110"
+      sha256: "98f28b42168cc509abc92f88518882fd58061ea372d7999aecc424345c7bff6a"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "9.1.2"
+    version: "11.5.0"
   device_info_plus_platform_interface:
     dependency: transitive
     description:
@@ -774,10 +774,10 @@ packages:
     dependency: "direct main"
     description:
       name: launch_at_startup
-      sha256: "93fc5638e088290004fae358bae691486673d469957d461d9dae5b12248593eb"
+      sha256: "7db33398b76ec0ed9e27f9f4640553e239977437564046625e215be89c91f084"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.2.2"
+    version: "0.5.1"
   leak_tracker:
     dependency: transitive
     description:
@@ -994,6 +994,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.3.1"
+  notification_listener_service:
+    dependency: "direct main"
+    description:
+      name: notification_listener_service
+      sha256: "8b9bd50aaa6b98e8aea4e1f060ebc6ceedade5a1613760d1ba3b724d4b3d7485"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.3.4"
   open_file_plus:
     dependency: "direct main"
     description:
@@ -1679,7 +1687,7 @@ packages:
       path: "../uri_file_reader"
       relative: true
     source: path
-    version: "1.0.1"
+    version: "1.0.2"
   url_launcher:
     dependency: "direct main"
     description:
@@ -1852,10 +1860,10 @@ packages:
     dependency: transitive
     description:
       name: win32_registry
-      sha256: "21ec76dfc731550fd3e2ce7a33a9ea90b828fdf19a5c3bcf556fa992cfa99852"
+      sha256: "6f1b564492d0147b330dd794fee8f512cec4977957f310f9951b5f9d83618dae"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.1.5"
+    version: "2.1.0"
   window_manager:
     dependency: "direct main"
     description:

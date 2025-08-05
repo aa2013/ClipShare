@@ -22,6 +22,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:floor/floor.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -124,7 +125,7 @@ class DbService extends GetxService {
 
   @override
   Future<void> onClose() {
-    print("db service onClose");
+    debugPrint("db service onClose");
     return _db.close();
   }
 

@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/models/desktop_multi_window_args.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_window.dart';
 import 'package:clipshare/app/modules/views/windows/history/history_window.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
+import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
@@ -18,7 +19,6 @@ import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
-import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/services/window_service.dart';
 import 'package:clipshare/app/translations/app_translations.dart';
@@ -158,6 +158,9 @@ Future<void> initMainServices() async {
   await Get.putAsync(() => ClipboardSourceService().init(), permanent: true);
   if (PlatformExt.isDesktop) {
     await Get.putAsync(() => WindowService().init(), permanent: true);
+  }
+  if (Platform.isAndroid) {
+    Get.put(AndroidNotificationListenerService(), permanent: true);
   }
 }
 

@@ -26,15 +26,15 @@ class HistoryFilterController {
   final loading = false.obs;
 
   SearchFilter get filter => SearchFilter(
-        content: content.value,
-        startDate: startDate.value,
-        endDate: endDate.value,
-        tags: selectedTags.value,
-        devIds: selectedDevIds.value,
-        appIds: selectedAppIds.value,
-        onlyNoSync: onlyNoSync.value,
-        type: selectedType.value,
-      );
+    content: content.value,
+    startDate: startDate.value,
+    endDate: endDate.value,
+    tags: selectedTags.value,
+    devIds: selectedDevIds.value,
+    appIds: selectedAppIds.value,
+    onlyNoSync: onlyNoSync.value,
+    type: selectedType.value,
+  );
 
   ///region filter
   final content = "".obs;
@@ -101,18 +101,18 @@ class HistoryFilterController {
   }
 
   String getDevNameById(devId) {
-    return allDevices
-        .firstWhereOrNull((item) => item.guid == devId)
-        ?.name ?? "Unknown";
+    return allDevices.firstWhereOrNull((item) => item.guid == devId)?.name ?? "Unknown";
   }
 }
 
 class HistoryFilter extends StatelessWidget {
   final HistoryFilterController controller;
+  final void Function(HistoryContentType type)? onFilterTypeChanged;
 
   const HistoryFilter({
     super.key,
     required this.controller,
+    this.onFilterTypeChanged,
   });
 
   @override
@@ -222,44 +222,40 @@ class HistoryFilter extends StatelessWidget {
           if (controller.showContentTypeFilter)
             Container(
               margin: const EdgeInsets.only(top: 5),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (var type in [
-                      HistoryContentType.all,
-                      HistoryContentType.text,
-                      HistoryContentType.image,
-                      HistoryContentType.file,
-                      HistoryContentType.sms,
-                    ])
-                      Row(
-                        children: [
-                          Obx(
-                            () => RoundedChip(
-                              selected: controller.selectedType.value.label == type.label,
-                              onPressed: () {
-                                if (controller.selectedType.value.label == type.label) {
-                                  return;
-                                }
-                                controller.loading.value = true;
-                                controller.selectedType.value = type;
-                                Future.delayed(
-                                  const Duration(milliseconds: 200),
-                                  () {
-                                    controller.onChanged(controller.filter);
-                                  },
-                                );
+              child: Wrap(
+                children: [
+                  for (var type in [
+                    HistoryContentType.all,
+                    HistoryContentType.text,
+                    HistoryContentType.image,
+                    HistoryContentType.file,
+                    HistoryContentType.sms,
+                    HistoryContentType.notification,
+                  ])
+                    Container(
+                      margin: const EdgeInsets.only(right: 5, bottom: 5),
+                      child: Obx(
+                        () => RoundedChip(
+                          selected: controller.selectedType.value.label == type.label,
+                          onPressed: () {
+                            if (controller.selectedType.value.label == type.label) {
+                              return;
+                            }
+                            onFilterTypeChanged?.call(type);
+                            controller.selectedType.value = type;
+                            Future.delayed(
+                              const Duration(milliseconds: 200),
+                              () {
+                                controller.onChanged(controller.filter);
                               },
-                              selectedColor: controller.selectedType.value == type ? Theme.of(context).chipTheme.selectedColor : null,
-                              label: Text(type.label),
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                        ],
+                            );
+                          },
+                          selectedColor: controller.selectedType.value == type ? Theme.of(context).chipTheme.selectedColor : null,
+                          label: Text(type.label),
+                        ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
         ],

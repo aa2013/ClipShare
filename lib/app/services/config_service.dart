@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
-import 'package:clipshare/app/data/models/blacklist_item.dart';
-import 'package:clipshare/app/data/models/blacklist_match_result.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -120,6 +120,7 @@ class ConfigService extends GetxService {
   final currentNetWorkType = ConnectivityResult.none.obs;
 
   bool get isSmallScreen => Get.width <= Constants.smallScreenWidth;
+
   final isHistorySyncing = false.obs;
 
   final _innerCopy = false.obs;
@@ -444,14 +445,39 @@ class ConfigService extends GetxService {
   bool get autoSyncMissingData => _autoSyncMissingData.value;
 
   //黑名单功能
-  final _enableBlackList = false.obs;
+  final _enableContentBlackList = false.obs;
 
-  bool get enableBlackList => _enableBlackList.value;
+  bool get enableContentBlackList => _enableContentBlackList.value;
 
   //黑名单列表
-  final _blackList = <BlackListRule>[].obs;
+  final _contentBlackList = <FilterRule>[].obs;
 
-  List<BlackListRule> get blackList => _blackList.value;
+  List<FilterRule> get contentBlackList => _contentBlackList.value;
+
+  //启用通知记录
+  final _enableRecordNotification = false.obs;
+
+  bool get enableRecordNotification => _enableRecordNotification.value;
+
+  //通知黑白名单模式
+  final _currentNotificationWhiteBlackMode = WhiteBlackMode.black.obs;
+
+  WhiteBlackMode get currentNotificationWhiteBlackMode => _currentNotificationWhiteBlackMode.value;
+
+  //通知黑名单列表
+  final _notificationBlackList = <FilterRule>[].obs;
+
+  List<FilterRule> get notificationBlackList => _notificationBlackList.value;
+
+  //通知白名单列表
+  final _notificationWhiteList = <FilterRule>[].obs;
+
+  List<FilterRule> get notificationWhiteList => _notificationWhiteList.value;
+
+  //显示移动设备的通知
+  final _enableShowMobileNotification = false.obs;
+
+  bool get enableShowMobileNotification => _enableShowMobileNotification.value;
 
   //endregion
 
@@ -521,8 +547,11 @@ class ConfigService extends GetxService {
     var notifyOnDevDisconn = await cfg.getConfig("notifyOnDevDisconn", userId);
     var notifyOnDevConn = await cfg.getConfig("notifyOnDevConn", userId);
     var autoSyncMissingData = await cfg.getConfig("autoSyncMissingData", userId);
-    var enableBlackList = await cfg.getConfig("enableBlackList", userId);
+    var enableContentBlackList = await cfg.getConfig("enableContentBlackList", userId);
     var blacklist = await cfg.getConfig("blacklist", userId);
+    var enableRecordNotification = await cfg.getConfig("enableRecordNotification", userId);
+    var enableShowMobileNotification = await cfg.getConfig("enableShowMobileNotification", userId);
+    var notificationBlackWhiteList = await cfg.getConfig("notificationBlackWhiteList", userId);
     //endregion
 
     //region 设置配置值
@@ -592,18 +621,36 @@ class ConfigService extends GetxService {
     _notifyOnDevDisconn.value = notifyOnDevDisconn?.toBool() ?? true;
     _notifyOnDevConn.value = notifyOnDevConn?.toBool() ?? true;
     _autoSyncMissingData.value = autoSyncMissingData?.toBool() ?? true;
-    _enableBlackList.value = enableBlackList?.toBool() ?? false;
+    _enableContentBlackList.value = enableContentBlackList?.toBool() ?? false;
     try {
       if (blacklist.isNullOrEmpty) {
-        _blackList.value = [];
+        _contentBlackList.value = [];
       } else {
         List<Map<String, dynamic>> jsonList = (jsonDecode(blacklist!) as List<dynamic>).cast();
-        _blackList.value = jsonList.map((item) => BlackListRule.fromJson(item)).toList();
+        _contentBlackList.value = jsonList.map((item) => FilterRule.fromJson(item)).toList();
       }
     } catch (err, stack) {
-      print(err);
+      debugPrint(err.toString());
       debugPrintStack(stackTrace: stack);
-      _blackList.value = [];
+      _contentBlackList.value = [];
+    }
+    _enableRecordNotification.value = enableRecordNotification?.toBool() ?? false;
+    _enableShowMobileNotification.value = enableShowMobileNotification?.toBool() ?? false;
+    try {
+      if (notificationBlackWhiteList.isNullOrEmpty) {
+        _notificationWhiteList.value = [];
+        _notificationBlackList.value = [];
+      } else {
+        final map = jsonDecode(notificationBlackWhiteList!) as Map<String, dynamic>;
+        _currentNotificationWhiteBlackMode.value = WhiteBlackMode.values.byName(map["mode"].toString());
+        _notificationBlackList.value = (map["blacklist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
+        _notificationWhiteList.value = (map["whitelist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
+      }
+    } catch (err, stack) {
+      debugPrint(err.toString());
+      debugPrintStack(stackTrace: stack);
+      _notificationWhiteList.value = [];
+      _notificationBlackList.value = [];
     }
     //endregion
     changeThemeMode(this.appTheme);
@@ -1021,15 +1068,42 @@ class ConfigService extends GetxService {
     _autoSyncMissingData.value = enable;
   }
 
-  Future<void> setEnableBlackList(bool enable) async {
-    await _addOrUpdateDbConfig("enableBlackList", enable.toString());
-    _enableBlackList.value = enable;
+  Future<void> setEnableContentBlackList(bool enable) async {
+    await _addOrUpdateDbConfig("enableContentBlackList", enable.toString());
+    _enableContentBlackList.value = enable;
   }
 
-  ///更新黑名单数据
-  Future<void> setBlacklist(List<BlackListRule> rules) async {
-    await _addOrUpdateDbConfig("blacklist", jsonEncode(rules));
-    _blackList.value = rules;
+  ///更新内容黑名单数据
+  Future<void> setContentBlacklist(List<FilterRule> rules) async {
+    await _addOrUpdateDbConfig("contentBlackList", jsonEncode(rules));
+    _contentBlackList.value = rules;
+  }
+
+  ///更新通知黑白名单数据
+  Future<void> setNotificationBlackWhiteList(WhiteBlackMode mode, List<FilterRule> blacklist, List<FilterRule> whitelist) async {
+    await _addOrUpdateDbConfig(
+      "notificationBlackWhiteList",
+      jsonEncode({
+        "mode": mode.name,
+        "blacklist": blacklist,
+        "whitelist": whitelist,
+      }),
+    );
+    _currentNotificationWhiteBlackMode.value = mode;
+    _notificationBlackList.value = blacklist;
+    _notificationWhiteList.value = whitelist;
+  }
+
+  ///启用通知历史记录
+  Future<void> setEnableRecordNotification(bool enabled) async {
+    await _addOrUpdateDbConfig("enableRecordNotification", enabled.toString());
+    _enableRecordNotification.value = enabled;
+  }
+
+  ///显示移动设备的通知
+  Future<void> setEnableShowMobileNotification(bool enabled) async {
+    await _addOrUpdateDbConfig("enableShowMobileNotification", enabled.toString());
+    _enableShowMobileNotification.value = enabled;
   }
 
   //endregion
@@ -1085,30 +1159,50 @@ class ConfigService extends GetxService {
     }
   }
 
-  ///判断是否命中黑名单
-  BlackListMatchResult matchesBlacklist(HistoryContentType type, String content, ClipboardSource? source) {
-    if (!enableBlackList) {
-      return BlackListMatchResult.notMatched;
+  ///判断是否命中内容黑名单
+  FilterRuleMatchResult matchesContentBlacklist(HistoryContentType type, String content, ClipboardSource? source) {
+    if (!enableContentBlackList) {
+      return FilterRuleMatchResult.notMatched;
     }
     // 遍历所有黑名单规则
-    for (final rule in blackList) {
+    for (final rule in contentBlackList) {
       // 跳过未启用的规则
       if (!rule.enable) continue;
-
-      // 检查内容匹配
-      final contentMatched = rule.isAllContent || content.matchRegExp(rule.content, rule.ignoreCase);
-
-      // 检查应用匹配
-      final appMatched = rule.isAllApp || (source != null && rule.appIds.contains(source.id));
-
-      // 如果内容和应用都匹配，则命中黑名单
-      if (contentMatched && appMatched) {
-        return BlackListMatchResult.matched(rule);
+      if (rule.matched(type, content, source)) {
+        return FilterRuleMatchResult.matched(rule);
       }
     }
 
     // 没有命中任何黑名单规则
-    return BlackListMatchResult.notMatched;
+    return FilterRuleMatchResult.notMatched;
+  }
+
+  ///判断是否命中通知黑白名单规则
+  FilterRuleMatchResult matchesNotificationRuleList(String content, String pkgName) {
+    //未启用
+    if (!enableRecordNotification) {
+      return FilterRuleMatchResult.notMatched;
+    }
+    try {
+      final json = jsonDecode(content);
+      final title = json["title"];
+      final detail = json["content"];
+      content = "$title\n$detail";
+    } catch (err, stack) {
+      Log.error(tag, "matchesNotificationRuleList error: $err,$stack");
+    }
+    final ruleList = currentNotificationWhiteBlackMode == WhiteBlackMode.black ? notificationBlackList : notificationWhiteList;
+    final source = ClipboardSource(id: pkgName, name: "", time: null, iconB64: "");
+    for (var rule in ruleList) {
+      // 跳过未启用的规则
+      if (!rule.enable) continue;
+      if (rule.matched(HistoryContentType.notification, content, source)) {
+        return FilterRuleMatchResult.matched(rule);
+      }
+    }
+
+    //未命中
+    return FilterRuleMatchResult.notMatched;
   }
 
   //endregion

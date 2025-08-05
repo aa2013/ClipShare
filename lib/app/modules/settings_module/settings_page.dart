@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
@@ -48,6 +49,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 /**
@@ -420,7 +422,7 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsAccessibilityDesc.tr),
                         value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord,
                         action: (val) => const Icon(
                           Icons.help,
@@ -429,6 +431,19 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => Platform.isAndroid && v,
                         onTap: () {
                           PermissionHelper.reqAndroidAccessibilityPerm();
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.permissionSettingsNotificationRecordTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsNotificationRecordDesc.tr),
+                        value: !controller.hasNotificationRecordPerm.value && appConfig.enableRecordNotification,
+                        action: (val) => const Icon(
+                          Icons.help,
+                          color: Colors.orange,
+                        ),
+                        show: (v) => Platform.isAndroid && v,
+                        onTap: () {
+                          NotificationListenerService.requestPermission();
                         },
                       ),
                     ],
@@ -556,6 +571,35 @@ class SettingsPage extends GetView<SettingsController> {
                     icon: const Icon(Icons.notifications_active_outlined),
                     cardList: [
                       SettingCard(
+                        title: Text(TranslationKey.recordNotification.tr),
+                        value: appConfig.enableRecordNotification,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) async {
+                            HapticFeedback.mediumImpact();
+                            final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
+                            if (checked) {
+                              var isGranted = await NotificationListenerService.isPermissionGranted();
+                              if (!isGranted) {
+                                await NotificationListenerService.requestPermission();
+                                isGranted = await NotificationListenerService.isPermissionGranted();
+                                if (isGranted) {
+                                  appConfig.setEnableRecordNotification(checked);
+                                  androidNotificationListenerService.startListening();
+                                }
+                                return;
+                              } else {
+                                androidNotificationListenerService.startListening();
+                              }
+                            } else {
+                              androidNotificationListenerService.stopListening();
+                            }
+                            appConfig.setEnableRecordNotification(checked);
+                          },
+                        ),
+                        show: (v) => Platform.isAndroid,
+                      ),
+                      SettingCard(
                         title: Text(
                           TranslationKey.preferenceSettingsDevConnNotification.tr,
                         ),
@@ -582,6 +626,19 @@ class SettingsPage extends GetView<SettingsController> {
                           },
                         ),
                         show: (v) => true,
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.preferenceSettingsShowMobileNotificationTitle.tr),
+                        description: Text(TranslationKey.preferenceSettingsShowMobileNotificationDesc.tr),
+                        value: appConfig.enableShowMobileNotification,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) {
+                            HapticFeedback.mediumImpact();
+                            appConfig.setEnableShowMobileNotification(checked);
+                          },
+                        ),
+                        show: (v) => PlatformExt.isDesktop,
                       ),
                     ],
                   ),
@@ -1637,13 +1694,29 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       value: false,
                       action: (v) => IconButton(
-                        onPressed: controller.gotoBlacklistPage,
+                        onPressed: controller.gotoBlackListPage,
                         icon: const Icon(
                           Icons.arrow_forward_rounded,
                           color: Colors.blueGrey,
                         ),
                       ),
-                      onTap: controller.gotoBlacklistPage,
+                      onTap: controller.gotoBlackListPage,
+                    ),
+                    SettingCard(
+                      title: Text(
+                        TranslationKey.notificationRules.tr,
+                        maxLines: 1,
+                      ),
+                      value: null,
+                      action: (v) => IconButton(
+                        onPressed: controller.gotoFilterRuleListPage,
+                        icon: const Icon(
+                          Icons.arrow_forward_rounded,
+                          color: Colors.blueGrey,
+                        ),
+                      ),
+                      onTap: controller.gotoFilterRuleListPage,
+                      show: (_) => Platform.isAndroid,
                     ),
                   ],
                 ),

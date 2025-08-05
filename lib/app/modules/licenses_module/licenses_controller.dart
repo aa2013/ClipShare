@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "notification_listener_service",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/notification_listener_service",
+    },
+    {
       "name": "installed_apps",
       "license": "Apache-2.0",
       "url": "https://pub.dev/packages/installed_apps",

@@ -1,6 +1,9 @@
 import 'dart:io';
 
-import 'package:clipshare/app/modules/views/blacklist_page.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/white_black_rule.dart';
+import 'package:clipshare/app/modules/views/white_black_list_page.dart';
+import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -18,6 +21,7 @@ import 'package:clipshare/app/widgets/auth_password_input.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -43,6 +47,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasIgnoreBattery = false.obs;
   final hasSmsReadPerm = true.obs;
   final hasAccessibilityPerm = false.obs;
+  final hasNotificationRecordPerm = false.obs;
   final forwardServerConnected = false.obs;
   final updater = 0.obs;
 
@@ -199,18 +204,63 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoBlacklistPage() {
-    if (appConfig.isSmallScreen) {
-      Get.to(const BlackListPage());
-    } else {
-      final homeController = Get.find<HomeController>();
-      homeController.openEndDrawer(
-        drawer: BlackListPage(
-          onDone: () {
+  void gotoFilterRuleListPage() {
+    final isSmallScreen = appConfig.isSmallScreen;
+    final homeController = Get.find<HomeController>();
+    final currentMode = appConfig.currentNotificationWhiteBlackMode.obs;
+    final page = Obx(
+      () => WhiteBlackListPage(
+        title: TranslationKey.notificationRules.tr,
+        showMode: WhiteBlackMode.all,
+        currentMode: currentMode.value,
+        blacklist: List.from(appConfig.notificationBlackList),
+        whitelist: List.from(appConfig.notificationWhiteList),
+        onModeChanged: (mode, enabled) {
+          currentMode.value = mode;
+        },
+        onDone: (WhiteBlackMode mode, Map<WhiteBlackMode, List<FilterRule>> data) {
+          final blacklist = data[WhiteBlackMode.black]!;
+          final whitelist = data[WhiteBlackMode.white]!;
+          appConfig.setNotificationBlackWhiteList(mode, blacklist, whitelist);
+          if (!isSmallScreen) {
             homeController.closeEndDrawer();
-          },
-        ),
-      );
+          }
+        },
+      ),
+    );
+    if (isSmallScreen) {
+      Get.to(page);
+    } else {
+      homeController.openEndDrawer(drawer: page);
+    }
+  }
+
+  void gotoBlackListPage() {
+    final isSmallScreen = appConfig.isSmallScreen;
+    final homeController = Get.find<HomeController>();
+    final page = Obx(
+      () => WhiteBlackListPage(
+        title: TranslationKey.blacklistRules.tr,
+        showMode: WhiteBlackMode.black,
+        enabled: appConfig.enableContentBlackList,
+        blacklist: List.from(appConfig.contentBlackList),
+        onModeChanged: (mode, enabled) {
+          if (mode == WhiteBlackMode.black) {
+            appConfig.setEnableContentBlackList(enabled);
+          }
+        },
+        onDone: (_, Map<WhiteBlackMode, List<FilterRule>> data) {
+          appConfig.setContentBlacklist(data[WhiteBlackMode.black]!);
+          if (!isSmallScreen) {
+            homeController.closeEndDrawer();
+          }
+        },
+      ),
+    );
+    if (isSmallScreen) {
+      Get.to(page);
+    } else {
+      homeController.openEndDrawer(drawer: page);
     }
   }
 
@@ -259,6 +309,23 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
           okText: TranslationKey.goAuthorize.tr,
           onOk: () {
             PermissionHelper.reqAndroidAccessibilityPerm();
+          },
+        );
+      }
+    });
+    NotificationListenerService.isPermissionGranted().then((granted) {
+      hasNotificationRecordPerm.value = granted;
+      final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
+      if (granted && appConfig.enableRecordNotification && !androidNotificationListenerService.listening) {
+        androidNotificationListenerService.startListening();
+      } else if (!granted && appConfig.enableRecordNotification) {
+        Global.showTipsDialog(
+          context: Get.context!,
+          text: TranslationKey.noNotificationRecordPermTips.tr,
+          showCancel: true,
+          okText: TranslationKey.goAuthorize.tr,
+          onOk: () {
+            NotificationListenerService.requestPermission();
           },
         );
       }

@@ -257,7 +257,14 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
           if (!filterLoading)
             Container(
               margin: const EdgeInsets.only(top: 10),
-              child: HistoryFilter(controller: historyFilterController),
+              child: HistoryFilter(
+                controller: historyFilterController,
+                onFilterTypeChanged: (_) {
+                  setState(() {
+                    _loading = true;
+                  });
+                },
+              ),
             ),
           Expanded(
             child: RefreshIndicator(

@@ -20,7 +20,7 @@ import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_extra_info.dart';
+import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
@@ -177,7 +177,7 @@ class ClipDataCardState extends State<ClipDataCard> {
                           ),
                         ),
                       ),
-                ClipSimpleDataExtraInfo(clip: widget.clip),
+                ClipSimpleDataFooter(clip: widget.clip),
               ],
             ),
           ),
