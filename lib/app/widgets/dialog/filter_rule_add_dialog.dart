@@ -128,7 +128,7 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
                             onPressed: () => {},
                             label: Text(app.name),
                             avatar: Image.memory(iconBytesMap[app.appId] ?? Uint8List(0)),
-                            deleteIcon: const Icon(Icons.delete),
+                            deleteIcon: const Icon(Icons.delete, color: Colors.blueGrey),
                             onDeleted: () {
                               selectedAppList.remove(app);
                             },

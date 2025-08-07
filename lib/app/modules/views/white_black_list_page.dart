@@ -138,14 +138,17 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                             ),
                           ),
                           description: PlatformExt.isMobile
-                              ? Row(
+                              ? Wrap(
                                   children: [
                                     Text("${TranslationKey.source.tr}: "),
                                     if (item.isAllApp) allContent,
                                     ...item.appIds.map(
-                                      (appId) => AppIcon(
-                                        appId: appId,
-                                        iconSize: appIconSize,
+                                      (appId) => Container(
+                                        margin: const EdgeInsets.only(right: 2,bottom: 2),
+                                        child: AppIcon(
+                                          appId: appId,
+                                          iconSize: appIconSize,
+                                        ),
                                       ),
                                     ),
                                   ],

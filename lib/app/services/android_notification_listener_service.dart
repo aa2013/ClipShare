@@ -36,9 +36,16 @@ class AndroidNotificationListenerService extends GetxService {
         final hasImg = event.haveExtraPicture ?? false;
         map["title"] = event.title;
         map["content"] = event.content;
-        map["img"] = hasImg ? base64Encode(event.extrasPicture!) : null;
+        if(hasImg){
+          try{
+            map["img"] = base64Encode(event.extrasPicture!);
+          }catch(err,stack){
+            Log.debug(tag, "$err, $stack");
+          }
+        }
         final pkgName = event.packageName!;
         var appInfo = _sourceService.getAppInfoByAppId(pkgName);
+        final missing = appInfo == null;
         if (appInfo == null) {
           await _sourceService.loadInstalledApps();
         }
@@ -49,6 +56,9 @@ class AndroidNotificationListenerService extends GetxService {
           time: null,
           iconB64: appInfo?.iconB64 ?? "",
         );
+        if (missing && appInfo != null) {
+          _sourceService.addOrUpdate(appInfo, true);
+        }
         HistoryDataListener.inst.onChanged(HistoryContentType.notification, jsonEncode(map), source);
       } catch (err, stack) {
         Log.error(tag, "error: $err, stack:$stack");
