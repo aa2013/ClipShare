@@ -11,9 +11,9 @@ class LicensesController extends GetxController {
       "url": "https://pub.dev/packages/notification_listener_service",
     },
     {
-      "name": "installed_apps",
+      "name": "get_apps",
       "license": "Apache-2.0",
-      "url": "https://pub.dev/packages/installed_apps",
+      "url": "https://pub.dev/packages/get_apps",
     },
     {
       "name": "sliver_sticky_collapsable_panel",
