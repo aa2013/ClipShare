@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:animated_snack_bar/animated_snack_bar.dart';
@@ -148,7 +149,7 @@ class Global {
     showSnackBar(context, scaffoldMessengerState, text, Colors.orange);
   }
 
-  static void showTipsDialog({
+  static DialogController? showTipsDialog({
     required BuildContext context,
     required String text,
     String? title,
@@ -167,19 +168,21 @@ class Global {
       final appConfig = Get.find<ConfigService>();
       if (appConfig.authenticating.value) {
         Log.warn(tag, "cancel show tips dialog because of authenticating");
-        return;
+        return null;
       }
     } catch (_) {}
     title = title ?? TranslationKey.tips.tr;
     okText = okText ?? TranslationKey.dialogConfirmText.tr;
     cancelText = cancelText ?? TranslationKey.dialogCancelText.tr;
     neutralText = neutralText ?? TranslationKey.dialogNeutralText.tr;
-    showDialog(
+    final dlgCtl = DialogController(_lastDialogId++, context, GlobalKey());
+    final feature = showDialog(
       context: context,
       barrierDismissible: autoDismiss,
       builder: (context) {
         return PopScope(
           canPop: autoDismiss,
+          key: dlgCtl.key,
           child: AlertDialog(
             title: Text(title!),
             content: Text(text),
@@ -192,7 +195,7 @@ class Global {
                     child: TextButton(
                       onPressed: () {
                         if (autoDismiss) {
-                          Get.back();
+                          dlgCtl.close();
                         }
                         onNeutral?.call();
                       },
@@ -207,7 +210,7 @@ class Global {
                           child: TextButton(
                             onPressed: () {
                               if (autoDismiss) {
-                                Get.back();
+                                dlgCtl.close();
                               }
                               onCancel?.call();
                             },
@@ -219,7 +222,7 @@ class Global {
                           child: TextButton(
                             onPressed: () {
                               if (autoDismiss) {
-                                Get.back();
+                                dlgCtl.close();
                               }
                               onOk?.call();
                             },
@@ -236,9 +239,13 @@ class Global {
         );
       },
     );
+    feature.then((value) => dlgCtl.close());
+    return dlgCtl;
   }
 
-  static void showLoadingDialog({
+  static int _lastDialogId = 0;
+
+  static DialogController showLoadingDialog({
     required BuildContext context,
     bool dismissible = false,
     bool showCancel = false,
@@ -246,12 +253,14 @@ class Global {
     String? loadingText,
     LadingProgressController? controller,
   }) {
-    showDialog(
+    final dlgCtl = DialogController(_lastDialogId++, context, GlobalKey());
+    final feature = showDialog(
       context: context,
       barrierDismissible: dismissible,
       builder: (context) {
         return PopScope(
           canPop: dismissible,
+          key: dlgCtl.key,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -275,7 +284,7 @@ class Global {
                           children: [
                             TextButton(
                               onPressed: () {
-                                Get.back();
+                                dlgCtl.close();
                                 onCancel?.call();
                               },
                               child: Text(TranslationKey.dialogCancelText.tr),
@@ -292,9 +301,11 @@ class Global {
         );
       },
     );
+    feature.then((value) => dlgCtl.close());
+    return dlgCtl;
   }
 
-  static void showDownloadingDialog({
+  static DialogController showDownloadingDialog({
     required BuildContext context,
     required String url,
     required String filePath,
@@ -303,11 +314,13 @@ class Global {
     void Function(dynamic error, dynamic stack)? onError,
     void Function()? onCancel,
   }) {
-    showDialog(
+    final dlgCtl = DialogController(_lastDialogId++, context, GlobalKey());
+    final feature = showDialog(
       context: context,
       builder: (context) {
         return PopScope(
           canPop: false,
+          key: dlgCtl.key,
           child: DownloadDialog(
             url: url,
             savePath: filePath,
@@ -319,5 +332,39 @@ class Global {
         );
       },
     );
+    feature.then((value) => dlgCtl.close());
+    return dlgCtl;
+  }
+}
+
+class DialogController {
+  final int id;
+  final BuildContext context;
+  final GlobalKey key;
+  static const tag = 'DialogController';
+
+  bool get closed => !_dialogKeyMap.containsKey(id);
+  static final Map<int, DialogController> _dialogKeyMap = {};
+
+  DialogController(this.id, this.context, this.key) {
+    _dialogKeyMap[id] = this;
+  }
+
+  bool close([dynamic value]) {
+    var dialog = _dialogKeyMap[id];
+    if (dialog == null) {
+      return true;
+    }
+    _dialogKeyMap.remove(id);
+    try {
+      final routeDialog = ModalRoute.of(dialog.key.currentContext!);
+      if (routeDialog != null) {
+        Navigator.removeRoute(dialog.context, routeDialog);
+      }
+      return true;
+    } catch (err, stack) {
+      Log.error(tag, "$err,$stack");
+      return false;
+    }
   }
 }
