@@ -175,7 +175,7 @@ class Global {
     okText = okText ?? TranslationKey.dialogConfirmText.tr;
     cancelText = cancelText ?? TranslationKey.dialogCancelText.tr;
     neutralText = neutralText ?? TranslationKey.dialogNeutralText.tr;
-    final dlgCtl = DialogController(_lastDialogId++, context, GlobalKey());
+    final dlgCtl = DialogController(context);
     final feature = showDialog(
       context: context,
       barrierDismissible: autoDismiss,
@@ -243,8 +243,6 @@ class Global {
     return dlgCtl;
   }
 
-  static int _lastDialogId = 0;
-
   static DialogController showLoadingDialog({
     required BuildContext context,
     bool dismissible = false,
@@ -253,7 +251,7 @@ class Global {
     String? loadingText,
     LadingProgressController? controller,
   }) {
-    final dlgCtl = DialogController(_lastDialogId++, context, GlobalKey());
+    final dlgCtl = DialogController(context);
     final feature = showDialog(
       context: context,
       barrierDismissible: dismissible,
@@ -314,7 +312,7 @@ class Global {
     void Function(dynamic error, dynamic stack)? onError,
     void Function()? onCancel,
   }) {
-    final dlgCtl = DialogController(_lastDialogId++, context, GlobalKey());
+    final dlgCtl = DialogController(context);
     final feature = showDialog(
       context: context,
       builder: (context) {
@@ -338,28 +336,33 @@ class Global {
 }
 
 class DialogController {
-  final int id;
+  static int _lastDialogId = 0;
+  final int id = _lastDialogId++;
   final BuildContext context;
-  final GlobalKey key;
+  final GlobalKey key = GlobalKey();
   static const tag = 'DialogController';
 
   bool get closed => !_dialogKeyMap.containsKey(id);
   static final Map<int, DialogController> _dialogKeyMap = {};
 
-  DialogController(this.id, this.context, this.key) {
+  DialogController(this.context) {
     _dialogKeyMap[id] = this;
   }
 
-  bool close([dynamic value]) {
+  Future<bool> close([dynamic value]) async {
     var dialog = _dialogKeyMap[id];
     if (dialog == null) {
       return true;
     }
-    _dialogKeyMap.remove(id);
     try {
+      if (dialog.key.currentContext == null) {
+        Log.debug(tag, "dialog($id) currentContext = null, wait 100ms");
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
       final routeDialog = ModalRoute.of(dialog.key.currentContext!);
       if (routeDialog != null) {
         Navigator.removeRoute(dialog.context, routeDialog);
+        _dialogKeyMap.remove(id);
       }
       return true;
     } catch (err, stack) {
