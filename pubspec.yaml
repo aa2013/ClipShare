@@ -155,9 +155,11 @@ dependencies:
   # 粘性折叠分组，该版本至少 SDK 3.8.0
   sliver_sticky_collapsable_panel: ^3.0.0
   # 获取已安装的app（仅 Android）
-  get_apps: ^1.0.9
+  get_apps: ^2.0.1
   # 通知信息监听（仅 Android）
   notification_listener_service: ^0.3.4
+  # 文件归档压缩
+  archive: ^3.6.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
