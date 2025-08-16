@@ -1249,6 +1249,18 @@ class SettingsPage extends GetView<SettingsController> {
                                             );
                                           });
                                     },
+                                    onClear: () {
+                                      Global.showTipsDialog(
+                                        context: context,
+                                        text: TranslationKey.clearHotKeyConfirm.tr,
+                                        showCancel: true,
+                                        onOk: () {
+                                          appConfig.setHistoryWindowHotKeys("");
+                                          AppHotKeyHandler.unRegister(HotKeyType.historyWindow);
+                                          Get.back();
+                                        },
+                                      );
+                                    },
                                   ),
                                 );
                               },
@@ -1287,6 +1299,18 @@ class SettingsPage extends GetView<SettingsController> {
                                               text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
                                             );
                                           });
+                                    },
+                                    onClear: () {
+                                      Global.showTipsDialog(
+                                        context: context,
+                                        text: TranslationKey.clearHotKeyConfirm.tr,
+                                        showCancel: true,
+                                        onOk: () {
+                                          appConfig.setSyncFileHotKeys("");
+                                          AppHotKeyHandler.unRegister(HotKeyType.fileSender);
+                                          Get.back();
+                                        },
+                                      );
                                     },
                                   ),
                                 );
