@@ -1227,42 +1227,50 @@ class SettingsPage extends GetView<SettingsController> {
                         description: Text(TranslationKey.hotKeySettingsHistoryDesc.tr),
                         value: appConfig.historyWindowHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)!.desc;
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)?.desc;
+                          final dialog = HotKeyEditorDialog(
+                            hotKeyType: HotKeyType.historyWindow,
+                            initContent: desc??"",
+                            clearable: true,
+                            onDone: (hotKey, keyCodes) {
+                              AppHotKeyHandler.registerHistoryWindow(hotKey)
+                                  .then((v) {
+                                //设置为新值
+                                appConfig.setHistoryWindowHotKeys(keyCodes);
+                              })
+                                  .catchError((err) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                );
+                              });
+                            },
+                            onClear: () {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.clearHotKeyConfirm.tr,
+                                showCancel: true,
+                                onOk: () {
+                                  appConfig.setHistoryWindowHotKeys("");
+                                  AppHotKeyHandler.unRegister(HotKeyType.historyWindow);
+                                  Get.back();
+                                },
+                              );
+                            },
+                          );
+                          if (desc == null) {
+                            return TextButton(
+                              onPressed: () {
+                                Get.dialog(dialog);
+                              },
+                              child: Text(TranslationKey.create.tr),
+                            );
+                          }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(
-                                  HotKeyEditorDialog(
-                                    hotKeyType: HotKeyType.historyWindow,
-                                    initContent: desc,
-                                    onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerHistoryWindow(hotKey)
-                                          .then((v) {
-                                            //设置为新值
-                                            appConfig.setHistoryWindowHotKeys(keyCodes);
-                                          })
-                                          .catchError((err) {
-                                            Global.showTipsDialog(
-                                              context: context,
-                                              text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                            );
-                                          });
-                                    },
-                                    onClear: () {
-                                      Global.showTipsDialog(
-                                        context: context,
-                                        text: TranslationKey.clearHotKeyConfirm.tr,
-                                        showCancel: true,
-                                        onOk: () {
-                                          appConfig.setHistoryWindowHotKeys("");
-                                          AppHotKeyHandler.unRegister(HotKeyType.historyWindow);
-                                          Get.back();
-                                        },
-                                      );
-                                    },
-                                  ),
-                                );
+                                Get.dialog(dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1278,42 +1286,50 @@ class SettingsPage extends GetView<SettingsController> {
                         description: Text(TranslationKey.hotKeySettingsFileDesc.tr),
                         value: appConfig.syncFileHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)!.desc;
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)?.desc;
+                          final dialog = HotKeyEditorDialog(
+                            hotKeyType: HotKeyType.fileSender,
+                            initContent: desc??"",
+                            clearable: true,
+                            onDone: (hotKey, keyCodes) {
+                              AppHotKeyHandler.registerFileSync(hotKey)
+                                  .then((v) {
+                                //设置为新值
+                                appConfig.setSyncFileHotKeys(keyCodes);
+                              })
+                                  .catchError((err) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                );
+                              });
+                            },
+                            onClear: () {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.clearHotKeyConfirm.tr,
+                                showCancel: true,
+                                onOk: () {
+                                  appConfig.setSyncFileHotKeys("");
+                                  AppHotKeyHandler.unRegister(HotKeyType.fileSender);
+                                  Get.back();
+                                },
+                              );
+                            },
+                          );
+                          if (desc == null) {
+                            return TextButton(
+                              onPressed: () {
+                                Get.dialog(dialog);
+                              },
+                              child: Text(TranslationKey.create.tr),
+                            );
+                          }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(
-                                  HotKeyEditorDialog(
-                                    hotKeyType: HotKeyType.fileSender,
-                                    initContent: desc,
-                                    onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerFileSync(hotKey)
-                                          .then((v) {
-                                            //设置为新值
-                                            appConfig.setSyncFileHotKeys(keyCodes);
-                                          })
-                                          .catchError((err) {
-                                            Global.showTipsDialog(
-                                              context: context,
-                                              text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                            );
-                                          });
-                                    },
-                                    onClear: () {
-                                      Global.showTipsDialog(
-                                        context: context,
-                                        text: TranslationKey.clearHotKeyConfirm.tr,
-                                        showCancel: true,
-                                        onOk: () {
-                                          appConfig.setSyncFileHotKeys("");
-                                          AppHotKeyHandler.unRegister(HotKeyType.fileSender);
-                                          Get.back();
-                                        },
-                                      );
-                                    },
-                                  ),
-                                );
+                                Get.dialog(dialog);
                               },
                               child: Text(desc),
                             ),

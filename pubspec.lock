@@ -39,7 +39,7 @@ packages:
     source: hosted
     version: "2.0.10"
   archive:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: archive
       sha256: cb6a278ef2dbb298455e1a713bda08524a175630ec643a242c399c932a0a1f7d
@@ -598,10 +598,10 @@ packages:
     dependency: "direct main"
     description:
       name: get_apps
-      sha256: "06a4194d1073631c4ff8009cce8a7bf665060ff8457f775be00076d309376b7e"
+      sha256: "18249cc02946497619237372986bc3cb66d63a5ed011dec05cc1cc8cfbee4750"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.0.9"
+    version: "2.0.1"
   glob:
     dependency: transitive
     description:

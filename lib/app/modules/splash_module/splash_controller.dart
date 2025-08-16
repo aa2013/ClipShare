@@ -160,10 +160,14 @@ class SplashController extends GetxController {
   ///初始化快捷键
   initHotKey() async {
     await AppHotKeyHandler.unRegisterAll();
-    var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
-    AppHotKeyHandler.registerHistoryWindow(hotKey);
-    hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.syncFileHotKeys);
-    AppHotKeyHandler.registerFileSync(hotKey);
+    if(appConfig.historyWindowHotKeys.isNotEmpty) {
+      var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
+      AppHotKeyHandler.registerHistoryWindow(hotKey);
+    }
+    if(appConfig.syncFileHotKeys.isNotEmpty) {
+      var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.syncFileHotKeys);
+      AppHotKeyHandler.registerFileSync(hotKey);
+    }
   }
 
   void initMultiWindowEvent() {
