@@ -1127,7 +1127,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.permissionSettingsNotificationRecordTitle:
         return "Notification History";
       case TranslationKey.permissionSettingsNotificationRecordDesc:
-        return "Request this permission to record notification history";
+        return "This permission is required to log notification history. On some devices, granting it may prevent the app process from terminating completely. To stop the app, you can revoke the permission first and then proceed.";
       case TranslationKey.noNotificationRecordPermTips:
         return "No notification history access permission, unable to record notification history";
       case TranslationKey.recordNotification:

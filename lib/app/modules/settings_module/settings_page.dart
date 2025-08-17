@@ -436,7 +436,7 @@ class SettingsPage extends GetView<SettingsController> {
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsNotificationRecordTitle.tr),
                         description: Text(TranslationKey.permissionSettingsNotificationRecordDesc.tr),
-                        value: !controller.hasNotificationRecordPerm.value && appConfig.enableRecordNotification,
+                        value: (!controller.hasNotificationRecordPerm.value && appConfig.enableRecordNotification) || (controller.hasNotificationRecordPerm.value && !appConfig.enableRecordNotification),
                         action: (val) => const Icon(
                           Icons.help,
                           color: Colors.orange,

@@ -1128,7 +1128,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.permissionSettingsNotificationRecordTitle:
         return "通知历史访问权限";
       case TranslationKey.permissionSettingsNotificationRecordDesc:
-        return "请求该权限以记录通知历史";
+        return "该权限用于记录通知历史。在某些设备上，授予此权限可能导致应用进程无法完全终止。如需停止应用，可点击此处取消授权后再进行操作。";
       case TranslationKey.noNotificationRecordPermTips:
         return "无通知历史访问权限，无法记录通知历史";
       case TranslationKey.recordNotification:
