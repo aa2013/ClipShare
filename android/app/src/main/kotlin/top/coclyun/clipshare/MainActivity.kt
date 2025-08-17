@@ -540,11 +540,24 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("MainActivity", "onDestroy")
-        // 取消注册广播接收器
-        unregisterReceiver(screenReceiver)
-        //MainActivity被销毁时停止服务运行
-        stopService(Intent(this, HistoryFloatService::class.java))
-        unRegisterSmsObserver()
+        try {
+            // 取消注册广播接收器
+            unregisterReceiver(screenReceiver)
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
+        try {
+            //MainActivity被销毁时停止服务运行
+            stopService(Intent(this, HistoryFloatService::class.java))
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
+        try {
+            //MainActivity被销毁时停止服务运行
+            unRegisterSmsObserver()
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
     }
 
     private fun createPendingIntent(): PendingIntent {

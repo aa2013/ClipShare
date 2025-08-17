@@ -125,8 +125,8 @@ class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopSelf()
         closeFloatWindow()
+        stopSelf()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
