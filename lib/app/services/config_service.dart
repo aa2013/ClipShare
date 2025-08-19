@@ -309,6 +309,11 @@ class ConfigService extends GetxService {
 
   bool get enableLogsRecord => _enableLogsRecord.value;
 
+  //启用崩溃日志自动上报
+  late final RxBool _enableAutoUploadCrashLogs;
+
+  bool get enableAutoUploadCrashLogs => _enableAutoUploadCrashLogs.value;
+
   //历史记录弹窗快捷键
   late final RxString _historyWindowHotKeys;
 
@@ -509,6 +514,7 @@ class ConfigService extends GetxService {
     var rememberWindowSize = await cfg.getConfig("rememberWindowSize", userId);
     var lockHistoryFloatLoc = await cfg.getConfig("lockHistoryFloatLoc", userId);
     var enableLogsRecord = await cfg.getConfig("enableLogsRecord", userId);
+    var enableAutoUploadCrashLogs = await cfg.getConfig("enableAutoUploadCrashLogs", userId);
     var tagRules = await cfg.getConfig("tagRules", userId);
     var smsRules = await cfg.getConfig("smsRules", userId);
     var historyWindowHotKeys = await cfg.getConfig("historyWindowHotKeys", userId);
@@ -565,6 +571,7 @@ class ConfigService extends GetxService {
     _rememberWindowSize = rememberWindowSize?.toBool().obs ?? false.obs;
     _lockHistoryFloatLoc = lockHistoryFloatLoc?.toBool().obs ?? true.obs;
     _enableLogsRecord = enableLogsRecord?.toBool().obs ?? false.obs;
+    _enableAutoUploadCrashLogs = enableAutoUploadCrashLogs?.toBool().obs ?? true.obs;
     _recordHistoryDialogPosition.value = recordHistoryDialogPosition?.toBool() ?? false;
     _historyDialogPosition.value = historyDialogPosition ?? "";
     _showOnRecentTasks.value = showOnRecentTasks?.toBool() ?? true;
@@ -850,6 +857,11 @@ class ConfigService extends GetxService {
   Future<void> setEnableLogsRecord(bool enableLogsRecord) async {
     await _addOrUpdateDbConfig("enableLogsRecord", enableLogsRecord.toString());
     _enableLogsRecord.value = enableLogsRecord;
+  }
+
+  Future<void> setEnableAutoUploadCrashLogs(bool enableAutoUploadCrashLogs) async {
+    await _addOrUpdateDbConfig("enableAutoUploadCrashLogs", enableAutoUploadCrashLogs.toString());
+    _enableAutoUploadCrashLogs.value = enableAutoUploadCrashLogs;
   }
 
   Future<void> setTagRules(String tagRules) async {

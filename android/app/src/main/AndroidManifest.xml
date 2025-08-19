@@ -20,7 +20,7 @@
     <uses-permission android:name="android.permission.READ_SMS" />
 
     <application
-        android:name="${applicationName}"
+        android:name=".MyApplication"
         android:icon="@mipmap/launcher_icon"
         android:label="ClipShare"
         android:requestLegacyExternalStorage="true">
@@ -35,6 +35,12 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <!--ACRA https://www.acra.ch/-->
+        <service
+            android:name="org.acra.sender.SenderService"
+            android:exported="false"
+            android:process=":acra" />
 
         <receiver
             android:name=".broadcast.ScreenReceiver"

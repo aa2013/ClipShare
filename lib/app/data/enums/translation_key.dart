@@ -559,7 +559,16 @@ enum TranslationKey {
   permissionSettingsNotificationRecordDesc,
   noNotificationRecordPermTips,
   recordNotification,
-  notificationFromDevice;
+  logSettingsAutoUploadCrashLogTitle,
+  logSettingsAutoUploadCrashLogDesc,
+  logSettingsAutoUploadCrashLogTips,
+  notificationFromDevice,
+  backupRestore,
+  backup,
+  restore,
+  restoreSettingDesc,
+  backupSettingDesc,
+  startUp;
 
   String get tr => name.tr;
 

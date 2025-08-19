@@ -68,30 +68,32 @@ class SplashController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    init().then((ignore) {
-      // 初始化完成，导航到下一个页面
-      if (appConfig.firstStartup && Platform.isAndroid) {
-        Get.offNamed(Routes.WELCOME);
-      } else {
-        Get.offNamed(Routes.HOME);
-      }
-    }).catchError((err, stack) {
-      Global.showTipsDialog(
-        context: Get.context!,
-        text: "$err\n$stack",
-        title: TranslationKey.errorDialogTitle.tr,
-      );
-    });
+    init()
+        .then((ignore) {
+          // 初始化完成，导航到下一个页面
+          if (appConfig.firstStartup && Platform.isAndroid) {
+            Get.offNamed(Routes.WELCOME);
+          } else {
+            Get.offNamed(Routes.HOME);
+          }
+        })
+        .catchError((err, stack) {
+          Global.showTipsDialog(
+            context: Get.context!,
+            text: "$err\n$stack",
+            title: TranslationKey.errorDialogTitle.tr,
+          );
+        });
   }
 
   Future<void> init() async {
-    //加载配置后初始化窗体配置
-    if (Platform.isWindows || Platform.isLinux) {
-      await initWindowsManager();
-      await initHotKey();
-      initMultiWindowEvent();
-    }
     if (PlatformExt.isDesktop) {
+      //加载配置后初始化窗体配置
+      if (Platform.isWindows || Platform.isLinux) {
+        await initWindowsManager();
+        await initHotKey();
+        initMultiWindowEvent();
+      }
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       launchAtStartup.setup(
         appName: packageInfo.appName,
@@ -121,6 +123,9 @@ class SplashController extends GetxController {
       if (PlatformExt.isDesktop) {
         Get.putAsync(() => TrayService().init(), permanent: true);
       }
+    }
+    if (Platform.isAndroid) {
+      androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
     }
     // 初始化channel
     initChannel();
@@ -160,11 +165,11 @@ class SplashController extends GetxController {
   ///初始化快捷键
   initHotKey() async {
     await AppHotKeyHandler.unRegisterAll();
-    if(appConfig.historyWindowHotKeys.isNotEmpty) {
+    if (appConfig.historyWindowHotKeys.isNotEmpty) {
       var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
       AppHotKeyHandler.registerHistoryWindow(hotKey);
     }
-    if(appConfig.syncFileHotKeys.isNotEmpty) {
+    if (appConfig.syncFileHotKeys.isNotEmpty) {
       var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.syncFileHotKeys);
       AppHotKeyHandler.registerFileSync(hotKey);
     }

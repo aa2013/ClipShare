@@ -1230,20 +1230,20 @@ class SettingsPage extends GetView<SettingsController> {
                           final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)?.desc;
                           final dialog = HotKeyEditorDialog(
                             hotKeyType: HotKeyType.historyWindow,
-                            initContent: desc??"",
+                            initContent: desc ?? "",
                             clearable: true,
                             onDone: (hotKey, keyCodes) {
                               AppHotKeyHandler.registerHistoryWindow(hotKey)
                                   .then((v) {
-                                //设置为新值
-                                appConfig.setHistoryWindowHotKeys(keyCodes);
-                              })
+                                    //设置为新值
+                                    appConfig.setHistoryWindowHotKeys(keyCodes);
+                                  })
                                   .catchError((err) {
-                                Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                );
-                              });
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                    );
+                                  });
                             },
                             onClear: () {
                               Global.showTipsDialog(
@@ -1289,20 +1289,20 @@ class SettingsPage extends GetView<SettingsController> {
                           final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)?.desc;
                           final dialog = HotKeyEditorDialog(
                             hotKeyType: HotKeyType.fileSender,
-                            initContent: desc??"",
+                            initContent: desc ?? "",
                             clearable: true,
                             onDone: (hotKey, keyCodes) {
                               AppHotKeyHandler.registerFileSync(hotKey)
                                   .then((v) {
-                                //设置为新值
-                                appConfig.setSyncFileHotKeys(keyCodes);
-                              })
+                                    //设置为新值
+                                    appConfig.setSyncFileHotKeys(keyCodes);
+                                  })
                                   .catchError((err) {
-                                Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                );
-                              });
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                    );
+                                  });
                             },
                             onClear: () {
                               Global.showTipsDialog(
@@ -1863,6 +1863,40 @@ class SettingsPage extends GetView<SettingsController> {
                             },
                           );
                         },
+                      ),
+                      SettingCard(
+                        title: Row(
+                          children: [
+                            Text(
+                              TranslationKey.logSettingsAutoUploadCrashLogTitle.tr,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(width: 5),
+                            GestureDetector(
+                              onTap: () {
+                                Global.showTipsDialog(context: context, text: TranslationKey.logSettingsAutoUploadCrashLogTips.tr);
+                              },
+                              child: const Icon(
+                                Icons.info_outline,
+                                color: Colors.blueGrey,
+                                size: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.logSettingsAutoUploadCrashLogDesc.tr),
+                        value: appConfig.enableAutoUploadCrashLogs,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnableAutoUploadCrashLogs(checked);
+                              androidChannelService.setAutoReportCrashes(checked);
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isAndroid,
                       ),
                     ],
                   ),

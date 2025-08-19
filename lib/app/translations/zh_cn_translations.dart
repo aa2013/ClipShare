@@ -1135,6 +1135,24 @@ class ZhCNTranslation extends AbstractTranslations {
         return "记录通知历史";
       case TranslationKey.notificationFromDevice:
         return "来自 @devName 的通知";
+      case TranslationKey.logSettingsAutoUploadCrashLogTitle:
+        return "崩溃日志自动上传";
+      case TranslationKey.logSettingsAutoUploadCrashLogDesc:
+        return "当 app 因崩溃闪退时上传崩溃错误日志供开发者分析问题";
+      case TranslationKey.logSettingsAutoUploadCrashLogTips:
+        return "此日志依赖于 ACRA 崩溃日志工具，仅上传必要的信息和崩溃堆栈供分析，崩溃日志可能会在再次启动应用时才会上传";
+      case TranslationKey.backupRestore:
+        return "备份和恢复";
+      case TranslationKey.backup:
+        return "备份";
+      case TranslationKey.restore:
+        return "恢复";
+      case TranslationKey.backupSettingDesc:
+        return "导出备份为单独文件以供后续恢复数据库内容";
+      case TranslationKey.restoreSettingDesc:
+        return "从备份文件中恢复数据";
+      case TranslationKey.startUp:
+        return "开始";
     }
   }
 }

@@ -33,6 +33,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import androidx.core.net.toUri
+import org.acra.ACRA
 import java.io.BufferedInputStream
 import java.net.URLDecoder
 
@@ -334,6 +335,12 @@ class MainActivity : FlutterFragmentActivity() {
                 "getLatestImagePath" -> {
                     val path = getLatestImagePath(this)
                     result.success(path)
+                }
+                //是否自动报告崩溃（可能在下一次启动app时才会有）
+                "setAutoReportCrashes" -> {
+                    val enable = args["enable"] as Boolean
+                    ACRA.errorReporter.setEnabled(enable)
+                    result.success(null)
                 }
             }
         }

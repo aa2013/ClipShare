@@ -1134,6 +1134,24 @@ class EnUSTranslation extends AbstractTranslations {
         return "Record notification history";
       case TranslationKey.notificationFromDevice:
         return "Notification from @devName";
+        case TranslationKey.logSettingsAutoUploadCrashLogTitle:
+      return "Automatic Crash Log Upload";
+      case TranslationKey.logSettingsAutoUploadCrashLogDesc:
+        return "Upload crash error logs when the app crashes unexpectedly to help developers analyze issues";
+      case TranslationKey.logSettingsAutoUploadCrashLogTips:
+        return "This log relies on the ACRA crash reporting tool. Only necessary information and crash stack traces are uploaded for analysis. Crash logs may be uploaded when the app is restarted";
+      case TranslationKey.backupRestore:
+        return "Backup & Restore";
+      case TranslationKey.backup:
+        return "Backup";
+      case TranslationKey.restore:
+        return "Restore";
+      case TranslationKey.backupSettingDesc:
+        return "Export backup as a separate file for future database content restoration";
+      case TranslationKey.restoreSettingDesc:
+        return "Restore data from backup files";
+      case TranslationKey.startUp:
+        return "Start Up";
     }
   }
 }

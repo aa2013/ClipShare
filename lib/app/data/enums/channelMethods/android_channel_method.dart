@@ -15,6 +15,7 @@ enum AndroidChannelMethod {
   showOnRecentTasks,
   getImageUriRealPath,
   getLatestImagePath,
+  setAutoReportCrashes,
   getFileNameFromUri,
   readFileAsBytes;
 }
