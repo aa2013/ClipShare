@@ -17,7 +17,7 @@ class PermissionHelper {
   static Future<bool> testAndroidStoragePerm([String? dirPath]) async {
     if (!Platform.isAndroid) return true;
     final appConfig = Get.find<ConfigService>();
-    dirPath = dirPath ?? appConfig.fileStorePath;
+    dirPath = dirPath ?? appConfig.rootStorePath;
     bool isGranted = false;
     if (appConfig.osVersion >= 13) {
       isGranted = await Permission.manageExternalStorage.isGranted;
@@ -41,7 +41,7 @@ class PermissionHelper {
   static Future<void> reqAndroidStoragePerm([String? dirPath]) async {
     if (!Platform.isAndroid) return;
     final appConfig = Get.find<ConfigService>();
-    dirPath = dirPath ?? appConfig.fileStorePath;
+    dirPath = dirPath ?? appConfig.rootStorePath;
     if (!dirPath.startsWith(Constants.androidDownloadPath)) {
       var status = await Permission.manageExternalStorage.request();
       Log.info(tag, "request manageExternalStoragePermission: $status");

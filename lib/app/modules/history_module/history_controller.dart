@@ -290,7 +290,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         //移动到设置的路径然后删除临时文件
         var tempFile = File(content);
         size = await tempFile.length();
-        var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : "${appConfig.fileStorePath}/Screenshots"}/${tempFile.fileName}";
+        var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : appConfig.screenShotStorePath}/${tempFile.fileName}";
         var newFile = File(newPath);
         FileUtil.moveFile(content, newPath);
         content = newFile.normalizePath;
