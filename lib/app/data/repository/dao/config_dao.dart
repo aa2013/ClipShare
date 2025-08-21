@@ -23,17 +23,16 @@ abstract class ConfigDao {
     if (value == null || defValue == null || value.isEmpty) {
       return defValue;
     }
-    final type = defValue.runtimeType;
-    if (type is String) {
+    if (defValue is String) {
       return value as T;
     }
-    if (type is int) {
+    if (defValue is int) {
       return value.toInt() as T;
     }
-    if (type is double) {
+    if (defValue is double) {
       return value.toDouble() as T;
     }
-    if (type is bool) {
+    if (defValue is bool) {
       return value.toBool() as T;
     }
     if (convert == null) {
