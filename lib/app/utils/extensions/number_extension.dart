@@ -5,6 +5,8 @@ extension NumberExt on num {
 }
 
 extension IntExt on int {
+  static final _durationMap = <int, Duration>{};
+
   String get sizeStr {
     if (this < 0) {
       return '-';
@@ -45,6 +47,22 @@ extension IntExt on int {
     timeString.write(seconds.toString().padLeft(2, '0'));
 
     return timeString.toString();
+  }
+
+  Duration get s {
+    final duration = _durationMap[this];
+    if (duration == null) {
+      _durationMap[this] = Duration(seconds: this);
+    }
+    return _durationMap[this]!;
+  }
+
+  Duration get ms {
+    final duration = _durationMap[this];
+    if (duration == null) {
+      _durationMap[this] = Duration(milliseconds: this);
+    }
+    return _durationMap[this]!;
   }
 }
 

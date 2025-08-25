@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
@@ -61,6 +62,10 @@ class SettingsPage extends GetView<SettingsController> {
   final sktService = Get.find<SocketService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final logTag = "SettingsPage";
+  static const arrowForwardIcon = Icon(
+    Icons.arrow_forward_rounded,
+    color: Colors.blueGrey,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -1599,6 +1604,10 @@ class SettingsPage extends GetView<SettingsController> {
                           );
                         },
                         onDoubleTap: () async {
+                          final dir = Directory(appConfig.fileStorePath);
+                          if (!await dir.exists()) {
+                            await dir.create(recursive: true);
+                          }
                           await OpenFile.open(
                             appConfig.fileStorePath,
                           );
@@ -1656,10 +1665,7 @@ class SettingsPage extends GetView<SettingsController> {
                         value: null,
                         action: (v) => IconButton(
                           onPressed: controller.gotoCleanDataPage,
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Colors.blueGrey,
-                          ),
+                          icon: arrowForwardIcon,
                         ),
                         onTap: controller.gotoCleanDataPage,
                       ),
@@ -1735,10 +1741,7 @@ class SettingsPage extends GetView<SettingsController> {
                       value: false,
                       action: (v) => IconButton(
                         onPressed: controller.gotoBlackListPage,
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.blueGrey,
-                        ),
+                        icon: arrowForwardIcon,
                       ),
                       onTap: controller.gotoBlackListPage,
                     ),
@@ -1750,10 +1753,7 @@ class SettingsPage extends GetView<SettingsController> {
                       value: null,
                       action: (v) => IconButton(
                         onPressed: controller.gotoFilterRuleListPage,
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.blueGrey,
-                        ),
+                        icon: arrowForwardIcon,
                       ),
                       onTap: controller.gotoFilterRuleListPage,
                       show: (_) => Platform.isAndroid,
@@ -1934,6 +1934,38 @@ class SettingsPage extends GetView<SettingsController> {
 
                 ///endregion
 
+                ///region 备份和恢复
+                SettingCardGroup(
+                  groupName: TranslationKey.backupRestore.tr,
+                  icon: Icon(MdiIcons.backupRestore),
+                  cardList: [
+                    SettingCard(
+                      title: Text(TranslationKey.backup.tr),
+                      description: Text(TranslationKey.backupSettingDesc.tr),
+                      value: null,
+                      action: (v) {
+                        return TextButton(
+                          onPressed: () => controller.startBackup(context),
+                          child: Text(TranslationKey.startUp.tr),
+                        );
+                      },
+                    ),
+                    SettingCard(
+                      title: Text(TranslationKey.restore.tr),
+                      description: Text(TranslationKey.restoreSettingDesc.tr),
+                      value: null,
+                      action: (v) {
+                        return TextButton(
+                          onPressed: () => controller.restore(context),
+                          child: Text(TranslationKey.selection.tr),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+
+                ///endregion
+
                 ///region 关于
                 SettingCardGroup(
                   groupName: TranslationKey.about.tr,
@@ -1953,10 +1985,7 @@ class SettingsPage extends GetView<SettingsController> {
                         onPressed: () {
                           Get.toNamed(Routes.ABOUT);
                         },
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.blueGrey,
-                        ),
+                        icon: arrowForwardIcon,
                       ),
                       onTap: () {
                         Get.toNamed(Routes.ABOUT);
@@ -1966,9 +1995,7 @@ class SettingsPage extends GetView<SettingsController> {
                 ),
 
                 ///endregion
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
               ],
             ),
           ),

@@ -26,7 +26,9 @@ class ClipboardSourceService extends GetxService {
   List<AppInfo> get appInfos => _appInfos.values.toList(growable: false)..sort((a, b) => a.name.compareTo(b.name));
 
   Future<ClipboardSourceService> init() async {
-    GetApps.init();
+    if (Platform.isAndroid) {
+      GetApps.init();
+    }
     await _loadAll();
     return this;
   }
@@ -46,22 +48,23 @@ class ClipboardSourceService extends GetxService {
   }
 
   Future<void> loadInstalledApps() async {
-    if (Platform.isAndroid) {
-      _installedApps.clear();
-      final getAppsHelper = GetApps();
-      final userApps = await getAppsHelper.getApps();
-      final userAppIds = userApps.map((item) => item.appPackage).toList();
-      var apps = await getAppsHelper.getApps(includeSystemApps: true);
-      for (var item in apps) {
-        _installedApps[item.appPackage] = LocalAppInfo(
-          isSystemApp: !userAppIds.contains(item.appPackage),
-          id: 0,
-          appId: item.appPackage,
-          devId: _appConfig.device.guid,
-          name: item.appName,
-          iconB64: base64Encode(item.appIcon),
-        );
-      }
+    if (!Platform.isAndroid) {
+      return;
+    }
+    _installedApps.clear();
+    final getAppsHelper = GetApps();
+    final userApps = await getAppsHelper.getApps();
+    final userAppIds = userApps.map((item) => item.appPackage).toList();
+    var apps = await getAppsHelper.getApps(includeSystemApps: true);
+    for (var item in apps) {
+      _installedApps[item.appPackage] = LocalAppInfo(
+        isSystemApp: !userAppIds.contains(item.appPackage),
+        id: 0,
+        appId: item.appPackage,
+        devId: _appConfig.device.guid,
+        name: item.appName,
+        iconB64: base64Encode(item.appIcon),
+      );
     }
   }
 
@@ -111,7 +114,7 @@ class ClipboardSourceService extends GetxService {
     if (_appInfos.containsKey(appId)) {
       return _appInfos[appId];
     }
-    if(_installedApps.containsKey(appId)){
+    if (_installedApps.containsKey(appId)) {
       return _installedApps[appId];
     }
     return null;

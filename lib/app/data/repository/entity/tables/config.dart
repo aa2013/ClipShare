@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:floor/floor.dart';
 
 @entity
@@ -17,4 +19,25 @@ class Config {
     required this.value,
     required this.uid,
   });
+
+  factory Config.fromJson(Map<String, dynamic> json) {
+    return Config(
+      key: json["key"],
+      value: json["value"],
+      uid: json["uid"],
+    );
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toJson());
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "key": key,
+      "value": value,
+      "uid": uid,
+    };
+  }
 }

@@ -633,7 +633,7 @@ class _$HistoryDao extends HistoryDao {
     int fromId,
   ) async {
     return _queryAdapter.queryList(
-        'select * from history where uid = ?1 and id < ?2 order by top desc,id desc limit 100',
+        'select * from history where uid = ?1 and (?2 <= 0 or id < ?2) order by top desc,id desc limit 100',
         mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
         arguments: [uid, fromId]);
   }
@@ -950,6 +950,15 @@ class _$OperationSyncDao extends OperationSyncDao {
   }
 
   @override
+  Future<List<OperationSync>> getAll() async {
+    return _queryAdapter.queryList('select * from OperationSync',
+        mapper: (Map<String, Object?> row) => OperationSync(
+            opId: row['opId'] as int,
+            devId: row['devId'] as String,
+            uid: row['uid'] as int));
+  }
+
+  @override
   Future<int> add(OperationSync syncHistory) {
     return _operationSyncInsertionAdapter.insertAndReturnId(
         syncHistory, OnConflictStrategy.ignore);
@@ -1240,6 +1249,20 @@ class _$OperationRecordDao extends OperationRecordDao {
     await _queryAdapter.queryNoReturn(
         'delete from OperationRecord where data = ?1 and module = ?2',
         arguments: [historyId, moduleName]);
+  }
+
+  @override
+  Future<List<OperationRecord>> getListLimit1000(int fromId) async {
+    return _queryAdapter.queryList(
+        'select * from OperationRecord where id > ?1 order by id limit 1000',
+        mapper: (Map<String, Object?> row) => OperationRecord(
+            id: row['id'] as int,
+            uid: row['uid'] as int,
+            devId: row['devId'] as String,
+            module: _moduleTypeConverter.decode(row['module'] as String),
+            method: _opMethodTypeConverter.decode(row['method'] as String),
+            data: row['data'] as String),
+        arguments: [fromId]);
   }
 
   @override

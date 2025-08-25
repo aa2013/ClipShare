@@ -100,5 +100,8 @@ abstract class OperationRecordDao {
   @Query(
     r"delete from OperationRecord where data = :historyId and module = :moduleName",
   )
-  Future<void> deleteHistorySourceRecords(int historyId,String moduleName);
+  Future<void> deleteHistorySourceRecords(int historyId, String moduleName);
+
+  @Query("select * from OperationRecord where id > :fromId order by id limit 1000 ")
+  Future<List<OperationRecord>> getListLimit1000(int fromId);
 }

@@ -1,4 +1,3 @@
-import 'package:clipshare/app/modules/clean_data_module/clean_data_controller.dart';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';

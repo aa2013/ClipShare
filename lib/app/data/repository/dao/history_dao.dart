@@ -174,9 +174,9 @@ abstract class HistoryDao {
   @Query("select * from history where uid = :uid order by top desc,id desc limit 100")
   Future<List<History>> getHistoriesTop100(int uid);
 
-  ///获取前100条历史记录
+  ///分页获取100条历史记录
   @Query(
-    "select * from history where uid = :uid and id < :fromId order by top desc,id desc limit 100",
+    "select * from history where uid = :uid and (:fromId <= 0 or id < :fromId) order by top desc,id desc limit 100",
   )
   Future<List<History>> getHistoriesPage(int uid, int fromId);
 

@@ -536,8 +536,8 @@ class ConfigService extends GetxService {
     _smsRules.value = (await cfg.getConfigByKey<String?>(ConfigKey.smsRules, null));
     _historyWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.historyWindowHotKeys, Constants.defaultHistoryWindowKeys)).obs;
     _syncFileHotKeys = (await cfg.getConfigByKey(ConfigKey.syncFileHotKeys, Constants.defaultSyncFileHotKeys)).obs;
-    _showMainWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.showMainWindowHotKeys, Constants.defaultShowMainWindowHotKeys)).obs;
-    _exitAppHotKeys = (await cfg.getConfigByKey(ConfigKey.exitAppHotKeys, Constants.defaultExitAppHotKeys)).obs;
+    _showMainWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.showMainWindowHotKeys, "")).obs;
+    _exitAppHotKeys = (await cfg.getConfigByKey(ConfigKey.exitAppHotKeys, "")).obs;
     _heartbeatInterval = (await cfg.getConfigByKey(ConfigKey.heartbeatInterval, Constants.heartbeatInterval)).obs;
     _fileStorePath = (await cfg.getConfigByKey(
       ConfigKey.fileStorePath,

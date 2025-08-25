@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:archive/archive_io.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:uuid/uuid.dart';
+import 'package:path/path.dart' as path;
 
 class FileUtil {
   FileUtil._private();
@@ -103,5 +105,33 @@ class FileUtil {
     FilePickerResult? result = await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result == null) return [];
     return result.files;
+  }
+
+  static Future<void> extractZipFile(File zipFile, Directory destDir) async {
+    try {
+      final fileData = await zipFile.readAsBytes();
+      final bytes = Uint8List.fromList(fileData);
+      final archive = ZipDecoder().decodeBytes(bytes);
+      for (final file in archive.files) {
+        if (file.isFile) {
+          final filePath = path.join(destDir.path, file.name);
+
+          final fileDir = path.dirname(filePath);
+          await Directory(fileDir).create(recursive: true);
+
+          final data = file.content as List<int>;
+          await File(filePath).writeAsBytes(data);
+        } else {
+          // 如果是目录，则创建目录
+          final dirPath = path.join(destDir.path, file.name);
+          await Directory(dirPath).create(recursive: true);
+        }
+      }
+
+      print('ZIP文件解压完成，路径: $destDir');
+    } catch (e) {
+      print('解压ZIP文件时出错: $e');
+      rethrow;
+    }
   }
 }

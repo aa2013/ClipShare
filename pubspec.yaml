@@ -158,8 +158,8 @@ dependencies:
   get_apps: ^2.0.1
   # 通知信息监听（仅 Android）
   notification_listener_service: ^0.3.4
-  # 文件归档压缩
-  archive: ^3.6.1
+  # zip
+  zip_flutter: ^0.0.12
 dev_dependencies:
   flutter_test:
     sdk: flutter

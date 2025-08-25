@@ -361,8 +361,8 @@ class DialogController {
       }
       final routeDialog = ModalRoute.of(dialog.key.currentContext!);
       if (routeDialog != null) {
-        Navigator.removeRoute(dialog.context, routeDialog);
         _dialogKeyMap.remove(id);
+        Navigator.removeRoute(dialog.context, routeDialog);
       }
       return true;
     } catch (err, stack) {

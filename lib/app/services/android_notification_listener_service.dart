@@ -25,13 +25,10 @@ class AndroidNotificationListenerService extends GetxService {
     _listening = false;
     _listen = NotificationListenerService.notificationsStream.listen((event) async {
       try {
-        Log.debug(tag, "appIcon ${event.appIcon}");
-        Log.debug(tag, "largeIcon ${event.largeIcon}");
         if (event.hasRemoved == true) {
           Log.debug(tag, "notification removed ${event.content}");
           return;
         }
-        Log.debug(tag, event);
         var map = <String, String?>{};
         final hasImg = event.haveExtraPicture ?? false;
         map["title"] = event.title;

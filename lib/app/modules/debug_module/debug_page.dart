@@ -9,6 +9,7 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -67,19 +68,23 @@ class DebugPage extends GetView<DebugController> {
             },
             child: const Text("request data"),
           ),
-        Expanded(
-          child: Obx(
-            () => WhiteBlackListPage(
-              title: TranslationKey.blacklistRules.tr,
-              showMode: WhiteBlackMode.all,
-              enabled: controller.enableBlacklist.value,
-              blacklist: appConfig.contentBlackList,
-              onModeChanged: (mode, enabled) {
-                controller.enableBlacklist.value = enabled;
-              },
-              onDone: (_, Map<WhiteBlackMode, List<FilterRule>> data) {},
-            ),
-          ),
+        TextButton(
+          onPressed: () {
+            final dialog1 = Global.showLoadingDialog(context: context, loadingText: "1");
+            final dialog2 = Global.showLoadingDialog(context: context, loadingText: "2");
+            final dialog3 = Global.showLoadingDialog(context: context, loadingText: "3");
+            final dialog4 = Global.showLoadingDialog(context: context, loadingText: "4");
+            Future.delayed(const Duration(seconds: 2),() async {
+              dialog1.close();
+              await Future.delayed(const Duration(seconds: 2));
+              dialog2.close();
+              await Future.delayed(const Duration(seconds: 2));
+              dialog3.close();
+              await Future.delayed(const Duration(seconds: 2));
+              dialog4.close();
+            });
+          },
+          child: Text("Show Dialogs"),
         ),
       ],
     );

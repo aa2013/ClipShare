@@ -360,7 +360,7 @@ class FileSyncHandler {
       return;
     }
     var socket = await Socket.connect(ip, port);
-    String filePath = "${"${appConfig.fileStorePath}/files"}/$fileName";
+    String filePath = "${appConfig.fileStorePath}/$fileName";
     File file = File(filePath);
     Log.debug(tag, "receive file $filePath");
     final dir = file.parent;

@@ -2,8 +2,15 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
+import 'package:clipshare/app/handlers/backup/backup_handler.dart';
+import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/views/white_black_list_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
+import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -19,9 +26,11 @@ import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/auth_password_input.dart';
 import 'package:clipshare/app/widgets/loading.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
+import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -29,9 +38,12 @@ import 'package:notification_listener_service/notification_listener_service.dart
 class SettingsController extends GetxController with WidgetsBindingObserver implements ForwardStatusListener {
   final appConfig = Get.find<ConfigService>();
   final sktService = Get.find<SocketService>();
+  final sourceService = Get.find<ClipboardSourceService>();
+  final tagService = Get.find<TagService>();
+  final devService = Get.find<DeviceService>();
 
   //region 属性
-  final tag = "ProfilePage";
+  final tag = "SettingsController";
 
   //通知权限
   var notifyHandler = NotifyPermHandler();
@@ -341,7 +353,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     bool hasPermission = true;
     bool listening = await clipboardManager.checkIsRunning();
     if (!listening) {
-      await Future.delayed(const Duration(seconds: 2), () async {
+      await Future.delayed(2.s, () async {
         listening = await clipboardManager.checkIsRunning();
       });
     }
@@ -409,6 +421,76 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   void onForwardServerDisconnected() {
     forwardServerConnected.value = false;
   }
+
+  //region 备份与恢复
+
+  ///备份
+  Future<void> startBackup(BuildContext context) async {
+    final path = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+    if (path == null) return;
+    final dialog = Global.showLoadingDialog(
+      context: context,
+      dismissible: false,
+      showCancel: true,
+      loadingText: TranslationKey.exporting.tr,
+      onCancel: () {
+        backupHandler.cancel();
+        Global.showSnackBarSuc(text: "用户已取消", context: context);
+      },
+    );
+    await Future.delayed(200.ms);
+    try {
+      final (err, stack) = await backupHandler.backup(Directory(path));
+      if (err != null) {
+        Global.showSnackBarWarn(text: "导出失败，详情查看日志", context: context);
+      } else {
+        Global.showSnackBarSuc(text: "导出成功", context: context);
+      }
+    } catch (err, stack) {
+      Log.error(tag, "$err,$stack");
+    } finally {
+      dialog.close();
+    }
+  }
+
+  ///恢复备份
+  Future<void> restore(BuildContext context) async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null) {
+      return;
+    }
+    final dialog = Global.showLoadingDialog(
+      context: context,
+      dismissible: false,
+      showCancel: true,
+      loadingText: "导入中...",
+      onCancel: () {
+        backupHandler.cancel();
+        Global.showSnackBarSuc(text: "用户已取消", context: context);
+      },
+    );
+    await Future.delayed(200.ms);
+    try {
+      final (err, stack) = await backupHandler.restore(File(result.files[0].path!));
+      if (err != null) {
+        Global.showTipsDialog(context: context, title: "导入失败", text: "$err,$stack");
+      } else {
+        Global.showTipsDialog(context: context, title: "导入成功", text: "请手动重启应用以加载最新的数据和配置信息");
+        final historyController = Get.find<HistoryController>();
+        final searchController = Get.find<search_module.SearchController>();
+        sourceService.init();
+        devService.init();
+        tagService.init();
+        searchController.refreshData();
+        historyController.refreshData();
+      }
+    } catch (err, stack) {
+      Log.error(tag, "$err,$stack");
+    } finally {
+      dialog.close();
+    }
+  }
+  //endregion
 
   //endregion
 }
