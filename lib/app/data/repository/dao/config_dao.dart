@@ -20,10 +20,10 @@ abstract class ConfigDao {
   ///获取某个配置项
   Future<T> getConfigByKey<T>(ConfigKey key, T defValue, {T Function(String value)? convert}) async {
     final value = await getConfig(key.name, 0);
-    if (value == null || defValue == null || value.isEmpty) {
+    if (value == null || value.isEmpty) {
       return defValue;
     }
-    if (defValue is String) {
+    if (defValue is String || (defValue == null && convert == null)) {
       return value as T;
     }
     if (defValue is int) {
@@ -34,6 +34,9 @@ abstract class ConfigDao {
     }
     if (defValue is bool) {
       return value.toBool() as T;
+    }
+    if (convert == null && defValue == null) {
+      return defValue;
     }
     if (convert == null) {
       throw 'No matching conversion method available';

@@ -112,7 +112,7 @@ Future<void> main(List<String> args) async {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Wrap(
                   children: [
                     Text("Initialization failed! Error: $err"),
                     Tooltip(
