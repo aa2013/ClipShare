@@ -602,7 +602,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setEnableRecordNotification(checked);
                           },
                         ),
-                        show: (v) => Platform.isAndroid,
+                        show: (v) => Platform.isAndroid && false,
                       ),
                       SettingCard(
                         title: Text(
@@ -1756,7 +1756,7 @@ class SettingsPage extends GetView<SettingsController> {
                         icon: arrowForwardIcon,
                       ),
                       onTap: controller.gotoFilterRuleListPage,
-                      show: (_) => Platform.isAndroid,
+                      show: (_) => Platform.isAndroid && false,
                     ),
                   ],
                 ),
