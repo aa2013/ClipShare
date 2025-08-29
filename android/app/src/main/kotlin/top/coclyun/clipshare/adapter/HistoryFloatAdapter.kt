@@ -145,7 +145,7 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
                 val clipData = ClipData.newUri(
                     itemView.context.contentResolver,
                     "image",
-                    Uri.parse("content://${pkgName}.FileProvider/${item.content}")
+                    Uri.parse("content://${pkgName}.clipboard_listener.FileProvider/${item.content}")
                 )
                 ignoreNextCopy()
                 // 将数据放入剪贴板
