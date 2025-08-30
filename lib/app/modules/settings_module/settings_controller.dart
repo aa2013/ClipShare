@@ -257,18 +257,18 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   void gotoBlackListPage() {
     final isSmallScreen = appConfig.isSmallScreen;
     final homeController = Get.find<HomeController>();
+    final enabled = appConfig.enableContentBlackList.obs;
     final page = Obx(
       () => WhiteBlackListPage(
         title: TranslationKey.blacklistRules.tr,
         showMode: WhiteBlackMode.black,
-        enabled: appConfig.enableContentBlackList,
+        enabled: enabled.value,
         blacklist: List.from(appConfig.contentBlackList),
-        onModeChanged: (mode, enabled) {
-          if (mode == WhiteBlackMode.black) {
-            appConfig.setEnableContentBlackList(enabled);
-          }
+        onModeChanged: (mode, e) {
+          enabled.value = e;
         },
         onDone: (_, Map<WhiteBlackMode, List<FilterRule>> data) {
+          appConfig.setEnableContentBlackList(enabled.value);
           appConfig.setContentBlacklist(data[WhiteBlackMode.black]!);
           if (!isSmallScreen) {
             homeController.closeEndDrawer();
