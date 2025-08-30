@@ -43,7 +43,7 @@ class LogController extends GetxController {
   Future<void> gotoLogDetailPage(File file) async {
     var content = await file.openRead().transform(const Utf8Decoder(allowMalformed: true)).join();
     final page = LogDetailPage(
-      fileName: file.fileName,
+      file: file,
       content: content,
     );
     if (appConfig.isSmallScreen) {
