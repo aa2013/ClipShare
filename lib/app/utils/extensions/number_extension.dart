@@ -8,6 +8,8 @@ extension NumberExt on num {
 
 extension IntExt on int {
   static final _durationMap = <int, Duration>{};
+  static final _insetsMap = <String, EdgeInsets>{};
+  static final _radiusMap = <String, Radius>{};
 
   String get sizeStr {
     if (this < 0) {
@@ -52,26 +54,53 @@ extension IntExt on int {
   }
 
   Duration get s {
-    //转为毫秒
     final ms = this * 1000;
-    return ms.ms;
+    return _durationMap.putIfAbsent(
+      ms,
+      () => Duration(milliseconds: ms.toInt()),
+    );
   }
 
-  Duration get ms {
-    final duration = _durationMap[this];
-    if (duration == null) {
-      _durationMap[this] = Duration(milliseconds: this);
-    }
-    return _durationMap[this]!;
-  }
+  Duration get ms => _durationMap.putIfAbsent(
+    this,
+    () => Duration(milliseconds: toInt()),
+  );
 
   Duration get min {
-    //转为毫秒
     final ms = this * 60 * 1000;
-    return ms.ms;
+    return _durationMap.putIfAbsent(
+      ms,
+      () => Duration(milliseconds: ms.toInt()),
+    );
   }
 
+  EdgeInsets get insetAll => _insetsMap.putIfAbsent(
+    'padAll_$this',
+    () => EdgeInsets.all(toDouble()),
+  );
 
+  EdgeInsets get insetH => _insetsMap.putIfAbsent(
+    'padH_$this',
+    () => EdgeInsets.symmetric(horizontal: toDouble()),
+  );
+
+  EdgeInsets get insetV => _insetsMap.putIfAbsent(
+    'padV_$this',
+    () => EdgeInsets.symmetric(vertical: toDouble()),
+  );
+
+  EdgeInsets insetHV({double? horizontal, double? vertical}) {
+    final key = 'padHV_${horizontal ?? this}_${vertical ?? this}';
+    return _insetsMap.putIfAbsent(
+      key,
+      () => EdgeInsets.symmetric(
+        horizontal: horizontal ?? toDouble(),
+        vertical: vertical ?? toDouble(),
+      ),
+    );
+  }
+
+  Radius get r => _radiusMap.putIfAbsent("all_$this", () => Radius.circular(toDouble()));
 }
 
 extension DoubleExt on double {
