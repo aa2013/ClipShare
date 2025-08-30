@@ -11,12 +11,9 @@ import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/hot_key_handler.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
-import 'package:clipshare/app/modules/log_module/log_controller.dart';
-import 'package:clipshare/app/modules/log_module/log_page.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/modules/views/settings/sms_rules_setting_page.dart';
 import 'package:clipshare/app/modules/views/settings/tag_rules_setting_page.dart';
-import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -287,7 +284,13 @@ class SettingsPage extends GetView<SettingsController> {
                                 message: toolTip,
                                 child: GestureDetector(
                                   behavior: HitTestBehavior.opaque,
-                                  child: MouseRegion(cursor: SystemMouseCursors.click, child: Icon(icon)),
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 5),
+                                      child: Icon(icon),
+                                    ),
+                                  ),
                                   onTapDown: (details) async {
                                     final menu = ContextMenu(
                                       entries: ThemeMode.values.map((mode) {
@@ -318,42 +321,6 @@ class SettingsPage extends GetView<SettingsController> {
                                     menu.show(context);
                                   },
                                 ),
-                              );
-                              return PopupMenuButton<ThemeMode>(
-                                icon: Icon(icon),
-                                tooltip: toolTip,
-                                itemBuilder: (BuildContext context) {
-                                  return ThemeMode.values.map(
-                                    (mode) {
-                                      var icon = Icons.brightness_auto_outlined;
-                                      if (mode == ThemeMode.light) {
-                                        icon = Icons.light_mode_outlined;
-                                      } else if (mode == ThemeMode.dark) {
-                                        icon = Icons.dark_mode_outlined;
-                                      }
-                                      return PopupMenuItem<ThemeMode>(
-                                        value: mode,
-                                        child: Row(
-                                          children: <Widget>[
-                                            Padding(
-                                              padding: const EdgeInsets.only(right: 8),
-                                              child: Icon(icon),
-                                            ),
-                                            Text(mode.tk.name.tr),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ).toList();
-                                },
-                                onSelected: (mode) async {
-                                  await appConfig.setAppTheme(mode, switcherContext, () {
-                                    final currentBg = controller.envStatusBgColor.value;
-                                    if (currentBg != null) {
-                                      controller.envStatusBgColor.value = controller.warningBgColor;
-                                    }
-                                  });
-                                },
                               );
                             },
                           );

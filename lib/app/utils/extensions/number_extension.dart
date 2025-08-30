@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 extension NumberExt on num {
   bool between(num start, num end) {
     return this >= start && this <= end;
@@ -50,11 +52,9 @@ extension IntExt on int {
   }
 
   Duration get s {
-    final duration = _durationMap[this];
-    if (duration == null) {
-      _durationMap[this] = Duration(seconds: this);
-    }
-    return _durationMap[this]!;
+    //转为毫秒
+    final ms = this * 1000;
+    return ms.ms;
   }
 
   Duration get ms {
@@ -66,12 +66,12 @@ extension IntExt on int {
   }
 
   Duration get min {
-    final duration = _durationMap[this];
-    if (duration == null) {
-      _durationMap[this] = Duration(minutes: this);
-    }
-    return _durationMap[this]!;
+    //转为毫秒
+    final ms = this * 60 * 1000;
+    return ms.ms;
   }
+
+
 }
 
 extension DoubleExt on double {
