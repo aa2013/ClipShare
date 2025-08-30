@@ -6,6 +6,7 @@ import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/dialog/downloading_dialog.dart';
@@ -116,7 +117,7 @@ class Global {
         }),
         desktopSnackBarPosition: DesktopSnackBarPosition.topCenter,
         mobileSnackBarPosition: MobileSnackBarPosition.bottom,
-        duration: const Duration(seconds: 4),
+        duration: 4.s,
       ).show(context);
     } else {
       final snackbar = SnackBar(
@@ -404,7 +405,7 @@ class DialogController {
     try {
       if (dialog.key.currentContext == null) {
         Log.debug(tag, "dialog($id) currentContext = null, wait 100ms");
-        await Future.delayed(const Duration(milliseconds: 100));
+        await Future.delayed(100.ms);
       }
       final routeDialog = ModalRoute.of(dialog.key.currentContext!);
       if (routeDialog != null) {

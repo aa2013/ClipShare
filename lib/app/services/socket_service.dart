@@ -28,6 +28,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
@@ -170,7 +171,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
   Timer? _devNotifyTimer;
 
   //通知防抖时长
-  static const _debounceTime = Duration(milliseconds: 1500);
+  static final _debounceTime = 1500.ms;
 
   Future<SocketService> init() async {
     if (_isInit) throw Exception("已初始化");
@@ -230,7 +231,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
             String ip = datagram.address.address;
             var port = msg.data["port"];
             String address = "$ip:$port";
-            Future.delayed(const Duration(seconds: 5), () {
+            Future.delayed(5.s, () {
               broadcastProcessChain.remove(devId);
               _connectingAddress.remove(address);
             });
@@ -413,7 +414,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           if (_autoConnForwardServer) {
             Log.debug(tag, "尝试重连中转");
             Future.delayed(
-              const Duration(milliseconds: 1000),
+              1000.ms,
               () => connectForwardServer(true),
             );
           }
@@ -439,7 +440,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
           }
           self.send(connData);
           if (startDiscovery) {
-            Future.delayed(const Duration(seconds: 1), () async {
+            Future.delayed(1.s, () async {
               final list = await _forwardDiscovering();
               //发现中转设备
               TaskRunner<void>(
@@ -456,7 +457,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       if (_autoConnForwardServer) {
         Log.debug(tag, "尝试重连中转");
         Future.delayed(
-          const Duration(milliseconds: 1000),
+          1000.ms,
           () => connectForwardServer(true),
         );
       }
@@ -504,7 +505,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
         break;
       case ForwardMsgType.check:
         void disableForwardServerAfterDelay() {
-          Future.delayed(const Duration(milliseconds: 500), () {
+          Future.delayed(500.ms, () {
             if (_forwardClient != null) return;
             appConfig.setEnableForward(false);
           });
@@ -1004,7 +1005,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     for (var ms in const [100, 500, 2000, 5000]) {
       f() {
-        return Future.delayed(Duration(milliseconds: ms), () {
+        return Future.delayed(ms.ms, () {
           // 广播本机socket信息
           Map<String, dynamic> map = {"port": _server.port};
           sendMulticastMsg(MsgType.broadcastInfo, map);
@@ -1101,7 +1102,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     });
     Log.debug(tag, "testIsOnline: send ping result");
     //等待2000ms
-    const waitTime = Duration(milliseconds: 2000);
+    final waitTime = 2000.ms;
     await Future.delayed(waitTime);
     Log.debug(tag, "testIsOnline: waitTime finished");
     //等待过程中已经掉线
@@ -1158,7 +1159,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       return Future.value(true);
     }
     _connectingAddress.add(address);
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(5.s, () {
       _connectingAddress.remove(address);
     });
     return SecureSocketClient.connect(
@@ -1430,7 +1431,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     var interval = appConfig.heartbeatInterval;
     if (interval <= 0) return;
     //更新timer
-    _heartbeatTimer = Timer.periodic(Duration(seconds: interval), (timer) {
+    _heartbeatTimer = Timer.periodic(interval.s, (timer) {
       if (_devSockets.isEmpty) return;
       Log.debug(tag, "send ping");
       // judgeDeviceHeartbeatTimeout();
@@ -1451,7 +1452,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
       _stopJudgeForwardClientAlive();
     }
     //更新timer
-    _forwardClientHeartbeatTimer = Timer.periodic(const Duration(seconds: 35), (timer) {
+    _forwardClientHeartbeatTimer = Timer.periodic(35.s, (timer) {
       var disconnected = false;
       if (_lastForwardServerPingTime == null) {
         disconnected = true;
@@ -1514,7 +1515,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     Log.debug(tag, "屏幕关闭，开启定时器，$minutes分钟后关闭连接");
     WakelockPlus.toggle(enable: true);
     //开启定时器，到时间自动断开连接
-    autoCloseConnTimer = Future.delayed(const Duration(minutes: minutes), () {
+    autoCloseConnTimer = Future.delayed(minutes.min, () {
       WakelockPlus.toggle(enable: false);
       if (autoCloseConnTimer == null) {
         Log.debug(tag, "延迟执行已取消");
@@ -1628,7 +1629,7 @@ class SocketService extends GetxService with ScreenOpenedObserver {
     //三分钟内持续尝试
     while (diffMinutes < 3) {
       //延迟2s
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(2.s);
       if (_devSockets.containsKey(devSkt.dev.guid)) {
         Log.debug(tag, "重连成功 $devNameAddr");
         //已经成功连接，停止重连

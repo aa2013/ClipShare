@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/loading.dart';
@@ -43,7 +44,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
   static final borderRadius = BorderRadius.circular(12.0);
   static const itemPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
   static const checkIcon = IconButton(onPressed: null, icon: Icon(Icons.check_circle, color: Colors.lightBlue));
-  static const aniDuration = Duration(milliseconds: 200);
+  static final aniDuration = 200.ms;
   final emptyContent = EmptyContent();
   final appIconBytesCached = <String, Uint8List>{};
   var originAppList = List<LocalAppInfo>.empty(growable: true);

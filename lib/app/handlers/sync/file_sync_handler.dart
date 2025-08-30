@@ -226,7 +226,7 @@ class FileSyncHandler {
 
   ///在一定时间后检查是否有客户端连接，若无客户端则关闭服务
   void _delayedClientCheck(void Function() onDone) {
-    Future.delayed(const Duration(seconds: 5), () {
+    Future.delayed(5.s, () {
       if (hasClient) return;
       Log.info(tag, "No client connection for more than 5 seconds");
       _server?.close();

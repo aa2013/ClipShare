@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/material.dart';
 
 class EnvironmentSelectionCard extends StatelessWidget {
@@ -59,7 +60,7 @@ class EnvironmentSelectionCard extends StatelessWidget {
                   width: height * 2 / 3,
                   child: AnimatedOpacity(
                     opacity: selected ? 1 : 0,
-                    duration: const Duration(milliseconds: 300),
+                    duration: 300.ms,
                     curve: Curves.easeIn,
                     child: const Icon(
                       Icons.check_circle,

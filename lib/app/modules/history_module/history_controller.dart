@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -180,7 +181,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     // 如果已有计时器，则取消它
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     // 重新设置计时器，延迟 200 毫秒执行
-    _debounce = Timer(const Duration(milliseconds: 200), () {
+    _debounce = Timer(200.ms, () {
       final lst = [..._tempList];
       lst.sort((a, b) => b.data.compareTo(a.data));
       list.assignAll(lst);
@@ -553,7 +554,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         if (isTimeout) {
           return;
         }
-        const offset = Duration(milliseconds: 500);
+        final offset = 500.ms;
         final historyCreateTime = DateTime.parse(history.time);
         //如果获取的最新的剪贴板时间不在指定的误差时间，则跳过 todo 考虑提供设置项自行设置
         if (!(source.time?.isWithinRange(offset, historyCreateTime) ?? false)) {

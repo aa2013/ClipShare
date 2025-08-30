@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -137,7 +138,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         removeDuplicates();
         _sortList();
       }
-      Future.delayed(const Duration(milliseconds: 500), () {
+      Future.delayed(500.ms, () {
         _loadingNewData = false;
       });
     });
@@ -155,7 +156,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
   ///滚动监听
   void _scrollListener() {
     if (_scrollController.offset == 0) {
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(100.ms, () {
         var tmpList = widget.list.sublist(0, min(widget.list.length, 100));
         widget.list.value = tmpList;
         if (tmpList.isNotEmpty) {
@@ -311,7 +312,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
             child: RefreshIndicator(
               onRefresh: () async {
                 return Future.delayed(
-                  const Duration(milliseconds: 500),
+                  500.ms,
                   widget.onRefreshData,
                 );
               },
@@ -473,10 +474,10 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                     message: TranslationKey.backToTop.tr,
                     child: FloatingActionButton(
                       onPressed: () {
-                        Future.delayed(const Duration(milliseconds: 100), () {
+                        Future.delayed(100.ms, () {
                           _scrollController.animateTo(
                             0,
-                            duration: const Duration(milliseconds: 500),
+                            duration: 500.ms,
                             curve: Curves.easeInOut,
                           );
                         });

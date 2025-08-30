@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/models/app_info.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
@@ -48,7 +49,7 @@ class ClipDataCardCompact extends StatelessWidget {
               isDouble = false;
             } else {
               isDouble = true;
-              Future.delayed(const Duration(milliseconds: 300), () {
+              Future.delayed(300.ms, () {
                 isDouble = false;
               });
             }

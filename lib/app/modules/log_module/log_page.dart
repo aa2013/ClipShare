@@ -24,7 +24,7 @@ class LogPage extends GetView<LogController> {
       icon: const Icon(Icons.bug_report_outlined),
       child: RefreshIndicator(
         onRefresh: () {
-          return Future.delayed(const Duration(milliseconds: 300), () {
+          return Future.delayed(300.ms, () {
             controller.loadLogFileList();
           });
         },

@@ -8,6 +8,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -94,7 +95,7 @@ class _PreviewPageState extends State<PreviewPage> {
     if (!_canPre) return;
     _current--;
     _pageController.previousPage(
-      duration: const Duration(milliseconds: 200),
+      duration: 200.ms,
       curve: Curves.ease,
     );
     setState(() {});
@@ -104,7 +105,7 @@ class _PreviewPageState extends State<PreviewPage> {
     if (!_canNext) return;
     _current++;
     _pageController.nextPage(
-      duration: const Duration(milliseconds: 200),
+      duration: 200.ms,
       curve: Curves.ease,
     );
     setState(() {});

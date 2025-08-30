@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/data/models/drawer_model.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -49,15 +51,10 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   final Set<MultiSelectionPopScopeDisableListener> _multiSelectionPopScopeDisableListeners = {};
 
   //region 属性
-  final _drawer = Rx<Widget>(const SizedBox.shrink());
+  static const defaultDrawerWidth = 400.0;
+  final _drawers = <DrawerModel>[].obs;
 
-  Widget? get drawer => _drawer.value;
-  final _drawerWidth = Rx<double?>(null);
-
-  double? get drawerWidth => _drawerWidth.value;
-  final _onEndDrawerClosed = Rx<Function?>(null);
-
-  Function? get onEndDrawerClosed => _onEndDrawerClosed.value;
+  DrawerModel? get drawer => _drawers.isEmpty ? null : _drawers.last;
 
   final homeScaffoldKey = GlobalKey<ScaffoldState>();
   final _index = 0.obs;
@@ -153,13 +150,13 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     } else {
       clipboardManager
           .startListening(
-        env: appConfig.workingMode,
-        way: appConfig.clipboardListeningWay,
-        notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
-      )
+            env: appConfig.workingMode,
+            way: appConfig.clipboardListeningWay,
+            notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
+          )
           .then((started) {
-        settingsController.checkAndroidEnvPermission();
-      });
+            settingsController.checkAndroidEnvPermission();
+          });
     }
     AppUpdateInfoUtil.showUpdateInfo(true);
   }
@@ -252,7 +249,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
             delayMs = 1000;
           }
         }
-        await Future.delayed(Duration(milliseconds: delayMs), sktService.restartDiscoveryDevices);
+        await Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
       }
     });
     _tagSyncer = TagSyncHandler();
@@ -414,7 +411,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     }
   }
 
-//endregion 页面跳转
+  //endregion 页面跳转
 
   //region 多选返回监听
   void notifyMultiSelectionPopScopeDisable() {
@@ -435,24 +432,61 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     _multiSelectionPopScopeDisableListeners.remove(listener);
   }
 
-//endregion
+  //endregion
+  bool _allowRemoveDrawer = true;
 
   ///region drawer 打开和关闭
   void openEndDrawer({
     required Widget drawer,
-    double? width = 400,
+    double? width,
     Function? onDrawerClosed,
+    bool closeBefore = true,
   }) {
-    closeEndDrawer();
-    _drawer.value = drawer;
-    _drawerWidth.value = width;
-    _onEndDrawerClosed.value = onDrawerClosed;
-    homeScaffoldKey.currentState?.openEndDrawer();
+    if (closeBefore) {
+      closeAllEndDrawers();
+    }
+    if (_drawers.isNotEmpty) {
+      _allowRemoveDrawer = false;
+      homeScaffoldKey.currentState?.closeEndDrawer();
+    }
+    final isEmpty = _drawers.isEmpty;
+    _drawers.add(DrawerModel(drawer: drawer, onDrawerClosed: onDrawerClosed, width: width ?? defaultDrawerWidth));
+    Future.delayed((isEmpty ? 0 : 300).ms, () {
+      homeScaffoldKey.currentState?.openEndDrawer();
+    });
+  }
+
+  void closeAllEndDrawers() {
+    homeScaffoldKey.currentState?.closeEndDrawer();
+    final list = List.from(_drawers);
+    _drawers.value = [];
+    for (var drawer in list) {
+      try {
+        drawer.onDrawerClosed?.call();
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
   }
 
   void closeEndDrawer() {
-    homeScaffoldKey.currentState?.closeEndDrawer();
-    _onEndDrawerClosed.value = null;
+    if (_drawers.isEmpty) {
+      return;
+    }
+    if (_allowRemoveDrawer) {
+      drawer?.onDrawerClosed?.call();
+      _drawers.removeLast();
+      if (_drawers.isNotEmpty) {
+        homeScaffoldKey.currentState?.closeEndDrawer();
+        Future.delayed(300.ms, () {
+          homeScaffoldKey.currentState?.openEndDrawer();
+        });
+      } else {
+        homeScaffoldKey.currentState?.closeEndDrawer();
+      }
+    } else {
+      _allowRemoveDrawer = true;
+    }
   }
 
   ///endregion

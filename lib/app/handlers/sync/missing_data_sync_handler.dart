@@ -15,6 +15,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
 
@@ -48,7 +49,7 @@ class MissingDataSyncHandler {
             "seq": seq,
           },
         );
-        await Future.delayed(const Duration(milliseconds: 50));
+        await Future.delayed(50.ms);
       }
     }
   }

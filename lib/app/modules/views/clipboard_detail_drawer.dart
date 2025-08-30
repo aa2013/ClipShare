@@ -53,7 +53,8 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
   Widget build(BuildContext context) {
     final homeCtl = Get.find<HomeController>();
     final devService = Get.find<DeviceService>();
-    final showFullPage = homeCtl.drawerWidth != null && homeCtl.drawerWidth! > 400;
+    final drawerWidth = homeCtl.drawer?.width;
+    final showFullPage = drawerWidth != null && drawerWidth > HomeController.defaultDrawerWidth;
     final fullPageWidth = MediaQuery.of(context).size.width * 0.9;
     return Card(
       color: Theme.of(context).cardTheme.color,
@@ -243,7 +244,7 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
                       onPressed: () {
                         homeCtl.openEndDrawer(
                           drawer: ClipboardDetailDrawer(clipData: widget.clipData),
-                          width: showFullPage ? 400 : fullPageWidth,
+                          width: showFullPage ? HomeController.defaultDrawerWidth : fullPageWidth,
                         );
                       },
                       icon: Icon(

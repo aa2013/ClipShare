@@ -7,6 +7,7 @@ import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -131,7 +132,7 @@ class ConfigService extends GetxService {
 
   set innerCopy(bool value) {
     _innerCopy.value = value;
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(300.ms, () {
       _innerCopy.value = false;
     });
   }

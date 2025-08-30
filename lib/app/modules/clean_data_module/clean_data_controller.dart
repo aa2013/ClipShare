@@ -21,6 +21,7 @@ import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/cron_util.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -164,9 +165,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       context: Get.context!,
       defaultValue: selectedWeekDay.value?.value ?? WeekDay.monday.value,
       onSelected: (selected) {
-        Future.delayed(
-          const Duration(milliseconds: 100),
-        ).then(
+        Future.delayed(100.ms).then(
           (_) {
             selectedWeekDay.value = WeekDay.parse(selected);
             updateNextExecTime();
@@ -201,50 +200,52 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       Global.showLoadingDialog(context: Get.context!);
     }
     deleteCascade(
-      uid: appConfig.userId,
-      types: selectedContentTypes.map((item) => item.value).toList(),
-      tags: selectedTags.toList(),
-      devIds: selectedDevs.toList(),
-      appIds: selectedSources.toList(),
-      startTime: startDate.value,
-      endTime: endDate.value,
-      removeFiles: removeFiles.value,
-      saveTop: saveTopData.value,
-    ).then((cnt) async {
-      if (!mute) {
-        //关闭加载弹窗
-        Get.back();
-        Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt ${TranslationKey.deleteItemsUnit.tr}");
-      }
-      refreshHistoryPage();
-      final devs = selectedDevs.toList();
-      for (var devId in devs) {
-        //本机跳过
-        if (devId == appConfig.device.guid) {
-          return;
-        }
-        final cnt = await dbService.historyDao.countByDevId(devId, appConfig.userId);
-        if (cnt > 0) {
-          //数据未清空，跳过
-          return;
-        }
-        //如果设备离线并未配对则删除，否则不能删
-        if (sktService.isOnline(devId, true)) {
-          print("is online");
-          return;
-        }
-        var success = await devService.remove(devId);
-        print("delete device success $success");
-        if (success) {}
-      }
-    }).catchError((err, stack) {
-      Log.error(logTag, "$err: $stack");
-      if (!mute) {
-        //关闭加载弹窗
-        Get.back();
-        Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
-      }
-    });
+          uid: appConfig.userId,
+          types: selectedContentTypes.map((item) => item.value).toList(),
+          tags: selectedTags.toList(),
+          devIds: selectedDevs.toList(),
+          appIds: selectedSources.toList(),
+          startTime: startDate.value,
+          endTime: endDate.value,
+          removeFiles: removeFiles.value,
+          saveTop: saveTopData.value,
+        )
+        .then((cnt) async {
+          if (!mute) {
+            //关闭加载弹窗
+            Get.back();
+            Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt ${TranslationKey.deleteItemsUnit.tr}");
+          }
+          refreshHistoryPage();
+          final devs = selectedDevs.toList();
+          for (var devId in devs) {
+            //本机跳过
+            if (devId == appConfig.device.guid) {
+              return;
+            }
+            final cnt = await dbService.historyDao.countByDevId(devId, appConfig.userId);
+            if (cnt > 0) {
+              //数据未清空，跳过
+              return;
+            }
+            //如果设备离线并未配对则删除，否则不能删
+            if (sktService.isOnline(devId, true)) {
+              print("is online");
+              return;
+            }
+            var success = await devService.remove(devId);
+            print("delete device success $success");
+            if (success) {}
+          }
+        })
+        .catchError((err, stack) {
+          Log.error(logTag, "$err: $stack");
+          if (!mute) {
+            //关闭加载弹窗
+            Get.back();
+            Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
+          }
+        });
   }
 
   ///清理设备同步记录
@@ -254,21 +255,24 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       return;
     }
     Global.showLoadingDialog(context: Get.context!);
-    dbService.opSyncDao.deleteByDevIds(appConfig.userId, selectedDevs.toList()).then((cnt) {
-      //关闭加载弹窗
-      Get.back();
-      if (cnt == null) {
-        Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
-      } else {
-        Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt ${TranslationKey.deleteItemsUnit.tr}");
-        refreshHistoryPage();
-      }
-    }).catchError((err, stack) {
-      Log.error(logTag, "$err: $stack");
-      //关闭加载弹窗
-      Get.back();
-      Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
-    });
+    dbService.opSyncDao
+        .deleteByDevIds(appConfig.userId, selectedDevs.toList())
+        .then((cnt) {
+          //关闭加载弹窗
+          Get.back();
+          if (cnt == null) {
+            Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
+          } else {
+            Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt ${TranslationKey.deleteItemsUnit.tr}");
+            refreshHistoryPage();
+          }
+        })
+        .catchError((err, stack) {
+          Log.error(logTag, "$err: $stack");
+          //关闭加载弹窗
+          Get.back();
+          Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
+        });
   }
 
   ///清理设备操作记录
@@ -278,21 +282,24 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       return;
     }
     Global.showLoadingDialog(context: Get.context!);
-    dbService.opRecordDao.removeByDevIds(appConfig.userId, selectedDevs.toList()).then((cnt) {
-      //关闭加载弹窗
-      Get.back();
-      if (cnt == null) {
-        Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
-      } else {
-        Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt 条");
-        refreshHistoryPage();
-      }
-    }).catchError((err, stack) {
-      Log.error(logTag, "$err: $stack");
-      //关闭加载弹窗
-      Get.back();
-      Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
-    });
+    dbService.opRecordDao
+        .removeByDevIds(appConfig.userId, selectedDevs.toList())
+        .then((cnt) {
+          //关闭加载弹窗
+          Get.back();
+          if (cnt == null) {
+            Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
+          } else {
+            Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt 条");
+            refreshHistoryPage();
+          }
+        })
+        .catchError((err, stack) {
+          Log.error(logTag, "$err: $stack");
+          //关闭加载弹窗
+          Get.back();
+          Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
+        });
   }
 
   ///保存过滤器配置
@@ -301,35 +308,37 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
     if (cfg != null) {
       appConfig
           .setCleanDataConfig(
-        cfg.copyWith(
-          tags: selectedTags.toList(),
-          devIds: selectedDevs.toList(),
-          contentTypes: selectedContentTypes.toList(),
-          saveTopData: saveTopData.value,
-          removeFile: removeFiles.value,
-        ),
-      )
+            cfg.copyWith(
+              tags: selectedTags.toList(),
+              devIds: selectedDevs.toList(),
+              contentTypes: selectedContentTypes.toList(),
+              saveTopData: saveTopData.value,
+              removeFile: removeFiles.value,
+            ),
+          )
           .then((_) {
-        Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveSuccess.tr);
-      }).catchError((err, stack) {
-        Global.showTipsDialog(context: Get.context!, text: "${TranslationKey.saveSuccess.tr}\n$err\n$stack");
-      });
+            Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveSuccess.tr);
+          })
+          .catchError((err, stack) {
+            Global.showTipsDialog(context: Get.context!, text: "${TranslationKey.saveSuccess.tr}\n$err\n$stack");
+          });
     } else {
       appConfig
           .setCleanDataConfig(
-        CleanDataConfig(
-          tags: selectedTags.toList(),
-          devIds: selectedDevs.toList(),
-          contentTypes: selectedContentTypes.toList(),
-          saveTopData: saveTopData.value,
-          removeFiles: removeFiles.value,
-        ),
-      )
+            CleanDataConfig(
+              tags: selectedTags.toList(),
+              devIds: selectedDevs.toList(),
+              contentTypes: selectedContentTypes.toList(),
+              saveTopData: saveTopData.value,
+              removeFiles: removeFiles.value,
+            ),
+          )
           .then((_) {
-        Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveSuccess.tr);
-      }).catchError((err, stack) {
-        Global.showTipsDialog(context: Get.context!, text: "${TranslationKey.saveSuccess.tr}\n$err\n$stack");
-      });
+            Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveSuccess.tr);
+          })
+          .catchError((err, stack) {
+            Global.showTipsDialog(context: Get.context!, text: "${TranslationKey.saveSuccess.tr}\n$err\n$stack");
+          });
     }
   }
 
@@ -347,19 +356,20 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
     }
     appConfig
         .setCleanDataConfig(
-      cfg.copyWith(
-        autoClean: autoClean.value,
-        cron: _getCronExpress(),
-        autoCleanFreq: frequency.value,
-        nextCleanTime: DateTime.tryParse(nextExecTime.value!),
-      ),
-    )
+          cfg.copyWith(
+            autoClean: autoClean.value,
+            cron: _getCronExpress(),
+            autoCleanFreq: frequency.value,
+            nextCleanTime: DateTime.tryParse(nextExecTime.value!),
+          ),
+        )
         .then((_) {
-      Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveSuccess.tr);
-      initAutoClean();
-    }).catchError((err, stack) {
-      Global.showTipsDialog(context: Get.context!, text: "${TranslationKey.saveFailed.tr}\n$err\n$stack");
-    });
+          Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveSuccess.tr);
+          initAutoClean();
+        })
+        .catchError((err, stack) {
+          Global.showTipsDialog(context: Get.context!, text: "${TranslationKey.saveFailed.tr}\n$err\n$stack");
+        });
   }
 
   ///级联删除
@@ -439,18 +449,20 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
     final now = DateTime.now();
     //已经错过上次执行时间则立即执行
     if (now.isAfter(nextTime)) {
-      await cleanData(true).then((_) {
-        Log.debug(logTag, "auto clean data success.");
-        final newNextTime = CronUtil.getNextTime(cfg.cron!);
-        appConfig.setCleanDataConfig(
-          cfg.copyWith(
-            lastCleanTime: now,
-            nextCleanTime: newNextTime,
-          ),
-        );
-      }).catchError((err, stack) {
-        Log.debug(logTag, "auto clean data failed. $err $stack");
-      });
+      await cleanData(true)
+          .then((_) {
+            Log.debug(logTag, "auto clean data success.");
+            final newNextTime = CronUtil.getNextTime(cfg.cron!);
+            appConfig.setCleanDataConfig(
+              cfg.copyWith(
+                lastCleanTime: now,
+                nextCleanTime: newNextTime,
+              ),
+            );
+          })
+          .catchError((err, stack) {
+            Log.debug(logTag, "auto clean data failed. $err $stack");
+          });
     }
     //设置定时器
     final newNextTime = CronUtil.getNextTime(cfg.cron!)!;

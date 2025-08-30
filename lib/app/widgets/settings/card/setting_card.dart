@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -67,7 +68,7 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
               } else {
                 _readyDoubleClick = true;
                 //设置了双击，但仅点击了一次，延迟一段时间
-                Future.delayed(const Duration(milliseconds: 300), () {
+                Future.delayed(300.ms, () {
                   if (_readyDoubleClick) {
                     //指定时间后仍然没有进行第二次点击，进行单击逻辑
                     widget.onTap?.call();
@@ -95,13 +96,15 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                               // flex: widget.titleFlex,
                               child: SingleChildScrollView(
                                 scrollDirection: Axis.horizontal,
-                                child: Center(child: DefaultTextStyle(
-                                  style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 17,
+                                child: Center(
+                                  child: DefaultTextStyle(
+                                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                      fontWeight: FontWeight.normal,
+                                      fontSize: 17,
+                                    ),
+                                    child: widget.title,
                                   ),
-                                  child: widget.title,
-                                ),),
+                                ),
                               ),
                             ),
                             if (sub != null)
@@ -109,8 +112,8 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                                 children: [
                                   DefaultTextStyle(
                                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                          color: Colors.grey,
-                                        ),
+                                      color: Colors.grey,
+                                    ),
                                     child: sub,
                                   ),
                                 ],

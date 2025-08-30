@@ -18,6 +18,7 @@ import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -71,7 +72,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     // 旋转动画
     _rotationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: 4.s,
     )..repeat();
     setRotationAnimation(true);
     dbService.deviceDao.getAllDevices(appConfig.userId).then((list) {
@@ -596,7 +597,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
               pairing.value = true;
               showTimeoutText = false;
               pairingFailed.value = false;
-              Future.delayed(const Duration(seconds: 5), () {
+              Future.delayed(5.s, () {
                 if (pairing.value) {
                   pairing.value = false;
                   showTimeoutText = true;

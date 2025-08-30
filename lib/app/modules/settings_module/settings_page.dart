@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
+import 'package:clipshare/app/modules/about_module/about_controller.dart';
+import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
@@ -334,9 +336,7 @@ class SettingsPage extends GetView<SettingsController> {
                             context: context,
                             defaultValue: appConfig.language,
                             onSelected: (selected) {
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                              ).then(
+                              Future.delayed(100.ms).then(
                                 (_) {
                                   appConfig.setAppLanguage(selected);
                                   Get.back();
@@ -1191,9 +1191,7 @@ class SettingsPage extends GetView<SettingsController> {
                             context: context,
                             defaultValue: appConfig.appRevalidateDuration,
                             onSelected: (duration) {
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                              ).then(
+                              Future.delayed(100.ms).then(
                                 (value) {
                                   appConfig.setAppRevalidateDuration(duration);
                                   Navigator.pop(context);
@@ -1983,12 +1981,12 @@ class SettingsPage extends GetView<SettingsController> {
                       value: null,
                       action: (v) => IconButton(
                         onPressed: () {
-                          Get.toNamed(Routes.ABOUT);
+                          controller.gotoAboutPage();
                         },
                         icon: arrowForwardIcon,
                       ),
                       onTap: () {
-                        Get.toNamed(Routes.ABOUT);
+                        controller.gotoAboutPage();
                       },
                     ),
                   ],

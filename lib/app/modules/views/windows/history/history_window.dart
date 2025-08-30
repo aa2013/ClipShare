@@ -12,6 +12,7 @@ import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clip_data_card_compact.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
@@ -121,7 +122,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   @override
   void onWindowMove() {
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 500), () {
+    _timer = Timer(500.ms, () {
       _timer = null;
       windowManager.getPosition().then((pos) {
         multiWindowChannelService.storeWindowPos(0, "history", pos);
@@ -136,7 +137,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
 
   void _scrollListener() {
     if (_scrollController.offset == 0) {
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(100.ms, () {
         _list = _list.sublist(0, min(_list.length, 20));
         setState(() {});
       });
@@ -175,7 +176,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
         });
       }
     }
-    return Future.delayed(const Duration(milliseconds: 500), () {
+    return Future.delayed(500.ms, () {
       var fromId = 0;
       if (loadMore) {
         fromId = _list.isEmpty ? 0 : _list.last.data.data.id;
@@ -295,10 +296,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       floatingActionButton: _showBackToTopButton
           ? FloatingActionButton(
               onPressed: () {
-                Future.delayed(const Duration(milliseconds: 100), () {
+                Future.delayed(100.ms, () {
                   _scrollController.animateTo(
                     0,
-                    duration: const Duration(milliseconds: 500),
+                    duration: 500.ms,
                     curve: Curves.easeInOut,
                   );
                 });

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/cupertino.dart';
 
 class LoadingDots extends StatefulWidget {
@@ -20,7 +21,7 @@ class _LoadingDotsState extends State<LoadingDots> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 500), (Timer timer) {
+    _timer = Timer.periodic(500.ms, (Timer timer) {
       setState(() {
         _dots = (_dots % 3) + 1;
       });

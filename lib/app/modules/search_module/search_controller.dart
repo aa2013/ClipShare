@@ -342,7 +342,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
       lastTime = now;
 
       if (ClipData(item).isImage) {
-        await Future.delayed(const Duration(milliseconds: 50));
+        await Future.delayed(50.ms);
       }
     }
     loadingController.update(histories.length);

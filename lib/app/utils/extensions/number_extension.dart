@@ -64,6 +64,14 @@ extension IntExt on int {
     }
     return _durationMap[this]!;
   }
+
+  Duration get min {
+    final duration = _durationMap[this];
+    if (duration == null) {
+      _durationMap[this] = Duration(minutes: this);
+    }
+    return _durationMap[this]!;
+  }
 }
 
 extension DoubleExt on double {

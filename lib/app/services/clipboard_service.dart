@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -61,7 +62,7 @@ class ClipboardService extends GetxService with ClipboardListener {
       if (event.path != null && _lastScreenshotContent != event.path) {
         _lastScreenshotContent = event.path;
         final androidChannelService = Get.find<AndroidChannelService>();
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(500.ms, () {
           uriFileReader.getFileInfoFromUri(event.path!).then((info) async {
             Log.debug(tag, "content uri: ${event.path!}");
             var realPath = info?.path;

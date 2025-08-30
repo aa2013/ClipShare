@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/modules/views/preview_page.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
@@ -199,7 +200,7 @@ class _ClipContentViewState extends State<ClipContentView> {
         begin: 0.8,
         end: 1.0,
       ),
-      duration: const Duration(milliseconds: 60),
+      duration: 60.ms,
       builder: (context, value, child) {
         return Transform.scale(
           alignment: state.spawnAnchor,

@@ -4,6 +4,8 @@ import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
+import 'package:clipshare/app/modules/about_module/about_controller.dart';
+import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/views/white_black_list_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
@@ -274,6 +276,21 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       Get.to(page);
     } else {
       homeController.openEndDrawer(drawer: page);
+    }
+  }
+
+  void gotoAboutPage(){
+    if (appConfig.isSmallScreen) {
+      Get.toNamed(Routes.ABOUT);
+    } else {
+      final homeController = Get.find<HomeController>();
+      Get.put(AboutController());
+      homeController.openEndDrawer(
+        drawer: AboutPage(),
+        onDrawerClosed: () {
+          Get.delete<AboutController>();
+        },
+      );
     }
   }
 

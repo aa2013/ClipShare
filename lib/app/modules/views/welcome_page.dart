@@ -1,5 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -18,8 +19,7 @@ class WelcomePage extends StatelessWidget {
               children: <Widget>[
                 Text(
                   TranslationKey.welcome.tr,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 25),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 32, right: 32),
@@ -28,7 +28,7 @@ class WelcomePage extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     Future.delayed(
-                      const Duration(milliseconds: 200),
+                      200.ms,
                       () {
                         Get.offNamed(Routes.USER_GUIDE);
                       },

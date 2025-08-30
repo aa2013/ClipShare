@@ -4,6 +4,7 @@ import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -244,7 +245,7 @@ class HistoryFilter extends StatelessWidget {
                             onFilterTypeChanged?.call(type);
                             controller.selectedType.value = type;
                             Future.delayed(
-                              const Duration(milliseconds: 200),
+                              200.ms,
                               () {
                                 controller.onChanged(controller.filter);
                               },
