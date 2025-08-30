@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_info_groups_view.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
@@ -296,7 +297,7 @@ class FilterDetail extends StatelessWidget {
                 if (!controller.isBigScreen) {
                   Get.to(page);
                 } else {
-                  Get.dialog(DynamicSizeWidget(child: page));
+                  Global.showDialog(context, DynamicSizeWidget(child: page));
                 }
               },
             ),

@@ -1170,6 +1170,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Please restart the app manually to load the latest data and configuration";
       case TranslationKey.loading:
         return "Loading";
+      case TranslationKey.auto:
+        return "Auto";
     }
   }
 }

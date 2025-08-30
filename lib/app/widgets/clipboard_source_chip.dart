@@ -43,10 +43,7 @@ class ClipboardSourceChip extends StatelessWidget {
             limit: 1,
             loadDeviceName: devService.getName,
             loadAppInfos: () {
-              final list = sourceService.appInfos
-                  .where((item)=>item.devId==appConfig.device.guid)
-                  .map((item) => LocalAppInfo.fromAppInfo(item, false))
-                  .toList();
+              final list = sourceService.appInfos.where((item) => item.devId == appConfig.device.guid).map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
               return Future<List<LocalAppInfo>>.value(list);
             },
             onSelectedDone: (selected) async {
@@ -66,10 +63,10 @@ class ClipboardSourceChip extends StatelessWidget {
               }
             },
           );
-          if(appConfig.isSmallScreen){
+          if (appConfig.isSmallScreen) {
             Get.to(page);
-          }else{
-            Get.dialog(DynamicSizeWidget(child: page));
+          } else {
+            Global.showDialog(context, DynamicSizeWidget(child: page));
           }
         },
         avatar: const Icon(Icons.add),

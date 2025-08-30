@@ -24,12 +24,12 @@ class RuleSettingPage extends StatefulWidget {
   final Widget Function(
     Rule? initData,
     Function(Rule) onChange,
-  ) editDialogLayout;
+  )
+  editDialogLayout;
   final void Function(List<Rule> result) confirm;
   final List<Rule> initData;
   final String title;
-  final Widget Function(
-      int i, Rule rule, void Function(int i, Rule rule) remove) action;
+  final Widget Function(int i, Rule rule, void Function(int i, Rule rule) remove) action;
 
   const RuleSettingPage({
     super.key,
@@ -78,11 +78,11 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
     );
   }
 
-  bool get isSmallScreen =>
-      MediaQuery.of(Get.context!).size.width <= Constants.smallScreenWidth;
+  bool get isSmallScreen => MediaQuery.of(Get.context!).size.width <= Constants.smallScreenWidth;
 
   void showImportPreviewDialog(List<Rule> rules) {
-    Get.dialog(
+    Global.showDialog(
+      context,
       AlertDialog(
         contentPadding: const EdgeInsets.all(16),
         title: Row(
@@ -113,8 +113,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
             setState(() {});
             Global.showSnackBarSuc(
               scaffoldMessengerState: mainScaffoldMessengerKey.currentState!,
-              text: TranslationKey.importRulesSuccess
-                  .trParams({"length": importData.length.toString()}),
+              text: TranslationKey.importRulesSuccess.trParams({"length": importData.length.toString()}),
             );
             //导入成功关闭自身
             Get.back();
@@ -127,7 +126,8 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
   }
 
   void onUrlTypeClicked() {
-    Get.dialog(
+    Global.showDialog(
+      context,
       TextEditDialog(
         title: TranslationKey.importFromNet.tr,
         labelText: "url",
@@ -162,8 +162,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
               );
             } else {
               final rules = Rule.fromJson(
-                (jsonDecode(utf8.decode(resp.bodyBytes)) as List<dynamic>)
-                    .cast<Map<String, dynamic>>(),
+                (jsonDecode(utf8.decode(resp.bodyBytes)) as List<dynamic>).cast<Map<String, dynamic>>(),
               );
               showImportPreviewDialog(rules);
             }
@@ -204,106 +203,108 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
       );
     }
     final file = File(platformFile.path!);
-    file.readAsBytes().then((bytes) {
-      final content = utf8.decode(bytes);
-      final rules = Rule.fromJson(
-        (jsonDecode(content) as List<dynamic>).cast<Map<String, dynamic>>(),
-      );
-      showImportPreviewDialog(rules);
-    }).catchError((err) {
-      Log.error(tag, err);
-      Global.showSnackBarWarn(
-        text: TranslationKey.failedToReadFile.tr,
-        scaffoldMessengerState: mainScaffoldMessengerKey.currentState!,
-      );
-    });
+    file
+        .readAsBytes()
+        .then((bytes) {
+          final content = utf8.decode(bytes);
+          final rules = Rule.fromJson(
+            (jsonDecode(content) as List<dynamic>).cast<Map<String, dynamic>>(),
+          );
+          showImportPreviewDialog(rules);
+        })
+        .catchError((err) {
+          Log.error(tag, err);
+          Global.showSnackBarWarn(
+            text: TranslationKey.failedToReadFile.tr,
+            scaffoldMessengerState: mainScaffoldMessengerKey.currentState!,
+          );
+        });
   }
 
   void showEditDialog(int? idx, Rule? initData) {
     if (initData != null) {
       _editData = initData;
     }
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(TranslationKey.addRule.tr),
-          content: widget.editDialogLayout.call(initData, (data) {
-            if (idx == null) {
-              _addData = data;
-            } else {
-              _editData = data;
-            }
-          }),
-          actions: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton.icon(
-                  onPressed: () {
-                    Get.dialog(
-                      AlertDialog(
-                        title: Row(
-                          children: [
-                            const Icon(Icons.add),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Text(
-                              TranslationKey.importRule.tr,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        content: RuleImportType(
-                          onUrlTypeClicked: onUrlTypeClicked,
-                          onLocalFileTypeClicked: onLocalFileTypeClicked,
-                        ),
+    late DialogController outDialog;
+    outDialog = Global.showDialog(
+      context,
+      AlertDialog(
+        title: Text(TranslationKey.addRule.tr),
+        content: widget.editDialogLayout.call(initData, (data) {
+          if (idx == null) {
+            _addData = data;
+          } else {
+            _editData = data;
+          }
+        }),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  final dialog = Global.showDialog(
+                    context,
+                    AlertDialog(
+                      title: Row(
+                        children: [
+                          const Icon(Icons.add),
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Text(
+                            TranslationKey.importRule.tr,
+                            style: const TextStyle(fontSize: 16),
+                          ),
+                        ],
                       ),
-                    ).then((v) => Get.back());
-                  },
-                  label: Text(TranslationKey.import.tr),
-                  icon: const Icon(Icons.add),
+                      content: RuleImportType(
+                        onUrlTypeClicked: onUrlTypeClicked,
+                        onLocalFileTypeClicked: onLocalFileTypeClicked,
+                      ),
+                    ),
+                  );
+                  dialog.future.then((v) => outDialog.close());
+                },
+                label: Text(TranslationKey.import.tr),
+                icon: const Icon(Icons.add),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        _addData = null;
+                        _editData = null;
+                        Navigator.pop(context);
+                      },
+                      child: Text(TranslationKey.dialogCancelText.tr),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        final data = idx == null ? _addData! : _editData!;
+                        var res = widget.onAdd(data);
+                        if (!res) return;
+                        Navigator.pop(context);
+                        if (idx == null) {
+                          _list.add(data);
+                        } else {
+                          _list[idx] = data;
+                        }
+                        _addData = null;
+                        _editData = null;
+                        setState(() {});
+                      },
+                      child: Text(idx == null ? TranslationKey.add.tr : TranslationKey.modify.tr),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          _addData = null;
-                          _editData = null;
-                          Navigator.pop(context);
-                        },
-                        child: Text(TranslationKey.dialogCancelText.tr),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          final data = idx == null ? _addData! : _editData!;
-                          var res = widget.onAdd(data);
-                          if (!res) return;
-                          Navigator.pop(context);
-                          if (idx == null) {
-                            _list.add(data);
-                          } else {
-                            _list[idx] = data;
-                          }
-                          _addData = null;
-                          _editData = null;
-                          setState(() {});
-                        },
-                        child: Text(idx == null
-                            ? TranslationKey.add.tr
-                            : TranslationKey.modify.tr),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
-      },
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -324,24 +325,24 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
                 child: IconButton(
                   onPressed: () {
                     FileUtil.exportFile(
-                      TranslationKey.outputRule.tr,
-                      "export_rules.json",
-                      jsonEncode(selectedList.toList()),
-                    ).then((outputPath) {
-                      if (outputPath != null) {
-                        Global.showSnackBarSuc(
-                          text: TranslationKey.outputSuccess.tr,
-                          scaffoldMessengerState:
-                              mainScaffoldMessengerKey.currentState!,
-                        );
-                      }
-                    }).catchError((err) {
-                      Global.showSnackBarWarn(
-                        text: "${TranslationKey.outputFailed.tr}: $err",
-                        scaffoldMessengerState:
-                            mainScaffoldMessengerKey.currentState!,
-                      );
-                    });
+                          TranslationKey.outputRule.tr,
+                          "export_rules.json",
+                          jsonEncode(selectedList.toList()),
+                        )
+                        .then((outputPath) {
+                          if (outputPath != null) {
+                            Global.showSnackBarSuc(
+                              text: TranslationKey.outputSuccess.tr,
+                              scaffoldMessengerState: mainScaffoldMessengerKey.currentState!,
+                            );
+                          }
+                        })
+                        .catchError((err) {
+                          Global.showSnackBarWarn(
+                            text: "${TranslationKey.outputFailed.tr}: $err",
+                            scaffoldMessengerState: mainScaffoldMessengerKey.currentState!,
+                          );
+                        });
                   },
                   icon: const Icon(Icons.output),
                 ),
@@ -376,9 +377,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Tooltip(
-              message: selectionMode
-                  ? TranslationKey.exitSelectionMode.tr
-                  : TranslationKey.addRule.tr,
+              message: selectionMode ? TranslationKey.exitSelectionMode.tr : TranslationKey.addRule.tr,
               child: FloatingActionButton(
                 onPressed: () {
                   if (selectionMode) {
@@ -390,8 +389,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
                     showEditDialog(null, null);
                   }
                 },
-                child:
-                    Icon(selectionMode ? Icons.close : Icons.add), // 可以选择其他图标
+                child: Icon(selectionMode ? Icons.close : Icons.add), // 可以选择其他图标
               ),
             ),
             Visibility(
@@ -399,9 +397,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
               child: Container(
                 margin: const EdgeInsets.only(left: 10),
                 child: Tooltip(
-                  message: selectedList.length == _list.length
-                      ? TranslationKey.cancelSelectAll.tr
-                      : TranslationKey.selectAll.tr,
+                  message: selectedList.length == _list.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
                   child: FloatingActionButton(
                     onPressed: () {
                       if (selectedList.length == _list.length) {
@@ -412,9 +408,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
                       setState(() {});
                     },
                     child: Icon(
-                      selectedList.length == _list.length
-                          ? Icons.deselect
-                          : Icons.checklist,
+                      selectedList.length == _list.length ? Icons.deselect : Icons.checklist,
                     ), // 可以选择其他图标
                   ),
                 ),

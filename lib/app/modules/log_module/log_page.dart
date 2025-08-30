@@ -12,6 +12,8 @@ import 'package:clipshare/app/widgets/loading.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../utils/global.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -60,11 +62,7 @@ class LogPage extends GetView<LogController> {
                         ),
                         onTap: () async {
                           final file = controller.logs[i];
-                          var content = await file
-                              .openRead()
-                              .transform(
-                                  const Utf8Decoder(allowMalformed: true))
-                              .join();
+                          var content = await file.openRead().transform(const Utf8Decoder(allowMalformed: true)).join();
                           final page = LogDetailPage(
                             fileName: file.fileName,
                             content: content,
@@ -77,7 +75,8 @@ class LogPage extends GetView<LogController> {
                               ),
                             );
                           } else {
-                            Get.dialog(
+                            Global.showDialog(
+                              context,
                               DynamicSizeWidget(
                                 widthScale: 0.8,
                                 maxWidth: double.infinity,

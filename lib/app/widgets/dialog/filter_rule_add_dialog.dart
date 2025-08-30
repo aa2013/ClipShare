@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -110,7 +111,7 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
                       if (appConfig.isSmallScreen) {
                         Get.to(page);
                       } else {
-                        Get.dialog(DynamicSizeWidget(child: page));
+                        Global.showDialog(context, DynamicSizeWidget(child: page));
                       }
                     },
                   ),

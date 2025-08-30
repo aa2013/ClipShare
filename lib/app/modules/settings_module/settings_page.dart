@@ -848,9 +848,9 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.localName,
                         action: (v) => Text(v),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => TextEditDialog(
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
                               title: TranslationKey.modifyDeviceName.tr,
                               labelText: TranslationKey.deviceName.tr,
                               initStr: appConfig.localName,
@@ -874,9 +874,9 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.port,
                         action: (v) => Text(v.toString()),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => TextEditDialog(
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
                               title: TranslationKey.modifyPort.tr,
                               labelText: TranslationKey.port.tr,
                               initStr: appConfig.port.toString(),
@@ -964,9 +964,9 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.heartbeatInterval,
                         action: (v) => Text(v <= 0 ? TranslationKey.dontDetect.tr : '${v}s'),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => TextEditDialog(
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
                               title: TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle.tr,
                               labelText: TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel.tr,
                               initStr: "${appConfig.heartbeatInterval <= 0 ? '' : appConfig.heartbeatInterval}",
@@ -1123,16 +1123,14 @@ class SettingsPage extends GetView<SettingsController> {
                           }
                           return TextButton(
                             onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) {
-                                  return ForwardServerEditDialog(
-                                    initValue: v,
-                                    onOk: (server) {
-                                      appConfig.setForwardServer(server);
-                                    },
-                                  );
-                                },
+                              Global.showDialog(
+                                context,
+                                ForwardServerEditDialog(
+                                  initValue: v,
+                                  onOk: (server) {
+                                    appConfig.setForwardServer(server);
+                                  },
+                                ),
                               );
                             },
                             child: Text(text),
@@ -1301,7 +1299,7 @@ class SettingsPage extends GetView<SettingsController> {
                           if (desc == null) {
                             return TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(TranslationKey.create.tr),
                             );
@@ -1310,7 +1308,7 @@ class SettingsPage extends GetView<SettingsController> {
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1360,7 +1358,7 @@ class SettingsPage extends GetView<SettingsController> {
                           if (desc == null) {
                             return TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(TranslationKey.create.tr),
                             );
@@ -1369,7 +1367,7 @@ class SettingsPage extends GetView<SettingsController> {
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1420,7 +1418,7 @@ class SettingsPage extends GetView<SettingsController> {
                           if (desc == null) {
                             return TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(TranslationKey.create.tr),
                             );
@@ -1429,7 +1427,7 @@ class SettingsPage extends GetView<SettingsController> {
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1480,7 +1478,7 @@ class SettingsPage extends GetView<SettingsController> {
                           if (desc == null) {
                             return TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(TranslationKey.create.tr),
                             );
@@ -1489,7 +1487,7 @@ class SettingsPage extends GetView<SettingsController> {
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1729,11 +1727,11 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.isSmallScreen) {
                               Get.to(page);
                             } else {
-                              Get.dialog(
+                              Global.showDialog(
+                                context,
                                 DynamicSizeWidget(
                                   child: page,
                                 ),
-                                barrierDismissible: false,
                               );
                             }
                           },
@@ -1756,11 +1754,11 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.isSmallScreen) {
                               Get.to(page);
                             } else {
-                              Get.dialog(
+                              Global.showDialog(
+                                context,
                                 DynamicSizeWidget(
                                   child: page,
                                 ),
-                                barrierDismissible: false,
                               );
                             }
                           },
@@ -1853,11 +1851,14 @@ class SettingsPage extends GetView<SettingsController> {
                             Get.toNamed(Routes.LOG);
                           } else {
                             Get.put(LogController());
-                            Get.dialog(
+                            final dialog = Global.showDialog(
+                              context,
                               DynamicSizeWidget(
                                 child: LogPage(),
                               ),
-                            ).then((_) => Get.delete<LogController>());
+                              dismissible: true,
+                            );
+                            dialog.future.then((_) => Get.delete<LogController>());
                           }
                         },
                         action: (v) {
@@ -1867,32 +1868,31 @@ class SettingsPage extends GetView<SettingsController> {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableLogsRecord(checked);
                               if (!checked) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(TranslationKey.tips.tr),
-                                      content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(TranslationKey.dialogCancelText.tr),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            FileUtil.deleteDirectoryFiles(
-                                              appConfig.logsDirPath,
-                                            );
-                                            controller.updater.value++;
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(TranslationKey.dialogConfirmText.tr),
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                late DialogController dialog;
+                                dialog = Global.showDialog(
+                                  context,
+                                  AlertDialog(
+                                    title: Text(TranslationKey.tips.tr),
+                                    content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          dialog.close();
+                                        },
+                                        child: Text(TranslationKey.dialogCancelText.tr),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          FileUtil.deleteDirectoryFiles(
+                                            appConfig.logsDirPath,
+                                          );
+                                          controller.updater.value++;
+                                          dialog.close();
+                                        },
+                                        child: Text(TranslationKey.dialogConfirmText.tr),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               }
                             },

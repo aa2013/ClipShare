@@ -152,6 +152,35 @@ class Global {
     showSnackBar(context, scaffoldMessengerState, text, Colors.orange);
   }
 
+  static DialogController showDialog(BuildContext context, Widget widget, {bool dismissible = true, String? barrierLabel}) {
+    final dlgCtl = DialogController(context);
+    final future = showGeneralDialog(
+      barrierDismissible: dismissible,
+      barrierLabel: dismissible ? barrierLabel ?? '' : null,
+      context: context,
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 5 * anim1.value,
+              sigmaY: 5 * anim1.value,
+            ),
+            child: FadeTransition(
+              opacity: anim1,
+              child: child,
+            ),
+          ),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) => Container(
+        key: dlgCtl.key,
+        child: widget,
+      ),
+    );
+    dlgCtl.future = future.then((value) => dlgCtl.close());
+    return dlgCtl;
+  }
+
   static DialogController? showTipsDialog({
     required BuildContext context,
     required String text,
@@ -257,7 +286,7 @@ class Global {
         );
       },
     );
-    feature.then((value) => dlgCtl.close());
+    dlgCtl.future = feature.then((value) => dlgCtl.close());
     return dlgCtl;
   }
 
@@ -332,7 +361,7 @@ class Global {
         );
       },
     );
-    feature.then((value) => dlgCtl.close());
+    dlgCtl.future = feature.then((value) => dlgCtl.close());
     return dlgCtl;
   }
 
@@ -378,7 +407,7 @@ class Global {
         );
       },
     );
-    feature.then((value) => dlgCtl.close());
+    dlgCtl.future = feature.then((value) => dlgCtl.close());
     return dlgCtl;
   }
 }
@@ -387,6 +416,7 @@ class DialogController {
   static int _lastDialogId = 0;
   final int id = _lastDialogId++;
   final BuildContext context;
+  late final Future future;
   final GlobalKey key = GlobalKey();
   static const tag = 'DialogController';
 

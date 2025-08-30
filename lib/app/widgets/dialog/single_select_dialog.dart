@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:flutter/material.dart';
 
@@ -23,31 +24,29 @@ class SingleSelectDialog<T> extends StatelessWidget {
     String? cancelText,
     List<Widget>? actions,
   }) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: title,
-          content: SingleSelectDialog._private(
-            onSelected: onSelected,
-            defaultValue: defaultValue,
-            selections: selections,
-          ),
-          actions: actions ??
-              [
-                TextButton(
-                  onPressed: () {
-                    if (onCancel == null) {
-                      Navigator.pop(context);
-                    } else {
-                      onCancel.call();
-                    }
-                  },
-                  child: Text(cancelText ?? "取消"),
-                ),
-              ],
-        );
-      },
+    Global.showDialog(
+      context,
+      AlertDialog(
+        title: title,
+        content: SingleSelectDialog._private(
+          onSelected: onSelected,
+          defaultValue: defaultValue,
+          selections: selections,
+        ),
+        actions: actions ??
+            [
+              TextButton(
+                onPressed: () {
+                  if (onCancel == null) {
+                    Navigator.pop(context);
+                  } else {
+                    onCancel.call();
+                  }
+                },
+                child: Text(cancelText ?? "取消"),
+              ),
+            ],
+      ),
     );
   }
 

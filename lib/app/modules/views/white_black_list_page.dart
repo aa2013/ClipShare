@@ -85,7 +85,8 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
         ),
         TextButton(
           onPressed: () {
-            Get.dialog(
+            Global.showDialog(
+              context,
               FilterRuleAddDialog(
                 mode: isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white,
                 onDone: (data) {
@@ -144,7 +145,7 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                                     if (item.isAllApp) allContent,
                                     ...item.appIds.map(
                                       (appId) => Container(
-                                        margin: const EdgeInsets.only(right: 2,bottom: 2),
+                                        margin: const EdgeInsets.only(right: 2, bottom: 2),
                                         child: AppIcon(
                                           appId: appId,
                                           iconSize: appIconSize,
@@ -195,7 +196,8 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                             );
                           },
                           onTap: () {
-                            Get.dialog(
+                            Global.showDialog(
+                              context,
                               FilterRuleAddDialog(
                                 mode: isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white,
                                 data: ruleList[i],
