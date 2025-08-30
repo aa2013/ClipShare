@@ -75,22 +75,22 @@ extension IntExt on int {
   }
 
   EdgeInsets get insetAll => _insetsMap.putIfAbsent(
-    'padAll_$this',
+    'insetAll_$this',
     () => EdgeInsets.all(toDouble()),
   );
 
   EdgeInsets get insetH => _insetsMap.putIfAbsent(
-    'padH_$this',
+    'insetH_$this',
     () => EdgeInsets.symmetric(horizontal: toDouble()),
   );
 
   EdgeInsets get insetV => _insetsMap.putIfAbsent(
-    'padV_$this',
+    'insetV_$this',
     () => EdgeInsets.symmetric(vertical: toDouble()),
   );
 
   EdgeInsets insetHV({double? horizontal, double? vertical}) {
-    final key = 'padHV_${horizontal ?? this}_${vertical ?? this}';
+    final key = 'insetHV_${horizontal ?? this}_${vertical ?? this}';
     return _insetsMap.putIfAbsent(
       key,
       () => EdgeInsets.symmetric(
