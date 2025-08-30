@@ -7,6 +7,10 @@ import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/modules/about_module/about_controller.dart';
 import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
+import 'package:clipshare/app/modules/log_module/log_controller.dart';
+import 'package:clipshare/app/modules/log_module/log_page.dart';
+import 'package:clipshare/app/modules/statistics_module/statistics_controller.dart';
+import 'package:clipshare/app/modules/statistics_module/statistics_page.dart';
 import 'package:clipshare/app/modules/views/white_black_list_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
@@ -289,6 +293,37 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         drawer: AboutPage(),
         onDrawerClosed: () {
           Get.delete<AboutController>();
+        },
+      );
+    }
+  }
+
+  void gotoStatisticPage(){
+    if (appConfig.isSmallScreen) {
+      Get.toNamed(Routes.STATISTICS);
+    } else {
+      final homeController = Get.find<HomeController>();
+      Get.put(StatisticsController());
+      homeController.openEndDrawer(
+        drawer: StatisticsPage(),
+        width: 430,
+        onDrawerClosed: () {
+          Get.delete<StatisticsController>();
+        },
+      );
+    }
+  }
+
+  void gotoLogPage(){
+    if (appConfig.isSmallScreen) {
+      Get.toNamed(Routes.LOG);
+    } else {
+      final homeController = Get.find<HomeController>();
+      Get.put(LogController());
+      homeController.openEndDrawer(
+        drawer: LogPage(),
+        onDrawerClosed: () {
+          Get.delete<LogController>();
         },
       );
     }

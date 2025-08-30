@@ -2,9 +2,6 @@ import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
-import 'package:clipshare/app/handlers/backup/backup_handler.dart';
-import 'package:clipshare/app/modules/about_module/about_controller.dart';
-import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
@@ -37,7 +34,6 @@ import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/environment_status_card.dart';
-import 'package:clipshare/app/widgets/hot_key_editor.dart';
 import 'package:clipshare/app/widgets/settings/card/clipboard_listening_way_setting_card.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
@@ -1847,19 +1843,7 @@ class SettingsPage extends GetView<SettingsController> {
                         }),
                         value: appConfig.enableLogsRecord,
                         onTap: () {
-                          if (appConfig.isSmallScreen) {
-                            Get.toNamed(Routes.LOG);
-                          } else {
-                            Get.put(LogController());
-                            final dialog = Global.showDialog(
-                              context,
-                              DynamicSizeWidget(
-                                child: LogPage(),
-                              ),
-                              dismissible: true,
-                            );
-                            dialog.future.then((_) => Get.delete<LogController>());
-                          }
+                          controller.gotoLogPage();
                         },
                         action: (v) {
                           return Switch(
@@ -1952,11 +1936,11 @@ class SettingsPage extends GetView<SettingsController> {
                       description: Text(TranslationKey.statisticsSettingsDesc.tr),
                       value: null,
                       onTap: () {
-                        Get.toNamed(Routes.STATISTICS);
+                        controller.gotoStatisticPage();
                       },
                       action: (v) => IconButton(
                         onPressed: () {
-                          Get.toNamed(Routes.STATISTICS);
+                          controller.gotoStatisticPage();
                         },
                         icon: const Icon(
                           Icons.bar_chart,

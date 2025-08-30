@@ -16,7 +16,6 @@ class LicensesPage extends GetView<LicensesController> {
 
   @override
   Widget build(BuildContext context) {
-
     final currentTheme = Theme.of(context);
     final appConfig = Get.find<ConfigService>();
     final showAppBar = appConfig.isSmallScreen;
