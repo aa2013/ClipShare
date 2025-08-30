@@ -1169,6 +1169,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "导入成功";
       case TranslationKey.restoreRestartPrompt:
         return "请手动重启应用以加载最新的数据和配置信息";
+      case TranslationKey.loading:
+        return "加载中";
     }
   }
 }

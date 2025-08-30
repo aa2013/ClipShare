@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/dialog/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
@@ -176,10 +178,25 @@ class Global {
     cancelText = cancelText ?? TranslationKey.dialogCancelText.tr;
     neutralText = neutralText ?? TranslationKey.dialogNeutralText.tr;
     final dlgCtl = DialogController(context);
-    final feature = showDialog(
+    final feature = showGeneralDialog(
       context: context,
       barrierDismissible: autoDismiss,
-      builder: (context) {
+      barrierLabel: TranslationKey.tips.tr,
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 5 * anim1.value,
+              sigmaY: 5 * anim1.value,
+            ),
+            child: FadeTransition(
+              opacity: anim1,
+              child: child,
+            ),
+          ),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
         return PopScope(
           canPop: autoDismiss,
           key: dlgCtl.key,
@@ -252,10 +269,25 @@ class Global {
     LoadingProgressController? controller,
   }) {
     final dlgCtl = DialogController(context);
-    final feature = showDialog(
+    final feature = showGeneralDialog(
       context: context,
       barrierDismissible: dismissible,
-      builder: (context) {
+      barrierLabel: TranslationKey.loading.tr,
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 5 * anim1.value,
+              sigmaY: 5 * anim1.value,
+            ),
+            child: FadeTransition(
+              opacity: anim1,
+              child: child,
+            ),
+          ),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
         return PopScope(
           canPop: dismissible,
           key: dlgCtl.key,
@@ -313,9 +345,24 @@ class Global {
     void Function()? onCancel,
   }) {
     final dlgCtl = DialogController(context);
-    final feature = showDialog(
+    final feature = showGeneralDialog(
       context: context,
-      builder: (context) {
+      barrierLabel: TranslationKey.downloading.tr,
+      transitionBuilder: (context, anim1, anim2, child) {
+        return ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 5 * anim1.value,
+              sigmaY: 5 * anim1.value,
+            ),
+            child: FadeTransition(
+              opacity: anim1,
+              child: child,
+            ),
+          ),
+        );
+      },
+      pageBuilder: (context, animation, secondaryAnimation) {
         return PopScope(
           canPop: false,
           key: dlgCtl.key,

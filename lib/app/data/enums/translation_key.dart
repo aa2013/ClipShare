@@ -576,7 +576,8 @@ enum TranslationKey {
   importSuccess,
   cancelled,
   exportFailedAndViewLogs,
-  importing;
+  importing,
+  loading;
 
   String get tr => name.tr;
 

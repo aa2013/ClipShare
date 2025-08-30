@@ -39,11 +39,9 @@ class DebugPage extends GetView<DebugController> {
         ),
         TextButton(
           onPressed: () async {
-            final byteData = await rootBundle.load(Constants.emptyPngPath);
-            final bytes = byteData.buffer.asUint8List();
-            print(base64.encode(bytes));
+            Global.showTipsDialog(context: context, text: "text");
           },
-          child: Text("GetEmptyContentPngBytes"),
+          child: Text("tips dialog"),
         ),
         if (Platform.isAndroid)
           Obx(

@@ -1168,6 +1168,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Import succeeded";
       case TranslationKey.restoreRestartPrompt:
         return "Please restart the app manually to load the latest data and configuration";
+      case TranslationKey.loading:
+        return "Loading";
     }
   }
 }
