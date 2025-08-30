@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
+import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/views/white_black_list_page.dart';
@@ -435,16 +436,20 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       loadingText: TranslationKey.exporting.tr,
       onCancel: () {
         backupHandler.cancel();
-        Global.showSnackBarSuc(text: "用户已取消", context: context);
+        Global.showSnackBarSuc(text: TranslationKey.userCancelled.tr, context: context);
       },
     );
     await Future.delayed(200.ms);
     try {
-      final (err, stack) = await backupHandler.backup(Directory(path));
-      if (err != null) {
-        Global.showSnackBarWarn(text: "导出失败，详情查看日志", context: context);
+      final exInfo = await backupHandler.backup(Directory(path));
+      if (exInfo != null) {
+        if (exInfo.err is UserCancelBackup) {
+          Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
+        } else {
+          Global.showTipsDialog(text: TranslationKey.exportFailedAndViewLogs.tr, context: context);
+        }
       } else {
-        Global.showSnackBarSuc(text: "导出成功", context: context);
+        Global.showTipsDialog(text: TranslationKey.exportSuccess.tr, context: context);
       }
     } catch (err, stack) {
       Log.error(tag, "$err,$stack");
@@ -459,23 +464,28 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     if (result == null) {
       return;
     }
+    var loadingController = LoadingProgressController();
     final dialog = Global.showLoadingDialog(
       context: context,
       dismissible: false,
       showCancel: true,
-      loadingText: "导入中...",
+      loadingText: TranslationKey.importing.tr,
+      controller: loadingController,
       onCancel: () {
         backupHandler.cancel();
-        Global.showSnackBarSuc(text: "用户已取消", context: context);
       },
     );
     await Future.delayed(200.ms);
     try {
-      final (err, stack) = await backupHandler.restore(File(result.files[0].path!));
-      if (err != null) {
-        Global.showTipsDialog(context: context, title: "导入失败", text: "$err,$stack");
+      final exInfo= await backupHandler.restore(File(result.files[0].path!), loadingController);
+      if (exInfo != null) {
+        if (exInfo.err is UserCancelBackup) {
+          Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
+        } else {
+          Global.showTipsDialog(context: context, title:TranslationKey.importFailed.tr, text: "$exInfo");
+        }
       } else {
-        Global.showTipsDialog(context: context, title: "导入成功", text: "请手动重启应用以加载最新的数据和配置信息");
+        Global.showTipsDialog(context: context, title: TranslationKey.importSuccess.tr, text: TranslationKey.restoreRestartPrompt.tr);
         final historyController = Get.find<HistoryController>();
         final searchController = Get.find<search_module.SearchController>();
         sourceService.init();

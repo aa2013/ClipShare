@@ -10,6 +10,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -86,6 +87,11 @@ class DebugPage extends GetView<DebugController> {
           },
           child: Text("Show Dialogs"),
         ),
+        TextButton(onPressed: (){
+          dbService.historyDao.delete(1843814268377853952).then((res){
+            print(res);
+          });
+        }, child: Text("Get by Id"))
       ],
     );
   }

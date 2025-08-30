@@ -634,7 +634,14 @@ class _$HistoryDao extends HistoryDao {
   ) async {
     return _queryAdapter.queryList(
         'select * from history where uid = ?1 and (?2 <= 0 or id < ?2) order by top desc,id desc limit 100',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
+        mapper: (Map<String, Object?> row){
+          try{
+            return History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?);
+          }catch(err){
+            print(err);
+            rethrow;
+          }
+        },
         arguments: [uid, fromId]);
   }
 

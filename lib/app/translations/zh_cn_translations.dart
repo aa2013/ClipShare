@@ -1153,6 +1153,22 @@ class ZhCNTranslation extends AbstractTranslations {
         return "从备份文件中恢复数据";
       case TranslationKey.startUp:
         return "开始";
+      case TranslationKey.userCancelled:
+        return "用户已取消";
+      case TranslationKey.cancelled:
+        return "已取消";
+      case TranslationKey.exportFailedAndViewLogs:
+        return "导出失败，详情查看日志";
+      case TranslationKey.exportSuccess:
+        return "导出成功";
+      case TranslationKey.importing:
+        return "导入中";
+      case TranslationKey.importFailed:
+        return "导入失败";
+      case TranslationKey.importSuccess:
+        return "导入成功";
+      case TranslationKey.restoreRestartPrompt:
+        return "请手动重启应用以加载最新的数据和配置信息";
     }
   }
 }

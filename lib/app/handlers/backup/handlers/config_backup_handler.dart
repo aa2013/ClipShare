@@ -32,14 +32,22 @@ class ConfigBackupHandler with BaseBackupHandler {
   }
 
   @override
-  Future<void> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir) async {
+  Future<int?> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone) async {
     final map = m2.deserialize(bytes) as Map<dynamic, dynamic>;
     final config = Config.fromJson(map.cast());
     try {
+      final rid = appConfig.snowflake.nextId();
       final key = ConfigKey.values.byName(config.key);
-      await configDao.addOrUpdate(key, config.value);
+      dbService.execSequentially(() {
+        if (cancel.value) {
+          return Future.value();
+        }
+        return configDao.addOrUpdate(key, config.value).whenComplete(() => onDone(rid));
+      });
+      return rid;
     } catch (err, stack) {
       Log.error(tag, err, stack);
+      return null;
     }
   }
 }

@@ -2,10 +2,10 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-class LadingProgressController extends ValueNotifier<int> {
+class LoadingProgressController extends ValueNotifier<int> {
   int total;
 
-  LadingProgressController({
+  LoadingProgressController({
     this.total = 0,
   }) : super(0);
 
@@ -21,7 +21,7 @@ class LadingProgressController extends ValueNotifier<int> {
 class Loading extends StatefulWidget {
   final double width;
   final Widget? description;
-  final LadingProgressController? controller;
+  final LoadingProgressController? controller;
 
   const Loading({
     super.key,

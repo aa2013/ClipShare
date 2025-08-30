@@ -249,7 +249,7 @@ class Global {
     bool showCancel = false,
     void Function()? onCancel,
     String? loadingText,
-    LadingProgressController? controller,
+    LoadingProgressController? controller,
   }) {
     final dlgCtl = DialogController(context);
     final feature = showDialog(

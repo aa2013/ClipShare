@@ -60,7 +60,7 @@ class HistoryBackupHandler with BaseBackupHandler {
   }
 
   @override
-  Future<void> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir) async {
+  Future<int> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone) async {
     final map = m2.deserialize(bytes) as Map<dynamic, dynamic>;
     if (map["type"] == HistoryContentType.image.value) {
       final tempPath = "${tempDir.path}/${map['content']}".normalizePath;
@@ -81,6 +81,13 @@ class HistoryBackupHandler with BaseBackupHandler {
       }
     }
     final history = History.fromJson(map.cast<String, dynamic>());
-    dbService.execSequentially(() => historyDao.add(history));
+    final rid = appConfig.snowflake.nextId();
+    dbService.execSequentially(() {
+      if (cancel.value) {
+        return Future.value();
+      }
+      return historyDao.add(history).whenComplete(() => onDone(rid));
+    });
+    return rid;
   }
 }

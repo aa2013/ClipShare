@@ -21,6 +21,9 @@ class DeviceBackupHandler with BaseBackupHandler {
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {
+    final myDev = appConfig.devInfo;
+    final device = Device(guid: myDev.guid, devName: myDev.name, uid: 0, type: myDev.type);
+    yield m2.serialize(device.toJson());
     final devices = await deviceDao.getAllDevices(appConfig.userId);
     for (var dev in devices) {
       yield m2.serialize(dev.toJson());
@@ -28,9 +31,19 @@ class DeviceBackupHandler with BaseBackupHandler {
   }
 
   @override
-  Future<void> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir) async {
+  Future<int?> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone) async {
     final map = m2.deserialize(bytes) as Map<dynamic, dynamic>;
     final device = Device.fromJson(map.cast<String, dynamic>());
-    dbService.execSequentially(() => deviceDao.add(device));
+    if (device.guid == appConfig.device.guid) {
+      return null;
+    }
+    final rid = appConfig.snowflake.nextId();
+    dbService.execSequentially(() {
+      if (cancel.value) {
+        return Future.value();
+      }
+      return deviceDao.add(device).whenComplete(() => onDone(rid));
+    });
+    return rid;
   }
 }

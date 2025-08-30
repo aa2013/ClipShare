@@ -1134,8 +1134,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Record notification history";
       case TranslationKey.notificationFromDevice:
         return "Notification from @devName";
-        case TranslationKey.logSettingsAutoUploadCrashLogTitle:
-      return "Automatic Crash Log Upload";
+      case TranslationKey.logSettingsAutoUploadCrashLogTitle:
+        return "Automatic Crash Log Upload";
       case TranslationKey.logSettingsAutoUploadCrashLogDesc:
         return "Upload crash error logs when the app crashes unexpectedly to help developers analyze issues";
       case TranslationKey.logSettingsAutoUploadCrashLogTips:
@@ -1152,6 +1152,22 @@ class EnUSTranslation extends AbstractTranslations {
         return "Restore data from backup files";
       case TranslationKey.startUp:
         return "Start Up";
+      case TranslationKey.userCancelled:
+        return "User cancelled";
+      case TranslationKey.cancelled:
+        return "Cancelled";
+      case TranslationKey.exportFailedAndViewLogs:
+        return "Export failed, see logs for details";
+      case TranslationKey.exportSuccess:
+        return "Export succeeded";
+      case TranslationKey.importing:
+        return "Importing";
+      case TranslationKey.importFailed:
+        return "Import failed";
+      case TranslationKey.importSuccess:
+        return "Import succeeded";
+      case TranslationKey.restoreRestartPrompt:
+        return "Please restart the app manually to load the latest data and configuration";
     }
   }
 }

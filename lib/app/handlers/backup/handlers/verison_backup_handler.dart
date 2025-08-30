@@ -29,7 +29,7 @@ class VersionBackupHandler with BaseBackupHandler {
   }
 
   @override
-  void restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir) {
+  int? restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone) {
     throw 'not implement';
   }
 }

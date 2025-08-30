@@ -568,7 +568,15 @@ enum TranslationKey {
   restore,
   restoreSettingDesc,
   backupSettingDesc,
-  startUp;
+  startUp,
+  userCancelled,
+  exportSuccess,
+  importFailed,
+  restoreRestartPrompt,
+  importSuccess,
+  cancelled,
+  exportFailedAndViewLogs,
+  importing;
 
   String get tr => name.tr;
 

@@ -29,9 +29,16 @@ class HistoryTagBackupHandler with BaseBackupHandler {
   }
 
   @override
-  Future<void> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir) async {
+  Future<int> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone) async {
     final map = m2.deserialize(bytes) as Map<dynamic, dynamic>;
     final historyTag = HistoryTag.fromJson(map.cast<String, dynamic>());
-    dbService.execSequentially(() => historyTagDao.add(historyTag));
+    final rid = appConfig.snowflake.nextId();
+    dbService.execSequentially(() {
+      if (cancel.value) {
+        return Future.value();
+      }
+      return historyTagDao.add(historyTag).whenComplete(() => onDone(rid));
+    });
+    return rid;
   }
 }
