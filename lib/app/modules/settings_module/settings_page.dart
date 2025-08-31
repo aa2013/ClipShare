@@ -643,7 +643,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setEnableShowMobileNotification(checked);
                           },
                         ),
-                        show: (v) => PlatformExt.isDesktop,
+                        show: (v) => PlatformExt.isDesktop && false,
                       ),
                     ],
                   ),

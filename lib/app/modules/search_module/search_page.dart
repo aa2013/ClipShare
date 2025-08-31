@@ -41,9 +41,7 @@ class SearchPage extends GetView<search_module.SearchController> {
           padding: const EdgeInsets.fromLTRB(5, 5, 5, 0),
           child: Column(
             children: [
-              const SizedBox(
-                height: 5,
-              ),
+              const SizedBox(height: 5),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -54,7 +52,7 @@ class SearchPage extends GetView<search_module.SearchController> {
                       HistoryContentType.image,
                       HistoryContentType.file,
                       HistoryContentType.sms,
-                      HistoryContentType.notification,
+                      // HistoryContentType.notification,
                     ])
                       Row(
                         children: [
