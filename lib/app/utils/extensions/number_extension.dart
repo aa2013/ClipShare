@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart';
+
 extension NumberExt on num {
   bool between(num start, num end) {
     return this >= start && this <= end;
@@ -5,6 +7,10 @@ extension NumberExt on num {
 }
 
 extension IntExt on int {
+  static final _durationMap = <int, Duration>{};
+  static final _insetsMap = <String, EdgeInsets>{};
+  static final _radiusMap = <String, Radius>{};
+
   String get sizeStr {
     if (this < 0) {
       return '-';
@@ -46,6 +52,55 @@ extension IntExt on int {
 
     return timeString.toString();
   }
+
+  Duration get s {
+    final ms = this * 1000;
+    return _durationMap.putIfAbsent(
+      ms,
+      () => Duration(milliseconds: ms.toInt()),
+    );
+  }
+
+  Duration get ms => _durationMap.putIfAbsent(
+    this,
+    () => Duration(milliseconds: toInt()),
+  );
+
+  Duration get min {
+    final ms = this * 60 * 1000;
+    return _durationMap.putIfAbsent(
+      ms,
+      () => Duration(milliseconds: ms.toInt()),
+    );
+  }
+
+  EdgeInsets get insetAll => _insetsMap.putIfAbsent(
+    'insetAll_$this',
+    () => EdgeInsets.all(toDouble()),
+  );
+
+  EdgeInsets get insetH => _insetsMap.putIfAbsent(
+    'insetH_$this',
+    () => EdgeInsets.symmetric(horizontal: toDouble()),
+  );
+
+  EdgeInsets get insetV => _insetsMap.putIfAbsent(
+    'insetV_$this',
+    () => EdgeInsets.symmetric(vertical: toDouble()),
+  );
+
+  EdgeInsets insetHV({double? horizontal, double? vertical}) {
+    final key = 'insetHV_${horizontal ?? this}_${vertical ?? this}';
+    return _insetsMap.putIfAbsent(
+      key,
+      () => EdgeInsets.symmetric(
+        horizontal: horizontal ?? toDouble(),
+        vertical: vertical ?? toDouble(),
+      ),
+    );
+  }
+
+  Radius get r => _radiusMap.putIfAbsent("all_$this", () => Radius.circular(toDouble()));
 }
 
 extension DoubleExt on double {

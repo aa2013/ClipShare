@@ -1,4 +1,5 @@
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/menu/my_menu_item.dart';
 import 'package:flutter/material.dart';
 
@@ -47,7 +48,7 @@ class MyMenu extends StatelessWidget {
           offset: const Offset(0.0, 2.0),
           blurRadius: 10,
           spreadRadius: -1,
-        )
+        ),
       ],
       borderRadius: borderRadius ?? BorderRadius.circular(4.0),
     );
@@ -57,7 +58,7 @@ class MyMenu extends StatelessWidget {
         begin: 0.8,
         end: 1.0,
       ),
-      duration: const Duration(milliseconds: 60),
+      duration: 60.ms,
       builder: (context, value, child) {
         return Transform.scale(
           alignment: spawnAlignment,

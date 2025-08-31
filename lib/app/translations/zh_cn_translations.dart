@@ -1087,6 +1087,92 @@ class ZhCNTranslation extends AbstractTranslations {
         return "在设备连接后自动同步断连期间缺失的数据";
       case TranslationKey.syncingData:
         return "同步数据中";
+      case TranslationKey.enableBlackList:
+        return "黑名单";
+      case TranslationKey.enableBlackListTips:
+        return "启用后命中规则的内容不会被记录";
+      case TranslationKey.enableWhiteList:
+        return "白名单";
+      case TranslationKey.enableWhiteListTips:
+        return "启用后命中规则的内容才会被记录";
+      case TranslationKey.contentCannotEmpty:
+        return "内容不能为空";
+      case TranslationKey.contentAndSourceCannotEmpty:
+        return "内容和来源不能都为空";
+      case TranslationKey.blacklistRules:
+        return "黑名单规则";
+      case TranslationKey.whitelistRules:
+        return "白名单规则";
+      case TranslationKey.filterRuleDetectTips:
+        return "当前仅对文本内容生效";
+      case TranslationKey.ignoreCase:
+        return "忽略大小写";
+      case TranslationKey.application:
+        return "应用";
+      case TranslationKey.supportRegex:
+        return "支持正则表达式";
+      case TranslationKey.content:
+        return "内容";
+      case TranslationKey.title:
+        return "标题";
+      case TranslationKey.addWhitelistRule:
+        return "添加白名单";
+      case TranslationKey.addBlacklistRule:
+        return "添加黑名单";
+      case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
+        return "接收移动端设备通知";
+      case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
+        return "已连接的移动端设备的通知将显示在本设备（需在源设备开启通知记录功能）";
+      case TranslationKey.notificationRules:
+        return "通知历史记录规则";
+      case TranslationKey.permissionSettingsNotificationRecordTitle:
+        return "通知历史访问权限";
+      case TranslationKey.permissionSettingsNotificationRecordDesc:
+        return "该权限用于记录通知历史。在某些设备上，授予此权限可能导致应用进程无法完全终止。如需停止应用，可点击此处取消授权后再进行操作。";
+      case TranslationKey.noNotificationRecordPermTips:
+        return "无通知历史访问权限，无法记录通知历史";
+      case TranslationKey.recordNotification:
+        return "记录通知历史";
+      case TranslationKey.notificationFromDevice:
+        return "来自 @devName 的通知";
+      case TranslationKey.logSettingsAutoUploadCrashLogTitle:
+        return "崩溃日志自动上传";
+      case TranslationKey.logSettingsAutoUploadCrashLogDesc:
+        return "当 app 因崩溃闪退时上传崩溃错误日志供开发者分析问题";
+      case TranslationKey.logSettingsAutoUploadCrashLogTips:
+        return "此日志依赖于 ACRA 崩溃日志工具，仅上传必要的信息和崩溃堆栈供分析，崩溃日志可能会在再次启动应用时才会上传";
+      case TranslationKey.backupRestore:
+        return "备份和恢复";
+      case TranslationKey.backup:
+        return "备份";
+      case TranslationKey.restore:
+        return "恢复";
+      case TranslationKey.backupSettingDesc:
+        return "导出备份为单独文件以供后续恢复数据库内容";
+      case TranslationKey.restoreSettingDesc:
+        return "从备份文件中恢复数据";
+      case TranslationKey.startUp:
+        return "开始";
+      case TranslationKey.userCancelled:
+        return "用户已取消";
+      case TranslationKey.cancelled:
+        return "已取消";
+      case TranslationKey.exportFailedAndViewLogs:
+        return "导出失败，详情查看日志";
+      case TranslationKey.exportSuccess:
+        return "导出成功";
+      case TranslationKey.importing:
+        return "导入中";
+      case TranslationKey.importFailed:
+        return "导入失败";
+      case TranslationKey.importSuccess:
+        return "导入成功";
+      case TranslationKey.restoreRestartPrompt:
+        return "请手动重启应用以加载最新的数据和配置信息";
+      case TranslationKey.loading:
+        return "加载中";
+      case TranslationKey.auto:
+        return "自动";
     }
   }
 }

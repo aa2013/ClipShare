@@ -225,7 +225,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                           if (appConfig.isSmallScreen) {
                             Get.to(page);
                           } else {
-                            Get.dialog(DynamicSizeWidget(child: page));
+                            Global.showDialog(context, DynamicSizeWidget(child: page));
                           }
                         },
                       ),

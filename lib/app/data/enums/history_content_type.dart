@@ -8,7 +8,8 @@ enum HistoryContentType {
   image(value: "Image", order: 2),
   richText(value: "RichText", order: 3),
   sms(value: "Sms", order: 4),
-  file(value: "File", order: 5);
+  file(value: "File", order: 5),
+  notification(value: "Notification", order: 5);
 
   const HistoryContentType({
     required this.value,
@@ -34,6 +35,8 @@ enum HistoryContentType {
         return TranslationKey.smsHistoryContentType.tr;
       case HistoryContentType.file:
         return TranslationKey.fileHistoryContentType.tr;
+      case HistoryContentType.notification:
+        return TranslationKey.notification.tr;
     }
   }
 

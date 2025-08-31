@@ -12,6 +12,7 @@ import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clip_data_card_compact.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
@@ -121,7 +122,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   @override
   void onWindowMove() {
     _timer?.cancel();
-    _timer = Timer(const Duration(milliseconds: 500), () {
+    _timer = Timer(500.ms, () {
       _timer = null;
       windowManager.getPosition().then((pos) {
         multiWindowChannelService.storeWindowPos(0, "history", pos);
@@ -136,14 +137,14 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
 
   void _scrollListener() {
     if (_scrollController.offset == 0) {
-      Future.delayed(const Duration(milliseconds: 100), () {
+      Future.delayed(100.ms, () {
         _list = _list.sublist(0, min(_list.length, 20));
         setState(() {});
       });
     }
     // 判断是否快要滑动到底部
     if (_scrollController.position.extentAfter <= 200 && !_loadNewData) {
-      refresh(true);
+      refresh(loadMore: true);
     }
     if (_scrollController.offset >= 300) {
       if (!_showBackToTopButton) {
@@ -160,17 +161,22 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     }
   }
 
-  Future<void> refresh([bool loadMore = false]) async {
+  Future<void> refresh({
+    bool loadMore = false,
+    bool showLoading = false,
+  }) async {
     if (loadMore) {
       setState(() {
         _loadNewData = true;
       });
     } else {
-      setState(() {
-        _loading = true;
-      });
+      if (showLoading) {
+        setState(() {
+          _loading = true;
+        });
+      }
     }
-    return Future.delayed(const Duration(milliseconds: 500), () {
+    return Future.delayed(500.ms, () {
       var fromId = 0;
       if (loadMore) {
         fromId = _list.isEmpty ? 0 : _list.last.data.data.id;
@@ -249,7 +255,18 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     return Scaffold(
       body: Column(
         children: [
-          if (!filterLoading) HistoryFilter(controller: historyFilterController),
+          if (!filterLoading)
+            Container(
+              margin: const EdgeInsets.only(top: 10),
+              child: HistoryFilter(
+                controller: historyFilterController,
+                onFilterTypeChanged: (_) {
+                  setState(() {
+                    _loading = true;
+                  });
+                },
+              ),
+            ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () => Future.wait<void>([loadSearchCondition(), refresh()]),
@@ -279,10 +296,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       floatingActionButton: _showBackToTopButton
           ? FloatingActionButton(
               onPressed: () {
-                Future.delayed(const Duration(milliseconds: 100), () {
+                Future.delayed(100.ms, () {
                   _scrollController.animateTo(
                     0,
-                    duration: const Duration(milliseconds: 500),
+                    duration: 500.ms,
                     curve: Curves.easeInOut,
                   );
                 });

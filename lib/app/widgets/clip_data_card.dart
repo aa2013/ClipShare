@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -20,7 +21,7 @@ import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_extra_info.dart';
+import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
@@ -106,7 +107,7 @@ class ClipDataCardState extends State<ClipDataCard> {
             } else {
               _readyDoubleClick = true;
               //设置了双击，但仅点击了一次，延迟一段时间
-              Future.delayed(const Duration(milliseconds: 300), () {
+              Future.delayed(300.ms, () {
                 if (_readyDoubleClick) {
                   //指定时间后仍然没有进行第二次点击，进行单击逻辑
                   widget.onTap?.call();
@@ -177,7 +178,7 @@ class ClipDataCardState extends State<ClipDataCard> {
                           ),
                         ),
                       ),
-                ClipSimpleDataExtraInfo(clip: widget.clip),
+                ClipSimpleDataFooter(clip: widget.clip),
               ],
             ),
           ),

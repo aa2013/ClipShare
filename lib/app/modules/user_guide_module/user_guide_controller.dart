@@ -1,5 +1,6 @@
 import 'package:clipshare/app/handlers/guide/base_guide.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 /**
@@ -72,15 +73,14 @@ class UserGuideController extends GetxController with WidgetsBindingObserver {
       current.value -= 1;
       await updateCanNext();
       pageController.previousPage(
-        duration: const Duration(milliseconds: 200),
+        duration: 200.ms,
         curve: Curves.ease,
       );
     }
   }
 
   Future<void> updateCanNext() async {
-    canNextGuide.value = await guides[current.value].canNext() ||
-        guides[current.value].allowSkip;
+    canNextGuide.value = await guides[current.value].canNext() || guides[current.value].allowSkip;
   }
 
   ///跳转下一项
@@ -90,7 +90,7 @@ class UserGuideController extends GetxController with WidgetsBindingObserver {
       if (canNextGuide.value || guides[current.value].allowSkip) {
         current.value += 1;
         pageController.nextPage(
-          duration: const Duration(milliseconds: 200),
+          duration: 200.ms,
           curve: Curves.ease,
         );
         await updateCanNext();
@@ -101,5 +101,6 @@ class UserGuideController extends GetxController with WidgetsBindingObserver {
   void gotoHomePage() {
     Get.offNamed(Routes.HOME);
   }
-//endregion
+
+  //endregion
 }

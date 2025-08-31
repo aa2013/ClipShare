@@ -10,6 +10,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -94,7 +95,7 @@ class _DeviceCardState extends State<DeviceCard> {
   Icon get _currIcon => Constants.devTypeIcons[widget.dev!.type]!;
 
   void _setTimer() {
-    timer = Timer.periodic(const Duration(milliseconds: 1200), (timer) {
+    timer = Timer.periodic(1200.ms, (timer) {
       String key = Constants.devTypeIcons.keys
           .elementAt(_emptyIconIdx % Constants.devTypeIcons.length);
       _emptyIcon = Constants.devTypeIcons[key]!;

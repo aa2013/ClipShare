@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/hot_key_handler.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -82,7 +83,7 @@ class TrayService extends GetxService with TrayListener {
     }
     _trayClick = true;
     // 创建一个延迟0.2秒执行一次的定时器重置点击为false
-    Timer(const Duration(milliseconds: 200), () {
+    Timer(200.ms, () {
       _trayClick = false;
     });
   }

@@ -5,6 +5,8 @@ import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import io.flutter.plugin.common.MethodChannel.Result
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -33,12 +35,17 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import androidx.core.net.toUri
-import java.io.BufferedInputStream
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import org.acra.ACRA
 import java.net.URLDecoder
 
+const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
+const val loadHistories = "LOAD_HISTORIES"
+const val sendHistories = "SEND_HISTORIES"
 
 class MainActivity : FlutterFragmentActivity() {
     private val requestOverlayResultCode = 5002
+    private lateinit var localBroadcastReceiver: BroadcastReceiver
     private lateinit var screenReceiver: ScreenReceiver
     private val TAG: String = "MainActivity";
     private var smsObserver: SmsObserver? = null;
@@ -51,9 +58,6 @@ class MainActivity : FlutterFragmentActivity() {
         lateinit var clipChannel: MethodChannel;
         lateinit var applicationContext: Context
         lateinit var pendingIntent: PendingIntent
-
-        @JvmStatic
-        var lockHistoryFloatLoc: Boolean = false
 
         var commonNotifyId = 2
 
@@ -104,6 +108,7 @@ class MainActivity : FlutterFragmentActivity() {
         initCommonChannel()
         initAndroidChannel()
         createNotifyChannel();
+        setupLocalBroadcastReceiver()
     }
 
     private fun registerSmsObserver() {
@@ -115,6 +120,59 @@ class MainActivity : FlutterFragmentActivity() {
         Log.d(TAG, "registerSmsObserver")
         smsObserver = observer
         contentResolver.registerContentObserver(Uri.parse("content://sms/"), true, observer)
+    }
+
+    private fun setupLocalBroadcastReceiver() {
+        localBroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    loadHistories -> {
+                        val more = intent.getBooleanExtra("more", false)
+                        val minHistoryId = intent.getLongExtra("minHistoryId", 0)
+                        clipChannel.invokeMethod(
+                            "getHistory",
+                            mapOf("fromId" to if (more) minHistoryId else 0L),
+                            object : Result {
+                                @Suppress("UNCHECKED_CAST")
+                                override fun success(result: Any?) {
+                                    val tmpList = result as List<Map<String, Any>>
+                                    val serializableList = ArrayList<HashMap<String, Any>>().apply {
+                                        tmpList.forEach { map ->
+                                            add(HashMap(map))
+                                        }
+                                    }
+                                    val intent = Intent(sendHistories)
+                                    intent.putExtra("list", serializableList)
+                                    intent.putExtra("more", more)
+                                    LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+                                }
+
+                                override fun error(
+                                    errorCode: String,
+                                    errorMessage: String?,
+                                    errorDetails: Any?
+                                ) {
+                                    TODO("Not yet implemented")
+                                }
+
+                                override fun notImplemented() {
+                                    TODO("Not yet implemented")
+                                }
+
+                            })
+                    }
+                }
+            }
+        }
+
+        val filter = IntentFilter().apply {
+            addAction(loadHistories)
+        }
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            localBroadcastReceiver,
+            filter
+        )
     }
 
     private fun unRegisterSmsObserver() {
@@ -238,7 +296,10 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 //锁定悬浮窗位置
                 "lockHistoryFloatLoc" -> {
-                    lockHistoryFloatLoc = args["loc"] as Boolean
+                    val lockLoc = args["loc"] as Boolean
+                    val intent = Intent(lockHistoryFloatLocation)
+                    intent.putExtra("lock", lockLoc)
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
                 }
                 //关闭历史浮窗
                 "closeHistoryFloatWindow" -> {
@@ -334,6 +395,12 @@ class MainActivity : FlutterFragmentActivity() {
                 "getLatestImagePath" -> {
                     val path = getLatestImagePath(this)
                     result.success(path)
+                }
+                //是否自动报告崩溃（可能在下一次启动app时才会有）
+                "setAutoReportCrashes" -> {
+                    val enable = args["enable"] as Boolean
+                    ACRA.errorReporter.setEnabled(enable)
+                    result.success(null)
                 }
             }
         }
@@ -540,11 +607,25 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d("MainActivity", "onDestroy")
-        // 取消注册广播接收器
-        unregisterReceiver(screenReceiver)
-        //MainActivity被销毁时停止服务运行
-        stopService(Intent(this, HistoryFloatService::class.java))
-        unRegisterSmsObserver()
+        try {
+            // 取消注册广播接收器
+            unregisterReceiver(screenReceiver)
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
+        try {
+            //MainActivity被销毁时停止服务运行
+            stopService(Intent(this, HistoryFloatService::class.java))
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
+        try {
+            //MainActivity被销毁时停止服务运行
+            unRegisterSmsObserver()
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(localBroadcastReceiver)
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
     }
 
     private fun createPendingIntent(): PendingIntent {

@@ -75,6 +75,12 @@ android {
         }
     }
     signingConfigs{
+        debug{
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+        }
         release{
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
@@ -101,6 +107,9 @@ flutter {
 }
 
 dependencies {
+    var acraVersion = "5.12.0"
+    implementation "ch.acra:acra-http:$acraVersion"
+    implementation "ch.acra:acra-core:$acraVersion"
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'

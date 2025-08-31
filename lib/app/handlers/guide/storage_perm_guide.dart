@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 class StoragePermGuide extends BaseGuide {
   bool? hasPerm;
 
-  StoragePermGuide() {
+  ///不知道为什么有的设备会无法请求到存储权限，先允许跳过吧
+  StoragePermGuide({super.allowSkip = true}) {
     super.widget = PermissionGuide(
       title: TranslationKey.storagePermGuideTitle.tr,
       icon: Icons.storage_outlined,

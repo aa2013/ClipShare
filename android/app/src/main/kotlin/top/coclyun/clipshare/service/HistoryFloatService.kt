@@ -1,7 +1,10 @@
 package top.coclyun.clipshare.service
 
 import android.app.Service
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.res.Configuration
 import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.content.res.Resources
@@ -26,18 +29,22 @@ import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import android.widget.LinearLayout
 import androidx.cardview.widget.CardView
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import io.flutter.plugin.common.MethodChannel.Result
-import top.coclyun.clipshare.MainActivity
 import top.coclyun.clipshare.R
 import top.coclyun.clipshare.adapter.History
 import top.coclyun.clipshare.adapter.HistoryFloatAdapter
+import top.coclyun.clipshare.loadHistories
+import top.coclyun.clipshare.lockHistoryFloatLocation
+import top.coclyun.clipshare.sendHistories
 import java.io.File
 
 
-class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
+class HistoryFloatService() : Service(), OnTouchListener,
+    OnClickListener {
+    private lateinit var localBroadcastReceiver: BroadcastReceiver
     private lateinit var windowManager: WindowManager
     private lateinit var mainParams: LayoutParams
     private lateinit var view: ViewGroup
@@ -52,6 +59,7 @@ class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
     private lateinit var recyclerView: RecyclerView
     private lateinit var container: CardView
     private var minHistoryId = 0L
+    private var lockLoc = false
     private var loading = false;
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -59,12 +67,83 @@ class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
 
     override fun onCreate() {
         super.onCreate()
+        setupLocalBroadcastReceiver()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         val layoutInflater = baseContext.getSystemService(LAYOUT_INFLATER_SERVICE) as LayoutInflater
         view = layoutInflater.inflate(R.layout.history_clipboard_float, null) as ViewGroup
         mainParams = LayoutParams()
     }
 
+    private fun setupLocalBroadcastReceiver() {
+        localBroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                when (intent.action) {
+                    lockHistoryFloatLocation -> {
+                        lockLoc = intent.getBooleanExtra("lock", false)
+                    }
+
+                    sendHistories -> {
+                        val receivedList =
+                            intent.getSerializableExtra("list") as? ArrayList<HashMap<String, Any>>
+                        val more = intent.getBooleanExtra("more", false)
+                        if (receivedList == null) {
+                            Log.d(TAG, "loadHistories receivedList is null")
+                            return
+                        }
+                        val lst = receivedList.map { map ->
+                            History(
+                                id = map["id"] as Long,
+                                content = map["content"] as String,
+                                time = map["time"] as String,
+                                top = map["top"] as Boolean,
+                                type = map["type"] as String
+                            )
+                        }.filter {
+                            when (it.type.lowercase()) {
+                                "file" -> false
+                                "image" -> File(it.content).exists()
+                                else -> true
+                            }
+                        }
+
+                        if (lst.isNotEmpty()) {
+                            minHistoryId = lst.last().id
+                            if (more) {
+                                (recyclerView.adapter as HistoryFloatAdapter).addDataList(lst);
+                            } else {
+                                // 创建并设置适配器
+                                recyclerView.adapter = HistoryFloatAdapter(lst, {
+                                    view.visibility = INVISIBLE
+                                    mainParams.width = LayoutParams.WRAP_CONTENT
+                                    mainParams.x = 0
+                                    windowManager.updateViewLayout(view, mainParams)
+                                }, {
+                                    mainParams.width = LayoutParams.MATCH_PARENT
+//                                setPos1P3()
+                                    windowManager.updateViewLayout(view, mainParams)
+                                    view.post { view.visibility = VISIBLE }
+
+                                })
+                            }
+
+                        }
+                        loading = false
+
+                    }
+                }
+            }
+        }
+
+        val filter = IntentFilter().apply {
+            addAction(lockHistoryFloatLocation)
+            addAction(sendHistories)
+        }
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+            localBroadcastReceiver,
+            filter
+        )
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         showFloatWindow()
@@ -125,8 +204,8 @@ class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        stopSelf()
         closeFloatWindow()
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(localBroadcastReceiver)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -181,7 +260,7 @@ class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
                 val metrics = resources.displayMetrics
 
                 //未锁定位置
-                if (!MainActivity.lockHistoryFloatLoc) {
+                if (!lockLoc) {
                     //保持在窗口右边
                     mainParams.x = 0
                     mainParams.y = if (positionY != 0) positionY else mainParams.y + movedY
@@ -218,65 +297,10 @@ class HistoryFloatService : Service(), OnTouchListener, OnClickListener {
     private fun refreshData(more: Boolean = false) {
         if (loading) return
         loading = true
-        MainActivity.clipChannel.invokeMethod("getHistory",
-            mapOf("fromId" to if (more) minHistoryId else 0L),
-            object : Result {
-                @Suppress("UNCHECKED_CAST")
-                override fun success(result: Any?) {
-                    val tmpList = result as List<Map<String, Any>>
-                    val lst = tmpList.map { map ->
-                        History(
-                            id = map["id"] as Long,
-                            content = map["content"] as String,
-                            time = map["time"] as String,
-                            top = map["top"] as Boolean,
-                            type = map["type"] as String
-                        )
-                    }.filter {
-                        when (it.type.lowercase()) {
-                            "file" -> false
-                            "image" -> File(it.content).exists()
-                            else -> true
-                        }
-                    }
-
-                    if (lst.isNotEmpty()) {
-                        minHistoryId = lst.last().id
-                        if (more) {
-                            (recyclerView.adapter as HistoryFloatAdapter).addDataList(lst);
-                        } else {
-                            // 创建并设置适配器
-                            recyclerView.adapter = HistoryFloatAdapter(lst, {
-                                view.visibility = INVISIBLE
-                                mainParams.width = LayoutParams.WRAP_CONTENT
-                                mainParams.x = 0
-                                windowManager.updateViewLayout(view, mainParams)
-                            }, {
-                                mainParams.width = LayoutParams.MATCH_PARENT
-//                                setPos1P3()
-                                windowManager.updateViewLayout(view, mainParams)
-                                view.post { view.visibility = VISIBLE }
-
-                            })
-                        }
-
-                    }
-                    loading = false
-                }
-
-                override fun error(
-                    errorCode: String,
-                    errorMessage: String?,
-                    errorDetails: Any?
-                ) {
-                    TODO("Not yet implemented")
-                }
-
-                override fun notImplemented() {
-                    TODO("Not yet implemented")
-                }
-
-            })
+        val intent = Intent(loadHistories)
+        intent.putExtra("more", more)
+        intent.putExtra("minHistoryId", minHistoryId)
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
     }
 
     override fun onClick(v: View?) {

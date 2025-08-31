@@ -202,7 +202,7 @@ class SyncFileStatus extends StatelessWidget {
                           begin: isLocal ? 1 : 0.0,
                           end: isLocal ? 1 : factor,
                         ),
-                        duration: const Duration(milliseconds: 300),
+                        duration: 300.ms,
                         builder: (context, value, child) {
                           return Stack(
                             children: [

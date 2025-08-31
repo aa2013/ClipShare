@@ -7,6 +7,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/check_update_button.dart';
+import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -31,232 +32,245 @@ class AboutPage extends GetView<AboutController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(TranslationKey.about.tr)),
-      body: Padding(
-        padding: const EdgeInsets.all(8),
-        child: SingleChildScrollView(
-          child: Column(
+    final currentTheme = Theme.of(context);
+    final appConfig = Get.find<ConfigService>();
+    final dbService = Get.find<DbService>();
+    final showAppBar = appConfig.isSmallScreen;
+    final content = ListView(
+      children: [
+        SettingCard(
+          borderRadius: topBorderRadius,
+          padding: padding,
+          title: Row(
             children: [
-              SettingCard(
-                borderRadius: topBorderRadius,
-                padding: padding,
-                title: Row(
-                  children: [
-                    const Icon(
-                      Icons.help_outline_outlined,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      TranslationKey.aboutPageInstructionsItemName.tr,
-                      style: fontSize,
-                    ),
-                  ],
-                ),
-                value: null,
-                onTap: () {
-                  if (PlatformExt.isDesktop) {
-                    Constants.usageWeb.openUrl();
-                  } else {
-                    Constants.usageWeb.askOpenUrl();
-                  }
-                },
+              const Icon(
+                Icons.help_outline_outlined,
+                color: Colors.blueGrey,
+                size: 28,
               ),
-              SettingCard(
-                padding: padding,
-                onTap: () {
-                  Get.toNamed(Routes.LICENSES);
-                },
-                title: const Row(
-                  children: [
-                    Icon(
-                      Icons.event_note_outlined,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      "Licenses",
-                      style: fontSize,
-                    ),
-                  ],
-                ),
-                value: null,
+              const SizedBox(
+                width: 16,
               ),
-              SettingCard(
-                padding: padding,
-                title: Row(
-                  children: [
-                    Icon(
-                      MdiIcons.github,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    const Text(
-                      "Github",
-                      style: fontSize,
-                    ),
-                  ],
-                ),
-                value: null,
-                onTap: () {
-                  if (PlatformExt.isDesktop) {
-                    Constants.githubRepo.openUrl();
-                  } else {
-                    Constants.githubRepo.askOpenUrl();
-                  }
-                },
-              ),
-              SettingCard(
-                padding: padding,
-                title: Row(
-                  children: [
-                    Icon(
-                      MdiIcons.qqchat,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      TranslationKey.aboutPageJoinQQGroupItemName.tr,
-                      style: fontSize,
-                    ),
-                  ],
-                ),
-                value: null,
-                onTap: () {
-                  Constants.qqGroup.openUrl();
-                },
-              ),
-              SettingCard(
-                padding: padding,
-                title: Row(
-                  children: [
-                    Icon(
-                      MdiIcons.web,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      TranslationKey.aboutPageWebsiteItemName.tr,
-                      style: fontSize,
-                    ),
-                  ],
-                ),
-                value: null,
-                onTap: () {
-                  if (PlatformExt.isDesktop) {
-                    Constants.clipshareSite.openUrl();
-                  } else {
-                    Constants.clipshareSite.askOpenUrl();
-                  }
-                },
-              ),
-              SettingCard(
-                padding: padding,
-                title: Row(
-                  children: [
-                    Icon(
-                      MdiIcons.update,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Text(
-                      TranslationKey.aboutPageLogsItemName.tr,
-                      style: fontSize,
-                    ),
-                  ],
-                ),
-                value: null,
-                onTap: () {
-                  Get.toNamed(Routes.UPDATE_LOG);
-                },
-              ),
-              SettingCard(
-                padding: padding,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          TranslationKey.aboutPageVersionItemName.tr,
-                          style: fontSize,
-                        ),
-                        Text(
-                          appConfig.version.toString(),
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                action: (v) {
-                  return const CheckUpdateButton();
-                },
-                value: null,
-              ),
-              SettingCard(
-                borderRadius: bottomBorderRadius,
-                padding: padding,
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Icon(
-                      MdiIcons.databaseOutline,
-                      color: Colors.blueGrey,
-                      size: 28,
-                    ),
-                    const SizedBox(
-                      width: 16,
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          TranslationKey.aboutPageDatabaseVersionItemName.tr,
-                          style: fontSize,
-                        ),
-                        Text(
-                          dbService.version.toString(),
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                value: null,
+              Text(
+                TranslationKey.aboutPageInstructionsItemName.tr,
+                style: fontSize,
               ),
             ],
           ),
+          value: null,
+          onTap: () {
+            if (PlatformExt.isDesktop) {
+              Constants.usageWeb.openUrl();
+            } else {
+              Constants.usageWeb.askOpenUrl();
+            }
+          },
         ),
-      ),
+        SettingCard(
+          padding: padding,
+          onTap: () {
+            controller.gotoLicensesPage();
+          },
+          title: const Row(
+            children: [
+              Icon(
+                Icons.event_note_outlined,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              SizedBox(
+                width: 16,
+              ),
+              Text(
+                "Licenses",
+                style: fontSize,
+              ),
+            ],
+          ),
+          value: null,
+        ),
+        SettingCard(
+          padding: padding,
+          title: Row(
+            children: [
+              Icon(
+                MdiIcons.github,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              const Text(
+                "Github",
+                style: fontSize,
+              ),
+            ],
+          ),
+          value: null,
+          onTap: () {
+            if (PlatformExt.isDesktop) {
+              Constants.githubRepo.openUrl();
+            } else {
+              Constants.githubRepo.askOpenUrl();
+            }
+          },
+        ),
+        SettingCard(
+          padding: padding,
+          title: Row(
+            children: [
+              Icon(
+                MdiIcons.qqchat,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              Text(
+                TranslationKey.aboutPageJoinQQGroupItemName.tr,
+                style: fontSize,
+              ),
+            ],
+          ),
+          value: null,
+          onTap: () {
+            Constants.qqGroup.openUrl();
+          },
+        ),
+        SettingCard(
+          padding: padding,
+          title: Row(
+            children: [
+              Icon(
+                MdiIcons.web,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              Text(
+                TranslationKey.aboutPageWebsiteItemName.tr,
+                style: fontSize,
+              ),
+            ],
+          ),
+          value: null,
+          onTap: () {
+            if (PlatformExt.isDesktop) {
+              Constants.clipshareSite.openUrl();
+            } else {
+              Constants.clipshareSite.askOpenUrl();
+            }
+          },
+        ),
+        SettingCard(
+          padding: padding,
+          title: Row(
+            children: [
+              Icon(
+                MdiIcons.update,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              Text(
+                TranslationKey.aboutPageLogsItemName.tr,
+                style: fontSize,
+              ),
+            ],
+          ),
+          value: null,
+          onTap: () {
+            controller.gotoUpdateLogsPage();
+          },
+        ),
+        SettingCard(
+          padding: padding,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Icon(
+                Icons.info_outline,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    TranslationKey.aboutPageVersionItemName.tr,
+                    style: fontSize,
+                  ),
+                  Text(
+                    appConfig.version.toString(),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          action: (v) {
+            return const CheckUpdateButton();
+          },
+          value: null,
+        ),
+        SettingCard(
+          borderRadius: bottomBorderRadius,
+          padding: padding,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                MdiIcons.databaseOutline,
+                color: Colors.blueGrey,
+                size: 28,
+              ),
+              const SizedBox(
+                width: 16,
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    TranslationKey.aboutPageDatabaseVersionItemName.tr,
+                    style: fontSize,
+                  ),
+                  Text(
+                    dbService.version.toString(),
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          value: null,
+        ),
+      ],
+    );
+    if (showAppBar) {
+      return Scaffold(
+        appBar: showAppBar
+            ? AppBar(
+                title: Text(TranslationKey.about.tr),
+                backgroundColor: currentTheme.colorScheme.inversePrimary,
+              )
+            : null,
+        body: content,
+      );
+    }
+    return Card(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      elevation: 0,
+      margin: const EdgeInsets.all(8),
+      child: content,
     );
   }
 }

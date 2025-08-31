@@ -20,26 +20,33 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
         setState(() {
           loading = true;
         });
-        AppUpdateInfoUtil.showUpdateInfo().then((hasNewest) {
-          if (!hasNewest) {
-            Global.showSnackBarSuc(context: context, text: TranslationKey.alreadyNewestAppVersion.tr);
-          }
-        }).catchError((err) {
-          Global.showTipsDialog(
-            context: context,
-            text: err.toString(),
-          );
-        }).whenComplete(() {
-          setState(() {
-            loading = false;
-          });
-        });
+        AppUpdateInfoUtil.showUpdateInfo()
+            .then((hasNewest) {
+              if (!hasNewest) {
+                Global.showSnackBarSuc(context: context, text: TranslationKey.alreadyNewestAppVersion.tr);
+              }
+            })
+            .catchError((err) {
+              Global.showTipsDialog(
+                context: context,
+                text: err.toString(),
+              );
+            })
+            .whenComplete(() {
+              setState(() {
+                loading = false;
+              });
+            });
       },
       child: Visibility(
         replacement: Text(TranslationKey.checkUpdate.tr),
         visible: loading,
-        child: const CircularProgressIndicator(
-          strokeWidth: 2.0,
+        child: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.0,
+          ),
         ),
       ),
     );

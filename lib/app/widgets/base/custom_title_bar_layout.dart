@@ -8,6 +8,7 @@ import 'package:window_manager/window_manager.dart';
 class CustomTitleBarLayout extends StatefulWidget {
   final List<Widget> children;
   final Widget child;
+  static const double titleBarHeight = 35;
 
   const CustomTitleBarLayout({
     super.key,
@@ -20,7 +21,6 @@ class CustomTitleBarLayout extends StatefulWidget {
 }
 
 class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
-  static const double titleBarHeight = 35;
   final windowControlService = Get.find<WindowControlService>();
   bool closeBtnHovered = false;
 
@@ -34,7 +34,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
         Visibility(
           visible: PlatformExt.isDesktop,
           child: SizedBox(
-            height: titleBarHeight,
+            height: CustomTitleBarLayout.titleBarHeight,
             child: Row(
               children: [
                 Expanded(
@@ -65,8 +65,8 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                             child: InkWell(
                               mouseCursor: SystemMouseCursors.basic,
                               child: SizedBox(
-                                width: titleBarHeight,
-                                height: titleBarHeight,
+                                width: CustomTitleBarLayout.titleBarHeight,
+                                height: CustomTitleBarLayout.titleBarHeight,
                                 child: Icon(
                                   MdiIcons.minus,
                                   size: 15,
@@ -93,8 +93,8 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                                     }
                                   : null,
                               child: SizedBox(
-                                width: titleBarHeight,
-                                height: titleBarHeight,
+                                width: CustomTitleBarLayout.titleBarHeight,
+                                height: CustomTitleBarLayout.titleBarHeight,
                                 child: Icon(
                                   windowControlService.maxWindow.value && windowControlService.maximizable.value ? MdiIcons.cardMultipleOutline : Icons.check_box_outline_blank,
                                   size: 13,
@@ -122,8 +122,8 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                         });
                       },
                       child: SizedBox(
-                        width: titleBarHeight,
-                        height: titleBarHeight,
+                        width: CustomTitleBarLayout.titleBarHeight,
+                        height: CustomTitleBarLayout.titleBarHeight,
                         child: Icon(
                           Icons.close,
                           size: 13,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -142,7 +143,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                           appConfig.innerCopy = true;
                           setState(() {});
                           // 创建一个延迟0.5秒执行一次的定时器
-                          Future.delayed(const Duration(milliseconds: 500), () {
+                          Future.delayed(500.ms, () {
                             setState(() {});
                           });
                           var type = ClipboardContentType.parse(widget.clip.data.type);

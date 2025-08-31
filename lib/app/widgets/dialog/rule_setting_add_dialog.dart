@@ -71,7 +71,7 @@ class _RuleSettingAddDialogState extends State<RuleSettingAddDialog> {
             },
           ),
           const SizedBox(
-            height: 10,
+            height: 10
           ),
           TextField(
             controller: _ruleController,
@@ -97,7 +97,7 @@ class _RuleSettingAddDialogState extends State<RuleSettingAddDialog> {
             },
           ),
           const SizedBox(
-            height: 10,
+            height: 10
           ),
           CheckboxListTile(
             title: Text(TranslationKey.validationTesting.tr),

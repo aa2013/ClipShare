@@ -3,6 +3,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_list_view.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -53,6 +54,7 @@ class SearchPage extends GetView<search_module.SearchController> {
                       HistoryContentType.image,
                       HistoryContentType.file,
                       HistoryContentType.sms,
+                      HistoryContentType.notification,
                     ])
                       Row(
                         children: [
@@ -64,10 +66,7 @@ class SearchPage extends GetView<search_module.SearchController> {
                               }
                               controller.loading.value = true;
                               controller.searchType = type;
-                              Future.delayed(
-                                const Duration(milliseconds: 200),
-                                controller.refreshData,
-                              );
+                              Future.delayed(200.ms, controller.refreshData);
                             },
                             selectedColor: controller.searchType == type ? Theme.of(context).chipTheme.selectedColor : null,
                             label: Text(type.label),

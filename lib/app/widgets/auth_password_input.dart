@@ -83,7 +83,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
       if (!widget.again || (widget.again && secondInput)) {
         _error = !widget.onFinished.call(_first, secondInput ? _second : null);
         if (_error) {
-          Future.delayed(const Duration(milliseconds: 100), () {
+          Future.delayed(100.ms, () {
             setCurrentInput("");
             if (widget.again) {
               //如果是重复输入模式，清除第一次输入
@@ -105,7 +105,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
       } else {
         //需要重复输入且第一次输入完成
         Future.delayed(
-          const Duration(milliseconds: 200),
+          200.ms,
           () {
             secondInput = true;
             setState(() {});
@@ -197,7 +197,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
                           AnimatedContainer(
                             width: inputDotWidth,
                             height: inputDotWidth,
-                            duration: const Duration(milliseconds: 200),
+                            duration: 200.ms,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(inputDotWidth / 2),
                               color: currentInput.length > i ? Colors.blue : Colors.transparent,
@@ -244,7 +244,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
                                   child: AnimatedContainer(
                                     width: edgeLen,
                                     height: edgeLen,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: 200.ms,
                                     child: Center(
                                       child: Text(
                                         "${(i - 1) * 3 + j}",
@@ -284,7 +284,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
                                   child: AnimatedContainer(
                                     width: edgeLen,
                                     height: edgeLen,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: 200.ms,
                                     child: const Center(
                                       child: Text(
                                         "0",
@@ -313,7 +313,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
                                   child: AnimatedContainer(
                                     width: edgeLen,
                                     height: edgeLen,
-                                    duration: const Duration(milliseconds: 200),
+                                    duration: 200.ms,
                                     child: const Center(
                                       child: deleteIcon,
                                     ),

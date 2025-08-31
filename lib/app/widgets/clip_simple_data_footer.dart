@@ -2,18 +2,18 @@ import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:flutter/material.dart';
 
 ///历史记录中的卡片显示的额外信息部分，如时间，大小等
-class ClipSimpleDataExtraInfo extends StatefulWidget {
+class ClipSimpleDataFooter extends StatefulWidget {
   final ClipData clip;
 
-  const ClipSimpleDataExtraInfo({super.key, required this.clip});
+  const ClipSimpleDataFooter({super.key, required this.clip});
 
   @override
   State<StatefulWidget> createState() {
-    return _ClipSimpleDataExtraInfoState();
+    return _ClipSimpleDataFooterState();
   }
 }
 
-class _ClipSimpleDataExtraInfoState extends State<ClipSimpleDataExtraInfo> {
+class _ClipSimpleDataFooterState extends State<ClipSimpleDataFooter> {
   bool _showSimpleTime = true;
 
   @override

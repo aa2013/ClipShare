@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -178,7 +181,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     // 如果已有计时器，则取消它
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     // 重新设置计时器，延迟 200 毫秒执行
-    _debounce = Timer(const Duration(milliseconds: 200), () {
+    _debounce = Timer(200.ms, () {
       final lst = [..._tempList];
       lst.sort((a, b) => b.data.compareTo(a.data));
       list.assignAll(lst);
@@ -269,6 +272,11 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     switch (type) {
       case HistoryContentType.text:
         //文本无特殊实现，此处留空
+        final matchResult = appConfig.matchesContentBlacklist(type, content, source);
+        if (matchResult.matched) {
+          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
+          return;
+        }
         break;
       case HistoryContentType.image:
         //如果上次也是复制的图片/文件，判断其md5与本次比较，若相同则跳过
@@ -283,7 +291,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         //移动到设置的路径然后删除临时文件
         var tempFile = File(content);
         size = await tempFile.length();
-        var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : "${appConfig.fileStorePath}/Screenshots"}/${tempFile.fileName}";
+        var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : appConfig.screenShotStorePath}/${tempFile.fileName}";
         var newFile = File(newPath);
         FileUtil.moveFile(content, newPath);
         content = newFile.normalizePath;
@@ -294,9 +302,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         break;
       case HistoryContentType.sms:
         //判断是否符合短信同步规则，符合则继续，否则终止
-        var rules = jsonDecode(
-          appConfig.smsRules,
-        )["data"] as List<dynamic>;
+        var rules = jsonDecode(appConfig.smsRules)["data"] as List<dynamic>;
         var hasMatch = false;
         for (var rule in rules) {
           if (content.matchRegExp(rule["rule"])) {
@@ -306,6 +312,24 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         }
         //规则列表不为空且未匹配成功，忽略
         if (rules.isNotEmpty && !hasMatch) {
+          return;
+        }
+        break;
+      case HistoryContentType.notification:
+        if (!appConfig.enableRecordNotification) {
+          Log.warn(tag, "Not allow to record notification");
+          return;
+        }
+        final matchResult = appConfig.matchesNotificationRuleList(content, source!.id);
+        final isBlacklistMode = appConfig.currentNotificationWhiteBlackMode == WhiteBlackMode.black;
+        //匹配到黑名单，结束
+        if (matchResult.matched && isBlacklistMode) {
+          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
+          return;
+        }
+        //白名单模式，但未匹配到，结束
+        if (!isBlacklistMode && !matchResult.matched) {
+          Log.info(tag, "not matched whitelist, content $content");
           return;
         }
         break;
@@ -322,7 +346,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       size: size,
       source: source?.id,
     );
-    if (appConfig.sourceRecord) {
+    if (appConfig.sourceRecord || type == HistoryContentType.notification) {
       if (source != null) {
         await sourceService.addOrUpdate(
           AppInfo(
@@ -401,6 +425,29 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             file.writeAsBytesSync(data);
             if (appConfig.saveToPictures) {
               androidChannelService.notifyMediaScan(path);
+            }
+          }
+          break;
+        case HistoryContentType.notification:
+          if (appConfig.enableShowMobileNotification) {
+            final now = DateTime.now();
+            final hisTime = DateTime.parse(history.time);
+            final offsetMs = now.difference(hisTime).inMilliseconds.abs();
+            Log.info(tag, "show mobile notification, time offset ${offsetMs}ms");
+            const maxTimeoutMs = 2000;
+            if (offsetMs <= maxTimeoutMs) {
+              try {
+                final json = jsonDecode(history.content);
+                final notificationContent = json["content"];
+                Global.notify(
+                  title: TranslationKey.notificationFromDevice.trParams({"devName": msg.send.name}),
+                  content: notificationContent,
+                );
+              } catch (err, stack) {
+                Log.error(tag, "show mobile notification error: $err, $stack");
+              }
+            } else {
+              Log.debug(tag, "The sync notification is outdated (${offsetMs}ms exceeds ${maxTimeoutMs}ms), skipping.");
             }
           }
           break;
@@ -507,7 +554,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         if (isTimeout) {
           return;
         }
-        const offset = Duration(milliseconds: 500);
+        final offset = 500.ms;
         final historyCreateTime = DateTime.parse(history.time);
         //如果获取的最新的剪贴板时间不在指定的误差时间，则跳过 todo 考虑提供设置项自行设置
         if (!(source.time?.isWithinRange(offset, historyCreateTime) ?? false)) {
@@ -538,27 +585,23 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         for (var rule in rules) {
           if (history.content.matchRegExp(rule["rule"])) {
             //添加标签
-            var tag = HistoryTag(
-              rule["name"],
-              history.id,
-            );
+            var tag = HistoryTag(rule["name"], history.id);
             tagService.add(tag);
           }
         }
         break;
       case HistoryContentType.sms:
         //添加标签
-        tagService.add(
-          HistoryTag(
-            TranslationKey.sms.tr,
-            history.id,
-          ),
-        );
+        tagService.add(HistoryTag(TranslationKey.sms.tr, history.id));
+        break;
+      case HistoryContentType.notification:
+        //添加通知标签
+        tagService.add(HistoryTag(TranslationKey.notification.tr, history.id));
         break;
       default:
     }
     return cnt;
   }
 
-//endregion
+  //endregion
 }

@@ -6,6 +6,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
@@ -20,7 +21,8 @@ class TagEditPage extends StatefulWidget {
   static void goto(int hisId) {
     var isBigScreen = MediaQuery.of(Get.context!).size.width >= Constants.smallScreenWidth;
     if (isBigScreen) {
-      Get.dialog(
+      Global.showDialog(
+        Get.context!,
         DynamicSizeWidget(
           child: TagEditPage(hisId),
         ),
@@ -105,7 +107,10 @@ class _TagEditPageState extends State<TagEditPage> {
                 willAddList.add(t);
               }
 
-              link.then((value) => tagService.removeList(willRmList)).then((value) => tagService.addList(willAddList)).then(
+              link
+                  .then((value) => tagService.removeList(willRmList))
+                  .then((value) => tagService.addList(willAddList))
+                  .then(
                     (value) => setState(() {
                       saving = false;
                       Navigator.pop(context);

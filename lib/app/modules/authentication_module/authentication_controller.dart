@@ -2,6 +2,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -69,7 +70,7 @@ class AuthenticationController extends GetxController {
                       ),
                     ),
                     onPressed: () {
-                      Future.delayed(const Duration(milliseconds: 100), () {
+                      Future.delayed(100.ms, () {
                         Navigator.pop(context);
                       });
                     },

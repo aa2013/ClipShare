@@ -192,15 +192,15 @@ class HomePage extends GetView<HomeController> {
                       : null,
                   endDrawer: controller.isBigScreen
                       ? SizedBox(
-                          width: controller.drawerWidth,
-                          child: controller.drawer,
+                          width: controller.drawer?.width,
+                          child: controller.drawer?.drawer,
                         )
                       : null,
                   onEndDrawerChanged: (isOpened) {
                     if (isOpened) {
                       return;
                     }
-                    controller.onEndDrawerClosed?.call();
+                    controller.closeEndDrawer();
                   },
                 ),
               ),
@@ -221,9 +221,13 @@ class HomePage extends GetView<HomeController> {
             Obx(
               () => Visibility(
                 visible: controller.dragging.value && !controller.showPendingItemsDetail.value,
-                child: const Positioned.fill(
+                child: Positioned.fill(
                   child: BlurBackground(
-                    child: DragFileMask(),
+                    child: DragFileMask(
+                      onCloseBtnClicked: () {
+                        controller.dragging.value = false;
+                      },
+                    ),
                   ),
                 ),
               ),

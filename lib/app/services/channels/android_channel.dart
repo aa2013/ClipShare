@@ -130,12 +130,14 @@ class AndroidChannelService extends GetxService {
   ///设置是否在最近任务中隐藏
   Future<bool> showOnRecentTasks(bool show) {
     if (!Platform.isAndroid) return Future.value(false);
-    return androidChannel.invokeMethod<bool?>(
-      AndroidChannelMethod.showOnRecentTasks.name,
-      {
-        "show": show,
-      },
-    ).then((v) => v ?? false);
+    return androidChannel
+        .invokeMethod<bool?>(
+          AndroidChannelMethod.showOnRecentTasks.name,
+          {
+            "show": show,
+          },
+        )
+        .then((v) => v ?? false);
   }
 
   ///返回媒体库中的最新一张图片路径
@@ -144,6 +146,15 @@ class AndroidChannelService extends GetxService {
     return androidChannel.invokeMethod<String?>(
       AndroidChannelMethod.getLatestImagePath.name,
       {},
+    );
+  }
+
+  ///启用启动上传崩溃日志
+  Future<void> setAutoReportCrashes(bool checked) {
+    if (!Platform.isAndroid) return Future.value(null);
+    return androidChannel.invokeMethod(
+      AndroidChannelMethod.setAutoReportCrashes.name,
+      {"enable": checked},
     );
   }
 }

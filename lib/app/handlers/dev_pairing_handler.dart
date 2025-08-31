@@ -1,4 +1,5 @@
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 
 class DevPairCode {
@@ -18,7 +19,7 @@ class DevPairingHandler {
     //没有配对码记录，配对失败
     if (!hasKey) return false;
     DevPairCode pairCode = _pairingCodes[devId]!;
-    var duration = const Duration(seconds: Constants.pairingLimit);
+    var duration = Constants.pairingLimit.s;
     //配对超时
     if (DateTime.now().isAfter(pairCode.time.add(duration))) {
       Log.debug(tag, "$devId pairing timeout");

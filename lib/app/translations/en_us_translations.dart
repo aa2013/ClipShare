@@ -1086,6 +1086,92 @@ class EnUSTranslation extends AbstractTranslations {
         return "Automatically sync missing data during disconnection after device connection";
       case TranslationKey.syncingData:
         return "Syncing data";
+      case TranslationKey.enableBlackList:
+        return "Blacklist";
+      case TranslationKey.enableBlackListTips:
+        return "When enabled, content matching rules will not be recorded";
+      case TranslationKey.enableWhiteList:
+        return "Whitelist";
+      case TranslationKey.enableWhiteListTips:
+        return "When enabled, only content matching rules will be recorded";
+      case TranslationKey.contentCannotEmpty:
+        return "Content cannot be empty";
+      case TranslationKey.contentAndSourceCannotEmpty:
+        return "Both content and source cannot be empty";
+      case TranslationKey.blacklistRules:
+        return "Blacklist Rules";
+      case TranslationKey.whitelistRules:
+        return "Whitelist Rules";
+      case TranslationKey.filterRuleDetectTips:
+        return "Currently only applies to Text";
+      case TranslationKey.ignoreCase:
+        return "Case insensitive";
+      case TranslationKey.application:
+        return "App";
+      case TranslationKey.supportRegex:
+        return "Regex supported";
+      case TranslationKey.content:
+        return "Content";
+      case TranslationKey.title:
+        return "Title";
+      case TranslationKey.addWhitelistRule:
+        return "Add Whitelist";
+      case TranslationKey.addBlacklistRule:
+        return "Add Blacklist";
+      case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
+        return "Receive Mobile Device Notifications";
+      case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
+        return "Notifications from connected mobile devices will display on this device (requires enabling notification logging on source device)";
+      case TranslationKey.notificationRules:
+        return "Notification History Rules";
+      case TranslationKey.permissionSettingsNotificationRecordTitle:
+        return "Notification History";
+      case TranslationKey.permissionSettingsNotificationRecordDesc:
+        return "This permission is required to log notification history. On some devices, granting it may prevent the app process from terminating completely. To stop the app, you can revoke the permission first and then proceed.";
+      case TranslationKey.noNotificationRecordPermTips:
+        return "No notification history access permission, unable to record notification history";
+      case TranslationKey.recordNotification:
+        return "Record notification history";
+      case TranslationKey.notificationFromDevice:
+        return "Notification from @devName";
+      case TranslationKey.logSettingsAutoUploadCrashLogTitle:
+        return "Automatic Crash Log Upload";
+      case TranslationKey.logSettingsAutoUploadCrashLogDesc:
+        return "Upload crash error logs when the app crashes unexpectedly to help developers analyze issues";
+      case TranslationKey.logSettingsAutoUploadCrashLogTips:
+        return "This log relies on the ACRA crash reporting tool. Only necessary information and crash stack traces are uploaded for analysis. Crash logs may be uploaded when the app is restarted";
+      case TranslationKey.backupRestore:
+        return "Backup & Restore";
+      case TranslationKey.backup:
+        return "Backup";
+      case TranslationKey.restore:
+        return "Restore";
+      case TranslationKey.backupSettingDesc:
+        return "Export backup as a separate file for future database content restoration";
+      case TranslationKey.restoreSettingDesc:
+        return "Restore data from backup files";
+      case TranslationKey.startUp:
+        return "Start Up";
+      case TranslationKey.userCancelled:
+        return "User cancelled";
+      case TranslationKey.cancelled:
+        return "Cancelled";
+      case TranslationKey.exportFailedAndViewLogs:
+        return "Export failed, see logs for details";
+      case TranslationKey.exportSuccess:
+        return "Export succeeded";
+      case TranslationKey.importing:
+        return "Importing";
+      case TranslationKey.importFailed:
+        return "Import failed";
+      case TranslationKey.importSuccess:
+        return "Import succeeded";
+      case TranslationKey.restoreRestartPrompt:
+        return "Please restart the app manually to load the latest data and configuration";
+      case TranslationKey.loading:
+        return "Loading";
+      case TranslationKey.auto:
+        return "Auto";
     }
   }
 }

@@ -11,12 +11,14 @@ import 'package:get/get_core/src/get_main.dart';
 
 class AppIcon extends StatefulWidget {
   final String appId;
+  final double? iconSize;
   final void Function()? onDeleteClicked;
 
   const AppIcon({
     super.key,
     required this.appId,
     this.onDeleteClicked,
+    this.iconSize,
   });
 
   @override
@@ -57,10 +59,10 @@ class _AppIconState extends State<AppIcon> {
       message: TranslationKey.appIconLoadError.trParams({
         "appName": appInfo?.name ?? widget.appId,
       }),
-      child: const Icon(
+      child: Icon(
         Icons.error_outline,
         color: Colors.orange,
-        size: iconSize,
+        size: widget.iconSize ?? iconSize,
       ),
     );
   }

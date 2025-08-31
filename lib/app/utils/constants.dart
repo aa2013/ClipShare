@@ -41,24 +41,24 @@ class Constants {
 
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
+    {
+      "version": 1,
+      "data": [
         {
-          "version": 1,
-          "data": [
-            {
-              "name": TranslationKey.defaultLinkTagName.tr,
-              "rule": r"[a-zA-z]+://[^\s]*",
-            }
-          ],
+          "name": TranslationKey.defaultLinkTagName.tr,
+          "rule": r"[a-zA-z]+://[^\s]*",
         },
-      );
+      ],
+    },
+  );
 
   //默认短信规则
   static String get defaultSmsRules => jsonEncode(
-        {
-          "version": 0,
-          "data": [],
-        },
-      );
+    {
+      "version": 0,
+      "data": [],
+    },
+  );
 
   //使用说明网页
   static const usageWeb = "https://clipshare.coclyun.top/usages/android.html";
@@ -122,19 +122,22 @@ class Constants {
   );
 
   static List<RadioData<int>> get authBackEndTimeSelections => [
-        RadioData(value: 0, label: TranslationKey.immediately.tr),
-        RadioData(value: 1, label: "1 ${TranslationKey.minute.tr}"),
-        RadioData(value: 2, label: "2 ${TranslationKey.minute.tr}"),
-        RadioData(value: 5, label: "5 ${TranslationKey.minute.tr}"),
-        RadioData(value: 10, label: "10 ${TranslationKey.minute.tr}"),
-        RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
-      ];
-  static final languageSelections = [
-    RadioData(value: 'zh_CN', label: "简体中文"),
-    RadioData(value: 'en_US', label: "English"),
-  ]
-    ..sort((a, b) => a.label.compareTo(b.label))
-    ..insert(0, RadioData(value: 'auto', label: "Auto"));
+    RadioData(value: 0, label: TranslationKey.immediately.tr),
+    RadioData(value: 1, label: "1 ${TranslationKey.minute.tr}"),
+    RadioData(value: 2, label: "2 ${TranslationKey.minute.tr}"),
+    RadioData(value: 5, label: "5 ${TranslationKey.minute.tr}"),
+    RadioData(value: 10, label: "10 ${TranslationKey.minute.tr}"),
+    RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
+  ];
+
+  static List<RadioData> get languageSelections {
+    return [
+        RadioData(value: 'zh_CN', label: "简体中文"),
+        RadioData(value: 'en_US', label: "English"),
+      ]
+      ..sort((a, b) => a.label.compareTo(b.label))
+      ..insert(0, RadioData(value: 'auto', label: TranslationKey.auto.tr));
+  }
 
   static const defaultLocale = Locale("zh", "CN");
   static final supportedLocales = languageSelections.sublist(1).map((item) {

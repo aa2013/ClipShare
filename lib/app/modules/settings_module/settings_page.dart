@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
@@ -10,12 +11,9 @@ import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/hot_key_handler.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
-import 'package:clipshare/app/modules/log_module/log_controller.dart';
-import 'package:clipshare/app/modules/log_module/log_page.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/modules/views/settings/sms_rules_setting_page.dart';
 import 'package:clipshare/app/modules/views/settings/tag_rules_setting_page.dart';
-import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -33,21 +31,22 @@ import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/environment_status_card.dart';
-import 'package:clipshare/app/widgets/hot_key_editor.dart';
 import 'package:clipshare/app/widgets/settings/card/clipboard_listening_way_setting_card.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_header.dart';
 import 'package:clipshare/app/widgets/settings/forward_server_edit_dialog.dart';
 import 'package:clipshare/app/widgets/settings/text_edit_dialog.dart';
-import 'package:clipshare/app/widgets/single_select_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/single_select_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 /**
@@ -59,6 +58,10 @@ class SettingsPage extends GetView<SettingsController> {
   final sktService = Get.find<SocketService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final logTag = "SettingsPage";
+  static const arrowForwardIcon = Icon(
+    Icons.arrow_forward_rounded,
+    color: Colors.blueGrey,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -277,41 +280,47 @@ class SettingsPage extends GetView<SettingsController> {
                           }
                           return ThemeSwitcher(
                             builder: (switcherContext) {
-                              return PopupMenuButton<ThemeMode>(
-                                icon: Icon(icon),
-                                tooltip: toolTip,
-                                itemBuilder: (BuildContext context) {
-                                  return ThemeMode.values.map(
-                                    (mode) {
-                                      var icon = Icons.brightness_auto_outlined;
-                                      if (mode == ThemeMode.light) {
-                                        icon = Icons.light_mode_outlined;
-                                      } else if (mode == ThemeMode.dark) {
-                                        icon = Icons.dark_mode_outlined;
-                                      }
-                                      return PopupMenuItem<ThemeMode>(
-                                        value: mode,
-                                        child: Row(
-                                          children: <Widget>[
-                                            Padding(
-                                              padding: const EdgeInsets.only(right: 8),
-                                              child: Icon(icon),
-                                            ),
-                                            Text(mode.tk.name.tr),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ).toList();
-                                },
-                                onSelected: (mode) async {
-                                  await appConfig.setAppTheme(mode, switcherContext, () {
-                                    final currentBg = controller.envStatusBgColor.value;
-                                    if (currentBg != null) {
-                                      controller.envStatusBgColor.value = controller.warningBgColor;
-                                    }
-                                  });
-                                },
+                              return Tooltip(
+                                message: toolTip,
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  child: MouseRegion(
+                                    cursor: SystemMouseCursors.click,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 5),
+                                      child: Icon(icon),
+                                    ),
+                                  ),
+                                  onTapDown: (details) async {
+                                    final menu = ContextMenu(
+                                      entries: ThemeMode.values.map((mode) {
+                                        var icon = Icons.brightness_auto_outlined;
+                                        if (mode == ThemeMode.light) {
+                                          icon = Icons.light_mode_outlined;
+                                        } else if (mode == ThemeMode.dark) {
+                                          icon = Icons.dark_mode_outlined;
+                                        }
+                                        return MenuItem(
+                                          label: mode.tk.name.tr,
+                                          icon: icon,
+                                          enabled: mode != v,
+                                          onSelected: () async {
+                                            await appConfig.setAppTheme(mode, switcherContext, () {
+                                              final currentBg = controller.envStatusBgColor.value;
+                                              if (currentBg != null) {
+                                                controller.envStatusBgColor.value = controller.warningBgColor;
+                                              }
+                                            });
+                                          },
+                                        );
+                                      }).toList(),
+                                      position: details.globalPosition - const Offset(0, 50),
+                                      padding: const EdgeInsets.all(8.0),
+                                      borderRadius: BorderRadius.circular(8),
+                                    );
+                                    menu.show(context);
+                                  },
+                                ),
                               );
                             },
                           );
@@ -327,9 +336,7 @@ class SettingsPage extends GetView<SettingsController> {
                             context: context,
                             defaultValue: appConfig.language,
                             onSelected: (selected) {
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                              ).then(
+                              Future.delayed(100.ms).then(
                                 (_) {
                                   appConfig.setAppLanguage(selected);
                                   Get.back();
@@ -420,7 +427,7 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsAccessibilityDesc.tr),
                         value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord,
                         action: (val) => const Icon(
                           Icons.help,
@@ -429,6 +436,19 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => Platform.isAndroid && v,
                         onTap: () {
                           PermissionHelper.reqAndroidAccessibilityPerm();
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.permissionSettingsNotificationRecordTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsNotificationRecordDesc.tr),
+                        value: (!controller.hasNotificationRecordPerm.value && appConfig.enableRecordNotification) || (controller.hasNotificationRecordPerm.value && !appConfig.enableRecordNotification),
+                        action: (val) => const Icon(
+                          Icons.help,
+                          color: Colors.orange,
+                        ),
+                        show: (v) => Platform.isAndroid && v,
+                        onTap: () {
+                          NotificationListenerService.requestPermission();
                         },
                       ),
                     ],
@@ -556,6 +576,35 @@ class SettingsPage extends GetView<SettingsController> {
                     icon: const Icon(Icons.notifications_active_outlined),
                     cardList: [
                       SettingCard(
+                        title: Text(TranslationKey.recordNotification.tr),
+                        value: appConfig.enableRecordNotification,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) async {
+                            HapticFeedback.mediumImpact();
+                            final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
+                            if (checked) {
+                              var isGranted = await NotificationListenerService.isPermissionGranted();
+                              if (!isGranted) {
+                                await NotificationListenerService.requestPermission();
+                                isGranted = await NotificationListenerService.isPermissionGranted();
+                                if (isGranted) {
+                                  appConfig.setEnableRecordNotification(checked);
+                                  androidNotificationListenerService.startListening();
+                                }
+                                return;
+                              } else {
+                                androidNotificationListenerService.startListening();
+                              }
+                            } else {
+                              androidNotificationListenerService.stopListening();
+                            }
+                            appConfig.setEnableRecordNotification(checked);
+                          },
+                        ),
+                        show: (v) => Platform.isAndroid && false,
+                      ),
+                      SettingCard(
                         title: Text(
                           TranslationKey.preferenceSettingsDevConnNotification.tr,
                         ),
@@ -582,6 +631,19 @@ class SettingsPage extends GetView<SettingsController> {
                           },
                         ),
                         show: (v) => true,
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.preferenceSettingsShowMobileNotificationTitle.tr),
+                        description: Text(TranslationKey.preferenceSettingsShowMobileNotificationDesc.tr),
+                        value: appConfig.enableShowMobileNotification,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) {
+                            HapticFeedback.mediumImpact();
+                            appConfig.setEnableShowMobileNotification(checked);
+                          },
+                        ),
+                        show: (v) => PlatformExt.isDesktop,
                       ),
                     ],
                   ),
@@ -749,9 +811,9 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.localName,
                         action: (v) => Text(v),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => TextEditDialog(
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
                               title: TranslationKey.modifyDeviceName.tr,
                               labelText: TranslationKey.deviceName.tr,
                               initStr: appConfig.localName,
@@ -775,9 +837,9 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.port,
                         action: (v) => Text(v.toString()),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => TextEditDialog(
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
                               title: TranslationKey.modifyPort.tr,
                               labelText: TranslationKey.port.tr,
                               initStr: appConfig.port.toString(),
@@ -865,9 +927,9 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.heartbeatInterval,
                         action: (v) => Text(v <= 0 ? TranslationKey.dontDetect.tr : '${v}s'),
                         onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => TextEditDialog(
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
                               title: TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle.tr,
                               labelText: TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel.tr,
                               initStr: "${appConfig.heartbeatInterval <= 0 ? '' : appConfig.heartbeatInterval}",
@@ -1024,16 +1086,14 @@ class SettingsPage extends GetView<SettingsController> {
                           }
                           return TextButton(
                             onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) {
-                                  return ForwardServerEditDialog(
-                                    initValue: v,
-                                    onOk: (server) {
-                                      appConfig.setForwardServer(server);
-                                    },
-                                  );
-                                },
+                              Global.showDialog(
+                                context,
+                                ForwardServerEditDialog(
+                                  initValue: v,
+                                  onOk: (server) {
+                                    appConfig.setForwardServer(server);
+                                  },
+                                ),
                               );
                             },
                             child: Text(text),
@@ -1129,9 +1189,7 @@ class SettingsPage extends GetView<SettingsController> {
                             context: context,
                             defaultValue: appConfig.appRevalidateDuration,
                             onSelected: (duration) {
-                              Future.delayed(
-                                const Duration(milliseconds: 100),
-                              ).then(
+                              Future.delayed(100.ms).then(
                                 (value) {
                                   appConfig.setAppRevalidateDuration(duration);
                                   Navigator.pop(context);
@@ -1170,30 +1228,50 @@ class SettingsPage extends GetView<SettingsController> {
                         description: Text(TranslationKey.hotKeySettingsHistoryDesc.tr),
                         value: appConfig.historyWindowHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)!.desc;
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)?.desc;
+                          final dialog = HotKeyEditorDialog(
+                            hotKeyType: HotKeyType.historyWindow,
+                            initContent: desc ?? "",
+                            clearable: true,
+                            onDone: (hotKey, keyCodes) {
+                              AppHotKeyHandler.registerHistoryWindow(hotKey)
+                                  .then((v) {
+                                    //设置为新值
+                                    appConfig.setHistoryWindowHotKeys(keyCodes);
+                                  })
+                                  .catchError((err) {
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                    );
+                                  });
+                            },
+                            onClear: () {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.clearHotKeyConfirm.tr,
+                                showCancel: true,
+                                onOk: () {
+                                  appConfig.setHistoryWindowHotKeys("");
+                                  AppHotKeyHandler.unRegister(HotKeyType.historyWindow);
+                                  Get.back();
+                                },
+                              );
+                            },
+                          );
+                          if (desc == null) {
+                            return TextButton(
+                              onPressed: () {
+                                Global.showDialog(context, dialog);
+                              },
+                              child: Text(TranslationKey.create.tr),
+                            );
+                          }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(
-                                  HotKeyEditorDialog(
-                                    hotKeyType: HotKeyType.historyWindow,
-                                    initContent: desc,
-                                    onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerHistoryWindow(hotKey)
-                                          .then((v) {
-                                            //设置为新值
-                                            appConfig.setHistoryWindowHotKeys(keyCodes);
-                                          })
-                                          .catchError((err) {
-                                            Global.showTipsDialog(
-                                              context: context,
-                                              text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                            );
-                                          });
-                                    },
-                                  ),
-                                );
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1209,30 +1287,50 @@ class SettingsPage extends GetView<SettingsController> {
                         description: Text(TranslationKey.hotKeySettingsFileDesc.tr),
                         value: appConfig.syncFileHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)!.desc;
+                          final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)?.desc;
+                          final dialog = HotKeyEditorDialog(
+                            hotKeyType: HotKeyType.fileSender,
+                            initContent: desc ?? "",
+                            clearable: true,
+                            onDone: (hotKey, keyCodes) {
+                              AppHotKeyHandler.registerFileSync(hotKey)
+                                  .then((v) {
+                                    //设置为新值
+                                    appConfig.setSyncFileHotKeys(keyCodes);
+                                  })
+                                  .catchError((err) {
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                    );
+                                  });
+                            },
+                            onClear: () {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.clearHotKeyConfirm.tr,
+                                showCancel: true,
+                                onOk: () {
+                                  appConfig.setSyncFileHotKeys("");
+                                  AppHotKeyHandler.unRegister(HotKeyType.fileSender);
+                                  Get.back();
+                                },
+                              );
+                            },
+                          );
+                          if (desc == null) {
+                            return TextButton(
+                              onPressed: () {
+                                Global.showDialog(context, dialog);
+                              },
+                              child: Text(TranslationKey.create.tr),
+                            );
+                          }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(
-                                  HotKeyEditorDialog(
-                                    hotKeyType: HotKeyType.fileSender,
-                                    initContent: desc,
-                                    onDone: (hotKey, keyCodes) {
-                                      AppHotKeyHandler.registerFileSync(hotKey)
-                                          .then((v) {
-                                            //设置为新值
-                                            appConfig.setSyncFileHotKeys(keyCodes);
-                                          })
-                                          .catchError((err) {
-                                            Global.showTipsDialog(
-                                              context: context,
-                                              text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                                            );
-                                          });
-                                    },
-                                  ),
-                                );
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1283,7 +1381,7 @@ class SettingsPage extends GetView<SettingsController> {
                           if (desc == null) {
                             return TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(TranslationKey.create.tr),
                             );
@@ -1292,7 +1390,7 @@ class SettingsPage extends GetView<SettingsController> {
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1343,7 +1441,7 @@ class SettingsPage extends GetView<SettingsController> {
                           if (desc == null) {
                             return TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(TranslationKey.create.tr),
                             );
@@ -1352,7 +1450,7 @@ class SettingsPage extends GetView<SettingsController> {
                             message: TranslationKey.modify.tr,
                             child: TextButton(
                               onPressed: () {
-                                Get.dialog(dialog);
+                                Global.showDialog(context, dialog);
                               },
                               child: Text(desc),
                             ),
@@ -1502,6 +1600,10 @@ class SettingsPage extends GetView<SettingsController> {
                           );
                         },
                         onDoubleTap: () async {
+                          final dir = Directory(appConfig.fileStorePath);
+                          if (!await dir.exists()) {
+                            await dir.create(recursive: true);
+                          }
                           await OpenFile.open(
                             appConfig.fileStorePath,
                           );
@@ -1559,10 +1661,7 @@ class SettingsPage extends GetView<SettingsController> {
                         value: null,
                         action: (v) => IconButton(
                           onPressed: controller.gotoCleanDataPage,
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Colors.blueGrey,
-                          ),
+                          icon: arrowForwardIcon,
                         ),
                         onTap: controller.gotoCleanDataPage,
                       ),
@@ -1591,11 +1690,11 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.isSmallScreen) {
                               Get.to(page);
                             } else {
-                              Get.dialog(
+                              Global.showDialog(
+                                context,
                                 DynamicSizeWidget(
                                   child: page,
                                 ),
-                                barrierDismissible: false,
                               );
                             }
                           },
@@ -1618,17 +1717,42 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.isSmallScreen) {
                               Get.to(page);
                             } else {
-                              Get.dialog(
+                              Global.showDialog(
+                                context,
                                 DynamicSizeWidget(
                                   child: page,
                                 ),
-                                barrierDismissible: false,
                               );
                             }
                           },
                           child: Text(TranslationKey.configure.tr),
                         );
                       },
+                    ),
+                    SettingCard(
+                      title: Text(
+                        TranslationKey.blacklistRules.tr,
+                        maxLines: 1,
+                      ),
+                      value: false,
+                      action: (v) => IconButton(
+                        onPressed: controller.gotoBlackListPage,
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: controller.gotoBlackListPage,
+                    ),
+                    SettingCard(
+                      title: Text(
+                        TranslationKey.notificationRules.tr,
+                        maxLines: 1,
+                      ),
+                      value: null,
+                      action: (v) => IconButton(
+                        onPressed: controller.gotoFilterRuleListPage,
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: controller.gotoFilterRuleListPage,
+                      show: (_) => Platform.isAndroid && false,
                     ),
                   ],
                 ),
@@ -1686,16 +1810,7 @@ class SettingsPage extends GetView<SettingsController> {
                         }),
                         value: appConfig.enableLogsRecord,
                         onTap: () {
-                          if (appConfig.isSmallScreen) {
-                            Get.toNamed(Routes.LOG);
-                          } else {
-                            Get.put(LogController());
-                            Get.dialog(
-                              DynamicSizeWidget(
-                                child: LogPage(),
-                              ),
-                            ).then((_) => Get.delete<LogController>());
-                          }
+                          controller.gotoLogPage();
                         },
                         action: (v) {
                           return Switch(
@@ -1704,37 +1819,70 @@ class SettingsPage extends GetView<SettingsController> {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableLogsRecord(checked);
                               if (!checked) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) {
-                                    return AlertDialog(
-                                      title: Text(TranslationKey.tips.tr),
-                                      content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(TranslationKey.dialogCancelText.tr),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            FileUtil.deleteDirectoryFiles(
-                                              appConfig.logsDirPath,
-                                            );
-                                            controller.updater.value++;
-                                            Navigator.pop(context);
-                                          },
-                                          child: Text(TranslationKey.dialogConfirmText.tr),
-                                        ),
-                                      ],
-                                    );
-                                  },
+                                late DialogController dialog;
+                                dialog = Global.showDialog(
+                                  context,
+                                  AlertDialog(
+                                    title: Text(TranslationKey.tips.tr),
+                                    content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          dialog.close();
+                                        },
+                                        child: Text(TranslationKey.dialogCancelText.tr),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          FileUtil.deleteDirectoryFiles(
+                                            appConfig.logsDirPath,
+                                          );
+                                          controller.updater.value++;
+                                          dialog.close();
+                                        },
+                                        child: Text(TranslationKey.dialogConfirmText.tr),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               }
                             },
                           );
                         },
+                      ),
+                      SettingCard(
+                        title: Row(
+                          children: [
+                            Text(
+                              TranslationKey.logSettingsAutoUploadCrashLogTitle.tr,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(width: 5),
+                            GestureDetector(
+                              onTap: () {
+                                Global.showTipsDialog(context: context, text: TranslationKey.logSettingsAutoUploadCrashLogTips.tr);
+                              },
+                              child: const Icon(
+                                Icons.info_outline,
+                                color: Colors.blueGrey,
+                                size: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.logSettingsAutoUploadCrashLogDesc.tr),
+                        value: appConfig.enableAutoUploadCrashLogs,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnableAutoUploadCrashLogs(checked);
+                              androidChannelService.setAutoReportCrashes(checked);
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isAndroid,
                       ),
                     ],
                   ),
@@ -1755,17 +1903,49 @@ class SettingsPage extends GetView<SettingsController> {
                       description: Text(TranslationKey.statisticsSettingsDesc.tr),
                       value: null,
                       onTap: () {
-                        Get.toNamed(Routes.STATISTICS);
+                        controller.gotoStatisticPage();
                       },
                       action: (v) => IconButton(
                         onPressed: () {
-                          Get.toNamed(Routes.STATISTICS);
+                          controller.gotoStatisticPage();
                         },
                         icon: const Icon(
                           Icons.bar_chart,
                           color: Colors.blueGrey,
                         ),
                       ),
+                    ),
+                  ],
+                ),
+
+                ///endregion
+
+                ///region 备份和恢复
+                SettingCardGroup(
+                  groupName: TranslationKey.backupRestore.tr,
+                  icon: Icon(MdiIcons.backupRestore),
+                  cardList: [
+                    SettingCard(
+                      title: Text(TranslationKey.backup.tr),
+                      description: Text(TranslationKey.backupSettingDesc.tr),
+                      value: null,
+                      action: (v) {
+                        return TextButton(
+                          onPressed: () => controller.startBackup(context),
+                          child: Text(TranslationKey.startUp.tr),
+                        );
+                      },
+                    ),
+                    SettingCard(
+                      title: Text(TranslationKey.restore.tr),
+                      description: Text(TranslationKey.restoreSettingDesc.tr),
+                      value: null,
+                      action: (v) {
+                        return TextButton(
+                          onPressed: () => controller.restore(context),
+                          child: Text(TranslationKey.selection.tr),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -1789,24 +1969,19 @@ class SettingsPage extends GetView<SettingsController> {
                       value: null,
                       action: (v) => IconButton(
                         onPressed: () {
-                          Get.toNamed(Routes.ABOUT);
+                          controller.gotoAboutPage();
                         },
-                        icon: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.blueGrey,
-                        ),
+                        icon: arrowForwardIcon,
                       ),
                       onTap: () {
-                        Get.toNamed(Routes.ABOUT);
+                        controller.gotoAboutPage();
                       },
                     ),
                   ],
                 ),
 
                 ///endregion
-                const SizedBox(
-                  height: 10,
-                ),
+                const SizedBox(height: 10),
               ],
             ),
           ),

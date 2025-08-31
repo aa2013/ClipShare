@@ -31,4 +31,7 @@ abstract class OperationSyncDao {
     "delete OperationSync where opId in (select id from OperationRecord where data = :opRecordData)",
   )
   Future<int?> deleteByOpRecordData(String opRecordData);
+
+  @Query("select * from OperationSync")
+  Future<List<OperationSync>> getAll();
 }

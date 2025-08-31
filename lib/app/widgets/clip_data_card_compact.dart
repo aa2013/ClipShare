@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/models/app_info.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
@@ -5,7 +6,7 @@ import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_extra_info.dart';
+import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -48,7 +49,7 @@ class ClipDataCardCompact extends StatelessWidget {
               isDouble = false;
             } else {
               isDouble = true;
-              Future.delayed(const Duration(milliseconds: 300), () {
+              Future.delayed(300.ms, () {
                 isDouble = false;
               });
             }
@@ -86,7 +87,7 @@ class ClipDataCardCompact extends StatelessWidget {
                     imgSingleView: true,
                   ),
                 ),
-                ClipSimpleDataExtraInfo(clip: _clip),
+                ClipSimpleDataFooter(clip: _clip),
               ],
             ),
           ),

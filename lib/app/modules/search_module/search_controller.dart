@@ -235,7 +235,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
 
   //region 导出
   void _export() {
-    var loadingController = LadingProgressController();
+    var loadingController = LoadingProgressController();
     Global.showTipsDialog(
       context: Get.context!,
       text: TranslationKey.historyOutputTips.tr,
@@ -284,7 +284,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   }
 
   ///导出为 excel
-  Future<bool> export2Excel(LadingProgressController loadingController) async {
+  Future<bool> export2Excel(LoadingProgressController loadingController) async {
     if (exporting) return false;
     exporting = true;
     int lastId = 0;
@@ -342,7 +342,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
       lastTime = now;
 
       if (ClipData(item).isImage) {
-        await Future.delayed(const Duration(milliseconds: 50));
+        await Future.delayed(50.ms);
       }
     }
     loadingController.update(histories.length);

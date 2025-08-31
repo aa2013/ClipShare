@@ -1,16 +1,18 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/dialog/add_device_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/device_card.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';
-import 'package:clipshare/app/widgets/network_address_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/network_address_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
@@ -134,7 +136,7 @@ class DevicePage extends GetView<DeviceController> {
                     message: TranslationKey.devicePageManuallyTooltip.tr,
                     child: IconButton(
                       onPressed: () {
-                        _showAddDeviceDialog(context);
+                        Global.showDialog(context, const AddDeviceDialog());
                       },
                       icon: const Icon(
                         Icons.add,
@@ -159,18 +161,20 @@ class DevicePage extends GetView<DeviceController> {
                       ),
                     ),
                   ),
-                  Expanded(child: Obx(() {
-                    if (appConfig.deviceDiscoveryStatus.value == null) {
-                      return const SizedBox.shrink();
-                    }
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 15, left: 10),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: LoadingDots(text: Text(appConfig.deviceDiscoveryStatus.value!)),
-                      ),
-                    );
-                  }),),
+                  Expanded(
+                    child: Obx(() {
+                      if (appConfig.deviceDiscoveryStatus.value == null) {
+                        return const SizedBox.shrink();
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 15, left: 10),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: LoadingDots(text: Text(appConfig.deviceDiscoveryStatus.value!)),
+                        ),
+                      );
+                    }),
+                  ),
                 ],
               ),
             ),
@@ -202,12 +206,13 @@ class DevicePage extends GetView<DeviceController> {
                       print("${itf.name} ${itf.addresses.join(',')}");
                     }
                     showDialog(
-                        context: context,
-                        builder: (ctx) {
-                          return NetworkAddressDialog(
-                            interfaces: interfaces,
-                          );
-                        });
+                      context: context,
+                      builder: (ctx) {
+                        return NetworkAddressDialog(
+                          interfaces: interfaces,
+                        );
+                      },
+                    );
                   },
                   child: Row(
                     children: [
@@ -232,15 +237,6 @@ class DevicePage extends GetView<DeviceController> {
 
   //region 页面方法
 
-  ///显示添加设备弹窗
-  void _showAddDeviceDialog(BuildContext context) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) => const AddDeviceDialog(),
-    );
-  }
-
   ///创建设备列表 gridview
   Widget renderGridView(List<DeviceCard> list) {
     return LayoutBuilder(
@@ -264,5 +260,6 @@ class DevicePage extends GetView<DeviceController> {
       },
     );
   }
-//endregion
+
+  //endregion
 }

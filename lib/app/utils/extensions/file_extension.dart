@@ -6,8 +6,12 @@ import 'package:desktop_drop/desktop_drop.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
+import 'package:path/path.dart' as path;
 
 extension DirectoryExt on Directory {
+
+  String get name => path.basename(this.path);
+
   String get normalizePath {
     if (Platform.isWindows) {
       return absolute.path.replaceAll(RegExp(r'(/+|\\+)'), "\\");
@@ -54,6 +58,8 @@ extension DirectoryExt on Directory {
       }
     }
   }
+
+
 }
 
 extension FileExt on File {
@@ -129,14 +135,14 @@ extension FileExt on File {
 
   Future<void> openPath() async {
     if (Platform.isWindows) {
-      await Process.run("explorer /select,\"$path\"", []);
+      await Process.run("explorer /select,\"${this.path}\"", []);
     } else {
-      if (Platform.isAndroid && path.toString().toLowerCase().endsWith("apk")) {
+      if (Platform.isAndroid && this.path.toString().toLowerCase().endsWith("apk")) {
         final granted = await Permission.requestInstallPackages.isGranted;
         if (!granted) {
           final status = await Permission.requestInstallPackages.request();
           if (status.isGranted) {
-            await OpenFile.open(path);
+            await OpenFile.open(this.path);
             return;
           }
         }

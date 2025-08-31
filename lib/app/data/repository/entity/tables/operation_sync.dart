@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:floor/floor.dart';
 
 @Entity(
@@ -25,4 +27,25 @@ class OperationSync {
     required this.devId,
     required this.uid,
   });
+
+  factory OperationSync.fromJson(Map<String, dynamic> map) {
+    return OperationSync(
+      opId: map["opId"],
+      devId: map["devId"],
+      uid: map["uid"],
+    );
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toJson());
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "opId": opId,
+      "devId": devId,
+      "uid": uid,
+    };
+  }
 }

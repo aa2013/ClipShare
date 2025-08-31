@@ -6,6 +6,21 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "archive",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/archive",
+    },
+    {
+      "name": "notification_listener_service",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/notification_listener_service",
+    },
+    {
+      "name": "get_apps",
+      "license": "Apache-2.0",
+      "url": "https://pub.dev/packages/get_apps",
+    },
+    {
       "name": "sliver_sticky_collapsable_panel",
       "license": "MIT",
       "url": "https://pub.dev/packages/sliver_sticky_collapsable_panel",

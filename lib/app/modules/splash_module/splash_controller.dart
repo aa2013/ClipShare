@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/models/my_drop_item.dart';
+import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -43,6 +44,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
+import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:uri_file_reader/uri_file_reader.dart';
@@ -66,30 +68,32 @@ class SplashController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    init().then((ignore) {
-      // 初始化完成，导航到下一个页面
-      if (appConfig.firstStartup && Platform.isAndroid) {
-        Get.offNamed(Routes.WELCOME);
-      } else {
-        Get.offNamed(Routes.HOME);
-      }
-    }).catchError((err, stack) {
-      Global.showTipsDialog(
-        context: Get.context!,
-        text: "$err\n$stack",
-        title: TranslationKey.errorDialogTitle.tr,
-      );
-    });
+    init()
+        .then((ignore) {
+          // 初始化完成，导航到下一个页面
+          if (appConfig.firstStartup && Platform.isAndroid) {
+            Get.offNamed(Routes.WELCOME);
+          } else {
+            Get.offNamed(Routes.HOME);
+          }
+        })
+        .catchError((err, stack) {
+          Global.showTipsDialog(
+            context: Get.context!,
+            text: "$err\n$stack",
+            title: TranslationKey.errorDialogTitle.tr,
+          );
+        });
   }
 
   Future<void> init() async {
-    //加载配置后初始化窗体配置
-    if (Platform.isWindows || Platform.isLinux) {
-      await initWindowsManager();
-      await initHotKey();
-      initMultiWindowEvent();
-    }
     if (PlatformExt.isDesktop) {
+      //加载配置后初始化窗体配置
+      if (Platform.isWindows || Platform.isLinux) {
+        await initWindowsManager();
+        await initHotKey();
+        initMultiWindowEvent();
+      }
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       launchAtStartup.setup(
         appName: packageInfo.appName,
@@ -119,6 +123,9 @@ class SplashController extends GetxController {
       if (PlatformExt.isDesktop) {
         Get.putAsync(() => TrayService().init(), permanent: true);
       }
+    }
+    if (Platform.isAndroid) {
+      androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
     }
     // 初始化channel
     initChannel();
@@ -158,10 +165,14 @@ class SplashController extends GetxController {
   ///初始化快捷键
   initHotKey() async {
     await AppHotKeyHandler.unRegisterAll();
-    var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
-    AppHotKeyHandler.registerHistoryWindow(hotKey);
-    hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.syncFileHotKeys);
-    AppHotKeyHandler.registerFileSync(hotKey);
+    if (appConfig.historyWindowHotKeys.isNotEmpty) {
+      var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
+      AppHotKeyHandler.registerHistoryWindow(hotKey);
+    }
+    if (appConfig.syncFileHotKeys.isNotEmpty) {
+      var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.syncFileHotKeys);
+      AppHotKeyHandler.registerFileSync(hotKey);
+    }
   }
 
   void initMultiWindowEvent() {
