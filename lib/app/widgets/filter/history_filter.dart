@@ -231,7 +231,7 @@ class HistoryFilter extends StatelessWidget {
                     HistoryContentType.image,
                     HistoryContentType.file,
                     HistoryContentType.sms,
-                    HistoryContentType.notification,
+                    // HistoryContentType.notification,
                   ])
                     Container(
                       margin: const EdgeInsets.only(right: 5, bottom: 5),

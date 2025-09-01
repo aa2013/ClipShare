@@ -1173,6 +1173,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "加载中";
       case TranslationKey.auto:
         return "自动";
+      case TranslationKey.doubleClick2OpenPath:
+        return '双击打开路径';
     }
   }
 }
