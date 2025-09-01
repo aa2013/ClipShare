@@ -1172,6 +1172,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Loading";
       case TranslationKey.auto:
         return "Auto";
+      case TranslationKey.doubleClick2OpenPath:
+        return 'Double-click to open path';
     }
   }
 }

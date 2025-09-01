@@ -1579,7 +1579,14 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.syncSettingsStoreFilePathTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(appConfig.fileStorePath),
+                        description: Visibility(
+                          visible: PlatformExt.isDesktop,
+                          replacement: Text(appConfig.fileStorePath),
+                          child: Tooltip(
+                            message: TranslationKey.doubleClick2OpenPath.tr,
+                            child: Text(appConfig.fileStorePath),
+                          ),
+                        ),
                         value: false,
                         action: (v) {
                           return TextButton(

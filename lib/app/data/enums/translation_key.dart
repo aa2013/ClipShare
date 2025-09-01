@@ -578,7 +578,7 @@ enum TranslationKey {
   exportFailedAndViewLogs,
   importing,
   loading,
-  auto;
+  auto, doubleClick2OpenPath;
 
   String get tr => name.tr;
 
