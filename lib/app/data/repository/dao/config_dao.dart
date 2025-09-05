@@ -20,7 +20,7 @@ abstract class ConfigDao {
   ///获取某个配置项
   Future<T> getConfigByKey<T>(ConfigKey key, T defValue, {T Function(String value)? convert}) async {
     final value = await getConfig(key.name, 0);
-    if (value == null || value.isEmpty) {
+    if (value == null/* || value.isEmpty*/) {
       return defValue;
     }
     if (defValue is String || (defValue == null && convert == null)) {

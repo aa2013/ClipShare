@@ -787,7 +787,7 @@ class ConfigService extends GetxService {
 
   Future<void> setWindowSize(Size windowSize) async {
     var size = "${windowSize.width.toInt()}x${windowSize.height.toInt()}";
-    await configDao.addOrUpdate(ConfigKey.windowSize, windowSize.toString());
+    await configDao.addOrUpdate(ConfigKey.windowSize, size);
     _windowSize.value = size;
   }
 
