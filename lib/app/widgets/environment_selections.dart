@@ -23,11 +23,11 @@ class EnvironmentSelections extends StatefulWidget {
   State<StatefulWidget> createState() => _EnvironmentSelectionsState();
 }
 
-class _EnvironmentSelectionsState extends State<EnvironmentSelections>
-    with AutomaticKeepAliveClientMixin, ClipboardListener {
+class _EnvironmentSelectionsState extends State<EnvironmentSelections> with AutomaticKeepAliveClientMixin, ClipboardListener {
   EnvironmentType? _selectedEnv;
   bool requesting = false;
   EnvironmentType? requestingPerm;
+  DialogController? loadingController;
 
   @override
   bool get wantKeepAlive => true;
@@ -46,7 +46,8 @@ class _EnvironmentSelectionsState extends State<EnvironmentSelections>
     );
     if (!requesting || requestingPerm != environment) return;
     //关闭等待弹窗
-    Get.back();
+    loadingController?.close();
+    loadingController = null;
     setState(() {
       requesting = false;
       requestingPerm = null;
@@ -133,7 +134,7 @@ class _EnvironmentSelectionsState extends State<EnvironmentSelections>
               requesting = true;
               requestingPerm = EnvironmentType.shizuku;
             });
-            Global.showLoadingDialog(context: context, loadingText: TranslationKey.waitingRequestResult.tr);
+            loadingController = Global.showLoadingDialog(context: context, loadingText: TranslationKey.waitingRequestResult.tr);
             clipboardManager.requestPermission(EnvironmentType.shizuku);
           },
         ),
