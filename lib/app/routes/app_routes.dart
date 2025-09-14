@@ -23,5 +23,6 @@ abstract class Routes {
   static const UPDATE_LOG = '/update_log'; // UpdateLog page
   static const LICENSES = '/licenses'; // Licenses page
   static const QR_CODE_SCANNER = '/qr_code_scanner'; // qrCodeScanner page
-  static const CLEAN_DATA = '/clean_data'; // CleanData page
+  static const CLEAN_DATA = '/clean_data'; // CleanData page3
+  static const DB_EDITOR = '/db_editor'; // DbEditor page
 }

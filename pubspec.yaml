@@ -114,7 +114,10 @@ dependencies:
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
   # 大文本编辑器
-  re_editor: ^0.4.0
+  re_editor: # ^0.7.0
+    git: # 修复 Flutter 3.32 版本以上 无法输入的问题
+      url: https://github.com/copywith99/re-editor.git
+      ref: main
   # http请求
   http: ^1.2.2
   # 倒计时的 snackbar ，支持在指定的scaffold上显示

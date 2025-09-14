@@ -132,10 +132,29 @@ extension StringExt on String {
   bool containsIgnoreCase(String input) {
     return toLowerCase().contains(input.toLowerCase());
   }
+
+  bool get isValidVariablePart {
+    final int char = codeUnits.first;
+    return (char >= 65 && char <= 90) || (char >= 97 && char <= 122) || char == 95;
+  }
 }
 
 extension StringNilExt on String? {
   bool get isNotNullAndEmpty => this != null && this!.isNotEmpty;
 
   bool get isNullOrEmpty => this == null || this!.isEmpty;
+}
+
+
+extension CodeAutocompleteCharactersExtension on Characters {
+
+  bool containsSymbols(List<String> symbols) {
+    for (int i = length - 1; i >= 0; i--) {
+      if (symbols.contains(elementAt(i))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

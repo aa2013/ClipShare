@@ -29,6 +29,18 @@ import 'package:sqflite/sqflite.dart' as sqflite;
 
 part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
 
+const tables = [
+  Config,
+  Device,
+  History,
+  User,
+  OperationSync,
+  HistoryTag,
+  OperationRecord,
+  AppInfo,
+];
+const views = [VHistoryTagHold];
+
 /// 添加实体类到 @Database 注解中，app_db、db_util 中添加 get 方法
 /// 生成方法（二选一）
 ///
@@ -40,19 +52,8 @@ part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
   version: 5,
-  entities: [
-    Config,
-    Device,
-    History,
-    User,
-    OperationSync,
-    HistoryTag,
-    OperationRecord,
-    AppInfo,
-  ],
-  views: [
-    VHistoryTagHold,
-  ],
+  entities: tables,
+  views: views,
 )
 abstract class _AppDb extends FloorDatabase {
   UserDao get userDao;

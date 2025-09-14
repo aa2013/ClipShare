@@ -252,6 +252,20 @@ class AboutPage extends GetView<AboutController> {
             ],
           ),
           value: null,
+          action: (_) {
+            return Tooltip(
+              message: TranslationKey.editDb.tr,
+              child: IconButton(
+                onPressed: () {
+                  Get.toNamed(Routes.DB_EDITOR);
+                },
+                icon: const Icon(
+                  Icons.search_outlined,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

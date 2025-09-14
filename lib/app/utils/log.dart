@@ -45,9 +45,9 @@ class Log {
     writeLog("[fatal] | $log");
   }
 
-  static void error(String tag, dynamic, [StackTrace? stack]) {
+  static void error(String tag, err, [StackTrace? stack]) {
     final stackStr = stack != null ? ", $stack" : "";
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic $stackStr";
+    var log = "[$tag] ${DateTime.now().format()} | $err $stackStr";
     _logger.e(log);
     writeLog("[error] | $log");
   }

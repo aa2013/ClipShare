@@ -1174,6 +1174,22 @@ class EnUSTranslation extends AbstractTranslations {
         return "Auto";
       case TranslationKey.doubleClick2OpenPath:
         return 'Double-click to open path';
+      case TranslationKey.editDb:
+        return 'Edit Database';
+      case TranslationKey.enterSQLHere:
+        return 'Enter SQL here...';
+      case TranslationKey.optionalTables:
+        return 'Optional table names:';
+      case TranslationKey.execSQL:
+        return 'Execute SQL';
+      case TranslationKey.execSQLNoLimitTips:
+        return 'This appears to be a SELECT statement without LIMIT clause. Large result sets may cause performance issues. Continue anyway?';
+      case TranslationKey.toggleSQLLimitCheck:
+        return 'Toggle query LIMIT detection';
+      case TranslationKey.result:
+        return 'Result';
+      case TranslationKey.execFailed:
+        return 'Execution failed';
     }
   }
 }

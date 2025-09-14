@@ -578,7 +578,7 @@ enum TranslationKey {
   exportFailedAndViewLogs,
   importing,
   loading,
-  auto, doubleClick2OpenPath;
+  auto, doubleClick2OpenPath, editDb, enterSQLHere, optionalTables, execSQL, execSQLNoLimitTips, toggleSQLLimitCheck, result, execFailed;
 
   String get tr => name.tr;
 

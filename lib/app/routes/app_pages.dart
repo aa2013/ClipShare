@@ -1,3 +1,5 @@
+import '../../app/modules/db_editor_module/db_editor_page.dart';
+import '../../app/modules/db_editor_module/db_editor_bindings.dart';
 import '../../app/modules/clean_data_module/clean_data_page.dart';
 import '../../app/modules/clean_data_module/clean_data_bindings.dart';
 import '../../app/modules/qr_code_scanner_module/qr_code_scanner_page.dart';
@@ -136,6 +138,11 @@ abstract class AppPages {
       name: Routes.CLEAN_DATA,
       page: () => CleanDataPage(),
       binding: CleanDataBinding(),
+    ),
+    GetPage(
+      name: Routes.DB_EDITOR,
+      page: () => DbEditorPage(),
+      binding: DbEditorBinding(),
     ),
   ];
 }

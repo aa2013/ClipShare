@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
+import 'package:clipshare/app/modules/db_editor_module/db_editor_page.dart';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
 import 'package:clipshare/app/modules/views/white_black_list_page.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -74,7 +76,7 @@ class DebugPage extends GetView<DebugController> {
             final dialog2 = Global.showLoadingDialog(context: context, loadingText: "2");
             final dialog3 = Global.showLoadingDialog(context: context, loadingText: "3");
             final dialog4 = Global.showLoadingDialog(context: context, loadingText: "4");
-            Future.delayed(const Duration(seconds: 2),() async {
+            Future.delayed(const Duration(seconds: 2), () async {
               dialog1.close();
               await Future.delayed(const Duration(seconds: 2));
               dialog2.close();
@@ -86,11 +88,20 @@ class DebugPage extends GetView<DebugController> {
           },
           child: Text("Show Dialogs"),
         ),
-        TextButton(onPressed: (){
-          dbService.historyDao.delete(1843814268377853952).then((res){
-            print(res);
-          });
-        }, child: Text("Get by Id"))
+        TextButton(
+          onPressed: () {
+            dbService.historyDao.delete(1843814268377853952).then((res) {
+              print(res);
+            });
+          },
+          child: Text("Get by Id"),
+        ),
+        TextButton(
+          onPressed: () {
+            Get.toNamed(Routes.DB_EDITOR);
+          },
+          child: Text("goto db editor page"),
+        ),
       ],
     );
   }

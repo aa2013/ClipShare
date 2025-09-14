@@ -1175,6 +1175,22 @@ class ZhCNTranslation extends AbstractTranslations {
         return "自动";
       case TranslationKey.doubleClick2OpenPath:
         return '双击打开路径';
+      case TranslationKey.editDb:
+        return '编辑数据库';
+      case TranslationKey.enterSQLHere:
+        return '在此输入SQL...';
+      case TranslationKey.optionalTables:
+        return "可选表名：";
+      case TranslationKey.execSQL:
+        return "执行SQL";
+      case TranslationKey.execSQLNoLimitTips:
+        return "似乎是select语句但是未使用limit限制，如果数据过多可能会导致卡死，是否继续？";
+      case TranslationKey.toggleSQLLimitCheck:
+        return '启用/禁用查询limit检测';
+      case TranslationKey.result:
+        return '结果';
+      case TranslationKey.execFailed:
+        return "执行失败";
     }
   }
 }
