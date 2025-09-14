@@ -1,10 +1,10 @@
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/radio_group.dart';
+import 'package:clipshare/app/widgets/radio_group.dart' as rg;
 import 'package:flutter/material.dart';
 
 class SingleSelectDialog<T> extends StatelessWidget {
   final void Function(T value) onSelected;
-  final List<RadioData<T>> selections;
+  final List<rg.RadioData<T>> selections;
   final T defaultValue;
 
   const SingleSelectDialog._private({
@@ -18,7 +18,7 @@ class SingleSelectDialog<T> extends StatelessWidget {
     required BuildContext context,
     required void Function(T value) onSelected,
     required T defaultValue,
-    required List<RadioData<T>> selections,
+    required List<rg.RadioData<T>> selections,
     required Widget title,
     void Function()? onCancel,
     String? cancelText,
@@ -52,7 +52,7 @@ class SingleSelectDialog<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RadioGroup<T>(
+    return rg.RadioGroup<T>(
       data: selections,
       defaultValue: defaultValue,
       onSelected: onSelected,
