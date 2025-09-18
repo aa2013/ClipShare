@@ -421,6 +421,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             await PermissionHelper.reqAndroidStoragePerm();
           }
           var file = File(path);
+          await file.parent.create(recursive: true);
           if (!file.existsSync()) {
             file.writeAsBytesSync(data);
             if (appConfig.saveToPictures) {
