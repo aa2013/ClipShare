@@ -4,6 +4,7 @@ import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
+import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/modules/about_module/about_controller.dart';
 import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
@@ -16,6 +17,7 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -28,7 +30,7 @@ import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/auth_password_input.dart';
@@ -44,6 +46,7 @@ import 'package:clipshare/app/modules/search_module/search_controller.dart' as s
 
 class SettingsController extends GetxController with WidgetsBindingObserver implements ForwardStatusListener {
   final appConfig = Get.find<ConfigService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final sktService = Get.find<SocketService>();
   final sourceService = Get.find<ClipboardSourceService>();
   final tagService = Get.find<TagService>();
@@ -184,7 +187,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     super.onInit();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
-    sktService.addForwardStatusListener(this);
+    connRegService.addForwardStatusListener(this);
     envStatusAction.value = IconButton(
       icon: const Icon(Icons.more_horiz_outlined),
       tooltip: TranslationKey.switchWorkingMode.tr,

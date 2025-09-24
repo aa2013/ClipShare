@@ -82,49 +82,52 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
           mouseCursor: SystemMouseCursors.basic,
           child: Column(
             children: [
-              Padding(
-                padding: widget.padding,
-                child: IntrinsicHeight(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: sub == null ? MainAxisAlignment.center : MainAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              // flex: widget.titleFlex,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Center(
-                                  child: DefaultTextStyle(
-                                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: 17,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 50),
+                child: Padding(
+                  padding: widget.padding,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: sub == null ? MainAxisAlignment.center : MainAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                // flex: widget.titleFlex,
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Center(
+                                    child: DefaultTextStyle(
+                                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                                        fontWeight: FontWeight.normal,
+                                        fontSize: 17,
+                                      ),
+                                      child: widget.title,
                                     ),
-                                    child: widget.title,
                                   ),
                                 ),
                               ),
-                            ),
-                            if (sub != null)
-                              Wrap(
-                                children: [
-                                  DefaultTextStyle(
-                                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                      color: Colors.grey,
+                              if (sub != null)
+                                Wrap(
+                                  children: [
+                                    DefaultTextStyle(
+                                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                        color: Colors.grey,
+                                      ),
+                                      child: sub,
                                     ),
-                                    child: sub,
-                                  ),
-                                ],
-                              ),
-                          ],
+                                  ],
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
-                      IntrinsicWidth(
-                        child: widget.action == null ? const SizedBox.shrink() : widget.action!.call(widget.value),
-                      ),
-                    ],
+                        IntrinsicWidth(
+                          child: widget.action == null ? const SizedBox.shrink() : widget.action!.call(widget.value),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

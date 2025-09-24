@@ -32,7 +32,7 @@ class AppUpdateInfoUtil {
     final currentVersion = appConfig.version;
 
     for (var log in logs) {
-      log['url'] = body["downloads"][system.upperFirst()]["url"];
+      log['url'] = body["downloads"][system.upperFirst]["url"];
       final ul = UpdateLog.fromJson(log);
       final platform = ul.platform.toLowerCase();
       if ((platform != system && platform != 'all') || ul.version <= currentVersion) {

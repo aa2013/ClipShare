@@ -1,7 +1,8 @@
 import 'package:clipshare/app/data/enums/msg_type.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:floor/floor.dart';
 import 'package:get/get.dart';
 
@@ -16,16 +17,13 @@ abstract class OperationRecordDao {
   Future<int> add(OperationRecord record);
 
   ///添加操作记录并发送通知设备更改
-  Future<int> addAndNotify(OperationRecord record) {
-    return add(record).then((cnt) {
-      if (cnt == 0) return cnt;
-      final sktService = Get.find<SocketService>();
-      //发送变更至已连接的所有设备
-      MissingDataSyncHandler.process(record).then((result) {
-        sktService.sendData(null, MsgType.sync, result.result);
-      });
-      return cnt;
-    });
+  Future<int> addAndNotify(OperationRecord record) async {
+    final cnt = await add(record);
+    if (cnt == 0) return cnt;
+    //发送变更至已连接的所有设备
+    final result = await MissingDataSyncHandler.process(record);
+    await DataSender.sendData2All(MsgType.sync, result.result);
+    return cnt;
   }
 
   ///获取某用户某设备的未同步记录
@@ -64,6 +62,9 @@ abstract class OperationRecordDao {
     String opMethod,
     int uid,
   );
+
+  @Query("select * from OperationRecord where devId = :devId and storageSync = 1 order by id desc limit 1")
+  Future<OperationRecord?> getLatestStorageSyncSuccessByDevId(String devId);
 
   /// 删除指定模块的同步记录
   @Query(
@@ -104,4 +105,13 @@ abstract class OperationRecordDao {
 
   @Query("select * from OperationRecord where id > :fromId order by id limit 1000 ")
   Future<List<OperationRecord>> getListLimit1000(int fromId);
+
+  @Query("update OperationRecord set storageSync = :success where id = :id")
+  Future<int?> updateStorageSyncStatus(int id, bool success);
+
+  @Query("select * from OperationRecord where devId = :devId and storageSync = 0")
+  Future<List<OperationRecord>> getStorageSyncFiledData(String devId);
+
+  @Query("select * from OperationRecord where id = :id")
+  Future<OperationRecord?> getById(int id);
 }

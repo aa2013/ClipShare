@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -21,7 +22,7 @@ import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -172,8 +173,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                                 if (op == null) return;
                                 final result = await MissingDataSyncHandler.process(op);
                                 op.data = widget.clip.data.toString();
-                                sktService.sendData(
-                                  null,
+                                DataSender.sendData2All(
                                   MsgType.sync,
                                   result.result,
                                 );

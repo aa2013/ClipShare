@@ -84,7 +84,7 @@ class _DragAndSendFilePageState extends State<DragAndSendFilePage> {
   }
 
   Widget buildOnlineDevices() {
-    final onlineList = devController.onlineList;
+    final onlineList = devController.onlineAndPairedList;
     if (onlineList.length == 1) {
       pendingFileService.pendingDevs.add(onlineList[0]);
     }

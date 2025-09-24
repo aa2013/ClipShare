@@ -8,9 +8,20 @@ class AppVersion {
 
   const AppVersion(this.name, this.code);
 
+  factory AppVersion.fromJson(Map<String, dynamic> json) {
+    return AppVersion(json["name"], json["code"]);
+  }
+
   @override
   String toString() {
     return "$name($code)";
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "name": name,
+      "code": code,
+    };
   }
 
   bool operator >=(AppVersion other) {
@@ -34,11 +45,7 @@ class AppVersion {
   }
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is AppVersion &&
-          runtimeType == other.runtimeType &&
-          code == other.code;
+  bool operator ==(Object other) => identical(this, other) || other is AppVersion && runtimeType == other.runtimeType && code == other.code;
 
   @override
   int get hashCode => code.hashCode;

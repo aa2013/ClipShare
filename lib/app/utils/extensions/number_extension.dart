@@ -88,6 +88,22 @@ extension IntExt on int {
     'insetV_$this',
     () => EdgeInsets.symmetric(vertical: toDouble()),
   );
+  EdgeInsets get insetL => _insetsMap.putIfAbsent(
+    'insetL_$this',
+    () => EdgeInsets.only(left: toDouble()),
+  );
+  EdgeInsets get insetT => _insetsMap.putIfAbsent(
+    'insetT_$this',
+    () => EdgeInsets.only(top: toDouble()),
+  );
+  EdgeInsets get insetR => _insetsMap.putIfAbsent(
+    'insetR_$this',
+    () => EdgeInsets.only(right: toDouble()),
+  );
+  EdgeInsets get insetB => _insetsMap.putIfAbsent(
+    'insetB_$this',
+    () => EdgeInsets.only(bottom: toDouble()),
+  );
 
   EdgeInsets insetHV({double? horizontal, double? vertical}) {
     final key = 'insetHV_${horizontal ?? this}_${vertical ?? this}';

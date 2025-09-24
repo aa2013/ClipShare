@@ -91,7 +91,7 @@ class _$_AppDb extends _AppDb {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 5,
+      version: 6,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -119,7 +119,7 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `HistoryTag` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tagName` TEXT NOT NULL, `hisId` INTEGER NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
@@ -634,14 +634,7 @@ class _$HistoryDao extends HistoryDao {
   ) async {
     return _queryAdapter.queryList(
         'select * from history where uid = ?1 and (?2 <= 0 or id < ?2) order by top desc,id desc limit 100',
-        mapper: (Map<String, Object?> row){
-          try{
-            return History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?);
-          }catch(err){
-            print(err);
-            rethrow;
-          }
-        },
+        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
         arguments: [uid, fromId]);
   }
 
@@ -1131,7 +1124,10 @@ class _$OperationRecordDao extends OperationRecordDao {
                   'module': _moduleTypeConverter.encode(item.module),
                   'method': _opMethodTypeConverter.encode(item.method),
                   'data': item.data,
-                  'time': item.time
+                  'time': item.time,
+                  'storageSync': item.storageSync == null
+                      ? null
+                      : (item.storageSync! ? 1 : 0)
                 });
 
   final sqflite.DatabaseExecutor database;
@@ -1150,7 +1146,7 @@ class _$OperationRecordDao extends OperationRecordDao {
   ) async {
     return _queryAdapter.queryList(
         'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId = ?3   order by id desc',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [uid, toDevId, fromDevId]);
   }
 
@@ -1198,8 +1194,17 @@ class _$OperationRecordDao extends OperationRecordDao {
   ) async {
     return _queryAdapter.query(
         'select * from OperationRecord where uid = ?4 and module = ?2 and method = ?3 and data = ?1',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [id, module, opMethod, uid]);
+  }
+
+  @override
+  Future<OperationRecord?> getLatestStorageSyncSuccessByDevId(
+      String devId) async {
+    return _queryAdapter.query(
+        'select * from OperationRecord where devId = ?1 and storageSync = 1 order by id desc limit 1',
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        arguments: [devId]);
   }
 
   @override
@@ -1268,8 +1273,55 @@ class _$OperationRecordDao extends OperationRecordDao {
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
             method: _opMethodTypeConverter.decode(row['method'] as String),
-            data: row['data'] as String),
+            data: row['data'] as String,
+            storageSync: row['storageSync'] == null
+                ? null
+                : (row['storageSync'] as int) != 0),
         arguments: [fromId]);
+  }
+
+  @override
+  Future<int?> updateStorageSyncStatus(
+    int id,
+    bool success,
+  ) async {
+    return _queryAdapter.query(
+        'update OperationRecord set storageSync = ?2 where id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [id, success ? 1 : 0]);
+  }
+
+  @override
+  Future<List<OperationRecord>> getStorageSyncFiledData(String devId) async {
+    return _queryAdapter.queryList(
+        'select * from OperationRecord where devId = ?1 and storageSync = 0',
+        mapper: (Map<String, Object?> row) => OperationRecord(
+            id: row['id'] as int,
+            uid: row['uid'] as int,
+            devId: row['devId'] as String,
+            module: _moduleTypeConverter.decode(row['module'] as String),
+            method: _opMethodTypeConverter.decode(row['method'] as String),
+            data: row['data'] as String,
+            storageSync: row['storageSync'] == null
+                ? null
+                : (row['storageSync'] as int) != 0),
+        arguments: [devId]);
+  }
+
+  @override
+  Future<OperationRecord?> getById(int id) async {
+    return _queryAdapter.query('select * from OperationRecord where id = ?1',
+        mapper: (Map<String, Object?> row) => OperationRecord(
+            id: row['id'] as int,
+            uid: row['uid'] as int,
+            devId: row['devId'] as String,
+            module: _moduleTypeConverter.decode(row['module'] as String),
+            method: _opMethodTypeConverter.decode(row['method'] as String),
+            data: row['data'] as String,
+            storageSync: row['storageSync'] == null
+                ? null
+                : (row['storageSync'] as int) != 0),
+        arguments: [id]);
   }
 
   @override

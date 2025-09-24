@@ -38,6 +38,12 @@ class OperationRecord {
   /// 操作时间
   String time = DateTime.now().toString();
 
+  /// 存储服务同步
+  /// true 为已向存储服务同步
+  /// false 为未同步（如网络问题同步失败）
+  /// null 为以前还未启用存储服务时的数据
+  bool? storageSync;
+
   OperationRecord({
     required this.id,
     required this.uid,
@@ -45,6 +51,7 @@ class OperationRecord {
     required this.module,
     required this.method,
     required this.data,
+    this.storageSync,
   });
 
   OperationRecord.fromSimple(this.module, this.method, Object data) {
@@ -63,6 +70,7 @@ class OperationRecord {
     var data = map["data"];
     var time = map["time"];
     var devId = map["devId"];
+    var storageSync = map["storageSync"];
     var record = OperationRecord(
       id: id,
       uid: uid,
@@ -70,6 +78,7 @@ class OperationRecord {
       module: module,
       method: method,
       data: data,
+      storageSync: storageSync,
     );
     record.time = time;
     return record;
@@ -84,11 +93,28 @@ class OperationRecord {
       "method": method.name,
       "data": data,
       "time": time,
+      "storageSync": storageSync,
     };
   }
 
-  OperationRecord copyWith(String data) {
-    return fromJson(toJson())..data = data;
+  OperationRecord copyWith({
+    int? id,
+    int? uid,
+    String? devId,
+    Module? module,
+    OpMethod? method,
+    String? data,
+    bool? storageSync,
+  }) {
+    return OperationRecord(
+      id: id ?? this.id,
+      uid: uid ?? this.uid,
+      devId: devId ?? this.devId,
+      module: module ?? this.module,
+      method: method ?? this.method,
+      data: data ?? this.data,
+      storageSync: storageSync ?? this.storageSync,
+    );
   }
 
   @override

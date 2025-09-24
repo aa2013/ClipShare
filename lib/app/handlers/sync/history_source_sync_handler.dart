@@ -2,30 +2,33 @@ import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
 /// 剪贴板来源操作同步处理器
 class HistorySourceSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
-  final sktService = Get.find<SocketService>();
   final historyController = Get.find<HistoryController>();
   final sourceService = Get.find<ClipboardSourceService>();
 
   HistorySourceSyncHandler() {
-    sktService.addSyncListener(Module.historySource, this);
+    DataSender.addSyncListener(Module.historySource, this);
   }
 
   void dispose() {
-    sktService.removeSyncListener(Module.historySource, this);
+    DataSender.removeSyncListener(Module.historySource, this);
   }
 
   @override
@@ -43,7 +46,7 @@ class HistorySourceSyncHandler implements SyncListener {
 
   @override
   Future onSync(MessageData msg) async {
-    var send = msg.send;
+    var sender = msg.send;
     final map = msg.data;
     final historyMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
@@ -60,7 +63,7 @@ class HistorySourceSyncHandler implements SyncListener {
           cnt = await dbService.historyDao.clearHistorySource(history.id) ?? 0;
         }
         success = cnt > 0;
-        if(success){
+        if (success) {
           //移除未使用的剪贴板来源信息
           await sourceService.removeNotUsed();
         }
@@ -74,7 +77,7 @@ class HistorySourceSyncHandler implements SyncListener {
     if (success) {
       //同步成功后在本地也记录一次，先删除本地的该记录的其他剪贴板来源操作记录
       await dbService.opRecordDao.deleteHistorySourceRecords(history.id, Module.historySource.moduleName);
-      var originOpRecord = opRecord.copyWith(history.id.toString());
+      var originOpRecord = opRecord.copyWith(data: history.id.toString());
       await dbService.opRecordDao.add(originOpRecord);
     }
     historyController.updateData(
@@ -82,10 +85,12 @@ class HistorySourceSyncHandler implements SyncListener {
       (his) => his.source = history.source,
     );
     //发送同步确认
-    sktService.sendData(
-      send,
+    sender.sendData(
       MsgType.ackSync,
       {"id": opRecord.id, "module": Module.historySource.moduleName},
     );
   }
+
+  @override
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
 }

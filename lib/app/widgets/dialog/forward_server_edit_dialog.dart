@@ -313,7 +313,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                 onPressed: () {
                   checkConn();
                 },
-                child: Text(TranslationKey.forwardServerConnCheck.tr),
+                child: Text(TranslationKey.checkConnection.tr),
               ),
             ),
             IntrinsicWidth(

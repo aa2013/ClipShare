@@ -4,25 +4,27 @@ import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/rule_type.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
 ///规则同步器
 class RulesSyncHandler implements SyncListener {
-  final sktService = Get.find<SocketService>();
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
 
   RulesSyncHandler() {
-    sktService.addSyncListener(Module.rules, this);
+    DataSender.addSyncListener(Module.rules, this);
   }
 
   void dispose() {
-    sktService.removeSyncListener(Module.rules, this);
+    DataSender.removeSyncListener(Module.rules, this);
   }
 
   @override
@@ -40,15 +42,14 @@ class RulesSyncHandler implements SyncListener {
 
   @override
   Future onSync(MessageData msg) async {
-    var send = msg.send;
+    var sender = msg.send;
     final map = msg.data;
     final ruleMap = jsonDecode(map["data"]) as Map<dynamic, dynamic>;
     print(ruleMap);
     map["data"] = "";
     var opRecord = OperationRecord.fromJson(map);
     RuleType rule = RuleType.getValue(ruleMap["rule"]);
-    Map<String, dynamic> data =
-        (ruleMap["data"] as Map<dynamic, dynamic>).cast();
+    Map<String, dynamic> data = (ruleMap["data"] as Map<dynamic, dynamic>).cast();
     int newVersion = data["version"];
     dynamic localTagRules = {};
     switch (rule) {
@@ -82,10 +83,12 @@ class RulesSyncHandler implements SyncListener {
       await dbService.opRecordDao.add(opRecord);
     }
     //发送同步确认
-    sktService.sendData(
-      send,
+    sender.sendData(
       MsgType.ackSync,
       {"id": opRecord.id, "module": Module.rules.moduleName},
     );
   }
+
+  @override
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
 }

@@ -27,6 +27,9 @@ enum ConfigKey {
   enableSmsSync,
   enableForward,
   forwardServer,
+  webdavConfig,
+  s3Config,
+  forwardWay,
   workingMode,
   onlyForwardMode,
   appTheme,
@@ -53,4 +56,5 @@ enum ConfigKey {
   enableRecordNotification,
   enableShowMobileNotification,
   notificationBlackWhiteList,
+  notificationServer,
 }

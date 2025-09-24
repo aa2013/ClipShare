@@ -7,7 +7,7 @@ import 'package:clipshare/app/utils/log.dart';
 typedef FutureFunction<T> = Future<T> Function();
 
 class TaskRunner<T> {
-  static final tag = "TaskRunner";
+  static const tag = "TaskRunner";
   final StreamController<T> _streamController = StreamController();
   final Queue<FutureFunction<T>> _queue;
 

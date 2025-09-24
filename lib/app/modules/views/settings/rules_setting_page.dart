@@ -12,7 +12,7 @@ import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:clipshare/app/widgets/settings/rule/rule_import_preview.dart';
 import 'package:clipshare/app/widgets/settings/rule/rule_import_type.dart';
-import 'package:clipshare/app/widgets/settings/text_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/text_edit_dialog.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

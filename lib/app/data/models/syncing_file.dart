@@ -1,14 +1,13 @@
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/syncing_file_state.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-
-
 
 class SyncingFile {
   static const tag = "SyncingFile";
@@ -38,11 +37,10 @@ class SyncingFile {
     required this.isSender,
     startTime,
     this.onClose,
-  })  : _sink = sink,
-        assert(totalSize >= 0),
-        assert((!isSender && sink == null) || (sink != null || isSender)),
-        _fileStartTime =
-            startTime ?? DateTime.now().format("yyyy-MM-dd HH:mm:ss");
+  }) : _sink = sink,
+       assert(totalSize >= 0),
+       assert((!isSender && sink == null) || (sink != null || isSender)),
+       _fileStartTime = startTime ?? DateTime.now().format("yyyy-MM-dd HH:mm:ss");
 
   String get startTime => _fileStartTime;
 
@@ -69,7 +67,12 @@ class SyncingFile {
       }
     }
     final len = bytes.length;
-    _savedBytes += len;
+    updateProgress(savedBytes + len);
+  }
+
+  void updateProgress(int newProgress) {
+    final syncingFileService = Get.find<SyncingFileProgressService>();
+    _savedBytes = newProgress;
     final now = DateTime.now();
     final offsetSeconds = now.difference(_startTime).inSeconds;
     final offsetMs = now.difference(_startTime).inMilliseconds;

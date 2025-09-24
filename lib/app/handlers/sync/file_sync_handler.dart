@@ -19,8 +19,10 @@ import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
+import 'package:clipshare/app/services/transport/storage_service.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
@@ -84,15 +86,14 @@ class FileSyncHandler {
         //向中转服务器发送基本信息
         final payload = utf8.encode(
           json.encode(
-            baseMsg
-              ..addAll({
-                "fileName": fileName,
-                "size": size.toString(),
-                "fileId": _fileId.toString(),
-                "target": targetDevId!,
-                "connType": ForwardConnType.sendFile.name,
-                "userId": appConfig.userId.toString(),
-              }),
+            baseMsg..addAll({
+              "fileName": fileName,
+              "size": size.toString(),
+              "fileId": _fileId.toString(),
+              "target": targetDevId!,
+              "connType": ForwardConnType.sendFile.name,
+              "userId": appConfig.userId.toString(),
+            }),
           ),
         );
         final msgSize = payload.length;
@@ -199,29 +200,33 @@ class FileSyncHandler {
       );
     }
     syncingFile.setState(SyncingFileState.syncing);
-    client.addStream(stream).then((value) {
-      var history = History(
-        id: _fileId,
-        uid: appConfig.userId,
-        devId: appConfig.devInfo.guid,
-        time: start.toString(),
-        content: Uri.decodeComponent(filePath),
-        type: HistoryContentType.file.value,
-        size: fileSize,
-        sync: true,
-      );
-      final historyController = Get.find<HistoryController>();
-      historyController.addData(history, false);
-      syncingFile.setState(SyncingFileState.done);
-    }).catchError((err, stack) {
-      syncingFile.setState(SyncingFileState.error);
-      Log.error(tag, "send file failed: $filePath. $err $stack");
-    }).whenComplete(() {
-      Log.info(tag, "send file($fileName) completed");
-      client.close();
-      _server?.close();
-      _onDone();
-    });
+    client
+        .addStream(stream)
+        .then((value) {
+          var history = History(
+            id: _fileId,
+            uid: appConfig.userId,
+            devId: appConfig.devInfo.guid,
+            time: start.toString(),
+            content: Uri.decodeComponent(filePath),
+            type: HistoryContentType.file.value,
+            size: fileSize,
+            sync: true,
+          );
+          final historyController = Get.find<HistoryController>();
+          historyController.addData(history, false);
+          syncingFile.setState(SyncingFileState.done);
+        })
+        .catchError((err, stack) {
+          syncingFile.setState(SyncingFileState.error);
+          Log.error(tag, "send file failed: $filePath. $err $stack");
+        })
+        .whenComplete(() {
+          Log.info(tag, "send file($fileName) completed");
+          client.close();
+          _server?.close();
+          _onDone();
+        });
   }
 
   ///在一定时间后检查是否有客户端连接，若无客户端则关闭服务
@@ -305,37 +310,49 @@ class FileSyncHandler {
     required void Function() onDone,
     required BuildContext context,
   }) async {
-    final sktService = Get.find<SocketService>();
-    final useForward = sktService.isUseForward(device.guid);
-    FileSyncHandler._private(
-      pendingFile: pendingFile,
-      context: context,
-      useForward: useForward,
-      targetDevId: useForward ? device.guid : null,
-      onReady: (syncer) async {
-        int totalSize;
-        String fileName;
-        if (syncer.isUri) {
-          totalSize = pendingFile.size!;
-          fileName = pendingFile.fileName!;
-        } else {
-          final file = File(pendingFile.filePath);
-          totalSize = await file.length();
-          fileName = file.fileName;
-        }
-        //如果存在多级文件夹就拼接上文件夹
-        if (pendingFile.directories.isNotEmpty) {
-          fileName = "${pendingFile.directories.join("/")}/$fileName";
-        }
-        syncer.sktService.sendData(DevInfo.fromDevice(device), MsgType.file, {
-          "fileName": fileName,
-          "size": totalSize,
-          "port": syncer._server?.port,
-          "fileId": syncer._fileId,
-        });
-      },
-      onDone: onDone,
-    );
+    int totalSize;
+    String fileName;
+    if (pendingFile.isUri) {
+      totalSize = pendingFile.size!;
+      fileName = pendingFile.fileName!;
+    } else {
+      final file = File(pendingFile.filePath);
+      totalSize = await file.length();
+      fileName = file.fileName;
+    }
+    //如果存在多级文件夹就拼接上文件夹
+    if (pendingFile.directories.isNotEmpty) {
+      fileName = "${pendingFile.directories.join("/")}/$fileName";
+    }
+    if (device.isUseStorage) {
+      final storageService = Get.find<StorageService>();
+      final appConfig = Get.find<ConfigService>();
+      storageService.sendData(DevInfo.fromDevice(device), MsgType.file, {
+        "fileId": appConfig.snowflake.nextId(),
+        "filePath": pendingFile.filePath,
+        "fileName": fileName,
+        "isUri": pendingFile.isUri,
+        "size": totalSize,
+      });
+    } else {
+      final sktService = Get.find<SocketService>();
+      final useForward = sktService.isUseForward(device.guid);
+      FileSyncHandler._private(
+        pendingFile: pendingFile,
+        context: context,
+        useForward: useForward,
+        targetDevId: useForward ? device.guid : null,
+        onReady: (syncer) async {
+          device.sendData(MsgType.file, {
+            "fileName": fileName,
+            "size": totalSize,
+            "port": syncer._server?.port,
+            "fileId": syncer._fileId,
+          });
+        },
+        onDone: onDone,
+      );
+    }
   }
 
   static Future<void> receiveFile({
@@ -460,5 +477,6 @@ class FileSyncHandler {
       },
     );
   }
-//endregion
+
+  //endregion
 }

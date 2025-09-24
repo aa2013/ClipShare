@@ -2,23 +2,24 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 extension StringExt on String {
-  String upperFirst() {
+  String get upperFirst {
     if (isEmpty) return this;
     return '${this[0].toUpperCase()}${substring(1)}';
   }
 
   String get normalizePath {
-    if (Platform.isWindows) {
-      return replaceAll(RegExp(r'(/+|\\+)'), "\\");
-    } else {
-      return replaceAll(RegExp(r'(/+|\\+)'), "/");
-    }
+    return replaceAll(RegExp(r'(/+|\\+)'), Constants.dirSeparate);
+  }
+
+  String get unixPath {
+    return replaceAll(RegExp(r'(/+|\\+)'), Constants.unixDirSeparate);
   }
 
   bool get hasUrl {
@@ -137,6 +138,42 @@ extension StringExt on String {
     final int char = codeUnits.first;
     return (char >= 65 && char <= 90) || (char >= 97 && char <= 122) || char == 95;
   }
+
+  String safeDecodeUri() {
+    if (!contains("%")) return this;
+    try {
+      return Uri.decodeComponent(this);
+    } catch (e) {
+      return this; // 解码失败时返回原字符串
+    }
+  }
+
+  /// 删除头尾所有匹配的子字符串（递归）
+  String trimStr(String substring) {
+    return this.trimStart(substring).trimEnd(substring);
+  }
+
+  /// 删除头部所有匹配的子字符串（递归）
+  String trimStart(String substring) {
+    if (isEmpty || substring.isEmpty) return this;
+
+    var result = this;
+    while (result.startsWith(substring)) {
+      result = result.substring(substring.length);
+    }
+    return result;
+  }
+
+  /// 删除尾部所有匹配的子字符串（递归）
+  String trimEnd(String substring) {
+    if (isEmpty || substring.isEmpty) return this;
+
+    var result = this;
+    while (result.endsWith(substring)) {
+      result = result.substring(0, result.length - substring.length);
+    }
+    return result;
+  }
 }
 
 extension StringNilExt on String? {
@@ -145,9 +182,7 @@ extension StringNilExt on String? {
   bool get isNullOrEmpty => this == null || this!.isEmpty;
 }
 
-
 extension CodeAutocompleteCharactersExtension on Characters {
-
   bool containsSymbols(List<String> symbols) {
     for (int i = length - 1; i >= 0; i--) {
       if (symbols.contains(elementAt(i))) {
@@ -156,5 +191,4 @@ extension CodeAutocompleteCharactersExtension on Characters {
     }
     return false;
   }
-
 }

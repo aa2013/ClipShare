@@ -30,7 +30,7 @@ class DeviceService extends GetxController {
     if (_devices.containsKey(id)) {
       return _devices[id]!;
     }
-    return id == _appConfig.device.guid ? _appConfig.device : Device.empty(devName: "unknown");
+    return id == _appConfig.device.guid ? _appConfig.device : Device.unknown;
   }
 
   String getName(String id) {

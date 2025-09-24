@@ -6,9 +6,24 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
-      "name": "archive",
+      "name": "minio",
       "license": "MIT",
-      "url": "https://pub.dev/packages/archive",
+      "url": "https://pub.dev/packages/minio",
+    },
+    {
+      "name": "ali_yun_oss",
+      "license": "MIT",
+      "url": "https://github.com/aa2013/ali_yun_oss.git",
+    },
+    {
+      "name": "webdav_client",
+      "license": "BSD-3-Clause",
+      "url": "https://github.com/aa2013/webdav_client.git",
+    },
+    {
+      "name": "zip_flutter",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/zip_flutter",
     },
     {
       "name": "notification_listener_service",

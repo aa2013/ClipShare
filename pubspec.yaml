@@ -163,6 +163,19 @@ dependencies:
   notification_listener_service: ^0.3.4
   # zip
   zip_flutter: ^0.0.12
+  # fix "cannot be used to imply a default content-type, please set a proper content-type in the request."
+  # 修复 群晖 文件的 PROPFIND 请求 因为尾'/'导致的 400 错误
+  webdav_client:
+    git:
+#      url: https://github.com/zhenorzz/webdav_client.git
+      url: https://github.com/aa2013/webdav_client.git
+      ref: main
+  dart_aliyun_oss:
+    #    path: ../../Flutter/ali_yun_oss
+    git:
+      url: https://github.com/aa2013/ali_yun_oss
+      ref: main
+  minio: ^3.5.8
 dev_dependencies:
   flutter_test:
     sdk: flutter

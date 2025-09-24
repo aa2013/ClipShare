@@ -16,9 +16,11 @@ import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/services/window_service.dart';
 import 'package:clipshare/app/translations/app_translations.dart';
@@ -147,7 +149,11 @@ Future<void> main(List<String> args) async {
 Future<void> initMainServices() async {
   await Get.putAsync(() => DbService().init(), permanent: true);
   await Get.putAsync(() => ConfigService().init(), permanent: true);
-  Get.put<SocketService>(SocketService(), permanent: true);
+  final connRegistryService = ConnectionRegistryService();
+  final registry = connRegistryService.registry;
+  Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);
+  Get.put<SocketService>(SocketService(registry), permanent: true);
+  Get.put<StorageService>(StorageService(registry), permanent: true);
   Get.put(AndroidChannelService().init(), permanent: true);
   Get.put(ClipChannelService().init(), permanent: true);
   Get.put(MultiWindowChannelService(), permanent: true);

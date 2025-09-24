@@ -1,8 +1,9 @@
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:flutter/material.dart';
 
 class TextEditDialog extends StatefulWidget {
   final String title;
-  final String okText;
+  final String? okText;
   final String labelText;
   final String initStr;
   final String hint;
@@ -18,7 +19,7 @@ class TextEditDialog extends StatefulWidget {
     required this.initStr,
     this.hint = "",
     required this.onOk,
-    this.okText = "确定",
+    this.okText,
     this.verify,
     this.errorText,
     this.autofocus = true,
@@ -64,7 +65,7 @@ class _TextEditDialogState extends State<TextEditDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text("取消"),
+          child: Text(TranslationKey.dialogCancelText.tr),
         ),
         TextButton(
           onPressed: () {
@@ -80,7 +81,7 @@ class _TextEditDialogState extends State<TextEditDialog> {
             Navigator.of(context).pop();
             widget.onOk.call(_editor.text);
           },
-          child: Text(widget.okText),
+          child: Text(widget.okText ?? TranslationKey.dialogConfirmText.tr),
         ),
       ],
     );

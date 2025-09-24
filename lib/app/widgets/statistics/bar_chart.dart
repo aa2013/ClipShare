@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:clipshare/app/data/chart/bar_chart_item.dart';
+import 'package:clipshare/app/data/models/chart/bar_chart_item.dart';
 import 'package:clipshare/app/widgets/statistics/indicators.dart';
 import 'package:flutter/material.dart';
 import 'package:graphic/graphic.dart';

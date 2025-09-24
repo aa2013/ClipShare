@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
@@ -11,6 +12,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -26,7 +28,7 @@ class DeviceCard extends StatefulWidget {
   final bool isConnected;
   final AppVersion? minVersion;
   final AppVersion? version;
-  final bool isForward;
+  final TransportProtocol protocol;
   final appConfig = Get.find<ConfigService>();
 
   DeviceCard({
@@ -39,12 +41,10 @@ class DeviceCard extends StatefulWidget {
     required this.isSelf,
     required this.minVersion,
     required this.version,
-    this.isForward = false,
+    required this.protocol,
   });
 
-  bool get isVersionCompatible => minVersion == null || version == null
-      ? true
-      : minVersion! <= appConfig.version && version! >= appConfig.minVersion;
+  bool get isVersionCompatible => minVersion == null || version == null ? true : minVersion! <= appConfig.version && version! >= appConfig.minVersion;
 
   @override
   State<StatefulWidget> createState() {
@@ -60,7 +60,7 @@ class DeviceCard extends StatefulWidget {
     bool? isSelf,
     AppVersion? minVersion,
     AppVersion? version,
-    bool? isForward,
+    TransportProtocol? protocol,
   }) {
     isConnected = isConnected ?? this.isConnected;
     return DeviceCard(
@@ -72,7 +72,7 @@ class DeviceCard extends StatefulWidget {
       onLongPress: onLongPress ?? this.onLongPress,
       minVersion: !isConnected ? null : minVersion ?? this.minVersion,
       version: !isConnected ? null : version ?? this.version,
-      isForward: isForward ?? this.isForward,
+      protocol: protocol ?? this.protocol,
     );
   }
 }
@@ -96,8 +96,7 @@ class _DeviceCardState extends State<DeviceCard> {
 
   void _setTimer() {
     timer = Timer.periodic(1200.ms, (timer) {
-      String key = Constants.devTypeIcons.keys
-          .elementAt(_emptyIconIdx % Constants.devTypeIcons.length);
+      String key = Constants.devTypeIcons.keys.elementAt(_emptyIconIdx % Constants.devTypeIcons.length);
       _emptyIcon = Constants.devTypeIcons[key]!;
       _emptyIconIdx++;
       setState(() {});
@@ -172,9 +171,7 @@ class _DeviceCardState extends State<DeviceCard> {
     );
   }
 
-  AppVersion get minVersion => appConfig.minVersion > widget.minVersion!
-      ? appConfig.minVersion
-      : widget.minVersion!;
+  AppVersion get minVersion => appConfig.minVersion > widget.minVersion! ? appConfig.minVersion : widget.minVersion!;
 
   @override
   Widget build(BuildContext context) {
@@ -188,15 +185,13 @@ class _DeviceCardState extends State<DeviceCard> {
           if (_empty) {
             return;
           }
-          widget.onTap
-              ?.call(widget.dev!, widget.isConnected, _showRenameDialog);
+          widget.onTap?.call(widget.dev!, widget.isConnected, _showRenameDialog);
         },
         onLongPress: () {
           if (_empty) {
             return;
           }
-          widget.onLongPress
-              ?.call(widget.dev!, widget.isConnected, _showRenameDialog);
+          widget.onLongPress?.call(widget.dev!, widget.isConnected, _showRenameDialog);
         },
         borderRadius: BorderRadius.circular(12.0),
         child: Padding(
@@ -251,9 +246,7 @@ class _DeviceCardState extends State<DeviceCard> {
                               margin: const EdgeInsets.only(right: 10),
                               child: Dot(
                                 radius: 6.0,
-                                color: widget.isConnected
-                                    ? _connColor
-                                    : Colors.grey,
+                                color: widget.isConnected ? _connColor : Colors.grey,
                               ),
                             ),
                           ),
@@ -270,11 +263,29 @@ class _DeviceCardState extends State<DeviceCard> {
                             ),
                           ),
                           Visibility(
-                            visible: widget.isForward,
+                            visible: widget.protocol == TransportProtocol.server,
                             child: Container(
                               margin: const EdgeInsets.only(left: 5),
                               child: RoundedChip(
                                 label: Text(TranslationKey.forward.tr),
+                              ),
+                            ),
+                          ),
+                          Visibility(
+                            visible: widget.protocol == TransportProtocol.webdav,
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 5),
+                              child: RoundedChip(
+                                label: Text(TransportProtocol.webdav.name.upperFirst),
+                              ),
+                            ),
+                          ),
+                          Visibility(
+                            visible: widget.protocol == TransportProtocol.s3,
+                            child: Container(
+                              margin: const EdgeInsets.only(left: 5),
+                              child: RoundedChip(
+                                label: Text(TransportProtocol.s3.name.upperFirst),
                               ),
                             ),
                           ),
@@ -288,9 +299,7 @@ class _DeviceCardState extends State<DeviceCard> {
                                     onPressed: () => {
                                       Global.showTipsDialog(
                                         context: context,
-                                        text: TranslationKey
-                                            .notCompatibleDialogText
-                                            .trParams({
+                                        text: TranslationKey.notCompatibleDialogText.trParams({
                                           "minName": minVersion.name,
                                           "minCode": minVersion.code,
                                           "selfName": appConfig.version.name,
