@@ -4,6 +4,8 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -59,7 +61,30 @@ class DbEditorController extends GetxController {
         final rowMap = list[i - 1];
         final cells = List<DataCell>.empty(growable: true);
         cells.add(DataCell(Text(i.toString())));
-        cells.addAll(rowMap.values.map((value) => DataCell(Text(value?.toString().substringMinLen(0, 50) ?? ''))));
+        cells.addAll(
+          rowMap.values.map(
+            (value) => DataCell(
+              GestureDetector(
+                child: Text(value?.toString().substringMinLen(0, 50) ?? ''),
+                onTap: () {
+                  final text = value?.toString() ?? '';
+                  Global.showTipsDialog(
+                    context: Get.context!,
+                    title: TranslationKey.content.tr,
+                    text: text,
+                    showCancel: true,
+                    okText: TranslationKey.copyContent.tr,
+                    cancelText: TranslationKey.close.tr,
+                    onOk: () async {
+                      await clipboardManager.copy(ClipboardContentType.text, text);
+                      Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr);
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        );
         rows.add(
           DataRow(cells: cells),
         );

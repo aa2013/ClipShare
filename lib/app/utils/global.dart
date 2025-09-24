@@ -232,7 +232,7 @@ class Global {
           key: dlgCtl.key,
           child: AlertDialog(
             title: Text(title!),
-            content: Text(text),
+            content: SingleChildScrollView(child: Text(text)),
             actions: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
