@@ -192,7 +192,7 @@ class DbService extends GetxService {
   ///支持存储服务为中转方式，操作记录表新增存储同步标记字段
   final migration5to6 = Migration(5, 6, (database) async {
     if (!await hasColumnInTable(database, 'OperationRecord', 'storageSync')) {
-      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN IF NOT EXISTS `storageSync` INTEGER;");
+      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `storageSync` INTEGER;");
     }
     //todo 后续移除 UID 字段的时候这里需要改
     try {
