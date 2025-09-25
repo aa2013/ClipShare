@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  notification-server:
+    image: coclyun/clipshare-notification-server:1.0.0
+    container_name: clipshare-notification
+    ports:
+      - "18083:8083"
+    volumes:
+      - ./logs:/data/logs
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
