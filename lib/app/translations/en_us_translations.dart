@@ -1291,6 +1291,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Please configure the WebDAV service first";
       case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
         return "Please configure the S3 service first";
+      case TranslationKey.createFolder:
+        return 'Create Folder';
+      case TranslationKey.invalidFolderName:
+        return 'Invalid name, cannot contain special characters and must be less than 255 characters';
+      case TranslationKey.createFailed:
+        return 'Creation failed';
     }
   }
 }

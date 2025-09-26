@@ -635,7 +635,10 @@ enum TranslationKey {
   none,
   forwardServer,
   forwardSettingsForwardEnableRequiredWebdavText,
-  forwardSettingsForwardEnableRequiredS3Text;
+  forwardSettingsForwardEnableRequiredS3Text,
+  createFolder,
+  invalidFolderName,
+  createFailed;
 
   String get tr => name.tr;
 

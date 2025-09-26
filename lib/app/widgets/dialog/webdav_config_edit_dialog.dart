@@ -275,6 +275,11 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
                                       final list = await WebDavClient(tempConfig).list(path: path);
                                       return list.where((item) => item.isDir).map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
                                     },
+                                    onCreateDirectory: (current, name) {
+                                      final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                      final client = WebDavClient(tempConfig);
+                                      return client.createDirectory("$current/$name/");
+                                    },
                                     shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
                                     initialPath: Constants.unixDirSeparate,
                                   ),

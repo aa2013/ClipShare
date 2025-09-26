@@ -429,6 +429,11 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                                         final dirs = list.where((item) => item.isDir);
                                         return dirs.map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
                                       },
+                                      onCreateDirectory: (current, name) {
+                                        final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                        final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                        return s3client.createDirectory("$current/$name/");
+                                      },
                                       shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
                                       initialPath: Constants.unixDirSeparate,
                                     ),

@@ -3,12 +3,15 @@ import 'dart:async';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/dialog/text_edit_dialog.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 
 typedef FileListLoader = FutureOr<List<FileItem>> Function(String path);
+typedef DirectoryCreator = Future<bool> Function(String currentPath, String name);
 typedef ShouldShowUpLevel = bool Function(String currentPath);
 
 class FileItem {
@@ -25,6 +28,7 @@ class FileItem {
 
 class FileBrowser extends StatefulWidget {
   final FileListLoader onLoadFiles;
+  final DirectoryCreator? onCreateDirectory;
   final ShouldShowUpLevel shouldShowUpLevel;
   final String initialPath;
 
@@ -33,6 +37,7 @@ class FileBrowser extends StatefulWidget {
     required this.onLoadFiles,
     required this.shouldShowUpLevel,
     required this.initialPath,
+    this.onCreateDirectory,
   });
 
   @override
@@ -100,12 +105,75 @@ class _FileBrowserState extends State<FileBrowser> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // 显示当前路径
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            '当前路径: $_currentPath',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${TranslationKey.current.tr}: $_currentPath',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+            if (widget.onCreateDirectory != null)
+              TextButton(
+                onPressed: () {
+                  Global.showDialog(
+                    context,
+                    TextEditDialog(
+                      title: TranslationKey.createFolder.tr,
+                      labelText: TranslationKey.folder.tr,
+                      initStr: '',
+                      verify: (s) {
+                        // 验证文件夹名称是否为空
+                        if (s.isEmpty) {
+                          return false;
+                        }
+                        if (s.length > 255) {
+                          return false;
+                        }
+                        // 验证是否包含非法字符
+                        final invalidChars = RegExp(r'[<>:"/\\|?*\x00-\x1F]');
+                        if (invalidChars.hasMatch(s)) {
+                          return false;
+                        }
+                        return true;
+                      },
+                      errorText: TranslationKey.invalidFolderName.tr,
+                      okText: TranslationKey.create.tr,
+                      onOk: (v) async {
+                        try {
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          final result = await widget.onCreateDirectory!.call(_currentPath, v);
+                          if (!result) {
+                            Global.showTipsDialog(context: context, text: TranslationKey.createFailed.tr);
+                            return;
+                          } else {
+                            await _loadFiles();
+                          }
+                        } catch (err, stack) {
+                          Log.error(tag, err, stack);
+                        } finally {
+                          setState(() {
+                            _isLoading = false;
+                          });
+                        }
+                      },
+                    ),
+                  );
+                },
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.create_new_folder_outlined,
+                      color: Colors.blueGrey,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(TranslationKey.create.tr),
+                  ],
+                ),
+              ),
+          ],
         ),
         // 文件列表
         Expanded(
