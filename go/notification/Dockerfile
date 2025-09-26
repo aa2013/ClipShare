@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 # 关闭 CGO 并指定目标平台，构建静态二进制
-RUN CGO_ENABLED=0 GOOS=linux go build -o notification-server .
+RUN CGO_ENABLED=0 GOOS=linux go build -o notify-server .
 
 # ========== Runtime Stage ==========
 FROM alpine:3.20
@@ -27,4 +27,4 @@ COPY --from=builder /app/notification-server .
 # COPY config.yaml .
 
 EXPOSE 8083
-ENTRYPOINT ["./notification-server"]
+ENTRYPOINT ["./notify-server"]
