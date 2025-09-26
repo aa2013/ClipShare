@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   notification-server:
-    image: coclyun/clipshare-notification-server:1.0.0
-    container_name: clipshare-notification
+    image: coclyun/clipshare-notify-server:1.0.0
+    container_name: clipshare-notify-server
     ports:
       - "18083:8083"
     volumes:
