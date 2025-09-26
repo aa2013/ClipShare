@@ -1287,6 +1287,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'None';
       case TranslationKey.forwardServer:
         return 'Forward Server';
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
+        return "Please configure the WebDAV service first";
+      case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
+        return "Please configure the S3 service first";
     }
   }
 }

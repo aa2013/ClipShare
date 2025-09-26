@@ -79,12 +79,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   bool _autoConnForwardServer = true;
 
   String? get forwardServerHost {
-    if (!appConfig.enableForward) return null;
+    if (!appConfig.enableForward || appConfig.forwardWay != ForwardWay.server) return null;
     return appConfig.forwardServer!.host;
   }
 
   int? get forwardServerPort {
-    if (!appConfig.enableForward) return null;
+    if (!appConfig.enableForward || appConfig.forwardWay != ForwardWay.server) return null;
     return appConfig.forwardServer!.port.toInt();
   }
 

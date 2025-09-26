@@ -632,7 +632,10 @@ enum TranslationKey {
   version,
   changeForwardWayConfirm,
   s3,
-  none, forwardServer;
+  none,
+  forwardServer,
+  forwardSettingsForwardEnableRequiredWebdavText,
+  forwardSettingsForwardEnableRequiredS3Text;
 
   String get tr => name.tr;
 

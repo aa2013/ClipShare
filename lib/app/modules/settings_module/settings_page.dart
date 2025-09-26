@@ -1038,18 +1038,24 @@ class SettingsPage extends GetView<SettingsController> {
                                       icon: Icons.computer,
                                       enabled: v != ForwardWay.server,
                                       onSelected: () async {
+                                        void setup() async {
+                                          await appConfig.setForwardWay(ForwardWay.server);
+                                          await storageService.stop();
+                                          if (!appConfig.enableForward) {
+                                            return;
+                                          }
+                                          sktService.connectForwardServer(true);
+                                        }
+
+                                        if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                          setup();
+                                          return;
+                                        }
                                         Global.showTipsDialog(
                                           context: context,
                                           text: TranslationKey.changeForwardWayConfirm.tr,
                                           showCancel: true,
-                                          onOk: () async {
-                                            await appConfig.setForwardWay(ForwardWay.server);
-                                            await storageService.stop();
-                                            if (!appConfig.enableForward) {
-                                              return;
-                                            }
-                                            sktService.connectForwardServer(true);
-                                          },
+                                          onOk: setup,
                                         );
                                       },
                                     ),
@@ -1058,18 +1064,24 @@ class SettingsPage extends GetView<SettingsController> {
                                       icon: Icons.storage,
                                       enabled: v != ForwardWay.webdav,
                                       onSelected: () {
+                                        void setup() async {
+                                          await appConfig.setForwardWay(ForwardWay.webdav);
+                                          await sktService.disConnectForwardServer();
+                                          if (!appConfig.enableForward || appConfig.webDavConfig == null) {
+                                            return;
+                                          }
+                                          storageService.restart();
+                                        }
+
+                                        if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                          setup();
+                                          return;
+                                        }
                                         Global.showTipsDialog(
                                           context: context,
                                           text: TranslationKey.changeForwardWayConfirm.tr,
                                           showCancel: true,
-                                          onOk: () async {
-                                            await appConfig.setForwardWay(ForwardWay.webdav);
-                                            await sktService.disConnectForwardServer();
-                                            if (!appConfig.enableForward || appConfig.webDavConfig == null) {
-                                              return;
-                                            }
-                                            storageService.restart();
-                                          },
+                                          onOk: setup,
                                         );
                                       },
                                     ),
@@ -1078,18 +1090,24 @@ class SettingsPage extends GetView<SettingsController> {
                                       icon: Icons.storage,
                                       enabled: v != ForwardWay.s3,
                                       onSelected: () async {
+                                        void setup() async {
+                                          await appConfig.setForwardWay(ForwardWay.s3);
+                                          await sktService.disConnectForwardServer();
+                                          if (!appConfig.enableForward || appConfig.s3Config == null || !appConfig.enableForward) {
+                                            return;
+                                          }
+                                          storageService.restart();
+                                        }
+
+                                        if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                          setup();
+                                          return;
+                                        }
                                         Global.showTipsDialog(
                                           context: context,
                                           text: TranslationKey.changeForwardWayConfirm.tr,
                                           showCancel: true,
-                                          onOk: () async {
-                                            await appConfig.setForwardWay(ForwardWay.s3);
-                                            await sktService.disConnectForwardServer();
-                                            if (!appConfig.enableForward || appConfig.s3Config == null) {
-                                              return;
-                                            }
-                                            storageService.restart();
-                                          },
+                                          onOk: setup,
                                         );
                                       },
                                     ),
@@ -1098,15 +1116,21 @@ class SettingsPage extends GetView<SettingsController> {
                                       icon: Icons.cloud_off,
                                       enabled: v != ForwardWay.none,
                                       onSelected: () async {
+                                        Future<void> setup() async {
+                                          await appConfig.setForwardWay(ForwardWay.none);
+                                          await sktService.disConnectForwardServer();
+                                          await storageService.stop();
+                                        }
+
+                                        if (!appConfig.enableForward) {
+                                          setup();
+                                          return;
+                                        }
                                         Global.showTipsDialog(
                                           context: context,
                                           text: TranslationKey.changeForwardWayConfirm.tr,
                                           showCancel: true,
-                                          onOk: () async {
-                                            await appConfig.setForwardWay(ForwardWay.none);
-                                            await sktService.disConnectForwardServer();
-                                            await storageService.stop();
-                                          },
+                                          onOk: () async {},
                                         );
                                       },
                                     ),
@@ -1121,6 +1145,7 @@ class SettingsPage extends GetView<SettingsController> {
                           );
                         },
                       ),
+                      //服务状态/通知服务配置
                       if (appConfig.forwardWay != ForwardWay.none)
                         SettingCard(
                           title: Row(
@@ -1190,6 +1215,7 @@ class SettingsPage extends GetView<SettingsController> {
                             );
                           },
                         ),
+                      //是否启用中转服务
                       if (appConfig.forwardWay != ForwardWay.none)
                         SettingCard(
                           title: Row(
@@ -1231,6 +1257,22 @@ class SettingsPage extends GetView<SettingsController> {
                                   Global.showSnackBarErr(
                                     context: context,
                                     text: TranslationKey.forwardSettingsForwardEnableRequiredText.tr,
+                                  );
+                                  return;
+                                }
+                                final useWebdav = appConfig.forwardWay == ForwardWay.webdav;
+                                if (useWebdav && appConfig.webDavConfig == null) {
+                                  Global.showSnackBarErr(
+                                    context: context,
+                                    text: TranslationKey.forwardSettingsForwardEnableRequiredWebdavText.tr,
+                                  );
+                                  return;
+                                }
+                                final useS3 = appConfig.forwardWay == ForwardWay.s3;
+                                if (useS3 && appConfig.s3Config == null) {
+                                  Global.showSnackBarErr(
+                                    context: context,
+                                    text: TranslationKey.forwardSettingsForwardEnableRequiredS3Text.tr,
                                   );
                                   return;
                                 }

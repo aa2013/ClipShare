@@ -289,6 +289,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "通过中转服务可在公网环境下进行数据同步";
       case TranslationKey.forwardSettingsForwardEnableRequiredText:
         return "请先设置中转服务器地址";
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
+        return "请先配置 Webdav 服务";
+      case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
+        return "请先配置 对象存储 服务";
       case TranslationKey.forwardSettingsForwardAddressTitle:
         return "中转服务器地址";
       case TranslationKey.forwardSettingsForwardAddressDesc:

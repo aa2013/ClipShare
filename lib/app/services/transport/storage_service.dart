@@ -421,15 +421,19 @@ class StorageService extends GetxService with DataSender {
     final connectKey = "$id:${appConfig.device.guid}";
     var serverHost = appConfig.notificationServer.trimEnd('/');
     _wsChannel = WebSocketChannel.connect(Uri.parse('$serverHost/connect/$connectKey'));
-    _wsChannel!.ready.then((_) {
-      Log.info(tag, "websocket connected");
-      if (!_loadingMissingData) {
-        _loadMissingData();
-      }
-      for (var listener in _forwardStatusListener) {
-        listener.onForwardServerConnected();
-      }
-    });
+    _wsChannel!.ready
+        .then((_) {
+          Log.info(tag, "websocket connected");
+          if (!_loadingMissingData) {
+            _loadMissingData();
+          }
+          for (var listener in _forwardStatusListener) {
+            listener.onForwardServerConnected();
+          }
+        })
+        .catchError((err, stack) {
+          Log.error(tag, err, stack);
+        });
     _wsChannel!.stream.listen(
       _onWsMessage,
       onDone: () {
