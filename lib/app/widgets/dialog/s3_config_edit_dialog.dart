@@ -45,6 +45,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
   String? accessKeyErrText;
   String? secretKeyErrText;
   String? bucketNameErrText;
+  String? baseDirErrText;
   String? regionErrText;
   bool testingConnection = false;
 
@@ -160,14 +161,17 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
 
   bool validateBaseDirEditor() {
     bool isValid;
-    if (baseDirEditor.text.isEmpty) {
-      bucketNameErrText = TranslationKey.baseDirectoryRequired.tr;
+    if (baseDirEditor.text == "/") {
+      isValid = false;
+      baseDirErrText = TranslationKey.notAllowRootPath.tr;
+    } else if (baseDirEditor.text.isEmpty) {
+      baseDirErrText = TranslationKey.baseDirectoryRequired.tr;
       isValid = false;
     } else if (!baseDirEditor.text.startsWith('/')) {
-      bucketNameErrText = TranslationKey.baseDirectoryMustStartWithSlash.tr;
+      baseDirErrText = TranslationKey.baseDirectoryMustStartWithSlash.tr;
       isValid = false;
     } else {
-      bucketNameErrText = null;
+      baseDirErrText = null;
       isValid = true;
     }
     setState(() {});
@@ -445,6 +449,10 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                                     ),
                                     TextButton(
                                       onPressed: () {
+                                        if (selectedPath == "/") {
+                                          Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
+                                          return;
+                                        }
                                         baseDirEditor.text = selectedPath;
                                         dialog?.close();
                                       },

@@ -1297,6 +1297,8 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Invalid name, cannot contain special characters and must be less than 255 characters';
       case TranslationKey.createFailed:
         return 'Creation failed';
+      case TranslationKey.notAllowRootPath:
+        return 'Root path is not allowed';
     }
   }
 }

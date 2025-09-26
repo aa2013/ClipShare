@@ -1294,6 +1294,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return '无效的名称，不能包含特殊字符且长度小于255';
       case TranslationKey.createFailed:
         return '创建失败';
+      case TranslationKey.notAllowRootPath:
+        return '不可使用根路径';
     }
   }
 }

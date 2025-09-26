@@ -638,7 +638,8 @@ enum TranslationKey {
   forwardSettingsForwardEnableRequiredS3Text,
   createFolder,
   invalidFolderName,
-  createFailed;
+  createFailed,
+  notAllowRootPath;
 
   String get tr => name.tr;
 
