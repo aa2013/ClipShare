@@ -238,4 +238,6 @@ class Constants {
   static String get dirSeparate => Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
 
   static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
+
+  static const defaultWsPingIntervalTime = 30;
 }

@@ -36,6 +36,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -86,6 +87,9 @@ class StorageService extends GetxService with DataSender {
   final _cache = <dynamic>{};
   var _loadingMissingData = false;
   var _uploadingSyncFailedData = false;
+
+  //websocket heartbeat
+  Timer? _wsPingTimer;
 
   //region dev registry
   final DeviceConnectionRegistry _registry;
@@ -429,6 +433,7 @@ class StorageService extends GetxService with DataSender {
     _wsChannel!.ready
         .then((_) {
           Log.info(tag, "websocket connected");
+          _wsPingTimer = Timer(Constants.defaultWsPingIntervalTime.s, _sendWsPing);
           if (!_loadingMissingData) {
             _loadMissingData();
           }
@@ -475,9 +480,16 @@ class StorageService extends GetxService with DataSender {
         }
       }
       await ws?.sink.close();
+      //停止心跳发送
+      _wsPingTimer?.cancel();
+      _wsPingTimer = null;
     } catch (err, stack) {
       Log.error(tag, err, stack);
     }
+  }
+
+  void _sendWsPing() {
+    _wsChannel?.sink.add(WsMsgData(WsMsgType.ping, "", ""));
   }
 
   Future<void> _onWsMessage(dynamic json) async {

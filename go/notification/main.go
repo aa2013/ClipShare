@@ -37,6 +37,7 @@ const (
 	online       = "online"
 	offline      = "offline"
 	syncFile     = "syncFile"
+	ping         = "ping"
 	checkVersion = "checkVersion"
 )
 const version = "1.0.0"
@@ -120,6 +121,11 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		}
 		targetDevId := msg.TargetDevId
 		operation := msg.Operation
+
+		if operation == ping {
+			continue
+		}
+
 		connections.Lock()
 		ws, ok := connections.DevMap[msg.TargetDevId]
 		connections.Unlock()

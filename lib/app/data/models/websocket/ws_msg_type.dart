@@ -5,6 +5,7 @@ enum WsMsgType {
   online,
   offline,
   syncFile,
+  ping,
   unknown;
 
   static WsMsgType getValue(String name) => WsMsgType.values.firstWhere(
