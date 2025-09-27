@@ -181,6 +181,10 @@ class StorageService extends GetxService with DataSender {
       Log.warn(tag, "storage client is null");
       return;
     }
+    if(!appConfig.autoSyncMissingData){
+      Log.warn(tag, "autoSyncMissingData is false");
+      return;
+    }
     final clientType = _client.runtimeType;
 
     ///检查客户端类型是否和初始的相同，如果不同则表示用户切换了中转类型，需要终止该方法
