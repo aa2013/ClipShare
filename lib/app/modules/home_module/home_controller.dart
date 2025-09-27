@@ -118,7 +118,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   bool get isBigScreen => screenWidth >= Constants.smallScreenWidth;
 
   final sktService = Get.find<SocketService>();
-  final webdavService = Get.find<StorageService>();
   final dragging = false.obs;
   final showPendingItemsDetail = false.obs;
 
@@ -235,7 +234,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   void _initCommon() async {
     //初始化socket
     sktService.init();
-    webdavService.restart();
+    storageService.restart();
     _networkListener = Connectivity().onConnectivityChanged.listen(_onNetworkChanged);
     _tagSyncer = TagSyncHandler();
     _historyTopSyncer = HistoryTopSyncHandler();
@@ -422,10 +421,14 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
     _lastNetworkChangeTime = DateTime.now();
     Log.debug(tag, "网络变化 -> ${result.name}");
-    if (appConfig.currentNetWorkType.value != ConnectivityResult.none) {
+    final lastNetwork = appConfig.currentNetWorkType.value;
+    //网络变化前的状态，非无网络状态,断开中转服务连接
+    if (lastNetwork != ConnectivityResult.none) {
       sktService.disConnectAllConnections();
+      storageService.disconnectWs();
     }
     appConfig.currentNetWorkType.value = result;
+    //网络变化后的处理，重新连接/设备发现
     if (result != ConnectivityResult.none) {
       var delayMs = 0;
       if (_lastNetworkChangeTime != null) {
@@ -436,8 +439,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
           delayMs = 1000;
         }
       }
-      Future.delayed(delayMs.ms, storageService.uploadSyncFailedData);
-      await Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
+      Future.delayed(delayMs.ms, () {
+        storageService.reconnectWs();
+        storageService.uploadSyncFailedData();
+      });
+      Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
     }
   }
 

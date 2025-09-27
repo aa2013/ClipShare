@@ -44,6 +44,7 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/task_runner.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import "package:msgpack_dart/msgpack_dart.dart" as m2;
 import 'package:uri_file_reader/uri_file_reader.dart';
@@ -181,7 +182,7 @@ class StorageService extends GetxService with DataSender {
       Log.warn(tag, "storage client is null");
       return;
     }
-    if(!appConfig.autoSyncMissingData){
+    if (!appConfig.autoSyncMissingData) {
       Log.warn(tag, "autoSyncMissingData is false");
       return;
     }
@@ -448,7 +449,8 @@ class StorageService extends GetxService with DataSender {
           }
         }
         //如果为null表示手动断开，不重连
-        if (_wsChannel != null) {
+        //如果无网络，不重连
+        if (_wsChannel != null || appConfig.currentNetWorkType.value != ConnectivityResult.none) {
           Future.delayed(1.s, connectWs);
         }
         for (var listener in _forwardStatusListener) {
