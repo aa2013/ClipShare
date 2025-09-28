@@ -1,4 +1,5 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/models/qr_device_connection_info.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -38,6 +39,40 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
   Map<String, dynamic> _connectData = {};
   bool forwardConnected = false;
 
+  void attemptConnect(QRDeviceConnectionInfo result) async {
+    Global.showLoadingDialog(
+      context: Get.context!,
+      loadingText: TranslationKey.attemptingToConnect.tr,
+    );
+    final socketService = Get.find<SocketService>();
+    final interfaces = result.interfaces;
+    for (var itf in interfaces) {
+      for (var address in itf.addresses) {
+        print("address $address");
+        bool success = await socketService.manualConnect(address);
+        if (success) {
+          Get.back();
+          return;
+        }
+      }
+    }
+    //本地连接失败，尝试中转连接
+    final forwardHost = socketService.forwardServerHost;
+    final forwardPort = socketService.forwardServerPort;
+    if (forwardHost != null && forwardPort != null) {
+      bool success = await socketService.manualConnectByForward(result.id);
+      if (success) {
+        Get.back();
+        return;
+      }
+    }
+    Get.back();
+    Global.showTipsDialog(
+      context: Get.context!,
+      text: TranslationKey.connectFailed.tr,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -61,7 +96,19 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                     return;
                   }
                 }
-                Get.offNamed(Routes.QR_CODE_SCANNER);
+                final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                try {
+                  if (json != null) {
+                    final result = QRDeviceConnectionInfo.fromJson(json);
+                    attemptConnect(result);
+                  } else {
+                    Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                    Log.warn(tag, "scan result is null");
+                  }
+                } catch (err, stack) {
+                  Log.error(tag, err, stack);
+                  Global.showTipsDialog(context: context, text: "$err, $stack");
+                }
               },
               child: Row(
                 children: [
@@ -247,25 +294,27 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                             return;
                           }
                         } else {
-                          sktService.manualConnect(
-                            _ipEditor.text,
-                            port: int.parse(_portEditor.text),
-                            onErr: (err) {
-                              Log.debug(tag, err);
-                              if (_connecting) {
-                                setState(() {
-                                  _connectErr = true;
-                                  _connecting = false;
-                                });
-                              }
-                            },
-                            data: _connectData,
-                          ).then((val) {
-                            if (_connectErr || _connectData['stop']) {
-                              return;
-                            }
-                            Get.back();
-                          });
+                          sktService
+                              .manualConnect(
+                                _ipEditor.text,
+                                port: int.parse(_portEditor.text),
+                                onErr: (err) {
+                                  Log.debug(tag, err);
+                                  if (_connecting) {
+                                    setState(() {
+                                      _connectErr = true;
+                                      _connecting = false;
+                                    });
+                                  }
+                                },
+                                data: _connectData,
+                              )
+                              .then((val) {
+                                if (_connectErr || _connectData['stop']) {
+                                  return;
+                                }
+                                Get.back();
+                              });
                         }
                       },
                 child: _connecting

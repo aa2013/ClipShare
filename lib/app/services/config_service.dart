@@ -605,7 +605,7 @@ class ConfigService extends GetxService {
       null,
       convert: (value) {
         if (value.startsWith("{")) {
-          return ForwardServerConfig.fromJson(value);
+          return ForwardServerConfig.fromJson(jsonDecode(value));
         } else {
           final [host, port] = value.split(":");
           return ForwardServerConfig(host: host, port: port.toInt());

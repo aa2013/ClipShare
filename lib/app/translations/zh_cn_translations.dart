@@ -828,7 +828,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.qrCodeScannerPageTitle:
         return "扫描二维码连接设备";
       case TranslationKey.qrCodeScanError:
-        return "似乎不是ClipShare的连接二维码，请检查";
+        return "扫描出错，请检查";
       case TranslationKey.attemptingToConnect:
         return "尝试连接中";
       case TranslationKey.forwardServerStatus:
@@ -1205,7 +1205,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.forwardSettingsS3Title:
         return "对象存储配置信息";
       case TranslationKey.configureWebdavServer:
-        return "配置 WebDAV 服务器";
+        return "配置 WebDAV";
       case TranslationKey.nameRequired:
         return "请输入配置名称";
       case TranslationKey.configName:

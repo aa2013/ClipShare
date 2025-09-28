@@ -13,8 +13,7 @@ class ForwardServerConfig {
     this.key,
   });
 
-  factory ForwardServerConfig.fromJson(String json) {
-    final data = jsonDecode(json) as Map<String, dynamic>;
+  factory ForwardServerConfig.fromJson(Map<String, dynamic> data) {
     String? key = data.containsKey("key")
         ? data["key"] == ""
             ? null

@@ -4,14 +4,19 @@ import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/handlers/storage/aliyun_oss_client.dart';
 import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/handlers/storage/storage_client.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:get/get.dart';
 
 class S3ConfigEditDialog extends StatefulWidget {
   final void Function(S3Config config) onOk;
@@ -28,6 +33,7 @@ class S3ConfigEditDialog extends StatefulWidget {
 }
 
 class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
+  static const tag = "S3ConfigEditDialog";
   final nameEditor = TextEditingController();
   final endPointEditor = TextEditingController();
   final accessKeyEditor = TextEditingController();
@@ -64,15 +70,19 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
   void initState() {
     super.initState();
     if (widget.initValue != null) {
-      nameEditor.text = widget.initValue!.displayName;
-      endPointEditor.text = widget.initValue!.endPoint;
-      accessKeyEditor.text = widget.initValue!.accessKey;
-      secretKeyEditor.text = widget.initValue!.secretKey;
-      bucketNameEditor.text = widget.initValue!.bucketName;
-      regionEditor.text = widget.initValue!.region ?? '';
-      baseDirEditor.text = widget.initValue!.baseDir;
-      objectStorageType = widget.initValue!.type;
+      reset(config);
     }
+  }
+
+  void reset(S3Config config) {
+    nameEditor.text = config.displayName;
+    endPointEditor.text = config.endPoint;
+    accessKeyEditor.text = config.accessKey;
+    secretKeyEditor.text = config.secretKey;
+    bucketNameEditor.text = config.bucketName;
+    regionEditor.text = config.region ?? '';
+    baseDirEditor.text = config.baseDir;
+    objectStorageType = config.type;
   }
 
   bool validateNameEditor() {
@@ -227,7 +237,53 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(TranslationKey.configureS3Storage.tr),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(TranslationKey.configureS3Storage.tr),
+          if (PlatformExt.isMobile)
+            Tooltip(
+              message: TranslationKey.scan.tr,
+              child: IconButton(
+                onPressed: testingConnection
+                    ? null
+                    : () async {
+                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                        if (!hasPerm) {
+                          await PermissionHelper.reqAndroidCameraPerm();
+                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                          if (!hasPerm) {
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey.noCameraPermission.tr,
+                            );
+                            return;
+                          }
+                        }
+                        final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                        try {
+                          if (json != null) {
+                            final result = S3Config.fromJson(json);
+                            setState(() {
+                              reset(result);
+                            });
+                          } else {
+                            Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                            Log.warn(tag, "scan result is null");
+                          }
+                        } catch (err, stack) {
+                          Log.error(tag, err, stack);
+                          Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                        }
+                      },
+                icon: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ),
+        ],
+      ),
       content: SizedBox(
         width: 350,
         child: SingleChildScrollView(
@@ -407,6 +463,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                             hintText: TranslationKey.storagePathHint.tr,
                             hintStyle: TextStyle(color: Colors.grey[400]),
                             border: const OutlineInputBorder(),
+                            errorText: baseDirErrText,
                           ),
                         ),
                       ),
@@ -455,6 +512,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                                         }
                                         baseDirEditor.text = selectedPath;
                                         dialog?.close();
+                                        validateFields();
                                       },
                                       child: Text(TranslationKey.dialogConfirmText.tr),
                                     ),

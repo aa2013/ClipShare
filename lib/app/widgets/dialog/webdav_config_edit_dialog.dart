@@ -1,8 +1,14 @@
+import 'dart:io';
+
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/handlers/storage/web_dav_client.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +30,7 @@ class WebdavConfigEditDialog extends StatefulWidget {
 }
 
 class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
+  static const tag = "WebdavConfigEditDialog";
   final nameEditor = TextEditingController();
   final serverEditor = TextEditingController();
   final usernameEditor = TextEditingController();
@@ -50,12 +57,16 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
   void initState() {
     super.initState();
     if (widget.initValue != null) {
-      nameEditor.text = widget.initValue!.displayName;
-      serverEditor.text = widget.initValue!.server;
-      usernameEditor.text = widget.initValue!.username;
-      passwordEditor.text = widget.initValue!.password;
-      baseDirEditor.text = widget.initValue!.baseDir;
+      reset(widget.initValue!);
     }
+  }
+
+  void reset(WebDavConfig config) {
+    nameEditor.text = config.displayName;
+    serverEditor.text = config.server;
+    usernameEditor.text = config.username;
+    passwordEditor.text = config.password;
+    baseDirEditor.text = config.baseDir;
   }
 
   bool validateNameEditor() {
@@ -168,7 +179,53 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(TranslationKey.configureWebdavServer.tr),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(TranslationKey.configureWebdavServer.tr),
+          if (PlatformExt.isMobile)
+            Tooltip(
+              message: TranslationKey.scan.tr,
+              child: IconButton(
+                onPressed: testingConnection
+                    ? null
+                    : () async {
+                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                        if (!hasPerm) {
+                          await PermissionHelper.reqAndroidCameraPerm();
+                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                          if (!hasPerm) {
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey.noCameraPermission.tr,
+                            );
+                            return;
+                          }
+                        }
+                        final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                        try {
+                          if (json != null) {
+                            final result = WebDavConfig.fromJson(json);
+                            setState(() {
+                              reset(result);
+                            });
+                          } else {
+                            Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                            Log.warn(tag, "scan result is null");
+                          }
+                        } catch (err, stack) {
+                          Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                          Log.error(tag, err, stack);
+                        }
+                      },
+                icon: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ),
+        ],
+      ),
       content: SizedBox(
         width: 350,
         child: SingleChildScrollView(
@@ -300,6 +357,7 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
                                       }
                                       baseDirEditor.text = selectedPath;
                                       dialog?.close();
+                                      validateFields();
                                     },
                                     child: Text(TranslationKey.dialogConfirmText.tr),
                                   ),

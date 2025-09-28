@@ -5,9 +5,12 @@ import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/forward_server_config.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -41,10 +44,14 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
   void initState() {
     super.initState();
     if (widget.initValue == null) return;
-    hostEditor.text = widget.initValue!.host;
-    portEditor.text = widget.initValue!.port.toString();
-    if (widget.initValue!.key != null) {
-      keyEditor.text = widget.initValue!.key!;
+    reset(widget.initValue!);
+  }
+
+  void reset(ForwardServerConfig config) {
+    hostEditor.text = config.host;
+    portEditor.text = config.port.toString();
+    if (config.key != null) {
+      keyEditor.text = config.key!;
       useKey = true;
     }
   }
@@ -166,7 +173,8 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
               remaining = TranslationKey.exhausted.tr;
             }
             String remark = json["remark"];
-            String content = ""
+            String content =
+                ""
                 "${TranslationKey.forwardServerDeviceConnectionLimit.tr}: $deviceLimit\n"
                 "${TranslationKey.forwardServerLifeSpan.tr}: $lifeSpan\n"
                 "${TranslationKey.forwardServerRemainingTime.tr}: $remaining\n"
@@ -209,7 +217,53 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(TranslationKey.configureForwardServerDialogTitle.tr),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(TranslationKey.configureForwardServerDialogTitle.tr),
+          if (PlatformExt.isMobile)
+            Tooltip(
+              message: TranslationKey.scan.tr,
+              child: IconButton(
+                onPressed: detecting
+                    ? null
+                    : () async {
+                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                        if (!hasPerm) {
+                          await PermissionHelper.reqAndroidCameraPerm();
+                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                          if (!hasPerm) {
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey.noCameraPermission.tr,
+                            );
+                            return;
+                          }
+                        }
+                        final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                        try {
+                          if (json != null) {
+                            final result = ForwardServerConfig.fromJson(json);
+                            setState(() {
+                              reset(result);
+                            });
+                          } else {
+                            Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                            Log.warn(tag, "scan result is null");
+                          }
+                        } catch (err, stack) {
+                          Log.error(tag, err, stack);
+                          Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                        }
+                      },
+                icon: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ),
+        ],
+      ),
       content: SizedBox(
         width: 350,
         child: IntrinsicHeight(
@@ -235,15 +289,20 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                       },
                     ),
                   ),
-                  const SizedBox(
-                    width: 4,
-                  ),
+                  const SizedBox(width: 4),
                   SizedBox(
                     width: 80,
                     child: TextField(
                       enabled: !detecting,
                       controller: portEditor,
-                      decoration: InputDecoration(hintText: TranslationKey.port.tr, labelText: TranslationKey.port.tr, border: const OutlineInputBorder(), errorText: portErrText, helperText: "", helperMaxLines: 2),
+                      decoration: InputDecoration(
+                        hintText: TranslationKey.port.tr,
+                        labelText: TranslationKey.port.tr,
+                        border: const OutlineInputBorder(),
+                        errorText: portErrText,
+                        helperText: "",
+                        helperMaxLines: 2,
+                      ),
                       onChanged: (str) {
                         checkPortEditor();
                         setState(() {});

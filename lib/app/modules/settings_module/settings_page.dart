@@ -1,13 +1,17 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/data/enums/obj_storage_type.dart';
+import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/notification_server_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/qr_image_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/s3_config_edit_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/webdav_config_edit_dialog.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -53,6 +57,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../data/enums/forward_way.dart';
 /**
@@ -1307,19 +1312,36 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.forwardServer == null) {
                               text = TranslationKey.configure.tr;
                             }
-                            return TextButton(
-                              onPressed: () {
-                                Global.showDialog(
-                                  context,
-                                  ForwardServerEditDialog(
-                                    initValue: v,
-                                    onOk: (server) {
-                                      appConfig.setForwardServer(server);
+                            return Row(
+                              children: [
+                                if (appConfig.forwardServer != null)
+                                  IconButton(
+                                    onPressed: () {
+                                      Global.showDialog(
+                                        context,
+                                        QrImageDialog(
+                                          title: Text(TranslationKey.forwardServer.tr),
+                                          data: jsonEncode(appConfig.forwardServer!),
+                                        ),
+                                      );
                                     },
+                                    icon: const Icon(Icons.qr_code, color: Colors.blueGrey),
                                   ),
-                                );
-                              },
-                              child: Text(text),
+                                TextButton(
+                                  onPressed: () {
+                                    Global.showDialog(
+                                      context,
+                                      ForwardServerEditDialog(
+                                        initValue: v,
+                                        onOk: (server) {
+                                          appConfig.setForwardServer(server);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                  child: Text(text),
+                                ),
+                              ],
                             );
                           },
                         ),
@@ -1336,19 +1358,36 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.webDavConfig == null) {
                               text = TranslationKey.configure.tr;
                             }
-                            return TextButton(
-                              onPressed: () {
-                                Global.showDialog(
-                                  context,
-                                  WebdavConfigEditDialog(
-                                    initValue: v,
-                                    onOk: (config) {
-                                      appConfig.setWebDavConfig(config);
+                            return Row(
+                              children: [
+                                if (appConfig.webDavConfig != null)
+                                  IconButton(
+                                    onPressed: () {
+                                      Global.showDialog(
+                                        context,
+                                        QrImageDialog(
+                                          title: const Text("Webdav"),
+                                          data: jsonEncode(appConfig.webDavConfig!),
+                                        ),
+                                      );
                                     },
+                                    icon: const Icon(Icons.qr_code, color: Colors.blueGrey),
                                   ),
-                                );
-                              },
-                              child: Text(text),
+                                TextButton(
+                                  onPressed: () {
+                                    Global.showDialog(
+                                      context,
+                                      WebdavConfigEditDialog(
+                                        initValue: v,
+                                        onOk: (config) {
+                                          appConfig.setWebDavConfig(config);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                  child: Text(text),
+                                ),
+                              ],
                             );
                           },
                         ),
@@ -1365,19 +1404,36 @@ class SettingsPage extends GetView<SettingsController> {
                             if (appConfig.s3Config == null) {
                               text = TranslationKey.configure.tr;
                             }
-                            return TextButton(
-                              onPressed: () {
-                                Global.showDialog(
-                                  context,
-                                  S3ConfigEditDialog(
-                                    initValue: v,
-                                    onOk: (config) {
-                                      appConfig.setS3Config(config);
+                            return Row(
+                              children: [
+                                if (appConfig.s3Config != null)
+                                  IconButton(
+                                    onPressed: () {
+                                      Global.showDialog(
+                                        context,
+                                        QrImageDialog(
+                                          title: Text(TranslationKey.s3.tr),
+                                          data: jsonEncode(appConfig.s3Config!),
+                                        ),
+                                      );
                                     },
+                                    icon: const Icon(Icons.qr_code, color: Colors.blueGrey),
                                   ),
-                                );
-                              },
-                              child: Text(text),
+                                TextButton(
+                                  onPressed: () {
+                                    Global.showDialog(
+                                      context,
+                                      S3ConfigEditDialog(
+                                        initValue: v,
+                                        onOk: (config) {
+                                          appConfig.setS3Config(config);
+                                        },
+                                      ),
+                                    );
+                                  },
+                                  child: Text(text),
+                                ),
+                              ],
                             );
                           },
                         ),
