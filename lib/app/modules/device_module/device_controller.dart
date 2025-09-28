@@ -628,6 +628,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
               dev.sendData(
                 MsgType.pairing,
                 {"code": CryptoUtil.toMD5(pin)},
+                false,
               );
               pairing.value = true;
               showTimeoutText = false;
