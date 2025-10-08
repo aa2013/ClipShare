@@ -17,6 +17,12 @@ class S3Client implements StorageClient {
   late final Minio _client;
   final Uint8List _empty = Uint8List(0);
 
+  String get _baseDir{
+    if(_config.baseDir.endsWith("/")){
+      return _config.baseDir;
+    }
+    return "${_config.baseDir}/";
+  }
   S3Client(S3Config config) {
     _config = config;
     _client = Minio(
@@ -50,7 +56,7 @@ class S3Client implements StorageClient {
 
   @override
   Future<bool> createDirectory(String path) async {
-    var dirPath = _removePrefix(_config.baseDir + path);
+    var dirPath = _removePrefix(_baseDir + path);
     if (!dirPath.endsWith(Constants.unixDirSeparate)) {
       dirPath += Constants.unixDirSeparate;
     }
@@ -65,7 +71,7 @@ class S3Client implements StorageClient {
 
   @override
   Future<bool> createFile(String path, Uint8List bytes, {StorageProgressFunc? onProgress, bool createDir = false}) async {
-    var filePath = _removePrefix(_config.baseDir + path);
+    var filePath = _removePrefix(_baseDir + path);
     filePath = _removeSuffix(filePath);
     try {
       await _client.putObject(_config.bucketName, filePath, Stream<Uint8List>.value(bytes));
@@ -78,7 +84,7 @@ class S3Client implements StorageClient {
 
   @override
   Future<bool> deleteDirectory(String path) async {
-    var dirPath = _removePrefix(_config.baseDir + path);
+    var dirPath = _removePrefix(_baseDir + path);
     if (!dirPath.endsWith(Constants.unixDirSeparate)) {
       dirPath += Constants.unixDirSeparate;
     }
@@ -93,7 +99,7 @@ class S3Client implements StorageClient {
 
   @override
   Future<bool> deleteFile(String path) async {
-    var filePath = _removePrefix(_config.baseDir + path);
+    var filePath = _removePrefix(_baseDir + path);
     filePath = _removeSuffix(filePath);
     try {
       await _client.removeObject(_config.bucketName, filePath);
@@ -108,7 +114,7 @@ class S3Client implements StorageClient {
   Future<bool> downloadFile(String path, String localPath, {StorageProgressFunc? onProgress, bool isLocalDir = false}) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final props = await _client.statObject(_config.bucketName, filePath);
       final totalSize = props.size!;
       var count = 0;
@@ -142,7 +148,7 @@ class S3Client implements StorageClient {
   Future<bool> isDirectory(String path) async {
     path = path.unixPath;
     try {
-      var dirPath = _removePrefix(_config.baseDir + path);
+      var dirPath = _removePrefix(_baseDir + path);
       if (!dirPath.endsWith(Constants.unixDirSeparate)) {
         dirPath += Constants.unixDirSeparate;
       }
@@ -158,7 +164,7 @@ class S3Client implements StorageClient {
   Future<bool> isFile(String path) async {
     path = path.unixPath;
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       filePath = _removeSuffix(filePath);
       final result = await _client.statObject(_config.bucketName, filePath);
       return (result.size ?? 0) > 0;
@@ -170,7 +176,7 @@ class S3Client implements StorageClient {
 
   @override
   Future<List<StorageItem>> list({String path = "", bool recursive = false}) async {
-    var dirPath = _removePrefix(_config.baseDir + path);
+    var dirPath = _removePrefix(_baseDir + path);
     if (dirPath != '' && !dirPath.endsWith("/")) {
       dirPath += "/";
     }
@@ -229,7 +235,7 @@ class S3Client implements StorageClient {
   Future<List<int>?> readFileBytes(String path, {StorageProgressFunc? onProgress}) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final stream = (await _client.getObject(_config.bucketName, filePath));
       final List<int> result = [];
       await for (final chunk in stream) {
@@ -244,7 +250,7 @@ class S3Client implements StorageClient {
 
   @override
   Future<bool> uploadFile(String path, String localFilePath, {StorageProgressFunc? onProgress}) async {
-    var filePath = _removePrefix(_config.baseDir + path);
+    var filePath = _removePrefix(_baseDir + path);
     filePath = _removeSuffix(filePath);
     try {
       final file = File(localFilePath);

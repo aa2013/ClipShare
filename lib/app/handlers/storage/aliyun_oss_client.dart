@@ -18,6 +18,13 @@ class AliyunOssClient implements StorageClient {
   late final OSSClient _client;
   final Uint8List _empty = Uint8List(0);
 
+  String get _baseDir {
+    if (_config.baseDir.endsWith("/")) {
+      return _config.baseDir;
+    }
+    return "${_config.baseDir}/";
+  }
+
   AliyunOssClient(S3Config config) {
     _config = config;
     _client = OSSClient.init(
@@ -56,7 +63,7 @@ class AliyunOssClient implements StorageClient {
 
   @override
   Future<bool> createDirectory(String path) async {
-    var dirPath = _removePrefix(_config.baseDir + path);
+    var dirPath = _removePrefix(_baseDir + path);
     if (!dirPath.endsWith(Constants.unixDirSeparate)) {
       dirPath += Constants.unixDirSeparate;
     }
@@ -73,7 +80,7 @@ class AliyunOssClient implements StorageClient {
   Future<bool> createFile(String path, Uint8List bytes, {StorageProgressFunc? onProgress, bool createDir = false}) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final resp = await _client.putObjectFromBytes(bytes, filePath, params: OSSRequestParams(onSendProgress: onProgress));
       return _responseIsOk(resp);
     } catch (err, stack) {
@@ -85,7 +92,7 @@ class AliyunOssClient implements StorageClient {
   @override
   Future<bool> deleteDirectory(String path) async {
     try {
-      var dirPath = _removePrefix(_config.baseDir + path);
+      var dirPath = _removePrefix(_baseDir + path);
       if (!dirPath.endsWith(Constants.unixDirSeparate)) {
         dirPath += Constants.unixDirSeparate;
       }
@@ -101,7 +108,7 @@ class AliyunOssClient implements StorageClient {
   Future<bool> deleteFile(String path) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final resp = await _client.deleteObject(filePath);
       return _responseIsOk(resp);
     } catch (err, stack) {
@@ -114,7 +121,7 @@ class AliyunOssClient implements StorageClient {
   Future<bool> downloadFile(String path, String localPath, {StorageProgressFunc? onProgress, bool isLocalDir = false}) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final resp = (await _client.getObjectStream(filePath, params: OSSRequestParams(onReceiveProgress: onProgress)));
       final file = File(localPath);
       final writer = file.openWrite();
@@ -130,7 +137,7 @@ class AliyunOssClient implements StorageClient {
   Future<bool> isDirectory(String path) async {
     path = path.unixPath;
     try {
-      var dirPath = _removePrefix(_config.baseDir + path);
+      var dirPath = _removePrefix(_baseDir + path);
       if (!dirPath.endsWith(Constants.unixDirSeparate)) {
         dirPath += Constants.unixDirSeparate;
       }
@@ -146,7 +153,7 @@ class AliyunOssClient implements StorageClient {
   Future<bool> isFile(String path) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var dirPath = _removePrefix(_config.baseDir + path);
+      var dirPath = _removePrefix(_baseDir + path);
       final result = await _client.getObjectMeta(dirPath);
       return result?.isFile ?? false;
     } catch (err, stack) {
@@ -238,7 +245,7 @@ class AliyunOssClient implements StorageClient {
   Future<List<int>?> readFileBytes(String path, {StorageProgressFunc? onProgress}) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final resp = (await _client.getObject(filePath, params: OSSRequestParams(onReceiveProgress: onProgress)));
       return resp.data;
     } catch (err, stack) {
@@ -251,7 +258,7 @@ class AliyunOssClient implements StorageClient {
   Future<bool> uploadFile(String path, String localFilePath, {StorageProgressFunc? onProgress}) async {
     path = _removeSuffix(path.unixPath);
     try {
-      var filePath = _removePrefix(_config.baseDir + path);
+      var filePath = _removePrefix(_baseDir + path);
       final resp = await _client.putObject(File(localFilePath), filePath, params: OSSRequestParams(onSendProgress: onProgress));
       return _responseIsOk(resp);
     } catch (err, stack) {

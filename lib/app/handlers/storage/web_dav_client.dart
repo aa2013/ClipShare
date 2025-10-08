@@ -16,6 +16,13 @@ class WebDavClient implements StorageClient {
   late webdav.Client _client;
   static const tag = "WebDavClient";
 
+  String get _baseDir {
+    if (_config.baseDir.endsWith("/")) {
+      return _config.baseDir;
+    }
+    return "${_config.baseDir}/";
+  }
+
   WebDavClient(this._config) {
     _client = webdav.newClient(_config.server, user: _config.username, password: _config.password, debug: true);
   }
@@ -42,7 +49,7 @@ class WebDavClient implements StorageClient {
 
   @override
   Future<List<StorageItem>> list({String path = "", bool recursive = false}) async {
-    final dirPath = (_config.baseDir + path).unixPath;
+    final dirPath = (_baseDir + path).unixPath;
     if (!await isDirectory(path)) {
       throw '$path is not directory!';
     }
@@ -72,7 +79,7 @@ class WebDavClient implements StorageClient {
 
   @override
   Future<bool> isDirectory(String path) async {
-    var dirPath = _config.baseDir + path;
+    var dirPath = _baseDir + path;
     try {
       final file = await _client.readProps(dirPath);
       return file.isDir == true;
@@ -84,7 +91,7 @@ class WebDavClient implements StorageClient {
 
   @override
   Future<bool> createDirectory(String path) async {
-    final dirPath = _config.baseDir + path;
+    final dirPath = _baseDir + path;
     try {
       await _client.mkdirAll(dirPath);
       return true;
@@ -115,7 +122,7 @@ class WebDavClient implements StorageClient {
 
   @override
   Future<bool> isFile(String path) async {
-    var filePath = _config.baseDir + path;
+    var filePath = _baseDir + path;
     try {
       final file = await _client.readProps(filePath, isFile: true);
       if (file.isDir == null) {
@@ -136,7 +143,7 @@ class WebDavClient implements StorageClient {
     StorageProgressFunc? onProgress,
     bool createDir = false,
   }) async {
-    var filePath = _config.baseDir + path;
+    var filePath = _baseDir + path;
     filePath = _removeSuffix(filePath.unixPath);
     try {
       if (createDir) {
@@ -164,7 +171,7 @@ class WebDavClient implements StorageClient {
       if (!await File(localFilePath).exists()) {
         return false;
       }
-      var filePath = _config.baseDir + path;
+      var filePath = _baseDir + path;
       await _client.writeFromFile(localFilePath, filePath, onProgress: onProgress);
       return true;
     } catch (err, stack) {
@@ -181,7 +188,7 @@ class WebDavClient implements StorageClient {
     bool isLocalDir = false,
   }) async {
     try {
-      var filePath = _config.baseDir + path;
+      var filePath = _baseDir + path;
       if (!await isFile(path)) {
         return false;
       }
@@ -210,7 +217,7 @@ class WebDavClient implements StorageClient {
     StorageProgressFunc? onProgress,
   }) async {
     try {
-      var filePath = _config.baseDir + path;
+      var filePath = _baseDir + path;
       if (!await isFile(path)) {
         return null;
       }
@@ -228,7 +235,7 @@ class WebDavClient implements StorageClient {
       if (!isFile) {
         return false;
       }
-      var filePath = _config.baseDir + path;
+      var filePath = _baseDir + path;
       await _client.remove(filePath);
       return true;
     } catch (err, stack) {
