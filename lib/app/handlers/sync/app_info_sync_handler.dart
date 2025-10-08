@@ -53,7 +53,6 @@ class AppInfoSyncHandler implements SyncListener {
   Future onSync(MessageData msg) async {
     var sender = msg.send;
     final map = msg.data;
-    Log.debug(tag, "onSync ${map["data"]}");
     final appInfoMap = jsonDecode(map["data"]) as Map<String, dynamic>;
     map["data"] = "";
     var opRecord = OperationRecord.fromJson(map);
