@@ -1073,6 +1073,8 @@ class SettingsPage extends GetView<SettingsController> {
                                           await appConfig.setForwardWay(ForwardWay.webdav);
                                           await sktService.disConnectForwardServer();
                                           if (!appConfig.enableForward || appConfig.webDavConfig == null) {
+                                            //若无配置，关闭中转
+                                            await appConfig.setEnableForward(false);
                                             return;
                                           }
                                           storageService.restart();
@@ -1099,6 +1101,8 @@ class SettingsPage extends GetView<SettingsController> {
                                           await appConfig.setForwardWay(ForwardWay.s3);
                                           await sktService.disConnectForwardServer();
                                           if (!appConfig.enableForward || appConfig.s3Config == null || !appConfig.enableForward) {
+                                            //若无配置，关闭中转
+                                            await appConfig.setEnableForward(false);
                                             return;
                                           }
                                           storageService.restart();
@@ -1122,6 +1126,7 @@ class SettingsPage extends GetView<SettingsController> {
                                       enabled: v != ForwardWay.none,
                                       onSelected: () async {
                                         Future<void> setup() async {
+                                          await appConfig.setEnableForward(false);
                                           await appConfig.setForwardWay(ForwardWay.none);
                                           await sktService.disConnectForwardServer();
                                           await storageService.stop();
