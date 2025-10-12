@@ -44,8 +44,19 @@ class RulesSyncHandler implements SyncListener {
   Future onSync(MessageData msg) async {
     var sender = msg.send;
     final map = msg.data;
+    final opRecord = await _syncData(map);
+    if (opRecord == null) {
+      return;
+    }
+    //发送同步确认
+    sender.sendData(
+      MsgType.ackSync,
+      {"id": opRecord.id, "module": Module.rules.moduleName},
+    );
+  }
+
+  Future<OperationRecord?> _syncData(Map<String, dynamic> map) async {
     final ruleMap = jsonDecode(map["data"]) as Map<dynamic, dynamic>;
-    print(ruleMap);
     map["data"] = "";
     var opRecord = OperationRecord.fromJson(map);
     RuleType rule = RuleType.getValue(ruleMap["rule"]);
@@ -73,7 +84,7 @@ class RulesSyncHandler implements SyncListener {
           await appConfig.setSmsRules(jsonEncode(data));
           break;
         default:
-          return;
+          return null;
       }
       //本地插入一条操作记录，先移除旧的再插入
       await dbService.opRecordDao.removeRuleRecord(
@@ -82,13 +93,11 @@ class RulesSyncHandler implements SyncListener {
       );
       await dbService.opRecordDao.add(opRecord);
     }
-    //发送同步确认
-    sender.sendData(
-      MsgType.ackSync,
-      {"id": opRecord.id, "module": Module.rules.moduleName},
-    );
+    return opRecord;
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
+    await _syncData(map);
+  }
 }

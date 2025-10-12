@@ -69,7 +69,7 @@ class ClipboardSourceService extends GetxService {
   }
 
   Future<bool> addOrUpdate(AppInfo appInfo, [bool notify = false]) async {
-    //如果已缓存该app信息判断内容，直接返回
+    //如果已缓存该app信息，直接返回
     if (isCached(appInfo)) {
       return true;
     }

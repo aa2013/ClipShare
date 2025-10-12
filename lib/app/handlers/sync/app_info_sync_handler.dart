@@ -53,6 +53,15 @@ class AppInfoSyncHandler implements SyncListener {
   Future onSync(MessageData msg) async {
     var sender = msg.send;
     final map = msg.data;
+    final opRecord = await _syncData(map);
+    //发送同步确认
+    sender.sendData(
+      MsgType.ackSync,
+      {"id": opRecord.id, "module": Module.appInfo.moduleName},
+    );
+  }
+
+  Future<OperationRecord> _syncData(Map<String, dynamic> map) async {
     final appInfoMap = jsonDecode(map["data"]) as Map<String, dynamic>;
     map["data"] = "";
     var opRecord = OperationRecord.fromJson(map);
@@ -74,13 +83,11 @@ class AppInfoSyncHandler implements SyncListener {
       (his) => his.source == appInfo.appId,
       (his) => {},
     );
-    //发送同步确认
-    sender.sendData(
-      MsgType.ackSync,
-      {"id": opRecord.id, "module": Module.appInfo.moduleName},
-    );
+    return opRecord;
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
+    await _syncData(map);
+  }
 }

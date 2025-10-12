@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/obj_storage_type.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
@@ -16,8 +17,10 @@ import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/websocket/ws_msg_data.dart';
 import 'package:clipshare/app/data/models/websocket/ws_msg_type.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/exceptions/different_storage_client_type_exception.dart';
 import 'package:clipshare/app/handlers/storage/aliyun_oss_client.dart';
 import 'package:clipshare/app/handlers/storage/s3_client.dart';
@@ -31,6 +34,7 @@ import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -73,6 +77,9 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 ///   - deviceInfo.json
 ///   - minVersion.json
 ///   - version.json
+/// app-info
+/// - A
+///  - 1321465456444
 /// 监听网络恢复
 class StorageService extends GetxService with DataSender {
   static const tag = "StorageService";
@@ -81,7 +88,10 @@ class StorageService extends GetxService with DataSender {
   final _connectedDevIds = <String>{};
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
-  static const _baseDirs = [devicesInfoDir, historyDir];
+  static const appInfoDir = "app-info";
+  static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
+
+  String get _selfDevId => appConfig.device.guid;
   var _lastDate = '';
   var _lastDateFilePath = '';
   final _cache = <dynamic>{};
@@ -114,7 +124,7 @@ class StorageService extends GetxService with DataSender {
   Future<bool> _createBaseDirectories() async {
     if (_client == null) return false;
     var result = true;
-    final selfDevId = appConfig.device.guid;
+    final selfDevId = _selfDevId;
     final dirs = [..._baseDirs];
     final today = DateTime.now().format("yyyy-MM-dd");
     if (today != _lastDate) {
@@ -127,15 +137,86 @@ class StorageService extends GetxService with DataSender {
     return result;
   }
 
-  Future<void> updateBaseInfo() async {
+  Future<void> _updateBaseInfo() async {
     if (_client == null) {
       Log.warn(tag, "storage client is null");
       return;
     }
     final device = appConfig.device.copyWith(customName: appConfig.localName);
-    await _client!.createFile(getDeviceInfoPath(appConfig.device.guid), utf8.encode(jsonEncode(device)));
-    await _client!.createFile(getDeviceVersionPath(appConfig.device.guid), utf8.encode(jsonEncode(appConfig.version)));
-    await _client!.createFile(getDeviceMinVersionPath(appConfig.device.guid), utf8.encode(jsonEncode(appConfig.minVersion)));
+    await _client!.createFile(getDeviceInfoPath(_selfDevId), utf8.encode(jsonEncode(device)));
+    await _client!.createFile(getDeviceVersionPath(_selfDevId), utf8.encode(jsonEncode(appConfig.version)));
+    await _client!.createFile(getDeviceMinVersionPath(_selfDevId), utf8.encode(jsonEncode(appConfig.minVersion)));
+  }
+
+  /// 检查并上传缺失的本机app信息
+  Future<void> _checkAndUploadLocalAppInfo() async {
+    if (_client == null) {
+      Log.warn(tag, "storage client is null");
+      return;
+    }
+    final dirPath = getAppInfoDirectoryPath(_selfDevId);
+    var result = await _client!.createDirectory(dirPath);
+    if (!result) {
+      Log.debug(tag, "checkAndUploadLocalAppInfo failed");
+      return;
+    }
+    final sourceService = Get.find<ClipboardSourceService>();
+    var list = sourceService.appInfos.where((item) => item.devId == _selfDevId).toList();
+    final existsIds = (await _client!.list(path: dirPath)).map((item) => item.name).toSet();
+    list = list.where((item) => !existsIds.contains(item.id.toString())).toList();
+    for (var appInfo in list) {
+      if (!await _uploadAppInfo(appInfo)) {
+        continue;
+      }
+    }
+  }
+
+  Future<bool> _uploadAppInfo(AppInfo appInfo) async {
+    final dirPath = getAppInfoDirectoryPath(_selfDevId);
+    if (!await _client!.createDirectory(dirPath)) {
+      Log.debug(tag, "_uploadAppInfo createDirectory $dirPath failed.");
+      return false;
+    }
+    final opRecord = OperationRecord.fromSimple(
+      Module.appInfo,
+      OpMethod.add,
+      appInfo.id.toString(),
+    );
+    final result = await MissingDataSyncHandler.process(opRecord);
+    final id = appInfo.id;
+    final path = "$dirPath/$id";
+    final success = await _client!.createFile(path, m2.serialize(result.result));
+    if (!success) {
+      Log.warn(tag, "upload appInfo($id) failed");
+      return false;
+    }
+    //ws send
+    final devController = Get.find<DeviceController>();
+    for (var dev in devController.onlineAndPairedList) {
+      _wsChannel?.sink.add(WsMsgData(WsMsgType.appInfo, id.toString(), dev.guid).toString());
+    }
+    return true;
+  }
+
+  /// 检查并下载缺失的其他设备的app信息
+  Future<void> _checkAndDownloadMissingAppInfo(String devId) async {
+    if (_client == null) {
+      Log.warn(tag, "storage client is null");
+      return;
+    }
+    final dirPath = getAppInfoDirectoryPath(devId);
+    final sourceService = Get.find<ClipboardSourceService>();
+    final list = await _client!.list(path: dirPath);
+    final cloudIds = list.where((item) => !item.isDir).map((item) => item.name).toSet();
+    final existsIds = sourceService.appInfos.where((item) => item.devId == devId).map((item) => item.id.toString()).toSet();
+    final diff = cloudIds.difference(existsIds);
+    for (var id in diff) {
+      try {
+        await _processAppInfoMsg(WsMsgData(WsMsgType.appInfo, id, devId));
+      } catch (err, stack) {
+        Log.error(tag, "_checkAndDownloadMissingAppInfo error: $err", stack);
+      }
+    }
   }
 
   //endregion
@@ -163,7 +244,8 @@ class StorageService extends GetxService with DataSender {
       _client = null;
       return;
     }
-    await updateBaseInfo();
+    await _updateBaseInfo();
+    await _checkAndUploadLocalAppInfo();
     uploadSyncFailedData();
     _loadMissingData();
     connectWs();
@@ -209,7 +291,7 @@ class StorageService extends GetxService with DataSender {
     //add or update devices
     for (var dev in devices) {
       checkClientRuntimeType();
-      if (dev.guid == appConfig.device.guid) {
+      if (dev.guid == _selfDevId) {
         continue;
       }
       await _addOrUpdateDevice(dev);
@@ -225,6 +307,7 @@ class StorageService extends GetxService with DataSender {
 
     //region load sync map
     for (var devId in devHistoryDirMap.keys) {
+      await _checkAndDownloadMissingAppInfo(devId);
       // load latest record info form db
       final latestRecord = await dbService.opRecordDao.getLatestStorageSyncSuccessByDevId(devId);
       final latestDate = DateTime.parse(latestRecord?.time ?? "1970-01-01");
@@ -332,6 +415,10 @@ class StorageService extends GetxService with DataSender {
       Log.warn(tag, "read file failed, path = $path");
       return;
     }
+    await _syncData(devId, bytes, loadingMissingData);
+  }
+
+  Future<void> _syncData(String devId, List<int> bytes, bool loadingMissingData) async {
     final deviceService = Get.find<DeviceService>();
     final device = deviceService.getById(devId);
     //on sync
@@ -359,7 +446,7 @@ class StorageService extends GetxService with DataSender {
       return;
     }
     _uploadingSyncFailedData = true;
-    final list = await dbService.opRecordDao.getStorageSyncFiledData(appConfig.device.guid);
+    final list = await dbService.opRecordDao.getStorageSyncFiledData(_selfDevId);
     final List<FutureFunction> tasks = [];
     for (var record in list) {
       try {
@@ -367,7 +454,7 @@ class StorageService extends GetxService with DataSender {
         final syncData = await MissingDataSyncHandler.process(record);
         tasks.add(() async {
           final date = DateTime.parse(record.time).format("yyyy-MM-dd");
-          final historyDirPath = getHistoryDatePath(appConfig.device.guid, date);
+          final historyDirPath = getHistoryDatePath(_selfDevId, date);
           final id = record.id;
           final path = "$historyDirPath/$id";
           final result = await _client!.createFile(path, m2.serialize(syncData.result));
@@ -427,7 +514,7 @@ class StorageService extends GetxService with DataSender {
     } else {
       id = CryptoUtil.toMD5("${_s3Config!.endPoint}${_s3Config!.bucketName}${_s3Config!.accessKey}");
     }
-    final connectKey = "$id:${appConfig.device.guid}";
+    final connectKey = "$id:${_selfDevId}";
     var serverHost = appConfig.notificationServer.trimEnd('/');
     _wsChannel = WebSocketChannel.connect(Uri.parse('$serverHost/connect/$connectKey'));
     _wsChannel!.ready
@@ -489,7 +576,7 @@ class StorageService extends GetxService with DataSender {
   }
 
   void _sendWsPing() {
-    _wsChannel?.sink.add(WsMsgData(WsMsgType.ping, "", ""));
+    _wsChannel?.sink.add(jsonEncode(WsMsgData(WsMsgType.ping, "", "")));
   }
 
   Future<void> _onWsMessage(dynamic json) async {
@@ -508,6 +595,9 @@ class StorageService extends GetxService with DataSender {
           break;
         case WsMsgType.syncFile:
           _processSyncFileMsg(msg);
+          break;
+        case WsMsgType.appInfo:
+          _processAppInfoMsg(msg);
           break;
         default:
           Log.error(tag, "unknown ws data type, content = $json");
@@ -634,6 +724,22 @@ class StorageService extends GetxService with DataSender {
     }
   }
 
+  Future<void> _processAppInfoMsg(WsMsgData msg) async {
+    if (_client == null) {
+      Log.warn(tag, "storage client is null");
+      return;
+    }
+    final id = msg.data;
+    var dirPath = getAppInfoDirectoryPath(msg.targetDevId);
+    var filePath = "$dirPath/$id";
+    var bytes = await _client!.readFileBytes(filePath);
+    if (bytes == null) {
+      Log.warn(tag, "read file failed, path = $filePath");
+      return;
+    }
+    await _syncData(msg.targetDevId, bytes, false);
+  }
+
   Future<bool> _addOrUpdateDevice(Device dev) async {
     final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
     final devService = Get.find<DeviceService>();
@@ -646,6 +752,8 @@ class StorageService extends GetxService with DataSender {
   }
 
   //endregion
+
+  //region Send data
 
   @override
   Future<void> sendData(
@@ -671,191 +779,229 @@ class StorageService extends GetxService with DataSender {
     final today = DateTime.now().format("yyyy-MM-dd");
     //sync file
     if (key == MsgType.file) {
-      //region file info
-      id = appConfig.snowflake.nextId();
-      var startTime = DateTime.now().toString();
-      final fileName = data["fileName"] as String;
-      final isUri = data["isUri"] as bool;
-      final filePath = data["filePath"] as String;
-      final size = data["size"] as int;
-      final datePath = getHistoryDatePath(appConfig.device.guid, today);
-      late String storagePath;
-      final syncingFileService = Get.find<SyncingFileProgressService>();
-      final syncingFile = SyncingFile(
-        totalSize: size,
-        context: Get.context!,
-        filePath: filePath,
-        fromDev: appConfig.device,
-        isSender: true,
-      );
-      syncingFileService.updateSyncingFile(syncingFile);
-      void onStorageProgressSync(int count, int total) {
-        if (syncingFile.state != SyncingFileState.syncing) {
-          throw 'Syncing file stop!';
-        }
-        syncingFile.updateProgress(count);
-      }
-
-      final historyController = Get.find<HistoryController>();
-      var history = History(
-        id: id,
-        uid: appConfig.userId,
-        devId: appConfig.devInfo.guid,
-        time: startTime,
-        content: filePath.safeDecodeUri(),
-        type: HistoryContentType.file.value,
-        size: size,
-        sync: true,
-      );
-
-      storagePath = "$datePath/files";
-      if (_lastDateFilePath != storagePath) {
-        if (!await _client!.createDirectory(storagePath)) {
-          Log.error(tag, "sync file create directory failed! storageDirPath = $storagePath");
-          //file sync progress failed
-          syncingFile.setState(SyncingFileState.error);
-          return;
-        }
-        _lastDateFilePath = storagePath;
-      }
-      final storageFilePath = "$storagePath/$fileName";
-      final storageFileInfoPath = "$storagePath/$id";
-      //endregion
-      if (isUri) {
-        //region uri file
-        final nullableStream = await uriFileReader.readFileAsBytesStream(filePath);
-        if (nullableStream == null) {
-          Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
-          throw TranslationKey.failedToLoad.tr;
-        }
-        List<int> fileBytes = [];
-        Stream<List<int>> stream = nullableStream.transform(
-          StreamTransformer<Uint8List, List<int>>.fromHandlers(
-            handleData: (data, sink) {
-              sink.add(data);
-            },
-          ),
-        );
-        stream.listen(
-          (bytes) => fileBytes.addAll(bytes),
-          onDone: () async {
-            //read all
-            if (size != fileBytes.length) {
-              //update sync file progress
-              Log.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
-              syncingFile.setState(SyncingFileState.error);
-              return;
-            }
-            syncingFile.setState(SyncingFileState.syncing);
-            final result = await _client!.createFile(storageFilePath, Uint8List.fromList(fileBytes), onProgress: onStorageProgressSync);
-            if (!result) {
-              //update sync file progress
-              Log.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
-              syncingFile.setState(SyncingFileState.error);
-            } else {
-              //上传文件信息
-              final result = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
-              if (!result) {
-                await _client!.deleteFile(storageFilePath);
-                Log.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
-                return;
-              }
-              //本地写入记录
-              historyController.addData(history, false);
-              //ws send
-              _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:${appConfig.device.guid}:$id", dev!.guid).toString());
-              syncingFile.setState(SyncingFileState.done);
-            }
-          },
-        );
-        //endregion
-      } else {
-        //region local file
-        syncingFile.setState(SyncingFileState.syncing);
-        final result = await _client!.uploadFile(storageFilePath, filePath, onProgress: onStorageProgressSync);
-        if (!result) {
-          //update sync file progress
-          Log.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
-          syncingFile.setState(SyncingFileState.error);
-        } else {
-          //上传文件信息
-          final result = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
-          if (!result) {
-            await _client!.deleteFile(storageFilePath);
-            Log.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
-            return;
-          }
-          //本地写入记录
-          historyController.addData(history, false);
-          //ws send
-          _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:${appConfig.device.guid}:$id", dev!.guid).toString());
-          syncingFile.setState(SyncingFileState.done);
-        }
-        //endregion
-      }
-      return;
+      _sendFile(dev!, key, today, data);
     } else {
-      //other
+      //获取module，根据 module 处理
+      final module = Module.getValue(data["module"]);
+      if (module == Module.appInfo) {
+        //upload appInfo
+        _uploadAppInfo(AppInfo.fromJson(jsonDecode(data["data"])));
+        // return;
+      }
       // 缓存数据，避免批量发送重复写入
       final hasData = _cache.contains(data);
       if (!hasData) {
         _cache.add(data);
         //缓存 10s
-        Future.delayed(10.s, () {
-          _cache.remove(data);
-        });
-        //写入存储服务
-        if (today != _lastDate) {
-          _lastDate = today;
-          final path = getHistoryDatePath(appConfig.device.guid, today);
-          final result = await _client!.createDirectory(path);
-          if (!result) {
-            Log.warn(tag, "create history date directory failed! path = $path");
+        Future.delayed(10.s, () => _cache.remove(data));
+      }
+      await _sendHistory(id, dev, key, today, data, hasData);
+    }
+  }
+
+  //region Send file
+
+  Future<void> _sendFile(
+    DevInfo dev,
+    MsgType key,
+    String today,
+    Map<String, dynamic> data,
+  ) async {
+    //region file info
+    final id = appConfig.snowflake.nextId();
+    var startTime = DateTime.now().toString();
+    final fileName = data["fileName"] as String;
+    final isUri = data["isUri"] as bool;
+    final filePath = data["filePath"] as String;
+    final size = data["size"] as int;
+    final datePath = getHistoryDatePath(_selfDevId, today);
+    late String storagePath;
+    final syncingFileService = Get.find<SyncingFileProgressService>();
+    final syncingFile = SyncingFile(
+      totalSize: size,
+      context: Get.context!,
+      filePath: filePath,
+      fromDev: appConfig.device,
+      isSender: true,
+    );
+    syncingFileService.updateSyncingFile(syncingFile);
+    void onStorageProgressSync(int count, int total) {
+      if (syncingFile.state != SyncingFileState.syncing) {
+        throw 'Syncing file stop!';
+      }
+      syncingFile.updateProgress(count);
+    }
+
+    final historyController = Get.find<HistoryController>();
+    var history = History(
+      id: id,
+      uid: appConfig.userId,
+      devId: appConfig.devInfo.guid,
+      time: startTime,
+      content: filePath.safeDecodeUri(),
+      type: HistoryContentType.file.value,
+      size: size,
+      sync: true,
+    );
+
+    storagePath = "$datePath/files";
+    if (_lastDateFilePath != storagePath) {
+      if (!await _client!.createDirectory(storagePath)) {
+        Log.error(tag, "sync file create directory failed! storageDirPath = $storagePath");
+        //file sync progress failed
+        syncingFile.setState(SyncingFileState.error);
+        return;
+      }
+      _lastDateFilePath = storagePath;
+    }
+    final storageFilePath = "$storagePath/$fileName";
+    final storageFileInfoPath = "$storagePath/$id";
+    //endregion
+    if (isUri) {
+      //region uri file
+      final nullableStream = await uriFileReader.readFileAsBytesStream(filePath);
+      if (nullableStream == null) {
+        Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
+        throw TranslationKey.failedToLoad.tr;
+      }
+      List<int> fileBytes = [];
+      Stream<List<int>> stream = nullableStream.transform(
+        StreamTransformer<Uint8List, List<int>>.fromHandlers(
+          handleData: (data, sink) {
+            sink.add(data);
+          },
+        ),
+      );
+      stream.listen(
+        (bytes) => fileBytes.addAll(bytes),
+        onDone: () async {
+          //read all
+          if (size != fileBytes.length) {
+            //update sync file progress
+            Log.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
+            syncingFile.setState(SyncingFileState.error);
             return;
           }
-        }
-        var historyDirPath = getHistoryDatePath(appConfig.device.guid, today);
-        final path = "$historyDirPath/$id";
-        final result = await _client!.createFile(path, m2.serialize(data));
-        //写入存储服务，更新操作记录
-        dbService.opRecordDao.updateStorageSyncStatus(id, result);
+          syncingFile.setState(SyncingFileState.syncing);
+          final result = await _client!.createFile(storageFilePath, Uint8List.fromList(fileBytes), onProgress: onStorageProgressSync);
+          if (!result) {
+            //update sync file progress
+            Log.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+            syncingFile.setState(SyncingFileState.error);
+          } else {
+            //上传文件信息
+            final result = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
+            if (!result) {
+              await _client!.deleteFile(storageFilePath);
+              Log.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+              return;
+            }
+            //本地写入记录
+            historyController.addData(history, false);
+            //ws send
+            _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
+            syncingFile.setState(SyncingFileState.done);
+          }
+        },
+      );
+      //endregion
+    } else {
+      //region local file
+      syncingFile.setState(SyncingFileState.syncing);
+      final result = await _client!.uploadFile(storageFilePath, filePath, onProgress: onStorageProgressSync);
+      if (!result) {
+        //update sync file progress
+        Log.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+        syncingFile.setState(SyncingFileState.error);
+      } else {
+        //上传文件信息
+        final result = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
         if (!result) {
-          Log.warn(tag, "StorageService write data failed! key=${key.name}, data = ${jsonEncode(data)}");
+          await _client!.deleteFile(storageFilePath);
+          Log.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+          return;
+        }
+        //本地写入记录
+        historyController.addData(history, false);
+        //ws send
+        _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
+        syncingFile.setState(SyncingFileState.done);
+      }
+      //endregion
+    }
+    return;
+  }
+
+  //endregion
+
+  //region Send history
+  Future<void> _sendHistory(
+    int id,
+    DevInfo? dev,
+    MsgType key,
+    String today,
+    Map<String, dynamic> data,
+    bool hasData,
+  ) async {
+    if (!hasData) {
+      //写入存储服务
+      if (today != _lastDate) {
+        _lastDate = today;
+        final path = getHistoryDatePath(_selfDevId, today);
+        final result = await _client!.createDirectory(path);
+        if (!result) {
+          Log.warn(tag, "create history date directory failed! path = $path");
           return;
         }
       }
-      if (dev != null) {
-        // notify
-        _wsChannel?.sink.add(WsMsgData(WsMsgType.change, "$today:$id", dev.guid).toString());
+      var historyDirPath = getHistoryDatePath(_selfDevId, today);
+      final path = "$historyDirPath/$id";
+      final result = await _client!.createFile(path, m2.serialize(data));
+      //写入存储服务，更新操作记录
+      dbService.opRecordDao.updateStorageSyncStatus(id, result);
+      if (!result) {
+        Log.warn(tag, "StorageService write data failed! key=${key.name}, data = ${jsonEncode(data)}");
+        return;
       }
     }
+    // notify
+    if (dev != null) {
+      _wsChannel?.sink.add(WsMsgData(WsMsgType.change, "$today:$id", dev.guid).toString());
+    }
   }
+
+  //endregion
 
   //region Path getter
 
   String getDeviceInfoPath(String devId) {
-    return "devices-info/$devId/deviceInfo.json";
+    return "$devicesInfoDir/$devId/deviceInfo.json";
   }
 
   String getDeviceVersionPath(String devId) {
-    return "devices-info/$devId/version.json";
+    return "$devicesInfoDir/$devId/version.json";
   }
 
   String getDeviceMinVersionPath(String devId) {
-    return "devices-info/$devId/minVersion.json";
+    return "$devicesInfoDir/$devId/minVersion.json";
   }
 
   String getHistoryDatePath(String devId, String date) {
-    return "history/$devId/$date";
+    return "$historyDir/$devId/$date";
   }
 
   String getHistoryDirectoryPath(String devId) {
-    return "history/$devId";
+    return "$historyDir/$devId";
+  }
+
+  String getAppInfoDirectoryPath(String devId) {
+    return "$appInfoDir/$devId";
   }
 
   //endregion
 
   //region BaseInfo getter
+
   Future<Device?> getDeviceInfoFromCloud(String devId) async {
     final bytes = await _client!.readFileBytes(getDeviceInfoPath(devId));
     if (bytes == null) return null;
