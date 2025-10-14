@@ -24,7 +24,7 @@ class WebDavClient implements StorageClient {
   }
 
   WebDavClient(this._config) {
-    _client = webdav.newClient(_config.server, user: _config.username, password: _config.password, debug: true);
+    _client = webdav.newClient(_config.server, user: _config.username, password: _config.password, debug: false);
   }
 
   @override

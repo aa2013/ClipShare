@@ -1,10 +1,8 @@
-import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
-import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:get/get.dart';
 
 class DeviceConnectionRegistry {
@@ -26,6 +24,10 @@ class DeviceConnectionRegistry {
     this._forwardStatusListener,
   );
 
+  bool hasDevice(String devId) {
+    return _devices.keys.where((item) => item.guid == devId).isNotEmpty;
+  }
+
   void addDevice(DevInfo devInfo, TransportProtocol protocol) {
     _devices[devInfo] = protocol;
   }
@@ -36,13 +38,12 @@ class DeviceConnectionRegistry {
 }
 
 ///设备连接注册服务
-///管理所有已连接设备的信息（包括协议类型），并能根据设备ID返回对应的协议服务
-class ConnectionRegistryService extends GetxService {
+///管理所有已连接设备的信息（包括协议类型）
+class ConnectionRegistryService extends GetxService{
   final _devices = <DevInfo, TransportProtocol>{};
   final List<DevAliveListener> _devAliveListeners = List.empty(growable: true);
   final List<DiscoverListener> _discoverListeners = List.empty(growable: true);
   final List<ForwardStatusListener> _forwardStatusListener = List.empty(growable: true);
-  final Map<Module, List<SyncListener>> _syncListeners = {};
   DeviceConnectionRegistry? _registry;
 
   DeviceConnectionRegistry get registry {

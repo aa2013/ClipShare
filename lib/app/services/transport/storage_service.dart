@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
@@ -40,6 +41,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
@@ -81,10 +83,11 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 /// - A
 ///  - 1321465456444
 /// 监听网络恢复
-class StorageService extends GetxService with DataSender {
+class StorageService extends GetxService with DataSender implements DiscoverListener {
   static const tag = "StorageService";
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final _connectedDevIds = <String>{};
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
@@ -228,6 +231,7 @@ class StorageService extends GetxService with DataSender {
     if (!appConfig.enableForward) {
       return;
     }
+    connRegService.addDiscoverListener(this);
     if (appConfig.enableS3 && _s3Config != null) {
       if (_s3Config!.type == ObjStorageType.aliyunOss) {
         _client = AliyunOssClient(_s3Config!);
@@ -253,6 +257,7 @@ class StorageService extends GetxService with DataSender {
 
   Future<void> stop() async {
     _client = null;
+    connRegService.removeDiscoverListener(this);
     await disconnectWs();
   }
 
@@ -514,11 +519,11 @@ class StorageService extends GetxService with DataSender {
     } else {
       id = CryptoUtil.toMD5("${_s3Config!.endPoint}${_s3Config!.bucketName}${_s3Config!.accessKey}");
     }
-    final connectKey = "$id:${_selfDevId}";
+    final connectKey = "$id:$_selfDevId";
     var serverHost = appConfig.notificationServer.trimEnd('/');
     _wsChannel = WebSocketChannel.connect(Uri.parse('$serverHost/connect/$connectKey'));
     _wsChannel!.ready
-        .then((_) {
+        .then((_) async {
           Log.info(tag, "websocket connected");
           _wsPingTimer = Timer(Constants.defaultWsPingIntervalTime.s, _sendWsPing);
           if (!_loadingMissingData) {
@@ -526,6 +531,11 @@ class StorageService extends GetxService with DataSender {
           }
           for (var listener in _forwardStatusListener) {
             listener.onForwardServerConnected();
+          }
+          final list = await _client!.list(path: devicesInfoDir);
+          final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
+          for (var devId in deviceIds) {
+            _sendOnLineMsg(devId);
           }
         })
         .catchError((err, stack) {
@@ -579,6 +589,12 @@ class StorageService extends GetxService with DataSender {
     _wsChannel?.sink.add(jsonEncode(WsMsgData(WsMsgType.ping, "", "")));
   }
 
+  Future<void> _sendOnLineMsg(String devId) async {
+    final ipList = await _getInterfaceIpList();
+    final port = appConfig.port;
+    _wsChannel?.sink.add(jsonEncode(WsMsgData(WsMsgType.online, jsonEncode({"ipList": ipList, "port": port}), devId)));
+  }
+
   Future<void> _onWsMessage(dynamic json) async {
     try {
       Log.debug(tag, "_onWsMessage $json");
@@ -607,24 +623,48 @@ class StorageService extends GetxService with DataSender {
     }
   }
 
-  Future<void> _processOnlineMsg(WsMsgData msg) async {
-    final targetDevId = msg.targetDevId;
-    if (_connectedDevIds.contains(targetDevId)) {
+  ///执行设备连接操作（SocketService设备发现时不能执行）
+  Future<bool> _connectDevices() async {
+    if (_client == null) {
+      Log.warn(tag, "storage client is null");
+      return false;
+    }
+    final sktService = Get.find<SocketService>();
+    if (sktService.discovering) {
+      //正在设备发现，不能执行
+      Log.warn(tag, "SocketService discovering");
+      return false;
+    }
+    final devController = Get.find<DeviceController>();
+    //获取已配对且离线的设备
+    var offlineAndPairedList = devController.offlineAndPairedList.map((item) => item.guid).toSet();
+    //筛选已通过存储服务连接的设备
+    var devIds = offlineAndPairedList.where((devId) => _connectedDevIds.contains(devId)).toList();
+    //执行连接操作
+    for (var devId in devIds) {
+      await _connectDevice(devId);
+    }
+    return true;
+  }
+
+  Future<void> _connectDevice(String devId) async {
+    if (_client == null) {
+      Log.warn(tag, "storage client is null");
       return;
     }
-    final device = await getDeviceInfoFromCloud(targetDevId);
-    final version = await getDeviceVersionInfoFromCloud(targetDevId);
-    final minVersion = await getDeviceMinVersionInfoFromCloud(targetDevId);
+    final device = await getDeviceInfoFromCloud(devId);
+    final version = await getDeviceVersionInfoFromCloud(devId);
+    final minVersion = await getDeviceMinVersionInfoFromCloud(devId);
     if (device == null) {
-      Log.warn(tag, "device is null, target dev id = $targetDevId");
+      Log.warn(tag, "device is null, target dev id = $devId");
       return;
     }
     if (version == null) {
-      Log.warn(tag, "version is null, target dev id = $targetDevId");
+      Log.warn(tag, "version is null, target dev id = $devId");
       return;
     }
     if (minVersion == null) {
-      Log.warn(tag, "minVersion is null, target dev id = $targetDevId");
+      Log.warn(tag, "minVersion is null, target dev id = $devId");
       return;
     }
     final result = await _addOrUpdateDevice(device);
@@ -632,10 +672,44 @@ class StorageService extends GetxService with DataSender {
     for (var listener in _devAliveListeners) {
       listener.onConnected(DevInfo.fromDevice(device), version, minVersion, isWebDav ? TransportProtocol.webdav : TransportProtocol.s3);
     }
-    _wsChannel?.sink.add(jsonEncode(WsMsgData(WsMsgType.online, "", targetDevId)));
-    _connectedDevIds.add(targetDevId);
+    await _sendOnLineMsg(devId);
     if (!result) {
       Log.warn(tag, "add or update device failed, device = $device");
+    }
+  }
+
+  // 处理设备连接信息
+  // 这里只是记录设备连接状态，按照优先级内网>外网
+  // 先等待 socketService 设备发现流程结束，再调用存储服务的设备连接
+  Future<void> _processOnlineMsg(WsMsgData msg) async {
+    _connectedDevIds.add(msg.targetDevId);
+    var diffNetwork = true;
+    if (msg.data.isNotNullAndEmpty) {
+      try {
+        final json = jsonDecode(msg.data);
+        final ipList = (json["ipList"] as List<dynamic>).cast();
+        final port = json["port"] as int;
+        for (var ip in ipList) {
+          try {
+            await Socket.connect(ip, port, timeout: 2.s);
+            diffNetwork = false;
+            //与目标设备同一网络，跳过
+            break;
+          } catch (err, stack) {
+            //ignore
+          }
+        }
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+
+    //返回值未false代表未执行连接
+    final ignored = !await _connectDevices();
+    final devController = Get.find<DeviceController>();
+    final connected = devController.onlineAndPairedList.where((item) => item.guid == msg.targetDevId).isNotEmpty;
+    if (ignored && !connected) {
+      _connectDevice(msg.targetDevId);
     }
   }
 
@@ -1020,5 +1094,22 @@ class StorageService extends GetxService with DataSender {
     return AppVersion.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
   }
 
+  @override
+  void onDiscoverFinished() {
+    _connectDevices();
+  }
+
+  @override
+  void onDiscoverStart() {
+    //ignore
+  }
+
   //endregion
+
+  ///获取所有网卡 ip
+  Future<List<String>> _getInterfaceIpList() async {
+    var interfaces = await NetworkInterface.list();
+    var expendAddress = interfaces.map((networkInterface) => networkInterface.addresses).expand((ip) => ip);
+    return expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
+  }
 }

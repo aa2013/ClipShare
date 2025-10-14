@@ -57,6 +57,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   ///获取在线且配对的设备列表
   List<Device> get onlineAndPairedList => pairedList.where((item) => item.isConnected).map((item) => item.dev!).toList(growable: false);
 
+  ///获取离线且配对的设备列表
+  List<Device> get offlineAndPairedList => pairedList.where((item) => !item.isConnected).map((item) => item.dev!).toList(growable: false);
+
   ///获取在线设备列表
   List<Device> get onlineList => [...pairedList, ...discoverList].where((item) => item.isConnected).map((item) => item.dev!).toList(growable: false);
 

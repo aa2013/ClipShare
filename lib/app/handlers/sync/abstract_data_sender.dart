@@ -78,6 +78,4 @@ abstract mixin class DataSender {
   static void removeSyncListener(Module module, SyncListener listener) {
     _syncListeners[module]?.remove(listener);
   }
-
-
 }

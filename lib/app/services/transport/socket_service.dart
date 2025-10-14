@@ -321,7 +321,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       disConnectForwardServer();
     }
     if (appConfig.forwardWay != ForwardWay.server) {
-      Log.debug(tag, "forward way is ${appConfig.forwardWay.name}");
+      Log.debug(tag, "connectForwardServer forward way is ${appConfig.forwardWay.name}");
       return;
     }
     //屏幕关闭且 设置了自动断连 且 定时器已到期 则不连接
@@ -818,7 +818,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     }
   }
 
+  //是否正在设备发现
   var _discovering = false;
+
+  bool get discovering => _discovering;
   TaskRunner? _taskRunner;
 
   ///发现设备
@@ -1006,6 +1009,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     //endregion
 
     for (var dev in devices) {
+      if (!dev.address!.contains(":")) {
+        //如果先前通过存储服务连接，会解析失败，直接跳过
+        continue;
+      }
       var [ip, port] = dev.address!.split(":");
       //检测当前网络环境，以下条件直接直接连接中转，而不是走完整设备发现流程
       //1. 不是 WiFi 且为移动设备
@@ -1026,6 +1033,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   Future<List<Future<void> Function()>> _forwardDiscovering() async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     if (_forwardClient == null) return tasks;
+    if (appConfig.forwardWay != ForwardWay.server) {
+      Log.debug(tag, "_forwardDiscovering forward way is ${appConfig.forwardWay.name}");
+      return tasks;
+    }
     var lst = await dbService.deviceDao.getAllDevices(appConfig.userId);
     var offlineList = lst.where((dev) => !_devSockets.keys.contains(dev.guid));
     for (var dev in offlineList) {
@@ -1073,6 +1084,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       return false;
     }
     Log.debug(tag, "connecting $devId");
+    if (appConfig.forwardWay != ForwardWay.server) {
+      Log.debug(tag, "manualConnectByForward forward way is ${appConfig.forwardWay.name}");
+      return false;
+    }
     return manualConnect(
       forwardServerHost!,
       port: forwardServerPort,
