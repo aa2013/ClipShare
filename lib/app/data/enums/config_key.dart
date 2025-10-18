@@ -57,4 +57,5 @@ enum ConfigKey {
   enableShowMobileNotification,
   notificationBlackWhiteList,
   notificationServer,
+  mobileDevIdGenerateWay,
 }

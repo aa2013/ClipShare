@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/devicce_id_generate_way.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
@@ -43,6 +44,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:no_screenshot/no_screenshot.dart';
@@ -527,6 +529,11 @@ class ConfigService extends GetxService {
 
   String get notificationServer => _notificationServer.value;
 
+  //移动设备id生成方式
+  final _mobileDevIdGenerateWay = Rx<DeviceIdGenerateWay>(DeviceIdGenerateWay.unknown);
+
+  DeviceIdGenerateWay get mobileDevIdGenerateWay => _mobileDevIdGenerateWay.value;
+
   //endregion
 
   //endregion
@@ -536,9 +543,9 @@ class ConfigService extends GetxService {
   //region 初始化
 
   Future<ConfigService> init() async {
+    await loadConfigs();
     await initDeviceInfo();
     snowflake = Snowflake(device.guid.hashCode);
-    await loadConfigs();
     await initPath();
     return this;
   }
@@ -547,10 +554,7 @@ class ConfigService extends GetxService {
   Future<void> loadConfigs() async {
     var cfg = dbService.configDao;
     _port = (await cfg.getConfigByKey(ConfigKey.port, Constants.port)).obs;
-    _localName = (await cfg.getConfigByKey(ConfigKey.localName, devInfo.name)).obs;
-    if (devInfo.name != _localName.value) {
-      devInfo.name = _localName.value;
-    }
+    _localName = (await cfg.getConfigByKey(ConfigKey.localName, '')).obs;
     _startMini = (await cfg.getConfigByKey(ConfigKey.startMini, false)).obs;
     _allowDiscover = (await cfg.getConfigByKey(ConfigKey.allowDiscover, true)).obs;
     _showHistoryFloat = (await cfg.getConfigByKey(ConfigKey.showHistoryFloat, false)).obs;
@@ -714,6 +718,7 @@ class ConfigService extends GetxService {
         return WebDavConfig.fromJson(json.cast());
       },
     ));
+    _mobileDevIdGenerateWay.value = await cfg.getConfigByKey(ConfigKey.mobileDevIdGenerateWay, DeviceIdGenerateWay.unknown, convert: DeviceIdGenerateWay.parse);
   }
 
   ///初始化路径信息
@@ -768,7 +773,30 @@ class ConfigService extends GetxService {
     var type = "";
     if (Platform.isAndroid) {
       var androidInfo = await deviceInfo.androidInfo;
-      guid = CryptoUtil.toMD5(androidInfo.id);
+      final useAndroidId = [DeviceIdGenerateWay.unknown, DeviceIdGenerateWay.androidId].contains(_mobileDevIdGenerateWay.value);
+      if (useAndroidId && !firstStartup) {
+        //使用 Android id
+        guid = CryptoUtil.toMD5(androidInfo.id);
+        await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+      } else {
+        try {
+          //Android id 有可能会重复，如果是首次启动，使用 PersistentDeviceId 生成 id，理论上卸载/重启后都不会变化
+          await PersistentDeviceId.getDeviceId().then((id) async {
+            if (id != null) {
+              guid = CryptoUtil.toMD5(id);
+              await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.persistentDeviceId);
+            } else {
+              //获取失败，仍然使用Android id兜底
+              guid = CryptoUtil.toMD5(androidInfo.id);
+              await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+            }
+          });
+        } catch (err, stack) {
+          guid = CryptoUtil.toMD5(androidInfo.id);
+          await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+          debugPrint("$err,$stack");
+        }
+      }
       name = androidInfo.model;
       type = "Android";
       var release = androidInfo.version.release;
@@ -787,6 +815,11 @@ class ConfigService extends GetxService {
       throw Exception("Not Support Platform");
     }
     devInfo = DevInfo(guid, name, type);
+    if (_localName.value.isNullOrEmpty) {
+      _localName.value = devInfo.name;
+    } else {
+      devInfo.name = _localName.value;
+    }
     device = Device(
       guid: guid,
       devName: name,
@@ -1177,6 +1210,12 @@ class ConfigService extends GetxService {
   Future<void> setNotificationServer(String address) async {
     await configDao.addOrUpdate(ConfigKey.notificationServer, address);
     _notificationServer.value = address;
+  }
+
+  ///设置移动端设备id生成方式
+  Future<void> setMobileDeviceIdGenerateWay(DeviceIdGenerateWay way) async {
+    await configDao.addOrUpdate(ConfigKey.mobileDevIdGenerateWay, way.name);
+    _mobileDevIdGenerateWay.value = way;
   }
 
   //endregion

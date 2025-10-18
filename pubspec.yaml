@@ -176,6 +176,8 @@ dependencies:
       url: https://github.com/aa2013/ali_yun_oss
       ref: main
   minio: ^3.5.8
+  # Android/IOS deviceId generator
+  persistent_device_id: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

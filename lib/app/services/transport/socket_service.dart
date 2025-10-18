@@ -1369,7 +1369,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   ///设备配对成功
   void onDevForget(DevInfo dev, int uid) {
-    Log.debug(tag, "${dev.name} paired");
+    Log.debug(tag, "${dev.name} forget");
     _devSockets[dev.guid]?.isPaired = false;
     for (var listener in _devAliveListeners) {
       try {

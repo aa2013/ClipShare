@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "persistent_device_id",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/persistent_device_id",
+    },
+    {
       "name": "minio",
       "license": "MIT",
       "url": "https://pub.dev/packages/minio",
