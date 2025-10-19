@@ -1296,6 +1296,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return '创建失败';
       case TranslationKey.notAllowRootPath:
         return '不可使用根路径';
+      case TranslationKey.s3TypeTips:
+        return "标准S3协议的对象存储产品均可直接填写配置使用\n\n已测试腾讯云、七牛云均正常\n\n阿里云OSS需要单独填写";
+      case TranslationKey.forwardWay:
+        return "中转方式";
+      case TranslationKey.storageService:
+        return "存储服务";
+      case TranslationKey.forwardHost:
+        return "中转服务器";
     }
   }
 }

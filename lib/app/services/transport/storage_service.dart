@@ -12,6 +12,7 @@ import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/data/models/missing_data_sync_progress.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
 import 'package:clipshare/app/data/models/version.dart';
@@ -100,6 +101,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   final _cache = <dynamic>{};
   var _loadingMissingData = false;
   var _uploadingSyncFailedData = false;
+
+  bool get running => _client != null;
 
   //websocket heartbeat
   Timer? _wsPingTimer;
@@ -341,7 +344,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       }
     }
     //endregion
-
+    var syncProgress = MissingDataSyncProgress(1, totalSyncCnt);
     final List<FutureFunction> tasks = [];
     //region load missing data file
     for (var devId in syncMap.keys) {
@@ -870,6 +873,18 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         Future.delayed(10.s, () => _cache.remove(data));
       }
       await _sendHistory(id, dev, key, today, data, hasData);
+    }
+  }
+
+  ///从存储服务删除记录
+  Future<void> deleteOpRecords(List<OperationRecord> records) async {
+    if (_client == null) {
+      Log.warn(tag, "storage client is null");
+      return;
+    }
+    for (var record in records) {
+      final dir = getHistoryDatePath(_selfDevId, DateTime.parse(record.time).format("yyyy-MM-dd"));
+      _client!.deleteFile("$dir/${record.id}");
     }
   }
 

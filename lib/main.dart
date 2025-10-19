@@ -15,6 +15,7 @@ import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
@@ -27,6 +28,7 @@ import 'package:clipshare/app/translations/app_translations.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/windows_injector.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
@@ -46,6 +48,9 @@ Future<void> main(List<String> args) async {
     if (PlatformExt.isDesktop) {
       // Must add this line.
       await windowManager.ensureInitialized();
+      if (Platform.isWindows) {
+        WindowsInjector.instance.injectKeyData();
+      }
     }
     await Get.putAsync(() => WindowControlService().initWindows());
     Widget home = SplashPage();
@@ -168,6 +173,7 @@ Future<void> initMainServices() async {
   if (Platform.isAndroid) {
     Get.put(AndroidNotificationListenerService(), permanent: true);
   }
+  Get.put(HistorySyncProgressService(), permanent: true);
 }
 
 Future<void> initMultiWindowServices() async {

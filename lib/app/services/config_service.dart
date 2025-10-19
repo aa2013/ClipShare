@@ -130,8 +130,6 @@ class ConfigService extends GetxService {
 
   bool get isSmallScreen => Get.width <= Constants.smallScreenWidth;
 
-  final isHistorySyncing = false.obs;
-
   final _innerCopy = false.obs;
 
   bool get innerCopy => _innerCopy.value;
@@ -396,7 +394,7 @@ class ConfigService extends GetxService {
 
   bool get enableSmsSync => _enableSmsSync.value;
 
-  //是否启用短信同步
+  //是否启用中转服务
   late final RxBool _enableForward;
 
   bool get enableForward => _enableForward.value;

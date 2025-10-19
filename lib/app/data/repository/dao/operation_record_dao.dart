@@ -3,6 +3,8 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
+import 'package:clipshare/app/services/transport/storage_service.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:floor/floor.dart';
 import 'package:get/get.dart';
 
@@ -11,6 +13,7 @@ import '../entity/tables/operation_record.dart';
 @dao
 abstract class OperationRecordDao {
   final dbService = Get.find<DbService>();
+  static const tag = "OperationRecordDao";
 
   ///添加操作记录
   @Insert(onConflict: OnConflictStrategy.ignore)
@@ -35,11 +38,7 @@ abstract class OperationRecordDao {
   ) and devId = :fromDevId
   order by id desc
   """)
-  Future<List<OperationRecord>> getSyncRecord(
-    int uid,
-    String toDevId,
-    String fromDevId,
-  );
+  Future<List<OperationRecord>> getSyncRecord(int uid, String toDevId, String fromDevId);
 
   ///删除当前用户的所有操作记录
   @Query("delete from OperationRecord where uid = :uid")
@@ -54,14 +53,9 @@ abstract class OperationRecordDao {
   Future<int?> deleteByDataIds(List<String> ids);
 
   @Query(
-    "select * from OperationRecord where uid = :uid and module = :module and method = :opMethod and data = :id",
+    "select * from OperationRecord where uid = :uid and module = :module and method = :opMethod and data = :id order by id desc limit 1",
   )
-  Future<OperationRecord?> getByDataId(
-    int id,
-    String module,
-    String opMethod,
-    int uid,
-  );
+  Future<OperationRecord?> getByDataId(int id, String module, String opMethod, int uid);
 
   @Query("select * from OperationRecord where devId = :devId and storageSync = 1 order by id desc limit 1")
   Future<OperationRecord?> getLatestStorageSyncSuccessByDevId(String devId);
@@ -79,28 +73,37 @@ abstract class OperationRecordDao {
   Future<int?> removeRuleRecord(String rule, int uid);
 
   /// 删除指定设备的操作记录
-  @Query(
-    "delete from OperationRecord where uid = :uid and devId in (:devIds)",
-  )
+  @Query("delete from OperationRecord where uid = :uid and devId in (:devIds)")
   Future<int?> removeByDevIds(int uid, List<String> devIds);
 
   /// 根据 data（主键）删除同步记录
-  @Query(
-    r"delete from OperationRecord where data = :data",
-  )
+  @Query(r"delete from OperationRecord where data = :data")
   Future<int?> deleteByData(String data);
+
+  /// 根据 data（主键）获取操作记录
+  @Query(r"select * from OperationRecord where data = :data")
+  Future<List<OperationRecord>> getByData(String data);
 
   ///级联删除操作记录
   Future<void> deleteByDataWithCascade(String data) async {
-    //先删除同步记录
+    final storageService = Get.find<StorageService>();
+    if (storageService.running) {
+      try {
+        //获取需要删除的操作记录
+        final list = await getByData(data);
+        //删除云端的
+        storageService.deleteOpRecords(list);
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+    //删除同步记录
     await dbService.opSyncDao.deleteByOpRecordData(data);
     //再删除操作记录
     await deleteByData(data);
   }
 
-  @Query(
-    r"delete from OperationRecord where data = :historyId and module = :moduleName",
-  )
+  @Query(r"delete from OperationRecord where data = :historyId and module = :moduleName")
   Future<void> deleteHistorySourceRecords(int historyId, String moduleName);
 
   @Query("select * from OperationRecord where id > :fromId order by id limit 1000 ")

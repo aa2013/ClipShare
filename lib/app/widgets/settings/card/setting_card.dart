@@ -12,6 +12,7 @@ class SettingCard<T> extends StatefulWidget {
   late BorderRadius borderRadius;
   final bool Function(T)? show;
   void Function()? onTap;
+  void Function(TapDownDetails details)? onTapDown;
   void Function()? onDoubleTap;
   late final EdgeInsetsGeometry padding;
 
@@ -24,6 +25,7 @@ class SettingCard<T> extends StatefulWidget {
     this.separate = false,
     this.showValueInSub = false,
     this.onTap,
+    this.onTapDown,
     this.onDoubleTap,
     this.borderRadius = BorderRadius.zero,
     this.show,
@@ -38,6 +40,7 @@ class SettingCard<T> extends StatefulWidget {
 
 class _SettingCardState<T> extends State<SettingCard<T>> {
   bool _readyDoubleClick = false;
+  bool _doubleClickWait = false;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +70,7 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                 _readyDoubleClick = false;
               } else {
                 _readyDoubleClick = true;
+                _doubleClickWait = true;
                 //设置了双击，但仅点击了一次，延迟一段时间
                 Future.delayed(300.ms, () {
                   if (_readyDoubleClick) {
@@ -75,8 +79,24 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                   }
                   //指定时间后无论是否双击，恢复状态
                   _readyDoubleClick = false;
+                  _doubleClickWait = false;
                 });
               }
+            }
+          },
+          onTapDown: (details) {
+            if (_doubleClickWait) {
+              return;
+            }
+            if (widget.onDoubleTap == null) {
+              //未设置双击，直接执行
+              widget.onTapDown?.call(details);
+            } else {
+              Future.delayed(305.ms, () {
+                if (_doubleClickWait || _readyDoubleClick) return;
+                //指定时间后仍然没有进行第二次点击，进行单击逻辑
+                widget.onTapDown?.call(details);
+              });
             }
           },
           mouseCursor: SystemMouseCursors.basic,

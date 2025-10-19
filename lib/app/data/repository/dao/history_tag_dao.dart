@@ -42,6 +42,10 @@ abstract class HistoryTagDao {
   @Query("delete from HistoryTag where hisId = :hId")
   Future<int?> removeAllByHisId(int hId);
 
+  ///获取指定历史的所有标签
+  @Query("select * from HistoryTag where hisId = :hId")
+  Future<List<HistoryTag>> getAllByHisId(int hId);
+
   ///删除指定历史的所有标签
   @Query("delete from HistoryTag where hisId in (:hIds)")
   Future<int?> deleteByHisIds(List<int> hIds);

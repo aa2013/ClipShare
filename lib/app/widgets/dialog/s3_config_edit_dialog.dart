@@ -326,7 +326,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                     IconButton(
                       icon: const Icon(Icons.info_outline, color: Colors.blueGrey),
                       onPressed: () {
-                        Global.showTipsDialog(context: context, text: "标准S3协议的对象存储产品均可直接填写配置使用\n\n已测试腾讯云、七牛云均正常\n\n阿里云OSS需要单独填写");
+                        Global.showTipsDialog(context: context, text: TranslationKey.s3TypeTips.tr);
                       },
                     ),
                   ],

@@ -8,13 +8,11 @@ import 'package:clipshare/app/data/enums/connection_mode.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
-import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/dev_socket.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
-import 'package:clipshare/app/data/models/missing_data_sync_progress.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/handlers/dev_pairing_handler.dart';
@@ -24,12 +22,12 @@ import 'package:clipshare/app/handlers/socket/secure_socket_server.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/utils/task_runner.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
-import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -58,7 +56,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   Timer? _heartbeatTimer;
   Timer? _forwardClientHeartbeatTimer;
   DateTime? _lastForwardServerPingTime;
-  final missingDataSyncProgress = <String, MissingDataSyncProgress>{}.obs;
 
   // devId => DevSocket
   final Map<String, DevSocket> _devSockets = {};
@@ -531,7 +528,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         if (_devSockets.containsKey(dev.guid)) {
           skt!.updatePingTime();
           if (msg.data.containsKey("result")) {
-            dev.sendData(MsgType.pingResult, {});
+            dev.sendData(MsgType.pingResult, {}, false);
           }
         }
         break;
@@ -613,49 +610,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         var copyMsg = MessageData.fromJson(msg.toJson());
         var data = msg.data["data"] as Map<dynamic, dynamic>;
         copyMsg.data = data.cast<String, dynamic>();
-        final devId = dev.guid;
         final total = msg.data["total"];
         int seq = msg.data["seq"];
-        Module module = Module.getValue(copyMsg.data["module"]);
-        final opMethod = OpMethod.getValue(copyMsg.data["method"]);
-        MissingDataSyncProgress? newProgress;
-        //如果已经存在同步记录则更新或者移除
-        if (missingDataSyncProgress.containsKey(devId)) {
-          var progress = missingDataSyncProgress[devId]!;
-          progress.seq = seq;
-          progress.total = total;
-          progress.syncedCount++;
-          if (progress.firstHistory == true) {
-            progress.firstHistory = false;
-          } else if (module == Module.history && opMethod == OpMethod.add) {
-            if (progress.firstHistory == null) {
-              progress.firstHistory = true;
-            } else {
-              progress.firstHistory = false;
-            }
-          }
-          newProgress = progress.copy();
-          missingDataSyncProgress[devId] = newProgress;
-          if (newProgress.hasCompleted) {
-            //同步完成，移除
-            missingDataSyncProgress.remove(devId);
-            if (missingDataSyncProgress.keys.isEmpty) {
-              appConfig.isHistorySyncing.value = false;
-            }
-          }
-        } else if (total != 1) {
-          newProgress = MissingDataSyncProgress(
-            1,
-            total,
-            module == Module.history ? true : null,
-          );
-          //否则新增
-          missingDataSyncProgress[devId] = newProgress;
-          if (!appConfig.isHistorySyncing.value) {
-            appConfig.isHistorySyncing.value = true;
-          }
-        }
-        _onSyncMsg(copyMsg, newProgress);
+        final syncProgressService = Get.find<HistorySyncProgressService>();
+        syncProgressService.addProgress(copyMsg.send.guid, copyMsg.data, seq, total);
+        _onSyncMsg(copyMsg);
         break;
 
       ///请求批量同步
@@ -729,7 +688,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         var verify = DevPairingHandler.verify(dev.guid, code);
         _onDevPaired(dev, msg.userId, verify, address);
         //返回配对结果
-        dev.sendData(MsgType.paired, {"result": verify});
+        dev.sendData(MsgType.paired, {"result": verify}, false);
         ipSetTemp.removeWhere((v) {
           return v == address;
         });
@@ -790,17 +749,13 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     DevPairingHandler.removeCode(dev.guid);
     pairing = true;
     Get.back();
-    dev.sendData(MsgType.cancelPairing, {});
+    dev.sendData(MsgType.cancelPairing, {}, false);
   }
 
   ///数据同步处理
-  void _onSyncMsg(MessageData msg, [MissingDataSyncProgress? progress]) {
+  void _onSyncMsg(MessageData msg) {
     Module module = Module.getValue(msg.data["module"]);
     Log.debug(tag, "module ${module.moduleName}");
-    if (progress?.firstHistory ?? false) {
-      final historyController = Get.find<HistoryController>();
-      historyController.setMissingDataCopyMsg(MessageData.fromJson(msg.toJson()));
-    }
     //筛选某个模块的同步处理器
     var lst = getListeners(module);
     for (var listener in lst) {
@@ -1053,7 +1008,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     //发送一个ping事件，但是要求对方给回复
     await skt.dev.sendData(MsgType.ping, {
       "result": null,
-    });
+    }, false);
     Log.debug(tag, "testIsOnline: send ping result");
     //等待2000ms
     final waitTime = 2000.ms;
@@ -1244,7 +1199,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       );
       _devSockets[dev.guid] = ds;
     }
-    _onDevConnected(dev, client, minVersion, version);
+    await _onDevConnected(dev, client, minVersion, version);
     if (paired) {
       //已配对，请求所有缺失数据
       reqMissingData();
@@ -1269,22 +1224,23 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       await devSkt.dev.sendData(MsgType.reqMissingData, {
         "appIds": ownedAppIds,
       });
-    }
-    if (!appConfig.autoSyncMissingData) {
-      return;
-    }
-    final devs = _devSockets.values.where((dev) => dev.isPaired).map(((item) => item.dev)).toList();
-    final allAppInfos = sourceService.appInfos;
-    for (var dev in devs) {
-      final ownedAppIds = allAppInfos.where((item) => item.devId == dev.guid).map((item) => item.appId).toList();
-      await dev.sendData(MsgType.reqMissingData, {
-        "appIds": ownedAppIds,
-      });
+    } else {
+      if (!appConfig.autoSyncMissingData) {
+        return;
+      }
+      final devs = _devSockets.values.where((dev) => dev.isPaired).map(((item) => item.dev)).toList();
+      final allAppInfos = sourceService.appInfos;
+      for (var dev in devs) {
+        final ownedAppIds = allAppInfos.where((item) => item.devId == dev.guid).map((item) => item.appId).toList();
+        await dev.sendData(MsgType.reqMissingData, {
+          "appIds": ownedAppIds,
+        });
+      }
     }
   }
 
   ///设备连接成功
-  void _onDevConnected(
+  Future<void> _onDevConnected(
     DevInfo dev,
     SecureSocketClient client,
     AppVersion minVersion,
@@ -1303,7 +1259,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     broadcastProcessChain.remove(dev.guid);
     for (var listener in _devAliveListeners) {
       try {
-        listener.onConnected(
+        await listener.onConnected(
           dev,
           minVersion,
           version,
@@ -1513,10 +1469,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       final port = appConfig.forwardServer!.port;
       final address = "$host:$port:$devId";
       _connectingAddress.remove(address);
-    }
-    missingDataSyncProgress.remove(devId);
-    if (missingDataSyncProgress.keys.isEmpty) {
-      appConfig.isHistorySyncing.value = false;
     }
     for (var listener in _devAliveListeners) {
       try {

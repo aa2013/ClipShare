@@ -1013,146 +1013,144 @@ class SettingsPage extends GetView<SettingsController> {
                     icon: const Icon(Icons.cloud_sync_outlined),
                     cardList: [
                       SettingCard<ForwardWay>(
-                        title: Text('中转方式'),
+                        title: Text(TranslationKey.forwardWay.tr),
                         value: appConfig.forwardWay,
                         action: (v) {
                           late String text;
                           if (ForwardWay.storageWays.contains(v)) {
-                            text = "存储服务";
+                            text = TranslationKey.storageService.tr;
                           } else if (v == ForwardWay.server) {
-                            text = "中转服务器";
+                            text = TranslationKey.forwardHost.tr;
                           } else {
-                            text = "无";
+                            text = TranslationKey.none.tr;
                           }
                           return Tooltip(
                             message: TranslationKey.modify.tr,
-                            child: GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: Text(
-                                  text,
-                                  style: const TextStyle(color: Colors.blueGrey),
-                                ),
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.click,
+                              child: Text(
+                                text,
+                                style: const TextStyle(color: Colors.blueGrey),
                               ),
-                              onTapDown: (details) async {
-                                final menu = ContextMenu(
-                                  entries: [
-                                    MenuItem(
-                                      label: TranslationKey.forwardServer.tr,
-                                      icon: Icons.computer,
-                                      enabled: v != ForwardWay.server,
-                                      onSelected: () async {
-                                        void setup() async {
-                                          await appConfig.setForwardWay(ForwardWay.server);
-                                          await storageService.stop();
-                                          if (!appConfig.enableForward) {
-                                            return;
-                                          }
-                                          sktService.connectForwardServer(true);
-                                        }
-
-                                        if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
-                                          setup();
-                                          return;
-                                        }
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.changeForwardWayConfirm.tr,
-                                          showCancel: true,
-                                          onOk: setup,
-                                        );
-                                      },
-                                    ),
-                                    MenuItem(
-                                      label: 'WebDav',
-                                      icon: Icons.storage,
-                                      enabled: v != ForwardWay.webdav,
-                                      onSelected: () {
-                                        void setup() async {
-                                          await appConfig.setForwardWay(ForwardWay.webdav);
-                                          await sktService.disConnectForwardServer();
-                                          if (!appConfig.enableForward || appConfig.webDavConfig == null) {
-                                            //若无配置，关闭中转
-                                            await appConfig.setEnableForward(false);
-                                            return;
-                                          }
-                                          storageService.restart();
-                                        }
-
-                                        if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
-                                          setup();
-                                          return;
-                                        }
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.changeForwardWayConfirm.tr,
-                                          showCancel: true,
-                                          onOk: setup,
-                                        );
-                                      },
-                                    ),
-                                    MenuItem(
-                                      label: TranslationKey.s3.tr,
-                                      icon: Icons.storage,
-                                      enabled: v != ForwardWay.s3,
-                                      onSelected: () async {
-                                        void setup() async {
-                                          await appConfig.setForwardWay(ForwardWay.s3);
-                                          await sktService.disConnectForwardServer();
-                                          if (!appConfig.enableForward || appConfig.s3Config == null || !appConfig.enableForward) {
-                                            //若无配置，关闭中转
-                                            await appConfig.setEnableForward(false);
-                                            return;
-                                          }
-                                          storageService.restart();
-                                        }
-
-                                        if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
-                                          setup();
-                                          return;
-                                        }
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.changeForwardWayConfirm.tr,
-                                          showCancel: true,
-                                          onOk: setup,
-                                        );
-                                      },
-                                    ),
-                                    MenuItem(
-                                      label: TranslationKey.none.tr,
-                                      icon: Icons.cloud_off,
-                                      enabled: v != ForwardWay.none,
-                                      onSelected: () async {
-                                        Future<void> setup() async {
-                                          await appConfig.setEnableForward(false);
-                                          await appConfig.setForwardWay(ForwardWay.none);
-                                          await sktService.disConnectForwardServer();
-                                          await storageService.stop();
-                                        }
-
-                                        if (!appConfig.enableForward) {
-                                          setup();
-                                          return;
-                                        }
-                                        Global.showTipsDialog(
-                                          context: context,
-                                          text: TranslationKey.changeForwardWayConfirm.tr,
-                                          showCancel: true,
-                                          onOk: () async {},
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                  position: details.globalPosition - const Offset(0, 50),
-                                  padding: 8.insetAll,
-                                  borderRadius: BorderRadius.circular(8),
-                                );
-                                menu.show(context);
-                              },
                             ),
                           );
+                        },
+                        onTapDown: (details) {
+                          final v = appConfig.forwardWay;
+                          final menu = ContextMenu(
+                            entries: [
+                              MenuItem(
+                                label: TranslationKey.forwardServer.tr,
+                                icon: Icons.computer,
+                                enabled: v != ForwardWay.server,
+                                onSelected: () async {
+                                  void setup() async {
+                                    await appConfig.setForwardWay(ForwardWay.server);
+                                    await storageService.stop();
+                                    if (!appConfig.enableForward) {
+                                      return;
+                                    }
+                                    sktService.connectForwardServer(true);
+                                  }
+
+                                  if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                    setup();
+                                    return;
+                                  }
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    showCancel: true,
+                                    onOk: setup,
+                                  );
+                                },
+                              ),
+                              MenuItem(
+                                label: 'WebDav',
+                                icon: Icons.storage,
+                                enabled: v != ForwardWay.webdav,
+                                onSelected: () {
+                                  void setup() async {
+                                    await appConfig.setForwardWay(ForwardWay.webdav);
+                                    await sktService.disConnectForwardServer();
+                                    if (!appConfig.enableForward || appConfig.webDavConfig == null) {
+                                      //若无配置，关闭中转
+                                      await appConfig.setEnableForward(false);
+                                      return;
+                                    }
+                                    storageService.restart();
+                                  }
+
+                                  if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                    setup();
+                                    return;
+                                  }
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    showCancel: true,
+                                    onOk: setup,
+                                  );
+                                },
+                              ),
+                              MenuItem(
+                                label: TranslationKey.s3.tr,
+                                icon: Icons.storage,
+                                enabled: v != ForwardWay.s3,
+                                onSelected: () async {
+                                  void setup() async {
+                                    await appConfig.setForwardWay(ForwardWay.s3);
+                                    await sktService.disConnectForwardServer();
+                                    if (!appConfig.enableForward || appConfig.s3Config == null || !appConfig.enableForward) {
+                                      //若无配置，关闭中转
+                                      await appConfig.setEnableForward(false);
+                                      return;
+                                    }
+                                    storageService.restart();
+                                  }
+
+                                  if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                    setup();
+                                    return;
+                                  }
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    showCancel: true,
+                                    onOk: setup,
+                                  );
+                                },
+                              ),
+                              MenuItem(
+                                label: TranslationKey.none.tr,
+                                icon: Icons.cloud_off,
+                                enabled: v != ForwardWay.none,
+                                onSelected: () async {
+                                  Future<void> setup() async {
+                                    await appConfig.setEnableForward(false);
+                                    await appConfig.setForwardWay(ForwardWay.none);
+                                    await sktService.disConnectForwardServer();
+                                    await storageService.stop();
+                                  }
+
+                                  if (!appConfig.enableForward) {
+                                    setup();
+                                    return;
+                                  }
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    showCancel: true,
+                                    onOk: () async {},
+                                  );
+                                },
+                              ),
+                            ],
+                            position: Offset(Get.size.width, details.globalPosition.dy - 50),
+                            padding: 8.insetAll,
+                            borderRadius: BorderRadius.circular(8),
+                          );
+                          menu.show(context);
                         },
                       ),
                       //服务状态/通知服务配置
@@ -1386,6 +1384,9 @@ class SettingsPage extends GetView<SettingsController> {
                                         initValue: v,
                                         onOk: (config) {
                                           appConfig.setWebDavConfig(config);
+                                          if (appConfig.enableForward) {
+                                            storageService.restart();
+                                          }
                                         },
                                       ),
                                     );
@@ -1432,6 +1433,9 @@ class SettingsPage extends GetView<SettingsController> {
                                         initValue: v,
                                         onOk: (config) {
                                           appConfig.setS3Config(config);
+                                          if (appConfig.enableForward) {
+                                            storageService.restart();
+                                          }
                                         },
                                       ),
                                     );

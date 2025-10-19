@@ -71,7 +71,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   ///onChange事件锁
   final _onChangeLock = Lock();
 
-  ///获取最新的一条数据，如果 tmpList和 list都有数据就判断时间，否则返回不为空的
+  ///获取最新的一条数据，如果 tmpList 和 list 都有数据就判断时间，否则返回不为空的
   History? get last {
     var tmpSortedList = [..._tempList];
     tmpSortedList.sort((a, b) => b.data.id.compareTo(a.data.id));
@@ -210,16 +210,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   ///更新并复制最新的数据
   ///场景：同步缺失数据时，如果同步到最新（比当前本地的）的数据就自动复制
-  void setMissingDataCopyMsg(MessageData msg) {
-    final syncData = msg.data["data"];
+  void setMissingDataCopyMsg(Map<String, dynamic> opRecord) {
+    final syncData = opRecord["data"];
     Map<dynamic, dynamic> data = {};
     if (syncData is String) {
       data = jsonDecode(syncData);
     } else {
       data = syncData;
     }
-    final historyMap = data.cast<String, dynamic>();
-    final history = History.fromJson(historyMap);
+    final history = History.fromJson(data.cast<String, dynamic>());
+    //比本地的记录旧，跳过
+    if (last != null && last!.id < history.id) {
+      return;
+    }
     _missingDataCopyMsg = history.id;
   }
 
@@ -528,7 +531,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
 
     await _processData(history, historyContent, opRecord.method, msg.send);
-    final cnt = await _process2Db(history, opRecord.method, msg.key != MsgType.missingData, true);
+    final cnt = await _process2Db(history, opRecord.method, msg.key == MsgType.missingData, true);
     if (cnt <= 0) return;
     notifyHistoryWindow();
     //将同步过来的数据添加到本地操作记录
@@ -561,7 +564,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
 
     await _processData(history, historyContent, opRecord.method, DevInfo.fromDevice(sender));
-    final cnt = await _process2Db(history, opRecord.method, !loadingMissingData, false);
+    final cnt = await _process2Db(history, opRecord.method, loadingMissingData, false);
     if (cnt <= 0) return;
     notifyHistoryWindow();
     //将同步过来的数据添加到本地操作记录

@@ -1057,6 +1057,14 @@ class _$HistoryTagDao extends HistoryTagDao {
   }
 
   @override
+  Future<List<HistoryTag>> getAllByHisId(int hId) async {
+    return _queryAdapter.queryList('select * from HistoryTag where hisId = ?1',
+        mapper: (Map<String, Object?> row) => HistoryTag(
+            row['tagName'] as String, row['hisId'] as int, row['id'] as int?),
+        arguments: [hId]);
+  }
+
+  @override
   Future<int?> deleteByHisIds(List<int> hIds) async {
     const offset = 1;
     final _sqliteVariablesForHIds =
@@ -1193,7 +1201,7 @@ class _$OperationRecordDao extends OperationRecordDao {
     int uid,
   ) async {
     return _queryAdapter.query(
-        'select * from OperationRecord where uid = ?4 and module = ?2 and method = ?3 and data = ?1',
+        'select * from OperationRecord where uid = ?4 and module = ?2 and method = ?3 and data = ?1 order by id desc limit 1',
         mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [id, module, opMethod, uid]);
   }
@@ -1250,6 +1258,23 @@ class _$OperationRecordDao extends OperationRecordDao {
   Future<int?> deleteByData(String data) async {
     return _queryAdapter.query('delete from OperationRecord where data = ?1',
         mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [data]);
+  }
+
+  @override
+  Future<List<OperationRecord>> getByData(String data) async {
+    return _queryAdapter.queryList(
+        'select * from OperationRecord where data = ?1',
+        mapper: (Map<String, Object?> row) => OperationRecord(
+            id: row['id'] as int,
+            uid: row['uid'] as int,
+            devId: row['devId'] as String,
+            module: _moduleTypeConverter.decode(row['module'] as String),
+            method: _opMethodTypeConverter.decode(row['method'] as String),
+            data: row['data'] as String,
+            storageSync: row['storageSync'] == null
+                ? null
+                : (row['storageSync'] as int) != 0),
         arguments: [data]);
   }
 

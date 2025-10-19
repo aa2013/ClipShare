@@ -639,7 +639,8 @@ enum TranslationKey {
   createFolder,
   invalidFolderName,
   createFailed,
-  notAllowRootPath;
+  notAllowRootPath,
+  s3TypeTips, forwardWay, storageService, forwardHost;
 
   String get tr => name.tr;
 

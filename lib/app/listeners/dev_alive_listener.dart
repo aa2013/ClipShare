@@ -1,10 +1,12 @@
+import 'dart:async';
+
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/version.dart';
 
 abstract mixin class DevAliveListener {
   //连接成功
-  void onConnected(
+  FutureOr<void> onConnected(
     DevInfo info,
     AppVersion minVersion,
     AppVersion version,

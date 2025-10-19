@@ -509,51 +509,52 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Global.showTipsDialog(
-                            context: context,
-                            text: TranslationKey.devicePageUnpairedDialogAck.tr,
-                            onOk: () {
-                              if (isConnected) {
-                                var devInfo = DevInfo.fromDevice(device);
-                                sktService.onDevForget(
-                                  devInfo,
-                                  appConfig.userId,
-                                );
-                                devInfo.sendData(
-                                  MsgType.forgetDev,
-                                  {},
-                                );
-                              }
-                              //更新配对状态为未配对
-                              device.isPaired = false;
-                              dbService.deviceDao.updateDevice(device).then((cnt) {
-                                if (cnt <= 0) return;
-                                onForget(
-                                  DevInfo.fromDevice(device),
-                                  appConfig.userId,
-                                );
-                              });
-                              Navigator.pop(context);
-                            },
-                            showCancel: true,
-                          );
-                        },
-                        splashColor: Colors.black12,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 5, bottom: 5),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.block_flipped),
-                              Text(TranslationKey.devicePageUnpairedButtonText.tr),
-                            ],
+                    if (!device.isUseStorage)
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey.devicePageUnpairedDialogAck.tr,
+                              onOk: () {
+                                if (isConnected) {
+                                  var devInfo = DevInfo.fromDevice(device);
+                                  sktService.onDevForget(
+                                    devInfo,
+                                    appConfig.userId,
+                                  );
+                                  devInfo.sendData(
+                                    MsgType.forgetDev,
+                                    {},
+                                  );
+                                }
+                                //更新配对状态为未配对
+                                device.isPaired = false;
+                                dbService.deviceDao.updateDevice(device).then((cnt) {
+                                  if (cnt <= 0) return;
+                                  onForget(
+                                    DevInfo.fromDevice(device),
+                                    appConfig.userId,
+                                  );
+                                });
+                                Navigator.pop(context);
+                              },
+                              showCancel: true,
+                            );
+                          },
+                          splashColor: Colors.black12,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 5, bottom: 5),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.block_flipped),
+                                Text(TranslationKey.devicePageUnpairedButtonText.tr),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     Obx(
                       () => Visibility(
                         visible: appConfig.autoSyncMissingData && isConnected,
