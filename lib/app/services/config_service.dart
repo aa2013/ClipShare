@@ -102,8 +102,12 @@ class ConfigService extends GetxService {
       }
     }
     var dir = Directory(path);
-    if (!dir.existsSync()) {
-      dir.createSync();
+    try {
+      if (!dir.existsSync()) {
+        dir.createSync();
+      }
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
     }
     return Directory(path).normalizePath;
   }
