@@ -146,18 +146,18 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
     return isValid;
   }
 
-  bool validateFields() {
+  bool validateFields([bool verifyBaseDir = true]) {
     final isNameValid = validateNameEditor();
     final isServerValid = validateServerEditor();
     final isUsernameValid = validateUsernameEditor();
     final isPasswordValid = validatePasswordEditor();
-    final isBaseDirValid = validateBaseDirEditor();
+    final isBaseDirValid = !verifyBaseDir || validateBaseDirEditor();
 
     return isNameValid && isServerValid && isUsernameValid && isPasswordValid && isBaseDirValid;
   }
 
   Future<void> _testConnection() async {
-    if (validateFields()) {
+    if (validateFields(false)) {
       setState(() {
         testingConnection = true;
       });

@@ -188,20 +188,20 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     return isValid;
   }
 
-  bool validateFields() {
+  bool validateFields([bool verifyBaseDir = true]) {
     final isNameValid = validateNameEditor();
     final isEndPointValid = validateEndPointEditor();
     final isAccessKeyValid = validateAccessKeyEditor();
     final isSecretKeyValid = validateSecretKeyEditor();
     final isBucketNameValid = validateBucketNameEditor();
-    final isBaseDirValid = validateBaseDirEditor();
+    final isBaseDirValid = !verifyBaseDir || validateBaseDirEditor();
     final isRegionValid = validateRegionEditor();
 
     return isRegionValid && isNameValid && isEndPointValid && isAccessKeyValid && isSecretKeyValid && isBucketNameValid && isBaseDirValid;
   }
 
   Future<void> _testConnection() async {
-    if (validateFields()) {
+    if (validateFields(false)) {
       setState(() {
         testingConnection = true;
       });

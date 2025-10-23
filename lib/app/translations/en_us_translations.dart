@@ -829,7 +829,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.pleaseInputAccessKey:
         return "Please Enter Access Key";
       case TranslationKey.checkConnection:
-        return "Connection Check";
+        return "Check";
       case TranslationKey.pleaseInputValidPort:
         return 'Please Enter a Valid Port';
       case TranslationKey.pleaseInputValidDomainOrIpv4:

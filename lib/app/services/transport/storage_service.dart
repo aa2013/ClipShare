@@ -528,7 +528,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     _wsChannel!.ready
         .then((_) async {
           Log.info(tag, "websocket connected");
-          _wsPingTimer = Timer(Constants.defaultWsPingIntervalTime.s, _sendWsPing);
+          _wsPingTimer = Timer.periodic(Constants.defaultWsPingIntervalTime.s, (_) => _sendWsPing());
           if (!_loadingMissingData) {
             _loadMissingData();
           }
