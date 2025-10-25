@@ -437,11 +437,20 @@ class DialogController {
         Log.debug(tag, "dialog($id) currentContext = null, wait 100ms");
         await Future.delayed(100.ms);
       }
-      final routeDialog = ModalRoute.of(dialog.key.currentContext!);
-      if (routeDialog != null) {
+      if (dialog.key.currentContext == null) {
+        Log.debug(tag, "dialog.key.currentContext is null");
         _dialogKeyMap.remove(id);
-        Navigator.removeRoute(dialog.context, routeDialog);
+        return false;
       }
+      final routeDialog = ModalRoute.of(dialog.key.currentContext!);
+      if (routeDialog?.isCurrent ?? false) {
+        _dialogKeyMap.remove(id);
+        // Navigator.removeRoute(dialog.key.currentContext!, routeDialog);
+        if (Navigator.canPop(dialog.key.currentContext!)) {
+          Navigator.of(dialog.key.currentContext!, rootNavigator: true).pop(value);
+        }
+      }
+      _dialogKeyMap.remove(id);
       return true;
     } catch (err, stack) {
       Log.error(tag, "$err,$stack");
