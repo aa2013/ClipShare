@@ -203,12 +203,18 @@ class FileSyncHandler {
     client
         .addStream(stream)
         .then((value) {
+          var path = filePath;
+          try {
+            path = Uri.decodeComponent(filePath);
+          } catch (err, stack) {
+            //ignored
+          }
           var history = History(
             id: _fileId,
             uid: appConfig.userId,
             devId: appConfig.devInfo.guid,
             time: start.toString(),
-            content: Uri.decodeComponent(filePath),
+            content: path,
             type: HistoryContentType.file.value,
             size: fileSize,
             sync: true,
