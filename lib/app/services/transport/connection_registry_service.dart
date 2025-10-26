@@ -28,6 +28,14 @@ class DeviceConnectionRegistry {
     return _devices.keys.where((item) => item.guid == devId).isNotEmpty;
   }
 
+  TransportProtocol? getProtocol(String devId) {
+    var dev = _devices.keys.where((item) => item.guid == devId).firstOrNull;
+    if (dev == null) {
+      return null;
+    }
+    return _devices[dev]!;
+  }
+
   void addDevice(DevInfo devInfo, TransportProtocol protocol) {
     _devices[devInfo] = protocol;
   }
@@ -39,7 +47,7 @@ class DeviceConnectionRegistry {
 
 ///设备连接注册服务
 ///管理所有已连接设备的信息（包括协议类型）
-class ConnectionRegistryService extends GetxService{
+class ConnectionRegistryService extends GetxService {
   final _devices = <DevInfo, TransportProtocol>{};
   final List<DevAliveListener> _devAliveListeners = List.empty(growable: true);
   final List<DiscoverListener> _discoverListeners = List.empty(growable: true);

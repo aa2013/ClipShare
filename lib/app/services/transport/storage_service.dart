@@ -553,6 +553,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
             listener.onDisconnected(devId);
           }
         }
+        _connectedDevIds.clear();
         //如果为null表示手动断开，不重连
         //如果无网络，不重连
         if (_wsChannel != null || appConfig.currentNetWorkType.value != ConnectivityResult.none) {
@@ -577,6 +578,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       for (var listener in _devAliveListeners) {
         for (var devId in devIds) {
           listener.onDisconnected(devId);
+          //移除已连接的设备
+          _registry.removeDevice(devId);
         }
       }
       await ws?.sink.close();
@@ -585,6 +588,17 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       _wsPingTimer = null;
     } catch (err, stack) {
       Log.error(tag, err, stack);
+    }
+  }
+
+  void connectDevice(String devId) {
+    _sendOnLineMsg(devId);
+  }
+
+  void disconnectDevice(String devId) {
+    _wsChannel?.sink.add(jsonEncode(WsMsgData(WsMsgType.offline, "", devId)));
+    for (var listener in _devAliveListeners) {
+      listener.onDisconnected(devId);
     }
   }
 
@@ -641,11 +655,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final devController = Get.find<DeviceController>();
     //获取已配对且离线的设备
     var offlineAndPairedList = devController.offlineAndPairedList.map((item) => item.guid).toSet();
-    //筛选已通过存储服务连接的设备
-    var devIds = offlineAndPairedList.where((devId) => _connectedDevIds.contains(devId)).toList();
     //执行连接操作
-    for (var devId in devIds) {
-      await _connectDevice(devId);
+    for (var devId in offlineAndPairedList) {
+      if (_connectedDevIds.contains(devId)) {
+        await _connectDevice(devId);
+      } else {
+        await _sendOnLineMsg(devId);
+      }
     }
     return true;
   }
@@ -670,11 +686,18 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       Log.warn(tag, "minVersion is null, target dev id = $devId");
       return;
     }
+    final isSocket = _registry.getProtocol(device.guid)?.isSocket ?? false;
+    if (isSocket) {
+      Log.warn(tag, "已通过Socket协议连接: ${device.guid}");
+      return;
+    }
     final result = await _addOrUpdateDevice(device);
     final isWebDav = _client is WebDavClient;
+    final protocol = isWebDav ? TransportProtocol.webdav : TransportProtocol.s3;
     for (var listener in _devAliveListeners) {
-      listener.onConnected(DevInfo.fromDevice(device), version, minVersion, isWebDav ? TransportProtocol.webdav : TransportProtocol.s3);
+      listener.onConnected(DevInfo.fromDevice(device), version, minVersion, protocol);
     }
+    _registry.addDevice(DevInfo.fromDevice(device), protocol);
     await _sendOnLineMsg(devId);
     if (!result) {
       Log.warn(tag, "add or update device failed, device = $device");
@@ -685,6 +708,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   // 这里只是记录设备连接状态，按照优先级内网>外网
   // 先等待 socketService 设备发现流程结束，再调用存储服务的设备连接
   Future<void> _processOnlineMsg(WsMsgData msg) async {
+    if (msg.targetDevId == _selfDevId) {
+      return;
+    }
     _connectedDevIds.add(msg.targetDevId);
     var diffNetwork = true;
     if (msg.data.isNotNullAndEmpty) {
@@ -694,7 +720,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         final port = json["port"] as int;
         for (var ip in ipList) {
           try {
-            await Socket.connect(ip, port, timeout: 2.s);
+            await Socket.connect(ip, port, timeout: 500.ms);
             diffNetwork = false;
             //与目标设备同一网络，跳过
             break;

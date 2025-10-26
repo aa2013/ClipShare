@@ -542,6 +542,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
       ///客户端连接
       case MsgType.connect:
+        final isSocket = _registry.getProtocol(dev.guid)?.isSocket ?? true;
+        if (!isSocket) {
+          Log.warn(tag, "已通过其他协议连接: ${dev.guid}");
+          return;
+        }
         assert(() {
           ///忽略指定设备的连接
           if (dev.guid == "1f480ae18e8f79af8c78b304c1c9be3d") {
