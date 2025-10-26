@@ -70,7 +70,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
   void initState() {
     super.initState();
     if (widget.initValue != null) {
-      reset(config);
+      reset(widget.initValue!);
     }
   }
 

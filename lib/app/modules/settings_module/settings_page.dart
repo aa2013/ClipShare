@@ -1047,7 +1047,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.server);
                                     await storageService.stop();
-                                    if (!appConfig.enableForward) {
+                                    if (!appConfig.enableForward || appConfig.forwardServer == null) {
+                                      //若无配置，关闭中转
+                                      await appConfig.setEnableForward(false);
                                       return;
                                     }
                                     sktService.connectForwardServer(true);
@@ -1101,7 +1103,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.s3);
                                     await sktService.disConnectForwardServer();
-                                    if (!appConfig.enableForward || appConfig.s3Config == null || !appConfig.enableForward) {
+                                    if (!appConfig.enableForward || appConfig.s3Config == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
                                       return;
