@@ -1143,7 +1143,9 @@ class SettingsPage extends GetView<SettingsController> {
                                     context: context,
                                     text: TranslationKey.changeForwardWayConfirm.tr,
                                     showCancel: true,
-                                    onOk: () async {},
+                                    onOk: () async {
+                                      setup();
+                                    },
                                   );
                                 },
                               ),
