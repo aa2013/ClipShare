@@ -8,6 +8,7 @@ display_name: ClipShare
 create_desktop_icon: true
 install_dir_name: "{userappdata}\\ClipShare"
 launch_at_startup: false
+script_template: inno_setup.iss
 locales:
   - en
   - zh
