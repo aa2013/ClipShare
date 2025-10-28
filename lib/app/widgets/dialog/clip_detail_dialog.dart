@@ -162,22 +162,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                           color: Colors.blueGrey,
                         ),
                         onPressed: () {
-                          dbService.opRecordDao
-                              .getByDataId(
-                                widget.clip.data.id,
-                                Module.history.moduleName,
-                                OpMethod.add.name,
-                                appConfig.userId,
-                              )
-                              .then((op) async {
-                                if (op == null) return;
-                                final result = await MissingDataSyncHandler.process(op);
-                                op.data = widget.clip.data.toString();
-                                DataSender.sendData2All(
-                                  MsgType.sync,
-                                  result.result,
-                                );
-                              });
+                          dbService.opRecordDao.resyncData(widget.clip.data.id);
                         },
                         tooltip: widget.clip.data.top ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
                       ),

@@ -1,6 +1,9 @@
+import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
@@ -117,4 +120,50 @@ abstract class OperationRecordDao {
 
   @Query("select * from OperationRecord where id = :id")
   Future<OperationRecord?> getById(int id);
+
+  ///重新同步数据
+  ///内容/标签/来源信息
+  Future<void> resyncData(int historyId) async {
+    final history = await dbService.historyDao.getById(historyId);
+    if (history == null) {
+      Log.warn(tag, "History is null: $historyId");
+      return;
+    }
+    //历史记录
+    var opRecord = OperationRecord.fromSimple(
+      Module.history,
+      OpMethod.add,
+      historyId.toString(),
+    );
+    final result = await MissingDataSyncHandler.process(opRecord);
+    await DataSender.sendData2All(MsgType.sync, result.result);
+    //标签
+    final tags = await dbService.historyTagDao.getAllByHisId(historyId);
+    for (var tag in tags) {
+      opRecord = OperationRecord.fromSimple(
+        Module.tag,
+        OpMethod.add,
+        tag.id.toString(),
+      );
+      final result = await MissingDataSyncHandler.process(opRecord);
+      await DataSender.sendData2All(MsgType.sync, result.result);
+    }
+    //来源信息
+    if (history.source != null) {
+      final devId = history.devId;
+      final sourceService = Get.find<ClipboardSourceService>();
+      final appInfo = sourceService.appInfos.where((item) => item.devId == devId && history.source == item.appId).firstOrNull;
+      if (appInfo == null) {
+        Log.warn(tag, "AppInfo is null source = ${history.source}");
+        return;
+      }
+      opRecord = OperationRecord.fromSimple(
+        Module.appInfo,
+        OpMethod.add,
+        appInfo.id,
+      );
+      final result = await MissingDataSyncHandler.process(opRecord);
+      await DataSender.sendData2All(MsgType.sync, result.result);
+    }
+  }
 }
