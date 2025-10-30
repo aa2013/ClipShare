@@ -518,7 +518,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     connectWs();
   }
 
-  void connectWs() {
+  void connectWs([bool reconnect = false]) {
     if (!appConfig.enableStorageSync) {
       return;
     }
@@ -529,6 +529,15 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       Log.warn(tag, "ws already connected");
       return;
     }
+    if (reconnect) {
+      //如果为null表示手动断开，不重连
+      //如果无网络，不重连
+      if (_wsChannel != null || appConfig.currentNetWorkType.value != ConnectivityResult.none) {
+        Log.info(tag, "无网络或连接中，取消重连");
+        Future.delayed(5.s, () => connectWs(true));
+        return;
+      }
+    }
     late final String id;
     if (appConfig.enableWebdav) {
       id = CryptoUtil.toMD5("${_webDavConfig!.server}${_webDavConfig!.username}");
@@ -537,6 +546,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
     final connectKey = "$id:$_selfDevId";
     var serverHost = appConfig.notificationServer.trimEnd('/');
+    Log.info(tag, "开始连接ws");
     _wsChannel = WebSocketChannel.connect(Uri.parse('$serverHost/connect/$connectKey'));
     _wsChannel!.ready
         .then((_) async {
@@ -555,7 +565,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           }
         })
         .catchError((err, stack) {
+          final ws = _wsChannel;
+          _wsChannel = null;
           Log.error(tag, err, stack);
+          ws?.sink.close();
         });
     _wsChannel!.stream.listen(
       _onWsMessage,
@@ -567,11 +580,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           }
         }
         _connectedDevIds.clear();
-        //如果为null表示手动断开，不重连
-        //如果无网络，不重连
-        if (_wsChannel != null || appConfig.currentNetWorkType.value != ConnectivityResult.none) {
-          Future.delayed(1.s, connectWs);
-        }
+        Future.delayed(5.s, () => connectWs(true));
         for (var listener in _forwardStatusListener) {
           listener.onForwardServerDisconnected();
         }
