@@ -860,11 +860,38 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
     final devService = Get.find<DeviceService>();
     final isWebDav = _client is WebDavClient;
-    final address = (isWebDav ? TransportProtocol.webdav : TransportProtocol.s3).name;
+    final protocol = isWebDav ? TransportProtocol.webdav : TransportProtocol.s3;
+    final address = protocol.name;
     final result = dbDev ?? dev;
     result.isPaired = true;
     result.address = address;
-    return devService.addOrUpdate(result);
+    final success = await devService.addOrUpdate(result);
+    if (!success) return false;
+    try {
+      final devId = result.guid;
+      final device = await getDeviceInfoFromCloud(devId);
+      final version = await getDeviceVersionInfoFromCloud(devId);
+      final minVersion = await getDeviceMinVersionInfoFromCloud(devId);
+      if (device == null) {
+        Log.warn(tag, "device is null, target dev id = $devId");
+        return success;
+      }
+      if (version == null) {
+        Log.warn(tag, "version is null, target dev id = $devId");
+        return success;
+      }
+      if (minVersion == null) {
+        Log.warn(tag, "minVersion is null, target dev id = $devId");
+        return success;
+      }
+      for (var listener in _devAliveListeners) {
+        listener.onConnected(DevInfo.fromDevice(device), version, minVersion, protocol);
+      }
+      _registry.addDevice(DevInfo.fromDevice(device), protocol);
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+    }
+    return true;
   }
 
   //endregion

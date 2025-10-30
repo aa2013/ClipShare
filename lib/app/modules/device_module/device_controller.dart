@@ -240,6 +240,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           protocol: protocol,
         ),
       );
+      return;
     }
     var hasSame =
         discoverList.firstWhereOrNull(
