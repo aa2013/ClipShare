@@ -40,6 +40,7 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
@@ -89,6 +90,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final connRegService = Get.find<ConnectionRegistryService>();
+  final historySyncProgressService = Get.find<HistorySyncProgressService>();
   final _connectedDevIds = <String>{};
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
@@ -280,16 +282,20 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       Log.warn(tag, "autoSyncMissingData is false");
       return;
     }
+    if (_loadingMissingData) {
+      return;
+    }
+    _loadingMissingData = true;
     final clientType = _client.runtimeType;
 
     ///检查客户端类型是否和初始的相同，如果不同则表示用户切换了中转类型，需要终止该方法
     void checkClientRuntimeType() {
       if (clientType != _client.runtimeType) {
+        _loadingMissingData = false;
         throw DifferentStorageClientTypeException('current storage client(${_client.runtimeType}) is not a $clientType');
       }
     }
 
-    _loadingMissingData = true;
     final devices = await _loadDeviceInfosFromStorage();
     if (devices.isEmpty) {
       Log.warn(tag, "storage devices is empty");
@@ -324,7 +330,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       var historyDates = devHistoryDirMap[devId]!;
       for (var date in historyDates) {
         // filter date
-        if (DateTime.parse(date).isBefore(latestDate)) {
+        if (DateTime.parse(date).isBefore(latestDate.date)) {
           continue;
         }
         syncMap[devId]![date] = [];
@@ -332,7 +338,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           final path = getHistoryDatePath(devId, date);
           final items = await _client!.list(path: path);
           //filter id
-          final ids = items.where((item) => !item.isDir).map((item) => item.name).where((id) => int.parse(id) > latestId);
+          final ids = items.where((item) => !item.isDir).map((item) => item.name).where((id) => int.parse(id) > latestId).toList()..sort((a, b) => int.parse(b) - int.parse(a));
           totalSyncCnt += ids.length;
           for (var id in ids) {
             checkClientRuntimeType();
@@ -344,24 +350,24 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       }
     }
     //endregion
-    var syncProgress = MissingDataSyncProgress(1, totalSyncCnt);
+
     final List<FutureFunction> tasks = [];
     //region load missing data file
     for (var devId in syncMap.keys) {
       for (var date in syncMap[devId]!.keys) {
         for (var id in syncMap[devId]![date]!) {
           tasks.add(() async {
+            Map<String, dynamic>? syncData;
             try {
               checkClientRuntimeType();
-              await _readSyncData(devId, date, id, true);
+              syncData = await _readSyncData(devId, date, id, true);
             } catch (err, stack) {
               if (err is DifferentStorageClientTypeException) {
-                //todo clean sync progress
                 return;
               }
               Log.error(tag, "load missing data file from storage failed! devId = $devId, date = $date, id = $id", stack);
             } finally {
-              syncedCnt++;
+              historySyncProgressService.addProgress(devId, syncData, ++syncedCnt, totalSyncCnt);
             }
           });
         }
@@ -398,49 +404,56 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   Future<List<Device>> _loadDeviceInfosFromStorage() async {
     final result = List<Device>.empty(growable: true);
-    if (_client == null) {
-      Log.warn(tag, "storage client is null");
-      return result;
-    }
-    final list = await _client!.list(path: devicesInfoDir);
-    final deviceIds = list.where((item) => item.isDir).map((item) => item.name).toList();
-    for (var devId in deviceIds) {
-      final dev = await getDeviceInfoFromCloud(devId);
-      if (dev == null) {
-        Log.warn(tag, "loadDeviceInfo failed, devId = $devId");
-        continue;
+    try {
+      if (_client == null) {
+        Log.warn(tag, "storage client is null");
+        return result;
       }
-      result.add(dev);
+      final list = await _client!.list(path: devicesInfoDir);
+      final deviceIds = list.where((item) => item.isDir).map((item) => item.name).toList();
+      for (var devId in deviceIds) {
+        final dev = await getDeviceInfoFromCloud(devId);
+        if (dev == null) {
+          Log.warn(tag, "loadDeviceInfo failed, devId = $devId");
+          continue;
+        }
+        result.add(dev);
+      }
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
     }
     return result;
   }
 
-  Future<void> _readSyncData(String devId, String date, String id, bool loadingMissingData) async {
+  Future<Map<String, dynamic>?> _readSyncData(String devId, String date, String id, bool loadingMissingData) async {
     final dirPath = getHistoryDatePath(devId, date);
     final path = "$dirPath/$id";
     final bytes = await _client!.readFileBytes(path);
     if (bytes == null) {
       Log.warn(tag, "read file failed, path = $path");
-      return;
+      return null;
     }
-    await _syncData(devId, bytes, loadingMissingData);
+    return await _syncData(devId, bytes, loadingMissingData);
   }
 
-  Future<void> _syncData(String devId, List<int> bytes, bool loadingMissingData) async {
+  Future<Map<String, dynamic>?> _syncData(String devId, List<int> bytes, bool loadingMissingData) async {
     final deviceService = Get.find<DeviceService>();
     final device = deviceService.getById(devId);
+    Map<String, dynamic>? result;
     //on sync
     try {
       final data = m2.deserialize(Uint8List.fromList(bytes)) as Map<dynamic, dynamic>;
       final module = Module.getValue((data["module"]));
       final listeners = getListeners(module);
       final map = data.cast<String, dynamic>();
+      result = jsonDecode(jsonEncode(map));
       for (var listener in listeners) {
         listener.onStorageSync(map, device, loadingMissingData);
       }
     } catch (err, stack) {
       Log.error(tag, err, stack);
     }
+    return result;
   }
 
   //endregion

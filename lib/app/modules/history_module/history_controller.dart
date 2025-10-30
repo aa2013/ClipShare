@@ -210,7 +210,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   ///更新并复制最新的数据
   ///场景：同步缺失数据时，如果同步到最新（比当前本地的）的数据就自动复制
-  void setMissingDataCopyMsg(Map<String, dynamic> opRecord) {
+  void setMissingDataCopyMsg(Map<String, dynamic> opRecord, [bool fromStorage = false]) {
     final syncData = opRecord["data"];
     Map<dynamic, dynamic> data = {};
     if (syncData is String) {
@@ -220,10 +220,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     final history = History.fromJson(data.cast<String, dynamic>());
     //比本地的记录旧，跳过
-    if (last != null && last!.id < history.id) {
+    if (last != null && history.id < last!.id) {
       return;
     }
-    _missingDataCopyMsg = history.id;
+    if (fromStorage) {
+      var type = ClipboardContentType.parse(history.type);
+      if (type != ClipboardContentType.image) {
+        clipboardManager.copy(type, history.content);
+      } else if (appConfig.autoCopyImageAfterSync) {
+        clipboardManager.copy(type, history.content);
+      }
+    } else {
+      _missingDataCopyMsg = history.id;
+    }
   }
 
   //endregion

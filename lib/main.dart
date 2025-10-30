@@ -157,6 +157,7 @@ Future<void> initMainServices() async {
   final connRegistryService = ConnectionRegistryService();
   final registry = connRegistryService.registry;
   Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);
+  Get.put(HistorySyncProgressService(), permanent: true);
   Get.put<SocketService>(SocketService(registry), permanent: true);
   Get.put<StorageService>(StorageService(registry), permanent: true);
   Get.put(AndroidChannelService().init(), permanent: true);
@@ -173,7 +174,6 @@ Future<void> initMainServices() async {
   if (Platform.isAndroid) {
     Get.put(AndroidNotificationListenerService(), permanent: true);
   }
-  Get.put(HistorySyncProgressService(), permanent: true);
 }
 
 Future<void> initMultiWindowServices() async {
