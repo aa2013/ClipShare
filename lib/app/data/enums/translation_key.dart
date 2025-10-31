@@ -640,7 +640,11 @@ enum TranslationKey {
   invalidFolderName,
   createFailed,
   notAllowRootPath,
-  s3TypeTips, forwardWay, storageService, forwardHost;
+  s3TypeTips,
+  forwardWay,
+  storageService,
+  forwardHost,
+  connecting;
 
   String get tr => name.tr;
 

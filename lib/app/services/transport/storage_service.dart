@@ -248,16 +248,23 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     } else {
       throw 'storage service config is null';
     }
+    _updateForwardConnectingStatus();
     if (!await _createBaseDirectories()) {
       Log.warn(tag, "create base directories failed!");
       _client = null;
+      _updateForwardDisConnectedStatus();
       return;
     }
-    await _updateBaseInfo();
-    await _checkAndUploadLocalAppInfo();
-    uploadSyncFailedData();
-    _loadMissingData();
-    connectWs();
+    try {
+      await _updateBaseInfo();
+      await _checkAndUploadLocalAppInfo();
+      uploadSyncFailedData();
+      _loadMissingData();
+      connectWs();
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+      _updateForwardDisConnectedStatus();
+    }
   }
 
   Future<void> stop() async {
@@ -487,12 +494,12 @@ class StorageService extends GetxService with DataSender implements DiscoverList
               final historyController = Get.find<HistoryController>();
               historyController.updateData((his) => his.id == id, (his) => his.sync = true, true);
             });
-            //notify+
+            //notify
             //拿到所有在线且配对的通过存储中转的设备
             final devController = Get.find<DeviceController>();
             final devices = devController.onlineAndPairedList.where((dev) => dev.isUseStorage);
             for (var dev in devices) {
-              _wsChannel?.sink.add(WsMsgData(WsMsgType.change, "$date:$id", dev.guid));
+              _wsChannel?.sink.add(WsMsgData(WsMsgType.change, "$date:$id", dev.guid).toString());
             }
           }
         });
@@ -555,9 +562,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           if (!_loadingMissingData) {
             _loadMissingData();
           }
-          for (var listener in _forwardStatusListener) {
-            listener.onForwardServerConnected();
-          }
+          _updateForwardConnectedStatus();
           final list = await _client!.list(path: devicesInfoDir);
           final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
           for (var devId in deviceIds) {
@@ -581,9 +586,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         }
         _connectedDevIds.clear();
         Future.delayed(5.s, () => connectWs(true));
-        for (var listener in _forwardStatusListener) {
-          listener.onForwardServerDisconnected();
-        }
+        _updateForwardDisConnectedStatus();
       },
       onError: (err) {
         Log.error(tag, "ws $err");
@@ -901,6 +904,27 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       Log.error(tag, err, stack);
     }
     return true;
+  }
+
+  //endregion
+
+  //region Update server status
+  void _updateForwardConnectingStatus() {
+    for (var listener in _forwardStatusListener) {
+      listener.onForwardServerConnecting();
+    }
+  }
+
+  void _updateForwardConnectedStatus() {
+    for (var listener in _forwardStatusListener) {
+      listener.onForwardServerConnected();
+    }
+  }
+
+  void _updateForwardDisConnectedStatus() {
+    for (var listener in _forwardStatusListener) {
+      listener.onForwardServerDisconnected();
+    }
   }
 
   //endregion

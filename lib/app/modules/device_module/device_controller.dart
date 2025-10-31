@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
@@ -70,7 +69,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   final pairing = false.obs;
   bool newPairing = false;
   final discovering = true.obs;
-  final forwardConnected = false.obs;
+  final forwardStatus = ForwardServerStatus.disconnected.obs;
   late AnimationController _rotationController;
   final rotationReverse = false.obs;
   late Rx<Animation<double>> animation;
@@ -326,12 +325,17 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   @override
   void onForwardServerConnected() {
-    forwardConnected.value = true;
+    forwardStatus.value = ForwardServerStatus.connected;
+  }
+
+  @override
+  void onForwardServerConnecting() {
+    forwardStatus.value = ForwardServerStatus.connecting;
   }
 
   @override
   void onForwardServerDisconnected() {
-    forwardConnected.value = false;
+    forwardStatus.value = ForwardServerStatus.disconnected;
   }
 
   @override

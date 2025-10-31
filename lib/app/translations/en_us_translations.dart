@@ -884,6 +884,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Connected";
       case TranslationKey.disconnected:
         return "Disconnected";
+      case TranslationKey.connecting:
+        return "Connecting";
       case TranslationKey.forwardMode:
         return "Forward Mode";
       case TranslationKey.deviceId:

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/data/enums/obj_storage_type.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
@@ -1192,10 +1193,10 @@ class SettingsPage extends GetView<SettingsController> {
                             children: [
                               Dot(
                                 radius: 6.0,
-                                color: controller.forwardServerConnected.value ? Colors.green : Colors.grey,
+                                color: controller.forwardServerStatus.value.color,
                               ),
                               const SizedBox(width: 5),
-                              Text(controller.forwardServerConnected.value ? TranslationKey.connected.tr : TranslationKey.disconnected.tr),
+                              Text(controller.forwardServerStatus.value.tr),
                             ],
                           ),
                           value: appConfig.forwardWay == ForwardWay.server,

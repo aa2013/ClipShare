@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
@@ -70,7 +71,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasSmsReadPerm = true.obs;
   final hasAccessibilityPerm = false.obs;
   final hasNotificationRecordPerm = false.obs;
-  final forwardServerConnected = false.obs;
+  final forwardServerStatus = ForwardServerStatus.disconnected.obs;
   final updater = 0.obs;
 
   //region environment status widgets
@@ -286,7 +287,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoAboutPage(){
+  void gotoAboutPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.ABOUT);
     } else {
@@ -301,7 +302,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoStatisticPage(){
+  void gotoStatisticPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.STATISTICS);
     } else {
@@ -317,7 +318,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoLogPage(){
+  void gotoLogPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.LOG);
     } else {
@@ -470,12 +471,17 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   @override
   void onForwardServerConnected() {
-    forwardServerConnected.value = true;
+    forwardServerStatus.value = ForwardServerStatus.connected;
+  }
+
+  @override
+  void onForwardServerConnecting() {
+    forwardServerStatus.value = ForwardServerStatus.connecting;
   }
 
   @override
   void onForwardServerDisconnected() {
-    forwardServerConnected.value = false;
+    forwardServerStatus.value = ForwardServerStatus.disconnected;
   }
 
   //region 备份与恢复
@@ -532,12 +538,12 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     );
     await Future.delayed(200.ms);
     try {
-      final exInfo= await backupHandler.restore(File(result.files[0].path!), loadingController);
+      final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController);
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
         } else {
-          Global.showTipsDialog(context: context, title:TranslationKey.importFailed.tr, text: "$exInfo");
+          Global.showTipsDialog(context: context, title: TranslationKey.importFailed.tr, text: "$exInfo");
         }
       } else {
         Global.showTipsDialog(context: context, title: TranslationKey.importSuccess.tr, text: TranslationKey.restoreRestartPrompt.tr);

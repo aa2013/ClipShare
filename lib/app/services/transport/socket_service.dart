@@ -335,6 +335,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (!appConfig.enableForward) return;
     if (forwardServerHost == null || forwardServerPort == null) return;
     if (_forwardClient != null) return;
+    _updateForwardConnectingStatus();
     try {
       _forwardClient = await ForwardSocketClient.connect(
         ip: forwardServerHost!,
@@ -345,9 +346,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         },
         onDone: (self) {
           _forwardClient = null;
-          for (var listener in _forwardStatusListener) {
-            listener.onForwardServerDisconnected();
-          }
+          _updateForwardDisConnectedStatus();
           _stopJudgeForwardClientAlive();
           Log.debug(tag, "forwardClient done");
           if (_autoConnForwardServer) {
@@ -364,9 +363,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         onConnected: (self) {
           _autoConnForwardServer = true;
           Log.debug(tag, "forwardClient onConnected");
-          for (var listener in _forwardStatusListener) {
-            listener.onForwardServerConnected();
-          }
+          _updateForwardConnectedStatus();
           _startJudgeForwardClientAlivePeriod();
           //中转服务器连接成功后发送本机信息
           final connData = ForwardSocketClient.baseMsg
@@ -392,6 +389,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         },
       );
     } catch (e) {
+      _updateForwardDisConnectedStatus();
       Log.debug(tag, "connect forward server failed $e");
       if (_autoConnForwardServer) {
         Log.debug(tag, "尝试重连中转");
@@ -412,11 +410,30 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     _autoConnForwardServer = false;
     await _forwardClient?.close();
     _forwardClient = null;
+    _updateForwardDisConnectedStatus();
+    _disconnectForwardSockets();
+  }
+
+  //region Update server status
+  void _updateForwardConnectingStatus() {
+    for (var listener in _forwardStatusListener) {
+      listener.onForwardServerConnecting();
+    }
+  }
+
+  void _updateForwardConnectedStatus() {
+    for (var listener in _forwardStatusListener) {
+      listener.onForwardServerConnected();
+    }
+  }
+
+  void _updateForwardDisConnectedStatus() {
     for (var listener in _forwardStatusListener) {
       listener.onForwardServerDisconnected();
     }
-    _disconnectForwardSockets();
   }
+
+  //endregion
 
   ///断开所有通过中转服务器的连接
   void _disconnectForwardSockets() {
