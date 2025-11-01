@@ -43,9 +43,6 @@ class AndroidNotificationListenerService extends GetxService {
         final pkgName = event.packageName!;
         var appInfo = _sourceService.getAppInfoByAppId(pkgName);
         final missing = appInfo == null;
-        if (appInfo == null) {
-          await _sourceService.loadInstalledApps();
-        }
         appInfo = _sourceService.getAppInfoByAppId(pkgName);
         var source = ClipboardSource(
           id: pkgName,
