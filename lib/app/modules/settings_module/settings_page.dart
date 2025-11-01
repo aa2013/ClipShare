@@ -2145,7 +2145,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   ),
                                 ),
                                 onTap: () async {
-                                  Directory(appConfig.logsDirPath).createSync();
+                                  Directory(appConfig.logsDirPath).createSync(recursive: true);
                                   try {
                                     await OpenFile.open(appConfig.logsDirPath);
                                   } catch (e) {

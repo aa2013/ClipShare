@@ -104,7 +104,7 @@ class ConfigService extends GetxService {
     var dir = Directory(path);
     try {
       if (!dir.existsSync()) {
-        dir.createSync();
+        dir.createSync(recursive: true);
       }
     } catch (err, stack) {
       Log.error(tag, err, stack);
@@ -757,7 +757,7 @@ class ConfigService extends GetxService {
     }
     var dir = Directory(path);
     if (!dir.existsSync()) {
-      dir.createSync();
+      dir.createSync(recursive: true);
     }
     path = Directory(path).normalizePath;
     logsDirPath = path;

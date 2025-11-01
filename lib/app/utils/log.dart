@@ -64,7 +64,7 @@ class Log {
     final logDirPath = appConfig.logsDirPath;
     var dateStr = DateTime.now().toString().substring(0, 10);
     var filePath = "$logDirPath/$dateStr.txt";
-    Directory(logDirPath).createSync();
+    Directory(logDirPath).createSync(recursive: true);
     var file = File(filePath);
     _writeFuture = _writeFuture.then(
       (v) => file.writeAsString("$content\n", mode: FileMode.writeOnlyAppend),
