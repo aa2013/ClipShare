@@ -36,6 +36,12 @@ class ClipboardSourceService extends GetxService {
   }
 
   Future<void> _loadAll() async {
+    await _loadClipboardSource();
+    //这里不要await，否则会占用大量时间导致应用卡第一屏
+    _loadInstalledApps();
+  }
+
+  Future<void> _loadClipboardSource() async {
     final tmpMap = <String, MyAppInfo>{};
     var appInfos = await _dbService.appInfoDao.getAllAppInfos();
     for (var item in appInfos) {
@@ -45,8 +51,6 @@ class ClipboardSourceService extends GetxService {
     _appInfos.addAll(tmpMap);
     var idSet = tmpMap.values.map((item) => item.appId).toSet();
     my_app_info.AppInfoExt.removeWhere((appId, _) => !idSet.contains(appId));
-    //这里不要await，否则会占用大量时间导致应用卡第一屏
-    _loadInstalledApps();
   }
 
   Future<void> _loadInstalledApps() async {
@@ -129,6 +133,6 @@ class ClipboardSourceService extends GetxService {
 
   Future<void> removeNotUsed() async {
     await _dbService.appInfoDao.removeNotUsed();
-    await _loadAll();
+    await _loadClipboardSource();
   }
 }
