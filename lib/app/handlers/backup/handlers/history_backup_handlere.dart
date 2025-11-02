@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
@@ -21,10 +22,8 @@ class HistoryBackupHandler with BaseBackupHandler {
   final historyDao = Get.find<DbService>().historyDao;
   final appConfig = Get.find<ConfigService>();
 
-  static const String _name = "history.bin";
-
   @override
-  String get name => _name;
+  final BackupType backupType = BackupType.history;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

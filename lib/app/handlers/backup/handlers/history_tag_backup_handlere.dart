@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
@@ -15,10 +16,8 @@ class HistoryTagBackupHandler with BaseBackupHandler {
   final historyTagDao = Get.find<DbService>().historyTagDao;
   final appConfig = Get.find<ConfigService>();
 
-  static const String _name = "historyTag.bin";
-
   @override
-  String get name => _name;
+  final BackupType backupType = BackupType.historyTag;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

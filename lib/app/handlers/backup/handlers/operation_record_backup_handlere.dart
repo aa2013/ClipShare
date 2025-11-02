@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
@@ -15,10 +16,8 @@ class OperationRecordBackupHandler with BaseBackupHandler {
   final opRecordDao = Get.find<DbService>().opRecordDao;
   final appConfig = Get.find<ConfigService>();
 
-  static const String _name = "operationRecord.bin";
-
   @override
-  String get name => _name;
+  final BackupType backupType = BackupType.operationRecord;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

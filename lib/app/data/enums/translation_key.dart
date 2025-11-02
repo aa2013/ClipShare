@@ -644,7 +644,15 @@ enum TranslationKey {
   forwardWay,
   storageService,
   forwardHost,
-  connecting;
+  connecting,
+  backupTypeConfig,
+  backupTypeAppInfo,
+  backupTypeDevice,
+  backupTypeHistory,
+  backupTypeHistoryTag,
+  backupTypeOperationRecord,
+  backupTypeOperationSync,
+  selectBackupItems;
 
   String get tr => name.tr;
 

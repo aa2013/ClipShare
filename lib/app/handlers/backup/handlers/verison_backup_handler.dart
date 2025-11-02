@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -12,10 +13,8 @@ class VersionBackupHandler with BaseBackupHandler {
   final dbService = Get.find<DbService>();
   final appConfig = Get.find<ConfigService>();
 
-  static const String _name = "version.json";
-
   @override
-  String get name => _name;
+  final BackupType backupType = BackupType.version;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

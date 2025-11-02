@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/repository/entity/tables/config.dart';
@@ -21,7 +22,7 @@ class ConfigBackupHandler with BaseBackupHandler {
   final configDao = Get.find<DbService>().configDao;
 
   @override
-  String get name => "config.bin";
+  final BackupType backupType = BackupType.config;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

@@ -1306,6 +1306,22 @@ class ZhCNTranslation extends AbstractTranslations {
         return "存储服务";
       case TranslationKey.forwardHost:
         return "中转服务器";
+      case TranslationKey.backupTypeConfig:
+        return "配置信息";
+      case TranslationKey.backupTypeAppInfo:
+        return "剪贴板来源";
+      case TranslationKey.backupTypeDevice:
+        return "已配对设备信息";
+      case TranslationKey.backupTypeHistory:
+        return "历史记录";
+      case TranslationKey.backupTypeHistoryTag:
+        return "历史记录标签";
+      case TranslationKey.backupTypeOperationRecord:
+        return "操作记录";
+      case TranslationKey.backupTypeOperationSync:
+        return "同步记录";
+      case TranslationKey.selectBackupItems:
+        return "选择备份恢复项";
     }
   }
 }

@@ -1309,6 +1309,22 @@ class EnUSTranslation extends AbstractTranslations {
         return "Storage Service";
       case TranslationKey.forwardHost:
         return "Forward Server";
+      case TranslationKey.backupTypeConfig:
+        return "Config";
+      case TranslationKey.backupTypeAppInfo:
+        return "Clipboard Source";
+      case TranslationKey.backupTypeDevice:
+        return "Devices";
+      case TranslationKey.backupTypeHistory:
+        return "History";
+      case TranslationKey.backupTypeHistoryTag:
+        return "Tag";
+      case TranslationKey.backupTypeOperationRecord:
+        return "Operation Record";
+      case TranslationKey.backupTypeOperationSync:
+        return "Sync Record";
+      case TranslationKey.selectBackupItems:
+        return "Select Items";
     }
   }
 }

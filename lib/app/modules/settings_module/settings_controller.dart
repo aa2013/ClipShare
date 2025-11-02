@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
@@ -21,6 +23,7 @@ import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -486,8 +489,35 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   //region 备份与恢复
 
+  Future<List<BackupType>> _showBackupTypesDialog(BuildContext context) {
+    Completer<List<BackupType>> completer = Completer();
+    final types = BackupType.values.where((item) => item != BackupType.version).toList();
+    late DialogController dlgController;
+    dlgController = MultiSelectDialog.show<BackupType>(
+      context: context,
+      onSelected: (list) {
+        completer.complete(list);
+      },
+      defaultValues: types,
+      selections: types.map((item) {
+        return CheckboxData(value: item, text: item.tr);
+      }).toList(),
+      title: Text(TranslationKey.selectBackupItems.tr),
+      onCancel: () {
+        completer.complete([]);
+        dlgController.close();
+      },
+    );
+    return completer.future;
+  }
+
   ///备份
   Future<void> startBackup(BuildContext context) async {
+    final backupTypes = await _showBackupTypesDialog(context);
+    if (backupTypes.isEmpty) {
+      Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
+      return;
+    }
     final path = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
     if (path == null) return;
     final dialog = Global.showLoadingDialog(
@@ -502,7 +532,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     );
     await Future.delayed(200.ms);
     try {
-      final exInfo = await backupHandler.backup(Directory(path));
+      final exInfo = await backupHandler.backup(Directory(path), backupTypes);
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
@@ -521,6 +551,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   ///恢复备份
   Future<void> restore(BuildContext context) async {
+    final backupTypes = await _showBackupTypesDialog(context);
+    if (backupTypes.isEmpty) {
+      Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
+      return;
+    }
     final result = await FilePicker.platform.pickFiles();
     if (result == null) {
       return;
@@ -538,7 +573,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     );
     await Future.delayed(200.ms);
     try {
-      final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController);
+      final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController, backupTypes);
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
