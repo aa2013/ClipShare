@@ -157,7 +157,8 @@ dependencies:
   no_screenshot: ^0.3.1
   # Android uri读取
   uri_file_reader:
-    path: ../uri_file_reader
+    git:
+      url: https://github.com/aa2013/uri_file_reader
   # 粘性折叠分组，该版本至少 SDK 3.8.0
   sliver_sticky_collapsable_panel: ^3.0.0
   # 获取已安装的app（仅 Android）
