@@ -1,4 +1,4 @@
-import 'package:clipshare/app/data/chart/pie_data_item.dart';
+import 'package:clipshare/app/data/models/chart/pie_data_item.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:graphic/graphic.dart';
 

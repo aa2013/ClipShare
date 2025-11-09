@@ -3,6 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/sync_listener.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -27,7 +32,7 @@ import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
@@ -39,7 +44,6 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:synchronized/synchronized.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
@@ -67,7 +71,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   ///onChange事件锁
   final _onChangeLock = Lock();
 
-  ///获取最新的一条数据，如果 tmpList和 list都有数据就判断时间，否则返回不为空的
+  ///获取最新的一条数据，如果 tmpList 和 list 都有数据就判断时间，否则返回不为空的
   History? get last {
     var tmpSortedList = [..._tempList];
     tmpSortedList.sort((a, b) => b.data.id.compareTo(a.data.id));
@@ -107,7 +111,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     //更新上次复制的记录
     updateLatestLocalClip().then((his) {
       //添加同步监听
-      sktService.addSyncListener(Module.history, this);
+      DataSender.addSyncListener(Module.history, this);
       //刷新列表
       refreshData();
       //剪贴板监听注册
@@ -127,7 +131,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
-    sktService.removeSyncListener(Module.history, this);
+    DataSender.removeSyncListener(Module.history, this);
     super.dispose();
   }
 
@@ -206,17 +210,29 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   ///更新并复制最新的数据
   ///场景：同步缺失数据时，如果同步到最新（比当前本地的）的数据就自动复制
-  void setMissingDataCopyMsg(MessageData msg) {
-    final syncData = msg.data["data"];
+  void setMissingDataCopyMsg(Map<String, dynamic> opRecord, [bool fromStorage = false]) {
+    final syncData = opRecord["data"];
     Map<dynamic, dynamic> data = {};
     if (syncData is String) {
       data = jsonDecode(syncData);
     } else {
       data = syncData;
     }
-    final historyMap = data.cast<String, dynamic>();
-    final history = History.fromJson(historyMap);
-    _missingDataCopyMsg = history.id;
+    final history = History.fromJson(data.cast<String, dynamic>());
+    //比本地的记录旧，跳过
+    if (last != null && history.id < last!.id) {
+      return;
+    }
+    if (fromStorage) {
+      var type = ClipboardContentType.parse(history.type);
+      if (type != ClipboardContentType.image) {
+        clipboardManager.copy(type, history.content);
+      } else if (appConfig.autoCopyImageAfterSync) {
+        clipboardManager.copy(type, history.content);
+      }
+    } else {
+      _missingDataCopyMsg = history.id;
+    }
   }
 
   //endregion
@@ -365,43 +381,39 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     await addData(history, true);
   }
 
-  @override
-  Future<void> onSync(MessageData msg) async {
-    var send = msg.send;
-    final syncData = msg.data["data"];
-    Map<dynamic, dynamic> data = {};
+  ///抽取历史数据的map，因为有可能是 map，后续需要反序列化为操作记录
+  Map<dynamic, dynamic> _extractHistoryData(dynamic data) {
+    Map<dynamic, dynamic> syncData = {};
     if (syncData is String) {
-      data = jsonDecode(msg.data["data"]);
+      syncData = jsonDecode(data);
     } else {
-      data = syncData;
+      syncData = data;
     }
-    msg.data["data"] = "";
-    var opRecord = OperationRecord.fromJson(msg.data);
-    final historyMap = data.cast<String, dynamic>();
+    return syncData;
+  }
+
+  ///抽取内容（如果是文件，内容是一个 map）
+  dynamic _extractHistoryContent(Map<String, dynamic> historyMap) {
     dynamic historyContent = historyMap["content"];
     if (historyContent is Map) {
       historyMap["content"] = "";
     }
-    History history = History.fromJson(historyMap);
-    history.sync = true;
-    if (opRecord.module == Module.historyTop) {
-      //发送同步确认
-      sktService.sendData(send, MsgType.ackSync, {
-        "id": opRecord.id,
-        "hisId": history.id,
-        "module": Module.historyTop.moduleName,
-      });
-      //更新数据库
-      return dbService.historyDao.setTop(history.id, history.top).then((v) {
-        //更新页面
-        updateData(
-          (h) => h.id == history.id,
-          (his) => his.top = history.top,
-        );
-      });
-    }
-    Future f = Future.value();
-    if ([OpMethod.add, OpMethod.update].contains(opRecord.method)) {
+    return historyContent;
+  }
+
+  ///更新置顶状态
+  Future<void> _updateHistoryTop(History history) {
+    return dbService.historyDao.setTop(history.id, history.top).then((v) {
+      //更新页面
+      updateData(
+        (h) => h.id == history.id,
+        (his) => his.top = history.top,
+      );
+    });
+  }
+
+  Future<void> _processData(History history, dynamic historyContent, OpMethod method, DevInfo sender) async {
+    if ([OpMethod.add, OpMethod.update].contains(method)) {
       switch (HistoryContentType.parse(history.type)) {
         case HistoryContentType.image:
           var fileName = historyContent["fileName"];
@@ -421,6 +433,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             await PermissionHelper.reqAndroidStoragePerm();
           }
           var file = File(path);
+          await file.parent.create(recursive: true);
           if (!file.existsSync()) {
             file.writeAsBytesSync(data);
             if (appConfig.saveToPictures) {
@@ -440,7 +453,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
                 final json = jsonDecode(history.content);
                 final notificationContent = json["content"];
                 Global.notify(
-                  title: TranslationKey.notificationFromDevice.trParams({"devName": msg.send.name}),
+                  title: TranslationKey.notificationFromDevice.trParams({"devName": sender.name}),
                   content: notificationContent,
                 );
               } catch (err, stack) {
@@ -455,11 +468,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           break;
       }
     }
-    switch (opRecord.method) {
+  }
+
+  Future<int> _process2Db(History history, OpMethod method, bool loadingMissingData, bool notify) async {
+    var cnt = 0;
+    switch (method) {
       case OpMethod.add:
-        f = addData(history, false);
+        cnt = await addData(history, false, notify);
         //不是缺失数据的同步时放入本地剪贴板，如果是缺失数据但是需要豁免的也放行
-        if (msg.key != MsgType.missingData || _missingDataCopyMsg == history.id) {
+        if (!loadingMissingData || _missingDataCopyMsg == history.id) {
           appConfig.innerCopy = true;
           var type = ClipboardContentType.parse(history.type);
           if (type != ClipboardContentType.image) {
@@ -473,7 +490,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         }
         break;
       case OpMethod.delete:
-        f = dbService.historyDao.delete(history.id).then((cnt) {
+        cnt = await dbService.historyDao.delete(history.id).then((cnt) {
           if (cnt == null || cnt == 0) return 0;
           sourceService.removeNotUsed();
           _tempList.removeWhere((element) => element.data.id == history.id);
@@ -482,7 +499,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         });
         break;
       case OpMethod.update:
-        f = dbService.historyDao.updateHistory(history).then((cnt) {
+        cnt = await dbService.historyDao.updateHistory(history).then((cnt) {
           if (cnt == 0) return 0;
           var i = _tempList.indexWhere((element) => element.data.id == history.id);
           if (i == -1) return cnt;
@@ -492,26 +509,84 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         });
         break;
       default:
-        return;
     }
-    f.then((cnt) {
-      if (cnt == null && cnt <= 0) return;
-      //将同步过来的数据添加到本地操作记录
-      dbService.opRecordDao.add(opRecord.copyWith(history.id.toString()));
-    });
-    notifyHistoryWindow();
-    return f.whenComplete(() {
+    return cnt;
+  }
+
+  @override
+  Future<void> onSync(MessageData msg) async {
+    var sender = msg.send;
+    //抽取历史记录的map内容，然后将data赋值为空（操作记录反序列化里面data是字符串）
+    final historyMap = _extractHistoryData(msg.data["data"]).cast<String, dynamic>();
+    msg.data["data"] = "";
+
+    var opRecord = OperationRecord.fromJson(msg.data);
+
+    //处理历史记录内容，如果该记录是文件，content字段里面是一个map需要做转换
+    dynamic historyContent = _extractHistoryContent(historyMap);
+
+    //反序列化为对象
+    History history = History.fromJson(historyMap);
+    history.sync = true;
+    if (opRecord.module == Module.historyTop) {
       //发送同步确认
-      sktService.sendData(send, MsgType.ackSync, {
+      sender.sendData(MsgType.ackSync, {
         "id": opRecord.id,
         "hisId": history.id,
-        "module": Module.history.moduleName,
+        "module": Module.historyTop.moduleName,
       });
+      //更新数据库
+      return _updateHistoryTop(history);
+    }
+
+    await _processData(history, historyContent, opRecord.method, msg.send);
+    final cnt = await _process2Db(history, opRecord.method, msg.key == MsgType.missingData, true);
+    if (cnt <= 0) return;
+    notifyHistoryWindow();
+    //将同步过来的数据添加到本地操作记录
+    dbService.opRecordDao.add(opRecord.copyWith(data: history.id.toString()));
+    //发送同步确认
+    await sender.sendData(MsgType.ackSync, {
+      "id": opRecord.id,
+      "hisId": history.id,
+      "module": Module.history.moduleName,
     });
   }
 
+  @override
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
+    //抽取历史记录的map内容，然后将data赋值为空（操作记录反序列化里面data是字符串）
+    final historyMap = _extractHistoryData(map["data"]).cast<String, dynamic>();
+    map["data"] = "";
+
+    var opRecord = OperationRecord.fromJson(map);
+
+    //处理历史记录内容，如果该记录是文件，content字段里面是一个map需要做转换
+    dynamic historyContent = _extractHistoryContent(historyMap);
+
+    //反序列化为对象
+    History history = History.fromJson(historyMap);
+    history.sync = true;
+    if (opRecord.module == Module.historyTop) {
+      //更新数据库
+      return _updateHistoryTop(history);
+    }
+
+    await _processData(history, historyContent, opRecord.method, DevInfo.fromDevice(sender));
+    final cnt = await _process2Db(history, opRecord.method, loadingMissingData, false);
+    if (cnt <= 0) return;
+    notifyHistoryWindow();
+    //将同步过来的数据添加到本地操作记录
+    await dbService.opRecordDao.add(
+      opRecord.copyWith(
+        data: history.id.toString(),
+        storageSync: true,
+      ),
+    );
+  }
+
   ///添加页面和数据库数据
-  Future<int> addData(History history, bool shouldSync) async {
+  Future<int> addData(History history, bool shouldSync, [bool notify = true]) async {
     var clip = ClipData(history);
     final contentType = HistoryContentType.parse(history.type);
     var cnt = await dbService.historyDao.add(clip.data);
@@ -524,7 +599,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       final appInfo = sourceService.getAppInfoByAppId(source);
       //若同步的数据有来源信息但是本地未缓存，则请求同步该来源信息
       if (source != null && appInfo == null) {
-        sktService.sendDataByDevId(
+        DataSender.sendDataByDevId(
           history.devId,
           MsgType.reqAppInfo,
           {"appId": source},
@@ -538,7 +613,26 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       OpMethod.add,
       history.id.toString(),
     );
-    dbService.opRecordDao.addAndNotify(opRecord);
+    if (notify) {
+      await dbService.opRecordDao.addAndNotify(opRecord);
+      //若启用存储同步检查是否同步成功
+      if (appConfig.enableStorageSync) {
+        final record = await dbService.opRecordDao.getById(opRecord.id);
+        if (record != null && record.storageSync == true) {
+          await dbService.historyDao.setSync(history.id, true).then((_) {
+            for (var clip in _tempList) {
+              if (clip.data.id.toString() == history.id.toString()) {
+                clip.data.sync = true;
+                debounceUpdate();
+                break;
+              }
+            }
+          });
+        }
+      }
+    } else {
+      await dbService.opRecordDao.add(opRecord);
+    }
 
     //region update source on Android
     if (Platform.isAndroid && shouldSync && appConfig.sourceRecordViaDumpsys) {

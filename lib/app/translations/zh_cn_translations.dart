@@ -286,9 +286,13 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.forwardSettingsForwardDownloadTooltip:
         return "下载中转程序";
       case TranslationKey.forwardSettingsForwardDesc:
-        return "中转服务器可在公网环境下进行数据同步";
+        return "通过中转服务可在公网环境下进行数据同步";
       case TranslationKey.forwardSettingsForwardEnableRequiredText:
         return "请先设置中转服务器地址";
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
+        return "请先配置 Webdav 服务";
+      case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
+        return "请先配置 对象存储 服务";
       case TranslationKey.forwardSettingsForwardAddressTitle:
         return "中转服务器地址";
       case TranslationKey.forwardSettingsForwardAddressDesc:
@@ -777,7 +781,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return "访问密钥";
       case TranslationKey.pleaseInputAccessKey:
         return "请输入访问密钥";
-      case TranslationKey.forwardServerConnCheck:
+      case TranslationKey.checkConnection:
         return "连接检测";
       case TranslationKey.pleaseInputValidPort:
         return '请输入合法的端口';
@@ -824,7 +828,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.qrCodeScannerPageTitle:
         return "扫描二维码连接设备";
       case TranslationKey.qrCodeScanError:
-        return "似乎不是ClipShare的连接二维码，请检查";
+        return "扫描出错，请检查";
       case TranslationKey.attemptingToConnect:
         return "尝试连接中";
       case TranslationKey.forwardServerStatus:
@@ -833,6 +837,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "已连接";
       case TranslationKey.disconnected:
         return "已断开";
+      case TranslationKey.connecting:
+        return "连接中";
       case TranslationKey.forwardMode:
         return "中转模式";
       case TranslationKey.forwardServerNotConnected:
@@ -1175,6 +1181,147 @@ class ZhCNTranslation extends AbstractTranslations {
         return "自动";
       case TranslationKey.doubleClick2OpenPath:
         return '双击打开路径';
+      case TranslationKey.editDb:
+        return '编辑数据库';
+      case TranslationKey.enterSQLHere:
+        return '在此输入SQL...';
+      case TranslationKey.optionalTables:
+        return "可选表名：";
+      case TranslationKey.execSQL:
+        return "执行SQL";
+      case TranslationKey.execSQLNoLimitTips:
+        return "似乎是select语句但是未使用limit限制，如果数据过多可能会导致卡死，是否继续？";
+      case TranslationKey.toggleSQLLimitCheck:
+        return '启用/禁用查询limit检测';
+      case TranslationKey.result:
+        return '结果';
+      case TranslationKey.execFailed:
+        return "执行失败";
+      case TranslationKey.notificationServerStatus:
+        return "通知服务状态";
+      case TranslationKey.notificationServerTips:
+        return "使用存储服务作为中转时无法自动得知需要同步数据，需要依赖通知服务进行通知。\n"
+            "可自建也可使用公共通知服务，通知内容不含任何敏感信息。";
+      case TranslationKey.forwardSettingsWebDavTitle:
+        return "WebDav配置信息";
+      case TranslationKey.forwardSettingsS3Title:
+        return "对象存储配置信息";
+      case TranslationKey.configureWebdavServer:
+        return "配置 WebDAV";
+      case TranslationKey.nameRequired:
+        return "请输入配置名称";
+      case TranslationKey.configName:
+        return "配置名称";
+      case TranslationKey.webdavServerUrlRequired:
+        return "请输入 WebDAV 服务器 URL";
+      case TranslationKey.webdavUrlMustStartWithHttp:
+        return "URL 必须以 http:// 或 https:// 开头";
+      case TranslationKey.usernameRequired:
+        return "请输入用户名";
+      case TranslationKey.passwordRequired:
+        return "请输入密码";
+      case TranslationKey.baseDirectoryRequired:
+        return "请选择存储目录";
+      case TranslationKey.baseDirectoryMustStartWithSlash:
+        return "基础目录必须以 / 开头";
+      case TranslationKey.serverUrl:
+        return "服务器 URL";
+      case TranslationKey.username:
+        return "用户名";
+      case TranslationKey.password:
+        return "密码";
+      case TranslationKey.storagePath:
+        return "存储路径";
+      case TranslationKey.storagePathHint:
+        return "选择基路径";
+      case TranslationKey.pleaseInputCorrectURL:
+        return "请输入正确的URL";
+      case TranslationKey.noConfig:
+        return "无配置";
+      case TranslationKey.s3EndpointRequired:
+        return 'S3端点地址为必填项';
+      case TranslationKey.accessKeyRequired:
+        return 'Access Key为必填项';
+      case TranslationKey.secretKeyRequired:
+        return 'Secret Key为必填项';
+      case TranslationKey.bucketNameRequired:
+        return '存储桶名称为必填项';
+      case TranslationKey.configureS3Storage:
+        return '配置S3存储';
+      case TranslationKey.endpoint:
+        return 'EndPoint';
+      case TranslationKey.s3AccessKey:
+        return 'AccessKey';
+      case TranslationKey.s3SecretKey:
+        return 'SecretKey';
+      case TranslationKey.bucketName:
+        return '存储桶名称';
+      case TranslationKey.region:
+        return '区域';
+      case TranslationKey.optional:
+        return '可选';
+      case TranslationKey.objectStorageType:
+        return '对象存储类型';
+      case TranslationKey.standardS3Protocol:
+        return "标准S3协议";
+      case TranslationKey.aliyunOss:
+        return "阿里云OSS";
+      case TranslationKey.pleaseInputCorrectDomain:
+        return "请输入正确的域名";
+      case TranslationKey.notificationServerConfigure:
+        return "通知服务配置";
+      case TranslationKey.notificationServerAddress:
+        return "通知服务地址";
+      case TranslationKey.regionRequired:
+        return "区域为必填项";
+      case TranslationKey.pleaseInputCorrectWsURL:
+        return "请输入正确的地址 (ws:// 或 wss://) ";
+      case TranslationKey.selectStoragePath:
+        return "选择存储路径";
+      case TranslationKey.readonly:
+        return "只读";
+      case TranslationKey.version:
+        return "版本";
+      case TranslationKey.changeForwardWayConfirm:
+        return '是否确认切换中转方式？将会断开当前的中转相关的连接';
+      case TranslationKey.s3:
+        return '对象存储';
+      case TranslationKey.none:
+        return '无';
+      case TranslationKey.forwardServer:
+        return '中转服务器';
+      case TranslationKey.createFolder:
+        return '新建文件夹';
+      case TranslationKey.invalidFolderName:
+        return '无效的名称，不能包含特殊字符且长度小于255';
+      case TranslationKey.createFailed:
+        return '创建失败';
+      case TranslationKey.notAllowRootPath:
+        return '不可使用根路径';
+      case TranslationKey.s3TypeTips:
+        return "标准S3协议的对象存储产品均可直接填写配置使用\n\n已测试腾讯云、七牛云均正常\n\n阿里云OSS需要单独填写";
+      case TranslationKey.forwardWay:
+        return "中转方式";
+      case TranslationKey.storageService:
+        return "存储服务";
+      case TranslationKey.forwardHost:
+        return "中转服务器";
+      case TranslationKey.backupTypeConfig:
+        return "配置信息";
+      case TranslationKey.backupTypeAppInfo:
+        return "剪贴板来源";
+      case TranslationKey.backupTypeDevice:
+        return "已配对设备信息";
+      case TranslationKey.backupTypeHistory:
+        return "历史记录";
+      case TranslationKey.backupTypeHistoryTag:
+        return "历史记录标签";
+      case TranslationKey.backupTypeOperationRecord:
+        return "操作记录";
+      case TranslationKey.backupTypeOperationSync:
+        return "同步记录";
+      case TranslationKey.selectBackupItems:
+        return "选择备份恢复项";
     }
   }
 }

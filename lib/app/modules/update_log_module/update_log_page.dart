@@ -19,7 +19,7 @@ class UpdateLogPage extends GetView<UpdateLogController> {
     final appConfig = Get.find<ConfigService>();
     final showAppBar = appConfig.isSmallScreen;
     final content = FutureBuilder(
-      future: rootBundle.loadString("assets/md/updateLogs-${Platform.operatingSystem.upperFirst()}.md"),
+      future: rootBundle.loadString("assets/md/updateLogs-${Platform.operatingSystem.upperFirst}.md"),
       builder: (context, v) {
         return Markdown(
           data: v.data ?? TranslationKey.failedToReadUpdateLog.tr,

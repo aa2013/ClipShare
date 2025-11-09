@@ -3,10 +3,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/devicce_id_generate_way.dart';
+import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/storage/s3_config.dart';
+import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
+import 'package:clipshare/app/handlers/storage/s3_client.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -14,12 +20,11 @@ import 'package:clipshare/app/data/models/clean_data_config.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/forward_server_config.dart';
 import 'package:clipshare/app/data/models/version.dart';
-import 'package:clipshare/app/data/repository/entity/tables/config.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
@@ -39,6 +44,7 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:no_screenshot/no_screenshot.dart';
@@ -96,8 +102,12 @@ class ConfigService extends GetxService {
       }
     }
     var dir = Directory(path);
-    if (!dir.existsSync()) {
-      dir.createSync();
+    try {
+      if (!dir.existsSync()) {
+        dir.createSync(recursive: true);
+      }
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
     }
     return Directory(path).normalizePath;
   }
@@ -123,8 +133,6 @@ class ConfigService extends GetxService {
   final currentNetWorkType = ConnectivityResult.none.obs;
 
   bool get isSmallScreen => Get.width <= Constants.smallScreenWidth;
-
-  final isHistorySyncing = false.obs;
 
   final _innerCopy = false.obs;
 
@@ -181,6 +189,15 @@ class ConfigService extends GetxService {
 
   int get userId => _userId.value;
   final deviceDiscoveryStatus = Rx<String?>(null);
+
+  //本机是否启用 webdav 中转
+  bool get enableWebdav => forwardWay == ForwardWay.webdav;
+
+  //本机是否启用 对象存储 中转
+  bool get enableS3 => forwardWay == ForwardWay.s3;
+
+  //本机是否启用 存储 进行中转
+  bool get enableStorageSync => enableWebdav || enableS3;
 
   //endregion
 
@@ -381,7 +398,7 @@ class ConfigService extends GetxService {
 
   bool get enableSmsSync => _enableSmsSync.value;
 
-  //是否启用短信同步
+  //是否启用中转服务
   late final RxBool _enableForward;
 
   bool get enableForward => _enableForward.value;
@@ -491,6 +508,34 @@ class ConfigService extends GetxService {
 
   bool get enableShowMobileNotification => _enableShowMobileNotification.value;
 
+  //webdav配置
+  final _webdavConfig = Rx<WebDavConfig?>(null);
+
+  //webdav配置
+  WebDavConfig? get webDavConfig => _webdavConfig.value;
+
+  //s3配置
+  final _s3Config = Rx<S3Config?>(null);
+
+  //s3配置
+  S3Config? get s3Config => _s3Config.value;
+
+  //中转方式
+  final _forwardWay = ForwardWay.webdav.obs;
+
+  //使用的中转方式
+  ForwardWay get forwardWay => _forwardWay.value;
+
+  //中转方式
+  final _notificationServer = Rx<String>(Constants.defaultNotificationServer);
+
+  String get notificationServer => _notificationServer.value;
+
+  //移动设备id生成方式
+  final _mobileDevIdGenerateWay = Rx<DeviceIdGenerateWay>(DeviceIdGenerateWay.unknown);
+
+  DeviceIdGenerateWay get mobileDevIdGenerateWay => _mobileDevIdGenerateWay.value;
+
   //endregion
 
   //endregion
@@ -500,9 +545,9 @@ class ConfigService extends GetxService {
   //region 初始化
 
   Future<ConfigService> init() async {
+    await loadConfigs();
     await initDeviceInfo();
     snowflake = Snowflake(device.guid.hashCode);
-    await loadConfigs();
     await initPath();
     return this;
   }
@@ -511,10 +556,7 @@ class ConfigService extends GetxService {
   Future<void> loadConfigs() async {
     var cfg = dbService.configDao;
     _port = (await cfg.getConfigByKey(ConfigKey.port, Constants.port)).obs;
-    _localName = (await cfg.getConfigByKey(ConfigKey.localName, devInfo.name)).obs;
-    if (devInfo.name != _localName.value) {
-      devInfo.name = _localName.value;
-    }
+    _localName = (await cfg.getConfigByKey(ConfigKey.localName, '')).obs;
     _startMini = (await cfg.getConfigByKey(ConfigKey.startMini, false)).obs;
     _allowDiscover = (await cfg.getConfigByKey(ConfigKey.allowDiscover, true)).obs;
     _showHistoryFloat = (await cfg.getConfigByKey(ConfigKey.showHistoryFloat, false)).obs;
@@ -552,18 +594,52 @@ class ConfigService extends GetxService {
     _appPassword = (await cfg.getConfigByKey<String?>(ConfigKey.appPassword, null)).obs;
     _enableSmsSync = (await cfg.getConfigByKey(ConfigKey.enableSmsSync, false)).obs;
     _enableForward = (await cfg.getConfigByKey(ConfigKey.enableForward, false)).obs;
+    _notificationServer.value = await cfg.getConfigByKey<String>(ConfigKey.notificationServer, Constants.defaultNotificationServer);
+    _forwardWay.value = await cfg.getConfigByKey<ForwardWay>(
+      ConfigKey.forwardWay,
+      ForwardWay.none,
+      convert: (s) {
+        try {
+          return ForwardWay.values.byName(s);
+        } catch (err, stack) {
+          return ForwardWay.none;
+        }
+      },
+    );
     _forwardServer.value = (await cfg.getConfigByKey<ForwardServerConfig?>(
       ConfigKey.forwardServer,
       null,
       convert: (value) {
         if (value.startsWith("{")) {
-          return ForwardServerConfig.fromJson(value);
+          return ForwardServerConfig.fromJson(jsonDecode(value));
         } else {
           final [host, port] = value.split(":");
           return ForwardServerConfig(host: host, port: port.toInt());
         }
       },
     ));
+    _webdavConfig.value = await cfg.getConfigByKey<WebDavConfig?>(
+      ConfigKey.webdavConfig,
+      null,
+      convert: (s) {
+        try {
+          return WebDavConfig.fromJson(jsonDecode(s));
+        } catch (err, stack) {
+          return null;
+        }
+      },
+    );
+    _s3Config.value = await cfg.getConfigByKey<S3Config?>(
+      ConfigKey.s3Config,
+      null,
+      convert: (s) {
+        try {
+          return S3Config.fromJson(jsonDecode(s));
+        } catch (err, stack) {
+          return null;
+        }
+      },
+    );
     _workingMode = (await cfg.getConfigByKey<EnvironmentType?>(ConfigKey.workingMode, null, convert: EnvironmentType.parse)).obs;
     _onlyForwardMode = (await cfg.getConfigByKey(ConfigKey.onlyForwardMode, false)).obs;
     _appTheme = (await cfg.getConfigByKey(ConfigKey.appTheme, ThemeMode.system.name)).obs;
@@ -597,7 +673,7 @@ class ConfigService extends GetxService {
     );
     _closeOnSameHotKey.value = (await cfg.getConfigByKey(ConfigKey.closeOnSameHotKey, false));
     _enableAutoSyncOnScreenOpened.value = (await cfg.getConfigByKey(ConfigKey.enableAutoSyncOnScreenOpened, true));
-    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, false));
+    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, Platform.isWindows));
     _sourceRecordViaDumpsys.value = (await cfg.getConfigByKey(ConfigKey.sourceRecordViaDumpsys, false));
     _notifyOnDevDisconn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevDisconn, true));
     _notifyOnDevConn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevConn, true));
@@ -636,6 +712,15 @@ class ConfigService extends GetxService {
       _notificationWhiteList.value = [];
       _notificationBlackList.value = [];
     }
+    _webdavConfig.value = (await cfg.getConfigByKey(
+      ConfigKey.webdavConfig,
+      null,
+      convert: (value) {
+        final json = jsonDecode(value) as Map<dynamic, dynamic>;
+        return WebDavConfig.fromJson(json.cast());
+      },
+    ));
+    _mobileDevIdGenerateWay.value = await cfg.getConfigByKey(ConfigKey.mobileDevIdGenerateWay, DeviceIdGenerateWay.unknown, convert: DeviceIdGenerateWay.parse);
   }
 
   ///初始化路径信息
@@ -672,7 +757,7 @@ class ConfigService extends GetxService {
     }
     var dir = Directory(path);
     if (!dir.existsSync()) {
-      dir.createSync();
+      dir.createSync(recursive: true);
     }
     path = Directory(path).normalizePath;
     logsDirPath = path;
@@ -690,7 +775,30 @@ class ConfigService extends GetxService {
     var type = "";
     if (Platform.isAndroid) {
       var androidInfo = await deviceInfo.androidInfo;
-      guid = CryptoUtil.toMD5(androidInfo.id);
+      final useAndroidId = [DeviceIdGenerateWay.unknown, DeviceIdGenerateWay.androidId].contains(_mobileDevIdGenerateWay.value);
+      if (useAndroidId && !firstStartup) {
+        //使用 Android id
+        guid = CryptoUtil.toMD5(androidInfo.id);
+        await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+      } else {
+        try {
+          //Android id 有可能会重复，如果是首次启动，使用 PersistentDeviceId 生成 id，理论上卸载/重启后都不会变化
+          await PersistentDeviceId.getDeviceId().then((id) async {
+            if (id != null) {
+              guid = CryptoUtil.toMD5(id);
+              await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.persistentDeviceId);
+            } else {
+              //获取失败，仍然使用Android id兜底
+              guid = CryptoUtil.toMD5(androidInfo.id);
+              await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+            }
+          });
+        } catch (err, stack) {
+          guid = CryptoUtil.toMD5(androidInfo.id);
+          await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+          debugPrint("$err,$stack");
+        }
+      }
       name = androidInfo.model;
       type = "Android";
       var release = androidInfo.version.release;
@@ -709,9 +817,15 @@ class ConfigService extends GetxService {
       throw Exception("Not Support Platform");
     }
     devInfo = DevInfo(guid, name, type);
+    if (_localName.value.isNullOrEmpty) {
+      _localName.value = devInfo.name;
+    } else {
+      devInfo.name = _localName.value;
+    }
     device = Device(
       guid: guid,
-      devName: "本机",
+      devName: name,
+      customName: "本机",
       uid: 0,
       type: type,
     );
@@ -1076,6 +1190,36 @@ class ConfigService extends GetxService {
     _enableShowMobileNotification.value = enabled;
   }
 
+  ///保存 webdav 配置
+  Future<void> setWebDavConfig(WebDavConfig config) async {
+    await configDao.addOrUpdate(ConfigKey.webdavConfig, jsonEncode(config));
+    _webdavConfig.value = config;
+  }
+
+  ///保存 s3 配置
+  Future<void> setS3Config(S3Config config) async {
+    await configDao.addOrUpdate(ConfigKey.s3Config, jsonEncode(config));
+    _s3Config.value = config;
+  }
+
+  ///保存 中转方式 配置
+  Future<void> setForwardWay(ForwardWay way) async {
+    await configDao.addOrUpdate(ConfigKey.forwardWay, way.name);
+    _forwardWay.value = way;
+  }
+
+  ///保存 通知服务地址 配置
+  Future<void> setNotificationServer(String address) async {
+    await configDao.addOrUpdate(ConfigKey.notificationServer, address);
+    _notificationServer.value = address;
+  }
+
+  ///设置移动端设备id生成方式
+  Future<void> setMobileDeviceIdGenerateWay(DeviceIdGenerateWay way) async {
+    await configDao.addOrUpdate(ConfigKey.mobileDevIdGenerateWay, way.name);
+    _mobileDevIdGenerateWay.value = way;
+  }
+
   //endregion
 
   //region 其他方法
@@ -1176,4 +1320,8 @@ class ConfigService extends GetxService {
   }
 
   //endregion
+}
+
+DataSender get dataSender {
+  return Get.find<SocketService>();
 }

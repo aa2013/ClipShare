@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:clipshare/app/data/models/drawer_model.dart';
+import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -27,7 +28,7 @@ import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/app_update_info_util.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -46,6 +47,7 @@ final _noScreenshot = NoScreenshot.instance;
 class HomeController extends GetxController with WidgetsBindingObserver, ScreenOpenedObserver {
   final appConfig = Get.find<ConfigService>();
   final settingsController = Get.find<SettingsController>();
+  final storageService = Get.find<StorageService>();
 
   final androidChannelService = Get.find<AndroidChannelService>();
   final Set<MultiSelectionPopScopeDisableListener> _multiSelectionPopScopeDisableListeners = {};
@@ -97,7 +99,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   DateTime? _lastNetworkChangeTime;
   DateTime? pausedTime;
   final logoImg = Image.asset(
-    'assets/images/logo/logo.png',
+    Constants.logoPngPath,
     width: 24,
     height: 24,
   );
@@ -232,26 +234,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   void _initCommon() async {
     //初始化socket
     sktService.init();
-    _networkListener = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) async {
-      _lastNetworkChangeTime = DateTime.now();
-      Log.debug(tag, "网络变化 -> ${result.name}");
-      if (appConfig.currentNetWorkType.value != ConnectivityResult.none) {
-        sktService.disConnectAllConnections();
-      }
-      appConfig.currentNetWorkType.value = result;
-      if (result != ConnectivityResult.none) {
-        var delayMs = 0;
-        if (_lastNetworkChangeTime != null) {
-          var now = DateTime.now();
-          final diffMs = (now.difference(_lastNetworkChangeTime!).inMilliseconds).abs();
-          if (diffMs < 1000) {
-            Log.debug(tag, "Delay execution due to less than 1000ms(act ${diffMs}ms) since the last network change");
-            delayMs = 1000;
-          }
-        }
-        await Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
-      }
-    });
+    storageService.restart();
+    _networkListener = Connectivity().onConnectivityChanged.listen(_onNetworkChanged);
     _tagSyncer = TagSyncHandler();
     _historyTopSyncer = HistoryTopSyncHandler();
     _historySourceSyncer = HistorySourceSyncHandler();
@@ -433,6 +417,36 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   }
 
   //endregion
+
+  Future<void> _onNetworkChanged(ConnectivityResult result) async {
+    _lastNetworkChangeTime = DateTime.now();
+    Log.debug(tag, "网络变化 -> ${result.name}");
+    final lastNetwork = appConfig.currentNetWorkType.value;
+    //网络变化前的状态，非无网络状态,断开中转服务连接
+    if (lastNetwork != ConnectivityResult.none) {
+      sktService.disConnectAllConnections();
+      storageService.disconnectWs();
+    }
+    appConfig.currentNetWorkType.value = result;
+    //网络变化后的处理，重新连接/设备发现
+    if (result != ConnectivityResult.none) {
+      var delayMs = 0;
+      if (_lastNetworkChangeTime != null) {
+        var now = DateTime.now();
+        final diffMs = (now.difference(_lastNetworkChangeTime!).inMilliseconds).abs();
+        if (diffMs < 1000) {
+          Log.debug(tag, "Delay execution due to less than 1000ms(act ${diffMs}ms) since the last network change");
+          delayMs = 1000;
+        }
+      }
+      Future.delayed(delayMs.ms, () {
+        storageService.reconnectWs();
+        storageService.uploadSyncFailedData();
+      });
+      Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
+    }
+  }
+
   bool _allowRemoveDrawer = true;
 
   ///region drawer 打开和关闭

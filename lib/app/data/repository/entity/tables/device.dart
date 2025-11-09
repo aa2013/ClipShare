@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:floor/floor.dart';
@@ -30,8 +31,9 @@ class Device {
   ///是否已配对
   bool isPaired;
 
-  String get name =>
-      customName == null || customName == "" ? devName : customName!;
+  String get name => customName == null || customName == "" ? devName : customName!;
+
+  static final unknown = Device.empty(devName: "unknown");
 
   Device({
     required this.guid,
@@ -69,13 +71,7 @@ class Device {
   });
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Device &&
-          runtimeType == other.runtimeType &&
-          guid == other.guid &&
-          uid == other.uid &&
-          type == other.type;
+  bool operator ==(Object other) => identical(this, other) || other is Device && runtimeType == other.runtimeType && guid == other.guid && uid == other.uid && type == other.type;
 
   @override
   int get hashCode => guid.hashCode ^ uid.hashCode ^ type.hashCode;
@@ -96,5 +92,25 @@ class Device {
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
     return dbService.deviceDao.getById(dev.guid, appConfig.userId);
+  }
+
+  Device copyWith({
+    String? guid,
+    String? devName,
+    int? uid,
+    String? type,
+    String? customName,
+    String? address,
+    bool? isPaired,
+  }) {
+    return Device(
+      guid: guid ?? this.guid,
+      devName: devName ?? this.devName,
+      uid: uid ?? this.uid,
+      type: type ?? this.type,
+      customName: customName ?? this.customName,
+      address: address ?? this.address,
+      isPaired: isPaired ?? this.isPaired,
+    );
   }
 }

@@ -1,23 +1,31 @@
-import 'dart:convert';
-
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
+import 'package:clipshare/app/listeners/discover_listener.dart';
+import 'package:clipshare/app/listeners/forward_status_listener.dart';
+import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
+import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -33,7 +41,9 @@ import 'package:pinput/pinput.dart';
 
 class DeviceController extends GetxController with GetSingleTickerProviderStateMixin implements DevAliveListener, DeviceRemoveListener, SyncListener, DiscoverListener, ForwardStatusListener {
   final appConfig = Get.find<ConfigService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final sktService = Get.find<SocketService>();
+  final storageService = Get.find<StorageService>();
   final dbService = Get.find<DbService>();
   final devService = Get.find<DeviceService>();
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
@@ -43,8 +53,14 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   final discoverList = List<DeviceCard>.empty(growable: true).obs;
   final pairedList = List<DeviceCard>.empty(growable: true).obs;
 
+  ///获取在线且配对的设备列表
+  List<Device> get onlineAndPairedList => pairedList.where((item) => item.isConnected).map((item) => item.dev!).toList(growable: false);
+
+  ///获取离线且配对的设备列表
+  List<Device> get offlineAndPairedList => pairedList.where((item) => !item.isConnected).map((item) => item.dev!).toList(growable: false);
+
   ///获取在线设备列表
-  List<Device> get onlineList => pairedList.where((item) => item.isConnected).map((item) => item.dev!).toList(growable: false);
+  List<Device> get onlineList => [...pairedList, ...discoverList].where((item) => item.isConnected).map((item) => item.dev!).toList(growable: false);
 
   ///获取兼容版本的在线设备列表
   List<Device> get compatibleOnlineDevices => pairedList.where((item) => item.isVersionCompatible && item.isConnected).map((item) => item.dev!).toList(growable: false);
@@ -53,7 +69,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   final pairing = false.obs;
   bool newPairing = false;
   final discovering = true.obs;
-  final forwardConnected = false.obs;
+  final forwardStatus = ForwardServerStatus.disconnected.obs;
   late AnimationController _rotationController;
   final rotationReverse = false.obs;
   late Rx<Animation<double>> animation;
@@ -64,10 +80,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   @override
   void onInit() {
     super.onInit();
-    sktService.addDevAliveListener(this);
-    sktService.addDiscoverListener(this);
-    sktService.addForwardStatusListener(this);
-    sktService.addSyncListener(Module.device, this);
+    connRegService.addDevAliveListener(this);
+    connRegService.addDiscoverListener(this);
+    connRegService.addForwardStatusListener(this);
+    DataSender.addSyncListener(Module.device, this);
     devService.addDevRemoveListener(this);
     // 旋转动画
     _rotationController = AnimationController(
@@ -92,6 +108,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                   isConnected,
                   showReNameDlg,
                   Get.context!,
+                  dev.protocol,
                 );
               }
             },
@@ -102,6 +119,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                   isConnected,
                   showReNameDlg,
                   Get.context!,
+                  device.protocol,
                 );
               }
             },
@@ -109,7 +127,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
             isSelf: false,
             minVersion: null,
             version: null,
-            isForward: false,
+            protocol: TransportProtocol.direct,
           ),
         );
       }
@@ -118,10 +136,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   @override
   void onClose() {
-    sktService.removeDevAliveListener(this);
-    sktService.removeDiscoverListener(this);
-    sktService.removeForwardStatusListener(this);
-    sktService.removeSyncListener(Module.device, this);
+    connRegService.removeDevAliveListener(this);
+    connRegService.removeDiscoverListener(this);
+    connRegService.removeForwardStatusListener(this);
+    DataSender.removeSyncListener(Module.device, this);
     devService.removeDevRemoveListener(this);
     _rotationController.dispose();
     super.onClose();
@@ -145,7 +163,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   @override
   Future onSync(MessageData msg) {
-    var send = msg.send;
+    var sender = msg.send;
     var data = <dynamic, dynamic>{};
     if (msg.data["data"] is Map) {
       data = msg.data["data"];
@@ -172,8 +190,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     }
     //发送同步确认
     return f.then(
-      (v) => sktService.sendData(
-        send,
+      (v) => sender.sendData(
         MsgType.ackSync,
         {"id": opRecord.id, "module": Module.device.moduleName},
       ),
@@ -181,11 +198,14 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   }
 
   @override
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
+
+  @override
   void onConnected(
     DevInfo info,
     AppVersion minVersion,
     AppVersion version,
-    bool isForward,
+    TransportProtocol protocol,
   ) async {
     var dev = await Device.fromDevInfo(info);
     for (var i = 0; i < pairedList.length; i++) {
@@ -198,13 +218,28 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           dev: paired.dev,
           minVersion: minVersion,
           version: version,
-          isForward: isForward,
+          protocol: protocol,
         );
         _notifyOnlineDevicesWindow();
         //是已配对的设备，请求所有缺失数据
         // sktService.sendData(null, MsgType.reqMissingData, {});
         return;
       }
+    }
+    //设备非直连
+    if (dev != null && protocol != TransportProtocol.direct) {
+      pairedList.add(
+        DeviceCard(
+          dev: dev,
+          isPaired: true,
+          isConnected: true,
+          isSelf: false,
+          minVersion: minVersion,
+          version: version,
+          protocol: protocol,
+        ),
+      );
+      return;
     }
     var hasSame =
         discoverList.firstWhereOrNull(
@@ -228,7 +263,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         isPaired: false,
         isConnected: true,
         isSelf: false,
-        isForward: isForward,
+        protocol: protocol,
       ),
     );
   }
@@ -243,7 +278,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           isConnected: false,
           minVersion: null,
           version: null,
-          isForward: false,
+          protocol: TransportProtocol.direct,
         );
       }
     }
@@ -282,7 +317,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         dev,
         forgetDev!.minVersion!,
         forgetDev.version!,
-        forgetDev.isForward,
+        forgetDev.protocol,
       );
     }
     _notifyOnlineDevicesWindow();
@@ -290,12 +325,17 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   @override
   void onForwardServerConnected() {
-    forwardConnected.value = true;
+    forwardStatus.value = ForwardServerStatus.connected;
+  }
+
+  @override
+  void onForwardServerConnecting() {
+    forwardStatus.value = ForwardServerStatus.connecting;
   }
 
   @override
   void onForwardServerDisconnected() {
-    forwardConnected.value = false;
+    forwardStatus.value = ForwardServerStatus.disconnected;
   }
 
   @override
@@ -368,9 +408,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     Device device,
     bool isConnected,
     void Function() showReNameDlg,
-    BuildContext context, [
-    bool isForward = false,
-  ]) {
+    BuildContext context,
+    TransportProtocol protocol,
+  ) {
     showModalBottomSheet(
       isScrollControlled: true,
       clipBehavior: Clip.antiAlias,
@@ -436,18 +476,23 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                         onTap: () {
                           var devInfo = DevInfo.fromDevice(device);
                           if (isConnected) {
-                            sktService.disconnectDevice(
-                              devInfo,
-                              true,
-                            );
-                          } else {
-                            var address = device.address;
-                            var [ip, port] = address!.split(":");
-                            final forwardHost = appConfig.forwardServer?.host;
-                            if (isForward || ip == forwardHost) {
-                              sktService.manualConnectByForward(device.guid);
+                            if (protocol == TransportProtocol.webdav || protocol == TransportProtocol.s3) {
+                              storageService.disconnectDevice(devInfo.guid);
                             } else {
+                              sktService.disconnectDevice(
+                                devInfo,
+                                true,
+                              );
+                            }
+                          } else {
+                            if (protocol == TransportProtocol.server) {
+                              sktService.manualConnectByForward(device.guid);
+                            } else if (protocol == TransportProtocol.direct) {
+                              var address = device.address;
+                              var [ip, port] = address!.split(":");
                               sktService.manualConnect(ip, port: port.toInt());
+                            } else {
+                              storageService.connectDevice(devInfo.guid);
                             }
                           }
                           Navigator.pop(context);
@@ -482,8 +527,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                                   devInfo,
                                   appConfig.userId,
                                 );
-                                sktService.sendData(
-                                  devInfo,
+                                devInfo.sendData(
                                   MsgType.forgetDev,
                                   {},
                                 );
@@ -554,13 +598,13 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     if (!newPairing) return;
     Get.back();
     newPairing = false;
-    sktService.sendData(dev, MsgType.cancelPairing, {});
+    dev.sendData(MsgType.cancelPairing, {}, false);
   }
 
   ///请求配对设备
   void _requestPairing(DevInfo dev, BuildContext context) {
     newPairing = true;
-    sktService.sendData(dev, MsgType.reqPairing, {});
+    dev.sendData(MsgType.reqPairing, {}, false);
     pairing.value = false;
     pairingFailed.value = false;
     var result = showDialog(
@@ -589,10 +633,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
             pairingState = state;
             onSubmitted() {
               String pin = pinCtr.text;
-              sktService.sendData(
-                dev,
+              dev.sendData(
                 MsgType.pairing,
                 {"code": CryptoUtil.toMD5(pin)},
+                false,
               );
               pairing.value = true;
               showTimeoutText = false;
@@ -731,7 +775,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
               isConnected,
               showReNameDlg,
               Get.context!,
-              discoverDev.isForward,
+              discoverDev.protocol,
             );
           }
         },
@@ -742,7 +786,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
               isConnected,
               showReNameDlg,
               Get.context!,
-              discoverDev.isForward,
+              discoverDev.protocol,
             );
           }
         },

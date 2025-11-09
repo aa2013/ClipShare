@@ -228,4 +228,16 @@ class Constants {
 
   //Windows上使用，与项目中的 windows/packaging.exe/make_config.yaml 保持一致
   static const String appGuid = "B72665DE-3DB5-B0E9-0EF9-55CCB65D3D62";
+
+  static const windowsDirSeparate = "\\";
+  static const unixDirSeparate = "/";
+
+  static const httpUrlRegex = r'^(http|https)://[^\s]+$';
+  static const wsUrlRegex = r'^(ws|wss)://[^\s]+$';
+
+  static String get dirSeparate => Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
+
+  static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
+
+  static const defaultWsPingIntervalTime = 30;
 }

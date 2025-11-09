@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
@@ -14,10 +15,8 @@ class DeviceBackupHandler with BaseBackupHandler {
   final deviceDao = Get.find<DbService>().deviceDao;
   final appConfig = Get.find<ConfigService>();
 
-  static const String _name = "device.bin";
-
   @override
-  String get name => _name;
+  final BackupType backupType = BackupType.device;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

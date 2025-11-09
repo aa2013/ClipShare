@@ -2,28 +2,30 @@ import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
 /// 标签同步处理器
 class TagSyncHandler implements SyncListener {
-  final sktService = Get.find<SocketService>();
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final tagService = Get.find<TagService>();
 
   TagSyncHandler() {
-    sktService.addSyncListener(Module.tag, this);
+    DataSender.addSyncListener(Module.tag, this);
   }
 
   void dispose() {
-    sktService.removeSyncListener(Module.tag, this);
+    DataSender.removeSyncListener(Module.tag, this);
   }
 
   @override
@@ -41,8 +43,17 @@ class TagSyncHandler implements SyncListener {
 
   @override
   Future onSync(MessageData msg) async {
-    var send = msg.send;
+    var sender = msg.send;
     final map = msg.data;
+    final opRecord = await _syncData(map);
+    //发送同步确认
+    sender.sendData(
+      MsgType.ackSync,
+      {"id": opRecord.id, "module": Module.tag.moduleName},
+    );
+  }
+
+  Future<OperationRecord> _syncData(Map<String, dynamic> map) async {
     final tagMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
     var opRecord = OperationRecord.fromJson(map);
@@ -56,10 +67,7 @@ class TagSyncHandler implements SyncListener {
       case OpMethod.delete:
         //delete后仅有id，无hisId，需要本地查一次
         final dbTag = await dbService.historyTagDao.getById(tag.id);
-        success = await dbService.historyTagDao
-                .removeById(tag.id)
-                .then((cnt) => cnt ?? 0) >
-            0;
+        success = await dbService.historyTagDao.removeById(tag.id).then((cnt) => cnt ?? 0) > 0;
         if (dbTag != null) {
           tagService.remove(dbTag, false);
         }
@@ -67,13 +75,13 @@ class TagSyncHandler implements SyncListener {
       default:
     }
     if (success) {
-      await dbService.opRecordDao.add(opRecord.copyWith(tag.id.toString()));
+      await dbService.opRecordDao.add(opRecord.copyWith(data: tag.id.toString()));
     }
-    //发送同步确认
-    sktService.sendData(
-      send,
-      MsgType.ackSync,
-      {"id": opRecord.id, "module": Module.tag.moduleName},
-    );
+    return opRecord;
+  }
+
+  @override
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
+    await _syncData(map);
   }
 }

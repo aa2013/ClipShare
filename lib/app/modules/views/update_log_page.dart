@@ -12,7 +12,7 @@ class UpdateLogPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: rootBundle.loadString("assets/md/updateLogs-${Platform.operatingSystem.upperFirst()}.md"),
+      future: rootBundle.loadString("assets/md/updateLogs-${Platform.operatingSystem.upperFirst}.md"),
       builder: (context, v) {
         return RoundedScaffold(
           title: Row(

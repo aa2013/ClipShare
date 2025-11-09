@@ -154,30 +154,32 @@ class Global {
 
   static DialogController showDialog(BuildContext context, Widget widget, {bool dismissible = true, String? barrierLabel}) {
     final dlgCtl = DialogController(context);
-    final future = showGeneralDialog(
-      barrierDismissible: dismissible,
-      barrierLabel: dismissible ? barrierLabel ?? '' : null,
-      context: context,
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 5 * anim1.value,
-              sigmaY: 5 * anim1.value,
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final future = showGeneralDialog(
+        barrierDismissible: dismissible,
+        barrierLabel: dismissible ? barrierLabel ?? '' : null,
+        context: context,
+        transitionBuilder: (context, anim1, anim2, child) {
+          return ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 5 * anim1.value,
+                sigmaY: 5 * anim1.value,
+              ),
+              child: FadeTransition(
+                opacity: anim1,
+                child: child,
+              ),
             ),
-            child: FadeTransition(
-              opacity: anim1,
-              child: child,
-            ),
-          ),
-        );
-      },
-      pageBuilder: (context, animation, secondaryAnimation) => Container(
-        key: dlgCtl.key,
-        child: widget,
-      ),
-    );
-    dlgCtl.future = future.then((value) => dlgCtl.close());
+          );
+        },
+        pageBuilder: (context, animation, secondaryAnimation) => Container(
+          key: dlgCtl.key,
+          child: widget,
+        ),
+      );
+      dlgCtl.future = future.then((value) => dlgCtl.close());
+    });
     return dlgCtl;
   }
 
@@ -208,85 +210,88 @@ class Global {
     cancelText = cancelText ?? TranslationKey.dialogCancelText.tr;
     neutralText = neutralText ?? TranslationKey.dialogNeutralText.tr;
     final dlgCtl = DialogController(context);
-    final feature = showGeneralDialog(
-      context: context,
-      barrierDismissible: autoDismiss,
-      barrierLabel: TranslationKey.tips.tr,
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 5 * anim1.value,
-              sigmaY: 5 * anim1.value,
-            ),
-            child: FadeTransition(
-              opacity: anim1,
-              child: child,
-            ),
-          ),
-        );
-      },
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return PopScope(
-          canPop: autoDismiss,
-          key: dlgCtl.key,
-          child: AlertDialog(
-            title: Text(title!),
-            content: Text(text),
-            actions: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Visibility(
-                    visible: showNeutral,
-                    child: TextButton(
-                      onPressed: () {
-                        if (autoDismiss) {
-                          dlgCtl.close();
-                        }
-                        onNeutral?.call();
-                      },
-                      child: Text(neutralText!),
-                    ),
-                  ),
-                  IntrinsicWidth(
-                    child: Row(
-                      children: [
-                        Visibility(
-                          visible: showCancel,
-                          child: TextButton(
-                            onPressed: () {
-                              if (autoDismiss) {
-                                dlgCtl.close();
-                              }
-                              onCancel?.call();
-                            },
-                            child: Text(cancelText!),
-                          ),
-                        ),
-                        Visibility(
-                          visible: showOk,
-                          child: TextButton(
-                            onPressed: () {
-                              if (autoDismiss) {
-                                dlgCtl.close();
-                              }
-                              onOk?.call();
-                            },
-                            child: Text(okText!),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final feature = showGeneralDialog(
+        context: context,
+        barrierDismissible: autoDismiss,
+        barrierLabel: TranslationKey.tips.tr,
+        transitionBuilder: (context, anim1, anim2, child) {
+          return ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 5 * anim1.value,
+                sigmaY: 5 * anim1.value,
               ),
-            ],
-          ),
-        );
-      },
-    );
-    dlgCtl.future = feature.then((value) => dlgCtl.close());
+              child: FadeTransition(
+                opacity: anim1,
+                child: child,
+              ),
+            ),
+          );
+        },
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return PopScope(
+            canPop: autoDismiss,
+            key: dlgCtl.key,
+            child: AlertDialog(
+              title: Text(title!),
+              content: SingleChildScrollView(child: Text(text)),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Visibility(
+                      visible: showNeutral,
+                      child: TextButton(
+                        onPressed: () {
+                          if (autoDismiss) {
+                            dlgCtl.close();
+                          }
+                          onNeutral?.call();
+                        },
+                        child: Text(neutralText!),
+                      ),
+                    ),
+                    IntrinsicWidth(
+                      child: Row(
+                        children: [
+                          Visibility(
+                            visible: showCancel,
+                            child: TextButton(
+                              onPressed: () {
+                                if (autoDismiss) {
+                                  dlgCtl.close();
+                                }
+                                onCancel?.call();
+                              },
+                              child: Text(cancelText!),
+                            ),
+                          ),
+                          Visibility(
+                            visible: showOk,
+                            child: TextButton(
+                              onPressed: () {
+                                if (autoDismiss) {
+                                  dlgCtl.close();
+                                }
+                                onOk?.call();
+                              },
+                              child: Text(okText!),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      );
+      dlgCtl.future = feature.then((value) => dlgCtl.close());
+    });
     return dlgCtl;
   }
 
@@ -299,69 +304,71 @@ class Global {
     LoadingProgressController? controller,
   }) {
     final dlgCtl = DialogController(context);
-    final feature = showGeneralDialog(
-      context: context,
-      barrierDismissible: dismissible,
-      barrierLabel: TranslationKey.loading.tr,
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 5 * anim1.value,
-              sigmaY: 5 * anim1.value,
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final feature = showGeneralDialog(
+        context: context,
+        barrierDismissible: dismissible,
+        barrierLabel: TranslationKey.loading.tr,
+        transitionBuilder: (context, anim1, anim2, child) {
+          return ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 5 * anim1.value,
+                sigmaY: 5 * anim1.value,
+              ),
+              child: FadeTransition(
+                opacity: anim1,
+                child: child,
+              ),
             ),
-            child: FadeTransition(
-              opacity: anim1,
-              child: child,
-            ),
-          ),
-        );
-      },
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return PopScope(
-          canPop: dismissible,
-          key: dlgCtl.key,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AlertDialog(
-                content: IntrinsicHeight(
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 80,
-                        child: Loading(
-                          width: 32,
-                          description: loadingText != null ? Text(loadingText) : null,
-                          controller: controller,
+          );
+        },
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return PopScope(
+            canPop: dismissible,
+            key: dlgCtl.key,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AlertDialog(
+                  content: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 80,
+                          child: Loading(
+                            width: 32,
+                            description: loadingText != null ? Text(loadingText) : null,
+                            controller: controller,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Visibility(
-                        visible: showCancel,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                dlgCtl.close();
-                                onCancel?.call();
-                              },
-                              child: Text(TranslationKey.dialogCancelText.tr),
-                            ),
-                          ],
+                        const SizedBox(height: 10),
+                        Visibility(
+                          visible: showCancel,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  dlgCtl.close();
+                                  onCancel?.call();
+                                },
+                                child: Text(TranslationKey.dialogCancelText.tr),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    dlgCtl.future = feature.then((value) => dlgCtl.close());
+              ],
+            ),
+          );
+        },
+      );
+      dlgCtl.future = feature.then((value) => dlgCtl.close());
+    });
     return dlgCtl;
   }
 
@@ -375,39 +382,41 @@ class Global {
     void Function()? onCancel,
   }) {
     final dlgCtl = DialogController(context);
-    final feature = showGeneralDialog(
-      context: context,
-      barrierLabel: TranslationKey.downloading.tr,
-      transitionBuilder: (context, anim1, anim2, child) {
-        return ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 5 * anim1.value,
-              sigmaY: 5 * anim1.value,
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final feature = showGeneralDialog(
+        context: context,
+        barrierLabel: TranslationKey.downloading.tr,
+        transitionBuilder: (context, anim1, anim2, child) {
+          return ClipRRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: 5 * anim1.value,
+                sigmaY: 5 * anim1.value,
+              ),
+              child: FadeTransition(
+                opacity: anim1,
+                child: child,
+              ),
             ),
-            child: FadeTransition(
-              opacity: anim1,
-              child: child,
+          );
+        },
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return PopScope(
+            canPop: false,
+            key: dlgCtl.key,
+            child: DownloadDialog(
+              url: url,
+              savePath: filePath,
+              content: content,
+              onCancel: onCancel,
+              onFinished: onFinished,
+              onError: onError,
             ),
-          ),
-        );
-      },
-      pageBuilder: (context, animation, secondaryAnimation) {
-        return PopScope(
-          canPop: false,
-          key: dlgCtl.key,
-          child: DownloadDialog(
-            url: url,
-            savePath: filePath,
-            content: content,
-            onCancel: onCancel,
-            onFinished: onFinished,
-            onError: onError,
-          ),
-        );
-      },
-    );
-    dlgCtl.future = feature.then((value) => dlgCtl.close());
+          );
+        },
+      );
+      dlgCtl.future = feature.then((value) => dlgCtl.close());
+    });
     return dlgCtl;
   }
 }
@@ -423,7 +432,7 @@ class DialogController {
   bool get closed => !_dialogKeyMap.containsKey(id);
   static final Map<int, DialogController> _dialogKeyMap = {};
 
-  DialogController(this.context) {
+  DialogController(this.context){
     _dialogKeyMap[id] = this;
   }
 
@@ -437,11 +446,20 @@ class DialogController {
         Log.debug(tag, "dialog($id) currentContext = null, wait 100ms");
         await Future.delayed(100.ms);
       }
-      final routeDialog = ModalRoute.of(dialog.key.currentContext!);
-      if (routeDialog != null) {
+      if (dialog.key.currentContext == null) {
+        Log.debug(tag, "dialog.key.currentContext is null");
         _dialogKeyMap.remove(id);
-        Navigator.removeRoute(dialog.context, routeDialog);
+        return false;
       }
+      final routeDialog = ModalRoute.of(dialog.key.currentContext!);
+      if (routeDialog?.isCurrent ?? false) {
+        _dialogKeyMap.remove(id);
+        // Navigator.removeRoute(dialog.key.currentContext!, routeDialog);
+        if (Navigator.canPop(dialog.key.currentContext!)) {
+          Navigator.of(dialog.key.currentContext!, rootNavigator: true).pop(value);
+        }
+      }
+      _dialogKeyMap.remove(id);
       return true;
     } catch (err, stack) {
       Log.error(tag, "$err,$stack");

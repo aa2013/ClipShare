@@ -30,4 +30,8 @@ extension DateTimeExt on DateTime {
     var micros = other.difference(this).inMicroseconds;
     return micros.abs() < duration.inMicroseconds;
   }
+
+  DateTime get date {
+    return DateTime(year, month, day);
+  }
 }

@@ -148,7 +148,7 @@ abstract class HistoryDao {
   ///删除历史记录来源并通知，调用方记得删除未使用的来源信息
   Future<bool> clearHistorySourceAndNotify(int id) async {
     var cnt = await clearHistorySource(id);
-    if ((cnt ?? 0) > 0){
+    if ((cnt ?? 0) > 0) {
       await dbService.opRecordDao.deleteHistorySourceRecords(id, Module.historySource.moduleName);
       cnt = await dbService.opRecordDao.addAndNotify(
         OperationRecord.fromSimple(
@@ -162,7 +162,7 @@ abstract class HistoryDao {
     return false;
   }
 
-//endregion
+  //endregion
 
   /// 【废弃】获取某设备未同步的记录
   @Query(
@@ -228,15 +228,22 @@ abstract class HistoryDao {
   Future<int?> deleteByIds(List<int> ids, int uid);
 
   Future<void> deleteByCascade(int id) async {
+    final tags = await dbService.historyTagDao.getAllByHisId(id);
     //删除tag
-    ((await dbService.historyTagDao.removeAllByHisId(id)) ?? 0) > 0;
+    final success = ((await dbService.historyTagDao.removeAllByHisId(id)) ?? 0) > 0;
+    if (success && tags.isNotEmpty) {
+      final tagIds = tags.map((item) => item.id).toList();
+      for(var tagId in tagIds) {
+        await dbService.opRecordDao.deleteByDataWithCascade(tagId.toString());
+      }
+    }
     //删除历史
     await dbService.historyDao.delete(id);
     //删除操作记录和同步记录
     await dbService.opRecordDao.deleteByDataWithCascade(id.toString());
     //移除未使用的剪贴板来源信息
     final sourceService = Get.find<ClipboardSourceService>();
-    await sourceService.removeNotUsed();
+    sourceService.removeNotUsed();
   }
 
   ///查询历史记录中的不同类型的数量

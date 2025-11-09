@@ -45,9 +45,9 @@ class Log {
     writeLog("[fatal] | $log");
   }
 
-  static void error(String tag, dynamic, [StackTrace? stack]) {
+  static void error(String tag, err, [StackTrace? stack]) {
     final stackStr = stack != null ? ", $stack" : "";
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic $stackStr";
+    var log = "[$tag] ${DateTime.now().format()} | $err $stackStr";
     _logger.e(log);
     writeLog("[error] | $log");
   }
@@ -64,7 +64,7 @@ class Log {
     final logDirPath = appConfig.logsDirPath;
     var dateStr = DateTime.now().toString().substring(0, 10);
     var filePath = "$logDirPath/$dateStr.txt";
-    Directory(logDirPath).createSync();
+    Directory(logDirPath).createSync(recursive: true);
     var file = File(filePath);
     _writeFuture = _writeFuture.then(
       (v) => file.writeAsString("$content\n", mode: FileMode.writeOnlyAppend),

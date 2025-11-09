@@ -4,7 +4,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:get/get.dart';
 
-class DeviceService extends GetxController {
+class DeviceService extends GetxService {
   final _dbService = Get.find<DbService>();
   final _appConfig = Get.find<ConfigService>();
   final _devices = <String, Device>{}.obs;
@@ -30,7 +30,7 @@ class DeviceService extends GetxController {
     if (_devices.containsKey(id)) {
       return _devices[id]!;
     }
-    return id == _appConfig.device.guid ? _appConfig.device : Device.empty(devName: "unknown");
+    return id == _appConfig.device.guid ? _appConfig.device : Device.unknown;
   }
 
   String getName(String id) {

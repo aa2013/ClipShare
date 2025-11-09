@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
+import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/modules/about_module/about_controller.dart';
 import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
@@ -16,8 +20,10 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -28,7 +34,7 @@ import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/auth_password_input.dart';
@@ -44,6 +50,7 @@ import 'package:clipshare/app/modules/search_module/search_controller.dart' as s
 
 class SettingsController extends GetxController with WidgetsBindingObserver implements ForwardStatusListener {
   final appConfig = Get.find<ConfigService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final sktService = Get.find<SocketService>();
   final sourceService = Get.find<ClipboardSourceService>();
   final tagService = Get.find<TagService>();
@@ -67,7 +74,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasSmsReadPerm = true.obs;
   final hasAccessibilityPerm = false.obs;
   final hasNotificationRecordPerm = false.obs;
-  final forwardServerConnected = false.obs;
+  final forwardServerStatus = ForwardServerStatus.disconnected.obs;
   final updater = 0.obs;
 
   //region environment status widgets
@@ -184,7 +191,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     super.onInit();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
-    sktService.addForwardStatusListener(this);
+    connRegService.addForwardStatusListener(this);
     envStatusAction.value = IconButton(
       icon: const Icon(Icons.more_horiz_outlined),
       tooltip: TranslationKey.switchWorkingMode.tr,
@@ -283,7 +290,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoAboutPage(){
+  void gotoAboutPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.ABOUT);
     } else {
@@ -298,7 +305,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoStatisticPage(){
+  void gotoStatisticPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.STATISTICS);
     } else {
@@ -314,7 +321,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoLogPage(){
+  void gotoLogPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.LOG);
     } else {
@@ -467,18 +474,50 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   @override
   void onForwardServerConnected() {
-    forwardServerConnected.value = true;
+    forwardServerStatus.value = ForwardServerStatus.connected;
+  }
+
+  @override
+  void onForwardServerConnecting() {
+    forwardServerStatus.value = ForwardServerStatus.connecting;
   }
 
   @override
   void onForwardServerDisconnected() {
-    forwardServerConnected.value = false;
+    forwardServerStatus.value = ForwardServerStatus.disconnected;
   }
 
   //region 备份与恢复
 
+  Future<List<BackupType>> _showBackupTypesDialog(BuildContext context) {
+    Completer<List<BackupType>> completer = Completer();
+    final types = BackupType.values.where((item) => item != BackupType.version).toList();
+    late DialogController dlgController;
+    dlgController = MultiSelectDialog.show<BackupType>(
+      context: context,
+      onSelected: (list) {
+        completer.complete(list);
+      },
+      defaultValues: types,
+      selections: types.map((item) {
+        return CheckboxData(value: item, text: item.tr);
+      }).toList(),
+      title: Text(TranslationKey.selectBackupItems.tr),
+      onCancel: () {
+        completer.complete([]);
+        dlgController.close();
+      },
+    );
+    return completer.future;
+  }
+
   ///备份
   Future<void> startBackup(BuildContext context) async {
+    final backupTypes = await _showBackupTypesDialog(context);
+    if (backupTypes.isEmpty) {
+      Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
+      return;
+    }
     final path = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
     if (path == null) return;
     final dialog = Global.showLoadingDialog(
@@ -493,7 +532,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     );
     await Future.delayed(200.ms);
     try {
-      final exInfo = await backupHandler.backup(Directory(path));
+      final exInfo = await backupHandler.backup(Directory(path), backupTypes);
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
@@ -512,6 +551,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   ///恢复备份
   Future<void> restore(BuildContext context) async {
+    final backupTypes = await _showBackupTypesDialog(context);
+    if (backupTypes.isEmpty) {
+      Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
+      return;
+    }
     final result = await FilePicker.platform.pickFiles();
     if (result == null) {
       return;
@@ -529,12 +573,12 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     );
     await Future.delayed(200.ms);
     try {
-      final exInfo= await backupHandler.restore(File(result.files[0].path!), loadingController);
+      final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController, backupTypes);
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
         } else {
-          Global.showTipsDialog(context: context, title:TranslationKey.importFailed.tr, text: "$exInfo");
+          Global.showTipsDialog(context: context, title: TranslationKey.importFailed.tr, text: "$exInfo");
         }
       } else {
         Global.showTipsDialog(context: context, title: TranslationKey.importSuccess.tr, text: TranslationKey.restoreRestartPrompt.tr);

@@ -234,12 +234,7 @@ class ClipDataCardState extends State<ClipDataCard> {
             label: widget.clip.data.sync ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
             icon: Icons.sync,
             onSelected: () {
-              var opRecord = OperationRecord.fromSimple(
-                Module.history,
-                OpMethod.add,
-                widget.clip.data.id.toString(),
-              );
-              dbService.opRecordDao.addAndNotify(opRecord);
+              dbService.opRecordDao.resyncData(widget.clip.data.id);
             },
           ),
         if (widget.clip.isFile)

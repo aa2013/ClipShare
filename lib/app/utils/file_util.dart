@@ -57,7 +57,7 @@ class FileUtil {
     File sourceFile = File(sourcePath);
     File destFile = File(destinationPath);
     if (!destFile.parent.existsSync()) {
-      destFile.parent.createSync();
+      destFile.parent.createSync(recursive: true);
     }
     destFile.writeAsBytesSync(sourceFile.readAsBytesSync());
     sourceFile.deleteSync();

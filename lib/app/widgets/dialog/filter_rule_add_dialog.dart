@@ -65,7 +65,6 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
   }
 
   Future<void> loadInstalledApps() async {
-    await sourceService.loadInstalledApps();
     allLocalAppList.addAll(sourceService.installedApps);
   }
 

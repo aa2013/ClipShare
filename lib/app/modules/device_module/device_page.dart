@@ -2,10 +2,12 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/dialog/add_device_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -70,7 +72,7 @@ class DevicePage extends GetView<DeviceController> {
                                     margin: const EdgeInsets.only(right: 5),
                                     child: Dot(
                                       radius: 6.0,
-                                      color: controller.forwardConnected.value ? Colors.green : Colors.grey,
+                                      color: controller.forwardStatus.value.color,
                                     ),
                                   ),
                                   Text(TranslationKey.devicePageForwardServerText.tr),
@@ -190,6 +192,7 @@ class DevicePage extends GetView<DeviceController> {
                   isSelf: false,
                   minVersion: null,
                   version: null,
+                  protocol: TransportProtocol.direct,
                 ),
               ),
             ),

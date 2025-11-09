@@ -5,12 +5,14 @@ import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:clipshare/app/data/enums/clean_data_freq.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/enums/week_day.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
+import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
@@ -18,7 +20,8 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/cron_util.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -37,6 +40,7 @@ import '../../widgets/empty_content.dart';
 
 class CleanDataController extends GetxController implements DeviceRemoveListener, DevAliveListener {
   final dbService = Get.find<DbService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final appConfig = Get.find<ConfigService>();
   final devService = Get.find<DeviceService>();
   final sktService = Get.find<SocketService>();
@@ -90,7 +94,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   void onReady() {
     super.onReady();
     devService.addDevRemoveListener(this);
-    sktService.addDevAliveListener(this);
+    connRegService.addDevAliveListener(this);
     final cfg = appConfig.cleanDataConfig;
     if (cfg != null) {
       selectedDevs.addAll(cfg.devIds);
@@ -107,7 +111,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   @override
   void onClose() {
     devService.removeDevRemoveListener(this);
-    sktService.removeDevAliveListener(this);
+    connRegService.removeDevAliveListener(this);
   }
 
   ///加载搜索条件
@@ -479,7 +483,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   }
 
   @override
-  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, bool isForward) {
+  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, TransportProtocol protocol) {
     return;
   }
 

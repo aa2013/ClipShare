@@ -828,8 +828,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Access Key";
       case TranslationKey.pleaseInputAccessKey:
         return "Please Enter Access Key";
-      case TranslationKey.forwardServerConnCheck:
-        return "Connection Check";
+      case TranslationKey.checkConnection:
+        return "Check";
       case TranslationKey.pleaseInputValidPort:
         return 'Please Enter a Valid Port';
       case TranslationKey.pleaseInputValidDomainOrIpv4:
@@ -884,6 +884,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Connected";
       case TranslationKey.disconnected:
         return "Disconnected";
+      case TranslationKey.connecting:
+        return "Connecting";
       case TranslationKey.forwardMode:
         return "Forward Mode";
       case TranslationKey.deviceId:
@@ -1174,6 +1176,155 @@ class EnUSTranslation extends AbstractTranslations {
         return "Auto";
       case TranslationKey.doubleClick2OpenPath:
         return 'Double-click to open path';
+      case TranslationKey.editDb:
+        return 'Edit Database';
+      case TranslationKey.enterSQLHere:
+        return 'Enter SQL here...';
+      case TranslationKey.optionalTables:
+        return 'Optional table names:';
+      case TranslationKey.execSQL:
+        return 'Execute SQL';
+      case TranslationKey.execSQLNoLimitTips:
+        return 'This appears to be a SELECT statement without LIMIT clause. Large result sets may cause performance issues. Continue anyway?';
+      case TranslationKey.toggleSQLLimitCheck:
+        return 'Toggle query LIMIT detection';
+      case TranslationKey.result:
+        return 'Result';
+      case TranslationKey.execFailed:
+        return 'Execution failed';
+      case TranslationKey.notificationServerStatus:
+        return 'Notification Server Status';
+      case TranslationKey.notificationServerTips:
+        return "When using storage service as relay method, automatic synchronization detection is unavailable. \n"
+            "Notification service is required to alert devices of changes. \n"
+            "You may use either self-hosted or public notification services. \n"
+            "Notification content does not contain any sensitive information.";
+
+      case TranslationKey.forwardSettingsWebDavTitle:
+        return "WebDav Config";
+      case TranslationKey.forwardSettingsS3Title:
+        return "S3 Config";
+
+      case TranslationKey.configureWebdavServer:
+        return "Configure WebDAV Server";
+      case TranslationKey.webdavServerUrlRequired:
+        return "Please enter WebDAV server URL";
+      case TranslationKey.webdavUrlMustStartWithHttp:
+        return "URL must start with http:// or https://";
+      case TranslationKey.usernameRequired:
+        return "Please enter username";
+      case TranslationKey.passwordRequired:
+        return "Please enter password";
+      case TranslationKey.baseDirectoryRequired:
+        return "Please select base directory";
+      case TranslationKey.baseDirectoryMustStartWithSlash:
+        return "Base directory must start with /";
+      case TranslationKey.serverUrl:
+        return "Server URL";
+      case TranslationKey.username:
+        return "Username";
+      case TranslationKey.password:
+        return "Password";
+      case TranslationKey.storagePath:
+        return "Storage Path";
+      case TranslationKey.storagePathHint:
+        return "Select Base Path";
+      case TranslationKey.pleaseInputCorrectURL:
+        return "Please enter the correct URL";
+      case TranslationKey.nameRequired:
+        return "Please enter config name";
+      case TranslationKey.configName:
+        return "Config Name";
+      case TranslationKey.noConfig:
+        return "No Config";
+      case TranslationKey.s3EndpointRequired:
+        return 'S3 endpoint is required';
+      case TranslationKey.accessKeyRequired:
+        return 'Access Key is required';
+      case TranslationKey.secretKeyRequired:
+        return 'Secret Key is required';
+      case TranslationKey.bucketNameRequired:
+        return 'Bucket name is required';
+      case TranslationKey.configureS3Storage:
+        return 'Configure S3 Storage';
+      case TranslationKey.endpoint:
+        return 'Endpoint';
+      case TranslationKey.s3AccessKey:
+        return 'AccessKey';
+      case TranslationKey.s3SecretKey:
+        return 'SecretKey';
+      case TranslationKey.bucketName:
+        return 'Bucket Name';
+      case TranslationKey.region:
+        return 'Region';
+      case TranslationKey.optional:
+        return 'Optional';
+      case TranslationKey.objectStorageType:
+        return 'Storage Type';
+      case TranslationKey.standardS3Protocol:
+        return "Standard S3 Protocol";
+      case TranslationKey.aliyunOss:
+        return "Alibaba Cloud OSS";
+      case TranslationKey.pleaseInputCorrectDomain:
+        return "Please enter correct domain";
+      case TranslationKey.notificationServerConfigure:
+        return "Notification Server Configuration";
+      case TranslationKey.notificationServerAddress:
+        return "Notification Server Address";
+      case TranslationKey.regionRequired:
+        return "Region is required";
+      case TranslationKey.pleaseInputCorrectWsURL:
+        return "Please enter the correct address (ws:// or wss://)";
+      case TranslationKey.selectStoragePath:
+        return "Select Storage Path";
+      case TranslationKey.readonly:
+        return "Read Only";
+      case TranslationKey.version:
+        return "Version";
+      case TranslationKey.changeForwardWayConfirm:
+        return 'Are you sure to switch the transit method? Will disconnect the current transfer related connections';
+      case TranslationKey.s3:
+        return 'S3';
+      case TranslationKey.none:
+        return 'None';
+      case TranslationKey.forwardServer:
+        return 'Forward Server';
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
+        return "Please configure the WebDAV service first";
+      case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
+        return "Please configure the S3 service first";
+      case TranslationKey.createFolder:
+        return 'Create Folder';
+      case TranslationKey.invalidFolderName:
+        return 'Invalid name, cannot contain special characters and must be less than 255 characters';
+      case TranslationKey.createFailed:
+        return 'Creation failed';
+      case TranslationKey.notAllowRootPath:
+        return 'Root path is not allowed';
+      case TranslationKey.s3TypeTips:
+        return "Any object storage product compatible with the standard S3 protocol can be directly filled in for configuration and use.\n\nTencent Cloud and Qiniu Cloud have been tested and work properly.\n\nAlibaba Cloud OSS requires separate configuration.";
+      case TranslationKey.forwardWay:
+        return "Forward Way";
+      case TranslationKey.storageService:
+        return "Storage Service";
+      case TranslationKey.forwardHost:
+        return "Forward Server";
+      case TranslationKey.backupTypeConfig:
+        return "Config";
+      case TranslationKey.backupTypeAppInfo:
+        return "Clipboard Source";
+      case TranslationKey.backupTypeDevice:
+        return "Devices";
+      case TranslationKey.backupTypeHistory:
+        return "History";
+      case TranslationKey.backupTypeHistoryTag:
+        return "Tag";
+      case TranslationKey.backupTypeOperationRecord:
+        return "Operation Record";
+      case TranslationKey.backupTypeOperationSync:
+        return "Sync Record";
+      case TranslationKey.selectBackupItems:
+        return "Select Items";
     }
   }
 }

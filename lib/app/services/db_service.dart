@@ -19,6 +19,7 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart'
 import 'package:clipshare/app/data/repository/entity/tables/user.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:floor/floor.dart';
@@ -28,6 +29,18 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
+
+const tables = [
+  Config,
+  Device,
+  History,
+  User,
+  OperationSync,
+  HistoryTag,
+  OperationRecord,
+  AppInfo,
+];
+const views = [VHistoryTagHold];
 
 /// 添加实体类到 @Database 注解中，app_db、db_util 中添加 get 方法
 /// 生成方法（二选一）
@@ -39,20 +52,9 @@ part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
 ///
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
-  version: 5,
-  entities: [
-    Config,
-    Device,
-    History,
-    User,
-    OperationSync,
-    HistoryTag,
-    OperationRecord,
-    AppInfo,
-  ],
-  views: [
-    VHistoryTagHold,
-  ],
+  version: 6,
+  entities: tables,
+  views: views,
 )
 abstract class _AppDb extends FloorDatabase {
   UserDao get userDao;
@@ -118,6 +120,7 @@ class DbService extends GetxService {
       migration2to3,
       migration3to4,
       migration4to5,
+      migration5to6,
     ]).build();
     version = await _db.database.database.getVersion();
     return this;
@@ -127,6 +130,16 @@ class DbService extends GetxService {
   Future<void> onClose() {
     debugPrint("db service onClose");
     return _db.close();
+  }
+
+  static Future<bool> hasColumnInTable(sqflite.Database database, String tableName, String columnName) async {
+    final result = await database.rawQuery("SELECT COUNT(*) as cnt FROM pragma_table_info('$tableName') WHERE name='$columnName'");
+    if (result.isEmpty) return false;
+    if (!result.first.containsKey("cnt")) {
+      return false;
+    }
+    final cnt = result.first["cnt"] as int;
+    return cnt > 0;
   }
 
   ///----- 迁移策略 更新数据库版本后需要重新生成数据库代码 -----
@@ -173,5 +186,29 @@ class DbService extends GetxService {
     await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
     await database.execute("CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));");
     await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);');
+  });
+
+  ///数据库版本 5 -> 6
+  ///支持存储服务为中转方式，操作记录表新增存储同步标记字段
+  final migration5to6 = Migration(5, 6, (database) async {
+    if (!await hasColumnInTable(database, 'OperationRecord', 'storageSync')) {
+      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `storageSync` INTEGER;");
+    }
+    //todo 后续移除 UID 字段的时候这里需要改
+    try {
+      //升级时更新，如果已经配置过中转服务，将中转方式更新为 server，否则忽略
+      await database.execute(r"""
+        INSERT OR IGNORE INTO config (key, value,uid)
+        SELECT 'forwardWay', 'server', 0
+        WHERE EXISTS (
+            SELECT 1 FROM config WHERE key = 'forwardServer'
+        )
+        AND NOT EXISTS (
+            SELECT 1 FROM config WHERE key = 'forwardWay'
+        )
+    """);
+    } catch (err, stack) {
+      print("$err,$stack");
+    }
   });
 }

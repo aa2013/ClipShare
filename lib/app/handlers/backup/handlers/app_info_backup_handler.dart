@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
@@ -14,10 +15,8 @@ class AppInfoBackupHandler with BaseBackupHandler {
   final appInfoDao = Get.find<DbService>().appInfoDao;
   final appConfig = Get.find<ConfigService>();
 
-  static const String _name = "appInfo.bin";
-
   @override
-  String get name => _name;
+  final BackupType backupType = BackupType.appInfo;
 
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {

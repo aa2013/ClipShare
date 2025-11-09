@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/qr_device_connection_info.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/foundation.dart';
@@ -37,9 +37,7 @@ class QRCodeScannerController extends GetxController {
         HapticFeedback.mediumImpact();
         final json = jsonDecode(scanData.code!);
         Log.debug(logTag, scanData.code);
-        final result = QRDeviceConnectionInfo.fromJson(json);
-        Get.back();
-        attemptConnect(result);
+        Get.back(result: json);
       } catch (err, stack) {
         Log.warn(logTag, "$err $stack");
         Global.showTipsDialog(
@@ -78,38 +76,5 @@ class QRCodeScannerController extends GetxController {
 
   void onPermissionSet(BuildContext context, bool p) {
     if (!p) Get.snackbar('Permission', 'no Permission');
-  }
-
-  void attemptConnect(QRDeviceConnectionInfo result) async {
-    Global.showLoadingDialog(
-      context: Get.context!,
-      loadingText: TranslationKey.attemptingToConnect.tr,
-    );
-    final socketService = Get.find<SocketService>();
-    final interfaces = result.interfaces;
-    for (var itf in interfaces) {
-      for (var address in itf.addresses) {
-        bool success = await socketService.manualConnect(address);
-        if (success) {
-          Get.back();
-          return;
-        }
-      }
-    }
-    //本地连接失败，尝试中转连接
-    final forwardHost = socketService.forwardServerHost;
-    final forwardPort = socketService.forwardServerPort;
-    if (forwardHost != null && forwardPort != null) {
-      bool success = await socketService.manualConnectByForward(result.id);
-      if (success) {
-        Get.back();
-        return;
-      }
-    }
-    Get.back();
-    Global.showTipsDialog(
-      context: Get.context!,
-      text: TranslationKey.connectFailed.tr,
-    );
   }
 }

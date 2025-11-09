@@ -4,12 +4,14 @@ import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/listeners/tag_changed_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
@@ -17,7 +19,8 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -35,6 +38,7 @@ import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 
 class SearchController extends GetxController with WidgetsBindingObserver implements DeviceRemoveListener, DevAliveListener, TagChangedListener {
   final appConfig = Get.find<ConfigService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final dbService = Get.find<DbService>();
   final devService = Get.find<DeviceService>();
   final sktService = Get.find<SocketService>();
@@ -97,7 +101,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   void onInit() {
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
-    sktService.addDevAliveListener(this);
+    connRegService.addDevAliveListener(this);
     devService.addDevRemoveListener(this);
     tagService.addListener(this);
     loadSearchCondition().whenComplete(
@@ -128,7 +132,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
     appConfig.disableMultiSelectionMode(true);
-    sktService.removeDevAliveListener(this);
+    connRegService.removeDevAliveListener(this);
     devService.removeDevRemoveListener(this);
     tagService.removeListener(this);
     super.onClose();
@@ -483,7 +487,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   }
 
   @override
-  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, bool isForward) {
+  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, TransportProtocol protocol) {
     // ignored
   }
 

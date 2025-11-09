@@ -1,7 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/licenses_module/licenses_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';

@@ -605,8 +605,12 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         Log.d("MainActivity", "onDestroy")
+        try {
+            super.onDestroy()
+        }catch (e: Exception){
+            //ignored
+        }
         try {
             // 取消注册广播接收器
             unregisterReceiver(screenReceiver)

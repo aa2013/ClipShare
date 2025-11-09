@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:clipshare/app/utils/log.dart';
 
 enum MsgType {
@@ -27,8 +29,6 @@ enum MsgType {
   reqAppInfo,
   //app来源信息
   appInfo,
-  //删除记录
-  rmHistory,
   //配对情况
   pairedStatus,
   //手动断开连接
@@ -42,11 +42,13 @@ enum MsgType {
   //未知key
   unknown;
 
+  static UnmodifiableListView<MsgType> storageServiceKeys = UnmodifiableListView([sync, setTop, file, forgetDev]);
+
   static MsgType getValue(String name) => MsgType.values.firstWhere(
-        (e) => e.name == name,
-        orElse: () {
-          Log.debug("MsgKey", "key '$name' unknown");
-          return MsgType.unknown;
-        },
-      );
+    (e) => e.name == name,
+    orElse: () {
+      Log.debug("MsgKey", "key '$name' unknown");
+      return MsgType.unknown;
+    },
+  );
 }

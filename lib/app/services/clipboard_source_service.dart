@@ -4,37 +4,45 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
-import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
+import 'package:clipshare/app/data/repository/entity/tables/app_info.dart' as my_app_info;
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:get/get.dart';
 import 'package:get_apps/get_apps.dart';
+import 'package:get_apps/models.dart';
+
+typedef MyAppInfo = my_app_info.AppInfo;
 
 class ClipboardSourceService extends GetxService {
   final _dbService = Get.find<DbService>();
   final _appConfig = Get.find<ConfigService>();
+  final _getAppsHelper = GetApps();
+  Stream<ActionNotification>? _appInstallStream;
 
-  //appId -> AppInfo
-  final _appInfos = <String, AppInfo>{}.obs;
+  //appId -> MyAppInfo
+  final _appInfos = <String, MyAppInfo>{}.obs;
 
   //appId -> LocalAppInfo
   final _installedApps = <String, LocalAppInfo>{}.obs;
 
   List<LocalAppInfo> get installedApps => _installedApps.values.toList();
 
-  List<AppInfo> get appInfos => _appInfos.values.toList(growable: false)..sort((a, b) => a.name.compareTo(b.name));
+  List<MyAppInfo> get appInfos => _appInfos.values.toList(growable: false)..sort((a, b) => a.name.compareTo(b.name));
 
   Future<ClipboardSourceService> init() async {
-    if (Platform.isAndroid) {
-      GetApps.init();
-    }
     await _loadAll();
     return this;
   }
 
   Future<void> _loadAll() async {
-    final tmpMap = <String, AppInfo>{};
+    await _loadClipboardSource();
+    //这里不要await，否则会占用大量时间导致应用卡第一屏
+    _loadInstalledApps();
+  }
+
+  Future<void> _loadClipboardSource() async {
+    final tmpMap = <String, MyAppInfo>{};
     var appInfos = await _dbService.appInfoDao.getAllAppInfos();
     for (var item in appInfos) {
       tmpMap[item.appId] = item;
@@ -42,20 +50,17 @@ class ClipboardSourceService extends GetxService {
     _appInfos.clear();
     _appInfos.addAll(tmpMap);
     var idSet = tmpMap.values.map((item) => item.appId).toSet();
-    AppInfoExt.removeWhere((appId, _) => !idSet.contains(appId));
-    //这里不要await，否则会占用大量时间导致应用卡第一屏
-    loadInstalledApps();
+    my_app_info.AppInfoExt.removeWhere((appId, _) => !idSet.contains(appId));
   }
 
-  Future<void> loadInstalledApps() async {
+  Future<void> _loadInstalledApps() async {
     if (!Platform.isAndroid) {
       return;
     }
     _installedApps.clear();
-    final getAppsHelper = GetApps();
-    final userApps = await getAppsHelper.getApps();
+    final userApps = await _getAppsHelper.getApps();
     final userAppIds = userApps.map((item) => item.appPackage).toList();
-    var apps = await getAppsHelper.getApps(includeSystemApps: true);
+    var apps = await _getAppsHelper.getApps();
     for (var item in apps) {
       _installedApps[item.appPackage] = LocalAppInfo(
         isSystemApp: !userAppIds.contains(item.appPackage),
@@ -66,10 +71,16 @@ class ClipboardSourceService extends GetxService {
         iconB64: base64Encode(item.appIcon),
       );
     }
+    if (_appInstallStream == null) {
+      _appInstallStream = _getAppsHelper.appActionReceiver();
+      _appInstallStream!.listen((notification) async {
+        _loadInstalledApps();
+      });
+    }
   }
 
-  Future<bool> addOrUpdate(AppInfo appInfo, [bool notify = false]) async {
-    //如果已缓存该app信息判断内容，直接返回
+  Future<bool> addOrUpdate(MyAppInfo appInfo, [bool notify = false]) async {
+    //如果已缓存该app信息，直接返回
     if (isCached(appInfo)) {
       return true;
     }
@@ -101,7 +112,7 @@ class ClipboardSourceService extends GetxService {
   }
 
   ///判断是否缓存某 app 信息
-  bool isCached(AppInfo appInfo) {
+  bool isCached(MyAppInfo appInfo) {
     if (!_appInfos.containsKey(appInfo.appId)) {
       return false;
     }
@@ -109,7 +120,7 @@ class ClipboardSourceService extends GetxService {
     return appInfo.hasSameContent(_appInfos[appInfo.appId]);
   }
 
-  AppInfo? getAppInfoByAppId(String? appId) {
+  MyAppInfo? getAppInfoByAppId(String? appId) {
     if (appId == null) return null;
     if (_appInfos.containsKey(appId)) {
       return _appInfos[appId];
@@ -122,6 +133,6 @@ class ClipboardSourceService extends GetxService {
 
   Future<void> removeNotUsed() async {
     await _dbService.appInfoDao.removeNotUsed();
-    await _loadAll();
+    await _loadClipboardSource();
   }
 }

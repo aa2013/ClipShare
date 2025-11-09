@@ -6,12 +6,14 @@ import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/models/pending_file.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
+import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/multi_selection_pop_scope_disable_listener.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -35,6 +37,7 @@ class _SyncingFilePageTab {
 
 class SyncFileController extends GetxController with GetTickerProviderStateMixin, DevAliveListener implements MultiSelectionPopScopeDisableListener {
   final appConfig = Get.find<ConfigService>();
+  final connRegService = Get.find<ConnectionRegistryService>();
   final dbService = Get.find<DbService>();
   final syncingFileService = Get.find<SyncingFileProgressService>();
   final sktService = Get.find<SocketService>();
@@ -127,7 +130,7 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
   @override
   void onInit() {
     tabController = TabController(length: 3, vsync: this, initialIndex: 0);
-    sktService.addDevAliveListener(this);
+    connRegService.addDevAliveListener(this);
     super.onInit();
   }
 
@@ -142,7 +145,7 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
   void onClose() {
     final homeController = Get.find<HomeController>();
     homeController.removeMultiSelectionPopScopeDisableListener(this);
-    sktService.removeDevAliveListener(this);
+    connRegService.removeDevAliveListener(this);
     super.onClose();
   }
 

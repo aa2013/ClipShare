@@ -17,7 +17,7 @@ class ForwardSocketClient {
     return {
       "self": appConfig.device.guid,
       "devName": appConfig.localName,
-      "platform": defaultTargetPlatform.name.upperFirst(),
+      "platform": defaultTargetPlatform.name.upperFirst,
       "appVersion": appConfig.version.toString(),
     };
   }

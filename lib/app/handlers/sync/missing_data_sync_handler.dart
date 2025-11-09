@@ -13,7 +13,8 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_record.dar
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
+import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -27,10 +28,7 @@ class MissingDataSyncHandler {
     final dbService = Get.find<DbService>();
     final sourceService = Get.find<ClipboardSourceService>();
     final syncRecords = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devId);
-    final notIncludesAppInfos = sourceService.appInfos
-        .where((item) => item.devId == devId && !syncedAppIds.contains(item.appId))
-        .map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id))
-        .toList();
+    final notIncludesAppInfos = sourceService.appInfos.where((item) => item.devId == devId && !syncedAppIds.contains(item.appId)).map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id)).toList();
     final lst = [...notIncludesAppInfos, ...syncRecords];
     final sktService = Get.find<SocketService>();
     for (var i = 0; i < lst.length; i++) {
@@ -40,8 +38,7 @@ class MissingDataSyncHandler {
       if (result.shouldRemove) {
         dbService.opRecordDao.deleteByIds([item.id]);
       } else {
-        await sktService.sendData(
-          targetDev,
+        await targetDev.sendData(
           MsgType.missingData,
           {
             "data": result.result,

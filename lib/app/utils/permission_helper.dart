@@ -70,7 +70,7 @@ class PermissionHelper {
       }
     } else {
       try {
-        dir.createSync();
+        dir.createSync(recursive: true);
         return true;
       } catch (e) {
         return false;

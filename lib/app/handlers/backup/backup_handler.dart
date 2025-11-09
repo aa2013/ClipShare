@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
@@ -22,19 +23,18 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:zip_flutter/zip_flutter.dart';
 
 typedef OnRestoreDone = void Function(int restoreid);
 
 abstract mixin class BaseBackupHandler {
-  String get name;
+  BackupType get backupType;
 
   ///load from db
   Stream<Uint8List> loadData(Directory tempDir);
 
   ///read data from backup and restore
-  FutureOr<int?> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir,RxBool cancel, OnRestoreDone onDone);
+  FutureOr<int?> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone);
 }
 
 class BackupHandler {
@@ -71,7 +71,7 @@ class BackupHandler {
     }
   }
 
-  Future<ExceptionInfo?> backup(Directory storeDir) async {
+  Future<ExceptionInfo?> backup(Directory storeDir, List<BackupType> types) async {
     _restoreIds.clear();
     await storeDir.create(recursive: true);
     final tempDir = await storeDir.createTemp("temp_");
@@ -84,11 +84,15 @@ class BackupHandler {
     StackTrace? stackTrace;
     try {
       for (var handler in _handlers) {
-        final name = handler.name;
+        //版本信息必须写入，其他的不在备份的范围内的跳过
+        if (handler.backupType != BackupType.version && !types.contains(handler.backupType)) {
+          continue;
+        }
+        final filename = handler.backupType.filename;
         _testCancel();
-        final file = File("${tempDir.path}/$name".normalizePath);
+        final file = File("${tempDir.path}/$filename".normalizePath);
         final writer = file.openWrite();
-        Log.info(tag, "Start backup $name...");
+        Log.info(tag, "Start backup $filename...");
         await for (var bytes in handler.loadData(tempDir)) {
           try {
             _testCancel();
@@ -105,7 +109,7 @@ class BackupHandler {
           writer.add(bytes);
         }
         await writer.close();
-        Log.info(tag, "backup $name finished");
+        Log.info(tag, "backup $filename finished");
       }
       final backupFileName = "backup-${appConfig.localName}-${DateTime.now().format("yyyyMMdd")}.zip";
       var zip = ZipFile.open('${storeDir.path}/$backupFileName');
@@ -137,7 +141,7 @@ class BackupHandler {
     return ExceptionInfo(err: catchErr, stackTrace: stackTrace);
   }
 
-  Future<ExceptionInfo?> restore(File file, LoadingProgressController loadingController) async {
+  Future<ExceptionInfo?> restore(File file, LoadingProgressController loadingController, List<BackupType> types) async {
     if (_processing) {
       throw 'Backup or Restore processing';
     }
@@ -153,24 +157,28 @@ class BackupHandler {
       assert(_handlers[0] is VersionBackupHandler);
       await ZipFile.openAndExtractAsync(file.path, tempDir.path);
       final versionHandler = _handlers[0] as VersionBackupHandler;
-      final versionContent = await File("${tempDir.path}/${versionHandler.name}".normalizePath).readAsBytes();
+      final versionContent = await File("${tempDir.path}/${versionHandler.backupType.filename}".normalizePath).readAsBytes();
       final versionMap = jsonDecode(utf8.decode(versionContent)) as Map<dynamic, dynamic>;
       final backupVersion = BackupVersionInfo.fromJson(versionMap.cast());
       Log.debug(tag, "backupVersion $backupVersion");
       var totalRestoreCnt = 0;
       for (var handler in _handlers.sublist(1)) {
-        final name = handler.name;
+        //不在恢复的范围内的跳过
+        if (!types.contains(handler.backupType)) {
+          continue;
+        }
+        final filename = handler.backupType.filename;
         _testCancel();
-        final binFile = File("${tempDir.path}/$name");
+        final binFile = File("${tempDir.path}/$filename");
         if (!await binFile.exists()) {
-          Log.warn(tag, "file not found: $name");
+          Log.warn(tag, "file not found: $filename");
           continue;
         }
         final fileStream = binFile.openRead().transform(BackupDataPacketSplitter(endian: _endian, headerLen: _headerLen));
         await for (var bytes in fileStream) {
           _testCancel();
           try {
-            final rid = await handler.restore(Uint8List.fromList(bytes), backupVersion, tempDir,_cancel, (rid) => _onRestoreDone(rid, loadingController, completer));
+            final rid = await handler.restore(Uint8List.fromList(bytes), backupVersion, tempDir, _cancel, (rid) => _onRestoreDone(rid, loadingController, completer));
             if (rid != null) {
               _restoreIds.add(rid);
               loadingController.total = ++totalRestoreCnt;

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../repository/entity/tables/device.dart';
 
 class DevInfo {
@@ -31,6 +33,11 @@ class DevInfo {
       "name": name,
       "type": type,
     };
+  }
+
+  @override
+  String toString() {
+    return jsonEncode(toJson());
   }
 
   @override

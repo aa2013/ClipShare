@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.2.1+19
+version: 1.3.0+20
 
 environment:
   # At least Flutter 3.32.1
@@ -91,7 +91,10 @@ dependencies:
   # markdown 渲染
   flutter_markdown: ^0.6.22+1
   # 文件选择
-  file_picker: ^10.2.0
+  file_picker:
+    git:
+      url: https://github.com/aa2013/flutter_file_picker
+      ref: modify-android-saf-intent
   # 权限请求
   permission_handler: ^11.3.1
   # 瀑布流布局
@@ -110,11 +113,14 @@ dependencies:
   # 月份选择
   month_picker_dialog: ^5.1.2
   # 剪贴板监听
-  clipshare_clipboard_listener: ^1.0.4
+  clipshare_clipboard_listener: ^1.0.5
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
   # 大文本编辑器
-  re_editor: ^0.4.0
+  re_editor: # ^0.7.0
+    git: # 修复 Flutter 3.32 版本以上 无法输入的问题
+      url: https://github.com/copywith99/re-editor.git
+      ref: main
   # http请求
   http: ^1.2.2
   # 倒计时的 snackbar ，支持在指定的scaffold上显示
@@ -154,11 +160,26 @@ dependencies:
   # 粘性折叠分组，该版本至少 SDK 3.8.0
   sliver_sticky_collapsable_panel: ^3.0.0
   # 获取已安装的app（仅 Android）
-  get_apps: ^2.0.1
+  get_apps: ^4.1.2
   # 通知信息监听（仅 Android）
   notification_listener_service: ^0.3.4
   # zip
   zip_flutter: ^0.0.12
+  # fix "cannot be used to imply a default content-type, please set a proper content-type in the request."
+  # 修复 群晖 文件的 PROPFIND 请求 因为尾'/'导致的 400 错误
+  webdav_client:
+    git:
+#      url: https://github.com/zhenorzz/webdav_client.git
+      url: https://github.com/aa2013/webdav_client.git
+      ref: main
+  dart_aliyun_oss:
+    #    path: ../../Flutter/ali_yun_oss
+    git:
+      url: https://github.com/aa2013/ali_yun_oss
+      ref: main
+  minio: ^3.5.8
+  # Android/IOS deviceId generator
+  persistent_device_id: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

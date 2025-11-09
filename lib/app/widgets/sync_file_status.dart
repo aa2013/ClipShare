@@ -54,7 +54,7 @@ class SyncFileStatus extends StatelessWidget {
         filePath: history.content,
         fromDev: dev,
         isSender: selfDevId == history.devId,
-        startTime: DateTime.parse(history.time).format("yyyy-MM-dd HH:mm:ss"),
+        startTime: DateTime.parse(history.time).format(),
       ),
       factor: 1,
       isLocal: true,

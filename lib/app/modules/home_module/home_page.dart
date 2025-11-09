@@ -7,8 +7,9 @@ import 'package:clipshare/app/modules/sync_file_module/sync_file_controller.dart
 import 'package:clipshare/app/modules/views/drag_and_send_file_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -71,27 +72,23 @@ class HomePage extends GetView<HomeController> {
                                       () => ConditionWidget(
                                         //todo 是否会有问题？
                                         visible: appConfig.isMultiSelectionMode(currentPageController),
-                                        child: const Icon(Icons.checklist),
                                         replacement: controller.navBarItems[controller.index].icon,
+                                        child: const Icon(Icons.checklist),
                                       ),
                                     ),
                                     const SizedBox(width: 5),
                                     Obx(
                                       () {
+                                        final syncProgressService = Get.find<HistorySyncProgressService>();
                                         final selectionMode = appConfig.isMultiSelectionMode(currentPageController);
                                         final pageTitle = controller.navBarItems[controller.index].label!;
                                         final selectionText = appConfig.multiSelectionText;
-                                        bool isSyncing = appConfig.isHistorySyncing.value;
+                                        bool isSyncing = syncProgressService.syncing;
                                         final icon = controller.navBarItems[controller.index].icon;
                                         bool isHistoryPage = icon is Icon && icon.icon == Icons.history;
                                         if (!selectionMode && isSyncing && isHistoryPage) {
-                                          final progresses = sktService.missingDataSyncProgress.values;
-                                          int total = 0;
-                                          int syncedCnt = 0;
-                                          for (var progress in progresses) {
-                                            total += progress.total;
-                                            syncedCnt += progress.syncedCount;
-                                          }
+                                          int total = syncProgressService.total;
+                                          int syncedCnt = syncProgressService.syncedCnt;
                                           return LoadingDots(
                                             text: Text(
                                               "${TranslationKey.homeAppBarSyncingProgressText.tr}($syncedCnt/$total)",

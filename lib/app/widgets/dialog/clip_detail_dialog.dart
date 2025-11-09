@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -20,7 +22,7 @@ import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/socket_service.dart';
+import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -160,23 +162,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                           color: Colors.blueGrey,
                         ),
                         onPressed: () {
-                          dbService.opRecordDao
-                              .getByDataId(
-                            widget.clip.data.id,
-                            Module.history.moduleName,
-                            OpMethod.add.name,
-                            appConfig.userId,
-                          )
-                              .then((op) {
-                            Log.debug(tag, op.toString());
-                            if (op == null) return;
-                            op.data = widget.clip.data.toString();
-                            sktService.sendData(
-                              null,
-                              MsgType.sync,
-                              op.toJson(),
-                            );
-                          });
+                          dbService.opRecordDao.resyncData(widget.clip.data.id);
                         },
                         tooltip: widget.clip.data.top ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
                       ),
