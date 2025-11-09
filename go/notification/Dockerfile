@@ -21,7 +21,7 @@ WORKDIR /app
 
 RUN apk add tzdata
 
-COPY --from=builder /app/notification-server .
+COPY --from=builder /app/notify-server .
 
 # 如果你的服务用到配置文件，可以 COPY 进来，比如：
 # COPY config.yaml .
