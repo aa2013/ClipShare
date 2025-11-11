@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +34,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
     return Column(
       children: [
         Visibility(
-          visible: PlatformExt.isDesktop,
+          visible: PlatformExt.isDesktop && !Platform.isMacOS,
           child: SizedBox(
             height: CustomTitleBarLayout.titleBarHeight,
             child: Row(

@@ -100,6 +100,9 @@ class ConfigService extends GetxService {
       if (!FileUtil.testWriteable(path)) {
         path = "${await Constants.documentsPath}/files";
       }
+    } else if (Platform.isMacOS) {
+      var dir = await getApplicationDocumentsDirectory();
+      path = dir.path + "/${Constants.appName}/files".normalizePath;
     }
     var dir = Directory(path);
     try {
@@ -150,7 +153,8 @@ class ConfigService extends GetxService {
 
   bool get isEnableMultiSelectionMode => _isMultiSelectionMode.value;
   GetxController? _selectionModeController;
-  final _multiSelectionText = TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
+  final _multiSelectionText =
+      TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
 
   bool isMultiSelectionMode(GetxController controller) {
     if (controller == _selectionModeController && _isMultiSelectionMode.value) {
@@ -673,7 +677,7 @@ class ConfigService extends GetxService {
     );
     _closeOnSameHotKey.value = (await cfg.getConfigByKey(ConfigKey.closeOnSameHotKey, false));
     _enableAutoSyncOnScreenOpened.value = (await cfg.getConfigByKey(ConfigKey.enableAutoSyncOnScreenOpened, true));
-    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, Platform.isWindows));
+    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, Platform.isWindows || Platform.isMacOS));
     _sourceRecordViaDumpsys.value = (await cfg.getConfigByKey(ConfigKey.sourceRecordViaDumpsys, false));
     _notifyOnDevDisconn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevDisconn, true));
     _notifyOnDevConn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevConn, true));
@@ -720,7 +724,11 @@ class ConfigService extends GetxService {
         return WebDavConfig.fromJson(json.cast());
       },
     ));
-    _mobileDevIdGenerateWay.value = await cfg.getConfigByKey(ConfigKey.mobileDevIdGenerateWay, DeviceIdGenerateWay.unknown, convert: DeviceIdGenerateWay.parse);
+    _mobileDevIdGenerateWay.value = await cfg.getConfigByKey(
+      ConfigKey.mobileDevIdGenerateWay,
+      DeviceIdGenerateWay.unknown,
+      convert: DeviceIdGenerateWay.parse,
+    );
   }
 
   ///初始化路径信息
@@ -813,6 +821,11 @@ class ConfigService extends GetxService {
       guid = CryptoUtil.toMD5(linuxInfo.id);
       name = linuxInfo.name;
       type = "Linux";
+    } else if (Platform.isMacOS) {
+      var macosInfo = await deviceInfo.macOsInfo;
+      guid = CryptoUtil.toMD5(macosInfo.systemGUID!);
+      name = macosInfo.computerName;
+      type = "Mac";
     } else {
       throw Exception("Not Support Platform");
     }

@@ -154,7 +154,8 @@ dependencies:
   # 系统通知
   flutter_local_notifications: ^19.2.1
   # 禁止截屏
-  no_screenshot: ^0.3.1
+  no_screenshot:
+    git: https://github.com/FlutterPlaza/no_screenshot.git
   # Android uri读取
   uri_file_reader:
     git:

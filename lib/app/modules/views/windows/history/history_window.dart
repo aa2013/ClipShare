@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
@@ -255,6 +256,8 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     return Scaffold(
       body: Column(
         children: [
+          if(Platform.isMacOS)
+            const SizedBox(height: 15),
           if (!filterLoading)
             Container(
               margin: const EdgeInsets.only(top: 10),
