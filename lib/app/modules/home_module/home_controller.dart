@@ -147,7 +147,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       _initAndroid();
     }
     _initSearchPageShow();
-    if (Platform.isWindows || Platform.isLinux) {
+    if (PlatformExt.isDesktop) {
       clipboardManager.startListening();
     } else {
       clipboardManager

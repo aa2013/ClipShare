@@ -22,7 +22,7 @@
 + [x] Android
 + [x] Windows
 + [ ] Linux(快了，等待测试)
-+ [ ] Mac
++ [x] Mac
 + [ ] IOS
 
 ## 2. 项目结构

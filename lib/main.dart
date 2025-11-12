@@ -108,7 +108,7 @@ Future<void> main(List<String> args) async {
       );
     }
   } catch (err, stack) {
-    if (Platform.isWindows) {
+    if (PlatformExt.isDesktop) {
       windowManager.show();
     }
     runApp(

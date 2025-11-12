@@ -89,11 +89,9 @@ class SplashController extends GetxController {
   Future<void> init() async {
     if (PlatformExt.isDesktop) {
       //加载配置后初始化窗体配置
-      if (Platform.isWindows || Platform.isLinux) {
-        await initWindowsManager();
-        await initHotKey();
-        initMultiWindowEvent();
-      }
+      await initWindowsManager();
+      await initHotKey();
+      initMultiWindowEvent();
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       launchAtStartup.setup(
         appName: packageInfo.appName,
@@ -155,7 +153,6 @@ class SplashController extends GetxController {
     );
     return windowManager.waitUntilReadyToShow(windowOptions, () async {
       if (!appConfig.startMini) {
-        // await appConfig.initWindows();
         windowManager.show();
         windowManager.focus();
       }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -36,6 +37,8 @@ class FileSenderPage extends StatelessWidget {
           : null,
       body: Column(
         children: [
+          if(Platform.isMacOS)
+            const SizedBox(height: 25),
           SizedBox(
             height: 155,
             child: Obx(
