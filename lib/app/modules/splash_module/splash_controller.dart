@@ -153,7 +153,6 @@ class SplashController extends GetxController {
     );
     return windowManager.waitUntilReadyToShow(windowOptions, () async {
       if (!appConfig.startMini) {
-        // await appConfig.initWindows();
         windowManager.show();
         windowManager.focus();
       }

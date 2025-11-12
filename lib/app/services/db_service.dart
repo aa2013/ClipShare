@@ -107,15 +107,17 @@ class DbService extends GetxService {
 
   Future<DbService> init() async {
     // 获取应用程序的文件目录
-    String databasesPath = "clipshare.db";
+    String databasesFileName = "clipshare.db";
+    var dirPath = Directory(Platform.resolvedExecutable).parent.path;
     if (Platform.isWindows) {
-      var dirPath = Directory(Platform.resolvedExecutable).parent.path;
       if (!FileUtil.testWriteable(dirPath)) {
         dirPath = await Constants.documentsPath;
       }
-      databasesPath = "$dirPath\\$databasesPath";
+    }else if(Platform.isMacOS){
+      dirPath = await Constants.documentsPath;
     }
-    _db = await $Floor_AppDb.databaseBuilder(databasesPath).addMigrations([
+    databasesFileName = "$dirPath/$databasesFileName".normalizePath;
+    _db = await $Floor_AppDb.databaseBuilder(databasesFileName).addMigrations([
       migration1to2,
       migration2to3,
       migration3to4,

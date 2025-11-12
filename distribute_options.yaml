@@ -9,3 +9,10 @@ releases:
           build_args:
             dart-define:
               APP_ENV: prod
+      - name: release-macos
+        package:
+          platform: macos
+          target: dmg
+          build_args:
+            dart-define:
+              APP_ENV: prod

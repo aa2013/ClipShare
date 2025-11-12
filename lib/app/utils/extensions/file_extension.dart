@@ -9,7 +9,6 @@ import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
 import 'package:path/path.dart' as path;
 
 extension DirectoryExt on Directory {
-
   String get name => path.basename(this.path);
 
   String get normalizePath {
@@ -58,8 +57,6 @@ extension DirectoryExt on Directory {
       }
     }
   }
-
-
 }
 
 extension FileExt on File {
@@ -103,7 +100,8 @@ extension FileExt on File {
       }
       //提取序号并+1
       final start = regExp.firstMatch(name)!.start;
-      var seq = name.substring(start).replaceAll(RegExp(r"[\\(\\)]"), "").toInt() + 1;
+      var seq =
+          name.substring(start).replaceAll(RegExp(r"[\\(\\)]"), "").toInt() + 1;
       name = name.replaceAll(regExp, "");
       return "$name($seq)${extName.isEmpty ? "" : "."}$extName";
     }
@@ -130,7 +128,9 @@ extension FileExt on File {
     const videoExtensions = ['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv'];
 
     // 判断文件是否属于以上三类之一
-    return imageExtensions.contains(extName) || audioExtensions.contains(extName) || videoExtensions.contains(extName);
+    return imageExtensions.contains(extName) ||
+        audioExtensions.contains(extName) ||
+        videoExtensions.contains(extName);
   }
 
   Future<void> openPath() async {
