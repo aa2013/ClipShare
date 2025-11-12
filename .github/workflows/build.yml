@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies for Fastforge
         run: |
           npm install -g appdmg
+          dart pub global activate fastforge
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+          fastforge --version
         shell: bash
 
       - name: Flutter pub get
