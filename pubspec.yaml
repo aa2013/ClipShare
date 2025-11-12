@@ -38,11 +38,11 @@ dependencies:
   floor: ^1.4.2
   sqflite: any
   # sqlite3
-  sqlite3_flutter_libs: ^0.5.32
+  sqlite3_flutter_libs: ^0.5.40
   # 托盘插件 linux上需要安裝：sudo apt-get install libayatana-appindicator3-dev
   tray_manager: ^0.2.0
   # 窗体管理
-  window_manager: ^0.4.3
+  window_manager: ^0.5.0
   # 开机启动
   launch_at_startup: ^0.5.1
   # The following adds the Cupertino Icons font to your application.
@@ -150,8 +150,9 @@ dependencies:
   dio: ^5.8.0+1
   # 系统通知
   flutter_local_notifications: ^19.2.1
-  # 禁止截屏
-  no_screenshot: ^0.3.1
+  # 禁止截屏, pub.dev 上的版本在 macos 上会提示缺少 podfile，但是GitHub上的主分支是正常的，所以暂时 fork 一份
+  no_screenshot:
+    git: https://github.com/aa2013/no_screenshot.git
   # Android uri读取
   uri_file_reader:
     git:
@@ -200,6 +201,9 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/images/logo/logo.png"
     icon_size: 48 # min:48, max:256, default: 48
+  macos:
+    generate: true
+    image_path: "assets/images/logo/logo.png"
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

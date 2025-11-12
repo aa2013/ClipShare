@@ -231,7 +231,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setLaunchAtStartup(checked, true);
                           },
                         ),
-                        show: (v) => Platform.isWindows || Platform.isLinux,
+                        show: (v) => PlatformExt.isDesktop,
                       ),
                       SettingCard(
                         title: Text(TranslationKey.commonSettingsRunMinimize.tr),

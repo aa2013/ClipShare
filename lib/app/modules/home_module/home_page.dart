@@ -127,44 +127,53 @@ class HomePage extends GetView<HomeController> {
                     children: [
                       controller.isBigScreen
                           ? Obx(
-                              () => NavigationRail(
-                                leading: controller.leftMenuExtend.value
-                                    ? Row(
-                                        children: [
-                                          controller.logoImg,
-                                          const SizedBox(
-                                            width: 10,
-                                          ),
-                                          const Text(Constants.appName),
-                                        ],
-                                      )
-                                    : controller.logoImg,
-                                extended: controller.leftMenuExtend.value,
-                                onDestinationSelected: (i) {
-                                  controller.index = i;
-                                },
-                                minExtendedWidth: 200,
-                                destinations: controller.leftBarItems,
-                                selectedIndex: controller.index,
-                                trailing: Expanded(
-                                  child: Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(bottom: 10),
-                                      child: IconButton(
-                                        icon: Icon(
-                                          controller.leftMenuExtend.value ? Icons.keyboard_double_arrow_left_outlined : Icons.keyboard_double_arrow_right_outlined,
-                                          color: Colors.blueGrey,
+                            () =>
+                                NavigationRail(
+                                  leading: Container(
+                                    margin: Platform.isMacOS ? const EdgeInsets.only(top: 20) : null,
+                                    child: controller.leftMenuExtend.value
+                                        ? Row(
+                                      children: [
+                                        controller.logoImg,
+                                        const SizedBox(
+                                          width: 10,
                                         ),
-                                        onPressed: () {
-                                          controller.leftMenuExtend.value = !controller.leftMenuExtend.value;
-                                        },
+                                        const Text(Constants.appName),
+                                      ],
+                                    ) : controller.logoImg,
+                                  ),
+                                  extended: controller.leftMenuExtend.value,
+                                  onDestinationSelected: (i) {
+                                    controller.index = i;
+                                  },
+                                  minExtendedWidth: 200,
+                                  destinations: controller.leftBarItems,
+                                  selectedIndex: controller.index,
+                                  trailing: Expanded(
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(
+                                            bottom: 10),
+                                        child: IconButton(
+                                          icon: Icon(
+                                            controller.leftMenuExtend.value
+                                                ? Icons
+                                                .keyboard_double_arrow_left_outlined
+                                                : Icons
+                                                .keyboard_double_arrow_right_outlined,
+                                            color: Colors.blueGrey,
+                                          ),
+                                          onPressed: () {
+                                            controller.leftMenuExtend.value =
+                                            !controller.leftMenuExtend.value;
+                                          },
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            )
+                      )
                           : const SizedBox.shrink(),
                       Expanded(
                         child: Obx(
