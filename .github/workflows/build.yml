@@ -1,0 +1,56 @@
+name: build-macos-dmg
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - platform: macos
+            os: macos-13
+            arch: amd64
+          - platform: macos
+            os: macos-latest
+            arch: arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.35.0
+          cache: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies for Fastforge
+        run: |
+          npm install -g appdmg
+        shell: bash
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build & Package DMG
+        run: |
+          chmod +x scripts/build_macos.sh
+          ./scripts/build_macos.sh
+        shell: bash
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg-${{ matrix.arch }}
+          path: dist/**/*.dmg
+          overwrite: true
