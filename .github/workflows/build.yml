@@ -21,7 +21,6 @@ jobs:
         run: |
           xcode-select -p
           xcodebuild -version
-          flutter doctor -v
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
