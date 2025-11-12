@@ -162,7 +162,9 @@ dependencies:
   # 通知信息监听（仅 Android）
   notification_listener_service: ^0.3.4
   # zip
-  zip_flutter: ^0.0.12
+  zip_flutter:
+    git:
+      url: https://github.com/aa2013/zip_flutter
   # fix "cannot be used to imply a default content-type, please set a proper content-type in the request."
   # 修复 群晖 文件的 PROPFIND 请求 因为尾'/'导致的 400 错误
   webdav_client:
