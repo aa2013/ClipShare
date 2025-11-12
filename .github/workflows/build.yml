@@ -10,13 +10,18 @@ jobs:
       matrix:
         include:
           - platform: macos
-            os: macos-13
+            os: macos-latest
             arch: amd64
           - platform: macos
             os: macos-latest
             arch: arm64
 
     steps:
+      - name: Verify Xcode
+        run: |
+          xcode-select -p
+          xcodebuild -version
+          flutter doctor -v
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
