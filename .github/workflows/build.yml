@@ -47,8 +47,9 @@ jobs:
 
       - name: Build & Package DMG
         run: |
-          chmod +x scripts/build_macos.sh
-          ./scripts/build_macos.sh
+          cd scripts
+          chmod +x build_macos.sh
+          ./build_macos.sh
         shell: bash
 
       - name: Upload DMG artifact
