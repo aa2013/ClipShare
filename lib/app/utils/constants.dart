@@ -73,16 +73,16 @@ class Constants {
   static const clipshareSite = "https://clipshare.coclyun.top";
 
   //默认历史弹窗快捷键（Ctrl + Alt + H）
-  static final defaultHistoryWindowKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
+  static final defaultHistoryWindowKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
 
   //文件同步快捷键（Ctrl + Shift + C）
-  static final defaultSyncFileHotKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
+  static final defaultSyncFileHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
 
   //显示主窗体快捷键（Ctrl + Shift + S）
-  static final defaultShowMainWindowHotKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
+  static final defaultShowMainWindowHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
 
   //退出程序快捷键（Ctrl + Shift + Q）
-  static final defaultExitAppHotKeys = "${PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
+  static final defaultExitAppHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
 
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
