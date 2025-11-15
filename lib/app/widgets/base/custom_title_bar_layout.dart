@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/widgets/base/platform_title_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -64,48 +65,55 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                         Obx(
                           () => Visibility(
                             visible: windowControlService.minimizable.value,
-                            child: InkWell(
-                              mouseCursor: SystemMouseCursors.basic,
-                              child: SizedBox(
-                                width: CustomTitleBarLayout.titleBarHeight,
-                                height: CustomTitleBarLayout.titleBarHeight,
-                                child: Icon(
-                                  MdiIcons.minus,
-                                  size: 15,
-                                ),
-                              ),
-                              onTap: () {
-                                windowControlService.minimize();
-                              },
+                            child: PlatformTitleButton(
+                              onTap: windowControlService.minimize,
+                              icon: MdiIcons.minus,
+                              size: Platform.isWindows
+                                  ? CustomTitleBarLayout.titleBarHeight
+                                  : 25,
                             ),
                           ),
                         ),
+                        //最小化与右边的间隔
+                        if(Platform.isLinux)
+                          Obx(
+                             () => Visibility(
+                               visible: windowControlService.minimizable.value,
+                               child: const SizedBox(width: 5),
+                             ),
+                          ),
                         Obx(
                           () => Visibility(
                             visible: windowControlService.maximizable.value || windowControlService.minimizable.value,
-                            child: InkWell(
-                              mouseCursor: SystemMouseCursors.basic,
-                              onTap: windowControlService.maximizable.value
-                                  ? () {
-                                      if (windowControlService.maxWindow.value) {
-                                        windowControlService.unMaximize();
-                                      } else {
-                                        windowControlService.maximize();
-                                      }
-                                    }
-                                  : null,
-                              child: SizedBox(
-                                width: CustomTitleBarLayout.titleBarHeight,
-                                height: CustomTitleBarLayout.titleBarHeight,
-                                child: Icon(
-                                  windowControlService.maxWindow.value && windowControlService.maximizable.value ? MdiIcons.cardMultipleOutline : Icons.check_box_outline_blank,
-                                  size: 13,
-                                  color: windowControlService.maximizable.value ? null : Colors.grey,
-                                ),
-                              ),
+                            child: PlatformTitleButton(
+                              onTap: windowControlService.maximizable.value ? () {
+                                if (windowControlService.maxWindow.value) {
+                                  windowControlService.unMaximize();
+                                } else {
+                                  windowControlService.maximize();
+                                }
+                              } : null,
+                              icon: windowControlService.maxWindow.value &&
+                                  windowControlService.maximizable.value
+                                  ? MdiIcons.cardMultipleOutline
+                                  : Icons.check_box_outline_blank,
+                              iconColor: windowControlService.maximizable.value
+                                  ? null
+                                  : Colors.grey,
+                              size: Platform.isWindows
+                                  ? CustomTitleBarLayout.titleBarHeight
+                                  : 25,
                             ),
                           ),
                         ),
+                        //最大化与右边的间隔
+                        if(Platform.isLinux)
+                          Obx(
+                            () => Visibility(
+                              visible: windowControlService.maximizable.value || windowControlService.minimizable.value,
+                              child: const SizedBox(width: 5),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -113,31 +121,20 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                 Obx(
                   () => Visibility(
                     visible: windowControlService.closeable.value,
-                    child: InkWell(
-                      mouseCursor: SystemMouseCursors.basic,
-                      hoverColor: Colors.red,
-                      splashColor: Colors.red,
-                      highlightColor: Colors.red,
-                      onHover: (hovered) {
-                        setState(() {
-                          closeBtnHovered = hovered;
-                        });
-                      },
-                      child: SizedBox(
-                        width: CustomTitleBarLayout.titleBarHeight,
-                        height: CustomTitleBarLayout.titleBarHeight,
-                        child: Icon(
-                          Icons.close,
-                          size: 13,
-                          color: closeBtnHovered ? Colors.white : null,
-                        ),
-                      ),
-                      onTap: () {
-                        windowControlService.close(true);
-                      },
+                    child:
+                    PlatformTitleButton(
+                      onTap: () => windowControlService.close(true),
+                      icon: Icons.close,
+                      size: Platform.isWindows
+                          ? CustomTitleBarLayout.titleBarHeight
+                          : 25,
+                      hoverColor: Platform.isWindows ? Colors.red : null,
+                      hoveredIconColor: Platform.isWindows ? Colors.white : null,
                     ),
                   ),
                 ),
+                if(Platform.isLinux)
+                  const SizedBox(width: 5)
               ],
             ),
           ),
