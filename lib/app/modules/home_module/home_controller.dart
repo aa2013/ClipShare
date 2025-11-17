@@ -160,7 +160,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
             settingsController.checkAndroidEnvPermission();
           });
     }
-    AppUpdateInfoUtil.showUpdateInfo(true);
+    AppUpdateInfoUtil.showUpdateInfo(debounce: true);
   }
 
   @override
@@ -191,7 +191,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     Log.debug(tag, "AppLifecycleState $state");
     switch (state) {
       case AppLifecycleState.resumed:
-        AppUpdateInfoUtil.showUpdateInfo(true);
+        AppUpdateInfoUtil.showUpdateInfo(debounce: true);
         if (!appConfig.useAuthentication || appConfig.authenticating.value || pausedTime == null) {
           return;
         }

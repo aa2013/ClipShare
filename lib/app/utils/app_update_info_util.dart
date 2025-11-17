@@ -44,7 +44,10 @@ class AppUpdateInfoUtil {
     return updateLogs;
   }
 
-  static Future<bool> showUpdateInfo([bool debounce = false]) async {
+  static Future<bool> showUpdateInfo({
+    bool forceCheck = false,
+    bool debounce = false,
+  }) async {
     final now = DateTime.now();
     if (_lastCheckUpdateTime != null && debounce) {
       final diffHours = now.difference(_lastCheckUpdateTime!).inHours;
@@ -60,7 +63,7 @@ class AppUpdateInfoUtil {
     }
     final latestVersionCode = logs.first.version.code;
     final appConfig = Get.find<ConfigService>();
-    if (latestVersionCode == appConfig.ignoreUpdateVersion) {
+    if (latestVersionCode == appConfig.ignoreUpdateVersion && !forceCheck) {
       return false;
     }
     String content = "";

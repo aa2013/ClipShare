@@ -574,7 +574,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.newVersionDialogTitle:
         return "新版本";
       case TranslationKey.newVersionDialogSkipText:
-        return "跳过该次更新";
+        return "忽略该次更新";
       case TranslationKey.newVersionDialogOkText:
         return "下载更新";
       case TranslationKey.defaultLinkTagName:

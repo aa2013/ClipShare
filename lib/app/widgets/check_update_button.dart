@@ -20,7 +20,7 @@ class _CheckUpdateButtonState extends State<CheckUpdateButton> {
         setState(() {
           loading = true;
         });
-        AppUpdateInfoUtil.showUpdateInfo()
+        AppUpdateInfoUtil.showUpdateInfo(forceCheck: true)
             .then((hasNewest) {
               if (!hasNewest) {
                 Global.showSnackBarSuc(context: context, text: TranslationKey.alreadyNewestAppVersion.tr);
