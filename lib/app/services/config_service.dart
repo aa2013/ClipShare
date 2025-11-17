@@ -677,7 +677,7 @@ class ConfigService extends GetxService {
     );
     _closeOnSameHotKey.value = (await cfg.getConfigByKey(ConfigKey.closeOnSameHotKey, false));
     _enableAutoSyncOnScreenOpened.value = (await cfg.getConfigByKey(ConfigKey.enableAutoSyncOnScreenOpened, true));
-    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, Platform.isWindows || Platform.isMacOS));
+    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, PlatformExt.isDesktop));
     _sourceRecordViaDumpsys.value = (await cfg.getConfigByKey(ConfigKey.sourceRecordViaDumpsys, false));
     _notifyOnDevDisconn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevDisconn, true));
     _notifyOnDevConn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevConn, true));
