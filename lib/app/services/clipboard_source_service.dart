@@ -58,10 +58,9 @@ class ClipboardSourceService extends GetxService {
       return;
     }
     _installedApps.clear();
-    final userApps = await _getAppsHelper.getApps();
-    final userAppIds = userApps.map((item) => item.appPackage).toList();
-    var apps = await _getAppsHelper.getApps();
-    for (var item in apps) {
+    final allApps = await _getAppsHelper.getApps();
+    final userAppIds = allApps.where((item) => !item.isSystemApp).map((item) => item.appPackage).toList();
+    for (var item in allApps) {
       _installedApps[item.appPackage] = LocalAppInfo(
         isSystemApp: !userAppIds.contains(item.appPackage),
         id: 0,
