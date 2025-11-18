@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:clipshare/app/data/enums/device_paried_filter_status.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
@@ -13,8 +14,10 @@ import 'package:clipshare/app/widgets/dialog/add_device_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/device_card.dart';
 import 'package:clipshare/app/widgets/dot.dart';
+import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';
 import 'package:clipshare/app/widgets/dialog/network_address_dialog.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
@@ -35,59 +38,74 @@ class DevicePage extends GetView<DeviceController> {
           children: <Widget>[
             //我的设备列表
             Obx(
-              () => Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 12, top: 12),
-                    child: Visibility(
-                      visible: controller.pairedList.isNotEmpty,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.devices_rounded),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                TranslationKey.devicePageMyDevicesText.name.trParams({
-                                  'length': controller.pairedList.length.toString(),
-                                }),
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  fontFamily: "宋体",
+              () {
+                final filteredPairedList = controller.filteredPairedList;
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12, top: 12),
+                      child: Visibility(
+                        visible: controller.pairedList.isNotEmpty,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.devices_rounded),
+                                const SizedBox(width: 5),
+                                Text(
+                                  TranslationKey.devicePageMyDevicesText.name.trParams({
+                                    'length': controller.pairedList.length.toString(),
+                                  }),
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: "宋体",
+                                  ),
+                                ),
+                                CupertinoSegmentedControl(
+                                  //子标签
+                                  children: controller.pairedFilterSegmented,
+                                  //当前选中的索引
+                                  groupValue: controller.pairedFilter.value,
+                                  //点击回调
+                                  onValueChanged: (filter) {
+                                    controller.pairedFilter.value = filter;
+                                  },
+                                ),
+                              ],
+                            ),
+                            Obx(
+                              () => Offstage(
+                                offstage: !appConfig.enableForward,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(right: 5),
+                                      child: Dot(
+                                        radius: 6.0,
+                                        color: controller.forwardStatus.value.color,
+                                      ),
+                                    ),
+                                    Text(TranslationKey.devicePageForwardServerText.tr),
+                                    const SizedBox(width: 10),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                          Obx(
-                            () => Offstage(
-                              offstage: !appConfig.enableForward,
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(right: 5),
-                                    child: Dot(
-                                      radius: 6.0,
-                                      color: controller.forwardStatus.value.color,
-                                    ),
-                                  ),
-                                  Text(TranslationKey.devicePageForwardServerText.tr),
-                                  const SizedBox(width: 10),
-                                ],
-                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  renderGridView(controller.pairedList),
-                ],
-              ),
+                    Visibility(
+                      visible: filteredPairedList.isNotEmpty,
+                      replacement: EmptyContent(),
+                      child: renderGridView(filteredPairedList),
+                    ),
+                  ],
+                );
+              },
             ),
             Padding(
               padding: const EdgeInsets.only(left: 12),

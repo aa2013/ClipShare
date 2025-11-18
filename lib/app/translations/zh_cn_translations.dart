@@ -1322,6 +1322,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "同步记录";
       case TranslationKey.selectBackupItems:
         return "选择备份恢复项";
+      case TranslationKey.online:
+        return "在线";
+      case TranslationKey.offline:
+        return "离线";
     }
   }
 }

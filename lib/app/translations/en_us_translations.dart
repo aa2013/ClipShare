@@ -1325,6 +1325,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Sync Record";
       case TranslationKey.selectBackupItems:
         return "Select Items";
+      case TranslationKey.online:
+        return "Online";
+      case TranslationKey.offline:
+        return "Offline";
     }
   }
 }

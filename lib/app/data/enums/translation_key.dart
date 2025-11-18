@@ -652,7 +652,9 @@ enum TranslationKey {
   backupTypeHistoryTag,
   backupTypeOperationRecord,
   backupTypeOperationSync,
-  selectBackupItems;
+  selectBackupItems,
+  online,
+  offline;
 
   String get tr => name.tr;
 

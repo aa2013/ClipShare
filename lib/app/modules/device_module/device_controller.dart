@@ -1,3 +1,4 @@
+import 'package:clipshare/app/data/enums/device_paried_filter_status.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
@@ -53,6 +54,22 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   final discoverList = List<DeviceCard>.empty(growable: true).obs;
   final pairedList = List<DeviceCard>.empty(growable: true).obs;
 
+  List<DeviceCard> get filteredPairedList {
+    return pairedList.where((item) {
+      final v = pairedFilter.value;
+      if (v == DevicePairedFilterStatus.all) {
+        return true;
+      }
+      if (v == DevicePairedFilterStatus.online && item.isConnected) {
+        return true;
+      }
+      if (v == DevicePairedFilterStatus.offline && !item.isConnected) {
+        return true;
+      }
+      return false;
+    }).toList();
+  }
+
   ///获取在线且配对的设备列表
   List<Device> get onlineAndPairedList => pairedList.where((item) => item.isConnected).map((item) => item.dev!).toList(growable: false);
 
@@ -75,6 +92,24 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   late Rx<Animation<double>> animation;
 
   //endregion
+
+  final pairedFilter = DevicePairedFilterStatus.all.obs;
+
+  Map<DevicePairedFilterStatus, Widget> get pairedFilterSegmented {
+    final labels = {
+      DevicePairedFilterStatus.all: TranslationKey.all.tr,
+      DevicePairedFilterStatus.online: TranslationKey.online.tr,
+      DevicePairedFilterStatus.offline: TranslationKey.offline.tr,
+    };
+    final result = <DevicePairedFilterStatus, Widget>{};
+    for (var key in labels.keys) {
+      result[key] = Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: Text(labels[key]!),
+      );
+    }
+    return result;
+  }
 
   //region 生命周期
   @override
@@ -131,6 +166,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           ),
         );
       }
+      pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
     });
   }
 
@@ -239,13 +275,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           protocol: protocol,
         ),
       );
+      pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
       return;
     }
-    var hasSame =
-        discoverList.firstWhereOrNull(
-          (element) => element.dev?.guid == info.guid,
-        ) !=
-        null;
+    var hasSame = discoverList.firstWhereOrNull((element) => element.dev?.guid == info.guid) != null;
     if (hasSame) {
       return;
     }
@@ -792,6 +825,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         },
       ),
     );
+    pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
   }
 
   //endregion
