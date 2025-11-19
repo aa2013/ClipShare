@@ -1536,14 +1536,15 @@ class SettingsPage extends GetView<SettingsController> {
                         description: Text(TranslationKey.securitySettingsReverificationDesc.tr),
                         value: appConfig.appRevalidateDuration,
                         onTap: () {
-                          SingleSelectDialog.show(
+                          DialogController? dialog;
+                          dialog = SingleSelectDialog.show(
                             context: context,
                             defaultValue: appConfig.appRevalidateDuration,
                             onSelected: (duration) {
                               Future.delayed(100.ms).then(
                                 (value) {
                                   appConfig.setAppRevalidateDuration(duration);
-                                  Navigator.pop(context);
+                                  dialog!.close();
                                 },
                               );
                             },
@@ -1897,12 +1898,13 @@ class SettingsPage extends GetView<SettingsController> {
                                   appConfig.setSaveToPictures(true);
                                   return;
                                 }
-                                Global.showTipsDialog(
+                                DialogController? dialog;
+                                dialog=Global.showTipsDialog(
                                   context: context,
                                   text: TranslationKey.syncSettingsStoreImg2PicturesNoPermText.tr,
                                   showCancel: true,
                                   onOk: () async {
-                                    Navigator.pop(context);
+                                    await dialog!.close();
                                     await PermissionHelper.reqAndroidStoragePerm(path);
                                     if (!await PermissionHelper.testAndroidStoragePerm(path)) {
                                       appConfig.setSaveToPictures(false);
@@ -2067,7 +2069,7 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       description: Text(TranslationKey.ruleSettingsSmsRuleDesc.tr),
                       value: false,
-                      show: (v) => Platform.isAndroid || true,
+                      show: (v) => Platform.isAndroid,
                       action: (v) {
                         return TextButton(
                           onPressed: () {

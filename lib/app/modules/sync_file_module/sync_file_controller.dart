@@ -56,28 +56,28 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
 
   ///region tab明细数据
   List<_SyncingFilePageTab> get tabs => [
-        _SyncingFilePageTab(
-          name: TranslationKey.syncingFilePageHistoryTabText.tr,
-          icon: const Icon(
-            Icons.history,
-            size: 18,
-          ),
-        ),
-        _SyncingFilePageTab(
-          name: TranslationKey.syncingFilePageReceiveTabText.tr,
-          icon: const Icon(
-            Icons.file_download,
-            size: 18,
-          ),
-        ),
-        _SyncingFilePageTab(
-          name: TranslationKey.syncingFilePageSendTabText.tr,
-          icon: const Icon(
-            Icons.upload,
-            size: 18,
-          ),
-        ),
-      ];
+    _SyncingFilePageTab(
+      name: TranslationKey.syncingFilePageHistoryTabText.tr,
+      icon: const Icon(
+        Icons.history,
+        size: 18,
+      ),
+    ),
+    _SyncingFilePageTab(
+      name: TranslationKey.syncingFilePageReceiveTabText.tr,
+      icon: const Icon(
+        Icons.file_download,
+        size: 18,
+      ),
+    ),
+    _SyncingFilePageTab(
+      name: TranslationKey.syncingFilePageSendTabText.tr,
+      icon: const Icon(
+        Icons.upload,
+        size: 18,
+      ),
+    ),
+  ];
 
   List<SyncFileStatus> get recHistories => _recHistories;
 
@@ -173,56 +173,55 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
   Future deleteRecord(bool withFile) {
     Log.debug(tag, "withFile $withFile");
     final context = Get.context!;
-    Navigator.pop(context);
-    Global.showLoadingDialog(
+    final loadingDialog = Global.showLoadingDialog(
       context: context,
       loadingText: TranslationKey.deleting.tr,
     );
     return dbService.historyDao
         .deleteByIds(
-      selected.keys.toList().cast<int>(),
-      appConfig.userId,
-    )
-        .whenComplete(() {
-      bool hasError = false;
-      if (withFile) {
-        //删除本地文件
-        final files = selected.values;
-        for (var syncFile in files) {
-          final filePath = syncFile.syncingFile.filePath;
-          Log.debug(
-            tag,
-            "will delete file $filePath, isSender ${syncFile.syncingFile.isSender}",
-          );
-          if (syncFile.syncingFile.isSender) continue;
-          try {
-            var file = File(filePath);
-            if (file.existsSync()) {
-              file.deleteSync();
+          selected.keys.toList().cast<int>(),
+          appConfig.userId,
+        )
+        .whenComplete(() async {
+          bool hasError = false;
+          if (withFile) {
+            //删除本地文件
+            final files = selected.values;
+            for (var syncFile in files) {
+              final filePath = syncFile.syncingFile.filePath;
+              Log.debug(
+                tag,
+                "will delete file $filePath, isSender ${syncFile.syncingFile.isSender}",
+              );
+              if (syncFile.syncingFile.isSender) continue;
+              try {
+                var file = File(filePath);
+                if (file.existsSync()) {
+                  file.deleteSync();
+                }
+              } catch (e, stack) {
+                Log.error(
+                  logTag,
+                  "删除文件 $filePath 失败: $e $stack",
+                );
+                hasError = true;
+              }
             }
-          } catch (e, stack) {
-            Log.error(
-              logTag,
-              "删除文件 $filePath 失败: $e $stack",
-            );
-            hasError = true;
           }
-        }
-      }
-      refreshHistoryFiles();
-      Navigator.pop(context);
-      if (hasError) {
-        Global.showSnackBarWarn(
-          context: context,
-          text: TranslationKey.partialDeletionFailed.tr,
-        );
-      } else {
-        Global.showSnackBarSuc(
-          context: context,
-          text: TranslationKey.deletingSuccess.tr,
-        );
-      }
-    });
+          refreshHistoryFiles();
+          await loadingDialog.close();
+          if (hasError) {
+            Global.showSnackBarWarn(
+              context: context,
+              text: TranslationKey.partialDeletionFailed.tr,
+            );
+          } else {
+            Global.showSnackBarSuc(
+              context: context,
+              text: TranslationKey.deletingSuccess.tr,
+            );
+          }
+        });
   }
 
   void cancelSelectionMode() {
@@ -234,5 +233,4 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
   void onPopScopeDisableMultiSelection() {
     cancelSelectionMode();
   }
-
 }

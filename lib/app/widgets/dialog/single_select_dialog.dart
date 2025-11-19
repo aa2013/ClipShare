@@ -14,7 +14,7 @@ class SingleSelectDialog<T> extends StatelessWidget {
     required this.selections,
   });
 
-  static void show<T>({
+  static DialogController show<T>({
     required BuildContext context,
     required void Function(T value) onSelected,
     required T defaultValue,
@@ -24,7 +24,7 @@ class SingleSelectDialog<T> extends StatelessWidget {
     String? cancelText,
     List<Widget>? actions,
   }) {
-    Global.showDialog(
+    return Global.showDialog(
       context,
       AlertDialog(
         title: title,
@@ -33,7 +33,8 @@ class SingleSelectDialog<T> extends StatelessWidget {
           defaultValue: defaultValue,
           selections: selections,
         ),
-        actions: actions ??
+        actions:
+            actions ??
             [
               TextButton(
                 onPressed: () {

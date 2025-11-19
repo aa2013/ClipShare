@@ -184,7 +184,8 @@ class SyncFilePage extends GetView<SyncFileController> {
                                 message: TranslationKey.delete.tr,
                                 child: FloatingActionButton(
                                   onPressed: () {
-                                    Global.showTipsDialog(
+                                    DialogController? tipsDialog;
+                                    tipsDialog = Global.showTipsDialog(
                                       context: context,
                                       text: TranslationKey.deleteWithFilesOnSyncFilePageAckDialogText.trParams({"length": controller.selected.length.toString()}),
                                       showCancel: true,
@@ -193,19 +194,21 @@ class SyncFilePage extends GetView<SyncFileController> {
                                       okText: TranslationKey.onlyDeleteRecordsText.tr,
                                       autoDismiss: false,
                                       onOk: () async {
+                                        await tipsDialog!.close();
                                         await controller.deleteRecord(false);
                                         controller.selected.clear();
                                         controller.selectMode = false;
                                         appConfig.disableMultiSelectionMode(true);
                                       },
                                       onNeutral: () async {
+                                        await tipsDialog!.close();
                                         await controller.deleteRecord(true);
                                         controller.selected.clear();
                                         controller.selectMode = false;
                                         appConfig.disableMultiSelectionMode(true);
                                       },
-                                      onCancel: () {
-                                        Get.back();
+                                      onCancel: () async {
+                                        await tipsDialog!.close();
                                       },
                                     );
                                   },

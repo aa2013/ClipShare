@@ -456,7 +456,7 @@ class DialogController {
         _dialogKeyMap.remove(id);
         // Navigator.removeRoute(dialog.key.currentContext!, routeDialog);
         if (Navigator.canPop(dialog.key.currentContext!)) {
-          Navigator.of(dialog.key.currentContext!, rootNavigator: true).pop(value);
+          Navigator.of(dialog.key.currentContext!, rootNavigator: false).pop(value);
         }
       }
       _dialogKeyMap.remove(id);

@@ -447,8 +447,8 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                             appConfig.disableMultiSelectionMode(true);
                             setState(() {});
                           }
-
-                          Global.showTipsDialog(
+                          DialogController? dialog;
+                          dialog = Global.showTipsDialog(
                             context: context,
                             text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
                             showCancel: true,
@@ -456,7 +456,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                             showNeutral: _selectedItems.any((item) => item.isFile),
                             neutralText: TranslationKey.deleteWithFiles.tr,
                             onCancel: () {
-                              Navigator.pop(context);
+                              dialog!.close();
                             },
                             onNeutral: () => multiDelete(true),
                             onOk: () => multiDelete(false),
