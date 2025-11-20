@@ -533,6 +533,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     await Future.delayed(200.ms);
     try {
       final exInfo = await backupHandler.backup(Directory(path), backupTypes);
+      dialog.close();
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
@@ -574,6 +575,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     await Future.delayed(200.ms);
     try {
       final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController, backupTypes);
+      dialog.close();
       if (exInfo != null) {
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);

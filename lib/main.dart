@@ -40,33 +40,6 @@ import 'app/modules/splash_module/splash_page.dart';
 import 'app/services/config_service.dart';
 import 'app/services/db_service.dart';
 import 'app/theme/app_theme.dart';
-class LoggingNavigatorObserver extends NavigatorObserver {
-  void _log(String msg) {
-    // 你现有的 Log 调用方式替换下面一行
-    debugPrint('🧭 NAV_OBS: $msg');
-  }
-
-  @override
-  void didPop(Route route, Route? previousRoute) {
-    _log('didPop route: ${route.settings.name ?? route.runtimeType}, previous: ${previousRoute?.settings.name ?? previousRoute?.runtimeType}');
-    // 打印堆栈，帮助定位是谁触发的 pop
-    _log(StackTrace.current.toString());
-    super.didPop(route, previousRoute);
-  }
-
-  @override
-  void didRemove(Route route, Route? previousRoute) {
-    _log('didRemove route: ${route.settings.name ?? route.runtimeType}');
-    _log(StackTrace.current.toString());
-    super.didRemove(route, previousRoute);
-  }
-
-  @override
-  void didReplace({Route? newRoute, Route? oldRoute}) {
-    _log('didReplace new: ${newRoute?.settings.name ?? newRoute?.runtimeType} old: ${oldRoute?.settings.name ?? oldRoute?.runtimeType}');
-    super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
-  }
-}
 
 Future<void> main(List<String> args) async {
   try {
@@ -227,7 +200,6 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
       initTheme: isDarkMode ? darkThemeData : lightThemeData,
       builder: (context, theme) {
         return GetMaterialApp(
-          navigatorObservers: [LoggingNavigatorObserver(), /* 其他 observer */],
           translations: AppTranslation(),
           defaultTransition: Transition.native,
           builder: (ctx, child) {
