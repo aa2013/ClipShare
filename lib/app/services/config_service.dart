@@ -153,8 +153,7 @@ class ConfigService extends GetxService {
 
   bool get isEnableMultiSelectionMode => _isMultiSelectionMode.value;
   GetxController? _selectionModeController;
-  final _multiSelectionText =
-      TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
+  final _multiSelectionText = TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
 
   bool isMultiSelectionMode(GetxController controller) {
     if (controller == _selectionModeController && _isMultiSelectionMode.value) {
@@ -829,6 +828,12 @@ class ConfigService extends GetxService {
     } else {
       throw Exception("Not Support Platform");
     }
+
+    assert(() {
+      guid = "debug-$guid";
+      return true;
+    }());
+
     devInfo = DevInfo(guid, name, type);
     if (_localName.value.isNullOrEmpty) {
       _localName.value = devInfo.name;

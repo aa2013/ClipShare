@@ -13,6 +13,7 @@ class UserGuideController extends GetxController with WidgetsBindingObserver {
   final isInitFinished = false.obs;
   final PageController pageController = PageController();
   final List<BaseGuide> guides;
+  var _gotoHomePageLock = false;
 
   UserGuideController(this.guides);
 
@@ -99,6 +100,10 @@ class UserGuideController extends GetxController with WidgetsBindingObserver {
   }
 
   void gotoHomePage() {
+    if (_gotoHomePageLock) {
+      return;
+    }
+    _gotoHomePageLock = true;
     Get.offNamed(Routes.HOME);
   }
 

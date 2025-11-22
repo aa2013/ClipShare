@@ -654,7 +654,8 @@ enum TranslationKey {
   backupTypeOperationSync,
   selectBackupItems,
   online,
-  offline;
+  offline,
+  enterSoftware;
 
   String get tr => name.tr;
 

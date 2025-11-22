@@ -1326,6 +1326,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "在线";
       case TranslationKey.offline:
         return "离线";
+      case TranslationKey.enterSoftware:
+        return "进入软件";
     }
   }
 }

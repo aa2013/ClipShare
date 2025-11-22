@@ -8,6 +8,8 @@ class PermissionGuide extends StatefulWidget {
   final void Function()? grantPerm;
   final Future<bool> Function()? checkPerm;
   final Widget Function(BuildContext context, bool hasPerm)? action;
+  final IconData okIcon;
+  final String? okText;
 
   const PermissionGuide({
     super.key,
@@ -17,6 +19,8 @@ class PermissionGuide extends StatefulWidget {
     this.grantPerm,
     this.checkPerm,
     this.action,
+    this.okIcon = Icons.check_circle,
+    this.okText,
   });
 
   @override
@@ -25,8 +29,7 @@ class PermissionGuide extends StatefulWidget {
   }
 }
 
-class _PermissionGuideState extends State<PermissionGuide>
-    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+class _PermissionGuideState extends State<PermissionGuide> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   bool _hasPerm = false;
 
   @override
@@ -99,17 +102,8 @@ class _PermissionGuideState extends State<PermissionGuide>
                         widget.grantPerm!.call();
                       }
                     },
-                    icon: _hasPerm
-                        ? const Icon(
-                            Icons.check_circle,
-                            color: Colors.blue,
-                          )
-                        : const SizedBox.shrink(),
-                    label: Text(
-                      _hasPerm
-                          ? TranslationKey.goAuthorize.tr
-                          : TranslationKey.authorized.tr,
-                    ),
+                    icon: _hasPerm ? Icon(widget.okIcon, color: Colors.blue) : const SizedBox.shrink(),
+                    label: Text(_hasPerm ? widget.okText ?? TranslationKey.done.tr : TranslationKey.goAuthorize.tr),
                   )),
       ],
     );

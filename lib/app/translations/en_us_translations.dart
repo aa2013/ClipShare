@@ -1329,6 +1329,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Online";
       case TranslationKey.offline:
         return "Offline";
+      case TranslationKey.enterSoftware:
+        return "Enter";
     }
   }
 }
