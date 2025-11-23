@@ -91,11 +91,19 @@ class AndroidChannelService extends GetxService {
   }
 
   /// 发送通知
-  void sendNotify(String content) {
-    if (!Platform.isAndroid) return;
-    androidChannel.invokeMethod(
+  Future<int?> sendNotify(String content) {
+    if (!Platform.isAndroid) return Future.value(null);
+    return androidChannel.invokeMethod<int?>(
       AndroidChannelMethod.sendNotify.name,
       {"content": content},
+    );
+  }
+  /// 发送通知
+  Future<void> cancelNotify(int id) {
+    if (!Platform.isAndroid) return Future.value();
+    return androidChannel.invokeMethod(
+      AndroidChannelMethod.cancelNotify.name,
+      {"id": id},
     );
   }
 

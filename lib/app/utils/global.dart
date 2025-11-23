@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:animated_snack_bar/animated_snack_bar.dart';
@@ -8,13 +7,10 @@ import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/dialog/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:window_manager/window_manager.dart';
 
 import 'constants.dart';
 
@@ -22,70 +18,10 @@ class Global {
   Global._private();
 
   static const tag = "GlobalUtils";
-  static var _notificationReady = false;
-
-  static final _notification = FlutterLocalNotificationsPlugin();
-
-  static Future<void> _initNotifications() async {
-    if (_notificationReady) return;
-    const iosSettings = DarwinInitializationSettings();
-    var iconPath = File.fromUri(WindowsImage.getAssetUri(Constants.logoPngPath)).absolute.path;
-    final windowsSettings = WindowsInitializationSettings(
-      appName: Constants.appName,
-      appUserModelId: Constants.pkgName,
-      guid: Constants.appGuid,
-      iconPath: iconPath,
-    );
-    const linuxSettings = LinuxInitializationSettings(defaultActionName: 'Open notification');
-
-    final settings = InitializationSettings(
-      iOS: iosSettings,
-      macOS: iosSettings,
-      linux: linuxSettings,
-      windows: windowsSettings,
-    );
-
-    await _notification.initialize(
-      settings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        windowManager.show();
-      },
-    );
-    _notificationReady = true;
-  }
 
   static void toast(String text) {
     final androidChannelService = Get.find<AndroidChannelService>();
     androidChannelService.toast(text);
-  }
-
-  static Future<void> notify({
-    String title = Constants.appName,
-    required String content,
-    String? payload,
-  }) async {
-    if (Platform.isAndroid) {
-      final androidChannelService = Get.find<AndroidChannelService>();
-      androidChannelService.sendNotify(content);
-      return;
-    }
-    if (!_notificationReady) {
-      await _initNotifications();
-    }
-    const NotificationDetails notificationDetails = NotificationDetails(
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
-      linux: LinuxNotificationDetails(),
-      windows: WindowsNotificationDetails(),
-    );
-
-    await _notification.show(
-      0,
-      title,
-      content,
-      notificationDetails,
-      payload: payload,
-    );
   }
 
   static void showSnackBar(
@@ -424,7 +360,7 @@ class DialogController {
   bool get closed => !_dialogKeyMap.containsKey(id);
   static final Map<int, DialogController> _dialogKeyMap = {};
 
-  DialogController(this.context){
+  DialogController(this.context) {
     _dialogKeyMap[id] = this;
   }
 

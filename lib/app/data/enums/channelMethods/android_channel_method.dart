@@ -8,6 +8,7 @@ enum AndroidChannelMethod {
   moveToBg,
   toast,
   sendNotify,
+  cancelNotify,
   copyFileFromUri,
   startSmsListen,
   stopSmsListen,

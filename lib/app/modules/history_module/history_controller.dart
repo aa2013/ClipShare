@@ -10,6 +10,7 @@ import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -452,7 +453,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               try {
                 final json = jsonDecode(history.content);
                 final notificationContent = json["content"];
-                Global.notify(
+                NotifyUtil.notify(
                   title: TranslationKey.notificationFromDevice.trParams({"devName": sender.name}),
                   content: notificationContent,
                 );

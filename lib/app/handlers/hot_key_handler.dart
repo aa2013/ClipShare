@@ -3,9 +3,9 @@ import 'dart:math';
 
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/services/tray_service.dart';
-import 'package:clipshare/app/services/window_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -213,7 +213,7 @@ class AppHotKeyHandler {
       key,
       keyDownHandler: (hotKey) async {
         Log.debug(tag, "ExitApp HotKey Down");
-        Global.notify(content: TranslationKey.exitAppViaHotKey.tr);
+        NotifyUtil.notify(content: TranslationKey.exitAppViaHotKey.tr);
         final trayService = Get.find<TrayService>();
         trayService.clickExitAppItem();
       },

@@ -9,6 +9,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -121,7 +122,7 @@ class AppUpdateInfoUtil {
         }
       },
     );
-    Global.notify(content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}");
+    NotifyUtil.notify(content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}");
     return true;
   }
 }

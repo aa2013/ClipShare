@@ -98,11 +98,12 @@ class DevicePage extends GetView<DeviceController> {
                         ),
                       ),
                     ),
-                    Visibility(
-                      visible: filteredPairedList.isNotEmpty,
-                      replacement: EmptyContent(),
-                      child: renderGridView(filteredPairedList),
-                    ),
+                    if (controller.pairedList.isNotEmpty)
+                      Visibility(
+                        visible: filteredPairedList.isNotEmpty,
+                        replacement: EmptyContent(),
+                        child: renderGridView(filteredPairedList),
+                      ),
                   ],
                 );
               },
