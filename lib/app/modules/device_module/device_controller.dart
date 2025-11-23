@@ -96,16 +96,17 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   final pairedFilter = DevicePairedFilterStatus.all.obs;
 
   Map<DevicePairedFilterStatus, Widget> get pairedFilterSegmented {
-    final labels = {
-      DevicePairedFilterStatus.all: TranslationKey.all.tr,
-      DevicePairedFilterStatus.online: TranslationKey.online.tr,
-      DevicePairedFilterStatus.offline: TranslationKey.offline.tr,
-    };
     final result = <DevicePairedFilterStatus, Widget>{};
-    for (var key in labels.keys) {
-      result[key] = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: Text(labels[key]!),
+    for (var status in DevicePairedFilterStatus.values) {
+      result[status] = Tooltip(
+        message: status.tr,
+        child: InkWell(
+          mouseCursor: SystemMouseCursors.click,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Icon(status.icon, size: 10),
+          ),
+        ),
       );
     }
     return result;

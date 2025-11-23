@@ -64,6 +64,7 @@ class DevicePage extends GetView<DeviceController> {
                                   ),
                                 ),
                                 CupertinoSegmentedControl(
+
                                   //子标签
                                   children: controller.pairedFilterSegmented,
                                   //当前选中的索引
