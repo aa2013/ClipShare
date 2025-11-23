@@ -453,10 +453,17 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               try {
                 final json = jsonDecode(history.content);
                 final notificationContent = json["content"];
-                NotifyUtil.notify(
+                const notifyKey = "showMobileNotify";
+                final notifyId = await NotifyUtil.notify(
                   title: TranslationKey.notificationFromDevice.trParams({"devName": sender.name}),
                   content: notificationContent,
+                  key: notifyKey,
                 );
+                if (notifyId != null) {
+                  Future.delayed(2.s, () {
+                    NotifyUtil.cancel(notifyKey, notifyId);
+                  });
+                }
               } catch (err, stack) {
                 Log.error(tag, "show mobile notification error: $err, $stack");
               }

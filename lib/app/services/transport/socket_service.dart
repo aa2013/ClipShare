@@ -71,7 +71,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final Map<int, FileSyncHandler> _forwardFiles = {};
   Map<String, Future> broadcastProcessChain = {};
   bool _pairing = false;
-  int? _notifyId;
+  int? _pairingNotifyId;
   static bool _isInit = false;
   bool screenOpened = true;
   Future? autoCloseConnTimer;
@@ -667,7 +667,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         int code = 100000 + random.nextInt(900000);
         DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
         //发送通知
-        _notifyId = await NotifyUtil.notify(content: "${TranslationKey.newParingRequest.tr}: $code", key: "dev-pairing-${dev.guid}");
+        _pairingNotifyId = await NotifyUtil.notify(
+          content: "${TranslationKey.newParingRequest.tr}: $code",
+          key: "dev-pairing-${dev.guid}",
+        );
         if (_pairing) {
           Get.back();
         }
@@ -773,11 +776,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     DevPairingHandler.removeCode(dev.guid);
     Get.back();
     dev.sendData(MsgType.cancelPairing, {}, false);
-    if (_notifyId != null) {
-      NotifyUtil.cancel("dev-pairing-${dev.guid}", _notifyId!);
+    if (_pairingNotifyId != null) {
+      NotifyUtil.cancel("dev-pairing-${dev.guid}", _pairingNotifyId!);
     }
     _pairing = false;
-    _notifyId = null;
+    _pairingNotifyId = null;
   }
 
   ///数据同步处理
@@ -1342,11 +1345,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   ///设备取消配对
   void _onCancelPairing(DevInfo dev) {
     Log.debug(tag, "${dev.name} cancelPairing");
-    if (_notifyId != null) {
-      NotifyUtil.cancel("dev-pairing-${dev.guid}", _notifyId!);
+    if (_pairingNotifyId != null) {
+      NotifyUtil.cancel("dev-pairing-${dev.guid}", _pairingNotifyId!);
     }
     _pairing = false;
-    _notifyId = null;
+    _pairingNotifyId = null;
     for (var listener in _devAliveListeners) {
       try {
         listener.onCancelPairing(dev);
@@ -1537,6 +1540,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       final key = "dev-conn-$devId";
       NotifyUtil.cancelAll(key);
       final notifyId = await NotifyUtil.notify(
+        key: key,
         content: TranslationKey.devConnectedNotifyContent.trParams({
           "devName": devService.getName(devId),
         }),
@@ -1566,6 +1570,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       final key = "dev-disconn-$devId";
       NotifyUtil.cancelAll(key);
       final notifyId = await NotifyUtil.notify(
+        key: key,
         content: TranslationKey.devDisconnectNotifyContent.trParams({
           "devName": devService.getName(devId),
         }),

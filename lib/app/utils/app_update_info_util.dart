@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/models/update_log.dart';
 import 'package:clipshare/app/exceptions/fetch_update_logs_exception.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -122,7 +123,16 @@ class AppUpdateInfoUtil {
         }
       },
     );
-    NotifyUtil.notify(content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}");
+    const notifyKey = "appUpdate";
+    final notifyId = await NotifyUtil.notify(
+      content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}",
+      key: notifyKey,
+    );
+    if (notifyId != null) {
+      Future.delayed(2.s, () {
+        NotifyUtil.cancel(notifyKey, notifyId);
+      });
+    }
     return true;
   }
 }

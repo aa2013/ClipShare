@@ -44,53 +44,57 @@ class NotifyUtil {
   static Future<int?> notify({
     String title = Constants.appName,
     required String content,
-    String? key,
+    required String key,
     String? payload,
   }) async {
+    int? notifyId;
     if (Platform.isAndroid) {
       final androidChannelService = Get.find<AndroidChannelService>();
-      final notifyId = await androidChannelService.sendNotify(content);
-      if (key == null || notifyId == null) return null;
-      if (!_notifyIds.containsKey(key)) {
-        List<int> ids = [notifyId];
-        _notifyIds[key] = ids;
-      } else {
-        _notifyIds[key]!.add(notifyId);
+      notifyId = await androidChannelService.sendNotify(content);
+    } else {
+      if (!_notificationReady) {
+        await _initNotifications();
       }
-      return notifyId;
+      const NotificationDetails notificationDetails = NotificationDetails(
+        iOS: DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(),
+        linux: LinuxNotificationDetails(),
+        windows: WindowsNotificationDetails(),
+      );
+      notifyId = _notifyId;
+      _notifyId++;
+      await _notification.show(
+        notifyId,
+        title,
+        content,
+        notificationDetails,
+        payload: payload,
+      );
     }
-    if (!_notificationReady) {
-      await _initNotifications();
+    if (notifyId == null) return null;
+    if (!_notifyIds.containsKey(key)) {
+      List<int> ids = [notifyId];
+      _notifyIds[key] = ids;
+    } else {
+      _notifyIds[key]!.add(notifyId);
     }
-    const NotificationDetails notificationDetails = NotificationDetails(
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
-      linux: LinuxNotificationDetails(),
-      windows: WindowsNotificationDetails(),
-    );
-
-    await _notification.show(
-      _notifyId++,
-      title,
-      content,
-      notificationDetails,
-      payload: payload,
-    );
-    return null;
+    return notifyId;
   }
 
   static void cancel(String key, int notifyId) {
-    if (!Platform.isAndroid) return;
     if (!_notifyIds.containsKey(key)) {
       return;
     }
-    final androidChannelService = Get.find<AndroidChannelService>();
-    androidChannelService.cancelNotify(notifyId);
+    if (Platform.isAndroid){
+      final androidChannelService = Get.find<AndroidChannelService>();
+      androidChannelService.cancelNotify(notifyId);
+    }else{
+      _notification.cancel(notifyId);
+    }
     _notifyIds[key]!.remove(notifyId);
   }
 
   static cancelExcludeLast(String key) {
-    if (!Platform.isAndroid) return;
     if (!_notifyIds.containsKey(key)) {
       return;
     }
@@ -103,19 +107,26 @@ class NotifyUtil {
     ids = ids..removeLast();
     final androidChannelService = Get.find<AndroidChannelService>();
     for (var id in ids) {
-      androidChannelService.cancelNotify(id);
+      if(Platform.isAndroid) {
+        androidChannelService.cancelNotify(id);
+      }else{
+        _notification.cancel(id);
+      }
     }
   }
 
   static cancelAll(String key) {
-    if (!Platform.isAndroid) return;
     if (!_notifyIds.containsKey(key)) {
       return;
     }
     var ids = _notifyIds[key]!;
     final androidChannelService = Get.find<AndroidChannelService>();
     for (var id in ids) {
-      androidChannelService.cancelNotify(id);
+      if (Platform.isAndroid){
+        androidChannelService.cancelNotify(id);
+      }else{
+        _notification.cancel(id);
+      }
     }
     _notifyIds[key]!.clear();
   }
