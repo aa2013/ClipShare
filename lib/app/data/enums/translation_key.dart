@@ -547,7 +547,6 @@ enum TranslationKey {
   notificationRules,
   addWhitelistRule,
   addBlacklistRule,
-  filterRuleDetectTips,
   ignoreCase,
   application,
   supportRegex,
@@ -655,7 +654,9 @@ enum TranslationKey {
   selectBackupItems,
   online,
   offline,
-  enterSoftware;
+  enterSoftware,
+  types,
+  selectTypes;
 
   String get tr => name.tr;
 

@@ -18,12 +18,14 @@ class MultiSelectDialog<T> extends StatefulWidget {
   final void Function(List<T> values) onSelected;
   final List<CheckboxData<T>> selections;
   final List<T> defaultValues;
+  final int minSelectedCnt;
 
   const MultiSelectDialog._private({
     super.key,
     required this.onSelected,
     required this.defaultValues,
     required this.selections,
+    this.minSelectedCnt = 1,
   });
 
   static DialogController show<T>({
@@ -32,25 +34,25 @@ class MultiSelectDialog<T> extends StatefulWidget {
     required List<T> defaultValues,
     required List<CheckboxData<T>> selections,
     required Widget title,
+    int minSelectedCnt = 1,
     void Function()? onCancel,
+    bool dismissable = false,
     String? cancelText,
     String? confirmText,
   }) {
-    // 确保至少有一个默认选中项
-    final List<T> safeDefaultValues = defaultValues.isNotEmpty ? List.from(defaultValues) : [selections.firstWhere((item) => item.isDefault).value];
-
     return Global.showDialog(
       context,
       _MultiSelectDialogContent<T>(
         title: title,
         selections: selections,
-        initialSelectedValues: safeDefaultValues,
+        initialSelectedValues: defaultValues,
         onConfirmed: onSelected,
         onCancel: onCancel,
         cancelText: cancelText,
         confirmText: confirmText,
+        minSelectedCnt: minSelectedCnt,
       ),
-      dismissible: false,
+      dismissible: dismissable,
     );
   }
 
@@ -66,12 +68,14 @@ class _MultiSelectDialogContent<T> extends StatefulWidget {
   final void Function()? onCancel;
   final String? cancelText;
   final String? confirmText;
+  final int minSelectedCnt;
 
   const _MultiSelectDialogContent({
     required this.title,
     required this.selections,
     required this.initialSelectedValues,
     required this.onConfirmed,
+    this.minSelectedCnt = 1,
     this.onCancel,
     this.cancelText,
     this.confirmText,
@@ -89,19 +93,24 @@ class _MultiSelectDialogContentState<T> extends State<_MultiSelectDialogContent<
     super.initState();
     _selectedValues = List.from(widget.initialSelectedValues);
 
-    // 确保至少选择一项
-    if (_selectedValues.isEmpty && widget.selections.isNotEmpty) {
-      _selectedValues.add(widget.selections.first.value);
+    // 确保至少选择 minSelectedCnt 项
+    final minCnt = widget.minSelectedCnt;
+    for (var item in widget.selections) {
+      if (_selectedValues.length < minCnt) {
+        _selectedValues.add(item.value);
+      } else {
+        break;
+      }
     }
   }
 
   void _toggleSelection(T value) {
     setState(() {
       if (_selectedValues.contains(value)) {
-        // 如果取消选中后没有选中项了，不允许取消
-        if (_selectedValues.length > 1) {
-          _selectedValues.remove(value);
+        if (_selectedValues.length <= widget.minSelectedCnt) {
+          return;
         }
+        _selectedValues.remove(value);
       } else {
         _selectedValues.add(value);
       }

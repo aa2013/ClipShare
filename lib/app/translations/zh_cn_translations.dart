@@ -1104,12 +1104,11 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.contentCannotEmpty:
         return "内容不能为空";
       case TranslationKey.contentAndSourceCannotEmpty:
-        return "内容和来源不能都为空";
+        return "内容、来源、类型不能都为空";
       case TranslationKey.blacklistRules:
         return "黑名单规则";
       case TranslationKey.whitelistRules:
         return "白名单规则";
-      case TranslationKey.filterRuleDetectTips:
         return "当前仅对文本内容生效";
       case TranslationKey.ignoreCase:
         return "忽略大小写";
@@ -1328,6 +1327,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "离线";
       case TranslationKey.enterSoftware:
         return "进入软件";
+      case TranslationKey.types:
+        return "类型";
+      case TranslationKey.selectTypes:
+        return "选择类型";
     }
   }
 }
