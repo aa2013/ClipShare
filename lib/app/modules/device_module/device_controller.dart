@@ -56,14 +56,14 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   List<DeviceCard> get filteredPairedList {
     return pairedList.where((item) {
-      final v = pairedFilter.value;
-      if (v == DevicePairedFilterStatus.all) {
+      final v = appConfig.devicePairedStatusFilter;
+      if (v == DevicePairedStatusFilter.all) {
         return true;
       }
-      if (v == DevicePairedFilterStatus.online && item.isConnected) {
+      if (v == DevicePairedStatusFilter.online && item.isConnected) {
         return true;
       }
-      if (v == DevicePairedFilterStatus.offline && !item.isConnected) {
+      if (v == DevicePairedStatusFilter.offline && !item.isConnected) {
         return true;
       }
       return false;
@@ -93,11 +93,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   //endregion
 
-  final pairedFilter = DevicePairedFilterStatus.all.obs;
-
-  Map<DevicePairedFilterStatus, Widget> get pairedFilterSegmented {
-    final result = <DevicePairedFilterStatus, Widget>{};
-    for (var status in DevicePairedFilterStatus.values) {
+  Map<DevicePairedStatusFilter, Widget> get pairedFilterSegmented {
+    final result = <DevicePairedStatusFilter, Widget>{};
+    for (var status in DevicePairedStatusFilter.values) {
       result[status] = Tooltip(
         message: status.tr,
         child: InkWell(

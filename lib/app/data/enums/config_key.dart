@@ -58,4 +58,6 @@ enum ConfigKey {
   notificationBlackWhiteList,
   notificationServer,
   mobileDevIdGenerateWay,
+  devicePairedStatusFilter,
+  lastSqlEditContent,
 }

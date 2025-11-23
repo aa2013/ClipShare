@@ -102,7 +102,7 @@ class FilterRule {
     return {
       "content": content,
       "appIds": appIds.toList(),
-      "types": types.map((type) => type.toString()).toList(),
+      "types": types.map((type) => type.name).toList(),
       "needSync": needSync,
       "enable": enable,
       "ignoreCase": ignoreCase,

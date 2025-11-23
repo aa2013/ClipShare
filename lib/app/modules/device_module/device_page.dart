@@ -68,10 +68,10 @@ class DevicePage extends GetView<DeviceController> {
                                   //子标签
                                   children: controller.pairedFilterSegmented,
                                   //当前选中的索引
-                                  groupValue: controller.pairedFilter.value,
+                                  groupValue: appConfig.devicePairedStatusFilter,
                                   //点击回调
                                   onValueChanged: (filter) {
-                                    controller.pairedFilter.value = filter;
+                                    appConfig.setDevicePairedStatusFilter(filter);
                                   },
                                 ),
                               ],
