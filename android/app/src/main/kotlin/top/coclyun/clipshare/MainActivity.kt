@@ -6,7 +6,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
-import io.flutter.plugin.common.MethodChannel.Result
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -21,22 +20,23 @@ import android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugins.GeneratedPluginRegistrant
+import org.acra.ACRA
 import top.coclyun.clipshare.broadcast.ScreenReceiver
 import top.coclyun.clipshare.observer.SmsObserver
 import top.coclyun.clipshare.service.HistoryFloatService
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
-import androidx.core.net.toUri
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import org.acra.ACRA
 import java.net.URLDecoder
 
 const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
@@ -50,6 +50,7 @@ class MainActivity : FlutterFragmentActivity() {
     private val TAG: String = "MainActivity";
     private var smsObserver: SmsObserver? = null;
     private lateinit var binaryMessenger: BinaryMessenger
+    private lateinit var notifyManager: NotificationManager
 
     companion object {
         lateinit var commonChannel: MethodChannel;
@@ -67,7 +68,7 @@ class MainActivity : FlutterFragmentActivity() {
         /**
          * 发送通知
          */
-        fun commonNotify(content: String) {
+        fun commonNotify(content: String): Int {
             // 构建通知
             val builder = NotificationCompat.Builder(applicationContext, commonNotifyChannelId)
                 .setSmallIcon(R.drawable.launcher_icon).setContentTitle("ClipShare")
@@ -81,9 +82,11 @@ class MainActivity : FlutterFragmentActivity() {
                 builder.setBadgeIconType(NotificationCompat.BADGE_ICON_NONE)
             }
             val notificationManager =
-                applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
+                applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager;
+            val id = commonNotifyId++
             // 发送通知
-            notificationManager.notify(commonNotifyId++, builder.build())
+            notificationManager.notify(id, builder.build())
+            return id
         }
     }
 
@@ -185,14 +188,13 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     private fun createNotifyChannel() {
+        notifyManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         // 创建通知渠道（仅适用于 Android 8.0 及更高版本）
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 commonNotifyChannelId, "普通通知", NotificationManager.IMPORTANCE_HIGH
             )
-            val notificationManager =
-                Companion.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager;
-            notificationManager.createNotificationChannel(channel)
+            notifyManager.createNotificationChannel(channel)
         }
     }
 
@@ -285,7 +287,12 @@ class MainActivity : FlutterFragmentActivity() {
                 //发送通知
                 "sendNotify" -> {
                     val content = args["content"].toString();
-                    commonNotify(content)
+                    result.success(commonNotify(content));
+                }
+                //发送通知
+                "cancelNotify" -> {
+                    val id = args["id"] as Int
+                    notifyManager.cancel(id)
                     result.success(true);
                 }
                 //显示历史浮窗
@@ -608,7 +615,7 @@ class MainActivity : FlutterFragmentActivity() {
         Log.d("MainActivity", "onDestroy")
         try {
             super.onDestroy()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             //ignored
         }
         try {

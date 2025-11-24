@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/devicce_id_generate_way.dart';
+import 'package:clipshare/app/data/enums/device_paried_filter_status.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
@@ -153,8 +154,7 @@ class ConfigService extends GetxService {
 
   bool get isEnableMultiSelectionMode => _isMultiSelectionMode.value;
   GetxController? _selectionModeController;
-  final _multiSelectionText =
-      TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
+  final _multiSelectionText = TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
 
   bool isMultiSelectionMode(GetxController controller) {
     if (controller == _selectionModeController && _isMultiSelectionMode.value) {
@@ -540,6 +540,16 @@ class ConfigService extends GetxService {
 
   DeviceIdGenerateWay get mobileDevIdGenerateWay => _mobileDevIdGenerateWay.value;
 
+  //设备状态筛选过滤器
+  final _devicePairedStatusFilter = Rx<DevicePairedStatusFilter>(DevicePairedStatusFilter.all);
+
+  DevicePairedStatusFilter get devicePairedStatusFilter => _devicePairedStatusFilter.value;
+
+  //上次编辑的SQL内容
+  final _lastSqlEditContent = ''.obs;
+
+  String get lastSqlEditContent => _lastSqlEditContent.value;
+
   //endregion
 
   //endregion
@@ -729,6 +739,12 @@ class ConfigService extends GetxService {
       DeviceIdGenerateWay.unknown,
       convert: DeviceIdGenerateWay.parse,
     );
+    _devicePairedStatusFilter.value = await cfg.getConfigByKey(
+      ConfigKey.devicePairedStatusFilter,
+      DevicePairedStatusFilter.all,
+      convert: DevicePairedStatusFilter.parse,
+    );
+    _lastSqlEditContent.value = await cfg.getConfigByKey(ConfigKey.lastSqlEditContent, '');
   }
 
   ///初始化路径信息
@@ -829,6 +845,12 @@ class ConfigService extends GetxService {
     } else {
       throw Exception("Not Support Platform");
     }
+
+    assert(() {
+      guid = "debug-$guid";
+      return true;
+    }());
+
     devInfo = DevInfo(guid, name, type);
     if (_localName.value.isNullOrEmpty) {
       _localName.value = devInfo.name;
@@ -1231,6 +1253,18 @@ class ConfigService extends GetxService {
   Future<void> setMobileDeviceIdGenerateWay(DeviceIdGenerateWay way) async {
     await configDao.addOrUpdate(ConfigKey.mobileDevIdGenerateWay, way.name);
     _mobileDevIdGenerateWay.value = way;
+  }
+
+  ///设置设备状态筛选过滤器
+  Future<void> setDevicePairedStatusFilter(DevicePairedStatusFilter filter) async {
+    await configDao.addOrUpdate(ConfigKey.devicePairedStatusFilter, filter.name);
+    _devicePairedStatusFilter.value = filter;
+  }
+
+  ///更新编辑的 SQL内容
+  Future<void> setSQLEditContent(String sql) async {
+    await configDao.addOrUpdate(ConfigKey.lastSqlEditContent, sql);
+    _lastSqlEditContent.value = sql;
   }
 
   //endregion

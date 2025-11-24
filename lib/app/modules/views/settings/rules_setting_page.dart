@@ -277,7 +277,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
                       onPressed: () {
                         _addData = null;
                         _editData = null;
-                        Navigator.pop(context);
+                        outDialog.close();
                       },
                       child: Text(TranslationKey.dialogCancelText.tr),
                     ),
@@ -286,7 +286,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
                         final data = idx == null ? _addData! : _editData!;
                         var res = widget.onAdd(data);
                         if (!res) return;
-                        Navigator.pop(context);
+                        outDialog.close();
                         if (idx == null) {
                           _list.add(data);
                         } else {

@@ -38,6 +38,11 @@ class AuthenticationController extends GetxController {
     localizedReason = args['localizedReason'];
   }
 
+  @override
+  void onClose() {
+    appConfig.authenticating.value = false;
+  }
+
   void showBottomSheetAuthentication() {
     showModalBottomSheet(
       // isScrollControlled: true,

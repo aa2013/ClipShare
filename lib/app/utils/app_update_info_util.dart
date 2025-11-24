@@ -6,9 +6,11 @@ import 'package:clipshare/app/data/models/update_log.dart';
 import 'package:clipshare/app/exceptions/fetch_update_logs_exception.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -44,7 +46,10 @@ class AppUpdateInfoUtil {
     return updateLogs;
   }
 
-  static Future<bool> showUpdateInfo([bool debounce = false]) async {
+  static Future<bool> showUpdateInfo({
+    bool forceCheck = false,
+    bool debounce = false,
+  }) async {
     final now = DateTime.now();
     if (_lastCheckUpdateTime != null && debounce) {
       final diffHours = now.difference(_lastCheckUpdateTime!).inHours;
@@ -60,7 +65,7 @@ class AppUpdateInfoUtil {
     }
     final latestVersionCode = logs.first.version.code;
     final appConfig = Get.find<ConfigService>();
-    if (latestVersionCode == appConfig.ignoreUpdateVersion) {
+    if (latestVersionCode == appConfig.ignoreUpdateVersion && !forceCheck) {
       return false;
     }
     String content = "";
@@ -118,7 +123,16 @@ class AppUpdateInfoUtil {
         }
       },
     );
-    Global.notify(content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}");
+    const notifyKey = "appUpdate";
+    final notifyId = await NotifyUtil.notify(
+      content: "${TranslationKey.newVersionAvailable.tr} ${logs.first.version}",
+      key: notifyKey,
+    );
+    if (notifyId != null) {
+      Future.delayed(2.s, () {
+        NotifyUtil.cancel(notifyKey, notifyId);
+      });
+    }
     return true;
   }
 }

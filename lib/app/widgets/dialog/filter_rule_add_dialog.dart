@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
@@ -9,15 +11,16 @@ import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
-import 'package:get_apps/get_apps.dart';
+
+import 'multi_select_dialog.dart';
 
 class FilterRuleAddDialog extends StatefulWidget {
   final FilterRule? data;
@@ -40,6 +43,7 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
   final contentText = TextEditingController();
   final allLocalAppList = <LocalAppInfo>[].obs;
   final selectedAppList = <LocalAppInfo>[].obs;
+  final selectedTypes = <HistoryContentType>[].obs;
   final ignoreCase = false.obs;
   final iconBytesMap = <String, Uint8List>{};
   final sourceService = Get.find<ClipboardSourceService>();
@@ -52,6 +56,7 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
     if (widget.data != null) {
       contentText.text = widget.data!.content;
       ignoreCase.value = widget.data!.ignoreCase;
+      selectedTypes.value = widget.data!.types.toList();
     }
     loadInstalledApps().then((_) {
       iconBytesMap.clear();
@@ -65,7 +70,35 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
   }
 
   Future<void> loadInstalledApps() async {
-    allLocalAppList.addAll(sourceService.installedApps);
+    if (PlatformExt.isDesktop) {
+      final list = sourceService.appInfos.where((item) => item.devId == appConfig.device.guid).map((item) => LocalAppInfo.fromAppInfo(item, false));
+      allLocalAppList.addAll(list);
+    } else {
+      allLocalAppList.addAll(sourceService.installedApps);
+    }
+  }
+
+  Future<List<HistoryContentType>> _showTypesDialog() {
+    Completer<List<HistoryContentType>> completer = Completer();
+    late DialogController dlgController;
+    dlgController = MultiSelectDialog.show<HistoryContentType>(
+      context: context,
+      dismissable: true,
+      onSelected: (list) {
+        completer.complete(list);
+      },
+      minSelectedCnt: 0,
+      defaultValues: selectedTypes,
+      selections: FilterRule.filterTypes.map((item) {
+        return CheckboxData(value: item, text: item.label);
+      }).toList(),
+      title: Text(TranslationKey.selectTypes.tr),
+      onCancel: () {
+        completer.complete([]);
+        dlgController.close();
+      },
+    );
+    return completer.future;
   }
 
   @override
@@ -76,6 +109,45 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("${TranslationKey.types.tr}："),
+                RoundedChip(
+                  avatar: const Icon(Icons.add),
+                  label: Text(TranslationKey.selection.tr),
+                  onPressed: () async {
+                    final result = await _showTypesDialog();
+                    selectedTypes.value = result;
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Obx(() {
+              if (selectedTypes.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Expanded(
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    children: selectedTypes.map((type) {
+                      return Container(
+                        margin: const EdgeInsets.only(right: 5, bottom: 5),
+                        child: RoundedChip(
+                          onPressed: () => {},
+                          label: Text(type.label),
+                          deleteIcon: const Icon(Icons.delete, color: Colors.blueGrey),
+                          onDeleted: () {
+                            selectedTypes.remove(type);
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            }),
             TextField(
               controller: contentText,
               autofocus: true,
@@ -85,42 +157,44 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
                 border: const OutlineInputBorder(),
               ),
             ),
-            if (Platform.isAndroid) const SizedBox(height: 10),
-            if (Platform.isAndroid)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("${TranslationKey.application.tr}: "),
-                  RoundedChip(
-                    avatar: const Icon(Icons.add),
-                    label: Text(TranslationKey.selection.tr),
-                    onPressed: () {
-                      final page = AppSelectionPage(
-                        loadDeviceName: (devId) => appConfig.device.name,
-                        selectedIds: selectedAppList.map((app) => app.appId).toList(),
-                        distinguishSystemApps: true,
-                        loadAppInfos: () async {
-                          return allLocalAppList.value;
-                        },
-                        onSelectedDone: (selected) {
-                          selectedAppList.clear();
-                          selectedAppList.addAll(selected);
-                        },
-                      );
-                      if (appConfig.isSmallScreen) {
-                        Get.to(page);
-                      } else {
-                        Global.showDialog(context, DynamicSizeWidget(child: page));
-                      }
-                    },
-                  ),
-                ],
-              ),
-            if (Platform.isAndroid)
-              Expanded(
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("${TranslationKey.application.tr}: "),
+                RoundedChip(
+                  avatar: const Icon(Icons.add),
+                  label: Text(TranslationKey.selection.tr),
+                  onPressed: () {
+                    final page = AppSelectionPage(
+                      loadDeviceName: (devId) => appConfig.device.name,
+                      selectedIds: selectedAppList.map((app) => app.appId).toList(),
+                      distinguishSystemApps: Platform.isAndroid,
+                      loadAppInfos: () async {
+                        return allLocalAppList.value;
+                      },
+                      onSelectedDone: (selected) {
+                        selectedAppList.clear();
+                        selectedAppList.addAll(selected);
+                      },
+                    );
+                    if (appConfig.isSmallScreen) {
+                      Get.to(page);
+                    } else {
+                      Global.showDialog(context, DynamicSizeWidget(child: page));
+                    }
+                  },
+                ),
+              ],
+            ),
+            Obx((){
+              if(selectedAppList.isEmpty){
+                return const SizedBox.shrink();
+              }
+              return Expanded(
                 child: SingleChildScrollView(
                   child: Obx(
-                    () => Wrap(
+                        () => Wrap(
                       children: selectedAppList.map((app) {
                         return Container(
                           margin: const EdgeInsets.only(right: 5, bottom: 5),
@@ -138,7 +212,8 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
                     ),
                   ),
                 ),
-              ),
+              );
+            }),
             Obx(
               () => Container(
                 margin: const EdgeInsets.symmetric(vertical: 5),
@@ -164,6 +239,7 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
                   FilterRule(
                     content: contentText.text,
                     appIds: selectedAppList.map((item) => item.appId).toSet(),
+                    types: selectedTypes.toSet(),
                     enable: true,
                     needSync: false,
                     ignoreCase: ignoreCase.value,

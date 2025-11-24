@@ -23,6 +23,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/task_runner.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
@@ -69,7 +70,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final Set<String> _connectingAddress = {};
   final Map<int, FileSyncHandler> _forwardFiles = {};
   Map<String, Future> broadcastProcessChain = {};
-  bool pairing = false;
+  bool _pairing = false;
+  int? _pairingNotifyId;
   static bool _isInit = false;
   bool screenOpened = true;
   Future? autoCloseConnTimer;
@@ -665,11 +667,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         int code = 100000 + random.nextInt(900000);
         DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
         //发送通知
-        Global.notify(content: "${TranslationKey.newParingRequest.tr}: $code");
-        if (pairing) {
+        _pairingNotifyId = await NotifyUtil.notify(
+          content: "${TranslationKey.newParingRequest.tr}: $code",
+          key: "dev-pairing-${dev.guid}",
+        );
+        if (_pairing) {
           Get.back();
         }
-        pairing = true;
+        _pairing = true;
         showDialog(
           context: Get.context!,
           builder: (BuildContext context) {
@@ -721,16 +726,16 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         bool result = msg.data["result"];
         _onDevPaired(dev, msg.userId, result, address);
         ipSetTemp.removeWhere((v) => v == address);
-        if (pairing = true) {
+        if (_pairing = true) {
           Get.back();
-          pairing = false;
+          _pairing = false;
         }
         break;
 
       ///取消配对
       case MsgType.cancelPairing:
         DevPairingHandler.removeCode(dev.guid);
-        if (pairing) {
+        if (_pairing) {
           Get.back();
         }
         _onCancelPairing(dev);
@@ -767,11 +772,15 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   void cancelPairing(DevInfo dev) {
-    if (!pairing) return;
+    if (!_pairing) return;
     DevPairingHandler.removeCode(dev.guid);
-    pairing = true;
     Get.back();
     dev.sendData(MsgType.cancelPairing, {}, false);
+    if (_pairingNotifyId != null) {
+      NotifyUtil.cancel("dev-pairing-${dev.guid}", _pairingNotifyId!);
+    }
+    _pairing = false;
+    _pairingNotifyId = null;
   }
 
   ///数据同步处理
@@ -1336,6 +1345,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   ///设备取消配对
   void _onCancelPairing(DevInfo dev) {
     Log.debug(tag, "${dev.name} cancelPairing");
+    if (_pairingNotifyId != null) {
+      NotifyUtil.cancel("dev-pairing-${dev.guid}", _pairingNotifyId!);
+    }
+    _pairing = false;
+    _pairingNotifyId = null;
     for (var listener in _devAliveListeners) {
       try {
         listener.onCancelPairing(dev);
@@ -1520,14 +1534,22 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       return;
     }
     _devNotifyIdMap[devId] = false;
-    _devNotifyTimer = Timer(_debounceTime, () {
+    _devNotifyTimer = Timer(_debounceTime, () async {
       _devNotifyIdMap.remove(devId);
       final devService = Get.find<DeviceService>();
-      Global.notify(
+      final key = "dev-conn-$devId";
+      NotifyUtil.cancelAll(key);
+      final notifyId = await NotifyUtil.notify(
+        key: key,
         content: TranslationKey.devConnectedNotifyContent.trParams({
           "devName": devService.getName(devId),
         }),
       );
+      if (notifyId != null) {
+        Future.delayed(2.s, () {
+          NotifyUtil.cancel(key, notifyId);
+        });
+      }
     });
   }
 
@@ -1542,14 +1564,22 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     }
     _devNotifyTimer?.cancel();
     _devNotifyIdMap[devId] = true;
-    _devNotifyTimer = Timer(_debounceTime, () {
+    _devNotifyTimer = Timer(_debounceTime, () async {
       _devNotifyIdMap.remove(devId);
       final devService = Get.find<DeviceService>();
-      Global.notify(
+      final key = "dev-disconn-$devId";
+      NotifyUtil.cancelAll(key);
+      final notifyId = await NotifyUtil.notify(
+        key: key,
         content: TranslationKey.devDisconnectNotifyContent.trParams({
           "devName": devService.getName(devId),
         }),
       );
+      if (notifyId != null) {
+        Future.delayed(2.s, () {
+          NotifyUtil.cancel(key, notifyId);
+        });
+      }
     });
   }
 

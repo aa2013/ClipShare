@@ -3,9 +3,10 @@ import 'dart:math';
 
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/services/tray_service.dart';
-import 'package:clipshare/app/services/window_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -29,10 +30,13 @@ class AppHotKeyHandler {
 
   static HotKey toSystemHotKey(String keyCodes) {
     var [modifiers, key] = keyCodes.split(";");
-    var modifyList = modifiers.split(",").map((e) {
-      var key = PhysicalKeyboardKey(e.toInt());
-      return key.toModify;
-    }).toList(growable: true);
+    var modifyList = modifiers
+        .split(",")
+        .map((e) {
+          var key = PhysicalKeyboardKey(e.toInt());
+          return key.toModify;
+        })
+        .toList(growable: true);
     return HotKey(
       key: PhysicalKeyboardKey(key.toInt()),
       modifiers: modifyList,
@@ -213,7 +217,13 @@ class AppHotKeyHandler {
       key,
       keyDownHandler: (hotKey) async {
         Log.debug(tag, "ExitApp HotKey Down");
-        Global.notify(content: TranslationKey.exitAppViaHotKey.tr);
+        const notifyKey = "appExit";
+        final notifyId = await NotifyUtil.notify(content: TranslationKey.exitAppViaHotKey.tr, key: notifyKey);
+        if (notifyId != null) {
+          Future.delayed(2.s, () {
+            NotifyUtil.cancel(notifyKey, notifyId);
+          });
+        }
         final trayService = Get.find<TrayService>();
         trayService.clickExitAppItem();
       },

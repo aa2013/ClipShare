@@ -1,5 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/my_code_keyword_prompt.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -18,6 +19,7 @@ import 'package:re_highlight/languages/sql.dart';
 class DbEditorController extends GetxController {
   static const logTag = "DbEditorController";
   final dbService = Get.find<DbService>();
+  final appConfig = Get.find<ConfigService>();
   final keywordPrompts = [
     ...tables.map((t) => MyCodeKeywordPrompt(word: t.toString())),
     ...views.map((t) => MyCodeKeywordPrompt(word: t.toString())),
@@ -39,6 +41,7 @@ class DbEditorController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    editor.text = appConfig.lastSqlEditContent;
     langSql.keywords["keyword"].add("limit");
   }
 
@@ -49,7 +52,7 @@ class DbEditorController extends GetxController {
       _tableColumns.value = [];
       _tableRows.value = [];
       List<Map<String, Object?>> list = await dbService.dbExecutor.rawQuery(editor.text);
-
+      appConfig.setSQLEditContent(editor.text);
       if (list.isEmpty) {
         return;
       }

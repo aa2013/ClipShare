@@ -1,19 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/enums/white_black_mode.dart';
-import 'package:clipshare/app/data/models/white_black_rule.dart';
-import 'package:clipshare/app/modules/db_editor_module/db_editor_page.dart';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
-import 'package:clipshare/app/modules/views/white_black_list_page.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -102,6 +95,34 @@ class DebugPage extends GetView<DebugController> {
             Get.toNamed(Routes.DB_EDITOR);
           },
           child: Text("goto db editor page"),
+        ),
+        TextButton(
+          onPressed: () async {
+            var notifyId = await NotifyUtil.notify(content: "notify 1", key: "dev");
+            await Future.delayed(2.s);
+            NotifyUtil.cancel("dev", notifyId!);
+          },
+          child: Text("Test Cancel Notify"),
+        ),
+        TextButton(
+          onPressed: () async {
+            await NotifyUtil.notify(content: "notify 1", key: "dev");
+            await NotifyUtil.notify(content: "notify 2", key: "dev");
+            await NotifyUtil.notify(content: "notify 3", key: "dev");
+            await Future.delayed(2.s);
+            NotifyUtil.cancelAll("dev");
+          },
+          child: Text("Test All Notifies"),
+        ),
+        TextButton(
+          onPressed: () async {
+            await NotifyUtil.notify(content: "notify 1", key: "dev");
+            await NotifyUtil.notify(content: "notify 2", key: "dev");
+            await NotifyUtil.notify(content: "notify 3", key: "dev");
+            await Future.delayed(2.s);
+            NotifyUtil.cancelExcludeLast("dev");
+          },
+          child: Text("Test All Notifies Exclude Last"),
         ),
         Expanded(
           child: FileBrowser(

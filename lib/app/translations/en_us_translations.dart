@@ -1099,12 +1099,10 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.contentCannotEmpty:
         return "Content cannot be empty";
       case TranslationKey.contentAndSourceCannotEmpty:
-        return "Both content and source cannot be empty";
+        return "Both content, source, types cannot be empty";
       case TranslationKey.blacklistRules:
         return "Blacklist Rules";
       case TranslationKey.whitelistRules:
-        return "Whitelist Rules";
-      case TranslationKey.filterRuleDetectTips:
         return "Currently only applies to Text";
       case TranslationKey.ignoreCase:
         return "Case insensitive";
@@ -1325,6 +1323,16 @@ class EnUSTranslation extends AbstractTranslations {
         return "Sync Record";
       case TranslationKey.selectBackupItems:
         return "Select Items";
+      case TranslationKey.online:
+        return "Online";
+      case TranslationKey.offline:
+        return "Offline";
+      case TranslationKey.enterSoftware:
+        return "Enter";
+      case TranslationKey.types:
+        return "Types";
+      case TranslationKey.selectTypes:
+        return "Select Types";
     }
   }
 }

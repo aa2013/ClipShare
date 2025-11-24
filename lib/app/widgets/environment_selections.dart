@@ -162,7 +162,7 @@ class _EnvironmentSelectionsState extends State<EnvironmentSelections> with Auto
               requesting = true;
               requestingPerm = EnvironmentType.root;
             });
-            Global.showLoadingDialog(context: context, loadingText: TranslationKey.waitingRequestResult.tr);
+            loadingController = Global.showLoadingDialog(context: context, loadingText: TranslationKey.waitingRequestResult.tr);
             clipboardManager.requestPermission(EnvironmentType.root);
           },
         ),

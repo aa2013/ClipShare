@@ -574,7 +574,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.newVersionDialogTitle:
         return "新版本";
       case TranslationKey.newVersionDialogSkipText:
-        return "跳过该次更新";
+        return "忽略该次更新";
       case TranslationKey.newVersionDialogOkText:
         return "下载更新";
       case TranslationKey.defaultLinkTagName:
@@ -1104,12 +1104,11 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.contentCannotEmpty:
         return "内容不能为空";
       case TranslationKey.contentAndSourceCannotEmpty:
-        return "内容和来源不能都为空";
+        return "内容、来源、类型不能都为空";
       case TranslationKey.blacklistRules:
         return "黑名单规则";
       case TranslationKey.whitelistRules:
         return "白名单规则";
-      case TranslationKey.filterRuleDetectTips:
         return "当前仅对文本内容生效";
       case TranslationKey.ignoreCase:
         return "忽略大小写";
@@ -1322,6 +1321,16 @@ class ZhCNTranslation extends AbstractTranslations {
         return "同步记录";
       case TranslationKey.selectBackupItems:
         return "选择备份恢复项";
+      case TranslationKey.online:
+        return "在线";
+      case TranslationKey.offline:
+        return "离线";
+      case TranslationKey.enterSoftware:
+        return "进入软件";
+      case TranslationKey.types:
+        return "类型";
+      case TranslationKey.selectTypes:
+        return "选择类型";
     }
   }
 }

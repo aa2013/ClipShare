@@ -62,6 +62,10 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
     TranslationKey.all.tr,
     style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
   );
+  final noneContent = Text(
+    TranslationKey.none.tr,
+    style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
+  );
 
   @override
   void initState() {
@@ -85,12 +89,15 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
         ),
         TextButton(
           onPressed: () {
-            Global.showDialog(
+            late final DialogController dialog;
+            dialog = Global.showDialog(
               context,
               FilterRuleAddDialog(
                 mode: isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white,
                 onDone: (data) {
-                  onRuleDialogConfirm(context, -1, data);
+                  if (onRuleDialogConfirm(context, -1, data)) {
+                    dialog.close();
+                  }
                 },
               ),
             );
@@ -127,7 +134,9 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                             ? _allBorder
                             : i == 0
                             ? _topBorder
-                            : _bottomBorder;
+                            : i == length - 1
+                            ? _bottomBorder
+                            : BorderRadius.zero;
                         return SettingCard<FilterRule>(
                           title: DefaultTextStyle(
                             style: const TextStyle(fontSize: 14, color: Colors.grey),
@@ -138,23 +147,41 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                               ],
                             ),
                           ),
-                          description: PlatformExt.isMobile
-                              ? Wrap(
-                                  children: [
-                                    Text("${TranslationKey.source.tr}: "),
-                                    if (item.isAllApp) allContent,
-                                    ...item.appIds.map(
-                                      (appId) => Container(
-                                        margin: const EdgeInsets.only(right: 2, bottom: 2),
-                                        child: AppIcon(
-                                          appId: appId,
-                                          iconSize: appIconSize,
-                                        ),
+                          description: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text("${TranslationKey.types.tr}: "),
+                                  if (item.types.isEmpty)
+                                    noneContent
+                                  else if (item.types.length == FilterRule.filterTypes.length)
+                                    allContent
+                                  else
+                                    Text(
+                                      item.types.map((item) => item.label).join(", "),
+                                      style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Wrap(
+                                children: [
+                                  Text("${TranslationKey.source.tr}: "),
+                                  if (item.isAllApp) allContent,
+                                  ...item.appIds.map(
+                                    (appId) => Container(
+                                      margin: const EdgeInsets.only(right: 2, bottom: 2),
+                                      child: AppIcon(
+                                        appId: appId,
+                                        iconSize: appIconSize,
                                       ),
                                     ),
-                                  ],
-                                )
-                              : null,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                           value: item,
                           action: (value) {
                             return Row(
@@ -196,13 +223,16 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                             );
                           },
                           onTap: () {
-                            Global.showDialog(
+                            late final DialogController dialog;
+                            dialog = Global.showDialog(
                               context,
                               FilterRuleAddDialog(
                                 mode: isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white,
                                 data: ruleList[i],
                                 onDone: (data) {
-                                  onRuleDialogConfirm(context, i, data);
+                                  if (onRuleDialogConfirm(context, i, data)) {
+                                    dialog.close();
+                                  }
                                 },
                               ),
                             );
@@ -231,23 +261,18 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
     );
   }
 
-  void onRuleDialogConfirm(BuildContext context, int index, FilterRule data) {
+  bool onRuleDialogConfirm(BuildContext context, int index, FilterRule data) {
     final ruleList = isBlacklistMode.value ? blacklist : whitelist;
-    if (data.content.isEmpty) {
-      if (PlatformExt.isDesktop) {
-        Global.showTipsDialog(context: context, text: TranslationKey.contentCannotEmpty.tr);
-        return;
-      } else if (data.appIds.isEmpty) {
-        Global.showTipsDialog(context: context, text: TranslationKey.contentAndSourceCannotEmpty.tr);
-        return;
-      }
+    if (data.content.isEmpty && data.appIds.isEmpty && data.types.isEmpty) {
+      Global.showTipsDialog(context: context, text: TranslationKey.contentAndSourceCannotEmpty.tr);
+      return false;
     }
     if (index < 0) {
       ruleList.add(data);
     } else {
       ruleList[index] = data;
     }
-    Get.back();
+    return true;
   }
 
   void onConfirmClicked(BuildContext context) {
@@ -327,31 +352,7 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
               ),
             ),
           ),
-          Container(
-            margin: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              color: const Color(0xFFFFE0B2),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    TranslationKey.filterRuleDetectTips.tr,
-                    style: const TextStyle(
-                      color: Color(0xFFFFB74D),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: buildRuleList(context, !showAppBar),
-          ),
+          Expanded(child: buildRuleList(context, !showAppBar)),
         ],
       ),
     );

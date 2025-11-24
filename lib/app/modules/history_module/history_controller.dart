@@ -10,6 +10,7 @@ import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -285,14 +286,14 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       return;
     }
     int size = content.length;
+    final matchResult = appConfig.matchesContentBlacklist(type, content, source);
+    if (matchResult.matched) {
+      Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
+      return;
+    }
     switch (type) {
       case HistoryContentType.text:
         //文本无特殊实现，此处留空
-        final matchResult = appConfig.matchesContentBlacklist(type, content, source);
-        if (matchResult.matched) {
-          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
-          return;
-        }
         break;
       case HistoryContentType.image:
         //如果上次也是复制的图片/文件，判断其md5与本次比较，若相同则跳过
@@ -452,10 +453,17 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               try {
                 final json = jsonDecode(history.content);
                 final notificationContent = json["content"];
-                Global.notify(
+                const notifyKey = "showMobileNotify";
+                final notifyId = await NotifyUtil.notify(
                   title: TranslationKey.notificationFromDevice.trParams({"devName": sender.name}),
                   content: notificationContent,
+                  key: notifyKey,
                 );
+                if (notifyId != null) {
+                  Future.delayed(2.s, () {
+                    NotifyUtil.cancel(notifyKey, notifyId);
+                  });
+                }
               } catch (err, stack) {
                 Log.error(tag, "show mobile notification error: $err, $stack");
               }
