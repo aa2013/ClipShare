@@ -11,9 +11,6 @@ jobs:
         include:
           - platform: macos
             os: macos-latest
-            arch: amd64
-          - platform: macos
-            os: macos-latest
             arch: arm64
 
     steps:
@@ -55,10 +52,24 @@ jobs:
           chmod +x build_macos.sh
           ./build_macos.sh
         shell: bash
+        
+      - name: Find and Upload DMG artifact
+        run: |
+          DMG_FILE=$(find dist -name "*.dmg" -type f | head -1)
+          if [ -n "$DMG_FILE" ]; then
+            echo "Found DMG file: $DMG_FILE"
+            # 复制到固定位置便于上传
+            mkdir -p upload
+            cp "$DMG_FILE" upload/
+          else
+            echo "No DMG file found"
+            exit 1
+          fi
+        shell: bash
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
           name: macos-dmg-${{ matrix.arch }}
-          path: dist/**/*.dmg
+          path: upload/*.dmg
           overwrite: true
