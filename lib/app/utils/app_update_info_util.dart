@@ -29,7 +29,7 @@ class AppUpdateInfoUtil {
     final updateLogs = List<UpdateLog>.empty(growable: true);
     final body = jsonDecode(utf8.decode(resp.bodyBytes));
     final logs = body["logs"] as List<dynamic>;
-    final system = Platform.operatingSystem;
+    final system = Platform.isMacOS ? "MacOS" : Platform.operatingSystem;
     final appConfig = Get.find<ConfigService>();
     final currentVersion = appConfig.version;
 
