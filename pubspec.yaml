@@ -162,7 +162,9 @@ dependencies:
   # 获取已安装的app（仅 Android）
   get_apps: ^4.1.2
   # 通知信息监听（仅 Android）
-  notification_listener_service: ^0.3.4
+  notification_listener_service:
+    git:
+      url: https://github.com/aa2013/notification_listener_service
   # zip
   zip_flutter:
     git:
