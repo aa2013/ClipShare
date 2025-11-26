@@ -17,6 +17,7 @@ import 'package:clipshare/app/widgets/blur_background.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/drag_file_mask.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';
+import 'package:clipshare/app/widgets/segment_text_view.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -127,53 +128,47 @@ class HomePage extends GetView<HomeController> {
                     children: [
                       controller.isBigScreen
                           ? Obx(
-                            () =>
-                                NavigationRail(
-                                  leading: Container(
-                                    margin: Platform.isMacOS ? const EdgeInsets.only(top: 20) : null,
-                                    child: controller.leftMenuExtend.value
-                                        ? Row(
-                                      children: [
-                                        controller.logoImg,
-                                        const SizedBox(
-                                          width: 10,
+                              () => NavigationRail(
+                                leading: Container(
+                                  margin: Platform.isMacOS ? const EdgeInsets.only(top: 20) : null,
+                                  child: controller.leftMenuExtend.value
+                                      ? Row(
+                                          children: [
+                                            controller.logoImg,
+                                            const SizedBox(
+                                              width: 10,
+                                            ),
+                                            const Text(Constants.appName),
+                                          ],
+                                        )
+                                      : controller.logoImg,
+                                ),
+                                extended: controller.leftMenuExtend.value,
+                                onDestinationSelected: (i) {
+                                  controller.index = i;
+                                },
+                                minExtendedWidth: 200,
+                                destinations: controller.leftBarItems,
+                                selectedIndex: controller.index,
+                                trailing: Expanded(
+                                  child: Align(
+                                    alignment: Alignment.bottomCenter,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(bottom: 10),
+                                      child: IconButton(
+                                        icon: Icon(
+                                          controller.leftMenuExtend.value ? Icons.keyboard_double_arrow_left_outlined : Icons.keyboard_double_arrow_right_outlined,
+                                          color: Colors.blueGrey,
                                         ),
-                                        const Text(Constants.appName),
-                                      ],
-                                    ) : controller.logoImg,
-                                  ),
-                                  extended: controller.leftMenuExtend.value,
-                                  onDestinationSelected: (i) {
-                                    controller.index = i;
-                                  },
-                                  minExtendedWidth: 200,
-                                  destinations: controller.leftBarItems,
-                                  selectedIndex: controller.index,
-                                  trailing: Expanded(
-                                    child: Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom: 10),
-                                        child: IconButton(
-                                          icon: Icon(
-                                            controller.leftMenuExtend.value
-                                                ? Icons
-                                                .keyboard_double_arrow_left_outlined
-                                                : Icons
-                                                .keyboard_double_arrow_right_outlined,
-                                            color: Colors.blueGrey,
-                                          ),
-                                          onPressed: () {
-                                            controller.leftMenuExtend.value =
-                                            !controller.leftMenuExtend.value;
-                                          },
-                                        ),
+                                        onPressed: () {
+                                          controller.leftMenuExtend.value = !controller.leftMenuExtend.value;
+                                        },
                                       ),
                                     ),
                                   ),
                                 ),
-                      )
+                              ),
+                            )
                           : const SizedBox.shrink(),
                       Expanded(
                         child: Obx(
@@ -230,7 +225,7 @@ class HomePage extends GetView<HomeController> {
                 child: Positioned.fill(
                   child: BlurBackground(
                     child: DragFileMask(
-                      onCloseBtnClicked: () {
+                      onClose: () {
                         controller.dragging.value = false;
                       },
                     ),
@@ -298,6 +293,22 @@ class HomePage extends GetView<HomeController> {
                       ),
                     ),
                   ],
+                ),
+              ),
+            ),
+            Obx(
+              () => Visibility(
+                visible: controller.isSegmenting.value,
+                child: Positioned.fill(
+                  child: BlurBackground(
+                    child: SegmentTestView(
+                      text: controller.segmentText.value,
+                      onClose: () {
+                        controller.isSegmenting.value = false;
+                        controller.segmentText.value = '';
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),

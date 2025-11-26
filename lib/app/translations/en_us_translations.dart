@@ -1333,6 +1333,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Types";
       case TranslationKey.selectTypes:
         return "Select Types";
+      case TranslationKey.segmentWords:
+        return "Segment Words";
+      case TranslationKey.downloadFromGithub:
+        return 'Download from Github';
+      case TranslationKey.notFoundJiebaFiles:
+        return "Jieba files not found\nPlease download the Jieba files and copy them to the \n @dirPath \n folder\nNote: Only dict.txt and prob_emit.txt are required";
     }
   }
 }

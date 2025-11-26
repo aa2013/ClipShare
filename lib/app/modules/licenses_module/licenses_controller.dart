@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "jieba_flutter",
+      "license": "GPL-3.0",
+      "url": "https://pub.dev/packages/jieba_flutter",
+    },
+    {
       "name": "persistent_device_id",
       "license": "MIT",
       "url": "https://pub.dev/packages/persistent_device_id",

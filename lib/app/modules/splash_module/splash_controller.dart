@@ -43,6 +43,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';

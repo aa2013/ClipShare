@@ -157,6 +157,10 @@ dependencies:
   uri_file_reader:
     git:
       url: https://github.com/aa2013/uri_file_reader
+  # 分词 (去除了分词文件减小压缩包体积，改为下载或导入)
+  jieba_flutter:
+    git:
+      url: https://github.com/aa2013/jieba_flutter.git
   # 粘性折叠分组，该版本至少 SDK 3.8.0
   sliver_sticky_collapsable_panel: ^3.0.0
   # 获取已安装的app（仅 Android）

@@ -656,7 +656,10 @@ enum TranslationKey {
   offline,
   enterSoftware,
   types,
-  selectTypes;
+  selectTypes,
+  segmentWords,
+  downloadFromGithub,
+  notFoundJiebaFiles;
 
   String get tr => name.tr;
 

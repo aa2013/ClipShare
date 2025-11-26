@@ -43,6 +43,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
@@ -202,6 +203,9 @@ class ConfigService extends GetxService {
 
   //本机是否启用 存储 进行中转
   bool get enableStorageSync => enableWebdav || enableS3;
+
+  //jieba分词库是否已初始化
+  bool _jiebaInited = false;
 
   //endregion
 
@@ -1364,6 +1368,35 @@ class ConfigService extends GetxService {
 
     //未命中
     return FilterRuleMatchResult.notMatched;
+  }
+
+  ///获取分词文件的存储位置
+  Future<String> getJiebaSegmentFileDirPath() async {
+    late String dirPath;
+    if (Platform.isWindows) {
+      dirPath = Directory(Platform.resolvedExecutable).parent.path;
+      if (!FileUtil.testWriteable(dirPath)) {
+        dirPath = await Constants.documentsPath;
+      }
+    } else {
+      dirPath = await Constants.documentsPath;
+    }
+    return "$dirPath/jieba".normalizePath;
+  }
+
+  ///检测是否可分词
+  Future<bool> checkJiebaSegment() async {
+    if (_jiebaInited) {
+      return true;
+    }
+    final dirPath = await getJiebaSegmentFileDirPath();
+    final dictFilePath = "$dirPath/dict.txt".normalizePath;
+    final probEmitFilePath = "$dirPath/prob_emit.txt".normalizePath;
+    final result = await File(dictFilePath).exists() && await File(probEmitFilePath).exists();
+    if (!result) return false;
+    await JiebaSegmenter.init(dirPath);
+    _jiebaInited = true;
+    return true;
   }
 
   //endregion

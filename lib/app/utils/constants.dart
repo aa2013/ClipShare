@@ -240,4 +240,8 @@ class Constants {
   static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
 
   static const defaultWsPingIntervalTime = 30;
+
+  static const jiebaDownloadUrl = 'https://download.clipshare.coclyun.top/others/jieba.zip';
+
+  static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
 }

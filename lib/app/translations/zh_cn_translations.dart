@@ -1331,6 +1331,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return "类型";
       case TranslationKey.selectTypes:
         return "选择类型";
+      case TranslationKey.segmentWords:
+        return "分词";
+      case TranslationKey.downloadFromGithub:
+        return '从Github下载';
+      case TranslationKey.notFoundJiebaFiles:
+        return "未发现分词文件\n请下载分词文件后将其复制到 \n @dirPath \n文件夹下\n提示：仅需 dict.txt 和 prob_emit.txt 即可";
     }
   }
 }

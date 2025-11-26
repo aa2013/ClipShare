@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:clipshare/app/data/models/drawer_model.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -120,6 +122,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   final sktService = Get.find<SocketService>();
   final dragging = false.obs;
   final showPendingItemsDetail = false.obs;
+  final isSegmenting = false.obs;
+  final segmentText = ''.obs;
 
   bool get isSyncFilePage => _pages[index] is SyncFilePage;
 
@@ -504,4 +508,30 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   }
 
   ///endregion
+
+  ///显示分词信息
+  Future<void> showSegmentWordsView(BuildContext context, String content) async {
+    final enabled = await appConfig.checkJiebaSegment();
+    if (!enabled) {
+      final dirPath = await appConfig.getJiebaSegmentFileDirPath();
+      Global.showTipsDialog(
+        context: context,
+        text: TranslationKey.notFoundJiebaFiles.trParams({"dirPath": dirPath}),
+        okText: TranslationKey.openLink.tr,
+        neutralText: TranslationKey.downloadFromGithub.tr,
+        onOk: () {
+          Constants.jiebaDownloadUrl.askOpenUrl();
+        },
+        onNeutral: () {
+          Constants.jiebaGithubUrl.askOpenUrl();
+        },
+        showCancel: true,
+        showNeutral: true,
+      );
+      return;
+    }
+    final home = Get.find<HomeController>();
+    home.isSegmenting.value = true;
+    home.segmentText.value = content;
+  }
 }
