@@ -98,6 +98,7 @@ class AndroidChannelService extends GetxService {
       {"content": content},
     );
   }
+
   /// 发送通知
   Future<void> cancelNotify(int id) {
     if (!Platform.isAndroid) return Future.value();
@@ -164,5 +165,9 @@ class AndroidChannelService extends GetxService {
       AndroidChannelMethod.setAutoReportCrashes.name,
       {"enable": checked},
     );
+  }
+
+  void sendBigImageNotify() {
+    androidChannel.invokeMethod('sendBigImageNotification');
   }
 }

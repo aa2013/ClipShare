@@ -2334,6 +2334,28 @@ class SettingsPage extends GetView<SettingsController> {
                         controller.gotoAboutPage();
                       },
                     ),
+                    SettingCard(
+                      title: Row(
+                        children: [
+                          Text(
+                            "test",
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                      value: null,
+                      action: (v) => IconButton(
+                        onPressed: () {
+                          final cs = Get.find<AndroidChannelService>();
+                          cs.sendBigImageNotify();
+                        },
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: () {
+                        final cs = Get.find<AndroidChannelService>();
+                        cs.sendBigImageNotify();
+                      },
+                    ),
                   ],
                 ),
 
