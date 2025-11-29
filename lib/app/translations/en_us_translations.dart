@@ -1339,6 +1339,12 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Download from Github';
       case TranslationKey.notFoundJiebaFiles:
         return "Jieba files not found\nPlease download the Jieba files and copy them to the \n @dirPath \n folder\nNote: Only dict.txt and prob_emit.txt are required";
+      case TranslationKey.installJiebaDictFile:
+        return "Install";
+      case TranslationKey.downloadFailed:
+        return "Download failed!";
+      case TranslationKey.jiebaFileInstallSuccess:
+        return "Install success";
     }
   }
 }

@@ -40,6 +40,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:no_screenshot/no_screenshot.dart';
+import 'package:zip_flutter/zip_flutter.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -514,13 +515,45 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     final enabled = await appConfig.checkJiebaSegment();
     if (!enabled) {
       final dirPath = await appConfig.getJiebaSegmentFileDirPath();
-      Global.showTipsDialog(
+      DialogController? dialog;
+      dialog = Global.showTipsDialog(
         context: context,
         text: TranslationKey.notFoundJiebaFiles.trParams({"dirPath": dirPath}),
-        okText: TranslationKey.openLink.tr,
+        okText: TranslationKey.installJiebaDictFile.tr,
         neutralText: TranslationKey.downloadFromGithub.tr,
-        onOk: () {
-          Constants.jiebaDownloadUrl.askOpenUrl();
+        onOk: () async {
+          const downloadUrl = Constants.jiebaDownloadUrl;
+          var downPath = "";
+          const fileName = "jieba.zip";
+          if (Platform.isAndroid) {
+            downPath = "${Constants.androidDownloadPath}/ClipShare/$fileName";
+          } else {
+            downPath = "${await Constants.documentsPath}/temp/$fileName";
+          }
+          await dialog?.close();
+          Global.showDownloadingDialog(
+            context: Get.context!,
+            url: downloadUrl,
+            filePath: downPath,
+            content: const Text(fileName),
+            onFinished: (success) async {
+              try {
+                if (success) {
+                  final extraTo = await appConfig.getJiebaSegmentFileDirPath();
+                  await ZipFile.openAndExtractAsync(downPath, extraTo);
+                  Global.showSnackBarSuc(text: TranslationKey.jiebaFileInstallSuccess.tr, context: Get.context);
+                  await File(downPath).delete();
+                } else {
+                  Global.showSnackBarErr(text: TranslationKey.downloadFailed.tr, context: Get.context);
+                }
+              } catch (err, stack) {
+                Global.showTipsDialog(context: Get.context!, text: "error $err,$stack");
+              }
+            },
+            onError: (error, stack) {
+              Global.showTipsDialog(context: Get.context!, text: "error $error,$stack");
+            },
+          );
         },
         onNeutral: () {
           Constants.jiebaGithubUrl.askOpenUrl();

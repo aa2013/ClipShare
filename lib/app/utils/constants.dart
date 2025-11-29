@@ -87,10 +87,16 @@ class Constants {
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
+  static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
 
   static Future<String> get documentsPath async {
-    final dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+    String dir;
+    if (Platform.isAndroid) {
+      dir = "$androidDocumentsPath/ClipShare/";
+    } else {
+      dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+    }
     Directory(dir).createSync(recursive: true);
     return dir;
   }

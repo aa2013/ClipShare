@@ -1337,6 +1337,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return '从Github下载';
       case TranslationKey.notFoundJiebaFiles:
         return "未发现分词文件\n请下载分词文件后将其复制到 \n @dirPath \n文件夹下\n提示：仅需 dict.txt 和 prob_emit.txt 即可";
+      case TranslationKey.installJiebaDictFile:
+        return "安装";
+      case TranslationKey.downloadFailed:
+        return "下载失败";
+      case TranslationKey.jiebaFileInstallSuccess:
+        return "分词文件安装成功！";
     }
   }
 }

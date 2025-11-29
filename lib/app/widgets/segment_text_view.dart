@@ -45,60 +45,66 @@ class _SegmentTestViewState extends State<SegmentTestView> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(child: Center(child: SingleChildScrollView(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: List.generate(tokens.length, (index) {
-              final token = tokens[index];
-              return RoundedChip(
-                label: Text(token.word),
-                showCheckmark: false,
-                selected: selectedTokens.contains(index),
-                onSelected: (selected) {
-                  if (selected) {
-                    selectedTokens.add(index);
-                  } else {
-                    selectedTokens.remove(index);
-                  }
-                  setState(() {});
-                },
-              );
-            }),
+    return SafeArea(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(tokens.length, (index) {
+                    final token = tokens[index];
+                    return RoundedChip(
+                      label: Text(token.word),
+                      showCheckmark: false,
+                      selected: selectedTokens.contains(index),
+                      onSelected: (selected) {
+                        if (selected) {
+                          selectedTokens.add(index);
+                        } else {
+                          selectedTokens.remove(index);
+                        }
+                        setState(() {});
+                      },
+                    );
+                  }),
+                ),
+              ),
+            ),
           ),
-        ),)),
-        const SizedBox(height: 32),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Tooltip(
-              message: TranslationKey.copyContent.tr,
-              child: IconButton(
-                onPressed: () {
-                  final indexList = selectedTokens.toList()..sort((a, b) => a - b);
-                  final content = indexList.map((i) => tokens[i].word).join("");
-                  clipboardManager.copy(ClipboardContentType.text, content);
-                  Global.showSnackBarSuc(context: context, text: TranslationKey.copySuccess.tr);
-                  onClose();
-                },
-                icon: const Icon(Icons.copy, color: Colors.blueGrey),
+          const SizedBox(height: 32),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Tooltip(
+                message: TranslationKey.copyContent.tr,
+                child: IconButton(
+                  onPressed: () {
+                    final indexList = selectedTokens.toList()..sort((a, b) => a - b);
+                    final content = indexList.map((i) => tokens[i].word).join("");
+                    clipboardManager.copy(ClipboardContentType.text, content);
+                    Global.showSnackBarSuc(context: context, text: TranslationKey.copySuccess.tr);
+                    onClose();
+                  },
+                  icon: const Icon(Icons.copy, color: Colors.blueGrey),
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Tooltip(
-              message: TranslationKey.close.tr,
-              child: IconButton(
-                onPressed: onClose,
-                icon: const Icon(Icons.close, color: Colors.blueGrey),
+              const SizedBox(width: 10),
+              Tooltip(
+                message: TranslationKey.close.tr,
+                child: IconButton(
+                  onPressed: onClose,
+                  icon: const Icon(Icons.close, color: Colors.blueGrey),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 32),
-      ],
+            ],
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
     );
   }
 }

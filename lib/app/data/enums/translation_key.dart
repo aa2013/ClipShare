@@ -659,7 +659,10 @@ enum TranslationKey {
   selectTypes,
   segmentWords,
   downloadFromGithub,
-  notFoundJiebaFiles;
+  notFoundJiebaFiles,
+  installJiebaDictFile,
+  downloadFailed,
+  jiebaFileInstallSuccess;
 
   String get tr => name.tr;
 
