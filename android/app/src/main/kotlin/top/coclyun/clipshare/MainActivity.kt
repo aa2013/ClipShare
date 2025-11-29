@@ -578,7 +578,11 @@ class MainActivity : FlutterFragmentActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+        try {
+            super.onActivityResult(requestCode, resultCode, data)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         if (requestCode == requestOverlayResultCode) {
             if (resultCode != Activity.RESULT_OK) {
                 if (!Settings.canDrawOverlays(this)) {

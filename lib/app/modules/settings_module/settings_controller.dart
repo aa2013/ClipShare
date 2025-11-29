@@ -239,6 +239,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         title: TranslationKey.notificationRules.tr,
         showMode: WhiteBlackMode.all,
         currentMode: currentMode.value,
+        showTypesFilter: false,
         blacklist: List.from(appConfig.notificationBlackList),
         whitelist: List.from(appConfig.notificationWhiteList),
         onModeChanged: (mode, enabled) {

@@ -38,8 +38,6 @@ class ClipData {
     try {
       var title = notificationContentMap["title"] ?? "";
       var detail = (notificationContentMap["content"] as String? ?? "");
-      title = '${TranslationKey.title.tr}: $title';
-      detail = "${TranslationKey.content.tr}: $detail";
       return "$title\n$detail";
     } catch (err, stack) {
       debugPrint(err.toString());

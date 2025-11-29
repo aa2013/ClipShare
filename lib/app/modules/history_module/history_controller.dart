@@ -448,7 +448,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             final hisTime = DateTime.parse(history.time);
             final offsetMs = now.difference(hisTime).inMilliseconds.abs();
             Log.info(tag, "show mobile notification, time offset ${offsetMs}ms");
-            const maxTimeoutMs = 2000;
+            const maxTimeoutMs = 5000;
             if (offsetMs <= maxTimeoutMs) {
               try {
                 final json = jsonDecode(history.content);

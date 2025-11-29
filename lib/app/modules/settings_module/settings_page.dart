@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
-import 'package:clipshare/app/data/enums/obj_storage_type.dart';
-import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
@@ -58,7 +56,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../data/enums/forward_way.dart';
 /**
@@ -615,7 +612,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setEnableRecordNotification(checked);
                           },
                         ),
-                        show: (v) => Platform.isAndroid && false,
+                        show: (v) => Platform.isAndroid,
                       ),
                       SettingCard(
                         title: Text(
@@ -656,7 +653,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setEnableShowMobileNotification(checked);
                           },
                         ),
-                        show: (v) => PlatformExt.isDesktop && false,
+                        show: (v) => PlatformExt.isDesktop,
                       ),
                     ],
                   ),
@@ -2112,7 +2109,7 @@ class SettingsPage extends GetView<SettingsController> {
                         icon: arrowForwardIcon,
                       ),
                       onTap: controller.gotoFilterRuleListPage,
-                      show: (_) => Platform.isAndroid && false,
+                      show: (_) => Platform.isAndroid,
                     ),
                   ],
                 ),
@@ -2335,6 +2332,28 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       onTap: () {
                         controller.gotoAboutPage();
+                      },
+                    ),
+                    SettingCard(
+                      title: Row(
+                        children: [
+                          Text(
+                            "test",
+                            maxLines: 1,
+                          ),
+                        ],
+                      ),
+                      value: null,
+                      action: (v) => IconButton(
+                        onPressed: () {
+                          final cs = Get.find<AndroidChannelService>();
+                          cs.sendBigImageNotify();
+                        },
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: () {
+                        final cs = Get.find<AndroidChannelService>();
+                        cs.sendBigImageNotify();
                       },
                     ),
                   ],
