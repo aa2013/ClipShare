@@ -60,4 +60,5 @@ enum ConfigKey {
   mobileDevIdGenerateWay,
   devicePairedStatusFilter,
   lastSqlEditContent,
+  dhEncryptKey,
 }

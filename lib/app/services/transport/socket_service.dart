@@ -218,6 +218,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       port: port,
       prime1: appConfig.prime1,
       prime2: appConfig.prime2,
+      dhAesKey: appConfig.dhAesKey,
       onConnected: (client) async {
         Log.debug(tag, '已连接到服务器');
         //本地是否已配对
@@ -1111,6 +1112,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       port: port,
       prime1: appConfig.prime1,
       prime2: appConfig.prime2,
+      dhAesKey: appConfig.dhAesKey,
       targetDevId: forward ? targetDevId : null,
       selfDevId: forward ? appConfig.device.guid : null,
       connectionMode: forward ? ConnectionMode.forward : ConnectionMode.direct,

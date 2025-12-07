@@ -662,7 +662,14 @@ enum TranslationKey {
   notFoundJiebaFiles,
   installJiebaDictFile,
   downloadFailed,
-  jiebaFileInstallSuccess;
+  jiebaFileInstallSuccess,
+  encryptKey,
+  encryptKeyErrorTip,
+  confirmClearEncryptKey,
+  authFailed,
+  dhKeySettingDesc,
+  dhKeySettingName,
+  dhKeySettingTips;
 
   String get tr => name.tr;
 

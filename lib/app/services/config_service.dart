@@ -208,6 +208,11 @@ class ConfigService extends GetxService {
   //jieba分词库是否已初始化
   bool _jiebaInited = false;
 
+  //设备连接时的df算法参数加密key
+  String? _dhAesKey;
+
+  String? get dhAesKey => _dhAesKey;
+
   //endregion
 
   //region 存储于数据库的配置
@@ -555,6 +560,11 @@ class ConfigService extends GetxService {
 
   String get lastSqlEditContent => _lastSqlEditContent.value;
 
+  //设备连接DH参数加密密钥
+  final _dhEncryptKey = ''.obs;
+
+  String get dhEncryptKey => _dhEncryptKey.value;
+
   //endregion
 
   //endregion
@@ -750,6 +760,10 @@ class ConfigService extends GetxService {
       convert: DevicePairedStatusFilter.parse,
     );
     _lastSqlEditContent.value = await cfg.getConfigByKey(ConfigKey.lastSqlEditContent, '');
+    _dhEncryptKey.value = await cfg.getConfigByKey(ConfigKey.dhEncryptKey, '');
+    if (_dhEncryptKey.value.isNotNullAndEmpty) {
+      _dhAesKey = await _updateDhAesKey();
+    }
   }
 
   ///初始化路径信息
@@ -1272,9 +1286,30 @@ class ConfigService extends GetxService {
     _lastSqlEditContent.value = sql;
   }
 
+  ///设置 DH 加密密钥
+  Future<void> setDHEncryptKey(String key) async {
+    await configDao.addOrUpdate(ConfigKey.dhEncryptKey, key);
+    _dhEncryptKey.value = key;
+    _dhAesKey = await _updateDhAesKey();
+  }
+
   //endregion
 
   //region 其他方法
+
+  Future<String> _updateDhAesKey() {
+    if(_dhEncryptKey.value.isNullOrEmpty){
+      return Future.value('');
+    }
+    return compute((List<dynamic> params) {
+      return CryptoUtil.pbkdf2WithHmacSHA256(
+        params[0],
+        params[1],
+        params[2],
+        params[3],
+      );
+    }, [_dhEncryptKey.value, Constants.pkgName, 100_000, 32]);
+  }
 
   ///将底部导航栏设置为深色
   void setSystemUIOverlayDarkStyle() {

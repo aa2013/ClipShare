@@ -1345,6 +1345,20 @@ class EnUSTranslation extends AbstractTranslations {
         return "Download failed!";
       case TranslationKey.jiebaFileInstallSuccess:
         return "Install success";
+      case TranslationKey.encryptKey:
+        return "Encryption Key";
+      case TranslationKey.encryptKeyErrorTip:
+        return 'Length must be at least 8 characters and cannot contain whitespace';
+      case TranslationKey.confirmClearEncryptKey:
+        return 'Confirm clear encryption key?';
+      case TranslationKey.authFailed:
+        return 'Authentication failed';
+      case TranslationKey.dhKeySettingName:
+        return 'Encrypt encryption parameters';
+      case TranslationKey.dhKeySettingDesc:
+        return 'When enabled, all connected devices must have this enabled with the same password, otherwise connection will fail';
+      case TranslationKey.dhKeySettingTips:
+        return 'Encrypts the parameters of the Diffie-Hellman key exchange algorithm used during device connection.\nWhen enabled, all connected devices must have this enabled with the same password, otherwise connection will fail.\n\nActually, not using this is also fine.';
     }
   }
 }

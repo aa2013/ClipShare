@@ -1343,6 +1343,20 @@ class ZhCNTranslation extends AbstractTranslations {
         return "下载失败";
       case TranslationKey.jiebaFileInstallSuccess:
         return "分词文件安装成功！";
+      case TranslationKey.encryptKey:
+        return "密钥";
+      case TranslationKey.encryptKeyErrorTip:
+        return '长度不能小于8，且不能包含空白字符';
+      case TranslationKey.confirmClearEncryptKey:
+        return '确认清除密钥吗？';
+      case TranslationKey.authFailed:
+        return '验证失败';
+      case TranslationKey.dhKeySettingName:
+        return '对加密参数进行加密';
+      case TranslationKey.dhKeySettingDesc:
+        return '启用后，所有连接的设备都必须启用且密码相同，否则无法连接';
+      case TranslationKey.dhKeySettingTips:
+        return '对设备连接过程中使用的 Diffie–Hellman 密钥加密算法的参数进行加密。\n启用后，所有连接的设备都必须启用且密码相同，否则无法连接。\n\n当然，其实这个不使用也没什么问题。';
     }
   }
 }

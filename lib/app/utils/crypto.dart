@@ -7,6 +7,7 @@ import 'package:basic_utils/basic_utils.dart';
 import 'package:crypto/crypto.dart';
 import 'package:encrypt/encrypt.dart';
 import 'package:pointycastle/key_generators/rsa_key_generator.dart';
+import 'package:pointycastle/export.dart';
 
 class CryptoUtil {
   CryptoUtil._private();
@@ -51,10 +52,8 @@ class CryptoUtil {
   /// 第一个参数是 privateKey，第二个是 publicKey
   static List<String> genRSAKey() {
     AsymmetricKeyPair pair = CryptoUtils.generateRSAKeyPair();
-    var privateKey =
-        CryptoUtils.encodeRSAPrivateKeyToPem(pair.privateKey as RSAPrivateKey);
-    var publicKey =
-        CryptoUtils.encodeRSAPublicKeyToPem(pair.publicKey as RSAPublicKey);
+    var privateKey = CryptoUtils.encodeRSAPrivateKeyToPem(pair.privateKey as RSAPrivateKey);
+    var publicKey = CryptoUtils.encodeRSAPublicKeyToPem(pair.publicKey as RSAPublicKey);
     return [privateKey, publicKey];
   }
 
@@ -147,8 +146,7 @@ class CryptoUtil {
     int ivLen = 16,
   }) {
     final iv = IV.fromUtf8(key.substring(0, ivLen));
-    final list = (encrypter ?? getEncrypter(key))
-        .decryptBytes(Encrypted(encoded), iv: iv);
+    final list = (encrypter ?? getEncrypter(key)).decryptBytes(Encrypted(encoded), iv: iv);
     return Uint8List.fromList(list);
   }
 
@@ -160,6 +158,30 @@ class CryptoUtil {
     // 生成随机密钥
     var lst = List.generate(len, (_) => words[random.nextInt(words.length)]);
     return lst.join('');
+  }
+
+  ///密钥派生
+  static Uint8List pbkdf2WithHmacSHA256Bytes(String password, String salt, int iterations, int keyLength) {
+    final generator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
+      ..init(
+        Pbkdf2Parameters(
+          utf8.encode(salt),
+          iterations,
+          keyLength,
+        ),
+      );
+
+    var result = generator.process(utf8.encode(password));
+    // 将字节映射到可打印ASCII字符范围 (32-126)
+    for (var i = 0; i < result.length; i++) {
+      result[i] = 32 + (result[i] % 95); // 95个可打印字符
+    }
+    return result;
+  }
+
+  ///密钥派生
+  static String pbkdf2WithHmacSHA256(String password, String salt, int iterations, int keyLength) {
+    return ascii.decode(pbkdf2WithHmacSHA256Bytes(password, salt, iterations, keyLength));
   }
 }
 
