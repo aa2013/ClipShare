@@ -1138,8 +1138,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "无通知历史访问权限，无法记录通知历史";
       case TranslationKey.recordNotification:
         return "记录通知历史";
-      case TranslationKey.notificationFromDevice:
-        return "来自 @devName 的通知";
       case TranslationKey.logSettingsAutoUploadCrashLogTitle:
         return "崩溃日志自动上传";
       case TranslationKey.logSettingsAutoUploadCrashLogDesc:

@@ -10,6 +10,7 @@ import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:path/path.dart' as p;
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -448,16 +449,28 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             final hisTime = DateTime.parse(history.time);
             final offsetMs = now.difference(hisTime).inMilliseconds.abs();
             Log.info(tag, "show mobile notification, time offset ${offsetMs}ms");
-            const maxTimeoutMs = 5000;
+            const maxTimeoutMs = 10000;
             if (offsetMs <= maxTimeoutMs) {
               try {
                 final json = jsonDecode(history.content);
+                final pkgName = json["pkg"];
+                final appInfo = sourceService.getAppInfoByAppId(pkgName);
+                Uri? iconUri;
+                if (appInfo != null) {
+                  final documentsPath = await Constants.documentsPath;
+                  final file = File(p.join(documentsPath, "appIcons", "${appInfo.appId}.png"));
+                  await file.parent.create(recursive: true);
+                  await file.writeAsBytes(appInfo.iconBytes);
+                  iconUri = file.uri;
+                }
+                final notificationTitle = json["title"];
                 final notificationContent = json["content"];
                 const notifyKey = "showMobileNotify";
                 final notifyId = await NotifyUtil.notify(
-                  title: TranslationKey.notificationFromDevice.trParams({"devName": sender.name}),
+                  title: notificationTitle,
                   content: notificationContent,
                   key: notifyKey,
+                  windowsImageUri: iconUri,
                 );
                 if (notifyId != null) {
                   Future.delayed(2.s, () {

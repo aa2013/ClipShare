@@ -1132,8 +1132,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "No notification history access permission, unable to record notification history";
       case TranslationKey.recordNotification:
         return "Record notification history";
-      case TranslationKey.notificationFromDevice:
-        return "Notification from @devName";
       case TranslationKey.logSettingsAutoUploadCrashLogTitle:
         return "Automatic Crash Log Upload";
       case TranslationKey.logSettingsAutoUploadCrashLogDesc:

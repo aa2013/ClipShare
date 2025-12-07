@@ -39,7 +39,7 @@ abstract class OperationRecordDao {
     select 1 from OperationSync opsync
     where opsync.uid = :uid and opsync.devId = :toDevId and opsync.opId = record.id
   ) and devId = :fromDevId
-  order by id desc
+  order by case when module='App信息' then 1 else 0 end desc, id desc
   """)
   Future<List<OperationRecord>> getSyncRecord(int uid, String toDevId, String fromDevId);
 

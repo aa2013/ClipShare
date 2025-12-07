@@ -561,7 +561,6 @@ enum TranslationKey {
   logSettingsAutoUploadCrashLogTitle,
   logSettingsAutoUploadCrashLogDesc,
   logSettingsAutoUploadCrashLogTips,
-  notificationFromDevice,
   backupRestore,
   backup,
   restore,

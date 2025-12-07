@@ -1153,7 +1153,7 @@ class _$OperationRecordDao extends OperationRecordDao {
     String fromDevId,
   ) async {
     return _queryAdapter.queryList(
-        'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId = ?3   order by id desc',
+        'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId = ?3   order by case when module=\'App信息\' then 1 else 0 end desc, id desc',
         mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [uid, toDevId, fromDevId]);
   }

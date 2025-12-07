@@ -97,7 +97,7 @@ class Constants {
     } else {
       dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
     }
-    Directory(dir).createSync(recursive: true);
+    await Directory(dir).create(recursive: true);
     return dir;
   }
 

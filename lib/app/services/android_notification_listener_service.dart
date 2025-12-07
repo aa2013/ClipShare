@@ -31,6 +31,7 @@ class AndroidNotificationListenerService extends GetxService {
         }
         var map = <String, String?>{};
         final hasImg = event.haveExtraPicture ?? false;
+        map["pkg"] = event.packageName;
         map["title"] = event.title;
         map["content"] = event.content;
         if(hasImg){
