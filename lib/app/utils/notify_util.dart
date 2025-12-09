@@ -45,7 +45,7 @@ class NotifyUtil {
     String title = Constants.appName,
     required String content,
     required String key,
-    Uri? windowsImageUri,
+    Uri? notificationLogoUri,
     String? payload,
   }) async {
     int? notifyId;
@@ -58,12 +58,15 @@ class NotifyUtil {
       }
       NotificationDetails notificationDetails = NotificationDetails(
         iOS: const DarwinNotificationDetails(),
-        macOS: const DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(attachments: [
+          if(notificationLogoUri != null)
+            DarwinNotificationAttachment(File.fromUri(notificationLogoUri).path)
+        ]),
         linux: const LinuxNotificationDetails(),
         windows: WindowsNotificationDetails(
           images: [
             WindowsImage(
-              windowsImageUri ?? WindowsImage.getAssetUri(Constants.logoPngPath),
+              notificationLogoUri ?? WindowsImage.getAssetUri(Constants.logoPngPath),
               altText: '',
               placement: WindowsImagePlacement.appLogoOverride,
             ),

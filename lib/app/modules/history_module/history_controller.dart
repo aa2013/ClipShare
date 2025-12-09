@@ -470,7 +470,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
                   title: notificationTitle,
                   content: notificationContent,
                   key: notifyKey,
-                  windowsImageUri: iconUri,
+                  notificationLogoUri: iconUri,
                 );
                 if (notifyId != null) {
                   Future.delayed(2.s, () {
