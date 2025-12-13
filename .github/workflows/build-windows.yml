@@ -1,0 +1,62 @@
+name: build-windows-exe
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # - name: Install InnoSetup via Chocolatey
+    #   run: |
+    #     # 方法1: 直接运行 Chocolatey
+    #     Set-ExecutionPolicy Bypass -Scope Process -Force
+    #     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+    #     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+        
+    #     # 方法2: 使用 Chocolatey GitHub Action
+    #     # 或者使用下面的专门 Action
+    #   shell: powershell
+      
+    - name: Install InnoSetup
+      uses: crazy-max/ghaction-chocolatey@v2
+      with:
+        args: install innosetup -y --no-progress
+        
+    - name: Verify InnoSetup installation
+      run: |
+        # 检查 InnoSetup 是否安装成功
+        if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+          echo "InnoSetup installed successfully"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /?
+        } else {
+          echo "InnoSetup not found"
+          exit 1
+        }
+        
+    - name: Add InnoSetup to PATH
+      run: |
+        echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Append
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        flutter-version: 3.35.0
+        cache: true
+        
+    - name: Install dependencies
+      run: flutter pub get
+      
+    - name: Build with fastforge
+      run: |
+        # 确保 Windows 桌面支持已启用
+        dart pub global activate fastforge
+        
+        # 使用 fastforge 构建
+        cd scripts
+        ./build_windows_exe.bat
