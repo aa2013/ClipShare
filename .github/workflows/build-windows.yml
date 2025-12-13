@@ -34,7 +34,7 @@ jobs:
         cd scripts
         ./build_windows_exe.bat
 
-    - name: Upload DMG artifact
+    - name: Upload exe artifact
       uses: actions/upload-artifact@v4
       with:
         name: windows-setup.exe
