@@ -39,5 +39,6 @@ jobs:
       with:
         name: windows-setup.exe
         path: dist/**/*.exe
+        compression-level: 0
         overwrite: true
     
