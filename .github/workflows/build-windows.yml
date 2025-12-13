@@ -33,3 +33,11 @@ jobs:
         # 使用 fastforge 构建
         cd scripts
         ./build_windows_exe.bat
+
+    - name: Upload DMG artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-setup.exe
+        path: ../dist/*.exe
+        overwrite: true
+    
