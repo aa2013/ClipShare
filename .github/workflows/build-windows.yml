@@ -37,8 +37,7 @@ jobs:
     - name: Upload exe artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-setup.exe
+        name: windows-build
         path: dist/**/*.exe
-        compression-level: 0
         overwrite: true
     
