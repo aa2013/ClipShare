@@ -27,20 +27,9 @@ jobs:
       with:
         args: install innosetup -y --no-progress
         
-    - name: Verify InnoSetup installation
-      run: |
-        # 检查 InnoSetup 是否安装成功
-        if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
-          echo "InnoSetup installed successfully"
-          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /?
-        } else {
-          echo "InnoSetup not found"
-          exit 1
-        }
-        
-    - name: Add InnoSetup to PATH
-      run: |
-        echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Append
+    # - name: Add InnoSetup to PATH
+    #   run: |
+    #     echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Append
         
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
