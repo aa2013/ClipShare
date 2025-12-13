@@ -11,25 +11,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    # - name: Install InnoSetup via Chocolatey
-    #   run: |
-    #     # 方法1: 直接运行 Chocolatey
-    #     Set-ExecutionPolicy Bypass -Scope Process -Force
-    #     [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    #     iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
-        
-    #     # 方法2: 使用 Chocolatey GitHub Action
-    #     # 或者使用下面的专门 Action
-    #   shell: powershell
-      
     - name: Install InnoSetup
       uses: crazy-max/ghaction-chocolatey@v2
       with:
         args: install innosetup -y --no-progress
-        
-    # - name: Add InnoSetup to PATH
-    #   run: |
-    #     echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Append
         
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
@@ -43,9 +28,8 @@ jobs:
       
     - name: Build with fastforge
       run: |
-        # 确保 Windows 桌面支持已启用
+        copy "./windows/packaging/exe/ChineseSimplified.isl" "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseSimplified.isl"
         dart pub global activate fastforge
-        
         # 使用 fastforge 构建
         cd scripts
         ./build_windows_exe.bat
