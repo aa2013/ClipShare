@@ -61,4 +61,5 @@ enum ConfigKey {
   devicePairedStatusFilter,
   lastSqlEditContent,
   dhEncryptKey,
+  syncOutdateLimitTime,
 }

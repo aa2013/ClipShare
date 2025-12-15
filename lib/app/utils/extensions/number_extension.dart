@@ -1,8 +1,44 @@
+import 'package:clipshare/app/data/enums/time_span_unit.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:flutter/cupertino.dart';
 
 extension NumberExt on num {
   bool between(num start, num end) {
     return this >= start && this <= end;
+  }
+
+  String get timeSpanStr {
+    if (this < TimeSpanUnit.minute.magnification) {
+      return '$this ${TranslationKey.second.tr}';
+    }
+    if (this < TimeSpanUnit.hour.magnification) {
+      var val = this / TimeSpanUnit.minute.magnification;
+      var valStr = '';
+      if ("${val.toInt()}.0" == val.toString()) {
+        valStr = val.toInt().toString();
+      } else {
+        valStr = val.toStringAsFixed(1);
+      }
+      return '$valStr ${TranslationKey.minute.tr}';
+    }
+    if (this < TimeSpanUnit.day.magnification) {
+      var val = this / TimeSpanUnit.hour.magnification;
+      var valStr = '';
+      if ("${val.toInt()}.0" == val.toString()) {
+        valStr = val.toInt().toString();
+      } else {
+        valStr = val.toStringAsFixed(1);
+      }
+      return '$valStr ${TranslationKey.hour.tr}';
+    }
+    var val = this / TimeSpanUnit.day.magnification;
+    var valStr = '';
+    if ("${val.toInt()}.0" == val.toString()) {
+      valStr = val.toInt().toString();
+    } else {
+      valStr = val.toStringAsFixed(1);
+    }
+    return '$valStr ${TranslationKey.day.tr}';
   }
 }
 
@@ -88,18 +124,22 @@ extension IntExt on int {
     'insetV_$this',
     () => EdgeInsets.symmetric(vertical: toDouble()),
   );
+
   EdgeInsets get insetL => _insetsMap.putIfAbsent(
     'insetL_$this',
     () => EdgeInsets.only(left: toDouble()),
   );
+
   EdgeInsets get insetT => _insetsMap.putIfAbsent(
     'insetT_$this',
     () => EdgeInsets.only(top: toDouble()),
   );
+
   EdgeInsets get insetR => _insetsMap.putIfAbsent(
     'insetR_$this',
     () => EdgeInsets.only(right: toDouble()),
   );
+
   EdgeInsets get insetB => _insetsMap.putIfAbsent(
     'insetB_$this',
     () => EdgeInsets.only(bottom: toDouble()),

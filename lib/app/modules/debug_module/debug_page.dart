@@ -7,7 +7,6 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
-import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -123,17 +122,6 @@ class DebugPage extends GetView<DebugController> {
             NotifyUtil.cancelExcludeLast("dev");
           },
           child: Text("Test All Notifies Exclude Last"),
-        ),
-        Expanded(
-          child: FileBrowser(
-            onLoadFiles: (String path) => [
-              FileItem(name: 'aa', isDirectory: true, fullPath: 'a'),
-              FileItem(name: 'bb', isDirectory: true, fullPath: 'b'),
-              FileItem(name: 'cc', isDirectory: true, fullPath: 'c'),
-            ],
-            shouldShowUpLevel: (String currentPath) => true,
-            initialPath: '/',
-          ),
         ),
       ],
     );

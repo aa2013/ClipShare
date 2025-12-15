@@ -668,7 +668,11 @@ enum TranslationKey {
   authFailed,
   dhKeySettingDesc,
   dhKeySettingName,
-  dhKeySettingTips;
+  dhKeySettingTips,
+  second,
+  hour,
+  syncOutDateSettingTitle,
+  syncOutDateSettingDesc;
 
   String get tr => name.tr;
 

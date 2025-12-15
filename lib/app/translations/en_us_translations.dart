@@ -802,6 +802,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Device";
       case TranslationKey.day:
         return "Day";
+      case TranslationKey.hour:
+        return "Hour";
+      case TranslationKey.second:
+        return "Second";
       case TranslationKey.forwardServerKeyNotStarted:
         return "Not Started";
       case TranslationKey.exhausted:
@@ -1357,6 +1361,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'When enabled, all connected devices must have this enabled with the same password, otherwise connection will fail';
       case TranslationKey.dhKeySettingTips:
         return 'Encrypts the parameters of the Diffie-Hellman key exchange algorithm used during device connection.\nWhen enabled, all connected devices must have this enabled with the same password, otherwise connection will fail.\n\nActually, not using this is also fine.';
+      case TranslationKey.syncOutDateSettingTitle:
+        return 'Sync Data Time Limit';
+      case TranslationKey.syncOutDateSettingDesc:
+        return 'Only sync data within the specified time period instead of all data';
     }
   }
 }

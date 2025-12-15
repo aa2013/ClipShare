@@ -207,7 +207,7 @@ packages:
       path: "../clipboard_listener"
       relative: true
     source: path
-    version: "1.0.5"
+    version: "1.2.2"
   clock:
     dependency: transitive
     description:

@@ -73,6 +73,9 @@ class ConfigService extends GetxService {
   final prime1 = CryptoUtil.getPrime();
   final prime2 = CryptoUtil.getPrime();
 
+  //当前时区与UTC的差值，带正负
+  final timeZoneOffsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
+
   // final bgColor = const Color.fromARGB(255, 238, 238, 238);
   WindowController? historyWindow;
   WindowController? onlineDevicesWindow;
@@ -565,6 +568,11 @@ class ConfigService extends GetxService {
 
   String get dhEncryptKey => _dhEncryptKey.value;
 
+  ///新设备配对的过往数据同步时间限制，单位秒
+  final _syncOutdateLimitTime = 0.obs;
+
+  int get syncOutdateLimitTime => _syncOutdateLimitTime.value;
+
   //endregion
 
   //endregion
@@ -764,6 +772,7 @@ class ConfigService extends GetxService {
     if (_dhEncryptKey.value.isNotNullAndEmpty) {
       _dhAesKey = await _updateDhAesKey();
     }
+    _syncOutdateLimitTime.value = await cfg.getConfigByKey(ConfigKey.syncOutdateLimitTime, 0);
   }
 
   ///初始化路径信息
@@ -1293,12 +1302,18 @@ class ConfigService extends GetxService {
     _dhAesKey = await _updateDhAesKey();
   }
 
+  ///设置 DH 加密密钥
+  Future<void> setNewPairedDeviceSyncOldDataLimitTime(int seconds) async {
+    await configDao.addOrUpdate(ConfigKey.syncOutdateLimitTime, seconds.toString());
+    _syncOutdateLimitTime.value = seconds;
+  }
+
   //endregion
 
   //region 其他方法
 
   Future<String> _updateDhAesKey() {
-    if(_dhEncryptKey.value.isNullOrEmpty){
+    if (_dhEncryptKey.value.isNullOrEmpty) {
       return Future.value('');
     }
     return compute((List<dynamic> params) {

@@ -39,9 +39,14 @@ abstract class OperationRecordDao {
     select 1 from OperationSync opsync
     where opsync.uid = :uid and opsync.devId = :toDevId and opsync.opId = record.id
   ) and devId = :fromDevId
+  and (
+    :syncOutdateLimitTimeSeconds <= 0 
+    or 
+    (strftime('%s', 'now') + :timeZoneOffsetSeconds - strftime('%s', record.time)) <= :syncOutdateLimitTimeSeconds
+  )
   order by case when module='App信息' then 1 else 0 end desc, id desc
   """)
-  Future<List<OperationRecord>> getSyncRecord(int uid, String toDevId, String fromDevId);
+  Future<List<OperationRecord>> getSyncRecord(int uid, String toDevId, String fromDevId, int syncOutdateLimitTimeSeconds, int timeZoneOffsetSeconds);
 
   ///删除当前用户的所有操作记录
   @Query("delete from OperationRecord where uid = :uid")
