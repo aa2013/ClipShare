@@ -1331,6 +1331,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "类型";
       case TranslationKey.selectTypes:
         return "选择类型";
+      case TranslationKey.pleaseWait:
+        return "请稍等...";
+      case TranslationKey.generateTodayAndroidLog:
+        return "生成 Android 原生日志（当天）";
     }
   }
 }

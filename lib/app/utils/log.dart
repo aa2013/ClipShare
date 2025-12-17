@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:get/get.dart';
 import 'package:logger/logger.dart';
@@ -69,5 +71,31 @@ class Log {
     _writeFuture = _writeFuture.then(
       (v) => file.writeAsString("$content\n", mode: FileMode.writeOnlyAppend),
     );
+  }
+
+  static Future<void> writeAndroidLogToday() async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    DateTime now = DateTime.now();
+    String timeStr =
+        "${now.month.toString().padLeft(2, '0')}-"
+        "${now.day.toString().padLeft(2, '0')} 00:00:00.000";
+    var result = await Process.start('logcat', ['-T', timeStr, '-v', 'long', 'top.coclyun.clipshare:V']);
+    List<int> bytes = [];
+    result.stdout.listen((data) {
+      // print(utf8.decode(data));
+      bytes.addAll(data);
+    });
+
+    await Future.delayed(5.s, result.kill);
+
+    final appConfig = Get.find<ConfigService>();
+    final logDirPath = appConfig.logsDirPath;
+    var dateStr = DateTime.now().toString().substring(0, 10);
+    var filePath = "$logDirPath/$dateStr-Android.txt";
+    Directory(logDirPath).createSync(recursive: true);
+    var file = File(filePath);
+    file.writeAsBytes(bytes);
   }
 }

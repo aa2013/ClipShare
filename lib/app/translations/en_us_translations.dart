@@ -1333,6 +1333,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Types";
       case TranslationKey.selectTypes:
         return "Select Types";
+      case TranslationKey.pleaseWait:
+        return "Please wait...";
+      case TranslationKey.generateTodayAndroidLog:
+        return "Generate Android native logs (today)";
     }
   }
 }

@@ -656,7 +656,9 @@ enum TranslationKey {
   offline,
   enterSoftware,
   types,
-  selectTypes;
+  selectTypes,
+  pleaseWait,
+  generateTodayAndroidLog;
 
   String get tr => name.tr;
 
