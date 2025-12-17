@@ -1365,6 +1365,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Sync Data Time Limit';
       case TranslationKey.syncOutDateSettingDesc:
         return 'Only sync data within the specified time period instead of all data';
+      case TranslationKey.pleaseWait:
+        return "Please wait...";
+      case TranslationKey.generateTodayAndroidLog:
+        return "Generate Android native logs (today)";
     }
   }
 }

@@ -1363,6 +1363,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '同步过往数据限制';
       case TranslationKey.syncOutDateSettingDesc:
         return '仅同步指定时间内的数据而不是全部同步';
+      case TranslationKey.pleaseWait:
+        return "请稍等...";
+      case TranslationKey.generateTodayAndroidLog:
+        return "生成 Android 原生日志（当天）";
     }
   }
 }

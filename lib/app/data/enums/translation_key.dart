@@ -672,7 +672,9 @@ enum TranslationKey {
   second,
   hour,
   syncOutDateSettingTitle,
-  syncOutDateSettingDesc;
+  syncOutDateSettingDesc,
+  pleaseWait,
+  generateTodayAndroidLog;
 
   String get tr => name.tr;
 

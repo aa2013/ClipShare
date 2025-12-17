@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
@@ -6,7 +7,9 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
+import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -122,6 +125,23 @@ class DebugPage extends GetView<DebugController> {
             NotifyUtil.cancelExcludeLast("dev");
           },
           child: Text("Test All Notifies Exclude Last"),
+        ),
+        TextButton(
+          onPressed: () async {
+            Log.writeAndroidLogToday();
+          },
+          child: Text("666"),
+        ),
+        Expanded(
+          child: FileBrowser(
+            onLoadFiles: (String path) => [
+              FileItem(name: 'aa', isDirectory: true, fullPath: 'a'),
+              FileItem(name: 'bb', isDirectory: true, fullPath: 'b'),
+              FileItem(name: 'cc', isDirectory: true, fullPath: 'c'),
+            ],
+            shouldShowUpLevel: (String currentPath) => true,
+            initialPath: '/',
+          ),
         ),
       ],
     );
