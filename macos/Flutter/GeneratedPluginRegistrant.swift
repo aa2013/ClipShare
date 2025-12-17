@@ -5,6 +5,7 @@
 import FlutterMacOS
 import Foundation
 
+import clipshare_clipboard_listener
 import connectivity_plus
 import desktop_drop
 import desktop_multi_window
@@ -27,6 +28,7 @@ import wakelock_plus
 import window_manager
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
+  ClipshareClipboardListenerPlugin.register(with: registry.registrar(forPlugin: "ClipshareClipboardListenerPlugin"))
   ConnectivityPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlugin"))
   DesktopDropPlugin.register(with: registry.registrar(forPlugin: "DesktopDropPlugin"))
   FlutterMultiWindowPlugin.register(with: registry.registrar(forPlugin: "FlutterMultiWindowPlugin"))
