@@ -101,6 +101,14 @@ class Constants {
     return dir;
   }
 
+  static Future<String> get updateDownloadFileDirPath async {
+    if (Platform.isAndroid) {
+      return Constants.androidDownloadPath;
+    } else {
+      return "${await Constants.documentsPath}/update";
+    }
+  }
+
   static const windowsStartUpPath = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
 
   static String? get windowsUserStartUpPath {

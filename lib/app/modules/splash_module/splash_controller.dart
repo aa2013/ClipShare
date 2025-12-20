@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/models/my_drop_item.dart';
-import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -119,8 +118,11 @@ class SplashController extends GetxController {
       }
       Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
       appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
-      if (PlatformExt.isDesktop) {
-        Get.putAsync(() => TrayService().init(), permanent: true);
+      Get.putAsync(() => TrayService().init(), permanent: true);
+      var updateDir = Directory(await Constants.updateDownloadFileDirPath);
+      Log.debug(tag, "updateDir = $updateDir");
+      if(await updateDir.exists()) {
+        updateDir.delete(recursive: true);
       }
     }
     if (Platform.isAndroid) {
