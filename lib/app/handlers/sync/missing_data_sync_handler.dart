@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
@@ -27,7 +28,7 @@ class MissingDataSyncHandler {
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
     final sourceService = Get.find<ClipboardSourceService>();
-    final syncOutdateLimitTimeSeconds = appConfig.syncOutdateLimitTime;
+    final syncOutdateLimitTimeSeconds = max(0, appConfig.syncOutdateLimitTime);
     final timeZoneOffsetSeconds = appConfig.timeZoneOffsetSeconds;
     final syncRecords = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devId, syncOutdateLimitTimeSeconds, timeZoneOffsetSeconds);
     final notIncludesAppInfos = sourceService.appInfos.where((item) => item.devId == devId && !syncedAppIds.contains(item.appId)).map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id)).toList();

@@ -22,7 +22,6 @@ class _OutdateTimeInputDialogState extends State<OutdateTimeInputDialog> {
   final TextEditingController _controller = TextEditingController();
   final Map<TimeSpanUnit, String> unitMap = {};
 
-  // final Map<>
   TimeSpanUnit _selectedUnit = TimeSpanUnit.day;
 
   int get numericValue => double.tryParse(_controller.text)?.toInt() ?? 0;
@@ -56,7 +55,8 @@ class _OutdateTimeInputDialogState extends State<OutdateTimeInputDialog> {
           child: TextField(
             controller: _controller,
             decoration: InputDecoration(
-              hintText: '请输入数值',
+              visualDensity: VisualDensity.compact,
+              hintText: TranslationKey.pleaseInput.tr,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -101,7 +101,7 @@ class _OutdateTimeInputDialogState extends State<OutdateTimeInputDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("data"),
+      title: Text(TranslationKey.syncOutDateSettingTitle.tr),
       content: buildInput(context),
       actions: [
         Row(
