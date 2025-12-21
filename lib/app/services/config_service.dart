@@ -200,13 +200,13 @@ class ConfigService extends GetxService {
   final deviceDiscoveryStatus = Rx<String?>(null);
 
   //本机是否启用 webdav 中转
-  bool get enableWebdav => forwardWay == ForwardWay.webdav;
+  bool get enableWebDAV => forwardWay == ForwardWay.webdav;
 
   //本机是否启用 对象存储 中转
   bool get enableS3 => forwardWay == ForwardWay.s3;
 
   //本机是否启用 存储 进行中转
-  bool get enableStorageSync => enableWebdav || enableS3;
+  bool get enableStorageSync => enableWebDAV || enableS3;
 
   //jieba分词库是否已初始化
   bool _jiebaInited = false;
@@ -526,10 +526,10 @@ class ConfigService extends GetxService {
   bool get enableShowMobileNotification => _enableShowMobileNotification.value;
 
   //webdav配置
-  final _webdavConfig = Rx<WebDavConfig?>(null);
+  final _webdavConfig = Rx<WebDAVConfig?>(null);
 
   //webdav配置
-  WebDavConfig? get webDavConfig => _webdavConfig.value;
+  WebDAVConfig? get webDAVConfig => _webdavConfig.value;
 
   //s3配置
   final _s3Config = Rx<S3Config?>(null);
@@ -655,12 +655,12 @@ class ConfigService extends GetxService {
         }
       },
     ));
-    _webdavConfig.value = await cfg.getConfigByKey<WebDavConfig?>(
+    _webdavConfig.value = await cfg.getConfigByKey<WebDAVConfig?>(
       ConfigKey.webdavConfig,
       null,
       convert: (s) {
         try {
-          return WebDavConfig.fromJson(jsonDecode(s));
+          return WebDAVConfig.fromJson(jsonDecode(s));
         } catch (err, stack) {
           return null;
         }
@@ -754,7 +754,7 @@ class ConfigService extends GetxService {
       null,
       convert: (value) {
         final json = jsonDecode(value) as Map<dynamic, dynamic>;
-        return WebDavConfig.fromJson(json.cast());
+        return WebDAVConfig.fromJson(json.cast());
       },
     ));
     _mobileDevIdGenerateWay.value = await cfg.getConfigByKey(
@@ -1254,7 +1254,7 @@ class ConfigService extends GetxService {
   }
 
   ///保存 webdav 配置
-  Future<void> setWebDavConfig(WebDavConfig config) async {
+  Future<void> setWebDavConfig(WebDAVConfig config) async {
     await configDao.addOrUpdate(ConfigKey.webdavConfig, jsonEncode(config));
     _webdavConfig.value = config;
   }

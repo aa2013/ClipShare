@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-class WebDavConfig {
+class WebDAVConfig {
   final String server;
   final String username;
   final String password;
   final String baseDir;
   final String displayName;
 
-  WebDavConfig({
+  WebDAVConfig({
     required this.server,
     required this.username,
     required this.password,
@@ -15,8 +15,8 @@ class WebDavConfig {
     required this.displayName,
   });
 
-  factory WebDavConfig.fromJson(Map<String, dynamic> json) {
-    return WebDavConfig(
+  factory WebDAVConfig.fromJson(Map<String, dynamic> json) {
+    return WebDAVConfig(
       server: json["server"],
       username: json["username"],
       password: json["password"],
@@ -25,7 +25,7 @@ class WebDavConfig {
     );
   }
 
-  WebDavConfig copyWith({
+  WebDAVConfig copyWith({
     String? displayName,
     String? server,
     String? username,
@@ -33,7 +33,7 @@ class WebDavConfig {
     String? baseDir,
     bool? enable,
   }) {
-    return WebDavConfig(
+    return WebDAVConfig(
       displayName: displayName ?? this.displayName,
       server: server ?? this.server,
       username: username ?? this.username,

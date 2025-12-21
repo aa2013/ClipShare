@@ -1067,14 +1067,14 @@ class SettingsPage extends GetView<SettingsController> {
                                 },
                               ),
                               MenuItem(
-                                label: 'WebDav',
+                                label: 'WebDAV',
                                 icon: Icons.storage,
                                 enabled: v != ForwardWay.webdav,
                                 onSelected: () {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.webdav);
                                     await sktService.disConnectForwardServer();
-                                    if (!appConfig.enableForward || appConfig.webDavConfig == null) {
+                                    if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
                                       return;
@@ -1272,10 +1272,10 @@ class SettingsPage extends GetView<SettingsController> {
                                   return;
                                 }
                                 final useWebdav = appConfig.forwardWay == ForwardWay.webdav;
-                                if (useWebdav && appConfig.webDavConfig == null) {
+                                if (useWebdav && appConfig.webDAVConfig == null) {
                                   Global.showSnackBarErr(
                                     context: context,
-                                    text: TranslationKey.forwardSettingsForwardEnableRequiredWebdavText.tr,
+                                    text: TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr,
                                   );
                                   return;
                                 }
@@ -1354,26 +1354,26 @@ class SettingsPage extends GetView<SettingsController> {
                       if (appConfig.forwardWay == ForwardWay.webdav)
                         SettingCard(
                           title: Text(
-                            TranslationKey.forwardSettingsWebDavTitle.tr,
+                            TranslationKey.forwardSettingsWebDAVTitle.tr,
                             maxLines: 1,
                           ),
-                          description: Text(appConfig.webDavConfig?.displayName ?? TranslationKey.noConfig.tr, maxLines: 1),
-                          value: appConfig.webDavConfig,
+                          description: Text(appConfig.webDAVConfig?.displayName ?? TranslationKey.noConfig.tr, maxLines: 1),
+                          value: appConfig.webDAVConfig,
                           action: (v) {
                             String text = TranslationKey.change.tr;
-                            if (appConfig.webDavConfig == null) {
+                            if (appConfig.webDAVConfig == null) {
                               text = TranslationKey.configure.tr;
                             }
                             return Row(
                               children: [
-                                if (appConfig.webDavConfig != null)
+                                if (appConfig.webDAVConfig != null)
                                   IconButton(
                                     onPressed: () {
                                       Global.showDialog(
                                         context,
                                         QrImageDialog(
-                                          title: const Text("Webdav"),
-                                          data: jsonEncode(appConfig.webDavConfig!),
+                                          title: const Text("WebDAV"),
+                                          data: jsonEncode(appConfig.webDAVConfig!),
                                         ),
                                       );
                                     },
@@ -1383,7 +1383,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   onPressed: () {
                                     Global.showDialog(
                                       context,
-                                      WebdavConfigEditDialog(
+                                      WebDAVConfigEditDialog(
                                         initValue: v,
                                         onOk: (config) {
                                           appConfig.setWebDavConfig(config);

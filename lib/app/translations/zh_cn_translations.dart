@@ -289,8 +289,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "通过中转服务可在公网环境下进行数据同步";
       case TranslationKey.forwardSettingsForwardEnableRequiredText:
         return "请先设置中转服务器地址";
-      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
-        return "请先配置 Webdav 服务";
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText:
+        return "请先配置 WebDAV 服务";
       case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
         return "请先配置 对象存储 服务";
       case TranslationKey.forwardSettingsForwardAddressTitle:
@@ -1203,11 +1203,11 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.notificationServerTips:
         return "使用存储服务作为中转时无法自动得知需要同步数据，需要依赖通知服务进行通知。\n"
             "可自建也可使用公共通知服务，通知内容不含任何敏感信息。";
-      case TranslationKey.forwardSettingsWebDavTitle:
-        return "WebDav配置信息";
+      case TranslationKey.forwardSettingsWebDAVTitle:
+        return "WebDAV配置信息";
       case TranslationKey.forwardSettingsS3Title:
         return "对象存储配置信息";
-      case TranslationKey.configureWebdavServer:
+      case TranslationKey.configureWebDAVServer:
         return "配置 WebDAV";
       case TranslationKey.nameRequired:
         return "请输入配置名称";

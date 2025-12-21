@@ -123,7 +123,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   StorageService(this._registry);
 
-  WebDavConfig? get _webDavConfig => appConfig.webDavConfig;
+  WebDAVConfig? get _webDAVConfig => appConfig.webDAVConfig;
 
   S3Config? get _s3Config => appConfig.s3Config;
 
@@ -243,8 +243,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       } else {
         _client = S3Client(_s3Config!);
       }
-    } else if (appConfig.enableWebdav && _webDavConfig != null) {
-      _client = WebDavClient(_webDavConfig!);
+    } else if (appConfig.enableWebDAV && _webDAVConfig != null) {
+      _client = WebDAVClient(_webDAVConfig!);
     } else {
       throw 'storage service config is null';
     }
@@ -546,8 +546,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       }
     }
     late final String id;
-    if (appConfig.enableWebdav) {
-      id = CryptoUtil.toMD5("${_webDavConfig!.server}${_webDavConfig!.username}");
+    if (appConfig.enableWebDAV) {
+      id = CryptoUtil.toMD5("${_webDAVConfig!.server}${_webDAVConfig!.username}");
     } else {
       id = CryptoUtil.toMD5("${_s3Config!.endPoint}${_s3Config!.bucketName}${_s3Config!.accessKey}");
     }
@@ -717,8 +717,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     final result = await _addOrUpdateDevice(device);
-    final isWebDav = _client is WebDavClient;
-    final protocol = isWebDav ? TransportProtocol.webdav : TransportProtocol.s3;
+    final isWebDAV = _client is WebDAVClient;
+    final protocol = isWebDAV ? TransportProtocol.webdav : TransportProtocol.s3;
     for (var listener in _devAliveListeners) {
       listener.onConnected(DevInfo.fromDevice(device), version, minVersion, protocol);
     }
@@ -871,8 +871,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   Future<bool> _addOrUpdateDevice(Device dev) async {
     final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
     final devService = Get.find<DeviceService>();
-    final isWebDav = _client is WebDavClient;
-    final protocol = isWebDav ? TransportProtocol.webdav : TransportProtocol.s3;
+    final isWebDAV = _client is WebDAVClient;
+    final protocol = isWebDAV ? TransportProtocol.webdav : TransportProtocol.s3;
     final address = protocol.name;
     final result = dbDev ?? dev;
     result.isPaired = true;

@@ -11,10 +11,10 @@ import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import 'storage_client.dart';
 
-class WebDavClient implements StorageClient {
-  final WebDavConfig _config;
+class WebDAVClient implements StorageClient {
+  final WebDAVConfig _config;
   late webdav.Client _client;
-  static const tag = "WebDavClient";
+  static const tag = "WebDAVClient";
 
   String get _baseDir {
     if (_config.baseDir.endsWith("/")) {
@@ -23,7 +23,7 @@ class WebDavClient implements StorageClient {
     return "${_config.baseDir}/";
   }
 
-  WebDavClient(this._config) {
+  WebDAVClient(this._config) {
     _client = webdav.newClient(_config.server, user: _config.username, password: _config.password, debug: false);
   }
 

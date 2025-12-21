@@ -1200,12 +1200,12 @@ class EnUSTranslation extends AbstractTranslations {
             "You may use either self-hosted or public notification services. \n"
             "Notification content does not contain any sensitive information.";
 
-      case TranslationKey.forwardSettingsWebDavTitle:
-        return "WebDav Config";
+      case TranslationKey.forwardSettingsWebDAVTitle:
+        return "WebDAV Config";
       case TranslationKey.forwardSettingsS3Title:
         return "S3 Config";
 
-      case TranslationKey.configureWebdavServer:
+      case TranslationKey.configureWebDAVServer:
         return "Configure WebDAV Server";
       case TranslationKey.webdavServerUrlRequired:
         return "Please enter WebDAV server URL";
@@ -1289,7 +1289,7 @@ class EnUSTranslation extends AbstractTranslations {
         return 'None';
       case TranslationKey.forwardServer:
         return 'Forward Server';
-      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText:
         return "Please configure the WebDAV service first";
       case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
         return "Please configure the S3 service first";

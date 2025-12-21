@@ -15,22 +15,22 @@ import 'package:flutter/material.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:get/get.dart';
 
-class WebdavConfigEditDialog extends StatefulWidget {
-  final void Function(WebDavConfig config) onOk;
-  final WebDavConfig? initValue;
+class WebDAVConfigEditDialog extends StatefulWidget {
+  final void Function(WebDAVConfig config) onOk;
+  final WebDAVConfig? initValue;
 
-  const WebdavConfigEditDialog({
+  const WebDAVConfigEditDialog({
     super.key,
     this.initValue,
     required this.onOk,
   });
 
   @override
-  State<StatefulWidget> createState() => _WebdavConfigEditDialogState();
+  State<StatefulWidget> createState() => _WebDAVConfigEditDialogState();
 }
 
-class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
-  static const tag = "WebdavConfigEditDialog";
+class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
+  static const tag = "WebDAVConfigEditDialog";
   final nameEditor = TextEditingController();
   final serverEditor = TextEditingController();
   final usernameEditor = TextEditingController();
@@ -45,7 +45,7 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
   String? baseDirErrText;
   bool testingConnection = false;
 
-  WebDavConfig get config => WebDavConfig(
+  WebDAVConfig get config => WebDAVConfig(
     displayName: nameEditor.text,
     server: serverEditor.text,
     username: usernameEditor.text,
@@ -61,7 +61,7 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
     }
   }
 
-  void reset(WebDavConfig config) {
+  void reset(WebDAVConfig config) {
     nameEditor.text = config.displayName;
     serverEditor.text = config.server;
     usernameEditor.text = config.username;
@@ -161,7 +161,7 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
       setState(() {
         testingConnection = true;
       });
-      final exception = await WebDavClient(config).testConnect();
+      final exception = await WebDAVClient(config).testConnect();
       if (!testingConnection) {
         return;
       }
@@ -182,7 +182,7 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(TranslationKey.configureWebdavServer.tr),
+          Text(TranslationKey.configureWebDAVServer.tr),
           if (PlatformExt.isMobile)
             Tooltip(
               message: TranslationKey.scan.tr,
@@ -205,7 +205,7 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
                         final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
                         try {
                           if (json != null) {
-                            final result = WebDavConfig.fromJson(json);
+                            final result = WebDAVConfig.fromJson(json);
                             setState(() {
                               reset(result);
                             });
@@ -332,12 +332,12 @@ class _WebdavConfigEditDialogState extends State<WebdavConfigEditDialog> {
                                     onLoadFiles: (String path) async {
                                       selectedPath = path.unixPath;
                                       final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                      final list = await WebDavClient(tempConfig).list(path: path);
+                                      final list = await WebDAVClient(tempConfig).list(path: path);
                                       return list.where((item) => item.isDir).map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
                                     },
                                     onCreateDirectory: (current, name) {
                                       final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                      final client = WebDavClient(tempConfig);
+                                      final client = WebDAVClient(tempConfig);
                                       return client.createDirectory("$current/$name/");
                                     },
                                     shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
