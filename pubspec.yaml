@@ -133,8 +133,6 @@ dependencies:
   qr_flutter: ^4.1.0
   # 二维码扫描
   qr_code_scanner_plus: ^2.0.10+1
-  # titlebar
-  modern_titlebar_buttons: ^1.1.1
   # 截屏检测（Android/IOS）
   flutter_screenshot_detect:
     git:
