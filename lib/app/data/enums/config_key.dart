@@ -64,4 +64,5 @@ enum ConfigKey {
   syncOutdateLimitTime,
   noDiscoveryIfs,
   onlyManualDiscoverySubNet,
+  stopListeningOnScreenClosed,
 }

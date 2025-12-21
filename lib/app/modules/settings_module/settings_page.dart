@@ -670,6 +670,24 @@ class SettingsPage extends GetView<SettingsController> {
                     icon: Icon(MdiIcons.clipboardOutline),
                     cardList: [
                       SettingCard(
+                        title: Text(
+                          TranslationKey.stopListeningOnScreenClosedSettingTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.stopListeningOnScreenClosedSettingDesc.tr),
+                        value: appConfig.stopListeningOnScreenClosed,
+                        show: (v) => Platform.isAndroid,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setStopListeningOnScreenClosed(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
                         title: Row(
                           children: [
                             Text(

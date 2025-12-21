@@ -583,6 +583,11 @@ class ConfigService extends GetxService {
 
   bool get onlyManualDiscoverySubNet => _onlyManualDiscoverySubNet.value;
 
+  ///仅Android 屏幕关闭后停止监听
+  final _stopListeningOnScreenClosed = false.obs;
+
+  bool get stopListeningOnScreenClosed => _stopListeningOnScreenClosed.value;
+
   //endregion
 
   //endregion
@@ -789,6 +794,7 @@ class ConfigService extends GetxService {
       convert: (content) => content.split(',').where(((item) => item.isNotEmpty)).toList(),
     );
     _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
+    _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
   }
 
   ///初始化路径信息
@@ -1334,6 +1340,15 @@ class ConfigService extends GetxService {
   Future<void> setOnlyManualDiscoverySubNet(bool onlyManualDiscoverySubNet) async {
     await configDao.addOrUpdate(ConfigKey.onlyManualDiscoverySubNet, onlyManualDiscoverySubNet.toString());
     _onlyManualDiscoverySubNet.value = onlyManualDiscoverySubNet;
+  }
+
+  ///仅 Android，屏幕关闭后停止监听
+  Future<void> setStopListeningOnScreenClosed(bool stopListeningOnScreenClosed) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.stopListeningOnScreenClosed, stopListeningOnScreenClosed.toString());
+    _stopListeningOnScreenClosed.value = stopListeningOnScreenClosed;
   }
 
   //endregion

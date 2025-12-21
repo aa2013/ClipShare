@@ -1375,6 +1375,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '仅手动子网扫描发现设备';
       case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
         return '在网络切换/屏幕亮起后不进行子网扫描，仅在设备页面手动点击发现时才进行子网扫描';
+      case TranslationKey.stopListeningOnScreenClosedSettingTitle:
+        return '熄屏后停止监听（实验性）';
+      case TranslationKey.stopListeningOnScreenClosedSettingDesc:
+        return '熄屏一分钟后停止监听剪贴板，在某些设备上能大量节省电量，后续可能移除该设置变成默认行为';
     }
   }
 }

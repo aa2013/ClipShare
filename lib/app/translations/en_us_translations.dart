@@ -1377,6 +1377,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Subnet Scanning Only for Manual Device Discovery';
       case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
         return 'Skip subnet scanning after network changes/screen wake-up, only scan when manually triggering discovery on the device page';
+      case TranslationKey.stopListeningOnScreenClosedSettingTitle:
+        return 'Stop listening on screen closed (Experimental)';
+      case TranslationKey.stopListeningOnScreenClosedSettingDesc:
+        return 'Stop listening to clipboard one minute after screen turns off. Can significantly save battery on some devices. This setting may be removed in the future and become default behavior.';
     }
   }
 }

@@ -8,6 +8,7 @@ import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
+import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/about_module/about_controller.dart';
 import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
@@ -48,7 +49,7 @@ import 'package:clipshare/app/modules/search_module/search_controller.dart' as s
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class SettingsController extends GetxController with WidgetsBindingObserver implements ForwardStatusListener {
+class SettingsController extends GetxController with WidgetsBindingObserver implements ForwardStatusListener, ScreenOpenedObserver {
   final appConfig = Get.find<ConfigService>();
   final connRegService = Get.find<ConnectionRegistryService>();
   final sktService = Get.find<SocketService>();
@@ -76,6 +77,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasNotificationRecordPerm = false.obs;
   final forwardServerStatus = ForwardServerStatus.disconnected.obs;
   final updater = 0.obs;
+  Timer? _screenEventTimer;
 
   //region environment status widgets
   final Rx<Widget> envStatusIcon = Rx<Widget>(const Loading(width: 32));
@@ -191,6 +193,9 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     super.onInit();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
+    if (Platform.isAndroid) {
+      ScreenOpenedListener.inst.register(this);
+    }
     connRegService.addForwardStatusListener(this);
     envStatusAction.value = IconButton(
       icon: const Icon(Icons.more_horiz_outlined),
@@ -199,6 +204,14 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     );
     checkPermissions();
     checkAndroidEnvPermission();
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+    if (Platform.isAndroid) {
+      ScreenOpenedListener.inst.remove(this);
+    }
   }
 
   @override
@@ -599,6 +612,48 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       dialog.close();
     }
   }
+
+  //endregion
+
+  //region 屏幕关闭与唤醒监听
+
+  @override
+  void onScreenOpened() {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    var currentMode = appConfig.workingMode;
+    if (currentMode != EnvironmentType.shizuku && currentMode != EnvironmentType.root) {
+      return;
+    }
+    //屏幕亮起2s内没关闭则启动监听
+    _screenEventTimer?.cancel();
+    _screenEventTimer = Timer(2.s, () {
+      if (!appConfig.stopListeningOnScreenClosed) {
+        return;
+      }
+      Log.debug(tag, "start listening on screen opened over 2 seconds");
+      clipboardManager.startListening(
+        env: appConfig.workingMode,
+        way: appConfig.clipboardListeningWay,
+        notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
+      );
+    });
+  }
+
+  @override
+  void onScreenClosed() {
+    //屏幕关闭一分钟后关闭监听
+    _screenEventTimer?.cancel();
+    _screenEventTimer = Timer(1.min, () {
+      if (!appConfig.stopListeningOnScreenClosed) {
+        return;
+      }
+      Log.debug(tag, "stopping listening on screen closed over 1 minutes");
+      clipboardManager.stopListening();
+    });
+  }
+
   //endregion
 
   //endregion
