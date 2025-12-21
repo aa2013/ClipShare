@@ -118,10 +118,12 @@ class _MultiSelectDialogContentState<T> extends State<_MultiSelectDialogContent<
   }
 
   void _confirmSelection() {
-    if (_selectedValues.isNotEmpty) {
-      widget.onConfirmed(_selectedValues);
-      Navigator.pop(context);
+    if (_selectedValues.isEmpty && widget.minSelectedCnt > 0) {
+      //最小选择数量大于0，且选择的数量为空时跳过
+      return;
     }
+    widget.onConfirmed(_selectedValues);
+    Navigator.pop(context);
   }
 
   void _cancel() {

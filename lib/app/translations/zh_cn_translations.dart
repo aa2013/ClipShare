@@ -1367,6 +1367,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return "请稍等...";
       case TranslationKey.generateTodayAndroidLog:
         return "生成 Android 原生日志（当天）";
+      case TranslationKey.noDiscoveryIfsSettingTitle:
+        return '设备发现排除网卡';
+      case TranslationKey.noDiscoveryIfsSettingDesc:
+        return '在设备发现流程中的子网扫描时跳过指定网卡';
+      case TranslationKey.onlyManualDiscoverySubNetSettingTitle:
+        return '仅手动子网扫描发现设备';
+      case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
+        return '在网络切换/屏幕亮起后不进行子网扫描，仅在设备页面手动点击发现时才进行子网扫描';
     }
   }
 }

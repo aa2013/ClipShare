@@ -573,6 +573,16 @@ class ConfigService extends GetxService {
 
   int get syncOutdateLimitTime => _syncOutdateLimitTime.value;
 
+  ///设备发现排除的网卡，包含子网扫描和广播
+  final _noDiscoveryIfs = <String>[].obs;
+
+  List<String> get noDiscoveryIfs => _noDiscoveryIfs.value;
+
+  ///仅手动子网扫描发现设备
+  final _onlyManualDiscoverySubNet = false.obs;
+
+  bool get onlyManualDiscoverySubNet => _onlyManualDiscoverySubNet.value;
+
   //endregion
 
   //endregion
@@ -773,6 +783,12 @@ class ConfigService extends GetxService {
       _dhAesKey = await _updateDhAesKey();
     }
     _syncOutdateLimitTime.value = await cfg.getConfigByKey(ConfigKey.syncOutdateLimitTime, 0);
+    _noDiscoveryIfs.value = await cfg.getConfigByKey(
+      ConfigKey.noDiscoveryIfs,
+      [],
+      convert: (content) => content.split(',').where(((item) => item.isNotEmpty)).toList(),
+    );
+    _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
   }
 
   ///初始化路径信息
@@ -1302,10 +1318,22 @@ class ConfigService extends GetxService {
     _dhAesKey = await _updateDhAesKey();
   }
 
-  ///设置 DH 加密密钥
+  ///设置 过时数据同步时间限制
   Future<void> setNewPairedDeviceSyncOldDataLimitTime(int seconds) async {
     await configDao.addOrUpdate(ConfigKey.syncOutdateLimitTime, seconds.toString());
     _syncOutdateLimitTime.value = seconds;
+  }
+
+  ///设置 设备发现流程中跳过的网卡
+  Future<void> setNoDiscoveryIfs(List<String> interfaces) async {
+    await configDao.addOrUpdate(ConfigKey.noDiscoveryIfs, interfaces.join(','));
+    _noDiscoveryIfs.value = interfaces;
+  }
+
+  ///仅手动子网扫描发现设备
+  Future<void> setOnlyManualDiscoverySubNet(bool onlyManualDiscoverySubNet) async {
+    await configDao.addOrUpdate(ConfigKey.onlyManualDiscoverySubNet, onlyManualDiscoverySubNet.toString());
+    _onlyManualDiscoverySubNet.value = onlyManualDiscoverySubNet;
   }
 
   //endregion

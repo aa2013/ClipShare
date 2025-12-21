@@ -1369,6 +1369,14 @@ class EnUSTranslation extends AbstractTranslations {
         return "Please wait...";
       case TranslationKey.generateTodayAndroidLog:
         return "Generate Android native logs (today)";
+      case TranslationKey.noDiscoveryIfsSettingTitle:
+        return 'Exclude NICs from Device Discovery';
+      case TranslationKey.noDiscoveryIfsSettingDesc:
+        return 'Skip specified network interfaces during subnet scanning in the device discovery process';
+      case TranslationKey.onlyManualDiscoverySubNetSettingTitle:
+        return 'Subnet Scanning Only for Manual Device Discovery';
+      case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
+        return 'Skip subnet scanning after network changes/screen wake-up, only scan when manually triggering discovery on the device page';
     }
   }
 }

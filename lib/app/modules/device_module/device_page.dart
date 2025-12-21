@@ -143,7 +143,7 @@ class DevicePage extends GetView<DeviceController> {
                               controller.setRotationAnimation();
                               sktService.restartDiscoveryDevices();
                             } else {
-                              sktService.startDiscoveryDevices();
+                              sktService.startDiscoveryDevices(manual: true);
                             }
                           },
                           icon: const Icon(

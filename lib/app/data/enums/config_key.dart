@@ -62,4 +62,6 @@ enum ConfigKey {
   lastSqlEditContent,
   dhEncryptKey,
   syncOutdateLimitTime,
+  noDiscoveryIfs,
+  onlyManualDiscoverySubNet,
 }

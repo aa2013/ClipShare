@@ -9,6 +9,7 @@ import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/notification_server_edit_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/outdate_time_input_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/qr_image_dialog.dart';
@@ -995,6 +996,62 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableAutoSyncOnScreenOpened(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.onlyManualDiscoverySubNetSettingTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.onlyManualDiscoverySubNetSettingDesc.tr),
+                        value: appConfig.onlyManualDiscoverySubNet,
+                        action: (v) {
+                          return Switch(
+                            value: appConfig.onlyManualDiscoverySubNet,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setOnlyManualDiscoverySubNet(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.noDiscoveryIfsSettingTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.noDiscoveryIfsSettingDesc.tr),
+                        value: appConfig.noDiscoveryIfs,
+                        action: (v) {
+                          return TextButton(
+                            child: Text(TranslationKey.configure.tr),
+                            onPressed: () async {
+                              final interfaces = await NetworkInterface.list();
+                              final selections = interfaces.map((itf) {
+                                var showTextList = [itf.name];
+                                var ipList = itf.addresses.where((address) => address.type == InternetAddressType.IPv4).map((address) => address.address);
+                                showTextList.addAll(ipList);
+                                return CheckboxData(value: itf.name, text: showTextList.join('\n'));
+                              }).toList();
+                              DialogController? dialog;
+                              dialog = MultiSelectDialog.show(
+                                context: context,
+                                dismissable: true,
+                                onSelected: (List<String> values) {
+                                  Future.delayed(100.ms).then(
+                                    (value) {
+                                      appConfig.setNoDiscoveryIfs(values);
+                                      dialog!.close();
+                                    },
+                                  );
+                                },
+                                defaultValues: appConfig.noDiscoveryIfs,
+                                minSelectedCnt: 0,
+                                selections: selections,
+                                title: Text(TranslationKey.noDiscoveryIfsSettingTitle.tr),
+                              );
                             },
                           );
                         },

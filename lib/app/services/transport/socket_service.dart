@@ -815,6 +815,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   void startDiscoveryDevices({
     bool restart = false,
     bool scan = true,
+    bool manual = false,
   }) async {
     if (_discovering) {
       Log.debug(tag, "正在发现设备");
@@ -874,7 +875,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
                 tasks = [];
               } else if (scan) {
                 //发现子网设备
-                tasks = await _subNetDiscovering();
+                tasks = await _subNetDiscovering(manual);
               } else {
                 tasks = [];
               }
@@ -951,10 +952,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///发现子网设备
-  Future<List<Future<void> Function()>> _subNetDiscovering() async {
+  Future<List<Future<void> Function()>> _subNetDiscovering(bool manual) async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
-    var interfaces = await NetworkInterface.list();
-    var expendAddress = interfaces.map((networkInterface) => networkInterface.addresses).expand((ip) => ip);
+    //自动设备发现但是设置了仅手动触发
+    if (!manual && appConfig.onlyManualDiscoverySubNet) {
+      return tasks;
+    }
+    var interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
+    var expendAddress = interfaces.map((itf) => itf.addresses).expand((ip) => ip);
     var ips = expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
     for (var ip in ips) {
       //生成所有 ip
@@ -1704,7 +1709,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     String multicastGroup, [
     int port = 0,
   ]) async {
-    final interfaces = await NetworkInterface.list();
+    final interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
     final sockets = <RawDatagramSocket>[];
     for (final interface in interfaces) {
       final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port);

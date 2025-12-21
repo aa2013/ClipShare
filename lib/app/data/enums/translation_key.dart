@@ -674,7 +674,11 @@ enum TranslationKey {
   syncOutDateSettingTitle,
   syncOutDateSettingDesc,
   pleaseWait,
-  generateTodayAndroidLog;
+  generateTodayAndroidLog,
+  noDiscoveryIfsSettingTitle,
+  noDiscoveryIfsSettingDesc,
+  onlyManualDiscoverySubNetSettingTitle,
+  onlyManualDiscoverySubNetSettingDesc;
 
   String get tr => name.tr;
 
