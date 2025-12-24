@@ -6,16 +6,16 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Handler
 import android.util.Log
-import top.coclyun.clipshare.MainActivity
+import top.coclyun.clipshare.MyApplication
 
 
-class SmsObserver(private val mainActivity: MainActivity, handler: Handler) :
+class SmsObserver(private val app: MyApplication, handler: Handler) :
     ContentObserver(handler) {
     private val tag = "SmsObserver"
     private var lastSmsId: Long = -1
 
     init {
-        val cursor: Cursor? = mainActivity.contentResolver.query(
+        val cursor: Cursor? = app.contentResolver.query(
                 Uri.parse("content://sms/inbox"),
                 null,
                 null,
@@ -40,7 +40,7 @@ class SmsObserver(private val mainActivity: MainActivity, handler: Handler) :
     @SuppressLint("Range")
     private fun readSms() {
         val cursor: Cursor? =
-            mainActivity.contentResolver.query(
+            app.contentResolver.query(
                 Uri.parse("content://sms/inbox"),
                 null,
                 null,
@@ -55,7 +55,7 @@ class SmsObserver(private val mainActivity: MainActivity, handler: Handler) :
             val body = cursor.getString(cursor.getColumnIndex("body"))
 //            Log.d(tag, "Sender: $address, Message: $body")
             cursor.close()
-            mainActivity.onSmsChanged(body)
+            app.onSmsChanged(body)
         } else {
             Log.d(tag, "no result")
         }

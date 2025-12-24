@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
 import io.flutter.plugin.common.MethodChannel.Result
 import top.coclyun.clipshare.MainActivity
+import top.coclyun.clipshare.MyApplication
 import top.coclyun.clipshare.R
 import kotlin.math.min
 
@@ -61,7 +62,7 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
     private lateinit var onDragStart: () -> Unit
     private lateinit var onDragEnd: () -> Unit
     private fun ignoreNextCopy(){
-        MainActivity.clipChannel.invokeMethod("ignoreNextCopy",null)
+        MyApplication.clipChannel.invokeMethod("ignoreNextCopy",null)
     }
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchLinear: View.OnTouchListener = View.OnTouchListener { _, event ->
@@ -163,7 +164,7 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
         pinIcon.setOnClickListener {
             item.top = !item.top
             pinIcon.setImageResource(if (item.top) R.drawable.baseline_push_pin_24 else R.drawable.outline_push_not_pin_24)
-            MainActivity.clipChannel.invokeMethod(
+            MyApplication.clipChannel.invokeMethod(
                 "setTop",
                 mapOf("id" to item.id, "top" to item.top),
                 object : Result {

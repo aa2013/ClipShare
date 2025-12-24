@@ -387,7 +387,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     });
     PermissionHelper.testAndroidAccessibilityPerm().then((granted) {
       hasAccessibilityPerm.value = granted;
-      if (!granted && appConfig.sourceRecord) {
+      if (!granted && !appConfig.ignoreAccessibility && appConfig.sourceRecord) {
         Global.showTipsDialog(
           context: Get.context!,
           text: TranslationKey.noAccessibilityPermTips.tr,
@@ -395,6 +395,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
           okText: TranslationKey.goAuthorize.tr,
           onOk: () {
             PermissionHelper.reqAndroidAccessibilityPerm();
+          },
+          showNeutral: true,
+          neutralText: TranslationKey.notNow.tr,
+          onNeutral: () {
+            appConfig.ignoreAccessibility = true;
           },
         );
       }

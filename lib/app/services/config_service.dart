@@ -56,7 +56,9 @@ final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
-  final configDao = Get.find<DbService>().configDao;
+  final configDao = Get
+      .find<DbService>()
+      .configDao;
   final tag = "ConfigService";
 
   //region 属性
@@ -74,7 +76,10 @@ class ConfigService extends GetxService {
   final prime2 = CryptoUtil.getPrime();
 
   //当前时区与UTC的差值，带正负
-  final timeZoneOffsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
+  final timeZoneOffsetSeconds = DateTime
+      .now()
+      .timeZoneOffset
+      .inSeconds;
 
   // final bgColor = const Color.fromARGB(255, 238, 238, 238);
   WindowController? historyWindow;
@@ -215,6 +220,9 @@ class ConfigService extends GetxService {
   String? _dhAesKey;
 
   String? get dhAesKey => _dhAesKey;
+
+  //是否忽略无障碍权限
+  bool ignoreAccessibility = false;
 
   //endregion
 
@@ -990,9 +998,7 @@ class ConfigService extends GetxService {
     _windowSize.value = size;
   }
 
-  Future<void> setRecordHistoryDialogPosition(
-    bool recordHistoryDialogPosition,
-  ) async {
+  Future<void> setRecordHistoryDialogPosition(bool recordHistoryDialogPosition,) async {
     await configDao.addOrUpdate(ConfigKey.recordHistoryDialogPosition, recordHistoryDialogPosition.toString());
     _recordHistoryDialogPosition.value = recordHistoryDialogPosition;
   }
@@ -1138,9 +1144,7 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterSync.value = autoCopyImageAfterSync;
   }
 
-  Future<void> setAutoCopyImageAfterScreenShot(
-    bool autoCopyImageAfterScreenShot,
-  ) async {
+  Future<void> setAutoCopyImageAfterScreenShot(bool autoCopyImageAfterScreenShot,) async {
     await configDao.addOrUpdate(
       ConfigKey.autoCopyImageAfterScreenShot,
       autoCopyImageAfterScreenShot.toString(),
@@ -1148,11 +1152,10 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterScreenShot.value = autoCopyImageAfterScreenShot;
   }
 
-  Future<void> setAppTheme(
-    ThemeMode appTheme,
-    BuildContext context, [
-    VoidCallback? onAnimationFinish,
-  ]) async {
+  Future<void> setAppTheme(ThemeMode appTheme,
+      BuildContext context, [
+        VoidCallback? onAnimationFinish,
+      ]) async {
     await configDao.addOrUpdate(ConfigKey.appTheme, appTheme.name);
     _appTheme.value = appTheme.name;
     var theme = appTheme == ThemeMode.dark ? darkThemeData : lightThemeData;
@@ -1493,7 +1496,7 @@ class ConfigService extends GetxService {
     return true;
   }
 
-  //endregion
+//endregion
 }
 
 DataSender get dataSender {

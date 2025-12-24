@@ -440,7 +440,7 @@ class SettingsPage extends GetView<SettingsController> {
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
                         description: Text(TranslationKey.permissionSettingsAccessibilityDesc.tr),
-                        value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord,
+                        value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord && !appConfig.ignoreAccessibility,
                         action: (val) => const Icon(
                           Icons.help,
                           color: Colors.orange,
@@ -520,26 +520,11 @@ class SettingsPage extends GetView<SettingsController> {
                             value: v,
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
-                              if (!checked) {
-                                Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.showOnRecentTasksTips.tr,
-                                  showCancel: true,
-                                  onOk: () {
-                                    androidChannelService.showOnRecentTasks(checked).then((v) {
-                                      if (v) {
-                                        appConfig.setShowOnRecentTasks(checked);
-                                      }
-                                    });
-                                  },
-                                );
-                              } else {
-                                androidChannelService.showOnRecentTasks(checked).then((v) {
-                                  if (v) {
-                                    appConfig.setShowOnRecentTasks(checked);
-                                  }
-                                });
-                              }
+                              androidChannelService.showOnRecentTasks(checked).then((v) {
+                                if (v) {
+                                  appConfig.setShowOnRecentTasks(checked);
+                                }
+                              });
                             },
                           );
                         },
@@ -730,7 +715,7 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableSourceRecord(checked);
-                              if (Platform.isAndroid && checked && !controller.hasAccessibilityPerm.value) {
+                              if (Platform.isAndroid && checked && !controller.hasAccessibilityPerm.value && !appConfig.ignoreAccessibility) {
                                 //检查无障碍
                                 Global.showTipsDialog(
                                   context: context,
@@ -739,6 +724,11 @@ class SettingsPage extends GetView<SettingsController> {
                                   okText: TranslationKey.goAuthorize.tr,
                                   onOk: () {
                                     PermissionHelper.reqAndroidAccessibilityPerm();
+                                  },
+                                  showNeutral: true,
+                                  neutralText: TranslationKey.notNow.tr,
+                                  onNeutral: () {
+                                    appConfig.ignoreAccessibility = true;
                                   },
                                 );
                               }

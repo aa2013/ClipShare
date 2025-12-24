@@ -860,10 +860,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Remember last position";
       case TranslationKey.showOnRecentTasks:
         return "Show on recent tasks";
-      case TranslationKey.showOnRecentTasksTips:
-        return "Hiding recent tasks in higher versions of Android may cause the system to kill the app when switching to other apps. Still want to try hiding?";
       case TranslationKey.showOnRecentTasksDesc:
-        return "Hiding the backend on some systems may result in the backend being killed after switching applications（e.g. Xiaomi）, and the current reason is unknown";
+        return "OCD-friendly option: hide the app from recent tasks when turned off";
       case TranslationKey.showLocalIpAddress:
         return "Show Local IP Address";
       case TranslationKey.localIpAddress:
@@ -1380,7 +1378,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.stopListeningOnScreenClosedSettingTitle:
         return 'Stop listening on screen closed (Experimental)';
       case TranslationKey.stopListeningOnScreenClosedSettingDesc:
-        return 'Stop listening to clipboard one minute after screen turns off. Can significantly save battery on some devices. This setting may be removed in the future and become default behavior.';
+        return 'Stop listening to clipboard one minute after the screen turns off. This may help save battery on some devices.';
+      case TranslationKey.notNow:
+        return 'Not now';
     }
   }
 }

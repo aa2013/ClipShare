@@ -10,6 +10,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import '../clipboard_service.dart';
+
 class AndroidChannelService extends GetxService {
   static const tag = "AndroidChannelService";
   late final MethodChannel androidChannel;
@@ -131,15 +133,13 @@ class AndroidChannelService extends GetxService {
   ///关闭短信监听
   Future<void> stopSmsListen() {
     if (!Platform.isAndroid) return Future(() => null);
-    return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.stopSmsListen.name,
-    );
+    return androidChannel.invokeMethod<String?>(AndroidChannelMethod.stopSmsListen.name);
   }
 
   ///设置是否在最近任务中隐藏
-  Future<bool> showOnRecentTasks(bool show) {
+  Future<bool> showOnRecentTasks(bool show) async {
     if (!Platform.isAndroid) return Future.value(false);
-    return androidChannel
+    return await androidChannel
         .invokeMethod<bool?>(
           AndroidChannelMethod.showOnRecentTasks.name,
           {

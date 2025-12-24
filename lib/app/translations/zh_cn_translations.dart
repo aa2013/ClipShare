@@ -813,10 +813,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "记住上次位置";
       case TranslationKey.showOnRecentTasks:
         return "在最近任务中显示";
-      case TranslationKey.showOnRecentTasksTips:
-        return "在高版本Android系统中隐藏最近任务可能会导致在切换到其他app时被系统杀死，仍要尝试隐藏吗？";
       case TranslationKey.showOnRecentTasksDesc:
-        return "在部分系统上隐藏后台后可能导致切换应用后会被杀掉后台（如小米），当前原因未知";
+        return "强迫症选项，若关闭则会在后台卡片中隐藏";
       case TranslationKey.showLocalIpAddress:
         return "查看本机IP";
       case TranslationKey.localIpAddress:
@@ -1378,7 +1376,9 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.stopListeningOnScreenClosedSettingTitle:
         return '熄屏后停止监听（实验性）';
       case TranslationKey.stopListeningOnScreenClosedSettingDesc:
-        return '熄屏一分钟后停止监听剪贴板，在某些设备上能大量节省电量，后续可能移除该设置变成默认行为';
+        return '熄屏一分钟后停止监听剪贴板，在某些设备上可能能节省电量';
+      case TranslationKey.notNow:
+        return '本次忽略';
     }
   }
 }
