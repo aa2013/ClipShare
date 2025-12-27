@@ -91,7 +91,7 @@ class _$_AppDb extends _AppDb {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 6,
+      version: 7,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -122,6 +122,10 @@ class _$_AppDb extends _AppDb {
             'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
+        await database.execute(
+            'CREATE INDEX `index_History_devId_source` ON `History` (`devId`, `source`)');
         await database.execute(
             'CREATE UNIQUE INDEX `index_HistoryTag_tagName_hisId` ON `HistoryTag` (`tagName`, `hisId`)');
         await database.execute(

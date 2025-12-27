@@ -52,7 +52,7 @@ const views = [VHistoryTagHold];
 ///
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
-  version: 6,
+  version: 7,
   entities: tables,
   views: views,
 )
@@ -114,7 +114,7 @@ class DbService extends GetxService {
         dirPath = await Constants.documentsPath;
       }
       dbPath = "$dirPath/$dbPath".normalizePath;
-    }else if(Platform.isMacOS){
+    } else if (Platform.isMacOS) {
       var dirPath = await Constants.documentsPath;
       dbPath = "$dirPath/$dbPath".normalizePath;
     }
@@ -124,6 +124,7 @@ class DbService extends GetxService {
       migration3to4,
       migration4to5,
       migration5to6,
+      migration6to7,
     ]).build();
     version = await _db.database.database.getVersion();
     return this;
@@ -213,5 +214,12 @@ class DbService extends GetxService {
     } catch (err, stack) {
       print("$err,$stack");
     }
+  });
+
+  ///数据库版本 6 -> 7
+  ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
+  final migration6to7 = Migration(6, 7, (database) async {
+    await database.execute('CREATE INDEX `index_History_devId` ON `History` (`devId`)');
+    await database.execute('CREATE INDEX `index_History_devId_source` ON `History` (`devId`, `source`)');
   });
 }

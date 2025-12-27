@@ -243,7 +243,7 @@ abstract class HistoryDao {
     await dbService.opRecordDao.deleteByDataWithCascade(id.toString());
     //移除未使用的剪贴板来源信息
     final sourceService = Get.find<ClipboardSourceService>();
-    sourceService.removeNotUsed();
+    await sourceService.removeNotUsed();
   }
 
   ///查询历史记录中的不同类型的数量

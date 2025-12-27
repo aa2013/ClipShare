@@ -2,7 +2,12 @@ import 'dart:convert';
 
 import 'package:floor/floor.dart';
 
-@entity
+@Entity(
+  indices: [
+    Index(value: ['devId'], unique: false),
+    Index(value: ['devId', "source"], unique: false),
+  ]
+)
 class History implements Comparable {
   ///本地id
   @PrimaryKey(autoGenerate: true)
