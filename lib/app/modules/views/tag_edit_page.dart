@@ -6,6 +6,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
@@ -136,6 +137,9 @@ class _TagEditPageState extends State<TagEditPage> {
         ),
       ],
     );
+    final searchText = _textController.text.toLowerCase();
+    final showTagList = _tags.where((item) => searchText.isEmpty || item.tagName.containsIgnoreCase(searchText)).toList();
+    showTagList.sort();
     return RoundedScaffold(
       title: appBarTitle,
       icon: const Icon(Icons.tag),
@@ -191,11 +195,21 @@ class _TagEditPageState extends State<TagEditPage> {
               : const SizedBox.shrink(),
           Column(
             children: [
-              for (var item in _tags.where((item) => _textController.text.isEmpty || item.tagName.toLowerCase().contains(_textController.text.toLowerCase())))
+              for (var item in showTagList)
                 Column(
                   children: [
                     InkWell(
-                      onTap: () {},
+                      onTap: () {
+                        final checked = item.hasTag;
+                        if (checked) {
+                          item.hasTag = false;
+                          _selected.remove(item);
+                        } else {
+                          item.hasTag = true;
+                          _selected.add(item);
+                        }
+                        setState(() {});
+                      },
                       child: Padding(
                         padding: const EdgeInsets.only(left: 10, right: 5),
                         child: Row(

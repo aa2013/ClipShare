@@ -23,7 +23,7 @@ class NotifyUtil {
       guid: Constants.appGuid,
       iconPath: iconPath,
     );
-    const linuxSettings = LinuxInitializationSettings(defaultActionName: 'Open notification');
+    const linuxSettings = LinuxInitializationSettings(defaultActionName: 'Open');
 
     final settings = InitializationSettings(
       iOS: iosSettings,
