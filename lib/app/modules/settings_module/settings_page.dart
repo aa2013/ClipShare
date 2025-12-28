@@ -2333,34 +2333,7 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableLogsRecord(checked);
-                              if (!checked) {
-                                late DialogController dialog;
-                                dialog = Global.showDialog(
-                                  context,
-                                  AlertDialog(
-                                    title: Text(TranslationKey.tips.tr),
-                                    content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          dialog.close();
-                                        },
-                                        child: Text(TranslationKey.dialogCancelText.tr),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          FileUtil.deleteDirectoryFiles(
-                                            appConfig.logsDirPath,
-                                          );
-                                          controller.updater.value++;
-                                          dialog.close();
-                                        },
-                                        child: Text(TranslationKey.dialogConfirmText.tr),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
+                              controller.updater.value++;
                             },
                           );
                         },
