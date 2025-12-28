@@ -1379,6 +1379,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return '熄屏一分钟后停止监听剪贴板，在某些设备上可能能节省电量';
       case TranslationKey.notNow:
         return '本次忽略';
+      case TranslationKey.faq:
+        return '常见问题';
     }
   }
 }

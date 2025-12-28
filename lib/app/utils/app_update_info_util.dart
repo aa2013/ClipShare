@@ -22,7 +22,7 @@ class AppUpdateInfoUtil {
   static const tag = "AppUpdateInfoUtil";
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
-    final resp = await http.get(Uri.parse(Constants.appUpdateInfoUtl));
+    final resp = await http.get(Uri.parse(Constants.appUpdateInfoUrl));
     if (resp.statusCode != 200) {
       throw FetchUpdateLogsException(resp.statusCode.toString());
     }

@@ -1381,6 +1381,8 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Stop listening to clipboard one minute after the screen turns off. This may help save battery on some devices.';
       case TranslationKey.notNow:
         return 'Not now';
+      case TranslationKey.faq:
+        return 'FAQ';
     }
   }
 }

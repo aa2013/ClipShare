@@ -2465,6 +2465,23 @@ class SettingsPage extends GetView<SettingsController> {
                         controller.gotoAboutPage();
                       },
                     ),
+                    SettingCard(
+                      title: Row(
+                        children: [
+                          Text(TranslationKey.faq.tr, maxLines: 1),
+                        ],
+                      ),
+                      value: null,
+                      action: (v) => IconButton(
+                        onPressed: () {
+                          Constants.faqUrl.askOpenUrl();
+                        },
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: () {
+                        Constants.faqUrl.askOpenUrl();
+                      },
+                    ),
                   ],
                 ),
 

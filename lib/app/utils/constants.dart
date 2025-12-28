@@ -37,7 +37,10 @@ class Constants {
   static const forwardDownloadUrl = "https://clipshare.coclyun.top/usages/forward.html";
 
   //更新信息地址
-  static const appUpdateInfoUtl = "https://clipshare.coclyun.top/version-info.json";
+  static const appUpdateInfoUrl = "https://clipshare.coclyun.top/version-info.json";
+
+  //常见问题地址
+  static const faqUrl = "https://clipshare.coclyun.top/faq.html";
 
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
