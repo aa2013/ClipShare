@@ -1311,8 +1311,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   ///断开所有连接
   void disConnectAllConnections([bool onlyNotPaired = false]) {
-    Log.debug(tag, "开始断开所有连接");
-    disConnectForwardServer();
+    Log.debug(tag, "开始断开所有连接 仅未配对：$onlyNotPaired");
+    if (!onlyNotPaired) {
+      disConnectForwardServer();
+    }
     var skts = _devSockets.values.toList();
     for (var devSkt in skts) {
       if (onlyNotPaired && devSkt.isPaired) {
