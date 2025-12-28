@@ -1391,6 +1391,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Explanation';
       case TranslationKey.sendBroadcastOnAddDataTips:
         return 'The broadcast Action is: ${Constants.kOnHistoryChangedBroadcastAction}\n\nThe current broadcast contains the following variables:\n1.type: Content type, valid values are: text, image, sms, file, notification\n2. content: Content, when it is an image or file, it is a local path; when it is a notification, it is JSON\n3. from_dev_id: Source device ID\n4. from_dev_name: Source device name';
+      case TranslationKey.recopyOnScreenUnlockedTitle:
+        return "Recopy latest data after unlock";
+      case TranslationKey.recopyOnScreenUnlockedTitleDesc:
+        return "Some systems cannot auto-copy in locked screen state. When enabled, this feature will retry copying the latest synced data after screen unlock";
     }
   }
 }

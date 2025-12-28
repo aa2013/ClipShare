@@ -66,4 +66,5 @@ enum ConfigKey {
   onlyManualDiscoverySubNet,
   stopListeningOnScreenClosed,
   sendBroadcastOnAdd,
+  recopyOnScreenUnlocked,
 }

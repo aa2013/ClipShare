@@ -601,6 +601,11 @@ class ConfigService extends GetxService {
 
   bool get sendBroadcastOnAdd => _sendBroadcastOnAdd.value;
 
+  ///设备解锁后重新复制锁屏期间同步的最新的一条数据，部分设备在锁屏期间无法复制
+  final _recopyOnScreenUnlocked = false.obs;
+
+  bool get reCopyOnScreenUnlocked => _recopyOnScreenUnlocked.value;
+
   //endregion
 
   //endregion
@@ -809,6 +814,7 @@ class ConfigService extends GetxService {
     _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
     _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
+    _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
   }
 
   ///初始化路径信息
@@ -1367,6 +1373,16 @@ class ConfigService extends GetxService {
     }
     await configDao.addOrUpdate(ConfigKey.sendBroadcastOnAdd, value.toString());
     _sendBroadcastOnAdd.value = value;
+  }
+
+
+  ///设备解锁后重新复制锁屏期间同步的最新的一条数据，部分设备在锁屏期间无法复制
+  Future<void> setReCopyOnScreenUnlocked(bool value) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.recopyOnScreenUnlocked, value.toString());
+    _recopyOnScreenUnlocked.value = value;
   }
 
   //endregion

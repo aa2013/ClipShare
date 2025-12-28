@@ -1,5 +1,6 @@
 enum AndroidChannelMethod {
   onScreenOpened,
+  onScreenUnlocked,
   onScreenClosed,
   notifyMediaScan,
   showHistoryFloatWindow,

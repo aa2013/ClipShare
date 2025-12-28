@@ -1389,6 +1389,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '说明';
       case TranslationKey.sendBroadcastOnAddDataTips:
         return '广播Action为：${Constants.kOnHistoryChangedBroadcastAction}\n\n当前广播中含有以下变量：\n1.type: 内容类型，有效值为：text, image, sms, file, notification\n2.content: 内容，当为图片和文件时是本机路径，当为通知时是json\n3.from_dev_id：来源设备id\n4.from_dev_name: 来源设备名称';
+      case TranslationKey.recopyOnScreenUnlockedTitle:
+        return "解锁后重新复制最新数据";
+      case TranslationKey.recopyOnScreenUnlockedTitleDesc:
+        return "部分系统在锁屏状态下无法自动复制，启用该功能后会在屏幕解锁后再去重试复制最新同步的数据";
     }
   }
 }

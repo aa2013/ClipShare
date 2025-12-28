@@ -272,6 +272,7 @@ class MyApplication : Application() {
         val filter = IntentFilter()
         filter.addAction(Intent.ACTION_SCREEN_ON)
         filter.addAction(Intent.ACTION_SCREEN_OFF)
+        filter.addAction(Intent.ACTION_USER_PRESENT)
         registerReceiver(screenReceiver, filter)
         androidChannel.setMethodCallHandler { call, result ->
             var args: Map<String, Any> = mapOf()

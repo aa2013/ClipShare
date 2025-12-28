@@ -647,6 +647,9 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   }
 
   @override
+  void onScreenUnlocked() {}
+
+  @override
   void onScreenClosed() {
     //屏幕关闭一分钟后关闭监听
     _screenEventTimer?.cancel();

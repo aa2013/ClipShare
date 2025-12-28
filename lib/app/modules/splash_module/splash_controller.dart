@@ -121,7 +121,7 @@ class SplashController extends GetxController {
       Get.putAsync(() => TrayService().init(), permanent: true);
       var updateDir = Directory(await Constants.updateDownloadFileDirPath);
       Log.debug(tag, "updateDir = $updateDir");
-      if(await updateDir.exists()) {
+      if (await updateDir.exists()) {
         updateDir.delete(recursive: true);
       }
     }
@@ -315,10 +315,9 @@ class SplashController extends GetxController {
         var method = AndroidChannelMethod.values.byName(call.method);
         switch (method) {
           case AndroidChannelMethod.onScreenOpened:
-            ScreenOpenedListener.inst.notify(true);
-            break;
+          case AndroidChannelMethod.onScreenUnlocked:
           case AndroidChannelMethod.onScreenClosed:
-            ScreenOpenedListener.inst.notify(false);
+            ScreenOpenedListener.inst.notify(method);
             break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;

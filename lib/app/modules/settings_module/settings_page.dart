@@ -2014,7 +2014,26 @@ class SettingsPage extends GetView<SettingsController> {
                           return Switch(
                             value: v,
                             onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
                               appConfig.setAutoSyncMissingData(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.recopyOnScreenUnlockedTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.recopyOnScreenUnlockedTitleDesc.tr),
+                        value: appConfig.reCopyOnScreenUnlocked,
+                        show: (v) => Platform.isAndroid,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setReCopyOnScreenUnlocked(checked);
                             },
                           );
                         },
@@ -2031,6 +2050,7 @@ class SettingsPage extends GetView<SettingsController> {
                           return Switch(
                             value: v,
                             onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
                               if (checked) {
                                 var isGranted = await PermissionHelper.testAndroidReadSms();
                                 if (isGranted) {
