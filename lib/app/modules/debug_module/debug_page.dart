@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
+import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -128,7 +130,8 @@ class DebugPage extends GetView<DebugController> {
         ),
         TextButton(
           onPressed: () async {
-            Log.writeAndroidLogToday();
+            final as = Get.find<AndroidChannelService>();
+            as.sendHistoryChangedBroadcast(HistoryContentType.text,"FSDFDS","devid111","devname222");
           },
           child: Text("666"),
         ),

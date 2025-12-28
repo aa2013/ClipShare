@@ -65,4 +65,5 @@ enum ConfigKey {
   noDiscoveryIfs,
   onlyManualDiscoverySubNet,
   stopListeningOnScreenClosed,
+  sendBroadcastOnAdd,
 }

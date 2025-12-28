@@ -46,6 +46,7 @@ import java.net.URLDecoder
 const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
 const val loadHistories = "LOAD_HISTORIES"
 const val sendHistories = "SEND_HISTORIES"
+const val OnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED"
 
 class MyApplication : Application() {
 
@@ -426,6 +427,15 @@ class MyApplication : Application() {
                 "setAutoReportCrashes" -> {
                     val enable = args["enable"] as Boolean
                     ACRA.errorReporter.setEnabled(enable)
+                    result.success(null)
+                }
+                //是否自动报告崩溃（可能在下一次启动app时才会有）
+                "sendHistoryChangedBroadcast" -> {
+                    val intent = Intent(OnHistoryChangedBroadcastAction)
+                    for (key in args.keys){
+                        intent.putExtra(key, args[key].toString())
+                    }
+                    sendBroadcast(intent)
                     result.success(null)
                 }
             }

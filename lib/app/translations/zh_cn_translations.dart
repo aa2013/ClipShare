@@ -1381,6 +1381,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return '本次忽略';
       case TranslationKey.faq:
         return '常见问题';
+      case TranslationKey.sendBroadcastOnAddData:
+        return '新增数据时发送广播';
+      case TranslationKey.sendBroadcastOnAddDataDesc:
+        return '当剪贴板改变/同步新数据时发送一个系统广播以通知其他app如Tasker进行额外处理';
+      case TranslationKey.explain:
+        return '说明';
+      case TranslationKey.sendBroadcastOnAddDataTips:
+        return '广播Action为：${Constants.kOnHistoryChangedBroadcastAction}\n\n当前广播中含有以下变量：\n1.type: 内容类型，有效值为：text, image, sms, file, notification\n2.content: 内容，当为图片和文件时是本机路径，当为通知时是json\n3.from_dev_id：来源设备id\n4.from_dev_name: 来源设备名称';
     }
   }
 }

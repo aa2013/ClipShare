@@ -778,6 +778,48 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                         show: (v) => Platform.isAndroid && appConfig.sourceRecord,
                       ),
+                      SettingCard(
+                        title: Row(
+                          children: [
+                            Text(
+                              TranslationKey.sendBroadcastOnAddData.tr,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(width: 5),
+                            Tooltip(
+                              message: TranslationKey.explain.tr,
+                              child: GestureDetector(
+                                child: const MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blueGrey,
+                                    size: 15,
+                                  ),
+                                ),
+                                onTap: () async {
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.sendBroadcastOnAddDataTips.tr,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.sendBroadcastOnAddDataDesc.tr),
+                        value: appConfig.sendBroadcastOnAdd,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setSendBroadcastOnAdd(checked);
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isAndroid,
+                      ),
                     ],
                   ),
                 ),

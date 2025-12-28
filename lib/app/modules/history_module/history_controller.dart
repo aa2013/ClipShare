@@ -7,6 +7,7 @@ import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -610,6 +611,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   Future<int> addData(History history, bool shouldSync, [bool notify = true]) async {
     var clip = ClipData(history);
     final contentType = HistoryContentType.parse(history.type);
+    if(appConfig.sendBroadcastOnAdd) {
+      final devService = Get.find<DeviceService>();
+      androidChannelService.sendHistoryChangedBroadcast(contentType, history.content, history.devId, devService.getName(history.devId));
+    }
     var cnt = await dbService.historyDao.add(clip.data);
     if (cnt <= 0) return cnt;
     notifyHistoryWindow();

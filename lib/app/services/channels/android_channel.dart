@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -167,7 +168,12 @@ class AndroidChannelService extends GetxService {
     );
   }
 
-  void sendBigImageNotify() {
-    androidChannel.invokeMethod('sendBigImageNotification');
+  void sendHistoryChangedBroadcast(HistoryContentType type, String content, String fromDevId, String fromDevName) {
+    androidChannel.invokeMethod(AndroidChannelMethod.sendHistoryChangedBroadcast.name, {
+      "type": type.name,
+      "content": content,
+      "from_dev_id": fromDevId,
+      "from_dev_name": fromDevName,
+    });
   }
 }

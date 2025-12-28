@@ -1383,6 +1383,14 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Not now';
       case TranslationKey.faq:
         return 'FAQ';
+      case TranslationKey.sendBroadcastOnAddData:
+        return 'Send broadcast when adding data';
+      case TranslationKey.sendBroadcastOnAddDataDesc:
+        return 'Send a system broadcast when clipboard changes/syncs new data to notify other apps like Tasker for additional processing';
+      case TranslationKey.explain:
+        return 'Explanation';
+      case TranslationKey.sendBroadcastOnAddDataTips:
+        return 'The broadcast Action is: ${Constants.kOnHistoryChangedBroadcastAction}\n\nThe current broadcast contains the following variables:\n1.type: Content type, valid values are: text, image, sms, file, notification\n2. content: Content, when it is an image or file, it is a local path; when it is a notification, it is JSON\n3. from_dev_id: Source device ID\n4. from_dev_name: Source device name';
     }
   }
 }

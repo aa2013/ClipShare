@@ -681,7 +681,11 @@ enum TranslationKey {
   onlyManualDiscoverySubNetSettingDesc,
   stopListeningOnScreenClosedSettingTitle,
   stopListeningOnScreenClosedSettingDesc,
-  faq;
+  faq,
+  sendBroadcastOnAddData,
+  sendBroadcastOnAddDataDesc,
+  explain,
+  sendBroadcastOnAddDataTips;
 
   String get tr => name.tr;
 

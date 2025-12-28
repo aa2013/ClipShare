@@ -596,6 +596,11 @@ class ConfigService extends GetxService {
 
   bool get stopListeningOnScreenClosed => _stopListeningOnScreenClosed.value;
 
+  ///当有新数据时发送广播通知
+  final _sendBroadcastOnAdd = false.obs;
+
+  bool get sendBroadcastOnAdd => _sendBroadcastOnAdd.value;
+
   //endregion
 
   //endregion
@@ -803,6 +808,7 @@ class ConfigService extends GetxService {
     );
     _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
     _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
+    _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
   }
 
   ///初始化路径信息
@@ -1352,6 +1358,15 @@ class ConfigService extends GetxService {
     }
     await configDao.addOrUpdate(ConfigKey.stopListeningOnScreenClosed, stopListeningOnScreenClosed.toString());
     _stopListeningOnScreenClosed.value = stopListeningOnScreenClosed;
+  }
+
+  ///当有新数据时发送广播通知
+  Future<void> setSendBroadcastOnAdd(bool value) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.sendBroadcastOnAdd, value.toString());
+    _sendBroadcastOnAdd.value = value;
   }
 
   //endregion

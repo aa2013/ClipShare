@@ -42,6 +42,8 @@ class Constants {
   //常见问题地址
   static const faqUrl = "https://clipshare.coclyun.top/faq.html";
 
+  //数据广播Action
+  static const kOnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED";
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
     {
