@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -39,14 +40,14 @@ class _EnvironmentSelectionsState extends State<EnvironmentSelections> with Auto
   }
 
   @override
-  void onPermissionStatusChanged(EnvironmentType environment, bool isGranted) {
+  Future<void> onPermissionStatusChanged(EnvironmentType environment, bool isGranted) async {
     Log.debug(
       "EnvironmentSelections",
       "onPermissionStatusChanged $environment $isGranted",
     );
     if (!requesting || requestingPerm != environment) return;
     //关闭等待弹窗
-    loadingController?.close();
+    await loadingController?.close();
     loadingController = null;
     setState(() {
       requesting = false;
