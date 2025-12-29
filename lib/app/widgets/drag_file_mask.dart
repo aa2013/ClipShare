@@ -2,11 +2,11 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:flutter/material.dart';
 
 class DragFileMask extends StatelessWidget {
-  final void Function() onCloseBtnClicked;
+  final void Function() onClose;
 
   const DragFileMask({
     super.key,
-    required this.onCloseBtnClicked,
+    required this.onClose,
   });
 
   @override
@@ -28,7 +28,7 @@ class DragFileMask extends StatelessWidget {
         Tooltip(
           message: TranslationKey.close.tr,
           child: IconButton(
-            onPressed: onCloseBtnClicked,
+            onPressed: onClose,
             icon: const Icon(Icons.close, color: Colors.blueGrey),
           ),
         ),

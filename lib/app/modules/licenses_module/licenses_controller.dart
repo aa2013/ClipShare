@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "jieba_flutter",
+      "license": "GPL-3.0",
+      "url": "https://pub.dev/packages/jieba_flutter",
+    },
+    {
       "name": "persistent_device_id",
       "license": "MIT",
       "url": "https://pub.dev/packages/persistent_device_id",
@@ -299,11 +304,6 @@ class LicensesController extends GetxController {
       "name": "qr_code_scanner_plus",
       "license": "BSD-2-Clause",
       "url": "https://pub.dev/packages/qr_code_scanner_plus",
-    },
-    {
-      "name": "modern_titlebar_buttons",
-      "license": "MPL-2.0",
-      "url": "https://pub.dev/packages/modern_titlebar_buttons",
     },
     {
       "name": "flutter_screenshot_detect",

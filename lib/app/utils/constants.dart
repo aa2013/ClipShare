@@ -37,8 +37,13 @@ class Constants {
   static const forwardDownloadUrl = "https://clipshare.coclyun.top/usages/forward.html";
 
   //更新信息地址
-  static const appUpdateInfoUtl = "https://clipshare.coclyun.top/version-info.json";
+  static const appUpdateInfoUrl = "https://clipshare.coclyun.top/version-info.json";
 
+  //常见问题地址
+  static const faqUrl = "https://clipshare.coclyun.top/faq.html";
+
+  //数据广播Action
+  static const kOnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED";
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
     {
@@ -87,12 +92,26 @@ class Constants {
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
+  static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
 
   static Future<String> get documentsPath async {
-    final dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
-    Directory(dir).createSync(recursive: true);
+    String dir;
+    if (Platform.isAndroid) {
+      dir = "$androidDocumentsPath/ClipShare/";
+    } else {
+      dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+    }
+    await Directory(dir).create(recursive: true);
     return dir;
+  }
+
+  static Future<String> get updateDownloadFileDirPath async {
+    if (Platform.isAndroid) {
+      return Constants.androidDownloadPath;
+    } else {
+      return "${await Constants.documentsPath}/update";
+    }
   }
 
   static const windowsStartUpPath = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
@@ -240,4 +259,8 @@ class Constants {
   static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
 
   static const defaultWsPingIntervalTime = 30;
+
+  static const jiebaDownloadUrl = 'https://download.clipshare.coclyun.top/others/jieba.zip';
+
+  static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
 }

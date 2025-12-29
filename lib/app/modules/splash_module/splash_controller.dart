@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/models/my_drop_item.dart';
-import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -43,6 +42,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -118,8 +118,11 @@ class SplashController extends GetxController {
       }
       Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
       appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
-      if (PlatformExt.isDesktop) {
-        Get.putAsync(() => TrayService().init(), permanent: true);
+      Get.putAsync(() => TrayService().init(), permanent: true);
+      var updateDir = Directory(await Constants.updateDownloadFileDirPath);
+      Log.debug(tag, "updateDir = $updateDir");
+      if (await updateDir.exists()) {
+        updateDir.delete(recursive: true);
       }
     }
     if (Platform.isAndroid) {
@@ -312,10 +315,9 @@ class SplashController extends GetxController {
         var method = AndroidChannelMethod.values.byName(call.method);
         switch (method) {
           case AndroidChannelMethod.onScreenOpened:
-            ScreenOpenedListener.inst.notify(true);
-            break;
+          case AndroidChannelMethod.onScreenUnlocked:
           case AndroidChannelMethod.onScreenClosed:
-            ScreenOpenedListener.inst.notify(false);
+            ScreenOpenedListener.inst.notify(method);
             break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;

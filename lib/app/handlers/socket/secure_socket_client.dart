@@ -32,6 +32,7 @@ class SecureSocketClient {
   bool? _cancelOnError;
   final controller = StreamController<String>();
   late final Encrypter _encrypter;
+  Encrypter? _dhEncrypter;
   late final DiffieHellman _dh;
   late final String _aesKey;
   late final BigInt _prime1;
@@ -42,6 +43,7 @@ class SecureSocketClient {
   late final ConnectionMode _connectionMode;
   final Lock _lock = Lock(); // 创建互斥锁
   bool _forwardReady = false;
+  String? _dhAesKey;
 
   //使用compute的阈值
   static const int useComputeThreshold = 1024 * 100;
@@ -63,6 +65,7 @@ class SecureSocketClient {
     required int port,
     required BigInt prime1,
     required BigInt prime2,
+    required String? dhAesKey,
     ConnectionMode connectionMode = ConnectionMode.direct,
     String? targetDevId,
     String? selfDevId,
@@ -81,6 +84,7 @@ class SecureSocketClient {
       socket: socket,
       prime1: prime1,
       prime2: prime2,
+      dhAesKey: dhAesKey,
       connectionMode: connectionMode,
       targetDevId: targetDevId,
       selfDevId: selfDevId,
@@ -107,6 +111,7 @@ class SecureSocketClient {
     required Socket socket,
     required BigInt prime1,
     required BigInt prime2,
+    required String? dhAesKey,
     ConnectionMode connectionMode = ConnectionMode.direct,
     String? targetDevId,
     String? selfDevId,
@@ -123,6 +128,10 @@ class SecureSocketClient {
       assert(selfDevId.isNotNullAndEmpty);
     }
     var ssc = SecureSocketClient._private(socket.remoteAddress.address);
+    ssc._dhAesKey = dhAesKey;
+    if (dhAesKey != null) {
+      ssc._dhEncrypter = CryptoUtil.getEncrypter(dhAesKey);
+    }
     if (serverPort != null) {
       ssc._port = serverPort;
     }
@@ -213,30 +222,67 @@ class SecureSocketClient {
     }
     _listening = true;
     try {
-      _socket.transform(_dataSplitter).listen(
-        (bytes) {
-          //接收完成，进行解码
-          _recDataLock.synchronized(() => _onDataReceive(bytes));
-        },
-        onError: (e) {
-          Log.error(tag, "error:$e");
-          if (_onError != null) {
-            _onError!(e, this);
-          }
-        },
-        onDone: () {
-          if (_keyIsExchanged) {
-            _onDone?.call(this);
-          }
-          Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
-          _socket.close();
-        },
-        cancelOnError: _cancelOnError,
-      );
+      _socket
+          .transform(_dataSplitter)
+          .listen(
+            (bytes) {
+              //接收完成，进行解码
+              _recDataLock.synchronized(() => _onDataReceive(bytes));
+            },
+            onError: (e) {
+              Log.error(tag, "error:$e");
+              if (_onError != null) {
+                _onError!(e, this);
+              }
+            },
+            onDone: () {
+              if (_keyIsExchanged) {
+                _onDone?.call(this);
+              }
+              Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
+              _socket.close();
+            },
+            cancelOnError: _cancelOnError,
+          );
     } catch (e) {
       _listening = false;
       rethrow;
     }
+  }
+
+  String _dhEncrypt(String content) {
+    if (_dhAesKey.isNullOrEmpty) {
+      return content;
+    }
+    return CryptoUtil.encryptAES(key: _dhAesKey!, input: content, encrypter: _dhEncrypter);
+  }
+
+  String _dhDecrypt(String encrypted) {
+    if (_dhAesKey.isNullOrEmpty) {
+      return encrypted;
+    }
+    return CryptoUtil.decryptAES(key: _dhAesKey!, encoded: encrypted, encrypter: _dhEncrypter);
+  }
+
+  ///DH 算法发送 key 和 素数、底数
+  void sendKey() {
+    if (_keyIsExchanged) {
+      throw Exception("already ready");
+    }
+    //底数g
+    var g = BigInt.from(65537);
+    //创建DH对象
+    _dh = DiffieHellman(_prime1, g, _prime2);
+    final appConfig = Get.find<ConfigService>();
+    //发送素数，底数，公钥
+    Map<String, dynamic> map = {
+      "seq": 1,
+      "prime": _dhEncrypt(_prime1.toString()),
+      "g": _dhEncrypt(g.toString()),
+      "key": _dhEncrypt(_dh.publicKey.toString()),
+      "port": appConfig.port,
+    };
+    send(map);
   }
 
   ///密钥交换
@@ -245,9 +291,9 @@ class SecureSocketClient {
     //A(client) -------> B(server)
     if (data["seq"] == 1) {
       //接收公钥，素数和底数g
-      var key = data["key"];
-      var g = BigInt.parse(data["g"]);
-      var prime = BigInt.parse(data["prime"]);
+      var key = _dhDecrypt(data["key"]);
+      var g = BigInt.parse(_dhDecrypt(data["g"]));
+      var prime = BigInt.parse(_dhDecrypt(data["prime"]));
       //使用素数，底数，自己的私钥创建一个DH对象
       _dh = DiffieHellman(prime, g, _prime2);
       //根据接收的公钥使用dh算法生成共享秘钥
@@ -262,7 +308,7 @@ class SecureSocketClient {
       //发送自己的publicKey
       Map<String, dynamic> map = {
         "seq": 2,
-        "key": _dh.publicKey.toString(),
+        "key": _dhEncrypt(_dh.publicKey.toString()),
         "port": appConfig.port,
       };
       //发送
@@ -271,7 +317,7 @@ class SecureSocketClient {
     //A(client) <------- B(server)
     if (data["seq"] == 2) {
       //接收公钥
-      var key = data["key"];
+      var key = _dhDecrypt(data["key"]);
       _port = data["port"];
       var otherPublicKey = BigInt.parse(key);
       //SharedSecretKey
@@ -365,27 +411,6 @@ class SecureSocketClient {
       bytes = utf8.encode(jsonEncode(map));
     }
     return bytes;
-  }
-
-  ///DH 算法发送 key 和 素数、底数
-  void sendKey() {
-    if (_keyIsExchanged) {
-      throw Exception("already ready");
-    }
-    //底数g
-    var g = BigInt.from(65537);
-    //创建DH对象
-    _dh = DiffieHellman(_prime1, g, _prime2);
-    final appConfig = Get.find<ConfigService>();
-    //发送素数，底数，公钥
-    Map<String, dynamic> map = {
-      "seq": 1,
-      "prime": _prime1.toString(),
-      "g": g.toString(),
-      "key": _dh.publicKey.toString(),
-      "port": appConfig.port,
-    };
-    send(map);
   }
 
   ///关闭连接

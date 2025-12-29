@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -152,6 +153,19 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                           clipboardManager.copy(type, widget.clip.data.content);
                         },
                         tooltip: TranslationKey.copyContent.tr,
+                      ),
+                    ),
+                    Visibility(
+                      visible: widget.clip.isText,
+                      child: IconButton(
+                        icon: const Icon(Icons.grain, color: Colors.blueGrey),
+                        onPressed: () {
+                          //关闭底部弹窗
+                          Get.back();
+                          final home = Get.find<HomeController>();
+                          home.showSegmentWordsView(context, widget.clip.data.content);
+                        },
+                        tooltip: TranslationKey.segmentWords.tr,
                       ),
                     ),
                     Visibility(

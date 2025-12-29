@@ -1,5 +1,6 @@
 enum AndroidChannelMethod {
   onScreenOpened,
+  onScreenUnlocked,
   onScreenClosed,
   notifyMediaScan,
   showHistoryFloatWindow,
@@ -18,5 +19,6 @@ enum AndroidChannelMethod {
   getLatestImagePath,
   setAutoReportCrashes,
   getFileNameFromUri,
+  sendHistoryChangedBroadcast,
   readFileAsBytes;
 }

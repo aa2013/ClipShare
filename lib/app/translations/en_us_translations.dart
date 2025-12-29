@@ -802,6 +802,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Device";
       case TranslationKey.day:
         return "Day";
+      case TranslationKey.hour:
+        return "Hour";
+      case TranslationKey.second:
+        return "Second";
       case TranslationKey.forwardServerKeyNotStarted:
         return "Not Started";
       case TranslationKey.exhausted:
@@ -856,10 +860,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Remember last position";
       case TranslationKey.showOnRecentTasks:
         return "Show on recent tasks";
-      case TranslationKey.showOnRecentTasksTips:
-        return "Hiding recent tasks in higher versions of Android may cause the system to kill the app when switching to other apps. Still want to try hiding?";
       case TranslationKey.showOnRecentTasksDesc:
-        return "Hiding the backend on some systems may result in the backend being killed after switching applications（e.g. Xiaomi）, and the current reason is unknown";
+        return "OCD-friendly option: hide the app from recent tasks when turned off";
       case TranslationKey.showLocalIpAddress:
         return "Show Local IP Address";
       case TranslationKey.localIpAddress:
@@ -1132,8 +1134,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "No notification history access permission, unable to record notification history";
       case TranslationKey.recordNotification:
         return "Record notification history";
-      case TranslationKey.notificationFromDevice:
-        return "Notification from @devName";
       case TranslationKey.logSettingsAutoUploadCrashLogTitle:
         return "Automatic Crash Log Upload";
       case TranslationKey.logSettingsAutoUploadCrashLogDesc:
@@ -1198,12 +1198,12 @@ class EnUSTranslation extends AbstractTranslations {
             "You may use either self-hosted or public notification services. \n"
             "Notification content does not contain any sensitive information.";
 
-      case TranslationKey.forwardSettingsWebDavTitle:
-        return "WebDav Config";
+      case TranslationKey.forwardSettingsWebDAVTitle:
+        return "WebDAV Config";
       case TranslationKey.forwardSettingsS3Title:
         return "S3 Config";
 
-      case TranslationKey.configureWebdavServer:
+      case TranslationKey.configureWebDAVServer:
         return "Configure WebDAV Server";
       case TranslationKey.webdavServerUrlRequired:
         return "Please enter WebDAV server URL";
@@ -1287,7 +1287,7 @@ class EnUSTranslation extends AbstractTranslations {
         return 'None';
       case TranslationKey.forwardServer:
         return 'Forward Server';
-      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText:
         return "Please configure the WebDAV service first";
       case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
         return "Please configure the S3 service first";
@@ -1333,10 +1333,68 @@ class EnUSTranslation extends AbstractTranslations {
         return "Types";
       case TranslationKey.selectTypes:
         return "Select Types";
+      case TranslationKey.segmentWords:
+        return "Segment Words";
+      case TranslationKey.downloadFromGithub:
+        return 'Download from Github';
+      case TranslationKey.notFoundJiebaFiles:
+        return "Jieba files not found\nPlease download the Jieba files and copy them to the \n @dirPath \n folder\nNote: Only dict.txt and prob_emit.txt are required";
+      case TranslationKey.installJiebaDictFile:
+        return "Install";
+      case TranslationKey.downloadFailed:
+        return "Download failed!";
+      case TranslationKey.jiebaFileInstallSuccess:
+        return "Install success";
+      case TranslationKey.encryptKey:
+        return "Encryption Key";
+      case TranslationKey.encryptKeyErrorTip:
+        return 'Length must be at least 8 characters and cannot contain whitespace';
+      case TranslationKey.confirmClearEncryptKey:
+        return 'Confirm clear encryption key?';
+      case TranslationKey.authFailed:
+        return 'Authentication failed';
+      case TranslationKey.dhKeySettingName:
+        return 'Encrypt encryption parameters';
+      case TranslationKey.dhKeySettingDesc:
+        return 'When enabled, all connected devices must have this enabled with the same password, otherwise connection will fail';
+      case TranslationKey.dhKeySettingTips:
+        return 'Encrypts the parameters of the Diffie-Hellman key exchange algorithm used during device connection.\nWhen enabled, all connected devices must have this enabled with the same password, otherwise connection will fail.\n\nActually, not using this is also fine.';
+      case TranslationKey.syncOutDateSettingTitle:
+        return 'Sync Data Time Limit';
+      case TranslationKey.syncOutDateSettingDesc:
+        return 'Only sync data within the specified time period instead of all data';
       case TranslationKey.pleaseWait:
         return "Please wait...";
       case TranslationKey.generateTodayAndroidLog:
         return "Generate Android native logs (today)";
+      case TranslationKey.noDiscoveryIfsSettingTitle:
+        return 'Exclude NICs from Device Discovery';
+      case TranslationKey.noDiscoveryIfsSettingDesc:
+        return 'Skip specified network interfaces during subnet scanning in the device discovery process';
+      case TranslationKey.onlyManualDiscoverySubNetSettingTitle:
+        return 'Subnet Scanning Only for Manual Device Discovery';
+      case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
+        return 'Skip subnet scanning after network changes/screen wake-up, only scan when manually triggering discovery on the device page';
+      case TranslationKey.stopListeningOnScreenClosedSettingTitle:
+        return 'Stop listening on screen closed (Experimental)';
+      case TranslationKey.stopListeningOnScreenClosedSettingDesc:
+        return 'Stop listening to clipboard one minute after the screen turns off. This may help save battery on some devices.';
+      case TranslationKey.notNow:
+        return 'Not now';
+      case TranslationKey.faq:
+        return 'FAQ';
+      case TranslationKey.sendBroadcastOnAddData:
+        return 'Send broadcast when adding data';
+      case TranslationKey.sendBroadcastOnAddDataDesc:
+        return 'Send a system broadcast when clipboard changes/syncs new data to notify other apps like Tasker for additional processing';
+      case TranslationKey.explain:
+        return 'Explanation';
+      case TranslationKey.sendBroadcastOnAddDataTips:
+        return 'The broadcast Action is: ${Constants.kOnHistoryChangedBroadcastAction}\n\nThe current broadcast contains the following variables:\n1.type: Content type, valid values are: text, image, sms, file, notification\n2. content: Content, when it is an image or file, it is a local path; when it is a notification, it is JSON\n3. from_dev_id: Source device ID\n4. from_dev_name: Source device name';
+      case TranslationKey.recopyOnScreenUnlockedTitle:
+        return "Recopy latest data after unlock";
+      case TranslationKey.recopyOnScreenUnlockedTitleDesc:
+        return "Some systems cannot auto-copy in locked screen state. When enabled, this feature will retry copying the latest synced data after screen unlock";
     }
   }
 }

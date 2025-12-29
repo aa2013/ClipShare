@@ -22,7 +22,7 @@ class AppUpdateInfoUtil {
   static const tag = "AppUpdateInfoUtil";
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
-    final resp = await http.get(Uri.parse(Constants.appUpdateInfoUtl));
+    final resp = await http.get(Uri.parse(Constants.appUpdateInfoUrl));
     if (resp.statusCode != 200) {
       throw FetchUpdateLogsException(resp.statusCode.toString());
     }
@@ -98,10 +98,8 @@ class AppUpdateInfoUtil {
 
           if (Platform.isAndroid) {
             fileName = "${latestVersion}_$fileName";
-            downPath = "${Constants.androidDownloadPath}/$fileName";
-          } else {
-            downPath = "${await Constants.documentsPath}/update/$fileName";
           }
+          downPath = "${Constants.updateDownloadFileDirPath}/$fileName";
           await File(downPath).parent.create();
           Global.showDownloadingDialog(
             context: Get.context!,

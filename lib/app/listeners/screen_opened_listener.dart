@@ -1,7 +1,10 @@
+import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
 import 'package:clipshare/app/utils/log.dart';
 
 abstract mixin class ScreenOpenedObserver {
   void onScreenOpened(){}
+
+  void onScreenUnlocked(){}
 
   void onScreenClosed(){}
 }
@@ -26,13 +29,20 @@ class ScreenOpenedListener {
     return this;
   }
 
-  void notify(bool open) {
+  void notify(AndroidChannelMethod method) {
     for (var observer in _list) {
       try {
-        if (open) {
-          observer.onScreenOpened();
-        } else {
-          observer.onScreenClosed();
+        switch(method){
+          case AndroidChannelMethod.onScreenOpened:
+            observer.onScreenOpened();
+            break;
+          case AndroidChannelMethod.onScreenUnlocked:
+            observer.onScreenUnlocked();
+            break;
+          case AndroidChannelMethod.onScreenClosed:
+            observer.onScreenClosed();
+            break;
+          default:
         }
       } catch (e, stacktrace) {
         Log.debug(tag, e);

@@ -76,6 +76,7 @@ class SecureSocketServer {
             socket: client,
             prime1: appConfig.prime1,
             prime2: appConfig.prime2,
+            dhAesKey: appConfig.dhAesKey,
             onConnected: (SecureSocketClient ssc) {
               _onConnected(ssc.ip, ssc.port);
             },

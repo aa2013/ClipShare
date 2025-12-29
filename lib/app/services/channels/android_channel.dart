@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -9,6 +10,8 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+
+import '../clipboard_service.dart';
 
 class AndroidChannelService extends GetxService {
   static const tag = "AndroidChannelService";
@@ -98,6 +101,7 @@ class AndroidChannelService extends GetxService {
       {"content": content},
     );
   }
+
   /// 发送通知
   Future<void> cancelNotify(int id) {
     if (!Platform.isAndroid) return Future.value();
@@ -130,15 +134,13 @@ class AndroidChannelService extends GetxService {
   ///关闭短信监听
   Future<void> stopSmsListen() {
     if (!Platform.isAndroid) return Future(() => null);
-    return androidChannel.invokeMethod<String?>(
-      AndroidChannelMethod.stopSmsListen.name,
-    );
+    return androidChannel.invokeMethod<String?>(AndroidChannelMethod.stopSmsListen.name);
   }
 
   ///设置是否在最近任务中隐藏
-  Future<bool> showOnRecentTasks(bool show) {
+  Future<bool> showOnRecentTasks(bool show) async {
     if (!Platform.isAndroid) return Future.value(false);
-    return androidChannel
+    return await androidChannel
         .invokeMethod<bool?>(
           AndroidChannelMethod.showOnRecentTasks.name,
           {
@@ -164,5 +166,14 @@ class AndroidChannelService extends GetxService {
       AndroidChannelMethod.setAutoReportCrashes.name,
       {"enable": checked},
     );
+  }
+
+  void sendHistoryChangedBroadcast(HistoryContentType type, String content, String fromDevId, String fromDevName) {
+    androidChannel.invokeMethod(AndroidChannelMethod.sendHistoryChangedBroadcast.name, {
+      "type": type.name,
+      "content": content,
+      "from_dev_id": fromDevId,
+      "from_dev_name": fromDevName,
+    });
   }
 }

@@ -20,6 +20,7 @@ class WhiteBlackListPage extends StatefulWidget {
 
   ///mode不为all时生效
   final bool enabled;
+  final bool showTypesFilter;
   final List<FilterRule>? blacklist;
   final List<FilterRule>? whitelist;
   final void Function(WhiteBlackMode mode, Map<WhiteBlackMode, List<FilterRule>> data)? onDone;
@@ -35,6 +36,7 @@ class WhiteBlackListPage extends StatefulWidget {
     this.onDone,
     this.blacklist,
     this.whitelist,
+    this.showTypesFilter = true,
   });
 
   @override
@@ -94,6 +96,7 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
               context,
               FilterRuleAddDialog(
                 mode: isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white,
+                showTypesFilter: widget.showTypesFilter,
                 onDone: (data) {
                   if (onRuleDialogConfirm(context, -1, data)) {
                     dialog.close();
@@ -150,21 +153,22 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                           description: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  Text("${TranslationKey.types.tr}: "),
-                                  if (item.types.isEmpty)
-                                    noneContent
-                                  else if (item.types.length == FilterRule.filterTypes.length)
-                                    allContent
-                                  else
-                                    Text(
-                                      item.types.map((item) => item.label).join(", "),
-                                      style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 3),
+                              if (widget.showTypesFilter)
+                                Row(
+                                  children: [
+                                    Text("${TranslationKey.types.tr}: "),
+                                    if (item.types.isEmpty)
+                                      noneContent
+                                    else if (item.types.length == FilterRule.filterTypes.length)
+                                      allContent
+                                    else
+                                      Text(
+                                        item.types.map((item) => item.label).join(", "),
+                                        style: const TextStyle(color: Colors.blueGrey, fontWeight: FontWeight.bold),
+                                      ),
+                                  ],
+                                ),
+                              if (widget.showTypesFilter) const SizedBox(height: 3),
                               Wrap(
                                 children: [
                                   Text("${TranslationKey.source.tr}: "),
@@ -228,6 +232,7 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                               context,
                               FilterRuleAddDialog(
                                 mode: isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white,
+                                showTypesFilter: widget.showTypesFilter,
                                 data: ruleList[i],
                                 onDone: (data) {
                                   if (onRuleDialogConfirm(context, i, data)) {
@@ -263,7 +268,19 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
 
   bool onRuleDialogConfirm(BuildContext context, int index, FilterRule data) {
     final ruleList = isBlacklistMode.value ? blacklist : whitelist;
-    if (data.content.isEmpty && data.appIds.isEmpty && data.types.isEmpty) {
+    final bool isEmptyContent = data.content.isEmpty;
+    final bool isEmptyAppIds = data.appIds.isEmpty;
+    final bool isEmptyTypes = data.types.isEmpty;
+
+    bool isValid = true;
+
+    if (widget.showTypesFilter) {
+      isValid = !(isEmptyContent && isEmptyAppIds && isEmptyTypes);
+    } else {
+      isValid = !(isEmptyContent && isEmptyAppIds);
+    }
+
+    if (!isValid) {
       Global.showTipsDialog(context: context, text: TranslationKey.contentAndSourceCannotEmpty.tr);
       return false;
     }

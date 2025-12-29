@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -218,6 +220,15 @@ class ClipDataCardState extends State<ClipDataCard> {
             });
           },
         ),
+        if (widget.clip.isText)
+          MenuItem(
+            label: TranslationKey.segmentWords.tr,
+            icon: Icons.grain,
+            onSelected: () {
+              final home = Get.find<HomeController>();
+              home.showSegmentWordsView(context,widget.clip.data.content);
+            },
+          ),
         if (!widget.clip.isFile)
           MenuItem(
             label: TranslationKey.copyContent.tr,

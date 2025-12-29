@@ -289,8 +289,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "通过中转服务可在公网环境下进行数据同步";
       case TranslationKey.forwardSettingsForwardEnableRequiredText:
         return "请先设置中转服务器地址";
-      case TranslationKey.forwardSettingsForwardEnableRequiredWebdavText:
-        return "请先配置 Webdav 服务";
+      case TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText:
+        return "请先配置 WebDAV 服务";
       case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
         return "请先配置 对象存储 服务";
       case TranslationKey.forwardSettingsForwardAddressTitle:
@@ -755,6 +755,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "台";
       case TranslationKey.day:
         return "天";
+      case TranslationKey.hour:
+        return "小时";
+      case TranslationKey.second:
+        return "秒";
       case TranslationKey.forwardServerKeyNotStarted:
         return "未开始计时";
       case TranslationKey.exhausted:
@@ -809,10 +813,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "记住上次位置";
       case TranslationKey.showOnRecentTasks:
         return "在最近任务中显示";
-      case TranslationKey.showOnRecentTasksTips:
-        return "在高版本Android系统中隐藏最近任务可能会导致在切换到其他app时被系统杀死，仍要尝试隐藏吗？";
       case TranslationKey.showOnRecentTasksDesc:
-        return "在部分系统上隐藏后台后可能导致切换应用后会被杀掉后台（如小米），当前原因未知";
+        return "强迫症选项，若关闭则会在后台卡片中隐藏";
       case TranslationKey.showLocalIpAddress:
         return "查看本机IP";
       case TranslationKey.localIpAddress:
@@ -1138,8 +1140,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "无通知历史访问权限，无法记录通知历史";
       case TranslationKey.recordNotification:
         return "记录通知历史";
-      case TranslationKey.notificationFromDevice:
-        return "来自 @devName 的通知";
       case TranslationKey.logSettingsAutoUploadCrashLogTitle:
         return "崩溃日志自动上传";
       case TranslationKey.logSettingsAutoUploadCrashLogDesc:
@@ -1201,11 +1201,11 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.notificationServerTips:
         return "使用存储服务作为中转时无法自动得知需要同步数据，需要依赖通知服务进行通知。\n"
             "可自建也可使用公共通知服务，通知内容不含任何敏感信息。";
-      case TranslationKey.forwardSettingsWebDavTitle:
-        return "WebDav配置信息";
+      case TranslationKey.forwardSettingsWebDAVTitle:
+        return "WebDAV配置信息";
       case TranslationKey.forwardSettingsS3Title:
         return "对象存储配置信息";
-      case TranslationKey.configureWebdavServer:
+      case TranslationKey.configureWebDAVServer:
         return "配置 WebDAV";
       case TranslationKey.nameRequired:
         return "请输入配置名称";
@@ -1331,10 +1331,68 @@ class ZhCNTranslation extends AbstractTranslations {
         return "类型";
       case TranslationKey.selectTypes:
         return "选择类型";
+      case TranslationKey.segmentWords:
+        return "分词";
+      case TranslationKey.downloadFromGithub:
+        return '从Github下载';
+      case TranslationKey.notFoundJiebaFiles:
+        return "未发现分词文件\n请下载分词文件后将其复制到 \n @dirPath \n文件夹下\n提示：仅需 dict.txt 和 prob_emit.txt 即可";
+      case TranslationKey.installJiebaDictFile:
+        return "安装";
+      case TranslationKey.downloadFailed:
+        return "下载失败";
+      case TranslationKey.jiebaFileInstallSuccess:
+        return "分词文件安装成功！";
+      case TranslationKey.encryptKey:
+        return "密钥";
+      case TranslationKey.encryptKeyErrorTip:
+        return '长度不能小于8，且不能包含空白字符';
+      case TranslationKey.confirmClearEncryptKey:
+        return '确认清除密钥吗？';
+      case TranslationKey.authFailed:
+        return '验证失败';
+      case TranslationKey.dhKeySettingName:
+        return '对加密参数进行加密';
+      case TranslationKey.dhKeySettingDesc:
+        return '启用后，所有连接的设备都必须启用且密码相同，否则无法连接';
+      case TranslationKey.dhKeySettingTips:
+        return '对设备连接过程中使用的 Diffie–Hellman 密钥加密算法的参数进行加密。\n启用后，所有连接的设备都必须启用且密码相同，否则无法连接。\n\n当然，其实这个不使用也没什么问题。';
+      case TranslationKey.syncOutDateSettingTitle:
+        return '同步数据范围';
+      case TranslationKey.syncOutDateSettingDesc:
+        return '仅同步指定时间内的数据而不是全部同步';
       case TranslationKey.pleaseWait:
         return "请稍等...";
       case TranslationKey.generateTodayAndroidLog:
         return "生成 Android 原生日志（当天）";
+      case TranslationKey.noDiscoveryIfsSettingTitle:
+        return '设备发现排除网卡';
+      case TranslationKey.noDiscoveryIfsSettingDesc:
+        return '在设备发现流程中的子网扫描时跳过指定网卡';
+      case TranslationKey.onlyManualDiscoverySubNetSettingTitle:
+        return '仅手动子网扫描发现设备';
+      case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
+        return '在网络切换/屏幕亮起后不进行子网扫描，仅在设备页面手动点击发现时才进行子网扫描';
+      case TranslationKey.stopListeningOnScreenClosedSettingTitle:
+        return '熄屏后停止监听（实验性）';
+      case TranslationKey.stopListeningOnScreenClosedSettingDesc:
+        return '熄屏一分钟后停止监听剪贴板，在某些设备上可能能节省电量';
+      case TranslationKey.notNow:
+        return '本次忽略';
+      case TranslationKey.faq:
+        return '常见问题';
+      case TranslationKey.sendBroadcastOnAddData:
+        return '新增数据时发送广播';
+      case TranslationKey.sendBroadcastOnAddDataDesc:
+        return '当剪贴板改变/同步新数据时发送一个系统广播以通知其他app如Tasker进行额外处理';
+      case TranslationKey.explain:
+        return '说明';
+      case TranslationKey.sendBroadcastOnAddDataTips:
+        return '广播Action为：${Constants.kOnHistoryChangedBroadcastAction}\n\n当前广播中含有以下变量：\n1.type: 内容类型，有效值为：text, image, sms, file, notification\n2.content: 内容，当为图片和文件时是本机路径，当为通知时是json\n3.from_dev_id：来源设备id\n4.from_dev_name: 来源设备名称';
+      case TranslationKey.recopyOnScreenUnlockedTitle:
+        return "解锁后重新复制最新数据";
+      case TranslationKey.recopyOnScreenUnlockedTitleDesc:
+        return "部分系统在锁屏状态下无法自动复制，启用该功能后会在屏幕解锁后再去重试复制最新同步的数据";
     }
   }
 }

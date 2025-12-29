@@ -1,3 +1,4 @@
+:: 生成数据库SQL代码
 @echo off
 setlocal enabledelayedexpansion
 

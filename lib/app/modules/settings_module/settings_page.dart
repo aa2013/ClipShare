@@ -4,14 +4,14 @@ import 'dart:io';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
-import 'package:clipshare/app/data/enums/obj_storage_type.dart';
-import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/notification_server_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/outdate_time_input_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/qr_image_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/s3_config_edit_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/webdav_config_edit_dialog.dart';
@@ -58,7 +58,6 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../data/enums/forward_way.dart';
 /**
@@ -441,7 +440,7 @@ class SettingsPage extends GetView<SettingsController> {
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
                         description: Text(TranslationKey.permissionSettingsAccessibilityDesc.tr),
-                        value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord,
+                        value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord && !appConfig.ignoreAccessibility,
                         action: (val) => const Icon(
                           Icons.help,
                           color: Colors.orange,
@@ -521,26 +520,11 @@ class SettingsPage extends GetView<SettingsController> {
                             value: v,
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
-                              if (!checked) {
-                                Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.showOnRecentTasksTips.tr,
-                                  showCancel: true,
-                                  onOk: () {
-                                    androidChannelService.showOnRecentTasks(checked).then((v) {
-                                      if (v) {
-                                        appConfig.setShowOnRecentTasks(checked);
-                                      }
-                                    });
-                                  },
-                                );
-                              } else {
-                                androidChannelService.showOnRecentTasks(checked).then((v) {
-                                  if (v) {
-                                    appConfig.setShowOnRecentTasks(checked);
-                                  }
-                                });
-                              }
+                              androidChannelService.showOnRecentTasks(checked).then((v) {
+                                if (v) {
+                                  appConfig.setShowOnRecentTasks(checked);
+                                }
+                              });
                             },
                           );
                         },
@@ -615,7 +599,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setEnableRecordNotification(checked);
                           },
                         ),
-                        show: (v) => Platform.isAndroid && false,
+                        show: (v) => Platform.isAndroid,
                       ),
                       SettingCard(
                         title: Text(
@@ -656,7 +640,7 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setEnableShowMobileNotification(checked);
                           },
                         ),
-                        show: (v) => PlatformExt.isDesktop && false,
+                        show: (v) => PlatformExt.isDesktop,
                       ),
                     ],
                   ),
@@ -670,6 +654,24 @@ class SettingsPage extends GetView<SettingsController> {
                     groupName: TranslationKey.clipboardSettingsGroupName.tr,
                     icon: Icon(MdiIcons.clipboardOutline),
                     cardList: [
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.stopListeningOnScreenClosedSettingTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.stopListeningOnScreenClosedSettingDesc.tr),
+                        value: appConfig.stopListeningOnScreenClosed,
+                        show: (v) => Platform.isAndroid,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setStopListeningOnScreenClosed(checked);
+                            },
+                          );
+                        },
+                      ),
                       SettingCard(
                         title: Row(
                           children: [
@@ -713,7 +715,7 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableSourceRecord(checked);
-                              if (Platform.isAndroid && checked && !controller.hasAccessibilityPerm.value) {
+                              if (Platform.isAndroid && checked && !controller.hasAccessibilityPerm.value && !appConfig.ignoreAccessibility) {
                                 //检查无障碍
                                 Global.showTipsDialog(
                                   context: context,
@@ -722,6 +724,11 @@ class SettingsPage extends GetView<SettingsController> {
                                   okText: TranslationKey.goAuthorize.tr,
                                   onOk: () {
                                     PermissionHelper.reqAndroidAccessibilityPerm();
+                                  },
+                                  showNeutral: true,
+                                  neutralText: TranslationKey.notNow.tr,
+                                  onNeutral: () {
+                                    appConfig.ignoreAccessibility = true;
                                   },
                                 );
                               }
@@ -770,6 +777,48 @@ class SettingsPage extends GetView<SettingsController> {
                           );
                         },
                         show: (v) => Platform.isAndroid && appConfig.sourceRecord,
+                      ),
+                      SettingCard(
+                        title: Row(
+                          children: [
+                            Text(
+                              TranslationKey.sendBroadcastOnAddData.tr,
+                              maxLines: 1,
+                            ),
+                            const SizedBox(width: 5),
+                            Tooltip(
+                              message: TranslationKey.explain.tr,
+                              child: GestureDetector(
+                                child: const MouseRegion(
+                                  cursor: SystemMouseCursors.click,
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: Colors.blueGrey,
+                                    size: 15,
+                                  ),
+                                ),
+                                onTap: () async {
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.sendBroadcastOnAddDataTips.tr,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.sendBroadcastOnAddDataDesc.tr),
+                        value: appConfig.sendBroadcastOnAdd,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setSendBroadcastOnAdd(checked);
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isAndroid,
                       ),
                     ],
                   ),
@@ -1001,6 +1050,62 @@ class SettingsPage extends GetView<SettingsController> {
                           );
                         },
                       ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.onlyManualDiscoverySubNetSettingTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.onlyManualDiscoverySubNetSettingDesc.tr),
+                        value: appConfig.onlyManualDiscoverySubNet,
+                        action: (v) {
+                          return Switch(
+                            value: appConfig.onlyManualDiscoverySubNet,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setOnlyManualDiscoverySubNet(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.noDiscoveryIfsSettingTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.noDiscoveryIfsSettingDesc.tr),
+                        value: appConfig.noDiscoveryIfs,
+                        action: (v) {
+                          return TextButton(
+                            child: Text(TranslationKey.configure.tr),
+                            onPressed: () async {
+                              final interfaces = await NetworkInterface.list();
+                              final selections = interfaces.map((itf) {
+                                var showTextList = [itf.name];
+                                var ipList = itf.addresses.where((address) => address.type == InternetAddressType.IPv4).map((address) => address.address);
+                                showTextList.addAll(ipList);
+                                return CheckboxData(value: itf.name, text: showTextList.join('\n'));
+                              }).toList();
+                              DialogController? dialog;
+                              dialog = MultiSelectDialog.show(
+                                context: context,
+                                dismissable: true,
+                                onSelected: (List<String> values) {
+                                  Future.delayed(100.ms).then(
+                                    (value) {
+                                      appConfig.setNoDiscoveryIfs(values);
+                                      dialog!.close();
+                                    },
+                                  );
+                                },
+                                defaultValues: appConfig.noDiscoveryIfs,
+                                minSelectedCnt: 0,
+                                selections: selections,
+                                title: Text(TranslationKey.noDiscoveryIfsSettingTitle.tr),
+                              );
+                            },
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -1069,14 +1174,14 @@ class SettingsPage extends GetView<SettingsController> {
                                 },
                               ),
                               MenuItem(
-                                label: 'WebDav',
+                                label: 'WebDAV',
                                 icon: Icons.storage,
                                 enabled: v != ForwardWay.webdav,
                                 onSelected: () {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.webdav);
                                     await sktService.disConnectForwardServer();
-                                    if (!appConfig.enableForward || appConfig.webDavConfig == null) {
+                                    if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
                                       return;
@@ -1274,10 +1379,10 @@ class SettingsPage extends GetView<SettingsController> {
                                   return;
                                 }
                                 final useWebdav = appConfig.forwardWay == ForwardWay.webdav;
-                                if (useWebdav && appConfig.webDavConfig == null) {
+                                if (useWebdav && appConfig.webDAVConfig == null) {
                                   Global.showSnackBarErr(
                                     context: context,
-                                    text: TranslationKey.forwardSettingsForwardEnableRequiredWebdavText.tr,
+                                    text: TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr,
                                   );
                                   return;
                                 }
@@ -1356,26 +1461,26 @@ class SettingsPage extends GetView<SettingsController> {
                       if (appConfig.forwardWay == ForwardWay.webdav)
                         SettingCard(
                           title: Text(
-                            TranslationKey.forwardSettingsWebDavTitle.tr,
+                            TranslationKey.forwardSettingsWebDAVTitle.tr,
                             maxLines: 1,
                           ),
-                          description: Text(appConfig.webDavConfig?.displayName ?? TranslationKey.noConfig.tr, maxLines: 1),
-                          value: appConfig.webDavConfig,
+                          description: Text(appConfig.webDAVConfig?.displayName ?? TranslationKey.noConfig.tr, maxLines: 1),
+                          value: appConfig.webDAVConfig,
                           action: (v) {
                             String text = TranslationKey.change.tr;
-                            if (appConfig.webDavConfig == null) {
+                            if (appConfig.webDAVConfig == null) {
                               text = TranslationKey.configure.tr;
                             }
                             return Row(
                               children: [
-                                if (appConfig.webDavConfig != null)
+                                if (appConfig.webDAVConfig != null)
                                   IconButton(
                                     onPressed: () {
                                       Global.showDialog(
                                         context,
                                         QrImageDialog(
-                                          title: const Text("Webdav"),
-                                          data: jsonEncode(appConfig.webDavConfig!),
+                                          title: const Text("WebDAV"),
+                                          data: jsonEncode(appConfig.webDAVConfig!),
                                         ),
                                       );
                                     },
@@ -1385,7 +1490,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   onPressed: () {
                                     Global.showDialog(
                                       context,
-                                      WebdavConfigEditDialog(
+                                      WebDAVConfigEditDialog(
                                         initValue: v,
                                         onOk: (config) {
                                           appConfig.setWebDavConfig(config);
@@ -1490,7 +1595,6 @@ class SettingsPage extends GetView<SettingsController> {
                             },
                           );
                         },
-                        show: (v) => true,
                       ),
                       SettingCard(
                         title: Text(
@@ -1521,12 +1625,9 @@ class SettingsPage extends GetView<SettingsController> {
                                     });
                               }
                             },
-                            child: Text(
-                              appConfig.appPassword == null ? TranslationKey.create.tr : TranslationKey.change.tr,
-                            ),
+                            child: Text(appConfig.appPassword == null ? TranslationKey.create.tr : TranslationKey.change.tr),
                           );
                         },
-                        show: (v) => true,
                       ),
                       SettingCard(
                         title: Text(
@@ -1558,7 +1659,86 @@ class SettingsPage extends GetView<SettingsController> {
                             duration <= 0 ? TranslationKey.immediately.tr : TranslationKey.securitySettingsReverificationValue.trParams({"value": duration.toString()}),
                           );
                         },
-                        show: (v) => true,
+                      ),
+                      SettingCard<String>(
+                        title: Row(
+                          children: [
+                            Text(TranslationKey.dhKeySettingName.tr, maxLines: 1),
+                            const SizedBox(width: 5),
+                            GestureDetector(
+                              onTap: () {
+                                Global.showTipsDialog(context: context, text: TranslationKey.dhKeySettingTips.tr);
+                              },
+                              child: const Icon(
+                                Icons.info_outline,
+                                color: Colors.blueGrey,
+                                size: 15,
+                              ),
+                            ),
+                          ],
+                        ),
+                        description: Text(TranslationKey.dhKeySettingDesc.tr),
+                        value: appConfig.dhEncryptKey,
+                        action: (v) {
+                          return TextButton(
+                            child: Text(v.isNullOrEmpty ? TranslationKey.configure.tr : TranslationKey.change.tr),
+                            onPressed: () {
+                              if (appConfig.appPassword == null) {
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogContent.tr,
+                                  onOk: controller.gotoSetPwd,
+                                  okText: TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogOkText.tr,
+                                  showCancel: true,
+                                );
+                                return;
+                              }
+
+                              //第一步验证
+                              appConfig.authenticating.value = true;
+                              final homeController = Get.find<HomeController>();
+                              homeController
+                                  .gotoAuthenticationPage(
+                                    TranslationKey.authenticationPageTitle.tr,
+                                    lock: false,
+                                  )
+                                  ?.then((v) {
+                                    if (v == null) {
+                                      Global.showSnackBarWarn(text: TranslationKey.authFailed.tr, context: context);
+                                      return;
+                                    }
+                                    Global.showDialog(
+                                      context,
+                                      TextEditDialog(
+                                        title: TranslationKey.encryptKey.tr,
+                                        labelText: TranslationKey.pleaseInput.tr,
+                                        initStr: appConfig.dhEncryptKey.isEmpty ? '' : appConfig.dhEncryptKey,
+                                        verify: (str) {
+                                          return (str.isEmpty && (appConfig.dhAesKey ?? '').isNotEmpty) || str.replaceAll('\\s+', '').length >= 8;
+                                        },
+                                        errorText: TranslationKey.encryptKeyErrorTip.tr,
+                                        onOk: (str) async {
+                                          if (str.isEmpty) {
+                                            Global.showTipsDialog(
+                                              context: context,
+                                              text: TranslationKey.confirmClearEncryptKey.tr,
+                                              showCancel: true,
+                                              onOk: () async {
+                                                await appConfig.setDHEncryptKey(str);
+                                                Global.showSnackBarSuc(text: TranslationKey.clearSuccess.tr, context: context);
+                                              },
+                                            );
+                                          } else {
+                                            await appConfig.setDHEncryptKey(str);
+                                            Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+                                          }
+                                        },
+                                      ),
+                                    );
+                                  });
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -1834,7 +2014,26 @@ class SettingsPage extends GetView<SettingsController> {
                           return Switch(
                             value: v,
                             onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
                               appConfig.setAutoSyncMissingData(checked);
+                            },
+                          );
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.recopyOnScreenUnlockedTitle.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.recopyOnScreenUnlockedTitleDesc.tr),
+                        value: appConfig.reCopyOnScreenUnlocked,
+                        show: (v) => Platform.isAndroid,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setReCopyOnScreenUnlocked(checked);
                             },
                           );
                         },
@@ -1851,6 +2050,7 @@ class SettingsPage extends GetView<SettingsController> {
                           return Switch(
                             value: v,
                             onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
                               if (checked) {
                                 var isGranted = await PermissionHelper.testAndroidReadSms();
                                 if (isGranted) {
@@ -1899,7 +2099,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   return;
                                 }
                                 DialogController? dialog;
-                                dialog=Global.showTipsDialog(
+                                dialog = Global.showTipsDialog(
                                   context: context,
                                   text: TranslationKey.syncSettingsStoreImg2PicturesNoPermText.tr,
                                   showCancel: true,
@@ -2025,6 +2225,23 @@ class SettingsPage extends GetView<SettingsController> {
                         ),
                         onTap: controller.gotoCleanDataPage,
                       ),
+                      SettingCard<int>(
+                        title: Text(TranslationKey.syncOutDateSettingTitle.tr),
+                        description: Text(TranslationKey.syncOutDateSettingDesc.tr),
+                        value: appConfig.syncOutdateLimitTime,
+                        action: (v) => Text(v == 0 ? TranslationKey.noLimits.tr : v.timeSpanStr),
+                        onTap: () {
+                          Global.showDialog(
+                            context,
+                            OutdateTimeInputDialog(
+                              initValue: appConfig.syncOutdateLimitTime,
+                              onConfirm: (value) {
+                                appConfig.setNewPairedDeviceSyncOldDataLimitTime(value);
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -2112,7 +2329,7 @@ class SettingsPage extends GetView<SettingsController> {
                         icon: arrowForwardIcon,
                       ),
                       onTap: controller.gotoFilterRuleListPage,
-                      show: (_) => Platform.isAndroid && false,
+                      show: (_) => Platform.isAndroid,
                     ),
                   ],
                 ),
@@ -2178,34 +2395,7 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableLogsRecord(checked);
-                              if (!checked) {
-                                late DialogController dialog;
-                                dialog = Global.showDialog(
-                                  context,
-                                  AlertDialog(
-                                    title: Text(TranslationKey.tips.tr),
-                                    content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          dialog.close();
-                                        },
-                                        child: Text(TranslationKey.dialogCancelText.tr),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          FileUtil.deleteDirectoryFiles(
-                                            appConfig.logsDirPath,
-                                          );
-                                          controller.updater.value++;
-                                          dialog.close();
-                                        },
-                                        child: Text(TranslationKey.dialogConfirmText.tr),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
+                              controller.updater.value++;
                             },
                           );
                         },
@@ -2335,6 +2525,23 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       onTap: () {
                         controller.gotoAboutPage();
+                      },
+                    ),
+                    SettingCard(
+                      title: Row(
+                        children: [
+                          Text(TranslationKey.faq.tr, maxLines: 1),
+                        ],
+                      ),
+                      value: null,
+                      action: (v) => IconButton(
+                        onPressed: () {
+                          Constants.faqUrl.askOpenUrl();
+                        },
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: () {
+                        Constants.faqUrl.askOpenUrl();
                       },
                     ),
                   ],

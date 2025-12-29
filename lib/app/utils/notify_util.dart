@@ -23,7 +23,7 @@ class NotifyUtil {
       guid: Constants.appGuid,
       iconPath: iconPath,
     );
-    const linuxSettings = LinuxInitializationSettings(defaultActionName: 'Open notification');
+    const linuxSettings = LinuxInitializationSettings(defaultActionName: 'Open');
 
     final settings = InitializationSettings(
       iOS: iosSettings,
@@ -45,6 +45,7 @@ class NotifyUtil {
     String title = Constants.appName,
     required String content,
     required String key,
+    Uri? notificationLogoUri,
     String? payload,
   }) async {
     int? notifyId;
@@ -55,11 +56,22 @@ class NotifyUtil {
       if (!_notificationReady) {
         await _initNotifications();
       }
-      const NotificationDetails notificationDetails = NotificationDetails(
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
-        linux: LinuxNotificationDetails(),
-        windows: WindowsNotificationDetails(),
+      NotificationDetails notificationDetails = NotificationDetails(
+        iOS: const DarwinNotificationDetails(),
+        macOS: DarwinNotificationDetails(attachments: [
+          if(notificationLogoUri != null)
+            DarwinNotificationAttachment(File.fromUri(notificationLogoUri).path)
+        ]),
+        linux: const LinuxNotificationDetails(),
+        windows: WindowsNotificationDetails(
+          images: [
+            WindowsImage(
+              notificationLogoUri ?? WindowsImage.getAssetUri(Constants.logoPngPath),
+              altText: '',
+              placement: WindowsImagePlacement.appLogoOverride,
+            ),
+          ],
+        ),
       );
       notifyId = _notifyId;
       _notifyId++;
@@ -85,10 +97,10 @@ class NotifyUtil {
     if (!_notifyIds.containsKey(key)) {
       return;
     }
-    if (Platform.isAndroid){
+    if (Platform.isAndroid) {
       final androidChannelService = Get.find<AndroidChannelService>();
       androidChannelService.cancelNotify(notifyId);
-    }else{
+    } else {
       _notification.cancel(notifyId);
     }
     _notifyIds[key]!.remove(notifyId);
@@ -107,9 +119,9 @@ class NotifyUtil {
     ids = ids..removeLast();
     final androidChannelService = Get.find<AndroidChannelService>();
     for (var id in ids) {
-      if(Platform.isAndroid) {
+      if (Platform.isAndroid) {
         androidChannelService.cancelNotify(id);
-      }else{
+      } else {
         _notification.cancel(id);
       }
     }
@@ -122,9 +134,9 @@ class NotifyUtil {
     var ids = _notifyIds[key]!;
     final androidChannelService = Get.find<AndroidChannelService>();
     for (var id in ids) {
-      if (Platform.isAndroid){
+      if (Platform.isAndroid) {
         androidChannelService.cancelNotify(id);
-      }else{
+      } else {
         _notification.cancel(id);
       }
     }

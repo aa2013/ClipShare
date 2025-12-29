@@ -26,18 +26,18 @@ class ClipboardService extends GetxService with ClipboardListener {
   var _detector = FlutterScreenshotDetect();
 
   static NotificationContentConfig get defaultNotificationContentConfig => NotificationContentConfig(
-        errorTitle: TranslationKey.defaultClipboardServerNotificationCfgErrorTitle.tr,
-        errorTextPrefix: TranslationKey.defaultClipboardServerNotificationCfgErrorTextPrefix.tr,
-        stopListeningTitle: TranslationKey.defaultClipboardServerNotificationCfgStopListeningTitle.tr,
-        stopListeningText: TranslationKey.defaultClipboardServerNotificationCfgStopListeningText.tr,
-        serviceRunningTitle: TranslationKey.defaultClipboardServerNotificationCfgRunningTitle.tr,
-        shizukuRunningText: TranslationKey.defaultClipboardServerNotificationCfgShizukuRunningText.tr,
-        rootRunningText: TranslationKey.defaultClipboardServerNotificationCfgRootRunningText.tr,
-        shizukuDisconnectedTitle: TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedTitle.tr,
-        shizukuDisconnectedText: TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedText.tr,
-        waitingRunningTitle: TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningTitle.tr,
-        waitingRunningText: TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningText.tr,
-      );
+    errorTitle: TranslationKey.defaultClipboardServerNotificationCfgErrorTitle.tr,
+    errorTextPrefix: TranslationKey.defaultClipboardServerNotificationCfgErrorTextPrefix.tr,
+    stopListeningTitle: TranslationKey.defaultClipboardServerNotificationCfgStopListeningTitle.tr,
+    stopListeningText: TranslationKey.defaultClipboardServerNotificationCfgStopListeningText.tr,
+    serviceRunningTitle: TranslationKey.defaultClipboardServerNotificationCfgRunningTitle.tr,
+    shizukuRunningText: TranslationKey.defaultClipboardServerNotificationCfgShizukuRunningText.tr,
+    rootRunningText: TranslationKey.defaultClipboardServerNotificationCfgRootRunningText.tr,
+    shizukuDisconnectedTitle: TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedTitle.tr,
+    shizukuDisconnectedText: TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedText.tr,
+    waitingRunningTitle: TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningTitle.tr,
+    waitingRunningText: TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningText.tr,
+  );
   String? _lastScreenshotContent;
 
   Future<ClipboardService> init() async {

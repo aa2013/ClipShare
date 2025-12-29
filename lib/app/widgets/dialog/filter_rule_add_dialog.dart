@@ -25,6 +25,7 @@ import 'multi_select_dialog.dart';
 class FilterRuleAddDialog extends StatefulWidget {
   final FilterRule? data;
   final WhiteBlackMode mode;
+  final bool showTypesFilter;
   final void Function(FilterRule rule) onDone;
 
   const FilterRuleAddDialog({
@@ -32,6 +33,7 @@ class FilterRuleAddDialog extends StatefulWidget {
     required this.onDone,
     required this.mode,
     this.data,
+    this.showTypesFilter = true,
   });
 
   @override
@@ -109,45 +111,47 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("${TranslationKey.types.tr}："),
-                RoundedChip(
-                  avatar: const Icon(Icons.add),
-                  label: Text(TranslationKey.selection.tr),
-                  onPressed: () async {
-                    final result = await _showTypesDialog();
-                    selectedTypes.value = result;
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Obx(() {
-              if (selectedTypes.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              return Expanded(
-                child: SingleChildScrollView(
-                  child: Wrap(
-                    children: selectedTypes.map((type) {
-                      return Container(
-                        margin: const EdgeInsets.only(right: 5, bottom: 5),
-                        child: RoundedChip(
-                          onPressed: () => {},
-                          label: Text(type.label),
-                          deleteIcon: const Icon(Icons.delete, color: Colors.blueGrey),
-                          onDeleted: () {
-                            selectedTypes.remove(type);
-                          },
-                        ),
-                      );
-                    }).toList(),
+            if (widget.showTypesFilter)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("${TranslationKey.types.tr}："),
+                  RoundedChip(
+                    avatar: const Icon(Icons.add),
+                    label: Text(TranslationKey.selection.tr),
+                    onPressed: () async {
+                      final result = await _showTypesDialog();
+                      selectedTypes.value = result;
+                    },
                   ),
-                ),
-              );
-            }),
+                ],
+              ),
+            if (widget.showTypesFilter) const SizedBox(height: 10),
+            if (widget.showTypesFilter)
+              Obx(() {
+                if (selectedTypes.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Expanded(
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      children: selectedTypes.map((type) {
+                        return Container(
+                          margin: const EdgeInsets.only(right: 5, bottom: 5),
+                          child: RoundedChip(
+                            onPressed: () => {},
+                            label: Text(type.label),
+                            deleteIcon: const Icon(Icons.delete, color: Colors.blueGrey),
+                            onDeleted: () {
+                              selectedTypes.remove(type);
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                );
+              }),
             TextField(
               controller: contentText,
               autofocus: true,
@@ -187,14 +191,14 @@ class _FilterRuleAddDialogState extends State<FilterRuleAddDialog> {
                 ),
               ],
             ),
-            Obx((){
-              if(selectedAppList.isEmpty){
+            Obx(() {
+              if (selectedAppList.isEmpty) {
                 return const SizedBox.shrink();
               }
               return Expanded(
                 child: SingleChildScrollView(
                   child: Obx(
-                        () => Wrap(
+                    () => Wrap(
                       children: selectedAppList.map((app) {
                         return Container(
                           margin: const EdgeInsets.only(right: 5, bottom: 5),

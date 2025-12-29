@@ -19,7 +19,7 @@ extension DeviceExt on Device {
     return address == appConfig.forwardServer!.server;
   }
 
-  bool get isUseWebDav {
+  bool get isUseWebDAV {
     return address == TransportProtocol.webdav.name;
   }
 
@@ -28,15 +28,15 @@ extension DeviceExt on Device {
   }
 
   bool get isUseDirect {
-    return !isUseForwardServer && !isUseS3 && !isUseWebDav;
+    return !isUseForwardServer && !isUseS3 && !isUseWebDAV;
   }
 
   bool get isUseStorage {
-    return isUseWebDav || isUseS3;
+    return isUseWebDAV || isUseS3;
   }
 
   TransportProtocol get protocol {
-    if (isUseWebDav) return TransportProtocol.webdav;
+    if (isUseWebDAV) return TransportProtocol.webdav;
     if (isUseS3) return TransportProtocol.s3;
     if (isUseForwardServer) return TransportProtocol.server;
     return TransportProtocol.direct;

@@ -29,8 +29,11 @@
             android:enabled="true"
             android:exported="false" />
 
-        <service android:label="notifications" android:name="notification.listener.service.NotificationListener"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" android:exported="true">
+        <service
+            android:name="notification.listener.service.NotificationListener"
+            android:exported="true"
+            android:label="notifications"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
@@ -53,11 +56,22 @@
         </receiver>
 
         <activity
+            android:name=".ProxyActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:theme="@style/LaunchTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:hardwareAccelerated="true"
             android:launchMode="singleTask"
-            android:theme="@style/LaunchTheme"
             android:windowSoftInputMode="adjustResize">
 
             <!--
@@ -70,11 +84,6 @@
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
             <!--share_handler-->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

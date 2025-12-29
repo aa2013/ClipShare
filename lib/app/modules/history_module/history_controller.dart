@@ -6,10 +6,12 @@ import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/global.dart';
+import 'package:path/path.dart' as p;
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -50,7 +52,7 @@ import 'package:synchronized/synchronized.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class HistoryController extends GetxController with WidgetsBindingObserver implements HistoryDataObserver, SyncListener {
+class HistoryController extends GetxController with WidgetsBindingObserver implements HistoryDataObserver, SyncListener, ScreenOpenedObserver {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final sktService = Get.find<SocketService>();
@@ -98,6 +100,11 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   bool get loading => _loading.value;
   Timer? _debounce;
 
+  bool _screenUnlocked = true;
+
+  //熄屏后的数据同步
+  History? _syncDataOnScreenOff;
+
   //防止短时间内频繁刷新ui的临时缓冲列表
   final List<ClipData> _tempList = List.empty(growable: true);
 
@@ -109,6 +116,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     super.onInit();
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
+    ScreenOpenedListener.inst.register(this);
     //更新上次复制的记录
     updateLatestLocalClip().then((his) {
       //添加同步监听
@@ -132,6 +140,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
+    ScreenOpenedListener.inst.remove(this);
     DataSender.removeSyncListener(Module.history, this);
     super.dispose();
   }
@@ -226,10 +235,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     if (fromStorage) {
       var type = ClipboardContentType.parse(history.type);
+      var copy = false;
       if (type != ClipboardContentType.image) {
+        copy = true;
         clipboardManager.copy(type, history.content);
       } else if (appConfig.autoCopyImageAfterSync) {
+        copy = true;
         clipboardManager.copy(type, history.content);
+      }
+      if (_screenUnlocked == false && copy) {
+        _syncDataOnScreenOff = history;
       }
     } else {
       _missingDataCopyMsg = history.id;
@@ -448,16 +463,28 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             final hisTime = DateTime.parse(history.time);
             final offsetMs = now.difference(hisTime).inMilliseconds.abs();
             Log.info(tag, "show mobile notification, time offset ${offsetMs}ms");
-            const maxTimeoutMs = 2000;
+            const maxTimeoutMs = 10000;
             if (offsetMs <= maxTimeoutMs) {
               try {
                 final json = jsonDecode(history.content);
+                final pkgName = json["pkg"];
+                final appInfo = sourceService.getAppInfoByAppId(pkgName);
+                Uri? iconUri;
+                if (appInfo != null) {
+                  final documentsPath = await Constants.documentsPath;
+                  final file = File(p.join(documentsPath, "appIcons", "${appInfo.appId}.png"));
+                  await file.parent.create(recursive: true);
+                  await file.writeAsBytes(appInfo.iconBytes);
+                  iconUri = file.uri;
+                }
+                final notificationTitle = json["title"];
                 final notificationContent = json["content"];
                 const notifyKey = "showMobileNotify";
                 final notifyId = await NotifyUtil.notify(
-                  title: TranslationKey.notificationFromDevice.trParams({"devName": sender.name}),
+                  title: notificationTitle,
                   content: notificationContent,
                   key: notifyKey,
+                  notificationLogoUri: iconUri,
                 );
                 if (notifyId != null) {
                   Future.delayed(2.s, () {
@@ -487,10 +514,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         if (!loadingMissingData || _missingDataCopyMsg == history.id) {
           appConfig.innerCopy = true;
           var type = ClipboardContentType.parse(history.type);
+          var copy = false;
           if (type != ClipboardContentType.image) {
+            copy = true;
             clipboardManager.copy(type, history.content);
           } else if (appConfig.autoCopyImageAfterSync) {
+            copy = true;
             clipboardManager.copy(type, history.content);
+          }
+          if (_screenUnlocked == false && copy) {
+            _syncDataOnScreenOff = history;
           }
           if (_missingDataCopyMsg == history.id) {
             _missingDataCopyMsg = null;
@@ -597,6 +630,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   Future<int> addData(History history, bool shouldSync, [bool notify = true]) async {
     var clip = ClipData(history);
     final contentType = HistoryContentType.parse(history.type);
+    if (appConfig.sendBroadcastOnAdd) {
+      final devService = Get.find<DeviceService>();
+      androidChannelService.sendHistoryChangedBroadcast(contentType, history.content, history.devId, devService.getName(history.devId));
+    }
     var cnt = await dbService.historyDao.add(clip.data);
     if (cnt <= 0) return cnt;
     notifyHistoryWindow();
@@ -703,6 +740,31 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       default:
     }
     return cnt;
+  }
+
+  @override
+  void onScreenOpened() {}
+
+  @override
+  void onScreenUnlocked() {
+    Log.debug(tag, "屏幕解锁");
+    _screenUnlocked = true;
+    if (_syncDataOnScreenOff != null) {
+      //已启用复制熄屏时的最新数据
+      if (appConfig.reCopyOnScreenUnlocked) {
+        print("copy");
+        //复制熄屏时的数据
+        var type = ClipboardContentType.parse(_syncDataOnScreenOff!.type);
+        var content = _syncDataOnScreenOff!.content;
+        clipboardManager.copy(type, content);
+      }
+      _syncDataOnScreenOff = null;
+    }
+  }
+
+  @override
+  void onScreenClosed() {
+    _screenUnlocked = false;
   }
 
   //endregion

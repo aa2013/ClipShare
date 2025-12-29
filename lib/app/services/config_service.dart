@@ -15,6 +15,7 @@ import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -43,6 +44,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
@@ -54,7 +56,9 @@ final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
-  final configDao = Get.find<DbService>().configDao;
+  final configDao = Get
+      .find<DbService>()
+      .configDao;
   final tag = "ConfigService";
 
   //region 属性
@@ -70,6 +74,12 @@ class ConfigService extends GetxService {
   final androidChannel = const MethodChannel(Constants.channelAndroid);
   final prime1 = CryptoUtil.getPrime();
   final prime2 = CryptoUtil.getPrime();
+
+  //当前时区与UTC的差值，带正负
+  final timeZoneOffsetSeconds = DateTime
+      .now()
+      .timeZoneOffset
+      .inSeconds;
 
   // final bgColor = const Color.fromARGB(255, 238, 238, 238);
   WindowController? historyWindow;
@@ -195,13 +205,24 @@ class ConfigService extends GetxService {
   final deviceDiscoveryStatus = Rx<String?>(null);
 
   //本机是否启用 webdav 中转
-  bool get enableWebdav => forwardWay == ForwardWay.webdav;
+  bool get enableWebDAV => forwardWay == ForwardWay.webdav;
 
   //本机是否启用 对象存储 中转
   bool get enableS3 => forwardWay == ForwardWay.s3;
 
   //本机是否启用 存储 进行中转
-  bool get enableStorageSync => enableWebdav || enableS3;
+  bool get enableStorageSync => enableWebDAV || enableS3;
+
+  //jieba分词库是否已初始化
+  bool _jiebaInited = false;
+
+  //设备连接时的df算法参数加密key
+  String? _dhAesKey;
+
+  String? get dhAesKey => _dhAesKey;
+
+  //是否忽略无障碍权限
+  bool ignoreAccessibility = false;
 
   //endregion
 
@@ -513,10 +534,10 @@ class ConfigService extends GetxService {
   bool get enableShowMobileNotification => _enableShowMobileNotification.value;
 
   //webdav配置
-  final _webdavConfig = Rx<WebDavConfig?>(null);
+  final _webdavConfig = Rx<WebDAVConfig?>(null);
 
   //webdav配置
-  WebDavConfig? get webDavConfig => _webdavConfig.value;
+  WebDAVConfig? get webDAVConfig => _webdavConfig.value;
 
   //s3配置
   final _s3Config = Rx<S3Config?>(null);
@@ -549,6 +570,41 @@ class ConfigService extends GetxService {
   final _lastSqlEditContent = ''.obs;
 
   String get lastSqlEditContent => _lastSqlEditContent.value;
+
+  //设备连接DH参数加密密钥
+  final _dhEncryptKey = ''.obs;
+
+  String get dhEncryptKey => _dhEncryptKey.value;
+
+  ///新设备配对的过往数据同步时间限制，单位秒
+  final _syncOutdateLimitTime = 0.obs;
+
+  int get syncOutdateLimitTime => _syncOutdateLimitTime.value;
+
+  ///设备发现排除的网卡，包含子网扫描和广播
+  final _noDiscoveryIfs = <String>[].obs;
+
+  List<String> get noDiscoveryIfs => _noDiscoveryIfs.value;
+
+  ///仅手动子网扫描发现设备
+  final _onlyManualDiscoverySubNet = false.obs;
+
+  bool get onlyManualDiscoverySubNet => _onlyManualDiscoverySubNet.value;
+
+  ///仅Android 屏幕关闭后停止监听
+  final _stopListeningOnScreenClosed = false.obs;
+
+  bool get stopListeningOnScreenClosed => _stopListeningOnScreenClosed.value;
+
+  ///当有新数据时发送广播通知
+  final _sendBroadcastOnAdd = false.obs;
+
+  bool get sendBroadcastOnAdd => _sendBroadcastOnAdd.value;
+
+  ///设备解锁后重新复制锁屏期间同步的最新的一条数据，部分设备在锁屏期间无法复制
+  final _recopyOnScreenUnlocked = false.obs;
+
+  bool get reCopyOnScreenUnlocked => _recopyOnScreenUnlocked.value;
 
   //endregion
 
@@ -632,12 +688,12 @@ class ConfigService extends GetxService {
         }
       },
     ));
-    _webdavConfig.value = await cfg.getConfigByKey<WebDavConfig?>(
+    _webdavConfig.value = await cfg.getConfigByKey<WebDAVConfig?>(
       ConfigKey.webdavConfig,
       null,
       convert: (s) {
         try {
-          return WebDavConfig.fromJson(jsonDecode(s));
+          return WebDAVConfig.fromJson(jsonDecode(s));
         } catch (err, stack) {
           return null;
         }
@@ -731,7 +787,7 @@ class ConfigService extends GetxService {
       null,
       convert: (value) {
         final json = jsonDecode(value) as Map<dynamic, dynamic>;
-        return WebDavConfig.fromJson(json.cast());
+        return WebDAVConfig.fromJson(json.cast());
       },
     ));
     _mobileDevIdGenerateWay.value = await cfg.getConfigByKey(
@@ -745,6 +801,20 @@ class ConfigService extends GetxService {
       convert: DevicePairedStatusFilter.parse,
     );
     _lastSqlEditContent.value = await cfg.getConfigByKey(ConfigKey.lastSqlEditContent, '');
+    _dhEncryptKey.value = await cfg.getConfigByKey(ConfigKey.dhEncryptKey, '');
+    if (_dhEncryptKey.value.isNotNullAndEmpty) {
+      _dhAesKey = await _updateDhAesKey();
+    }
+    _syncOutdateLimitTime.value = await cfg.getConfigByKey(ConfigKey.syncOutdateLimitTime, 0);
+    _noDiscoveryIfs.value = await cfg.getConfigByKey(
+      ConfigKey.noDiscoveryIfs,
+      [],
+      convert: (content) => content.split(',').where(((item) => item.isNotEmpty)).toList(),
+    );
+    _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
+    _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
+    _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
+    _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
   }
 
   ///初始化路径信息
@@ -940,9 +1010,7 @@ class ConfigService extends GetxService {
     _windowSize.value = size;
   }
 
-  Future<void> setRecordHistoryDialogPosition(
-    bool recordHistoryDialogPosition,
-  ) async {
+  Future<void> setRecordHistoryDialogPosition(bool recordHistoryDialogPosition,) async {
     await configDao.addOrUpdate(ConfigKey.recordHistoryDialogPosition, recordHistoryDialogPosition.toString());
     _recordHistoryDialogPosition.value = recordHistoryDialogPosition;
   }
@@ -1088,9 +1156,7 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterSync.value = autoCopyImageAfterSync;
   }
 
-  Future<void> setAutoCopyImageAfterScreenShot(
-    bool autoCopyImageAfterScreenShot,
-  ) async {
+  Future<void> setAutoCopyImageAfterScreenShot(bool autoCopyImageAfterScreenShot,) async {
     await configDao.addOrUpdate(
       ConfigKey.autoCopyImageAfterScreenShot,
       autoCopyImageAfterScreenShot.toString(),
@@ -1098,11 +1164,10 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterScreenShot.value = autoCopyImageAfterScreenShot;
   }
 
-  Future<void> setAppTheme(
-    ThemeMode appTheme,
-    BuildContext context, [
-    VoidCallback? onAnimationFinish,
-  ]) async {
+  Future<void> setAppTheme(ThemeMode appTheme,
+      BuildContext context, [
+        VoidCallback? onAnimationFinish,
+      ]) async {
     await configDao.addOrUpdate(ConfigKey.appTheme, appTheme.name);
     _appTheme.value = appTheme.name;
     var theme = appTheme == ThemeMode.dark ? darkThemeData : lightThemeData;
@@ -1226,7 +1291,7 @@ class ConfigService extends GetxService {
   }
 
   ///保存 webdav 配置
-  Future<void> setWebDavConfig(WebDavConfig config) async {
+  Future<void> setWebDavConfig(WebDAVConfig config) async {
     await configDao.addOrUpdate(ConfigKey.webdavConfig, jsonEncode(config));
     _webdavConfig.value = config;
   }
@@ -1267,9 +1332,76 @@ class ConfigService extends GetxService {
     _lastSqlEditContent.value = sql;
   }
 
+  ///设置 DH 加密密钥
+  Future<void> setDHEncryptKey(String key) async {
+    await configDao.addOrUpdate(ConfigKey.dhEncryptKey, key);
+    _dhEncryptKey.value = key;
+    _dhAesKey = await _updateDhAesKey();
+  }
+
+  ///设置 过时数据同步时间限制
+  Future<void> setNewPairedDeviceSyncOldDataLimitTime(int seconds) async {
+    await configDao.addOrUpdate(ConfigKey.syncOutdateLimitTime, seconds.toString());
+    _syncOutdateLimitTime.value = seconds;
+  }
+
+  ///设置 设备发现流程中跳过的网卡
+  Future<void> setNoDiscoveryIfs(List<String> interfaces) async {
+    await configDao.addOrUpdate(ConfigKey.noDiscoveryIfs, interfaces.join(','));
+    _noDiscoveryIfs.value = interfaces;
+  }
+
+  ///仅手动子网扫描发现设备
+  Future<void> setOnlyManualDiscoverySubNet(bool onlyManualDiscoverySubNet) async {
+    await configDao.addOrUpdate(ConfigKey.onlyManualDiscoverySubNet, onlyManualDiscoverySubNet.toString());
+    _onlyManualDiscoverySubNet.value = onlyManualDiscoverySubNet;
+  }
+
+  ///仅 Android，屏幕关闭后停止监听
+  Future<void> setStopListeningOnScreenClosed(bool stopListeningOnScreenClosed) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.stopListeningOnScreenClosed, stopListeningOnScreenClosed.toString());
+    _stopListeningOnScreenClosed.value = stopListeningOnScreenClosed;
+  }
+
+  ///当有新数据时发送广播通知
+  Future<void> setSendBroadcastOnAdd(bool value) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.sendBroadcastOnAdd, value.toString());
+    _sendBroadcastOnAdd.value = value;
+  }
+
+
+  ///设备解锁后重新复制锁屏期间同步的最新的一条数据，部分设备在锁屏期间无法复制
+  Future<void> setReCopyOnScreenUnlocked(bool value) async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.recopyOnScreenUnlocked, value.toString());
+    _recopyOnScreenUnlocked.value = value;
+  }
+
   //endregion
 
   //region 其他方法
+
+  Future<String> _updateDhAesKey() {
+    if (_dhEncryptKey.value.isNullOrEmpty) {
+      return Future.value('');
+    }
+    return compute((List<dynamic> params) {
+      return CryptoUtil.pbkdf2WithHmacSHA256(
+        params[0],
+        params[1],
+        params[2],
+        params[3],
+      );
+    }, [_dhEncryptKey.value, Constants.pkgName, 100_000, 32]);
+  }
 
   ///将底部导航栏设置为深色
   void setSystemUIOverlayDarkStyle() {
@@ -1366,7 +1498,36 @@ class ConfigService extends GetxService {
     return FilterRuleMatchResult.notMatched;
   }
 
-  //endregion
+  ///获取分词文件的存储位置
+  Future<String> getJiebaSegmentFileDirPath() async {
+    late String dirPath;
+    if (Platform.isWindows) {
+      dirPath = Directory(Platform.resolvedExecutable).parent.path;
+      if (!FileUtil.testWriteable(dirPath)) {
+        dirPath = await Constants.documentsPath;
+      }
+    } else {
+      dirPath = await Constants.documentsPath;
+    }
+    return "$dirPath/jieba".normalizePath;
+  }
+
+  ///检测是否可分词
+  Future<bool> checkJiebaSegment() async {
+    if (_jiebaInited) {
+      return true;
+    }
+    final dirPath = await getJiebaSegmentFileDirPath();
+    final dictFilePath = "$dirPath/dict.txt".normalizePath;
+    final probEmitFilePath = "$dirPath/prob_emit.txt".normalizePath;
+    final result = await File(dictFilePath).exists() && await File(probEmitFilePath).exists();
+    if (!result) return false;
+    await JiebaSegmenter.init(dirPath);
+    _jiebaInited = true;
+    return true;
+  }
+
+//endregion
 }
 
 DataSender get dataSender {

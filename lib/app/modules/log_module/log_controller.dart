@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/modules/views/log_detail_page.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
@@ -21,6 +22,12 @@ class LogController extends GetxController {
   void onInit() {
     super.onInit();
     loadLogFileList();
+  }
+
+  @override
+  void onClose() {
+    final settingController = Get.find<SettingsController>();
+    settingController.updater.value++;
   }
 
   void loadLogFileList() {

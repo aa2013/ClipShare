@@ -7,6 +7,7 @@ import 'package:clipshare/app/modules/views/log_detail_page.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
@@ -62,49 +63,51 @@ class LogPage extends GetView<LogController> {
             child: Obx(
               () => ConditionWidget(
                 visible: !controller.init.value,
-                replacement: ConditionWidget(
-                  visible: controller.logs.isEmpty,
-                  replacement: ListView.builder(
-                    itemCount: controller.logs.length,
-                    itemBuilder: (ctx, i) {
-                      return Column(
-                        children: [
-                          InkWell(
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(controller.logs[i].fileName),
-                                  Text(
-                                    controller.logs[i].lengthSync().sizeStr,
-                                  ),
-                                ],
+                replacement: Obx(
+                  () => ConditionWidget(
+                    visible: controller.logs.isEmpty,
+                    replacement: ListView.builder(
+                      itemCount: controller.logs.length,
+                      itemBuilder: (ctx, i) {
+                        return Column(
+                          children: [
+                            InkWell(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(controller.logs[i].fileName),
+                                    Text(
+                                      controller.logs[i].lengthSync().sizeStr,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              onTap: () async {
+                                final file = controller.logs[i];
+                                controller.gotoLogDetailPage(file);
+                              },
+                            ),
+                            Visibility(
+                              visible: i != controller.logs.length - 1,
+                              child: const Divider(
+                                indent: 16,
+                                endIndent: 16,
+                                height: 1,
+                                thickness: 1,
                               ),
                             ),
-                            onTap: () async {
-                              final file = controller.logs[i];
-                              controller.gotoLogDetailPage(file);
-                            },
-                          ),
-                          Visibility(
-                            visible: i != controller.logs.length - 1,
-                            child: const Divider(
-                              indent: 16,
-                              endIndent: 16,
-                              height: 1,
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  child: Stack(
-                    children: [
-                      ListView(),
-                      EmptyContent(),
-                    ],
+                          ],
+                        );
+                      },
+                    ),
+                    child: Stack(
+                      children: [
+                        ListView(),
+                        EmptyContent(),
+                      ],
+                    ),
                   ),
                 ),
                 child: const Loading(),
@@ -118,7 +121,50 @@ class LogPage extends GetView<LogController> {
       return Scaffold(
         appBar: showAppBar
             ? AppBar(
-                title: Text(TranslationKey.logPageAppBarTitle.tr),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(TranslationKey.logPageAppBarTitle.tr),
+                    Tooltip(
+                      message: TranslationKey.clear.tr,
+                      child: IconButton(
+                        onPressed: () {
+                          late DialogController dialog;
+                          dialog = Global.showDialog(
+                            context,
+                            AlertDialog(
+                              title: Text(TranslationKey.tips.tr),
+                              content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    dialog.close();
+                                  },
+                                  child: Text(TranslationKey.dialogCancelText.tr),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    FileUtil.deleteDirectoryFiles(
+                                      appConfig.logsDirPath,
+                                    );
+                                    controller.loadLogFileList();
+                                    dialog.close();
+                                  },
+                                  child: Text(TranslationKey.dialogConfirmText.tr),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.cleaning_services_rounded,
+                          color: Colors.blueGrey,
+                          size: 17,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,

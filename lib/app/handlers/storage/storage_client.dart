@@ -8,7 +8,7 @@ import 'package:clipshare/app/data/models/storage/storage_item.dart';
 /// [total] 表示需要处理的总量（文件总字节数）
 typedef StorageProgressFunc = void Function(int count, int total);
 
-/// 存储客户端抽象基类，定义了对不同存储后端（如 WebDav, 对象存储）进行操作的通用接口
+/// 存储客户端抽象基类，定义了对不同存储后端（如 WebDAV, 对象存储）进行操作的通用接口
 abstract class StorageClient {
   /// 测试连接
   Future<ExceptionInfo?> testConnect();

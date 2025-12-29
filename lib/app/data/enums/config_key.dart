@@ -60,4 +60,11 @@ enum ConfigKey {
   mobileDevIdGenerateWay,
   devicePairedStatusFilter,
   lastSqlEditContent,
+  dhEncryptKey,
+  syncOutdateLimitTime,
+  noDiscoveryIfs,
+  onlyManualDiscoverySubNet,
+  stopListeningOnScreenClosed,
+  sendBroadcastOnAdd,
+  recopyOnScreenUnlocked,
 }
