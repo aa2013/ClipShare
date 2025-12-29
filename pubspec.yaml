@@ -37,8 +37,8 @@ dependencies:
   # 数据库框架
   floor: ^1.4.2
   sqflite: any
-  # sqlite3
-  sqlite3_flutter_libs: ^0.5.40
+  # sqlite3 macos 0.5.40 以上需要更高的macos版本，暂时固定在 0.5.40
+  sqlite3_flutter_libs: 0.5.40
   # 托盘插件 linux上需要安裝：sudo apt-get install libayatana-appindicator3-dev
   tray_manager: ^0.5.2
   # 窗体管理
@@ -152,9 +152,7 @@ dependencies:
   no_screenshot:
     git: https://github.com/aa2013/no_screenshot.git
   # Android uri读取
-  uri_file_reader:
-    git:
-      url: https://github.com/aa2013/uri_file_reader
+  uri_file_reader: ^1.0.1
   # 分词 (去除了分词文件减小压缩包体积，改为下载或导入)
   jieba_flutter:
     git:
