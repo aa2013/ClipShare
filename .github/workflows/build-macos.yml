@@ -10,7 +10,7 @@ jobs:
       matrix:
         include:
           - platform: macos
-            os: macos-latest
+            os: macos-15
             arch: arm64
 
     steps:
