@@ -129,13 +129,18 @@ class MyApplication : Application() {
 
     override fun attachBaseContext(newBase: Context?) {
         super.attachBaseContext(newBase)
-        val builder = CoreConfigurationBuilder().withBuildConfigClass(BuildConfig::class.java)
+        val builder = CoreConfigurationBuilder()
+            .withBuildConfigClass(BuildConfig::class.java)
             .withReportFormat(StringFormat.JSON)
 
-        val httpConfig = HttpSenderConfigurationBuilder().withUri("https://acra.coclyun.top/report")
-            .withHttpMethod(HttpSender.Method.POST).withBasicAuthLogin("n7evJKRuZezohrEs")
-            .withBasicAuthPassword("9Qujrfk92bwpyHIB").withConnectionTimeout(5000)
-            .withSocketTimeout(20000).withEnabled(false)//默认关闭自动报告崩溃日志
+        val httpConfig = HttpSenderConfigurationBuilder()
+            .withUri("https://acra.coclyun.top/report")
+            .withHttpMethod(HttpSender.Method.POST)
+            .withBasicAuthLogin("6NlEx1mIPWsgiK1m")
+            .withBasicAuthPassword("k7y4lOhBWAb27xSN")
+            .withConnectionTimeout(5000)
+            .withSocketTimeout(20000)
+            .withEnabled(true)//默认关闭自动报告崩溃日志
 
         builder.withPluginConfigurations(httpConfig.build())
 
@@ -433,7 +438,7 @@ class MyApplication : Application() {
                 //是否自动报告崩溃（可能在下一次启动app时才会有）
                 "sendHistoryChangedBroadcast" -> {
                     val intent = Intent(OnHistoryChangedBroadcastAction)
-                    for (key in args.keys){
+                    for (key in args.keys) {
                         intent.putExtra(key, args[key].toString())
                     }
                     sendBroadcast(intent)

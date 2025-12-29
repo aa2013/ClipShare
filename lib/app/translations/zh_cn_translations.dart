@@ -1358,7 +1358,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.dhKeySettingTips:
         return '对设备连接过程中使用的 Diffie–Hellman 密钥加密算法的参数进行加密。\n启用后，所有连接的设备都必须启用且密码相同，否则无法连接。\n\n当然，其实这个不使用也没什么问题。';
       case TranslationKey.syncOutDateSettingTitle:
-        return '同步过往数据限制';
+        return '同步数据范围';
       case TranslationKey.syncOutDateSettingDesc:
         return '仅同步指定时间内的数据而不是全部同步';
       case TranslationKey.pleaseWait:
