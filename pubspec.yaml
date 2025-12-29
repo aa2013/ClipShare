@@ -38,7 +38,7 @@ dependencies:
   floor: ^1.4.2
   sqflite: any
   # sqlite3
-  sqlite3_flutter_libs: ^0.5.40
+  sqlite3_flutter_libs: ^0.5.41
   # 托盘插件 linux上需要安裝：sudo apt-get install libayatana-appindicator3-dev
   tray_manager: ^0.5.2
   # 窗体管理

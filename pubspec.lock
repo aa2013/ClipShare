@@ -196,9 +196,10 @@ packages:
   clipshare_clipboard_listener:
     dependency: "direct main"
     description:
-      path: "../clipboard_listener"
-      relative: true
-    source: path
+      name: clipshare_clipboard_listener
+      sha256: d05ae972fd98b5c3e7c539da6042b29ed5451ea679eaf7423f363a7d5603d6c1
+      url: "https://pub.flutter-io.cn"
+    source: hosted
     version: "1.2.5"
   clock:
     dependency: transitive
@@ -1508,10 +1509,10 @@ packages:
     dependency: "direct main"
     description:
       name: sqlite3_flutter_libs
-      sha256: "69c80d812ef2500202ebd22002cbfc1b6565e9ff56b2f971e757fac5d42294df"
+      sha256: "1e800ebe7f85a80a66adacaa6febe4d5f4d8b75f244e9838a27cb2ffc7aec08d"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.5.40"
+    version: "0.5.41"
   sqlparser:
     dependency: transitive
     description:
@@ -1684,11 +1685,10 @@ packages:
   uri_file_reader:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: c21b876dfa2f1d849cb9f0377a94d1af476ee4d3
-      url: "https://github.com/aa2013/uri_file_reader"
-    source: git
+      name: uri_file_reader
+      sha256: b8d4b333ce49d880a5f682dfdc0b6fd9b13b21229c7f0149fea6e1113caf6160
+      url: "https://pub.flutter-io.cn"
+    source: hosted
     version: "1.0.2"
   url_launcher:
     dependency: "direct main"
