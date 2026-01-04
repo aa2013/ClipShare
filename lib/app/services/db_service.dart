@@ -150,7 +150,9 @@ class DbService extends GetxService {
   ///数据库版本 1 -> 2
   ///操作记录表新增设备id字段，用于从连接设备同步其他已配对设备数据
   final migration1to2 = Migration(1, 2, (database) async {
-    await database.execute('ALTER TABLE OperationRecord ADD COLUMN devId TEXT');
+    if (!await hasColumnInTable(database, 'OperationRecord', 'devId')) {
+      await database.execute('ALTER TABLE OperationRecord ADD COLUMN devId TEXT');
+    }
   });
 
   ///数据库版本 2 -> 3
@@ -180,14 +182,18 @@ class DbService extends GetxService {
   ///数据库版本 3 -> 4
   ///历史表增加更新时间字段
   final migration3to4 = Migration(3, 4, (database) async {
-    await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
+    if (!await hasColumnInTable(database, 'History', 'updateTime')) {
+      await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
+    }
   });
 
   ///数据库版本 4 -> 5
   ///新增 app 信息表
   ///历史表增加来源字段
   final migration4to5 = Migration(4, 5, (database) async {
-    await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
+    if (!await hasColumnInTable(database, 'History', 'source')) {
+      await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
+    }
     await database.execute("CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));");
     await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);');
   });
@@ -216,10 +222,10 @@ class DbService extends GetxService {
     }
   });
 
-  ///数据库版本 6 -> 7
+  ///v1.4.0 数据库版本 6 -> 7
   ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
   final migration6to7 = Migration(6, 7, (database) async {
-    await database.execute('CREATE INDEX `index_History_devId` ON `History` (`devId`)');
-    await database.execute('CREATE INDEX `index_History_devId_source` ON `History` (`devId`, `source`)');
+    await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId` ON `History` (`devId`)');
+    await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId_source` ON `History` (`devId`, `source`)');
   });
 }
