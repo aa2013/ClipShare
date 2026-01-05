@@ -1,5 +1,6 @@
 package top.coclyun.clipshare
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
 import android.app.NotificationChannel
@@ -36,6 +37,7 @@ import org.acra.config.HttpSenderConfigurationBuilder
 import org.acra.data.StringFormat
 import org.acra.sender.HttpSender
 import top.coclyun.clipshare.broadcast.ScreenReceiver
+import top.coclyun.clipshare.clipboard_listener.ClipshareClipboardListenerPlugin
 import top.coclyun.clipshare.observer.SmsObserver
 import top.coclyun.clipshare.service.HistoryFloatService
 import java.io.File
@@ -107,6 +109,7 @@ class MyApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        ClipshareClipboardListenerPlugin.activityClass = MainActivity::class.java
         MyApplication.applicationContext = applicationContext
         MyApplication.pendingIntent = createPendingIntent()
         // 创建 engine

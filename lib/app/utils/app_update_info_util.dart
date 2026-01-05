@@ -99,7 +99,7 @@ class AppUpdateInfoUtil {
           if (Platform.isAndroid) {
             fileName = "${latestVersion}_$fileName";
           }
-          downPath = "${Constants.updateDownloadFileDirPath}/$fileName";
+          downPath = "${await Constants.updateDownloadFileDirPath}/$fileName";
           await File(downPath).parent.create();
           Global.showDownloadingDialog(
             context: Get.context!,
