@@ -37,7 +37,14 @@ jobs:
     - name: Upload exe artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-build
+        name: windows-build-exe
         path: dist/**/*.exe
+        overwrite: true
+
+    - name: Upload zip artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-build-zip
+        path: build/windows/x64/runner/Release/**/*
         overwrite: true
     
