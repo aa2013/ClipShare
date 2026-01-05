@@ -199,7 +199,7 @@ packages:
       path: "../clipboard_listener"
       relative: true
     source: path
-    version: "1.2.5"
+    version: "1.2.6"
   clock:
     dependency: transitive
     description:
@@ -1684,11 +1684,10 @@ packages:
   uri_file_reader:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: c21b876dfa2f1d849cb9f0377a94d1af476ee4d3
-      url: "https://github.com/aa2013/uri_file_reader"
-    source: git
+      name: uri_file_reader
+      sha256: b8d4b333ce49d880a5f682dfdc0b6fd9b13b21229c7f0149fea6e1113caf6160
+      url: "https://pub.flutter-io.cn"
+    source: hosted
     version: "1.0.2"
   url_launcher:
     dependency: "direct main"

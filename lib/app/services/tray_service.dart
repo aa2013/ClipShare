@@ -8,6 +8,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -54,10 +55,12 @@ class TrayService extends GetxService with TrayListener {
         Log.error(tag, "$err,$stack");
       }
     }
+    var showWindowLabel = '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';
+    debugPrint(showWindowLabel);
     List<MenuItem> items = [
       MenuItem(
         key: 'show_window',
-        label: '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}',
+        label: showWindowLabel,
       ),
       MenuItem.separator(),
       MenuItem(
