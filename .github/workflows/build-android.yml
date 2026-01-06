@@ -19,11 +19,6 @@ jobs:
         with:
           submodules: recursive
 
-      
-      - name: Restore keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}" | base64 --decode > android/key.properties
-          echo "${{ secrets.ANDROID_JKS_BASE64 }}" | base64 --decode > android/app/clipshare.jks
       - name: Restore keystore
         run: |
           echo "Secret length of ANDROID_KEY_PROPERTIES_BASE64: ${#ANDROID_KEY_PROPERTIES_BASE64}"
