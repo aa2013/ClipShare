@@ -33,18 +33,46 @@ jobs:
         # 使用 fastforge 构建
         cd scripts
         ./build_windows_exe.bat
+        cd ../
+        # 1. 找到 dist/**/*.exe 中的第一个 exe
+        $exe = Get-ChildItem -Path dist -Recurse -Filter *.exe | Select-Object -First 1
+    
+        if (-not $exe) {
+          Write-Error "No exe found under dist/**"
+          exit 1
+        }
+    
+        # 2. zip 文件名 = exe 文件名.zip
+        $zipName = "$($exe.BaseName).zip"
+    
+        # 3. Release 目录路径
+        $releasePath = "build/windows/x64/runner/Release"
+    
+        if (-not (Test-Path $releasePath)) {
+          Write-Error "Release path not found: $releasePath"
+          exit 1
+        }
+    
+        # 4. 压缩 Release 目录下的所有内容（不包含 Release 本身）
+        Compress-Archive `
+          -Path "$releasePath\*" `
+          -DestinationPath $zipName `
+          -Force
 
-    - name: Upload exe artifact
+        Write-Host "Zip created: $zipName"
+        # 创建目录
+        New-Item -ItemType Directory -Path output -Force | Out-Null
+        # 复制 exe 和 zip 到 output
+        Copy-Item $exe.FullName output/
+        Copy-Item $zipName output/
+    
+        Write-Host "Output files:"
+        Get-ChildItem output
+
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: windows-build-exe
-        path: dist/**/*.exe
-        overwrite: true
-
-    - name: Upload zip artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-build-zip
-        path: build/windows/x64/runner/Release/**/*
+        path: output/*
         overwrite: true
     
