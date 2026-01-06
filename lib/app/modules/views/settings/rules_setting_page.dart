@@ -230,13 +230,16 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
       context,
       AlertDialog(
         title: Text(TranslationKey.addRule.tr),
-        content: widget.editDialogLayout.call(initData, (data) {
-          if (idx == null) {
-            _addData = data;
-          } else {
-            _editData = data;
-          }
-        }),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 400),
+          child: widget.editDialogLayout.call(initData, (data) {
+            if (idx == null) {
+              _addData = data;
+            } else {
+              _editData = data;
+            }
+          }),
+        ),
         actions: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

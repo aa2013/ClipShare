@@ -11,7 +11,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/dialog/rule_setting_add_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/rule_setting_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -44,7 +44,7 @@ class SmsRuleSettingPage extends StatelessWidget {
         return true;
       },
       editDialogLayout: (initData, onChange) {
-        return RuleSettingAddDialog(
+        return RuleSettingDialog(
           labelText: TranslationKey.ruleSettingAddDialogLabel.tr,
           hintText: TranslationKey.ruleSettingAddDialogHint.tr,
           onChange: onChange,
