@@ -33,7 +33,7 @@ jobs:
           java-version: 17
 
       - name: Accept Android licenses
-        run: echo 'y' | flutter doctor --android-lic
+        run: echo 'y' | flutter doctor --android-licenses
       
       - name: Restore keystore
         run: |
