@@ -2,6 +2,10 @@ name: build-macos-dmg
 
 on:
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      artifact-name:
+        value: ${{ jobs.build.outputs.artifact-name }}
 
 jobs:
   build:
