@@ -315,6 +315,8 @@ enum TranslationKey {
   topUp,
   cancelTopUp,
   copyContent,
+  copyMultiContentAsc,
+  copyMultiContentDesc,
   syncRecord,
   clipListViewDeleteAsk,
   deleteCompleted,
