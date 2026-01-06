@@ -60,36 +60,27 @@ class _RuleItemState extends State<RuleItem> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Expanded(
-                              flex: 3,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: DefaultTextStyle(
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium!
-                                      .copyWith(
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 17,
-                                      ),
-                                  child: Text("${TranslationKey.name_.tr}: ${widget.rule.name}"),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: DefaultTextStyle(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium!
+                                    .copyWith(
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 17,
                                 ),
+                                child: Text("${TranslationKey.name_.tr}: ${widget.rule.name}"),
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: DefaultTextStyle(
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium!
-                                      .copyWith(
-                                        color: Colors.grey,
-                                      ),
-                                  child: Text("${TranslationKey.ruleContent.tr}: ${widget.rule.rule}"),
-                                ),
+                            DefaultTextStyle(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium!
+                                  .copyWith(
+                                color: Colors.grey,
                               ),
+                              child: Text("${TranslationKey.ruleContent.tr}: ${widget.rule.rule}",maxLines: 3,),
                             ),
                           ],
                         ),
@@ -100,8 +91,7 @@ class _RuleItemState extends State<RuleItem> {
                           replacement: widget.action,
                           child: Checkbox(
                             value: widget.selected,
-                            onChanged: (v) =>
-                                widget.onSelectionChange.call(v ?? false),
+                            onChanged: (v) => widget.onSelectionChange.call(v ?? false),
                           ),
                         ),
                       ),
