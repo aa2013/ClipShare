@@ -69,7 +69,20 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: windows-build-exe
+        name: windows-build
         path: output/*
         overwrite: true
     
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: Test
+        tag_name: Test
+        files: |
+          output/*
+        generate_release_notes: true
+        draft: true
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
