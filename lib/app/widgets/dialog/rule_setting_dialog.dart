@@ -3,14 +3,14 @@ import 'package:clipshare/app/data/models/rule.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:flutter/material.dart';
 
-class RuleSettingAddDialog extends StatefulWidget {
+class RuleSettingDialog extends StatefulWidget {
   final Function(Rule) onChange;
   final String labelText;
   final String hintText;
 
   final Rule? initData;
 
-  const RuleSettingAddDialog({
+  const RuleSettingDialog({
     super.key,
     required this.onChange,
     required this.labelText,
@@ -20,11 +20,11 @@ class RuleSettingAddDialog extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _RuleSettingAddDialogState();
+    return _RuleSettingDialogState();
   }
 }
 
-class _RuleSettingAddDialogState extends State<RuleSettingAddDialog> {
+class _RuleSettingDialogState extends State<RuleSettingDialog> {
   final TextEditingController _tagController = TextEditingController();
   final TextEditingController _ruleController = TextEditingController();
   final TextEditingController _verifyController = TextEditingController();
@@ -70,16 +70,16 @@ class _RuleSettingAddDialogState extends State<RuleSettingAddDialog> {
               _onChange();
             },
           ),
-          const SizedBox(
-            height: 10
-          ),
+          const SizedBox(height: 10),
           TextField(
             controller: _ruleController,
+            maxLines: 3,
             decoration: InputDecoration(
               labelText: TranslationKey.ruleAddDialogLabel.tr,
               hintText: TranslationKey.ruleAddDialogHint.tr,
               errorText: _showRuleErr ? TranslationKey.ruleCannotEmpty.tr : null,
               border: const OutlineInputBorder(),
+              alignLabelWithHint: true
             ),
             onChanged: (txt) {
               _rule = txt;
@@ -96,9 +96,7 @@ class _RuleSettingAddDialogState extends State<RuleSettingAddDialog> {
               });
             },
           ),
-          const SizedBox(
-            height: 10
-          ),
+          const SizedBox(height: 10),
           CheckboxListTile(
             title: Text(TranslationKey.validationTesting.tr),
             value: _useVerify,
@@ -119,22 +117,15 @@ class _RuleSettingAddDialogState extends State<RuleSettingAddDialog> {
                 labelText: _showVerifyErr ? TranslationKey.validationFailed.tr : TranslationKey.verify.tr,
                 hintText: TranslationKey.pleaseInput.tr,
                 border: OutlineInputBorder(
-                  borderSide: _showVerifyErr
-                      ? const BorderSide(color: Colors.red)
-                      : const BorderSide(),
+                  borderSide: _showVerifyErr ? const BorderSide(color: Colors.red) : const BorderSide(),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: _showVerifyErr
-                      ? const BorderSide(color: Colors.red)
-                      : const BorderSide(),
+                  borderSide: _showVerifyErr ? const BorderSide(color: Colors.red) : const BorderSide(),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: _showVerifyErr
-                      ? const BorderSide(color: Colors.red)
-                      : const BorderSide(),
+                  borderSide: _showVerifyErr ? const BorderSide(color: Colors.red) : const BorderSide(),
                 ),
-                labelStyle:
-                    TextStyle(color: _showVerifyErr ? Colors.red : null),
+                labelStyle: TextStyle(color: _showVerifyErr ? Colors.red : null),
               ),
               onChanged: (txt) {
                 setState(() {
