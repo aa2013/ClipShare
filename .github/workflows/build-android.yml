@@ -42,12 +42,20 @@ jobs:
         env:
           ANDROID_KEY_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}
           ANDROID_JKS_BASE64: ${{ secrets.ANDROID_JKS_BASE64 }}
+          
+      - name: Debug Android SDK location
+        shell: pwsh
+        run: |
+          Write-Host "ANDROID_SDK_ROOT=$env:ANDROID_SDK_ROOT"
+          Write-Host "ANDROID_HOME=$env:ANDROID_HOME"
+          Write-Host "Listing C:\Android"
+          Get-ChildItem C:\Android -Force
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: C:\Android\android-sdk
-          key: android-sdk-v1
+      # - name: Cache Android SDK
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: C:\Android\android-sdk
+      #     key: android-sdk-v1
 
       - name: Build APK
         shell: pwsh
