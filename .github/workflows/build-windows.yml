@@ -6,6 +6,9 @@ permissions:
   
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'  # 当推送标签时自动触发发布
 
 jobs:
   build-windows:
@@ -77,12 +80,31 @@ jobs:
         path: output/*
         overwrite: true
     
+    - name: Determine tag
+      id: tag
+      shell: bash
+      run: |
+        if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+          TAG_NAME="${GITHUB_REF_NAME}"
+          echo "Triggered by tag: $TAG_NAME"
+        else
+          TAG_NAME="test"
+          echo "Triggered manually, will use tag: $TAG_NAME"
+    
+          # 如果 tag 不存在才创建
+          if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+          fi
+        fi
+    
+        echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        name: Test
-        tag_name: Test
+        name: ${{ steps.tag.outputs.tag_name }}
+        tag_name: ${{ steps.tag.outputs.tag_name }}
         files: |
           output/*
         generate_release_notes: true
