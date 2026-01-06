@@ -35,7 +35,7 @@ jobs:
       - name: Accept Android SDK Licenses
         shell: pwsh
         run: |
-          echo "y" | & "$env:ANDROID_SDK_ROOT\tools\bin\sdkmanager.bat" --licenses
+          echo "y" | & "%ANDROID_SDK_ROOT%\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
 
       
       - name: Restore keystore
