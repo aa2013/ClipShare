@@ -10,9 +10,6 @@ on:
     outputs:
       artifact-name:
         value: ${{ jobs.build.outputs.artifact-name }}
-  push:
-    tags:
-      - 'v*'  # 当推送标签时自动触发发布
 
 jobs:
   build-windows:
