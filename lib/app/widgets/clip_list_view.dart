@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -384,7 +385,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   child: Container(
                     height: 48,
                     decoration: BoxDecoration(
-                      color: Colors.lightBlue.withOpacity(0.4),
+                      color: const Color(0xffc3e8ff),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     margin: const EdgeInsets.only(right: 10),
@@ -395,7 +396,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                           "${_selectedItems.length} / ${widget.list.length}",
                           style: TextStyle(
                             fontSize: 20,
-                            color: appConfig.currentIsDarkMode ? Colors.white : Colors.black45,
+                            color: appConfig.currentIsDarkMode ? Colors.white : Colors.black87,
                           ),
                         ),
                       ),
@@ -425,7 +426,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   child: Tooltip(
                     message: TranslationKey.delete.tr,
                     child: Container(
-                      margin: _showBackToTopButton ? const EdgeInsets.only(right: 10) : null,
+                      margin: const EdgeInsets.only(right: 10),
                       child: FloatingActionButton(
                         onPressed: () {
                           void multiDelete(bool deleteFile) async {
@@ -447,6 +448,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                             appConfig.disableMultiSelectionMode(true);
                             setState(() {});
                           }
+
                           DialogController? dialog;
                           dialog = Global.showTipsDialog(
                             context: context,
@@ -464,6 +466,45 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                         },
                         heroTag: 'deleteHistory',
                         child: const Icon(Icons.delete_forever),
+                      ),
+                    ),
+                  ),
+                ),
+                Visibility(
+                  visible: _selectMode && _selectedItems.length > 1,
+                  child: IntrinsicHeight(
+                    child: Container(
+                      margin: _showBackToTopButton ? 10.insetR : null,
+                      child: Column(
+                        children: [
+                          Tooltip(
+                            message: TranslationKey.copyMultiContentAsc.tr,
+                            child: FloatingActionButton(
+                              onPressed: () async {
+                                var list = _selectedItems.toList()..sort((a, b) => a.data.id.compareTo(b.data.id));
+                                var content = list.map((item) => item.data.content).join('\n');
+                                await clipboardManager.copy(ClipboardContentType.text, content);
+                                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+                              },
+                              mini: true,
+                              child: const Icon(Icons.content_copy_rounded),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Tooltip(
+                            message: TranslationKey.copyMultiContentDesc.tr,
+                            child: FloatingActionButton(
+                              onPressed: () async {
+                                var list = _selectedItems.toList()..sort((a, b) => b.data.id.compareTo(a.data.id));
+                                var content = list.map((item) => item.data.content).join('\n');
+                                await clipboardManager.copy(ClipboardContentType.text, content);
+                                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+                              },
+                              mini: true,
+                              child: const Icon(Icons.copy),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
