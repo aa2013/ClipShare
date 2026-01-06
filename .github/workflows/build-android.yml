@@ -24,8 +24,8 @@ jobs:
         run: |
           echo "Secret length: ${#ANDROID_KEY_PROPERTIES_BASE64}"
           echo "Secret length: ${#ANDROID_JKS_BASE64}"
-          echo "${#ANDROID_KEY_PROPERTIES_BASE64}" | base64 --decode > android/key.properties
-          echo "${#ANDROID_JKS_BASE64}" | base64 --decode > android/app/clipshare.jks
+          echo "${ANDROID_KEY_PROPERTIES_BASE64}" | base64 --decode > android/key.properties
+          echo "${ANDROID_JKS_BASE64}" | base64 --decode > android/app/clipshare.jks
         env:
           ANDROID_KEY_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}
           ANDROID_JKS_BASE64: ${{ secrets.ANDROID_JKS_BASE64 }}
