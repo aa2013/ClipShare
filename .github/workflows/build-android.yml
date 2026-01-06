@@ -1,0 +1,80 @@
+name: build-android-apk
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      artifact-name:
+        value: ${{ jobs.build.outputs.artifact-name }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      artifact-name: android-apk
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.35.3
+          cache: true
+
+      - name: Setup Java (Android)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses
+      
+      - name: Restore keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}" | base64 --decode > android/key.properties
+          echo "${{ secrets.ANDROID_JKS_BASE64 }}" | base64 --decode > android/app/clipshare.jks
+
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build APK
+        shell: pwsh
+        run: |
+          cd scripts
+          ./build_apk.bat
+          cd ..
+
+      - name: Prepare APK artifact
+        shell: pwsh
+        run: |
+          $apkDir = "build/app/outputs/apk/release"
+
+          if (-not (Test-Path $apkDir)) {
+            Write-Error "APK directory not found: $apkDir"
+            exit 1
+          }
+
+          $apk = Get-ChildItem $apkDir -Filter *.apk | Select-Object -First 1
+          if (-not $apk) {
+            Write-Error "No APK found in $apkDir"
+            exit 1
+          }
+
+          Write-Host "Found APK: $($apk.FullName)"
+
+          New-Item -ItemType Directory -Path upload -Force | Out-Null
+          Copy-Item $apk.FullName upload/
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: upload/*.apk
+          overwrite: true
