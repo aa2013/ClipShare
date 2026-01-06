@@ -32,10 +32,10 @@ jobs:
           distribution: temurin
           java-version: 17
           
-      - name: Accept Android SDK Licenses
-        shell: pwsh
-        run: |
-          echo "y" | & "%ANDROID_SDK_ROOT%\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
+      # - name: Accept Android SDK Licenses
+      #   shell: pwsh
+      #   run: |
+      #     echo "y" | & "%ANDROID_SDK_ROOT%\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
 
       
       - name: Restore keystore
