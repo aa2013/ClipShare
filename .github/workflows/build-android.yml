@@ -43,10 +43,11 @@ jobs:
           ANDROID_KEY_PROPERTIES_BASE64: ${{ secrets.ANDROID_KEY_PROPERTIES_BASE64 }}
           ANDROID_JKS_BASE64: ${{ secrets.ANDROID_JKS_BASE64 }}
 
-      # - name: Accept Android SDK Licenses
-      #   shell: pwsh
-      #   run: |
-      #     echo "y" | & "%ANDROID_SDK_ROOT%\cmdline-tools\latest\bin\sdkmanager.bat" --licenses
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: C:\Android\android-sdk
+          key: android-sdk-v1
 
       - name: Build APK
         shell: pwsh
