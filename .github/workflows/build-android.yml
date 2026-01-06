@@ -31,9 +31,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+          
+      - name: Accept Android SDK Licenses
+        shell: pwsh
+        run: |
+          echo "y" | "$env:ANDROID_SDK_ROOT\tools\bin\sdkmanager.bat" --licenses
 
-      - name: Accept Android licenses
-        run: echo 'y' | flutter doctor --android-licenses
       
       - name: Restore keystore
         run: |
