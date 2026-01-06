@@ -20,6 +20,7 @@ jobs:
           submodules: recursive
 
       - name: Restore keystore
+        shell: bash
         run: |
           echo "Secret length of ANDROID_KEY_PROPERTIES_BASE64: ${#ANDROID_KEY_PROPERTIES_BASE64}"
           echo "Secret length of ANDROID_JKS_BASE64: ${#ANDROID_JKS_BASE64}"
