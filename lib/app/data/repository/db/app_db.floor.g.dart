@@ -91,7 +91,7 @@ class _$_AppDb extends _AppDb {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 7,
+      version: 8,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -111,7 +111,7 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Device` (`guid` TEXT NOT NULL, `devName` TEXT NOT NULL, `uid` INTEGER NOT NULL, `customName` TEXT, `type` TEXT NOT NULL, `address` TEXT, `isPaired` INTEGER NOT NULL, PRIMARY KEY (`guid`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `History` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uid` INTEGER NOT NULL, `time` TEXT NOT NULL, `content` TEXT NOT NULL, `type` TEXT NOT NULL, `devId` TEXT NOT NULL, `top` INTEGER NOT NULL, `sync` INTEGER NOT NULL, `size` INTEGER NOT NULL, `updateTime` TEXT, `source` TEXT)');
+            'CREATE TABLE IF NOT EXISTS `History` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uid` INTEGER NOT NULL, `time` TEXT NOT NULL, `content` TEXT NOT NULL, `extractContent` TEXT, `type` TEXT NOT NULL, `devId` TEXT NOT NULL, `top` INTEGER NOT NULL, `sync` INTEGER NOT NULL, `size` INTEGER NOT NULL, `updateTime` TEXT, `source` TEXT)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER, `account` TEXT NOT NULL, `password` TEXT NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
@@ -349,6 +349,7 @@ class _$HistoryDao extends HistoryDao {
                   'uid': item.uid,
                   'time': item.time,
                   'content': item.content,
+                  'extractContent': item.extractContent,
                   'type': item.type,
                   'devId': item.devId,
                   'top': item.top ? 1 : 0,
@@ -366,6 +367,7 @@ class _$HistoryDao extends HistoryDao {
                   'uid': item.uid,
                   'time': item.time,
                   'content': item.content,
+                  'extractContent': item.extractContent,
                   'type': item.type,
                   'devId': item.devId,
                   'top': item.top ? 1 : 0,

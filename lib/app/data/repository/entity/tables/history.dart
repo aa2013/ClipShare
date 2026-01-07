@@ -6,7 +6,7 @@ import 'package:floor/floor.dart';
   indices: [
     Index(value: ['devId'], unique: false),
     Index(value: ['devId', "source"], unique: false),
-  ]
+  ],
 )
 class History implements Comparable {
   ///本地id
@@ -21,6 +21,9 @@ class History implements Comparable {
 
   ///剪贴板内容
   String content;
+
+  ///提取的内容，若该字段不为空，自动复制时复制这个
+  String? extractContent;
 
   ///内容类型
   String type;
@@ -55,6 +58,7 @@ class History implements Comparable {
     this.sync = false,
     this.updateTime,
     this.source,
+    this.extractContent,
   });
 
   @override
@@ -82,6 +86,7 @@ class History implements Comparable {
     this.size = 0,
     this.updateTime,
     this.source,
+    this.extractContent,
   });
 
   static History fromJson(Map<String, dynamic> map) {
@@ -106,6 +111,7 @@ class History implements Comparable {
       sync: sync,
       updateTime: map.containsKey("updateTime") ? map["updateTime"] : null,
       source: map.containsKey("source") ? map["source"] : null,
+      extractContent: map.containsKey("extractContent") ? map["extractContent"] : null,
     );
   }
 
@@ -123,6 +129,7 @@ class History implements Comparable {
       "uid": uid,
       "time": time,
       "content": content,
+      "extractContent": extractContent,
       "type": type,
       "devId": devId,
       "top": top,

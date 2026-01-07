@@ -53,7 +53,7 @@ const views = [VHistoryTagHold];
 ///
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
-  version: 7,
+  version: 8,
   entities: tables,
   views: views,
 )
@@ -124,6 +124,7 @@ class DbService extends GetxService {
       migration4to5,
       migration5to6,
       migration6to7,
+      migration7to8,
     ]).build();
     version = await _db.database.database.getVersion();
     return this;
@@ -226,5 +227,13 @@ class DbService extends GetxService {
   final migration6to7 = Migration(6, 7, (database) async {
     await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId` ON `History` (`devId`)');
     await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId_source` ON `History` (`devId`, `source`)');
+  });
+
+  ///v1.5.0 数据库版本 7 -> 8
+  ///为历史表增加提取字段，可通过规则/脚本提取内容，该字段不为空时同步后将复制该内容
+  final migration7to8 = Migration(7, 8, (database) async {
+    if (!await hasColumnInTable(database, 'History', 'extractContent')) {
+      await database.execute("ALTER TABLE `History` ADD COLUMN `extractContent` TEXT;");
+    }
   });
 }
