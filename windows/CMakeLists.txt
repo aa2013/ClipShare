@@ -5,8 +5,8 @@ project(clipshare LANGUAGES CXX)
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
 set(BINARY_NAME "clipshare")
-# sqlite3.dll
-set(SQLITE_DLL_PATH "${CMAKE_SOURCE_DIR}/lib/sqlite3.dll")
+# lua.dll
+set(LUA_DLL_PATH "${CMAKE_SOURCE_DIR}/lib/lua54.dll")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -110,3 +110,9 @@ install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
   CONFIGURATIONS Profile;Release
   COMPONENT Runtime)
+
+# 安装 lua54.dll 到输出目录
+install(FILES "${LUA_DLL_PATH}"
+        DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+        COMPONENT Runtime
+)

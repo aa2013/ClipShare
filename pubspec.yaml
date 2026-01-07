@@ -193,6 +193,9 @@ dependencies:
   flutter_slidable: ^4.0.3
   # 扩展的浮动按钮
   flutter_expandable_fab: ^2.5.2
+  flutter_embed_lua:
+    git:
+      url: https://github.com/aa2013/flutter_embed_lua
 dev_dependencies:
   flutter_test:
     sdk: flutter
