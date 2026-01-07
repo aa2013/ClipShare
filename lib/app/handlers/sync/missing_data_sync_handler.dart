@@ -125,6 +125,7 @@ class MissingDataSyncHandler {
         } else {
           //更新置顶状态，将内容设为空，提高传输效率
           history.content = "";
+          history.extractContent = null;
           result["data"] = history.toJson();
         }
         break;
@@ -140,6 +141,7 @@ class MissingDataSyncHandler {
         } else {
           //更新来源，将内容设为空，提高传输效率
           history.content = "";
+          history.extractContent = null;
           result["data"] = history.toJson();
         }
         break;
