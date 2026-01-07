@@ -463,6 +463,15 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.2.5"
+  flutter_embed_lua:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: aaf5564e79345c87e4d0e5cf33295ee0ed802bf9
+      url: "https://github.com/aa2013/flutter_embed_lua"
+    source: git
+    version: "0.0.1"
   flutter_highlighting:
     dependency: "direct main"
     description:
