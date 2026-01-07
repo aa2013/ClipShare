@@ -27,7 +27,50 @@ class LogPage extends GetView<LogController> {
   Widget build(BuildContext context) {
     final currentTheme = Theme.of(context);
     final appConfig = Get.find<ConfigService>();
+    final clearLogsButton = IconButton(
+      onPressed: () {
+        late DialogController dialog;
+        dialog = Global.showDialog(
+          context,
+          AlertDialog(
+            title: Text(TranslationKey.tips.tr),
+            content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  dialog.close();
+                },
+                child: Text(TranslationKey.dialogCancelText.tr),
+              ),
+              TextButton(
+                onPressed: () {
+                  FileUtil.deleteDirectoryFiles(
+                    appConfig.logsDirPath,
+                  );
+                  controller.loadLogFileList();
+                  dialog.close();
+                },
+                child: Text(TranslationKey.dialogConfirmText.tr),
+              ),
+            ],
+          ),
+        );
+      },
+      tooltip: TranslationKey.clear.tr,
+      icon: const Icon(
+        Icons.cleaning_services_rounded,
+        color: Colors.blueGrey,
+        size: 17,
+      ),
+    );
     final showAppBar = appConfig.isSmallScreen;
+    final appBarRow = Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(TranslationKey.logPageAppBarTitle.tr),
+        clearLogsButton,
+      ],
+    );
     final content = RefreshIndicator(
       onRefresh: () {
         return Future.delayed(300.ms, () {
@@ -36,6 +79,10 @@ class LogPage extends GetView<LogController> {
       },
       child: Column(
         children: [
+          Padding(
+            padding: 10.insetH,
+            child: appBarRow,
+          ),
           if (Platform.isAndroid)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
@@ -118,56 +165,12 @@ class LogPage extends GetView<LogController> {
       ),
     );
     if (showAppBar) {
+      final appBar = AppBar(
+        title: appBarRow,
+        backgroundColor: currentTheme.colorScheme.inversePrimary,
+      );
       return Scaffold(
-        appBar: showAppBar
-            ? AppBar(
-                title: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(TranslationKey.logPageAppBarTitle.tr),
-                    Tooltip(
-                      message: TranslationKey.clear.tr,
-                      child: IconButton(
-                        onPressed: () {
-                          late DialogController dialog;
-                          dialog = Global.showDialog(
-                            context,
-                            AlertDialog(
-                              title: Text(TranslationKey.tips.tr),
-                              content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    dialog.close();
-                                  },
-                                  child: Text(TranslationKey.dialogCancelText.tr),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    FileUtil.deleteDirectoryFiles(
-                                      appConfig.logsDirPath,
-                                    );
-                                    controller.loadLogFileList();
-                                    dialog.close();
-                                  },
-                                  child: Text(TranslationKey.dialogConfirmText.tr),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        icon: const Icon(
-                          Icons.cleaning_services_rounded,
-                          color: Colors.blueGrey,
-                          size: 17,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                backgroundColor: currentTheme.colorScheme.inversePrimary,
-              )
-            : null,
+        appBar: showAppBar ? appBar : null,
         body: content,
       );
     }
