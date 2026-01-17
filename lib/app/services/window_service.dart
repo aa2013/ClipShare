@@ -19,6 +19,9 @@ class WindowService extends GetxService with WindowListener {
   }
 
   void showApp() {
+    if(Platform.isMacOS){
+      windowManager.setSkipTaskbar(false);
+    }
     windowManager.setPreventClose(true).then((value) {
       windowManager.show();
     });
@@ -44,6 +47,9 @@ class WindowService extends GetxService with WindowListener {
   @override
   void onWindowClose() {
     windowManager.hide();
+    if(Platform.isMacOS){
+      windowManager.setSkipTaskbar(true);
+    }
     Log.debug(tag, "onClose");
   }
 
