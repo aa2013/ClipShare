@@ -25,22 +25,41 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
     _allKeywordPrompts.addAll(this.directPrompts);
     final dynamic keywords = language?.keywords;
     if (keywords is Map) {
-      final dynamic keywordList = keywords['keyword'];
-      if (keywordList is List) {
-        _allKeywordPrompts.addAll(keywordList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      final dynamic keywordContent = keywords['keyword'];
+      late final List<dynamic> keywordList;
+      if (keywordContent is! List) {
+        keywordList = keywordContent.toString().split(' ');
+      } else {
+        keywordList = keywordContent;
       }
-      final dynamic builtInList = keywords['built_in'];
-      if (builtInList is List) {
-        _allKeywordPrompts.addAll(builtInList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(keywordList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+
+      final dynamic builtInContent = keywords['built_in'];
+      late final List<dynamic> builtInList;
+      if (builtInContent is! List) {
+        builtInList = builtInContent.toString().split(' ');
+      } else {
+        builtInList = builtInContent;
       }
-      final dynamic literalList = keywords['literal'];
-      if (literalList is List) {
-        _allKeywordPrompts.addAll(literalList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(builtInList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+
+      final dynamic literalContent = keywords['literal'];
+      late final List<dynamic> literalList;
+      if (literalContent is! List) {
+        literalList = literalContent.toString().split(' ');
+      } else {
+        literalList = literalContent;
       }
-      final dynamic typeList = keywords['type'];
-      if (typeList is List) {
-        _allKeywordPrompts.addAll(typeList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(literalList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+
+      final dynamic typeContent = keywords['type'];
+      late final List<dynamic> typeList;
+      if (typeContent is! List) {
+        typeList = typeContent.toString().split(' ');
+      } else {
+        typeList = typeContent;
       }
+      _allKeywordPrompts.addAll(typeList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
     }
   }
 

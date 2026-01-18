@@ -115,7 +115,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   Future<SocketService> init() async {
     if (_isInit) throw Exception("已初始化");
     // 初始化，创建socket监听
-    _runSocketServer();
+    await _runSocketServer();
     //连接中转服务器
     await connectForwardServer();
     startDiscoveryDevices();
@@ -257,7 +257,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///运行服务端 socket 监听消息同步
-  void _runSocketServer() async {
+  Future<void> _runSocketServer() async {
     _server = await SecureSocketServer.bind(
       ip: '0.0.0.0',
       port: appConfig.port,

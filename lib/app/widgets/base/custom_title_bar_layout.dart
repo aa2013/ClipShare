@@ -10,13 +10,13 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:window_manager/window_manager.dart';
 
 class CustomTitleBarLayout extends StatefulWidget {
-  final List<Widget> children;
+  final List<Widget> title;
   final Widget child;
   static const double titleBarHeight = 35;
 
   const CustomTitleBarLayout({
     super.key,
-    required this.children,
+    required this.title,
     required this.child,
   });
 
@@ -30,9 +30,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
 
   @override
   Widget build(BuildContext context) {
-    final titleLayout = Row(
-      children: widget.children,
-    );
+    final titleLayout = Row(children: widget.title);
     return Column(
       children: [
         Visibility(

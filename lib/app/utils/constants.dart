@@ -1,13 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/rule/rule_category.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:re_editor/re_editor.dart';
+import 'package:re_highlight/languages/lua.dart';
+import 'package:re_highlight/languages/sql.dart';
 
 class Constants {
   Constants._private();
@@ -43,7 +48,8 @@ class Constants {
   static const faqUrl = "https://clipshare.coclyun.top/faq.html";
 
   //数据广播Action
-  static const kOnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED";
+  static const kOnHistoryChangedBroadcastAction = "$appPkg.ACTION_ON_HISTORY_CHANGED";
+
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
     {
@@ -94,6 +100,7 @@ class Constants {
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
   static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
+  static const androidPrivateDataPath = "$androidDataPath/$appPkg";
 
   static Future<String> get documentsPath async {
     String dir;
@@ -124,10 +131,11 @@ class Constants {
 
   //配对时限（秒）
   static const pairingLimit = 60;
-  static const channelCommon = "top.coclyun.clipshare/common";
-  static const channelClip = "top.coclyun.clipshare/clip";
-  static const channelAndroid = "top.coclyun.clipshare/android";
-  static const androidReadFileEventChannel = "top.coclyun.clipshare/read_file";
+  static const appPkg = "top.coclyun.clipshare";
+  static const channelCommon = "$appPkg/common";
+  static const channelClip = "$appPkg/clip";
+  static const channelAndroid = "$appPkg/android";
+  static const androidReadFileEventChannel = "$appPkg/read_file";
 
   static const smallScreenWidth = 640.0;
   static const showHistoryRightWidth = 840.0;
@@ -198,6 +206,9 @@ class Constants {
     ),
   };
 
+  ///规则类别
+  static final List<RuleCategory> ruleCategoryItems = RuleCategory.values.where((item) => item != RuleCategory.unknown).toList();
+
   //按键名称映射
   static final keyNameMap = [
     {
@@ -264,4 +275,32 @@ class Constants {
   static const jiebaDownloadUrl = 'https://download.clipshare.coclyun.top/others/jieba.zip';
 
   static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
+  static const appIconSize = 17.0;
+  static final emptyContent = EmptyContent();
+  static final codeSQLTheme = CodeHighlightThemeMode(mode: langSql);
+  static final codeLuaTheme = CodeHighlightThemeMode(mode: langLua);
+
+  // language=lua
+  static const String globalLuaFun = """
+    __userscripts_map = {}
+    function remove_user_sandbox_method(script_hash)
+      __userscripts_map[script_hash] = nil
+    end
+    function run_user_sandbox_method(script_hash)
+      if not script_hash then
+        script_hash = ''
+      end
+      local script = __userscripts_map[script_hash]
+      if not script then
+        error('ERR: not found user script: ' .. script_hash, 0)
+      end
+      local result = script()
+      if type(result) == "table" then
+        return json.encode(result)
+      else
+        return tostring(result)
+      end
+      
+    end 
+  """;
 }
