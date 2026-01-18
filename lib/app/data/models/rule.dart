@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+@Deprecated("1.5.0版本起不再使用，改为使用 RuleItem")
 class Rule {
   final String name;
   final String rule;
@@ -30,7 +31,5 @@ class Rule {
   int get hashCode => name.hashCode;
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Rule && runtimeType == other.runtimeType && name == other.name;
+  bool operator ==(Object other) => identical(this, other) || other is Rule && runtimeType == other.runtimeType && name == other.name;
 }

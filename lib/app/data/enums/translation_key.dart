@@ -706,6 +706,7 @@ enum TranslationKey {
   storagePathTips,
   uploading,
   preferenceSettingsRecordsDialogSize,
+  rulesManagement,
   forwardSettingsForwardHeartbeatTitle,
   forwardSettingsForwardHeartbeatDesc,
   useTrayFlashingForConnectionTitle,
