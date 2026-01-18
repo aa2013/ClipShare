@@ -199,7 +199,7 @@ packages:
       path: "../clipboard_listener"
       relative: true
     source: path
-    version: "1.2.1"
+    version: "1.2.6"
   clock:
     dependency: transitive
     description:
@@ -466,12 +466,18 @@ packages:
   flutter_embed_lua:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: aaf5564e79345c87e4d0e5cf33295ee0ed802bf9
-      url: "https://github.com/aa2013/flutter_embed_lua"
-    source: git
-    version: "0.0.1"
+      path: "../github/flutter_embed_lua"
+      relative: true
+    source: path
+    version: "0.0.2"
+  flutter_expandable_fab:
+    dependency: "direct main"
+    description:
+      name: flutter_expandable_fab
+      sha256: "2a488600924fd2a041679ad889807ee5670414a7a518cf11d4854b9898b3504f"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.5.2"
   flutter_highlighting:
     dependency: "direct main"
     description:
@@ -969,6 +975,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.1"
+  multi_split_view:
+    dependency: "direct main"
+    description:
+      name: multi_split_view
+      sha256: "06f5126a65d3010ce0a9d5c003e793041fe99377b23e3534bb05059f79a580e9"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.6.1"
   nested:
     dependency: transitive
     description:

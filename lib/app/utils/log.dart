@@ -18,38 +18,38 @@ class Log {
   );
 
   static void debug(String tag, dynamic) {
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic";
+    var log = "${DateTime.now().format()} [$tag] | $dynamic";
     _logger.d(log);
     writeLog("[debug] | $log");
   }
 
   static void trace(String tag, dynamic) {
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic";
+    var log = "${DateTime.now().format()} | [$tag] | $dynamic";
     _logger.t(log);
     writeLog("[trace] | $log");
   }
 
   static void info(String tag, dynamic) {
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic";
+    var log = "${DateTime.now().format()} | [$tag] | $dynamic";
     _logger.i(log);
     writeLog("[info] | $log");
   }
 
   static void warn(String tag, dynamic) {
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic";
+    var log = "${DateTime.now().format()} | [$tag] | $dynamic";
     _logger.w(log);
     writeLog("[warn] | $log");
   }
 
   static void fatal(String tag, dynamic) {
-    var log = "[$tag] ${DateTime.now().format()} | $dynamic";
+    var log = "${DateTime.now().format()} | [$tag] | $dynamic";
     _logger.w(log);
     writeLog("[fatal] | $log");
   }
 
   static void error(String tag, err, [StackTrace? stack]) {
     final stackStr = stack != null ? ", $stack" : "";
-    var log = "[$tag] ${DateTime.now().format()} | $err $stackStr";
+    var log = "${DateTime.now().format()} | [$tag] | $err $stackStr";
     _logger.e(log);
     writeLog("[error] | $log");
   }

@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:get/get.dart';
@@ -173,6 +174,10 @@ extension StringExt on String {
       result = result.substring(0, result.length - substring.length);
     }
     return result;
+  }
+
+  String toMd5() {
+    return CryptoUtil.toMD5(this);
   }
 }
 

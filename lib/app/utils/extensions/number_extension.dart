@@ -130,6 +130,11 @@ extension IntExt on int {
     () => EdgeInsets.only(left: toDouble()),
   );
 
+  EdgeInsets get insetLT => _insetsMap.putIfAbsent(
+    'insetLT_$this',
+    () => EdgeInsets.only(left: toDouble(), top: toDouble()),
+  );
+
   EdgeInsets get insetT => _insetsMap.putIfAbsent(
     'insetT_$this',
     () => EdgeInsets.only(top: toDouble()),

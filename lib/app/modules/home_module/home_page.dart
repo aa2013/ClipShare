@@ -38,7 +38,10 @@ class HomePage extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    controller.screenWidth = MediaQuery.of(context).size.width;
+    var screenWidth = MediaQuery.of(context).size.width;
+    if (controller.screenWidth != screenWidth) {
+      controller.screenWidth = screenWidth;
+    }
     final currentTheme = Theme.of(context);
     return PopScope(
       canPop: false,
@@ -73,7 +76,7 @@ class HomePage extends GetView<HomeController> {
                                       () => ConditionWidget(
                                         //todo 是否会有问题？
                                         visible: appConfig.isMultiSelectionMode(currentPageController),
-                                        replacement: controller.navBarItems[controller.index].icon,
+                                        replacement: controller.bottomNavBarItems[controller.index].icon,
                                         child: const Icon(Icons.checklist),
                                       ),
                                     ),
@@ -82,10 +85,10 @@ class HomePage extends GetView<HomeController> {
                                       () {
                                         final syncProgressService = Get.find<HistorySyncProgressService>();
                                         final selectionMode = appConfig.isMultiSelectionMode(currentPageController);
-                                        final pageTitle = controller.navBarItems[controller.index].label!;
+                                        final pageTitle = controller.bottomNavBarItems[controller.index].label!;
                                         final selectionText = appConfig.multiSelectionText;
                                         bool isSyncing = syncProgressService.syncing;
-                                        final icon = controller.navBarItems[controller.index].icon;
+                                        final icon = controller.bottomNavBarItems[controller.index].icon;
                                         bool isHistoryPage = icon is Icon && icon.icon == Icons.history;
                                         if (!selectionMode && isSyncing && isHistoryPage) {
                                           int total = syncProgressService.total;
@@ -187,7 +190,7 @@ class HomePage extends GetView<HomeController> {
                             backgroundColor: currentTheme.colorScheme.surface,
                             currentIndex: controller.index,
                             onTap: (i) => controller.index = i,
-                            items: controller.navBarItems,
+                            items: controller.bottomNavBarItems,
                           ),
                         )
                       : null,

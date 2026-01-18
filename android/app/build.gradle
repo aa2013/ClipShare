@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 //签名配置
-def keystorePropertiesFile=rootProject.file("key.properties")
+def keystorePropertiesFile = rootProject.file("key.properties")
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 //https://github.com/flutter/flutter/issues/156304
@@ -81,7 +81,7 @@ android {
             storeFile file(keystoreProperties['storeFile'])
             storePassword keystoreProperties['storePassword']
         }
-        release{
+        release {
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
             storeFile file(keystoreProperties['storeFile'])

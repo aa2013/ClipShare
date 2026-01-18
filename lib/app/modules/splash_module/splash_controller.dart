@@ -42,13 +42,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
-import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:uri_file_reader/uri_file_reader.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:path/path.dart' as p;
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -126,6 +125,7 @@ class SplashController extends GetxController {
     }
     if (Platform.isAndroid) {
       androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
+      await copyAssetsInAndroid();
     }
     // 初始化channel
     initChannel();
@@ -136,6 +136,24 @@ class SplashController extends GetxController {
       await Get.putAsync(() => TrayService().init(), permanent: true);
     }
     appConfig.changeThemeMode(appConfig.appTheme);
+  }
+
+  Future<void> copyAssetsInAndroid() async {
+    try {
+      var luaSaveDirPath = p.join(Constants.androidPrivateDataPath, 'lua');
+      final newLuaPath = File(p.join(luaSaveDirPath, 'dkjson.lua'));
+      if (await newLuaPath.exists()) {
+        return;
+      }
+      await Directory(luaSaveDirPath).create();
+      final bytes = await rootBundle.load('assets/lua/dkjson.lua');
+      await newLuaPath.writeAsBytes(
+        bytes.buffer.asUint8List(),
+        flush: true,
+      );
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+    }
   }
 
   void initLanguage() {

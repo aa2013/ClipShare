@@ -183,9 +183,13 @@ dependencies:
   minio: ^3.5.8
   # Android/IOS deviceId generator
   persistent_device_id: ^1.1.0
+  # lua ffi
   flutter_embed_lua:
-    git:
-      url: https://github.com/aa2013/flutter_embed_lua
+    path: ../github/flutter_embed_lua
+  # 可拖拉的切分视图
+  multi_split_view: ^3.6.1
+  # 扩展的浮动按钮
+  flutter_expandable_fab: ^2.5.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -226,6 +230,7 @@ flutter:
     - assets/images/
     - assets/images/logo/
     - assets/md/
+    - assets/lua/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

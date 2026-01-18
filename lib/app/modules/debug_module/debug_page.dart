@@ -7,6 +7,7 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -14,8 +15,11 @@ import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_embed_lua/lua_runtime.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -131,20 +135,26 @@ class DebugPage extends GetView<DebugController> {
         TextButton(
           onPressed: () async {
             final as = Get.find<AndroidChannelService>();
-            as.sendHistoryChangedBroadcast(HistoryContentType.text,"FSDFDS","devid111","devname222");
+            as.sendHistoryChangedBroadcast(HistoryContentType.text, "FSDFDS", "devid111", "devname222");
           },
           child: Text("666"),
         ),
-        Expanded(
-          child: FileBrowser(
-            onLoadFiles: (String path) => [
-              FileItem(name: 'aa', isDirectory: true, fullPath: 'a'),
-              FileItem(name: 'bb', isDirectory: true, fullPath: 'b'),
-              FileItem(name: 'cc', isDirectory: true, fullPath: 'c'),
-            ],
-            shouldShowUpLevel: (String currentPath) => true,
-            initialPath: '/',
-          ),
+
+        TextButton(
+          onPressed: () async {
+            final lua = controller.lua;
+
+            var dkJsonPath = 'assets/lua/dkjson.lua';
+            if(Platform.isAndroid) {
+              dkJsonPath = p.join(Constants.androidPrivateDataPath, 'lua', 'dkjson.lua');
+            }
+            var result = '';
+            result = lua.run('json = assert(loadfile("$dkJsonPath"))()');
+            print(result);
+            result = lua.run('return json.encode({a=1,b=2})');
+            print(result);
+          },
+          child: Text("LuaTest"),
         ),
       ],
     );

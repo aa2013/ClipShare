@@ -1,0 +1,1 @@
+enum RuleScriptLanguage { lua, unknown }

@@ -6,6 +6,16 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "flutter_embed_lua",
+      "license": "BSD-3-Clause",
+      "url": "https://github.com/aa2013/flutter_embed_lua",
+    },
+    {
+      "name": "flutter_expandable_fab",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/flutter_expandable_fab",
+    },
+    {
       "name": "jieba_flutter",
       "license": "GPL-3.0",
       "url": "https://pub.dev/packages/jieba_flutter",

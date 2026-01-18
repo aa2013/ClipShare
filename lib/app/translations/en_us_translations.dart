@@ -1399,6 +1399,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Recopy latest data after unlock";
       case TranslationKey.recopyOnScreenUnlockedTitleDesc:
         return "Some systems cannot auto-copy in locked screen state. When enabled, this feature will retry copying the latest synced data after screen unlock";
+      case TranslationKey.rulesManagement:
+        return "Rules";
     }
   }
 }

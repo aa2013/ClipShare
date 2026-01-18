@@ -1,6 +1,5 @@
 package top.coclyun.clipshare
 
-import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
 import android.app.NotificationChannel

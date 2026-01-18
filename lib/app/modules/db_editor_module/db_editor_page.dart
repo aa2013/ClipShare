@@ -3,7 +3,9 @@ import 'dart:ui';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/re-editor/code_autocomplete_prompts_builder.dart';
 import 'package:clipshare/app/handlers/re-editor/default_code_autocomplete_listview.dart';
+import 'package:clipshare/app/modules/views/code_edit_view.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/largeText/find.dart';
@@ -171,9 +173,13 @@ class DbEditorPage extends GetView<DbEditorController> {
               ],
             ),
             const SizedBox(height: 5),
-            SizedBox(
+            CodeEditView(
+              controller: controller.editor,
+              language: langSql,
+              codeTheme: Constants.codeSQLTheme,
+              hintText: TranslationKey.enterSQLHere.tr,
+              keywordPrompts: controller.keywordPrompts,
               height: 150,
-              child: renderCodeEditor(context),
             ),
             const SizedBox(height: 5),
             Text("${TranslationKey.result.tr}: "),

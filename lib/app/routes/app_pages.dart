@@ -1,3 +1,6 @@
+import 'package:clipshare/app/modules/rules_module/rules_bindings.dart';
+import 'package:clipshare/app/modules/rules_module/rules_page.dart';
+
 import '../../app/modules/db_editor_module/db_editor_page.dart';
 import '../../app/modules/db_editor_module/db_editor_bindings.dart';
 import '../../app/modules/clean_data_module/clean_data_page.dart';
@@ -143,6 +146,11 @@ abstract class AppPages {
       name: Routes.DB_EDITOR,
       page: () => DbEditorPage(),
       binding: DbEditorBinding(),
+    ),
+    GetPage(
+      name: Routes.RULES,
+      page: () => RulesPage(),
+      binding: RulesBinding(),
     ),
   ];
 }

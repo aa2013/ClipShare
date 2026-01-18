@@ -7,6 +7,7 @@ import 'package:clipshare/app/modules/views/log_detail_page.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -79,10 +80,11 @@ class LogPage extends GetView<LogController> {
       },
       child: Column(
         children: [
-          Padding(
-            padding: 10.insetH,
-            child: appBarRow,
-          ),
+          if (PlatformExt.isDesktop)
+            Padding(
+              padding: 10.insetH,
+              child: appBarRow,
+            ),
           if (Platform.isAndroid)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),

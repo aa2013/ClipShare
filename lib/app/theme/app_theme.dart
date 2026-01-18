@@ -11,15 +11,27 @@ const lightBackgroundColor = Color.fromARGB(255, 238, 238, 238);
 const darkBackgroundColor = Colors.black;
 final lightThemeData = ThemeData.light().copyWith(
   colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.lightBlueAccent, surfaceBright: Colors.white),
+    seedColor: Colors.lightBlueAccent,
+    surfaceBright: Colors.white,
+  ),
   cardTheme: const CardThemeData(color: Colors.white),
   scaffoldBackgroundColor: lightBackgroundColor,
-  textTheme: Platform.isWindows
-      ? ThemeData.light().textTheme.apply(fontFamily: 'Microsoft YaHei')
-      : null,
+  textTheme: Platform.isWindows ? ThemeData.light().textTheme.apply(fontFamily: 'Microsoft YaHei') : null,
   chipTheme: ChipThemeData(
     backgroundColor: const Color(0xffdde1e3),
     selectedColor: Colors.blue[100],
+  ),
+  segmentedButtonTheme: SegmentedButtonThemeData(
+    style: ButtonStyle(
+      backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+        (states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.blue.shade100; // 选中背景色
+          }
+          return Colors.transparent; // 未选中
+        },
+      ),
+    ),
   ),
   dialogBackgroundColor: const Color(0xffdde1e3),
   canvasColor: Colors.white,
@@ -32,9 +44,7 @@ final darkThemeData = ThemeData.dark().copyWith(
   ),
   // cardTheme: const CardTheme(color: Colors.blueGrey),
   scaffoldBackgroundColor: darkBackgroundColor,
-  textTheme: Platform.isWindows
-      ? ThemeData.dark().textTheme.apply(fontFamily: 'Microsoft YaHei')
-      : null,
+  textTheme: Platform.isWindows ? ThemeData.dark().textTheme.apply(fontFamily: 'Microsoft YaHei') : null,
   chipTheme: ChipThemeData(
     backgroundColor: darkBackgroundColor2,
     selectedColor: Colors.blue[800],

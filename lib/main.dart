@@ -219,7 +219,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
                 appBar: null,
                 backgroundColor: Colors.transparent,
                 body: CustomTitleBarLayout(
-                  children: [
+                  title: [
                     const SizedBox(width: 5),
                     logoImg,
                     const SizedBox(width: 5),

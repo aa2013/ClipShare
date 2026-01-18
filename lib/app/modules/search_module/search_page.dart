@@ -19,6 +19,8 @@ import 'package:get/get.dart';
 class SearchPage extends GetView<search_module.SearchController> {
   final appConfig = Get.find<ConfigService>();
 
+  SearchPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     controller.screenWidth = MediaQuery.of(context).size.width;

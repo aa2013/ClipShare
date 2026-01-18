@@ -25,4 +25,5 @@ abstract class Routes {
   static const QR_CODE_SCANNER = '/qr_code_scanner'; // qrCodeScanner page
   static const CLEAN_DATA = '/clean_data'; // CleanData page3
   static const DB_EDITOR = '/db_editor'; // DbEditor page
+  static const RULES = '/rules'; // script_management page
 }
