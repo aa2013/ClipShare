@@ -1429,6 +1429,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "注意：备份文件和中转文件存储于同一目录下的不同文件夹中\n如若存储路径选择为 /ClipShare\n则中转文件则存储于 /ClipShare/history 中\n备份文件存储于 /ClipShare/backup 中";
       case TranslationKey.uploading:
         return "上传中";
+      case TranslationKey.rulesManagement:
+        return "规则管理";
     }
   }
 }

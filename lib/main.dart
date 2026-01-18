@@ -196,7 +196,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
   if (isMultiWindow) {
     windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     locale = Locale(args.languageCode, args.countryCode);
-  }else{
+  } else {
     final appConfig=Get.find<ConfigService>();
     isDarkMode = appConfig.appTheme == ThemeMode.dark;
   }
@@ -214,7 +214,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
                   appBar: null,
                   backgroundColor: Colors.transparent,
                   body: CustomTitleBarLayout(
-                    children: [
+                    title: [
                       const SizedBox(width: 5),
                       logoImg,
                       const SizedBox(width: 5),
