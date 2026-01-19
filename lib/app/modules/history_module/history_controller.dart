@@ -386,7 +386,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             appId: source.id,
             devId: appConfig.device.guid,
             name: source.name,
-            iconB64: source.iconB64!,
+            iconB64: source.iconB64 ?? "",
           ),
           true,
         );

@@ -54,25 +54,27 @@ void send_signal_to_pid(pid_t target_pid) {
     }
 }
 
-char* get_process_name_by_pid(pid_t pid) {
-    static char proc_name[256];
+gchar* get_process_name_by_pid(pid_t pid) {
     char path[64];
-    FILE* fp;
     snprintf(path, sizeof(path), "/proc/%d/comm", pid);
-    fp = fopen(path, "r");
+
+    FILE* fp = fopen(path, "r");
     if (!fp) {
-        g_print("%s", "Failed to open /proc/[PID]/comm");
-        return nullptr;
+        g_warning("Failed to open %s", path);
+        return NULL;
     }
 
-    if (fgets(proc_name, sizeof(proc_name), fp) == NULL) {
+    char buf[256];
+    if (!fgets(buf, sizeof(buf), fp)) {
         fclose(fp);
-        return nullptr;
+        return NULL;
     }
     fclose(fp);
-    proc_name[strcspn(proc_name, "\n")] = '\0';
-    return proc_name;
+
+    buf[strcspn(buf, "\n")] = '\0';
+    return g_strdup(buf);
 }
+
 
 static void init_desktop_multi_window_plugin_window_created(FlPluginRegistry* registry) {
     g_autoptr(FlPluginRegistrar) window_manager_registrar = fl_plugin_registry_get_registrar_for_plugin(registry, "WindowManagerPlugin");
@@ -163,14 +165,15 @@ static void my_application_init(MyApplication* self) {}
 
 static void handle_sigusr1(int sig) {
     if (main_window) {
+        gtk_widget_show(GTK_WIDGET(main_window));
         gtk_window_present(main_window);
     }
 }
 MyApplication* my_application_new() {
   pid_t pid = read_pid_from_file(PID_FILE_NAME);
-  char* my_process_name = get_process_name_by_pid(getpid());
+  gchar* my_process_name = get_process_name_by_pid(getpid());
   if(pid){
-      char* process_name = get_process_name_by_pid(pid);
+      gchar* process_name = get_process_name_by_pid(pid);
       if(process_name){
           //already exists instance
           if(strcmp(process_name, my_process_name) == 0){

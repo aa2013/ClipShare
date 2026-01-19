@@ -111,7 +111,7 @@ class ConfigService extends GetxService {
       if (!FileUtil.testWriteable(path)) {
         path = "${await Constants.documentsPath}/files";
       }
-    } else if (Platform.isMacOS) {
+    } else if (Platform.isMacOS || Platform.isLinux) {
       var dir = await getApplicationDocumentsDirectory();
       path = dir.path + "/${Constants.appName}/files".normalizePath;
     }

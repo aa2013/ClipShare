@@ -1,0 +1,29 @@
+display_name: ClipShare
+
+packager: aa2013
+packagerEmail: coclyun@gmail.com
+license: GPL-3.0
+
+priority: optional
+section: x11
+installed_size: 66560
+essential: false
+icon: ./assets/images/logo/logo.png
+
+keywords:
+  - Clipboard
+  - Clipboard Manager
+  - Copy Paste
+  - History
+  - Productivity
+  - Utility
+  - Snippet
+  - Manager
+  - Enhanced Clipboard
+  - Paste History
+
+generic_name: ClipShare
+
+group: Applications/Utility
+
+startup_notify: true

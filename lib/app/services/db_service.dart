@@ -114,7 +114,7 @@ class DbService extends GetxService {
         dirPath = await Constants.documentsPath;
       }
       dbPath = "$dirPath/$dbPath".normalizePath;
-    } else if (Platform.isMacOS) {
+    } else if (Platform.isMacOS || Platform.isLinux) {
       var dirPath = await Constants.documentsPath;
       dbPath = "$dirPath/$dbPath".normalizePath;
     }
