@@ -990,9 +990,7 @@ class ConfigService extends GetxService {
     _windowSize.value = size;
   }
 
-  Future<void> setRecordHistoryDialogPosition(
-    bool recordHistoryDialogPosition,
-  ) async {
+  Future<void> setRecordHistoryDialogPosition(bool recordHistoryDialogPosition) async {
     await configDao.addOrUpdate(ConfigKey.recordHistoryDialogPosition, recordHistoryDialogPosition.toString());
     _recordHistoryDialogPosition.value = recordHistoryDialogPosition;
   }
@@ -1138,9 +1136,7 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterSync.value = autoCopyImageAfterSync;
   }
 
-  Future<void> setAutoCopyImageAfterScreenShot(
-    bool autoCopyImageAfterScreenShot,
-  ) async {
+  Future<void> setAutoCopyImageAfterScreenShot(bool autoCopyImageAfterScreenShot) async {
     await configDao.addOrUpdate(
       ConfigKey.autoCopyImageAfterScreenShot,
       autoCopyImageAfterScreenShot.toString(),
