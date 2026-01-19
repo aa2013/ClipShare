@@ -1,0 +1,33 @@
+display_name: ClipShare
+package_name: top.coclyun.clipshare
+generic_name: Cross-Platform Clipboard Sync
+categories:
+  - Utility
+maintainer:
+  name: aa2013
+  email: coclyun@gmail.com
+#co_authors:
+#  - name: Kingkor Roy Tirtho
+#    email: krtirtho@gmail.com
+priority: optional
+section: x11
+installed_size: 66560
+essential: false
+icon: assets/images/logo/logo.png
+
+dependencies:
+  - libayatana-appindicator3-dev
+  - libkeybinder-3.0-dev
+
+keywords:
+  - Clipboard
+  - Clipboard Manager
+  - Copy Paste
+  - History
+  - Productivity
+  - Utility
+  - Snippet
+  - Manager
+  - Enhanced Clipboard
+  - Paste History
+startup_notify: true
