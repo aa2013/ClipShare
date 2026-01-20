@@ -118,7 +118,6 @@ class SplashController extends GetxController {
       }
       Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
       appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
-      Get.putAsync(() => TrayService().init(), permanent: true);
       var updateDir = Directory(await Constants.updateDownloadFileDirPath);
       Log.debug(tag, "updateDir = $updateDir");
       if (await updateDir.exists()) {
@@ -132,6 +131,10 @@ class SplashController extends GetxController {
     initChannel();
     initShareHandler();
     initLanguage();
+    // 初始化托盘服务（必须在语言初始化之后，以确保菜单项使用正确的翻译）
+    if (PlatformExt.isDesktop) {
+      Get.putAsync(() => TrayService().init(), permanent: true);
+    }
     appConfig.changeThemeMode(appConfig.appTheme);
   }
 

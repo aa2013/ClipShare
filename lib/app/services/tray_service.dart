@@ -56,7 +56,7 @@ class TrayService extends GetxService with TrayListener {
       }
     }
     var showWindowLabel = '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';
-    debugPrint(showWindowLabel);
+    var exitAppLabel = '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}';
     List<MenuItem> items = [
       MenuItem(
         key: 'show_window',
@@ -65,7 +65,7 @@ class TrayService extends GetxService with TrayListener {
       MenuItem.separator(),
       MenuItem(
         key: 'exit_app',
-        label: '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}',
+        label: exitAppLabel,
       ),
     ];
     await trayManager.setContextMenu(Menu(items: items));
