@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=ClipShare
+Name[zh_CN]=ClipShare 剪贴板同步
+Comment=Cross-platform clipboard synchronization tool
+Comment[zh_CN]=跨平台剪贴板同步工具
+Exec=clipshare
+Icon=clipshare
+Terminal=false
+Categories=Utility;
+StartupNotify=true
+Keywords=clipboard;sync;share;transfer;
