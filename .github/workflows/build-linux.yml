@@ -1,0 +1,91 @@
+name: build-linux-packages
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        path: ClipShare
+
+    - name: Checkout ClipboardListener dependency
+      uses: actions/checkout@v4
+      with:
+        repository: aa2013/ClipboardListener
+        path: clipboard_listener
+
+    - name: Install Linux dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+        sudo apt-get install -y locate rpm patchelf
+        sudo apt-get install -y libayatana-appindicator3-dev
+        sudo apt-get install -y libkeybinder-3.0-dev
+        sudo apt-get install -y fuse libfuse-dev
+        sudo apt-get install -y wget
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: stable
+        flutter-version: 3.35.3
+        cache: true
+
+    - name: Install AppImage tool
+      run: |
+        wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x appimagetool
+        sudo mv appimagetool /usr/local/bin/
+
+    - name: Install dependencies for Fastforge
+      run: |
+        dart pub global activate fastforge
+        echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+        fastforge --version
+
+    - name: Flutter pub get
+      run: |
+        cd ClipShare
+        flutter pub get
+
+    - name: Build Flutter Linux Release
+      run: |
+        cd ClipShare
+        flutter build linux --release
+
+    - name: Build & Package with Fastforge
+      run: |
+        cd ClipShare
+        cd scripts
+        chmod +x build_linux.sh
+        ./build_linux.sh pack
+
+    - name: Upload deb artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-deb
+        path: ClipShare/dist/**/*.deb
+        overwrite: true
+
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-appimage
+        path: ClipShare/dist/**/*.AppImage
+        overwrite: true
+
+    - name: Upload rpm artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-rpm
+        path: ClipShare/dist/**/*.rpm
+        overwrite: true
