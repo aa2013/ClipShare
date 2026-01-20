@@ -165,6 +165,7 @@ class Constants {
   });
   static const localizationsDelegates = [
     GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
     GlobalWidgetsLocalizations.delegate,
   ];
 

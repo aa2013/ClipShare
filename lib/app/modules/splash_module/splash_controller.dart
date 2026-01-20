@@ -133,7 +133,7 @@ class SplashController extends GetxController {
     initLanguage();
     // 初始化托盘服务（必须在语言初始化之后，以确保菜单项使用正确的翻译）
     if (PlatformExt.isDesktop) {
-      Get.putAsync(() => TrayService().init(), permanent: true);
+      await Get.putAsync(() => TrayService().init(), permanent: true);
     }
     appConfig.changeThemeMode(appConfig.appTheme);
   }
@@ -144,12 +144,6 @@ class SplashController extends GetxController {
 
   Future<void> initWindowsManager() async {
     final [width, height] = appConfig.windowSize.split("x").map((e) => e.toDouble()).toList();
-    bool useMinimumSize = true;
-    // windowManager.setBackgroundColor(Colors.transparent);
-    assert(() {
-      useMinimumSize = false;
-      return true;
-    }());
     WindowOptions windowOptions = WindowOptions(
       size: Size(width, height),
       minimumSize: kReleaseMode ? const Size(Constants.showHistoryRightWidth * 1.0, 200) : null,
@@ -161,6 +155,8 @@ class SplashController extends GetxController {
       if (!appConfig.startMini) {
         windowManager.show();
         windowManager.focus();
+      }else if(Platform.isLinux){
+        windowManager.hide();
       }
     });
   }

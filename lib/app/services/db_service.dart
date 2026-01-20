@@ -24,6 +24,7 @@ import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
@@ -108,13 +109,11 @@ class DbService extends GetxService {
   Future<DbService> init() async {
     // 获取应用程序的文件目录
     var dbPath = "clipshare.db";
-    if (Platform.isWindows) {
-      var dirPath = Directory(Platform.resolvedExecutable).parent.path;
-      if (!FileUtil.testWriteable(dirPath)) {
-        dirPath = await Constants.documentsPath;
-      }
+    var dirPath = Directory(Platform.resolvedExecutable).parent.path;
+    if(FileUtil.testWriteable(dirPath)){
+      //如果当前路径可写则使用当前路径，如开发环境或者便携版本
       dbPath = "$dirPath/$dbPath".normalizePath;
-    } else if (Platform.isMacOS || Platform.isLinux) {
+    }else{
       var dirPath = await Constants.documentsPath;
       dbPath = "$dirPath/$dbPath".normalizePath;
     }

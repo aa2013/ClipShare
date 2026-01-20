@@ -29,7 +29,9 @@ class TrayService extends GetxService with TrayListener {
   ///初始化托盘
   Future<void> _initTrayManager() async {
     trayManager.addListener(this);
-    trayManager.setToolTip(Constants.appName);
+    if(!Platform.isLinux) {
+      trayManager.setToolTip(Constants.appName);
+    }
     await trayManager.setIcon(
       Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
     );
@@ -45,14 +47,14 @@ class TrayService extends GetxService with TrayListener {
           await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
         }
       } catch (err, stack) {
-        Log.error(tag, "$err,$stack");
+        Log.error(tag, err, stack);
       }
       try {
         if (exitAppKeys.isNotEmpty) {
           await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
         }
       } catch (err, stack) {
-        Log.error(tag, "$err,$stack");
+        Log.error(tag, err, stack);
       }
     }
     var showWindowLabel = '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';

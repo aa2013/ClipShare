@@ -44,19 +44,11 @@ import 'app/theme/app_theme.dart';
 Future<void> main(List<String> args) async {
   try {
     var isMultiWindow = args.firstOrNull == 'multi_window';
-    WidgetsFlutterBinding.ensureInitialized();
-    if (PlatformExt.isDesktop) {
-      // Must add this line.
-      await windowManager.ensureInitialized();
-      if (Platform.isWindows) {
-        WindowsInjector.instance.injectKeyData();
-      }
-    }
-    await Get.putAsync(() => WindowControlService().initWindows());
     Widget home = SplashPage();
     String title = Constants.appName;
     DesktopMultiWindowArgs? multiWindowArgs;
     if (isMultiWindow) {
+      await ensureInitialized();
       //子窗口
       final windowId = int.parse(args[1]);
       multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
@@ -92,65 +84,83 @@ Future<void> main(List<String> args) async {
           title = multiWindowArgs.title;
           break;
       }
-    }
-    if (isMultiWindow) {
       await initMultiWindowServices();
       runMain(home, title, multiWindowArgs);
     } else {
-      await initMainServices();
       runZonedGuarded(
-        () {
+        () async {
+          await ensureInitialized();
+          await initMainServices();
           runMain(home, title, null);
         },
         (err, stack) {
-          Log.error("globalError", "$err $stack");
+          Log.error("globalError", err, stack);
         },
       );
     }
   } catch (err, stack) {
-    if (PlatformExt.isDesktop) {
-      windowManager.show();
-    }
-    runApp(
-      MaterialApp(
-        home: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  children: [
-                    Text("Initialization failed! Error: $err"),
-                    Tooltip(
-                      message: 'Copy error detail',
-                      child: IconButton(
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: "$err\n$stack"));
-                        },
-                        icon: const Icon(
-                          Icons.copy,
-                          color: Colors.blueGrey,
-                          size: 15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Text(stack.toString()),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+    showErrorInfoOnStartFailed(err, stack);
   }
 }
 
+Future<void> ensureInitialized() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (PlatformExt.isDesktop) {
+    // Must add this line.
+    await windowManager.ensureInitialized();
+    if (Platform.isWindows) {
+      //解决 windows 下 win + v 无法写入到输入框的问题
+      WindowsInjector.instance.injectKeyData();
+    }
+  }
+  await Get.putAsync(() => WindowControlService().initWindows());
+}
+
+//启动初始化失败显示错误信息
+void showErrorInfoOnStartFailed(dynamic err, dynamic stack){
+  if (PlatformExt.isDesktop) {
+    windowManager.show();
+  }
+  runApp(
+    MaterialApp(
+      home: Scaffold(
+        body: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                children: [
+                  Text("Initialization failed! Error: $err"),
+                  Tooltip(
+                    message: 'Copy error detail',
+                    child: IconButton(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: "$err\n$stack"));
+                      },
+                      icon: const Icon(
+                        Icons.copy,
+                        color: Colors.blueGrey,
+                        size: 15,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Text(stack.toString()),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+//初始化主窗体服务
 Future<void> initMainServices() async {
   await Get.putAsync(() => DbService().init(), permanent: true);
   await Get.putAsync(() => ConfigService().init(), permanent: true);
@@ -176,6 +186,7 @@ Future<void> initMainServices() async {
   }
 }
 
+//初始化多窗口服务
 Future<void> initMultiWindowServices() async {
   Get.put(MultiWindowChannelService());
   Get.put(PendingFileService());
