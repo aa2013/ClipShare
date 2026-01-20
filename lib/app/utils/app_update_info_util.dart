@@ -22,28 +22,36 @@ class AppUpdateInfoUtil {
   static const tag = "AppUpdateInfoUtil";
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
-    final resp = await http.get(Uri.parse(Constants.appUpdateInfoUrl));
-    if (resp.statusCode != 200) {
-      throw FetchUpdateLogsException(resp.statusCode.toString());
-    }
-    final updateLogs = List<UpdateLog>.empty(growable: true);
-    final body = jsonDecode(utf8.decode(resp.bodyBytes));
-    final logs = body["logs"] as List<dynamic>;
-    final system = Platform.isMacOS ? "MacOS" : Platform.operatingSystem;
-    final appConfig = Get.find<ConfigService>();
-    final currentVersion = appConfig.version;
-
-    for (var log in logs) {
-      log['url'] = body["downloads"][system.upperFirst]["url"];
-      final ul = UpdateLog.fromJson(log);
-      final platform = ul.platform.toLowerCase();
-      if ((platform != system && platform != 'all') || ul.version <= currentVersion) {
-        continue;
+    try {
+      final resp = await http.get(Uri.parse(Constants.appUpdateInfoUrl));
+      if (resp.statusCode != 200) {
+        throw FetchUpdateLogsException(resp.statusCode.toString());
       }
-      updateLogs.add(ul);
+      final updateLogs = List<UpdateLog>.empty(growable: true);
+      final body = jsonDecode(utf8.decode(resp.bodyBytes));
+      final logs = body["logs"] as List<dynamic>;
+      final system = Platform.isMacOS ? "MacOS" : Platform.operatingSystem;
+      final appConfig = Get.find<ConfigService>();
+      final currentVersion = appConfig.version;
+
+      for (var log in logs) {
+        log['url'] = body["downloads"][system.upperFirst]["url"];
+        final ul = UpdateLog.fromJson(log);
+        final platform = ul.platform.toLowerCase();
+        if ((platform != system && platform != 'all') ||
+            ul.version <= currentVersion) {
+          continue;
+        }
+        updateLogs.add(ul);
+      }
+      updateLogs.sort((a, b) => b.version - a.version);
+      return updateLogs;
+    } catch (e) {
+      final errorMsg =
+          "检查update log的过程中出现异常\n错误: $e";
+      Log.error(tag, errorMsg);
+      throw FetchUpdateLogsException(errorMsg);
     }
-    updateLogs.sort((a, b) => b.version - a.version);
-    return updateLogs;
   }
 
   static Future<bool> showUpdateInfo({
