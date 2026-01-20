@@ -55,12 +55,18 @@ void send_signal_to_pid(pid_t target_pid) {
 }
 
 gchar* get_process_name_by_pid(pid_t pid) {
+    // 先检查进程是否存在
+    if (kill(pid, 0) == -1 && errno == ESRCH) {
+        // 进程不存在，静默返回NULL
+        return NULL;
+    }
+
     char path[64];
     snprintf(path, sizeof(path), "/proc/%d/comm", pid);
 
     FILE* fp = fopen(path, "r");
     if (!fp) {
-        g_warning("Failed to open %s", path);
+        // 进程可能在打开文件的瞬间退出了，静默返回NULL
         return NULL;
     }
 
