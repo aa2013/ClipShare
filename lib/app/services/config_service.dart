@@ -103,17 +103,16 @@ class ConfigService extends GetxService {
 
   //文件默认存储路径
   Future<String> get defaultFileStorePath async {
-    var path = "${Directory(Platform.resolvedExecutable).parent.path}/files";
+    late String path;
     if (Platform.isAndroid) {
       path = "${Constants.androidDownloadPath}/${Constants.appName}";
-    } else if (Platform.isWindows) {
-      //Windows 下如果没有权限写入默认位置则修改为document文件夹下
-      if (!FileUtil.testWriteable(path)) {
-        path = "${await Constants.documentsPath}/files";
+    }else{
+      path = "${Directory(Platform.resolvedExecutable).parent.path}/files";
+      //如果当前路径可写则使用当前路径，如开发环境或者便携版本
+      if(!FileUtil.testWriteable(path)){
+        final documentPath = await Constants.documentsPath;
+        path = "$documentPath/files".normalizePath;
       }
-    } else if (Platform.isMacOS || Platform.isLinux) {
-      var dir = await getApplicationDocumentsDirectory();
-      path = dir.path + "/${Constants.appName}/files".normalizePath;
     }
     var dir = Directory(path);
     try {
