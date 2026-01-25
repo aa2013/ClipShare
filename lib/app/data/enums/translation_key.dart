@@ -689,7 +689,9 @@ enum TranslationKey {
   explain,
   sendBroadcastOnAddDataTips,
   recopyOnScreenUnlockedTitle,
-  recopyOnScreenUnlockedTitleDesc;
+  recopyOnScreenUnlockedTitleDesc,
+  excludePrivateFormat,
+  excludePrivateFormatTips;
 
   String get tr => name.tr;
 

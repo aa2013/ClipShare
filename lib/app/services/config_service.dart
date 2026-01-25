@@ -14,6 +14,7 @@ import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -56,9 +57,7 @@ final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
   final dbService = Get.find<DbService>();
-  final configDao = Get
-      .find<DbService>()
-      .configDao;
+  final configDao = Get.find<DbService>().configDao;
   final tag = "ConfigService";
 
   //region 属性
@@ -76,10 +75,7 @@ class ConfigService extends GetxService {
   final prime2 = CryptoUtil.getPrime();
 
   //当前时区与UTC的差值，带正负
-  final timeZoneOffsetSeconds = DateTime
-      .now()
-      .timeZoneOffset
-      .inSeconds;
+  final timeZoneOffsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
 
   // final bgColor = const Color.fromARGB(255, 238, 238, 238);
   WindowController? historyWindow;
@@ -106,10 +102,10 @@ class ConfigService extends GetxService {
     late String path;
     if (Platform.isAndroid) {
       path = "${Constants.androidDownloadPath}/${Constants.appName}";
-    }else{
+    } else {
       path = "${Directory(Platform.resolvedExecutable).parent.path}/files";
       //如果当前路径可写则使用当前路径，如开发环境或者便携版本
-      if(!FileUtil.testWriteable(path)){
+      if (!FileUtil.testWriteable(path)) {
         final documentPath = await Constants.documentsPath;
         path = "$documentPath/files".normalizePath;
       }
@@ -605,6 +601,11 @@ class ConfigService extends GetxService {
 
   bool get reCopyOnScreenUnlocked => _recopyOnScreenUnlocked.value;
 
+  ///Windows 排除隐私格式
+  final _excludeFormat = true.obs;
+
+  bool get isExcludeFormat => _excludeFormat.value;
+
   //endregion
 
   //endregion
@@ -814,6 +815,7 @@ class ConfigService extends GetxService {
     _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
     _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
+    _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
   }
 
   ///初始化路径信息
@@ -1009,7 +1011,9 @@ class ConfigService extends GetxService {
     _windowSize.value = size;
   }
 
-  Future<void> setRecordHistoryDialogPosition(bool recordHistoryDialogPosition,) async {
+  Future<void> setRecordHistoryDialogPosition(
+    bool recordHistoryDialogPosition,
+  ) async {
     await configDao.addOrUpdate(ConfigKey.recordHistoryDialogPosition, recordHistoryDialogPosition.toString());
     _recordHistoryDialogPosition.value = recordHistoryDialogPosition;
   }
@@ -1155,7 +1159,9 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterSync.value = autoCopyImageAfterSync;
   }
 
-  Future<void> setAutoCopyImageAfterScreenShot(bool autoCopyImageAfterScreenShot,) async {
+  Future<void> setAutoCopyImageAfterScreenShot(
+    bool autoCopyImageAfterScreenShot,
+  ) async {
     await configDao.addOrUpdate(
       ConfigKey.autoCopyImageAfterScreenShot,
       autoCopyImageAfterScreenShot.toString(),
@@ -1163,10 +1169,11 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterScreenShot.value = autoCopyImageAfterScreenShot;
   }
 
-  Future<void> setAppTheme(ThemeMode appTheme,
-      BuildContext context, [
-        VoidCallback? onAnimationFinish,
-      ]) async {
+  Future<void> setAppTheme(
+    ThemeMode appTheme,
+    BuildContext context, [
+    VoidCallback? onAnimationFinish,
+  ]) async {
     await configDao.addOrUpdate(ConfigKey.appTheme, appTheme.name);
     _appTheme.value = appTheme.name;
     var theme = appTheme == ThemeMode.dark ? darkThemeData : lightThemeData;
@@ -1374,7 +1381,6 @@ class ConfigService extends GetxService {
     _sendBroadcastOnAdd.value = value;
   }
 
-
   ///设备解锁后重新复制锁屏期间同步的最新的一条数据，部分设备在锁屏期间无法复制
   Future<void> setReCopyOnScreenUnlocked(bool value) async {
     if (!Platform.isAndroid) {
@@ -1382,6 +1388,17 @@ class ConfigService extends GetxService {
     }
     await configDao.addOrUpdate(ConfigKey.recopyOnScreenUnlocked, value.toString());
     _recopyOnScreenUnlocked.value = value;
+  }
+
+  ///Windows启用/关闭隐私格式排除
+  Future<void> setExcludeFormat(bool value) async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.excludeFormat, value.toString());
+    _excludeFormat.value = value;
+    final clipboardService = Get.find<ClipboardService>();
+    await clipboardService.setExcludeFormat(value);
   }
 
   //endregion
@@ -1526,7 +1543,7 @@ class ConfigService extends GetxService {
     return true;
   }
 
-//endregion
+  //endregion
 }
 
 DataSender get dataSender {

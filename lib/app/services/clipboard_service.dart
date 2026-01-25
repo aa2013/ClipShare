@@ -24,6 +24,9 @@ class ClipboardService extends GetxService with ClipboardListener {
   final appConfig = Get.find<ConfigService>();
   final settingsController = Get.find<SettingsController>();
   var _detector = FlutterScreenshotDetect();
+  final _isExcludeFormat = true.obs;
+
+  bool get isExcludeFormat => _isExcludeFormat.value;
 
   static NotificationContentConfig get defaultNotificationContentConfig => NotificationContentConfig(
     errorTitle: TranslationKey.defaultClipboardServerNotificationCfgErrorTitle.tr,
@@ -50,6 +53,8 @@ class ClipboardService extends GetxService with ClipboardListener {
       if (!FileUtil.testWriteable(execDir)) {
         clipboardManager.setTempFileDir(await Constants.documentsPath);
       }
+      await clipboardManager.setExcludeFormatEnabled(appConfig.isExcludeFormat);
+      _isExcludeFormat.value = await clipboardManager.isEnableExcludeFormat();
     }
     return this;
   }
@@ -124,6 +129,14 @@ class ClipboardService extends GetxService with ClipboardListener {
 
   void stopListenScreenshot() {
     _detector.dispose();
+  }
+
+  Future<void> setExcludeFormat(bool enabled) async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    await clipboardManager.setExcludeFormatEnabled(enabled);
+    _isExcludeFormat.value = enabled;
   }
 
   @override

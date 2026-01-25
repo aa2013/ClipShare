@@ -1397,6 +1397,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "解锁后重新复制最新数据";
       case TranslationKey.recopyOnScreenUnlockedTitleDesc:
         return "部分系统在锁屏状态下无法自动复制，启用该功能后会在屏幕解锁后再去重试复制最新同步的数据";
+      case TranslationKey.excludePrivateFormat:
+        return "排除隐私格式";
+      case TranslationKey.excludePrivateFormatTips:
+        return "当检测到剪贴板含有特定标记（ExcludeClipboardContentFromMonitorProcessing）将不会记录";
     }
   }
 }
