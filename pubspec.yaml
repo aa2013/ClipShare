@@ -197,6 +197,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^3.0.2
 flutter_launcher_icons:
+  ios: true
   android: "launcher_icon"
   image_path: "assets/images/logo/logo.png"
   min_sdk_android: 24 # android min sdk min:16, default 21
@@ -223,6 +224,7 @@ flutter:
     - assets/images/
     - assets/images/logo/
     - assets/md/
+    - assets/videos/pip_example.mp4
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

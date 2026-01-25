@@ -1,0 +1,245 @@
+PODS:
+  - clipshare_clipboard_listener (0.0.1):
+    - Flutter
+  - connectivity_plus (0.0.1):
+    - Flutter
+    - ReachabilitySwift
+  - device_info_plus (0.0.1):
+    - Flutter
+  - DKImagePickerController/Core (4.3.9):
+    - DKImagePickerController/ImageDataManager
+    - DKImagePickerController/Resource
+  - DKImagePickerController/ImageDataManager (4.3.9)
+  - DKImagePickerController/PhotoGallery (4.3.9):
+    - DKImagePickerController/Core
+    - DKPhotoGallery
+  - DKImagePickerController/Resource (4.3.9)
+  - DKPhotoGallery (0.0.19):
+    - DKPhotoGallery/Core (= 0.0.19)
+    - DKPhotoGallery/Model (= 0.0.19)
+    - DKPhotoGallery/Preview (= 0.0.19)
+    - DKPhotoGallery/Resource (= 0.0.19)
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Core (0.0.19):
+    - DKPhotoGallery/Model
+    - DKPhotoGallery/Preview
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Model (0.0.19):
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Preview (0.0.19):
+    - DKPhotoGallery/Model
+    - DKPhotoGallery/Resource
+    - SDWebImage
+    - SwiftyGif
+  - DKPhotoGallery/Resource (0.0.19):
+    - SDWebImage
+    - SwiftyGif
+  - file_picker (0.0.1):
+    - DKImagePickerController/PhotoGallery
+    - Flutter
+  - Flutter (1.0.0)
+  - flutter_local_notifications (0.0.1):
+    - Flutter
+  - flutter_screenshot_detect (0.0.1):
+    - Flutter
+  - local_auth_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - MTBBarcodeScanner (5.0.11)
+  - no_screenshot (0.3.2-beta.3):
+    - Flutter
+    - ScreenProtectorKit (~> 1.3.1)
+  - open_file_plus (1.0.0):
+    - Flutter
+  - package_info_plus (0.4.5):
+    - Flutter
+  - path_provider_foundation (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - permission_handler_apple (9.3.0):
+    - Flutter
+  - persistent_device_id (0.0.1):
+    - Flutter
+  - qr_code_scanner_plus (0.2.6):
+    - Flutter
+    - MTBBarcodeScanner
+  - ReachabilitySwift (5.2.4)
+  - ScreenProtectorKit (1.3.1)
+  - SDWebImage (5.21.5):
+    - SDWebImage/Core (= 5.21.5)
+  - SDWebImage/Core (5.21.5)
+  - share_handler_ios (0.0.14):
+    - Flutter
+    - share_handler_ios/share_handler_ios_models (= 0.0.14)
+    - share_handler_ios_models
+  - share_handler_ios/share_handler_ios_models (0.0.14):
+    - Flutter
+    - share_handler_ios_models
+  - share_handler_ios_models (0.0.9)
+  - share_plus (0.0.1):
+    - Flutter
+  - smart_auth (0.0.1):
+    - Flutter
+  - sqflite_darwin (0.0.4):
+    - Flutter
+    - FlutterMacOS
+  - sqlite3 (3.50.4):
+    - sqlite3/common (= 3.50.4)
+  - sqlite3/common (3.50.4)
+  - sqlite3/dbstatvtab (3.50.4):
+    - sqlite3/common
+  - sqlite3/fts5 (3.50.4):
+    - sqlite3/common
+  - sqlite3/math (3.50.4):
+    - sqlite3/common
+  - sqlite3/perf-threadsafe (3.50.4):
+    - sqlite3/common
+  - sqlite3/rtree (3.50.4):
+    - sqlite3/common
+  - sqlite3/session (3.50.4):
+    - sqlite3/common
+  - sqlite3_flutter_libs (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - sqlite3 (~> 3.50.4)
+    - sqlite3/dbstatvtab
+    - sqlite3/fts5
+    - sqlite3/math
+    - sqlite3/perf-threadsafe
+    - sqlite3/rtree
+    - sqlite3/session
+  - SwiftyGif (5.4.5)
+  - url_launcher_ios (0.0.1):
+    - Flutter
+  - wakelock_plus (0.0.1):
+    - Flutter
+  - zip_flutter (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - clipshare_clipboard_listener (from `.symlinks/plugins/clipshare_clipboard_listener/ios`)
+  - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
+  - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
+  - file_picker (from `.symlinks/plugins/file_picker/ios`)
+  - Flutter (from `Flutter`)
+  - flutter_local_notifications (from `.symlinks/plugins/flutter_local_notifications/ios`)
+  - flutter_screenshot_detect (from `.symlinks/plugins/flutter_screenshot_detect/ios`)
+  - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
+  - no_screenshot (from `.symlinks/plugins/no_screenshot/ios`)
+  - open_file_plus (from `.symlinks/plugins/open_file_plus/ios`)
+  - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
+  - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
+  - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - persistent_device_id (from `.symlinks/plugins/persistent_device_id/ios`)
+  - qr_code_scanner_plus (from `.symlinks/plugins/qr_code_scanner_plus/ios`)
+  - share_handler_ios (from `.symlinks/plugins/share_handler_ios/ios`)
+  - share_handler_ios_models (from `.symlinks/plugins/share_handler_ios/ios/Models`)
+  - share_plus (from `.symlinks/plugins/share_plus/ios`)
+  - smart_auth (from `.symlinks/plugins/smart_auth/ios`)
+  - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
+  - sqlite3_flutter_libs (from `.symlinks/plugins/sqlite3_flutter_libs/darwin`)
+  - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
+  - wakelock_plus (from `.symlinks/plugins/wakelock_plus/ios`)
+  - zip_flutter (from `.symlinks/plugins/zip_flutter/ios`)
+
+SPEC REPOS:
+  trunk:
+    - DKImagePickerController
+    - DKPhotoGallery
+    - MTBBarcodeScanner
+    - ReachabilitySwift
+    - ScreenProtectorKit
+    - SDWebImage
+    - sqlite3
+    - SwiftyGif
+
+EXTERNAL SOURCES:
+  clipshare_clipboard_listener:
+    :path: ".symlinks/plugins/clipshare_clipboard_listener/ios"
+  connectivity_plus:
+    :path: ".symlinks/plugins/connectivity_plus/ios"
+  device_info_plus:
+    :path: ".symlinks/plugins/device_info_plus/ios"
+  file_picker:
+    :path: ".symlinks/plugins/file_picker/ios"
+  Flutter:
+    :path: Flutter
+  flutter_local_notifications:
+    :path: ".symlinks/plugins/flutter_local_notifications/ios"
+  flutter_screenshot_detect:
+    :path: ".symlinks/plugins/flutter_screenshot_detect/ios"
+  local_auth_darwin:
+    :path: ".symlinks/plugins/local_auth_darwin/darwin"
+  no_screenshot:
+    :path: ".symlinks/plugins/no_screenshot/ios"
+  open_file_plus:
+    :path: ".symlinks/plugins/open_file_plus/ios"
+  package_info_plus:
+    :path: ".symlinks/plugins/package_info_plus/ios"
+  path_provider_foundation:
+    :path: ".symlinks/plugins/path_provider_foundation/darwin"
+  permission_handler_apple:
+    :path: ".symlinks/plugins/permission_handler_apple/ios"
+  persistent_device_id:
+    :path: ".symlinks/plugins/persistent_device_id/ios"
+  qr_code_scanner_plus:
+    :path: ".symlinks/plugins/qr_code_scanner_plus/ios"
+  share_handler_ios:
+    :path: ".symlinks/plugins/share_handler_ios/ios"
+  share_handler_ios_models:
+    :path: ".symlinks/plugins/share_handler_ios/ios/Models"
+  share_plus:
+    :path: ".symlinks/plugins/share_plus/ios"
+  smart_auth:
+    :path: ".symlinks/plugins/smart_auth/ios"
+  sqflite_darwin:
+    :path: ".symlinks/plugins/sqflite_darwin/darwin"
+  sqlite3_flutter_libs:
+    :path: ".symlinks/plugins/sqlite3_flutter_libs/darwin"
+  url_launcher_ios:
+    :path: ".symlinks/plugins/url_launcher_ios/ios"
+  wakelock_plus:
+    :path: ".symlinks/plugins/wakelock_plus/ios"
+  zip_flutter:
+    :path: ".symlinks/plugins/zip_flutter/ios"
+
+SPEC CHECKSUMS:
+  clipshare_clipboard_listener: 509d6d88c1e5908dbb908ed3e1278853d4698308
+  connectivity_plus: 481668c94744c30c53b8895afb39159d1e619bdf
+  device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
+  DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
+  DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
+  file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
+  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  flutter_local_notifications: a5a732f069baa862e728d839dd2ebb904737effb
+  flutter_screenshot_detect: 1617896225a428f4aef698050c8900460566e1ff
+  local_auth_darwin: c3ee6cce0a8d56be34c8ccb66ba31f7f180aaebb
+  MTBBarcodeScanner: f453b33c4b7dfe545d8c6484ed744d55671788cb
+  no_screenshot: 89e778ede9f1e39cc3fb9404d782a42712f2a0b2
+  open_file_plus: b0a12f9db69dfdab3b4751761753d2ba229ae6c1
+  package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
+  permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
+  persistent_device_id: 8bea77b44b28d6950a9500ee03eff99b82378e92
+  qr_code_scanner_plus: 7e087021bc69873140e0754750eb87d867bed755
+  ReachabilitySwift: 32793e867593cfc1177f5d16491e3a197d2fccda
+  ScreenProtectorKit: 83a6281b02c7a5902ee6eac4f5045f674e902ae4
+  SDWebImage: e9c98383c7572d713c1a0d7dd2783b10599b9838
+  share_handler_ios: e2244e990f826b2c8eaa291ac3831569438ba0fb
+  share_handler_ios_models: fc638c9b4330dc7f082586c92aee9dfa0b87b871
+  share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a
+  smart_auth: 33668081c5f646af84f10492a067d25fdcd16951
+  sqflite_darwin: 20b2a3a3b70e43edae938624ce550a3cbf66a3d0
+  sqlite3: 73513155ec6979715d3904ef53a8d68892d4032b
+  sqlite3_flutter_libs: 83f8e9f5b6554077f1d93119fe20ebaa5f3a9ef1
+  SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
+  wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
+  zip_flutter: 452447e26d7e66c88fc582ad7ad86fcee39c7b53
+
+PODFILE CHECKSUM: 6d48759776783e224fba711a4f835659cbc6d3a2
+
+COCOAPODS: 1.16.2

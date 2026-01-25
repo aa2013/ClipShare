@@ -367,6 +367,30 @@ class SettingsPage extends GetView<SettingsController> {
                           return const Text("Unknown");
                         },
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.enablePIP.tr, maxLines: 1),
+                        description: Text(TranslationKey.enablePIPTip.tr, maxLines: 1),
+                        value: appConfig.enablePIP,
+                        padding: const EdgeInsets.all(16),
+                        action: (v) {
+                          return Switch(
+                            value: appConfig.enablePIP,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnablePIP(checked);
+                              if(checked){
+                                final tempPath = await FileUtil.copyAssetToTemp(Constants.iosPIPDefaultVideoPath);
+                                final result = await clipboardManager.startPIP(tempPath);
+                                Log.debug(logTag, "start pip $result");
+                              }else{
+                                final result = await clipboardManager.stopPIP();
+                                Log.debug(logTag, "stop pip $result");
+                              }
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isIOS,
+                      ),
                     ],
                   ),
                 ),
@@ -735,6 +759,7 @@ class SettingsPage extends GetView<SettingsController> {
                             },
                           );
                         },
+                        show: (v) => !Platform.isIOS,
                       ),
                       SettingCard(
                         title: Row(

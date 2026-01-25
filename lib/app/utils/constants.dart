@@ -94,6 +94,7 @@ class Constants {
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
   static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
+  static const iosPIPDefaultVideoPath = "assets/videos/pip_example.mp4";
 
   static Future<String> get documentsPath async {
     String dir;

@@ -691,7 +691,9 @@ enum TranslationKey {
   recopyOnScreenUnlockedTitle,
   recopyOnScreenUnlockedTitleDesc,
   excludePrivateFormat,
-  excludePrivateFormatTips;
+  excludePrivateFormatTips,
+  enablePIP,
+  enablePIPTip;
 
   String get tr => name.tr;
 

@@ -606,6 +606,11 @@ class ConfigService extends GetxService {
 
   bool get isExcludeFormat => _excludeFormat.value;
 
+  ///IOS 启用画中画，启用后可后台监听剪贴板
+  final _enablePIP = false.obs;
+
+  bool get enablePIP => _enablePIP.value;
+
   //endregion
 
   //endregion
@@ -816,6 +821,7 @@ class ConfigService extends GetxService {
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
     _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
     _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
+    _enablePIP.value = await cfg.getConfigByKey(ConfigKey.enablePIP, false);
   }
 
   ///初始化路径信息
@@ -913,6 +919,12 @@ class ConfigService extends GetxService {
       guid = CryptoUtil.toMD5(macosInfo.systemGUID!);
       name = macosInfo.computerName;
       type = "Mac";
+    } else if (Platform.isIOS) {
+      var iosInfo = await deviceInfo.iosInfo;
+      var id = await PersistentDeviceId.getDeviceId();
+      guid = CryptoUtil.toMD5(id!);
+      name = iosInfo.name;
+      type = "IOS";
     } else {
       throw Exception("Not Support Platform");
     }
@@ -1399,6 +1411,15 @@ class ConfigService extends GetxService {
     _excludeFormat.value = value;
     final clipboardService = Get.find<ClipboardService>();
     await clipboardService.setExcludeFormat(value);
+  }
+
+  ///设置ios是否启用画中画
+  Future<void> setEnablePIP(bool value) async {
+    if (!Platform.isIOS) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.enablePIP, value.toString());
+    _enablePIP.value = value;
   }
 
   //endregion

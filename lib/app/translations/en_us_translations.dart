@@ -1403,6 +1403,11 @@ class EnUSTranslation extends AbstractTranslations {
         return "Exclude Private Formats";
       case TranslationKey.excludePrivateFormatTips:
         return "Clipboard content with specific markers (ExcludeClipboardContentFromMonitorProcessing) will not be logged when detected";
+      case TranslationKey.enablePIP:
+        return "Enable Picture-in-Picture";
+      case TranslationKey.enablePIPTip:
+        return "When enabled, received video files can be opened directly in Picture-in-Picture mode, and clipboard detection will also be enhanced.";
+
     }
   }
 }

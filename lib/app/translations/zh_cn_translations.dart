@@ -1401,6 +1401,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "排除隐私格式";
       case TranslationKey.excludePrivateFormatTips:
         return "当检测到剪贴板含有特定标记（ExcludeClipboardContentFromMonitorProcessing）将不会记录";
+      case TranslationKey.enablePIP:
+        return "开启画中画悬浮窗";
+      case TranslationKey.enablePIPTip:
+        return "开启后接收到的视频文件可直接使用画中画打开，也可增强剪贴板获取";
     }
   }
 }
