@@ -820,6 +820,24 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                         show: (v) => Platform.isAndroid,
                       ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.excludePrivateFormat.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.excludePrivateFormatTips.tr),
+                        value: appConfig.isExcludeFormat,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setExcludeFormat(checked);
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isWindows,
+                      ),
                     ],
                   ),
                 ),

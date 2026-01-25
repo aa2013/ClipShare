@@ -67,4 +67,5 @@ enum ConfigKey {
   stopListeningOnScreenClosed,
   sendBroadcastOnAdd,
   recopyOnScreenUnlocked,
+  excludeFormat,
 }
