@@ -6,6 +6,7 @@ import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -252,7 +253,9 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     }
     initAutoCleanDataTimer();
     if (appConfig.useAuthentication) {
-      gotoAuthenticationPage(TranslationKey.authenticationPageTitle.tr, lock: true);
+      if (!PlatformExt.isDesktop || !appConfig.startMini) {
+        gotoAuthenticationPage(TranslationKey.authenticationPageTitle.tr, lock: true);
+      }
     }
   }
 
