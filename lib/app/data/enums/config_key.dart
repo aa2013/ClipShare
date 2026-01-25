@@ -68,4 +68,5 @@ enum ConfigKey {
   sendBroadcastOnAdd,
   recopyOnScreenUnlocked,
   excludeFormat,
+  enablePIP,
 }

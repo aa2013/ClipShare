@@ -1405,6 +1405,11 @@ class EnUSTranslation extends AbstractTranslations {
         return "Keep Last";
       case TranslationKey.onlyLocal:
         return "Only Local";
+      case TranslationKey.enablePIP:
+        return "Enable Picture-in-Picture";
+      case TranslationKey.enablePIPTip:
+        return "When enabled, received video files can be opened directly in Picture-in-Picture mode, and clipboard detection will also be enhanced.";
+
     }
   }
 }

@@ -692,7 +692,9 @@ enum TranslationKey {
   excludePrivateFormatTips,
   moreActions,
   retainDays,
-  onlyLocal;
+  onlyLocal,
+  enablePIP,
+  enablePIPTip;
 
   String get tr => name.tr;
 

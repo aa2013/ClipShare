@@ -1403,6 +1403,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "保留最近";
       case TranslationKey.onlyLocal:
         return "仅本地";
+      case TranslationKey.enablePIP:
+        return "开启画中画悬浮窗";
+      case TranslationKey.enablePIPTip:
+        return "开启后接收到的视频文件可直接使用画中画打开，也可增强剪贴板获取";
     }
   }
 }
