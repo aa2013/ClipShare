@@ -10,7 +10,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class AddDeviceDialog extends StatefulWidget {
@@ -85,14 +85,15 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
             visible: PlatformExt.isMobile,
             child: TextButton(
               onPressed: () async {
-                var hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                var hasPerm = await PermissionHelper.testCameraPerm();
                 if (!hasPerm) {
-                  await PermissionHelper.reqAndroidCameraPerm();
-                  hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                  await PermissionHelper.reqCameraPerm();
+                  hasPerm = await PermissionHelper.testCameraPerm();
                   if (!hasPerm) {
                     Global.showTipsDialog(
                       context: context,
                       text: TranslationKey.noCameraPermission.tr,
+                      onOk: () => openAppSettings(),
                     );
                     return;
                   }

@@ -868,6 +868,14 @@ class EnUSTranslation extends AbstractTranslations {
         return "Scan QRCode";
       case TranslationKey.noCameraPermission:
         return "Please grant camera permission";
+      case TranslationKey.noPhotoPermission:
+        return "Please grant photo permission";
+      case TranslationKey.noNotificationPermission:
+        return "Please grant notification permission";
+      case TranslationKey.permissionSettingsIOSPhotosTitle:
+        return "Photo Permission";
+      case TranslationKey.permissionSettingsIOSPhotosDesc:
+        return "Unable to save images to Photo Library without permission";
       case TranslationKey.qrCodeScannerPageTitle:
         return "Scan QR code";
       case TranslationKey.qrCodeScanError:
@@ -1391,6 +1399,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Keep Last";
       case TranslationKey.onlyLocal:
         return "Only Local";
+      case TranslationKey.enablePIP:
+        return "Enable Picture-in-Picture";
+      case TranslationKey.enablePIPTip:
+        return "When enabled, received video files can be opened directly in Picture-in-Picture mode, and clipboard detection will also be enhanced.";
       case TranslationKey.permissionSettingsClipboardTitle:
         return "Clipboard Permission";
       case TranslationKey.permissionSettingsClipboardDesc:

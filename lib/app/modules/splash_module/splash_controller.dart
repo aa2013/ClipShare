@@ -9,6 +9,8 @@ import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -131,6 +133,13 @@ class SplashController extends GetxController {
     if (Platform.isAndroid) {
       androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
       await copyAssets();
+    }
+    if(Platform.isIOS){
+      if(appConfig.enablePIP){
+        final tempPath = await FileUtil.copyAssetToTemp(Constants.iosPIPDefaultVideoPath);
+        final result = await clipboardManager.startPIP(tempPath);
+        Log.debug(tag, "start pip $result");
+      }
     }
     // 初始化channel
     initChannel();

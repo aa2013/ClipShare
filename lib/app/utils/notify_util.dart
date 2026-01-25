@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
@@ -58,6 +61,14 @@ class NotifyUtil {
     } else {
       if (!_notificationReady) {
         await _initNotifications();
+      }
+      if(Platform.isIOS){
+        if(!await PermissionHelper.checkIOSNotificationPermission()){
+          if(!await PermissionHelper.reqIOSNotificationPermission()){
+            Global.showTipsDialog(context: Get.context!, text: TranslationKey.noNotificationPermission.tr);
+            return null;
+          }
+        }
       }
       NotificationDetails notificationDetails = NotificationDetails(
         iOS: const DarwinNotificationDetails(),

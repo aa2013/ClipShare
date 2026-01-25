@@ -18,6 +18,8 @@ import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/loading.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
 import 'package:path/path.dart' as p;
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -74,6 +76,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   //region 属性
   final String tag = "HistoryController";
+  final imageSaver = ImageGallerySaver();
 
   var _exporting = false;
 
@@ -458,12 +461,21 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               path = "${appConfig.androidPrivatePicturesPath}/$fileName";
             }
             Log.debug(tag, "newPath $path");
+            //如果没有权限则请求
+            if (!(await PermissionHelper.testAndroidStoragePerm())) {
+              await PermissionHelper.reqAndroidStoragePerm();
+            }
+          }
+          if (Platform.isIOS){
+            if(appConfig.saveToPictures){
+              if(await PermissionHelper.checkIOSPhotoPermission()){
+                await imageSaver.saveImage(Uint8List.fromList(data));
+              }else{
+                Global.showTipsDialog(context: Get.context!, text: TranslationKey.noPhotoPermission.tr);
+              }
+            }
           }
           history.content = path;
-          //如果没有权限则请求
-          if (!(await PermissionHelper.testAndroidStoragePerm())) {
-            await PermissionHelper.reqAndroidStoragePerm();
-          }
           var file = File(path);
           await file.parent.create(recursive: true);
           if (!file.existsSync()) {

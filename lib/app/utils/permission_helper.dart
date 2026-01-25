@@ -91,17 +91,45 @@ class PermissionHelper {
     Log.info(tag, "request AndroidReadSms: $status");
   }
 
-  ///测试Android相机权限
-  static Future<bool> testAndroidCameraPerm() async {
-    if (!Platform.isAndroid) return false;
+  ///测试相机权限
+  static Future<bool> testCameraPerm() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return false;
     return await Permission.camera.isGranted;
   }
 
-  ///请求Android相机权限
-  static Future<void> reqAndroidCameraPerm() async {
-    if (!Platform.isAndroid) return;
+  ///请求相机权限
+  static Future<void> reqCameraPerm() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     var status = await Permission.camera.request();
-    Log.info(tag, "request Android camera: $status");
+    Log.info(tag, "request camera: $status");
+  }
+
+  ///检查IOS相册权限
+  static Future<bool> checkIOSPhotoPermission() async {
+    if(!Platform.isIOS) return false;
+    var status = await Permission.photos.status;
+    return status.isGranted || status.isLimited;
+  }
+
+  ///请求IOS相册权限
+  static Future<bool> reqIOSPhotoPermission() async {
+    if(!Platform.isIOS) return false;
+    final status = await Permission.photos.request();
+    return status.isGranted || status.isLimited;
+  }
+
+  ///检查IOS通知权限
+  static Future<bool> checkIOSNotificationPermission() async {
+    if(!Platform.isIOS) return false;
+    var status = await Permission.notification.status;
+    return status.isGranted || status.isLimited;
+  }
+
+  ///请求IOS通知权限
+  static Future<bool> reqIOSNotificationPermission() async {
+    if(!Platform.isIOS) return false;
+    final status = await Permission.notification.request();
+    return status.isGranted || status.isLimited;
   }
 
   ///测试无障碍权限

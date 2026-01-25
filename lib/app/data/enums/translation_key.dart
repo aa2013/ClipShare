@@ -679,6 +679,9 @@ enum TranslationKey {
   moreActions,
   retainDays,
   onlyLocal,
+  enablePIP,
+  enablePIPTip,
+  noPhotoPermission,
   permissionSettingsClipboardTitle,
   permissionSettingsClipboardDesc,
   clipboardPermissionRequestFailed,
@@ -925,7 +928,10 @@ enum TranslationKey {
   recordMaxLength,
   recordMaxLengthTips,
   length,
-  mustGreaterThanZero;
+  mustGreaterThanZero,
+  noNotificationPermission,
+  permissionSettingsIOSPhotosTitle,
+  permissionSettingsIOSPhotosDesc;
 
   String get tr => name.tr;
 

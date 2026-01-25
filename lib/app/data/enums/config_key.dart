@@ -68,6 +68,7 @@ enum ConfigKey {
   sendBroadcastOnAdd,
   recopyOnScreenUnlocked,
   excludeFormat,
+  enablePIP,
   rememberPopupWindowSize,
   historyWindowSize,
   fileSenderWindowSize,

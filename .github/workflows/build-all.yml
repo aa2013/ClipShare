@@ -32,12 +32,15 @@ jobs:
   macos:
     uses: ./.github/workflows/build-macos.yml
 
+  ios:
+    uses: ./.github/workflows/build-ios-nosign.yml
+
   # ========================
   # 2️⃣ 汇总 + 发布
   # ========================
   release:
-    needs: [windows, android, linux, macos]
-    # needs: [windows, linux, macos]
+    needs: [windows, android, linux, macos, ios]
+    # needs: [windows, linux, macos, ios]
     runs-on: ubuntu-latest
     outputs:
       tag_name: ${{ steps.tag.outputs.tag_name }}

@@ -39,7 +39,7 @@ class SearchPage extends GetView<search_module.SearchController> {
               }
               return HistoryFilter(
                   controller: controller.filterController,
-                  showFillColor: PlatformExt.isDesktop && controller.isBigScreen,
+                  showFillColor: PlatformExt.isDesktop || controller.isBigScreen,
               );
             },
           ),

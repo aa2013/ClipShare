@@ -38,43 +38,40 @@ class Constants {
   static const heartbeatInterval = 30;
 
   //中转程序下载地址
-  static const forwardDownloadUrl =
-      "https://clipshare.coclyun.top/usages/forward.html";
+  static const forwardDownloadUrl = "https://clipshare.coclyun.top/usages/forward.html";
 
   //更新信息地址
-  static const appUpdateInfoUrl =
-      "https://clipshare.coclyun.top/version-info.json";
+  static const appUpdateInfoUrl = "https://clipshare.coclyun.top/version-info.json";
 
   //常见问题地址
   static const faqUrl = "https://clipshare.coclyun.top/faq.html";
 
   //数据广播Action
-  static const kOnHistoryChangedBroadcastAction =
-      "$appPkg.ACTION_ON_HISTORY_CHANGED";
+  static const kOnHistoryChangedBroadcastAction = "$appPkg.ACTION_ON_HISTORY_CHANGED";
 
   //默认卡片边框颜色
   static const defaultCardBorderColor = Color.fromARGB(255, 236, 237, 243);
 
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
+    {
+      "version": 1,
+      "data": [
         {
-          "version": 1,
-          "data": [
-            {
-              "name": TranslationKey.defaultLinkTagName.tr,
-              "rule": r"[a-zA-z]+://[^\s]*",
-            },
-          ],
+          "name": TranslationKey.defaultLinkTagName.tr,
+          "rule": r"[a-zA-z]+://[^\s]*",
         },
-      );
+      ],
+    },
+  );
 
   //默认短信规则
   static String get defaultSmsRules => jsonEncode(
-        {
-          "version": 0,
-          "data": [],
-        },
-      );
+    {
+      "version": 0,
+      "data": [],
+    },
+  );
 
   //使用说明网页
   static const usageWeb = "https://clipshare.coclyun.top/usages/android.html";
@@ -83,35 +80,30 @@ class Constants {
   static const githubRepo = "https://github.com/aa2013/ClipShare";
 
   //QQ group
-  static const qqGroup =
-      "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=HQGbGZ-eYPNGLiawtVRuTk21RJyh87vp&authKey=mm0grlVTMpUJriGac5qBe8X50wShxlKILoeF9K6F2%2FmOpMPv60cBxZBZKs%2BSYmFI&noverify=0&group_code=622786394";
+  static const qqGroup = "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=HQGbGZ-eYPNGLiawtVRuTk21RJyh87vp&authKey=mm0grlVTMpUJriGac5qBe8X50wShxlKILoeF9K6F2%2FmOpMPv60cBxZBZKs%2BSYmFI&noverify=0&group_code=622786394";
 
   //ClipShare 官网
   static const clipshareSite = "https://clipshare.coclyun.top";
 
   //默认历史弹窗快捷键（Ctrl + Alt + H）
-  static final defaultHistoryWindowKeys =
-      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
+  static final defaultHistoryWindowKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
 
   //文件同步快捷键（Ctrl + Shift + C）
-  static final defaultSyncFileHotKeys =
-      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
+  static final defaultSyncFileHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
 
   //显示主窗体快捷键（Ctrl + Shift + S）
-  static final defaultShowMainWindowHotKeys =
-      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
+  static final defaultShowMainWindowHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
 
   //退出程序快捷键（Ctrl + Shift + Q）
-  static final defaultExitAppHotKeys =
-      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
+  static final defaultExitAppHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
 
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
   static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
-  static const windowsStartUpPath =
-      r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
+  static const iosPIPDefaultVideoPath = "assets/videos/pip_example.mp4";
+  static const windowsStartUpPath = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
 
   //配对时限（秒）
   static const pairingLimit = 60;
@@ -135,19 +127,19 @@ class Constants {
   );
 
   static List<RadioData<int>> get authBackEndTimeSelections => [
-        RadioData(value: 0, label: TranslationKey.immediately.tr),
-        RadioData(value: 1, label: "1 ${TranslationKey.minute.tr}"),
-        RadioData(value: 2, label: "2 ${TranslationKey.minute.tr}"),
-        RadioData(value: 5, label: "5 ${TranslationKey.minute.tr}"),
-        RadioData(value: 10, label: "10 ${TranslationKey.minute.tr}"),
-        RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
-      ];
+    RadioData(value: 0, label: TranslationKey.immediately.tr),
+    RadioData(value: 1, label: "1 ${TranslationKey.minute.tr}"),
+    RadioData(value: 2, label: "2 ${TranslationKey.minute.tr}"),
+    RadioData(value: 5, label: "5 ${TranslationKey.minute.tr}"),
+    RadioData(value: 10, label: "10 ${TranslationKey.minute.tr}"),
+    RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
+  ];
 
   static List<RadioData> get languageSelections {
     return [
-      RadioData(value: 'zh_CN', label: "简体中文"),
-      RadioData(value: 'en_US', label: "English"),
-    ]
+        RadioData(value: 'zh_CN', label: "简体中文"),
+        RadioData(value: 'en_US', label: "English"),
+      ]
       ..sort((a, b) => a.label.compareTo(b.label))
       ..insert(0, RadioData(value: 'auto', label: TranslationKey.auto.tr));
   }
@@ -249,18 +241,15 @@ class Constants {
   static const httpUrlRegex = r'^(http|https)://[^\s]+$';
   static const wsUrlRegex = r'^(ws|wss)://[^\s]+$';
 
-  static String get dirSeparate =>
-      Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
+  static String get dirSeparate => Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
 
   static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
 
   static const defaultWsPingIntervalTime = 30;
 
-  static const jiebaDownloadUrl =
-      'https://download.clipshare.coclyun.top/others/jieba.zip';
+  static const jiebaDownloadUrl = 'https://download.clipshare.coclyun.top/others/jieba.zip';
+  static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
 
-  static const jiebaGithubUrl =
-      'https://github.com/w568w/jieba_flutter/tree/master/assets';
   static const appIconSize = 17.0;
   static final emptyContent = EmptyContent();
   static final codeSQLTheme = CodeHighlightThemeMode(mode: langSqliteHighlight);

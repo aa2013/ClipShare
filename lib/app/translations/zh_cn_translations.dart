@@ -215,6 +215,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "悬浮窗权限";
       case TranslationKey.permissionSettingsFloatDesc:
         return "高版本系统中通过悬浮窗获取剪贴板焦点";
+      case TranslationKey.permissionSettingsIOSPhotosTitle:
+        return "相册权限";
+      case TranslationKey.permissionSettingsIOSPhotosDesc:
+        return "无相册权限将无法保存图片到相册";
       case TranslationKey.permissionSettingsBatteryOptimiseTitle:
         return "电池优化";
       case TranslationKey.permissionSettingsBatteryOptimiseDesc:
@@ -820,6 +824,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "扫描二维码";
       case TranslationKey.noCameraPermission:
         return "请授予相机权限";
+      case TranslationKey.noPhotoPermission:
+        return "请授予相册权限";
+      case TranslationKey.noNotificationPermission:
+        return "请授予通知权限";
       case TranslationKey.qrCodeScannerPageTitle:
         return "扫描二维码连接设备";
       case TranslationKey.qrCodeScanError:
@@ -1389,6 +1397,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "保留最近";
       case TranslationKey.onlyLocal:
         return "仅本地";
+      case TranslationKey.enablePIP:
+        return "开启画中画悬浮窗";
+      case TranslationKey.enablePIPTip:
+        return "开启后接收到的视频文件可直接使用画中画打开，也可增强剪贴板获取";
       case TranslationKey.local:
         return "本地";
       case TranslationKey.selectBackupSource:

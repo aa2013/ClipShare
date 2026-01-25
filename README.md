@@ -16,12 +16,7 @@ ClipShare 是一个基于 Flutter 的跨平台剪贴板同步工具，支持文�
 
 该项目源于我想找一个 Android 平台上的剪贴板同步工具，但是基本上在 Andorid10+ 系统上都无法后台无感同步和公网环境下同步（本人是个懒人）于是决定自己来实现。
 
-当前除 iOS 以外均已发布，iOS 版本还处于测试阶段，若需要参与 iOS 版本的测试和开发，请拉取对应分支代码：
-
-+ ClipShare: [ClipShare-ios-dev](https://github.com/aa2013/ClipShare/tree/ios-support-dev) 
-+ 剪贴板插件: [ClipboardListener-ios](https://github.com/aa2013/ClipboardListener/tree/ios) 。
-
-iOS 版本当前也可在 [issue#6](https://github.com/aa2013/ClipShare/issues/6) 中下载未签名的安装包
+iOS 版本虽已加入构建，但是还未经过充分测试
 
 ## 技术现状与规划
 
@@ -65,13 +60,13 @@ Android 侧目前主要有两类监听路径：
 
 ## 支持平台
 
-| 平台 | 状态 | 说明 |
-| --- | --- | --- |
-| Android | ✅ | 已支持 |
-| Windows | ✅ | 已支持                                                    |
-| Linux | ✅ | 已支持                                                    |
-| macOS | ✅ | 已支持                                                    |
-| iOS | ⚠️ | 仓库包含 iOS 工程，当前发布流程未包含 iOS，仍处于测试阶段 |
+| 平台 | 状态 | 说明             |
+| --- | --- |----------------|
+| Android | ✅ | 已支持            |
+| Windows | ✅ | 已支持            |
+| Linux | ✅ | 已支持            |
+| macOS | ✅ | 已支持            |
+| iOS | ✅ | 已支持，但未经过充分测试 |
 
 ## 项目结构
 
@@ -180,6 +175,7 @@ flutter run
 - Windows EXE 打包（Fastforge）：`scripts/build_windows_exe.bat`
 - Linux 打包（Fastforge, deb/appimage/rpm）：`scripts/build_linux.sh pack`
 - macOS DMG 打包 (Fastforge)：`scripts/build_macos.sh`
+- iOS 打包 (未签名)：`scripts/build_ios_nosign.sh`
 
 GitHub Actions 也提供了对应平台流水线，见 `.github/workflows/`：
 
@@ -188,6 +184,7 @@ GitHub Actions 也提供了对应平台流水线，见 `.github/workflows/`：
 - `build-windows.yml`
 - `build-linux.yml`
 - `build-macos.yml`
+- `build-ios-nosign.yml`
 - `build-notify-docker-image.yml`
 
 ### 代码生成

@@ -58,6 +58,7 @@ import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart' show openAppSettings;
 
 import '../../data/enums/forward_way.dart';
 /**
@@ -364,6 +365,30 @@ class SettingsPage extends GetView<SettingsController> {
                           return Text(TranslationKey.unknown.tr);
                         },
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.enablePIP.tr, maxLines: 1),
+                        description: Text(TranslationKey.enablePIPTip.tr, maxLines: 1),
+                        value: appConfig.enablePIP,
+                        padding: const EdgeInsets.all(16),
+                        action: (v) {
+                          return Switch(
+                            value: appConfig.enablePIP,
+                            onChanged: (checked) async {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setEnablePIP(checked);
+                              if(checked){
+                                final tempPath = await FileUtil.copyAssetToTemp(Constants.iosPIPDefaultVideoPath);
+                                final result = await clipboardManager.startPIP(tempPath);
+                                Log.debug(logTag, "start pip $result");
+                              }else{
+                                final result = await clipboardManager.stopPIP();
+                                Log.debug(logTag, "stop pip $result");
+                              }
+                            },
+                          );
+                        },
+                        show: (v) => Platform.isIOS,
+                      ),
                     ],
                   ),
                 ),
@@ -378,16 +403,20 @@ class SettingsPage extends GetView<SettingsController> {
                     cardList: [
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsNotificationTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsNotificationDesc.tr),
+                        description: Platform.isAndroid? Text(TranslationKey.permissionSettingsNotificationDesc.tr) : null,
                         value: controller.hasNotifyPerm.value,
                         action: (val) => Icon(
                           val ? Icons.check_circle : Icons.help,
                           color: val ? Colors.green : Colors.orange,
                         ),
-                        show: (v) => Platform.isAndroid && !v,
+                        show: (v) => (Platform.isAndroid || Platform.isIOS) && !v,
                         onTap: () {
                           if (!controller.hasNotifyPerm.value) {
-                            controller.notifyHandler.request();
+                            if(Platform.isIOS){
+                              openAppSettings();
+                            }else{
+                              controller.notifyHandler.request();
+                            }
                           }
                         },
                       ),
@@ -458,6 +487,21 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => Platform.isAndroid && v,
                         onTap: () {
                           NotificationListenerService.requestPermission();
+                        },
+                      ),
+                      SettingCard(
+                        title: Text(TranslationKey.permissionSettingsIOSPhotosTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsIOSPhotosDesc.tr),
+                        value: controller.hasIOSPhotosPerm.value,
+                        action: (val) => Icon(
+                          val ? Icons.check_circle : Icons.help,
+                          color: val ? Colors.green : Colors.orange,
+                        ),
+                        show: (v) => Platform.isAndroid && !v,
+                        onTap: () {
+                          if (!controller.hasIOSPhotosPerm.value) {
+                            controller.iosPhotosHandler.request();
+                          }
                         },
                       ),
                       SettingCard(
@@ -792,6 +836,7 @@ class SettingsPage extends GetView<SettingsController> {
                             },
                           );
                         },
+                        show: (v) => !Platform.isIOS,
                       ),
                       SettingCard(
                         title: Row(
@@ -2164,40 +2209,64 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
                               if (checked) {
-                                var path = "${Constants.androidPicturesPath}/${Constants.appName}";
-                                var res = await PermissionHelper.testAndroidStoragePerm(path);
-                                if (res) {
-                                  appConfig.setSaveToPictures(true);
-                                  return;
+                                if(Platform.isAndroid) {
+                                  var path = "${Constants
+                                      .androidPicturesPath}/${Constants
+                                      .appName}";
+                                  var res = await PermissionHelper
+                                      .testAndroidStoragePerm(path);
+                                  if (res) {
+                                    appConfig.setSaveToPictures(true);
+                                    return;
+                                  }
+                                  DialogController? dialog;
+                                  dialog = await Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey
+                                        .syncSettingsStoreImg2PicturesNoPermText
+                                        .tr,
+                                    showCancel: true,
+                                    onOk: () async {
+                                      await dialog!.close();
+                                      await PermissionHelper
+                                          .reqAndroidStoragePerm(path);
+                                      if (!await PermissionHelper
+                                          .testAndroidStoragePerm(path)) {
+                                        appConfig.setSaveToPictures(false);
+                                        Global.showTipsDialog(
+                                          context: context,
+                                          text: TranslationKey
+                                              .syncSettingsStoreImg2PicturesCancelPerm
+                                              .tr,
+                                        );
+                                      } else {
+                                        //授权成功
+                                        appConfig.setSaveToPictures(true);
+                                      }
+                                    },
+                                    okText: TranslationKey
+                                        .dialogAuthorizationButtonText.tr,
+                                  );
+                                }else {
+                                  if(!await PermissionHelper.checkIOSPhotoPermission() && !await PermissionHelper.reqIOSPhotoPermission()){
+                                    appConfig.setSaveToPictures(false);
+                                    Global.showTipsDialog(
+                                      context: context,
+                                      text: TranslationKey.noPhotoPermission.tr,
+                                      onOk: () {
+                                        openAppSettings();
+                                      },);
+                                  }else{
+                                    appConfig.setSaveToPictures(true);
+                                  }
                                 }
-                                DialogController? dialog;
-                                dialog = await Global.showTipsDialog(
-                                  context: context,
-                                  text: TranslationKey.syncSettingsStoreImg2PicturesNoPermText.tr,
-                                  showCancel: true,
-                                  onOk: () async {
-                                    await dialog!.close();
-                                    await PermissionHelper.reqAndroidStoragePerm(path);
-                                    if (!await PermissionHelper.testAndroidStoragePerm(path)) {
-                                      appConfig.setSaveToPictures(false);
-                                      Global.showTipsDialog(
-                                        context: context,
-                                        text: TranslationKey.syncSettingsStoreImg2PicturesCancelPerm.tr,
-                                      );
-                                    } else {
-                                      //授权成功
-                                      appConfig.setSaveToPictures(true);
-                                    }
-                                  },
-                                  okText: TranslationKey.dialogAuthorizationButtonText.tr,
-                                );
                               } else {
                                 appConfig.setSaveToPictures(false);
                               }
                             },
                           );
                         },
-                        show: (v) => Platform.isAndroid,
+                        show: (v) => Platform.isAndroid || Platform.isIOS,
                       ),
                       SettingCard(
                         title: Text(
