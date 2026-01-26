@@ -1,10 +1,10 @@
 name: build-linux-packages
 
 on:
-  push:
-    branches:
-      - master
-      - dev
+  # push: # 暂时通过手动触发
+  #   branches:
+  #     - master
+  #     - dev
   workflow_dispatch:
 
 jobs:
