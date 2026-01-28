@@ -19,6 +19,7 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart'
 import 'package:clipshare/app/data/repository/entity/tables/user.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -109,13 +110,15 @@ class DbService extends GetxService {
   Future<DbService> init() async {
     // 获取应用程序的文件目录
     var dbPath = "clipshare.db";
-    var dirPath = Directory(Platform.resolvedExecutable).parent.path;
-    if(FileUtil.testWriteable(dirPath)){
-      //如果当前路径可写则使用当前路径，如开发环境或者便携版本
-      dbPath = "$dirPath/$dbPath".normalizePath;
-    }else{
-      var dirPath = await Constants.documentsPath;
-      dbPath = "$dirPath/$dbPath".normalizePath;
+    //桌面端如果当前路径可写则使用当前路径，如开发环境或者便携版本
+    if(PlatformExt.isDesktop) {
+      var dirPath = Directory(Platform.resolvedExecutable).parent.path;
+      if (FileUtil.testWriteable(dirPath)) {
+        dbPath = "$dirPath/$dbPath".normalizePath;
+      } else {
+        var dirPath = await Constants.documentsPath;
+        dbPath = "$dirPath/$dbPath".normalizePath;
+      }
     }
     _db = await $Floor_AppDb.databaseBuilder(dbPath).addMigrations([
       migration1to2,
