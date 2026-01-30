@@ -42,9 +42,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
-import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:uri_file_reader/uri_file_reader.dart';
@@ -155,7 +153,7 @@ class SplashController extends GetxController {
       if (!appConfig.startMini) {
         windowManager.show();
         windowManager.focus();
-      }else if(Platform.isLinux){
+      } else if (Platform.isLinux) {
         windowManager.hide();
       }
     });

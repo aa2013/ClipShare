@@ -11,20 +11,53 @@ import 'package:clipshare/app/widgets/dragAndSendFiles/online_devices.dart';
 import 'package:clipshare/app/widgets/dragAndSendFiles/pending_file_list.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-class FileSenderPage extends StatelessWidget {
+class FileSenderPage extends StatefulWidget {
   final List<Device> devices;
-  final pendingFileService = Get.find<PendingFileService>();
   final void Function(DropItem item) onItemRemove;
   final Function(List<Device> devives, List<DropItem> items) onSendClicked;
 
-  FileSenderPage({
+  const FileSenderPage({
     super.key,
     required this.devices,
     required this.onSendClicked,
     required this.onItemRemove,
   });
+
+  @override
+  State<StatefulWidget> createState() => _FileSenderPageState();
+}
+
+class _FileSenderPageState extends State<FileSenderPage> {
+  final FocusNode focusNode = FocusNode();
+  final pendingFileService = Get.find<PendingFileService>();
+
+  @override
+  void initState() {
+    HardwareKeyboard.instance.addHandler(handleKeyEvent);
+    super.initState();
+  }
+
+  bool handleKeyEvent(KeyEvent event) {
+    if (event is! KeyDownEvent) {
+      return false;
+    }
+    if(pendingFileService.pendingItems.isEmpty){
+      return false;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.enter) {
+      sendFile(context);
+    }
+    return false;
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(handleKeyEvent);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,38 +68,37 @@ class FileSenderPage extends StatelessWidget {
               title: Text(TranslationKey.sendFile.tr),
             )
           : null,
-      body: Column(
-        children: [
-          if(Platform.isMacOS)
-            const SizedBox(height: 25),
-          SizedBox(
-            height: 155,
-            child: Obx(
-              () => buildOnlineDevices(),
-            ),
+      body: SafeArea(
+        child: RawKeyboardListener(
+          focusNode: focusNode,
+          child: Column(
+            children: [
+              if (Platform.isMacOS) const SizedBox(height: 25),
+              SizedBox(
+                height: 155,
+                child: Obx(
+                  () => buildOnlineDevices(),
+                ),
+              ),
+              Expanded(
+                child: DropTarget(
+                  child: Obx(() => buildPendingItems()),
+                  onDragDone: (detail) {
+                    pendingFileService.addDropItems(detail.files);
+                  },
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: DropTarget(
-              child: Obx(() => buildPendingItems()),
-              onDragDone: (detail) {
-                pendingFileService.addDropItems(detail.files);
-              },
-            ),
-          ),
-        ],
+        ),
       ),
       floatingActionButton: Obx(
         () => Visibility(
           visible: pendingFileService.pendingItems.isNotEmpty,
           child: FloatingActionButton(
             tooltip: TranslationKey.sendFiles.tr,
-            onPressed: () async {
-              final devices = pendingFileService.pendingDevs;
-              if (devices.isEmpty) {
-                Global.showTipsDialog(context: context, text: TranslationKey.pleaseSelectDevices.tr);
-                return;
-              }
-              onSendClicked(devices.toList(growable: false), pendingFileService.pendingItems);
+            onPressed: () {
+              sendFile(context);
             },
             child: Transform.rotate(
               angle: -45 * (pi / 180),
@@ -78,7 +110,17 @@ class FileSenderPage extends StatelessWidget {
     );
   }
 
+  void sendFile(BuildContext context) {
+    final devices = pendingFileService.pendingDevs;
+    if (devices.isEmpty) {
+      Global.showTipsDialog(context: context, text: TranslationKey.pleaseSelectDevices.tr);
+      return;
+    }
+    widget.onSendClicked(devices.toList(growable: false), pendingFileService.pendingItems);
+  }
+
   Widget buildOnlineDevices() {
+    final devices = widget.devices;
     //如果只有一个设备，默认选择
     if (devices.length == 1) {
       pendingFileService.pendingDevs.add(devices[0]);
@@ -104,7 +146,7 @@ class FileSenderPage extends StatelessWidget {
     final items = pendingFileService.pendingItems.toList(growable: false);
     return PendingFileList(
       pendingItems: items,
-      onItemRemove: onItemRemove,
+      onItemRemove: widget.onItemRemove,
       onAddClicked: () async {
         var result = await FileUtil.pickFiles();
         final files = result.map((f) => DropItemFile(f.path!)).toList();
