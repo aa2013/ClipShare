@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:clipshare/app/data/models/drawer_model.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/utils/notify_util.dart';
+import 'package:clipshare/app/widgets/base/multi_drawer.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -58,9 +57,9 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   //region 属性
   static const defaultDrawerWidth = 400.0;
-  final _drawers = <DrawerModel>[].obs;
+  final _drawerWidth = defaultDrawerWidth.obs;
 
-  DrawerModel? get drawer => _drawers.isEmpty ? null : _drawers.last;
+  double get drawerWidth => _drawerWidth.value;
 
   final homeScaffoldKey = GlobalKey<ScaffoldState>();
   final _index = 0.obs;
@@ -129,6 +128,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   bool get isSyncFilePage => _pages[index] is SyncFilePage;
 
+  final drawer = MultiDrawerController();
+
   //endregion
 
   //region 生命周期
@@ -188,6 +189,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     _appInfoSyncer.dispose();
     _rulesSyncer.dispose();
     _networkListener.cancel();
+    drawer.dispose();
     super.onClose();
   }
 
@@ -361,6 +363,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   //region 页面跳转相关
 
+  ///重置抽屉宽度
+  void resetDrawerWidth([double? width]) {
+    _drawerWidth.value = width ?? defaultDrawerWidth;
+  }
+
   ///跳转验证页面
   Future? gotoAuthenticationPage(
     localizedReason, {
@@ -455,63 +462,24 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     }
   }
 
-  bool _allowRemoveDrawer = true;
+  //region drawer 打开和关闭
 
-  ///region drawer 打开和关闭
-  void openEndDrawer({
-    required Widget drawer,
+  void pushDrawer({
+    required Widget widget,
     double? width,
-    Function? onDrawerClosed,
-    bool closeBefore = true,
+    BeforeDrawerClosed? beforeClosed,
   }) {
-    if (closeBefore) {
-      closeAllEndDrawers();
+    if (width != null) {
+      _drawerWidth.value = width;
     }
-    if (_drawers.isNotEmpty) {
-      _allowRemoveDrawer = false;
-      homeScaffoldKey.currentState?.closeEndDrawer();
-    }
-    final isEmpty = _drawers.isEmpty;
-    _drawers.add(DrawerModel(drawer: drawer, onDrawerClosed: onDrawerClosed, width: width ?? defaultDrawerWidth));
-    Future.delayed((isEmpty ? 0 : 300).ms, () {
-      homeScaffoldKey.currentState?.openEndDrawer();
-    });
+    drawer.push(widget, beforeClosed);
   }
 
-  void closeAllEndDrawers() {
-    homeScaffoldKey.currentState?.closeEndDrawer();
-    final list = List.from(_drawers);
-    _drawers.value = [];
-    for (var drawer in list) {
-      try {
-        drawer.onDrawerClosed?.call();
-      } catch (err, stack) {
-        Log.error(tag, err, stack);
-      }
-    }
+  Future<void> popDrawer() {
+    return drawer.popWithAnimation();
   }
 
-  void closeEndDrawer() {
-    if (_drawers.isEmpty) {
-      return;
-    }
-    if (_allowRemoveDrawer) {
-      drawer?.onDrawerClosed?.call();
-      _drawers.removeLast();
-      if (_drawers.isNotEmpty) {
-        homeScaffoldKey.currentState?.closeEndDrawer();
-        Future.delayed(300.ms, () {
-          homeScaffoldKey.currentState?.openEndDrawer();
-        });
-      } else {
-        homeScaffoldKey.currentState?.closeEndDrawer();
-      }
-    } else {
-      _allowRemoveDrawer = true;
-    }
-  }
-
-  ///endregion
+  //endregion
 
   ///显示分词信息
   Future<void> showSegmentWordsView(BuildContext context, String content) async {

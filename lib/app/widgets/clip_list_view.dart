@@ -242,7 +242,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
       selectMode: _selectMode,
       selected: _selectedItems.contains(item),
       onTap: () {
-        print("on clicked");
         if (_selectMode) {
           if (_selectedItems.contains(item)) {
             _selectedItems.remove(item);
@@ -253,8 +252,12 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         } else {
           var data = widget.list[i];
           if (isBigScreen) {
-            homeCtrl.openEndDrawer(
-              drawer: ClipboardDetailDrawer(clipData: data),
+            homeCtrl.pushDrawer(
+              widget: ClipboardDetailDrawer(clipData: data),
+              beforeClosed: () {
+                homeCtrl.resetDrawerWidth();
+                return true;
+              },
             );
           } else {
             showModalBottomSheet(

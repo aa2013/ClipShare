@@ -279,8 +279,8 @@ class ClipDataCardState extends State<ClipDataCard> {
             icon: Icons.edit_note,
             onSelected: () {
               final homCtl = Get.find<HomeController>();
-              homCtl.openEndDrawer(
-                drawer: ClipboardDetailDrawer(
+              homCtl.pushDrawer(
+                widget: ClipboardDetailDrawer(
                   clipData: widget.clip,
                   modifyMode: true,
                 ),
