@@ -53,52 +53,54 @@ class AuthenticationController extends GetxController {
       elevation: 100,
       builder: (BuildContext context) {
         authenticate();
-        return Container(
-          constraints: const BoxConstraints(minWidth: 500),
-          padding: const EdgeInsets.only(bottom: 30, top: 10),
-          child: IntrinsicHeight(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  TranslationKey.authenticationPageTitle.tr,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: TextButton(
-                    child: Text(
-                      TranslationKey.authenticationPageUsePassword.tr,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    onPressed: () {
-                      Future.delayed(100.ms, () {
-                        Navigator.pop(context);
-                      });
-                    },
+        return SafeArea(
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 500),
+            padding: const EdgeInsets.only(bottom: 30, top: 10),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    TranslationKey.authenticationPageTitle.tr,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
                   ),
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: authenticate,
-                      child: const Icon(
-                        Icons.fingerprint_outlined,
-                        color: Colors.blueAccent,
-                        size: 100,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: TextButton(
+                      child: Text(
+                        TranslationKey.authenticationPageUsePassword.tr,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
                       ),
+                      onPressed: () {
+                        Future.delayed(100.ms, () {
+                          Navigator.pop(context);
+                        });
+                      },
                     ),
-                    TextButton(
-                      onPressed: authenticate,
-                      child: Text(TranslationKey.authenticationPageStartVerification.tr),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: authenticate,
+                        child: const Icon(
+                          Icons.fingerprint_outlined,
+                          color: Colors.blueAccent,
+                          size: 100,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: authenticate,
+                        child: Text(TranslationKey.authenticationPageStartVerification.tr),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );

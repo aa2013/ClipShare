@@ -29,16 +29,18 @@ class AuthenticationPage extends GetView<AuthenticationController> {
               }
             },
       child: Scaffold(
-        body: Obx(
-          () => AuthPasswordInput(
-            onFinished: (String input, String? second) {
-              return CryptoUtil.toMD5(input) == appConfig.appPassword;
-            },
-            onOk: (input) {
-              controller.onAuthenticated();
-              return false;
-            },
-            showCancelBtn: controller.backPage.value,
+        body: SafeArea(
+          child: Obx(
+            () => AuthPasswordInput(
+              onFinished: (String input, String? second) {
+                return CryptoUtil.toMD5(input) == appConfig.appPassword;
+              },
+              onOk: (input) {
+                controller.onAuthenticated();
+                return false;
+              },
+              showCancelBtn: controller.backPage.value,
+            ),
           ),
         ),
       ),

@@ -26,43 +26,45 @@ class RoundedScaffold extends StatelessWidget {
               title: title,
             )
           : null,
-      body: Column(
-        children: [
-          Visibility(
-            visible: !isSmallScreen,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Visibility(
+              visible: !isSmallScreen,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                  color: Theme.of(context).colorScheme.inversePrimary,
                 ),
-                color: Theme.of(context).colorScheme.inversePrimary,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(5, 10, 5, 10),
-                child: Row(
-                  children: [
-                    icon,
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    Expanded(
-                      child: DefaultTextStyle(
-                        style: Theme.of(context).textTheme.titleLarge!,
-                        child: title,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(5, 10, 5, 10),
+                  child: Row(
+                    children: [
+                      icon,
+                      const SizedBox(
+                        width: 5,
                       ),
-                    ),
-                  ],
+                      Expanded(
+                        child: DefaultTextStyle(
+                          style: Theme.of(context).textTheme.titleLarge!,
+                          child: title,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            child: Ink(
-              child: child,
+            Expanded(
+              child: Ink(
+                child: child,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: floatingActionButton,
     );

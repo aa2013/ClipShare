@@ -21,45 +21,43 @@ class WorkingModeSelectionPage extends GetView<WorkingModeSelectionController> {
           ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            EnvironmentSelections(
-              onSelected: controller.onSelected,
-              selected: controller.selected.value,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 30),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: Get.back,
-                    child: Text(
-                      TranslationKey.dialogCancelText.tr,
-                      style: const TextStyle(color: Colors.blue),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Obx(
-                    () => TextButton(
-                      onPressed: controller.selected.value != null
-                          ? controller.confirm
-                          : null,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              EnvironmentSelections(
+                onSelected: controller.onSelected,
+                selected: controller.selected.value,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 30),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: Get.back,
                       child: Text(
-                        TranslationKey.dialogConfirmText.tr,
-                        style: controller.selected.value != null
-                            ? const TextStyle(color: Colors.blue)
-                            : null,
+                        TranslationKey.dialogCancelText.tr,
+                        style: const TextStyle(color: Colors.blue),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    Obx(
+                      () => TextButton(
+                        onPressed: controller.selected.value != null ? controller.confirm : null,
+                        child: Text(
+                          TranslationKey.dialogConfirmText.tr,
+                          style: controller.selected.value != null ? const TextStyle(color: Colors.blue) : null,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

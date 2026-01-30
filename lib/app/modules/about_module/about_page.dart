@@ -277,7 +277,7 @@ class AboutPage extends GetView<AboutController> {
                 backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,
-        body: content,
+        body: SafeArea(child: content),
       );
     }
     return Card(

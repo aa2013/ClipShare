@@ -818,7 +818,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                 backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,
-        body: content,
+        body: SafeArea(child: content),
       );
     }
     return Card(

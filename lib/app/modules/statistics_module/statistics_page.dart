@@ -113,7 +113,7 @@ class StatisticsPage extends GetView<StatisticsController> {
                 ),
               )
             : null,
-        body: content,
+        body: SafeArea(child: content),
       );
     }
     return Card(

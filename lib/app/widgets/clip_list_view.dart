@@ -266,11 +266,13 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
               context: context,
               elevation: 100,
               builder: (BuildContext context) {
-                return ClipDetailDialog(
-                  dlgContext: context,
-                  clip: data,
-                  onUpdate: widget.onUpdate,
-                  onRemoveClicked: onRemoveClicked,
+                return SafeArea(
+                  child: ClipDetailDialog(
+                    dlgContext: context,
+                    clip: data,
+                    onUpdate: widget.onUpdate,
+                    onRemoveClicked: onRemoveClicked,
+                  ),
                 );
               },
             );

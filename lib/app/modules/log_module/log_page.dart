@@ -79,10 +79,11 @@ class LogPage extends GetView<LogController> {
       },
       child: Column(
         children: [
-          Padding(
-            padding: 10.insetH,
-            child: appBarRow,
-          ),
+          if (!appConfig.isSmallScreen)
+            Padding(
+              padding: 10.insetH,
+              child: appBarRow,
+            ),
           if (Platform.isAndroid)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
@@ -171,7 +172,7 @@ class LogPage extends GetView<LogController> {
       );
       return Scaffold(
         appBar: showAppBar ? appBar : null,
-        body: content,
+        body: SafeArea(child: content),
       );
     }
     return Card(

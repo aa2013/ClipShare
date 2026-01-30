@@ -37,73 +37,75 @@ class SearchPage extends GetView<search_module.SearchController> {
             },
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.fromLTRB(5, 5, 5, 0),
-          child: Column(
-            children: [
-              const SizedBox(height: 5),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (var type in [
-                      HistoryContentType.all,
-                      HistoryContentType.text,
-                      HistoryContentType.image,
-                      HistoryContentType.file,
-                      HistoryContentType.sms,
-                      HistoryContentType.notification,
-                    ])
-                      Row(
-                        children: [
-                          RoundedChip(
-                            selected: controller.searchType.label == type.label,
-                            onPressed: () {
-                              if (controller.searchType.label == type.label) {
-                                return;
-                              }
-                              controller.loading.value = true;
-                              controller.searchType = type;
-                              Future.delayed(200.ms, controller.refreshData);
-                            },
-                            selectedColor: controller.searchType == type ? Theme.of(context).chipTheme.selectedColor : null,
-                            label: Text(type.label),
-                          ),
-                          const SizedBox(width: 5),
-                        ],
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 5,
-              ),
-              Expanded(
-                child: ConditionWidget(
-                  visible: controller.loading.value,
-                  child: const Loading(),
-                  replacement: ClipListView(
-                    list: controller.list,
-                    parentController: controller,
-                    onRefreshData: controller.refreshData,
-                    onUpdate: controller.sortList,
-                    onRemove: (id) {
-                      controller.list.removeWhere(
-                        (element) => element.data.id == id,
-                      );
-                    },
-                    onLoadMoreData: (minId) {
-                      return controller.loadData(minId);
-                    },
-                    detailBorderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(4),
-                      topRight: Radius.circular(4),
-                    ),
-                    imageMasonryGridViewLayout: controller.searchType == HistoryContentType.image,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(5, 5, 5, 0),
+            child: Column(
+              children: [
+                const SizedBox(height: 5),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (var type in [
+                        HistoryContentType.all,
+                        HistoryContentType.text,
+                        HistoryContentType.image,
+                        HistoryContentType.file,
+                        HistoryContentType.sms,
+                        HistoryContentType.notification,
+                      ])
+                        Row(
+                          children: [
+                            RoundedChip(
+                              selected: controller.searchType.label == type.label,
+                              onPressed: () {
+                                if (controller.searchType.label == type.label) {
+                                  return;
+                                }
+                                controller.loading.value = true;
+                                controller.searchType = type;
+                                Future.delayed(200.ms, controller.refreshData);
+                              },
+                              selectedColor: controller.searchType == type ? Theme.of(context).chipTheme.selectedColor : null,
+                              label: Text(type.label),
+                            ),
+                            const SizedBox(width: 5),
+                          ],
+                        ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(
+                  height: 5,
+                ),
+                Expanded(
+                  child: ConditionWidget(
+                    visible: controller.loading.value,
+                    child: const Loading(),
+                    replacement: ClipListView(
+                      list: controller.list,
+                      parentController: controller,
+                      onRefreshData: controller.refreshData,
+                      onUpdate: controller.sortList,
+                      onRemove: (id) {
+                        controller.list.removeWhere(
+                          (element) => element.data.id == id,
+                        );
+                      },
+                      onLoadMoreData: (minId) {
+                        return controller.loadData(minId);
+                      },
+                      detailBorderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(4),
+                      ),
+                      imageMasonryGridViewLayout: controller.searchType == HistoryContentType.image,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
