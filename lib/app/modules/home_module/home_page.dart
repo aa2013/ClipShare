@@ -13,6 +13,7 @@ import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/base/multi_drawer.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/drag_file_mask.dart';
@@ -191,18 +192,6 @@ class HomePage extends GetView<HomeController> {
                           ),
                         )
                       : null,
-                  endDrawer: controller.isBigScreen
-                      ? SizedBox(
-                          width: controller.drawer?.width,
-                          child: controller.drawer?.drawer,
-                        )
-                      : null,
-                  onEndDrawerChanged: (isOpened) {
-                    if (isOpened) {
-                      return;
-                    }
-                    controller.closeEndDrawer();
-                  },
                 ),
               ),
               onDragEntered: (detail) {
@@ -312,6 +301,7 @@ class HomePage extends GetView<HomeController> {
                 ),
               ),
             ),
+            Obx(()=>MultiDrawer(controller: controller.drawer, width: controller.drawerWidth)),
           ],
         ),
       ),

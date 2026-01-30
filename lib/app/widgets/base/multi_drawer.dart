@@ -1,19 +1,29 @@
-﻿import 'dart:ui';
-
+﻿import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+
+//返回 true 则正常关闭，否则阻止关闭
+typedef BeforeDrawerClosed = FutureOr<bool> Function();
 
 @immutable
 class _MultiDrawerChangedValue {
   final bool isPush;
   final Widget? widget;
+  final BeforeDrawerClosed? onClosed;
 
-  const _MultiDrawerChangedValue({required this.isPush, this.widget});
+  const _MultiDrawerChangedValue({
+    required this.isPush,
+    this.widget,
+    this.onClosed,
+  });
 }
 
 class MultiDrawerController extends ValueNotifier<_MultiDrawerChangedValue> {
   final List<Widget> _stack = [];
+  static const popValue = _MultiDrawerChangedValue(isPush: false);
+  late final _MultiDrawerState _state;
 
-  MultiDrawerController([Widget? root]): super(_MultiDrawerChangedValue(isPush: true, widget: root)) {
+  MultiDrawerController([Widget? root]) : super(_MultiDrawerChangedValue(isPush: true, widget: root)) {
     if (root != null) {
       _stack.add(root);
     }
@@ -29,9 +39,14 @@ class MultiDrawerController extends ValueNotifier<_MultiDrawerChangedValue> {
 
   Widget get current => _stack.last;
 
-  void push(Widget widget) {
+  ///[onDrawerClosed] 返回 true 则正常关闭，否则阻止关闭
+  void push(Widget widget, BeforeDrawerClosed? onDrawerClosed) {
     _stack.add(widget);
-    value = _MultiDrawerChangedValue(isPush: true, widget: widget);
+    value = _MultiDrawerChangedValue(isPush: true, widget: widget, onClosed: onDrawerClosed);
+  }
+
+  Future<void> popWithAnimation() async {
+    await _state.pop();
   }
 
   Widget pop() {
@@ -39,15 +54,13 @@ class MultiDrawerController extends ValueNotifier<_MultiDrawerChangedValue> {
       throw "no elements can be pop";
     }
     final drawer = _stack.removeLast();
-    if (isEmpty) {
-      _stack.clear();
-    }
     value = _MultiDrawerChangedValue(isPush: false);
     return drawer;
   }
 
   void closeAll() {
     _stack.clear();
+    // 这里不可以用const，否则value视为不变
     value = _MultiDrawerChangedValue(isPush: false);
   }
 }
@@ -73,11 +86,9 @@ class MultiDrawer extends StatefulWidget {
 }
 
 class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin {
-
   MultiDrawerController get controller => widget.controller;
-
-  final defaultPadding = EdgeInsets.all(8);
-  final defaultDuration = Duration(milliseconds: 200);
+  static const defaultPadding = EdgeInsets.all(8);
+  static const defaultDuration = Duration(milliseconds: 200);
   late final AnimationController _overlayController;
   late final Animation<double> _overlayAnimation;
   final List<AnimationController> _slideControllers = [];
@@ -87,7 +98,7 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
   @override
   void initState() {
     controller.addListener(onDrawerChanged);
-
+    controller._state=this;
     _overlayController = AnimationController(
       duration: widget.duration ?? defaultDuration,
       vsync: this,
@@ -116,10 +127,9 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
           duration: widget.duration ?? defaultDuration,
           vsync: this,
         );
-        final slideAnimation = Tween<double>(begin: -1 * widget.width, end: 0)
-            .animate(
-              CurvedAnimation(parent: slideController, curve: Curves.easeInOut),
-            );
+        final slideAnimation = Tween<double>(begin: -1 * widget.width, end: 0).animate(
+          CurvedAnimation(parent: slideController, curve: Curves.easeInOut),
+        );
         _slideControllers.add(slideController);
         _slideAnimations.add(slideAnimation);
         slideController.forward();
@@ -145,16 +155,27 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
   }
 
   Future<void> pop() async {
-    _popFuture = _popFuture.then((_) {
+    _popFuture = _popFuture.then((_) async {
       if (_slideControllers.isEmpty) {
-        return Future.value();
+        return;
+      }
+      final value = controller.value;
+      final futureOr = value.onClosed?.call() ?? true;
+      var allowClose = false;
+      if (futureOr is Future<bool>) {
+        allowClose = await futureOr.catchError((_) => false);
+      } else {
+        allowClose = futureOr;
+      }
+      if (!allowClose) {
+        return;
       }
       var slideController = _slideControllers.last;
       slideController.reverse();
       if (controller.isRoot) {
         _overlayController.reverse();
       }
-      return Future.delayed(widget.duration ?? defaultDuration, () async {
+      return Future.delayed(widget.duration ?? defaultDuration, () {
         if (!controller.isEmpty) {
           controller.pop();
         }
@@ -168,7 +189,7 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     if (controller.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     final drawers = controller.children;
     return Positioned.fill(

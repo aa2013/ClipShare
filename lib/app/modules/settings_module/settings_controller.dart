@@ -234,10 +234,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     } else {
       final homeController = Get.find<HomeController>();
       Get.lazyPut(() => CleanDataController());
-      homeController.openEndDrawer(
-        drawer: CleanDataPage(),
-        onDrawerClosed: () {
+      homeController.pushDrawer(
+        widget: CleanDataPage(),
+        beforeClosed: () {
           Get.delete<CleanDataController>();
+          return true;
         },
       );
     }
@@ -263,7 +264,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
           final whitelist = data[WhiteBlackMode.white]!;
           appConfig.setNotificationBlackWhiteList(mode, blacklist, whitelist);
           if (!isSmallScreen) {
-            homeController.closeEndDrawer();
+            homeController.popDrawer();
           }
         },
       ),
@@ -271,7 +272,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     if (isSmallScreen) {
       Get.to(page);
     } else {
-      homeController.openEndDrawer(drawer: page);
+      homeController.pushDrawer(widget: page);
     }
   }
 
@@ -292,7 +293,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
           appConfig.setEnableContentBlackList(enabled.value);
           appConfig.setContentBlacklist(data[WhiteBlackMode.black]!);
           if (!isSmallScreen) {
-            homeController.closeEndDrawer();
+            homeController.popDrawer();
           }
         },
       ),
@@ -300,7 +301,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     if (isSmallScreen) {
       Get.to(page);
     } else {
-      homeController.openEndDrawer(drawer: page);
+      homeController.pushDrawer(widget: page);
     }
   }
 
@@ -310,10 +311,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     } else {
       final homeController = Get.find<HomeController>();
       Get.put(AboutController());
-      homeController.openEndDrawer(
-        drawer: AboutPage(),
-        onDrawerClosed: () {
+      homeController.pushDrawer(
+        widget: AboutPage(),
+        beforeClosed: () {
           Get.delete<AboutController>();
+          return true;
         },
       );
     }
@@ -325,11 +327,13 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     } else {
       final homeController = Get.find<HomeController>();
       Get.put(StatisticsController());
-      homeController.openEndDrawer(
-        drawer: StatisticsPage(),
+      homeController.pushDrawer(
+        widget: StatisticsPage(),
         width: 430,
-        onDrawerClosed: () {
+        beforeClosed: () {
           Get.delete<StatisticsController>();
+          homeController.resetDrawerWidth();
+          return true;
         },
       );
     }
@@ -341,10 +345,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     } else {
       final homeController = Get.find<HomeController>();
       Get.put(LogController());
-      homeController.openEndDrawer(
-        drawer: LogPage(),
-        onDrawerClosed: () {
+      homeController.pushDrawer(
+        widget: LogPage(),
+        beforeClosed: () {
           Get.delete<LogController>();
+          return true;
         },
       );
     }

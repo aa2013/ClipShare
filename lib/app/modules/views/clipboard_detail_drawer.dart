@@ -53,8 +53,8 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
   Widget build(BuildContext context) {
     final homeCtl = Get.find<HomeController>();
     final devService = Get.find<DeviceService>();
-    final drawerWidth = homeCtl.drawer?.width;
-    final showFullPage = drawerWidth != null && drawerWidth > HomeController.defaultDrawerWidth;
+    final drawerWidth = homeCtl.drawerWidth;
+    final showFullPage = drawerWidth > HomeController.defaultDrawerWidth;
     final fullPageWidth = MediaQuery.of(context).size.width * 0.9;
     return Card(
       color: Theme.of(context).cardTheme.color,
@@ -75,7 +75,7 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
                       message: TranslationKey.fold.tr,
                       child: IconButton(
                         onPressed: () {
-                          homeCtl.closeEndDrawer();
+                          homeCtl.popDrawer();
                         },
                         icon: const Icon(
                           Icons.keyboard_double_arrow_right,
@@ -150,7 +150,7 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
                   child: IconButton(
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
-                      homeCtl.closeEndDrawer();
+                      homeCtl.popDrawer();
                     },
                     icon: const Icon(Icons.close),
                   ),
@@ -242,10 +242,10 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
                     message: showFullPage ? TranslationKey.fold.tr : TranslationKey.unfold.tr,
                     child: IconButton(
                       onPressed: () {
-                        homeCtl.openEndDrawer(
-                          drawer: ClipboardDetailDrawer(clipData: widget.clipData),
-                          width: showFullPage ? HomeController.defaultDrawerWidth : fullPageWidth,
-                        );
+                        homeCtl.resetDrawerWidth(showFullPage ? HomeController.defaultDrawerWidth : fullPageWidth);
+                        setState(() {
+
+                        });
                       },
                       icon: Icon(
                         showFullPage ? Icons.keyboard_double_arrow_right : Icons.keyboard_double_arrow_left,

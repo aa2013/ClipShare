@@ -19,12 +19,12 @@ class AboutController extends GetxController {
     } else {
       final homeController = Get.find<HomeController>();
       Get.put(LicensesController());
-      homeController.openEndDrawer(
-        drawer: LicensesPage(),
-        onDrawerClosed: () {
+      homeController.pushDrawer(
+        widget: LicensesPage(),
+        beforeClosed: () {
           Get.delete<LicensesController>();
+          return true;
         },
-        closeBefore: false,
       );
     }
   }
@@ -35,12 +35,12 @@ class AboutController extends GetxController {
     } else {
       final homeController = Get.find<HomeController>();
       Get.put(UpdateLogController());
-      homeController.openEndDrawer(
-        drawer: UpdateLogPage(),
-        onDrawerClosed: () {
+      homeController.pushDrawer(
+        widget: UpdateLogPage(),
+        beforeClosed: () {
           Get.delete<UpdateLogController>();
+          return true;
         },
-        closeBefore: false,
       );
     }
   }

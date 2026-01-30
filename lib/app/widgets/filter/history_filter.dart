@@ -187,7 +187,7 @@ class HistoryFilter extends StatelessWidget {
                     );
                     if (controller.isBigScreen) {
                       final homeController = Get.find<HomeController>();
-                      homeController.openEndDrawer(drawer: filterDetail);
+                      homeController.pushDrawer(widget: filterDetail);
                     } else {
                       showModalBottomSheet(
                         isScrollControlled: true,

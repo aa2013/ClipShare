@@ -63,7 +63,15 @@ class LogController extends GetxController {
     } else {
       var w = MediaQuery.of(Get.context!).size.width;
       final homeController = Get.find<HomeController>();
-      homeController.openEndDrawer(drawer: page, width: w * 0.8, closeBefore: false);
+      final width = w * 0.8;
+      homeController.pushDrawer(
+        widget: page,
+        width: width,
+        beforeClosed: () {
+          homeController.resetDrawerWidth();
+          return true;
+        },
+      );
     }
   }
 }
