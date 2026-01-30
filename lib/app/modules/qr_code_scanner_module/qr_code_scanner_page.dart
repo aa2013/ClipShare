@@ -11,26 +11,25 @@ class QRCodeScannerPage extends GetView<QRCodeScannerController> {
   @override
   Widget build(BuildContext context) {
     // For this example we check how width or tall the device is and change the scanArea and overlay accordingly.
-    var scanArea = (MediaQuery.of(context).size.width < 400 ||
-            MediaQuery.of(context).size.height < 400)
-        ? 150.0
-        : 300.0;
+    var scanArea = (MediaQuery.of(context).size.width < 400 || MediaQuery.of(context).size.height < 400) ? 150.0 : 300.0;
     return Scaffold(
       appBar: AppBar(
         title: Text(TranslationKey.qrCodeScannerPageTitle.tr),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: QRView(
-        key: controller.qrKey,
-        onQRViewCreated: controller.onQRViewCreated,
-        overlay: QrScannerOverlayShape(
-          borderColor: Colors.red,
-          borderRadius: 10,
-          borderLength: 30,
-          borderWidth: 10,
-          cutOutSize: scanArea,
+      body: SafeArea(
+        child: QRView(
+          key: controller.qrKey,
+          onQRViewCreated: controller.onQRViewCreated,
+          overlay: QrScannerOverlayShape(
+            borderColor: Colors.red,
+            borderRadius: 10,
+            borderLength: 30,
+            borderWidth: 10,
+            cutOutSize: scanArea,
+          ),
+          onPermissionSet: (ctrl, p) => controller.onPermissionSet(context, p),
         ),
-        onPermissionSet: (ctrl, p) => controller.onPermissionSet(context, p),
       ),
     );
   }

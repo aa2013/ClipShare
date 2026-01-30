@@ -70,40 +70,42 @@ extension StringExt on String {
       clipBehavior: Clip.antiAlias,
       elevation: 100,
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(8),
-          child: IntrinsicHeight(
-            child: Column(
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      TranslationKey.openLink.tr,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: IntrinsicHeight(
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        TranslationKey.openLink.tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        openUrl();
-                        Navigator.pop(context);
-                      },
-                      child: Text(TranslationKey.open.tr),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 5),
-                Linkify(
-                  text: this,
-                  options: const LinkifyOptions(humanize: false),
-                  linkStyle: const TextStyle(
-                    decoration: TextDecoration.none,
+                      TextButton(
+                        onPressed: () {
+                          openUrl();
+                          Navigator.pop(context);
+                        },
+                        child: Text(TranslationKey.open.tr),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 5),
-              ],
+                  const SizedBox(height: 5),
+                  Linkify(
+                    text: this,
+                    options: const LinkifyOptions(humanize: false),
+                    linkStyle: const TextStyle(
+                      decoration: TextDecoration.none,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                ],
+              ),
             ),
           ),
         );

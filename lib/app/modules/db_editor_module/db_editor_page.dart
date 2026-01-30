@@ -78,130 +78,132 @@ class DbEditorPage extends GetView<DbEditorController> {
       appBar: AppBar(
         title: Text(TranslationKey.editDb.tr),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 5),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                Text(TranslationKey.optionalTables.tr),
-                Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        ...tables.map(
-                          (t) => Container(
-                            margin: controller.tableInsets,
-                            child: RoundedChip(label: Text(t.toString()), onPressed: () => onTableChipClicked(t.toString())),
-                          ),
-                        ),
-                        ...views.map(
-                          (t) => Container(
-                            margin: controller.tableInsets,
-                            child: RoundedChip(
-                              label: Text(t.toString()),
-                              onPressed: () => onTableChipClicked(t.toString()),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  Text(TranslationKey.optionalTables.tr),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ...tables.map(
+                            (t) => Container(
+                              margin: controller.tableInsets,
+                              child: RoundedChip(label: Text(t.toString()), onPressed: () => onTableChipClicked(t.toString())),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                Text(TranslationKey.execSQL.tr),
-                const SizedBox(width: 5),
-                Tooltip(
-                  message: TranslationKey.execSQL.tr,
-                  child: IconButton(
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () {
-                      if (controller.loading) return;
-                      final text = controller.editor.text.toLowerCase();
-                      if (controller.showLimitTips.value && text.contains("select") && !text.contains("limit")) {
-                        Global.showTipsDialog(
-                          context: context,
-                          text: TranslationKey.execSQLNoLimitTips.tr,
-                          showCancel: true,
-                          onOk: () {
-                            controller.exec();
-                          },
-                        );
-                        return;
-                      }
-                      controller.exec();
-                    },
-                    icon: Obx(
-                      () => Visibility(
-                        visible: controller.loading,
-                        replacement: const Icon(
-                          Icons.play_arrow,
-                          color: Colors.orange,
-                        ),
-                        child: const Loading(
-                          width: 18,
-                        ),
+                          ...views.map(
+                            (t) => Container(
+                              margin: controller.tableInsets,
+                              child: RoundedChip(
+                                label: Text(t.toString()),
+                                onPressed: () => onTableChipClicked(t.toString()),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                Tooltip(
-                  message: TranslationKey.toggleSQLLimitCheck.tr,
-                  child: IconButton(
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () {
-                      controller.showLimitTips.value = !controller.showLimitTips.value;
-                    },
-                    icon: Obx(
-                      () => Icon(
-                        Icons.not_interested,
-                        size: 18,
-                        color: controller.showLimitTips.value ? Colors.orange : Colors.grey,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            SizedBox(
-              height: 150,
-              child: renderCodeEditor(context),
-            ),
-            const SizedBox(height: 5),
-            Text("${TranslationKey.result.tr}: "),
-            const SizedBox(height: 5),
-            Expanded(
-              child: Obx(
-                () {
-                  if (controller.loading) {
-                    return const Loading(
-                      width: 40,
-                    );
-                  }
-                  if (controller.columns.isNotEmpty) {
-                    return SingleChildScrollView(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          columns: controller.columns,
-                          rows: controller.rows,
-                        ),
-                      ),
-                    );
-                  }
-                  return EmptyContent();
-                },
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  Text(TranslationKey.execSQL.tr),
+                  const SizedBox(width: 5),
+                  Tooltip(
+                    message: TranslationKey.execSQL.tr,
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        if (controller.loading) return;
+                        final text = controller.editor.text.toLowerCase();
+                        if (controller.showLimitTips.value && text.contains("select") && !text.contains("limit")) {
+                          Global.showTipsDialog(
+                            context: context,
+                            text: TranslationKey.execSQLNoLimitTips.tr,
+                            showCancel: true,
+                            onOk: () {
+                              controller.exec();
+                            },
+                          );
+                          return;
+                        }
+                        controller.exec();
+                      },
+                      icon: Obx(
+                        () => Visibility(
+                          visible: controller.loading,
+                          replacement: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.orange,
+                          ),
+                          child: const Loading(
+                            width: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Tooltip(
+                    message: TranslationKey.toggleSQLLimitCheck.tr,
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        controller.showLimitTips.value = !controller.showLimitTips.value;
+                      },
+                      icon: Obx(
+                        () => Icon(
+                          Icons.not_interested,
+                          size: 18,
+                          color: controller.showLimitTips.value ? Colors.orange : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              SizedBox(
+                height: 150,
+                child: renderCodeEditor(context),
+              ),
+              const SizedBox(height: 5),
+              Text("${TranslationKey.result.tr}: "),
+              const SizedBox(height: 5),
+              Expanded(
+                child: Obx(
+                  () {
+                    if (controller.loading) {
+                      return const Loading(
+                        width: 40,
+                      );
+                    }
+                    if (controller.columns.isNotEmpty) {
+                      return SingleChildScrollView(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columns: controller.columns,
+                            rows: controller.rows,
+                          ),
+                        ),
+                      );
+                    }
+                    return EmptyContent();
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

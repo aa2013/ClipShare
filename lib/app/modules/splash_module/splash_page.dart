@@ -10,11 +10,13 @@ class SplashPage extends GetView<SplashController> {
   Widget build(BuildContext context) {
     Get.find<SplashController>();
     return Scaffold(
-      body: Center(
-        child: Image.asset(
-          'assets/images/logo/logo.png',
-          width: 100,
-          height: 100,
+      body: SafeArea(
+        child: Center(
+          child: Image.asset(
+            'assets/images/logo/logo.png',
+            width: 100,
+            height: 100,
+          ),
         ),
       ),
     );
