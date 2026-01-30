@@ -555,7 +555,10 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       },
     );
     await Future.delayed(200.ms);
+    final clipboardService = Get.find<ClipboardService>();
     try {
+      //如果启用了截图复制，临时关闭
+      clipboardService.stopListenScreenshot();
       final exInfo = await backupHandler.backup(Directory(path), backupTypes);
       dialog.close();
       if (exInfo != null) {
@@ -571,6 +574,8 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       Log.error(tag, "$err,$stack");
     } finally {
       dialog.close();
+      //恢复截图复制
+      clipboardService.startListenScreenshot();
     }
   }
 
@@ -597,7 +602,10 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       },
     );
     await Future.delayed(200.ms);
+    final clipboardService = Get.find<ClipboardService>();
     try {
+      //如果启用了截图复制，临时关闭
+      clipboardService.stopListenScreenshot();
       final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController, backupTypes);
       dialog.close();
       if (exInfo != null) {
@@ -620,6 +628,8 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       Log.error(tag, "$err,$stack");
     } finally {
       dialog.close();
+      //恢复截图复制
+      clipboardService.startListenScreenshot();
     }
   }
 

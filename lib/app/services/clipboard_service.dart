@@ -25,6 +25,7 @@ class ClipboardService extends GetxService with ClipboardListener {
   final settingsController = Get.find<SettingsController>();
   var _detector = FlutterScreenshotDetect();
   final _isExcludeFormat = true.obs;
+  var _pausedScreenshot = false;
 
   bool get isExcludeFormat => _isExcludeFormat.value;
 
@@ -61,6 +62,9 @@ class ClipboardService extends GetxService with ClipboardListener {
 
   void startListenScreenshot() {
     if (!Platform.isAndroid) return;
+    if (!appConfig.autoCopyImageAfterScreenShot) {
+      return;
+    }
     stopListenScreenshot();
     _detector = FlutterScreenshotDetect();
     _detector.startListening((event) {
