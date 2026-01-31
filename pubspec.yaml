@@ -160,7 +160,9 @@ dependencies:
   # 粘性折叠分组，该版本至少 SDK 3.8.0
   sliver_sticky_collapsable_panel: ^3.0.0
   # 获取已安装的app（仅 Android）
-  get_apps: ^4.1.2
+  get_apps:
+    git:
+      url: https://github.com/aa2013/get_apps.git
   # 通知信息监听（仅 Android）
   notification_listener_service:
     git:
