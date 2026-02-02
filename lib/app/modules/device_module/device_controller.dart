@@ -123,7 +123,8 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     _rotationController = AnimationController(
       vsync: this,
       duration: 4.s,
-    )..repeat();
+    )
+      ..repeat();
     setRotationAnimation(true);
     dbService.deviceDao.getAllDevices(appConfig.userId).then((list) {
       pairedList.clear();
@@ -225,10 +226,11 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     }
     //发送同步确认
     return f.then(
-      (v) => sender.sendData(
-        MsgType.ackSync,
-        {"id": opRecord.id, "module": Module.device.moduleName},
-      ),
+          (v) =>
+          sender.sendData(
+            MsgType.ackSync,
+            {"id": opRecord.id, "module": Module.device.moduleName},
+          ),
     );
   }
 
@@ -236,12 +238,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
 
   @override
-  void onConnected(
-    DevInfo info,
-    AppVersion minVersion,
-    AppVersion version,
-    TransportProtocol protocol,
-  ) async {
+  void onConnected(DevInfo info,
+      AppVersion minVersion,
+      AppVersion version,
+      TransportProtocol protocol,) async {
     var dev = await Device.fromDevInfo(info);
     for (var i = 0; i < pairedList.length; i++) {
       var paired = pairedList[i];
@@ -337,10 +337,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   void onForget(DevInfo dev, int uid) {
     //忘记设备，从已配对列表移动到发现设备列表
     var forgetDev = pairedList.firstWhereOrNull(
-      (element) => element.dev?.guid == dev.guid,
+          (element) => element.dev?.guid == dev.guid,
     );
     pairedList.removeWhere(
-      (element) => element.dev?.guid == dev.guid,
+          (element) => element.dev?.guid == dev.guid,
     );
     forgetDev = forgetDev?.copyWith(isPaired: false);
     if (forgetDev?.isConnected ?? false) {
@@ -436,20 +436,18 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   //region 页面方法
 
   ///显示底部弹窗
-  void _showBottomDetailSheet(
-    Device device,
-    bool isConnected,
-    void Function() showReNameDlg,
-    BuildContext context,
-    TransportProtocol protocol,
-  ) {
+  void _showBottomDetailSheet(Device device,
+      bool isConnected,
+      void Function() showReNameDlg,
+      BuildContext context,
+      TransportProtocol protocol,) {
     showModalBottomSheet(
       isScrollControlled: true,
       clipBehavior: Clip.antiAlias,
       context: context,
       elevation: 100,
       builder: (BuildContext context) {
-        return Container(
+        return SafeArea(child: Container(
           height: 200,
           constraints: const BoxConstraints(minWidth: 500),
           child: Padding(
@@ -592,35 +590,36 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                       ),
                     ),
                     Obx(
-                      () => Visibility(
-                        visible: appConfig.autoSyncMissingData && isConnected,
-                        child: Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
-                              sktService.reqMissingData(device.guid);
-                            },
-                            splashColor: Colors.black12,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 5, bottom: 5),
-                              child: Column(
-                                children: [
-                                  const Icon(Icons.sync_rounded),
-                                  Text(TranslationKey.syncData.tr),
-                                ],
+                          () =>
+                          Visibility(
+                            visible: appConfig.autoSyncMissingData && isConnected,
+                            child: Expanded(
+                              child: InkWell(
+                                onTap: () {
+                                  Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
+                                  sktService.reqMissingData(device.guid);
+                                },
+                                splashColor: Colors.black12,
+                                borderRadius: BorderRadius.circular(12),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 5, bottom: 5),
+                                  child: Column(
+                                    children: [
+                                      const Icon(Icons.sync_rounded),
+                                      Text(TranslationKey.syncData.tr),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-        );
+        ),);
       },
     );
   }
@@ -729,10 +728,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                     ),
                     (showTimeoutText || pairingFailed.value)
                         ? Text(
-                            showTimeoutText ? TranslationKey.devicePagePairingTimeoutText.tr : TranslationKey.devicePagePairingErrorText.tr,
-                            textAlign: TextAlign.left,
-                            style: const TextStyle(color: Colors.redAccent),
-                          )
+                      showTimeoutText ? TranslationKey.devicePagePairingTimeoutText.tr : TranslationKey.devicePagePairingErrorText.tr,
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(color: Colors.redAccent),
+                    )
                         : const SizedBox(),
                   ],
                 ),
@@ -744,18 +743,18 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                 ),
                 pairing.value
                     ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        ),
-                      )
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.0,
+                  ),
+                )
                     : TextButton(
-                        onPressed: completedInputPin ? onSubmitted : null,
-                        child: Text(
-                          TranslationKey.devicePagePairingDialogConfirmText.tr,
-                        ),
-                      ),
+                  onPressed: completedInputPin ? onSubmitted : null,
+                  child: Text(
+                    TranslationKey.devicePagePairingDialogConfirmText.tr,
+                  ),
+                ),
               ],
             );
           },
@@ -827,5 +826,5 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
   }
 
-  //endregion
+//endregion
 }

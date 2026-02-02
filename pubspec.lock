@@ -594,11 +594,12 @@ packages:
   get_apps:
     dependency: "direct main"
     description:
-      name: get_apps
-      sha256: a5d2147400b38c3422158b4154c4102d6968e0162271bdf06f5599f624d1c99e
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "4.1.2"
+      path: "."
+      ref: HEAD
+      resolved-ref: cbc2e179f435b5eb14034549e3e23e50958d6f9a
+      url: "https://github.com/aa2013/get_apps.git"
+    source: git
+    version: "4.1.3"
   glob:
     dependency: transitive
     description:

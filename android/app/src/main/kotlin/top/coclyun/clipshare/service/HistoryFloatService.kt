@@ -233,6 +233,8 @@ class HistoryFloatService() : Service(), OnTouchListener,
         mainParams.y = yPosition
     }
 
+    private var lastTouch:Long = 0
+
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         Log.d("onTouch", event.action.toString())
         val bar = view.findViewById<LinearLayout>(R.id.bar)
@@ -242,6 +244,12 @@ class HistoryFloatService() : Service(), OnTouchListener,
                 x = event.rawX.toInt()
                 y = event.rawY.toInt()
                 v.performClick()
+                val current = System.currentTimeMillis();
+                if(current - lastTouch < 300){
+                    unfoldView(bar)
+                }else{
+                    lastTouch=current
+                }
                 return true
             }
 
@@ -268,19 +276,7 @@ class HistoryFloatService() : Service(), OnTouchListener,
                 }
                 if (movedX < -20) {
                     //向左滑动，显示列表
-                    view.visibility = INVISIBLE
-                    bar.visibility = View.GONE
-                    showListView = true
-                    //显示listview
-                    container.visibility = VISIBLE
-                    setPosRight()
-                    mainParams.width = LayoutParams.MATCH_PARENT
-                    mainParams.height = LayoutParams.MATCH_PARENT
-                    windowManager.updateViewLayout(view, mainParams)
-                    view.post {
-                        view.visibility = VISIBLE
-                        refreshData()
-                    }
+                    unfoldView(bar)
 
                 } else if (!showListView) {
                     lastPos = arrayOf(positionX, positionY)
@@ -292,6 +288,23 @@ class HistoryFloatService() : Service(), OnTouchListener,
             else -> {}
         }
         return false
+    }
+
+    private fun unfoldView(bar: View):Boolean{
+        view.visibility = INVISIBLE
+        bar.visibility = View.GONE
+        showListView = true
+        //显示listview
+        container.visibility = VISIBLE
+        setPosRight()
+        mainParams.width = LayoutParams.MATCH_PARENT
+        mainParams.height = LayoutParams.MATCH_PARENT
+        windowManager.updateViewLayout(view, mainParams)
+        view.post {
+            view.visibility = VISIBLE
+            refreshData()
+        }
+        return true
     }
 
     private fun refreshData(more: Boolean = false) {
