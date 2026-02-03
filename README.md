@@ -21,9 +21,9 @@
 
 + [x] Android
 + [x] Windows
-+ [ ] Linux(快了，等待测试)
++ [x] Linux
 + [x] Mac
-+ [ ] IOS
++ [ ] IOS（已初步适配，可在 [issue#6](https://github.com/aa2013/ClipShare/issues/6) 中下载未签名的安装包）
 
 ## 2. 项目结构
 
