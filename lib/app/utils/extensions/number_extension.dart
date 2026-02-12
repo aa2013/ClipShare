@@ -3,6 +3,9 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:flutter/cupertino.dart';
 
 extension NumberExt on num {
+  static final _insetsMap = <String, EdgeInsets>{};
+  static final _radiusMap = <String, Radius>{};
+
   bool between(num start, num end) {
     return this >= start && this <= end;
   }
@@ -40,12 +43,58 @@ extension NumberExt on num {
     }
     return '$valStr ${TranslationKey.day.tr}';
   }
+
+  EdgeInsets get insetAll => _insetsMap.putIfAbsent(
+    'insetAll_$this',
+        () => EdgeInsets.all(toDouble()),
+  );
+
+  EdgeInsets get insetH => _insetsMap.putIfAbsent(
+    'insetH_$this',
+        () => EdgeInsets.symmetric(horizontal: toDouble()),
+  );
+
+  EdgeInsets get insetV => _insetsMap.putIfAbsent(
+    'insetV_$this',
+        () => EdgeInsets.symmetric(vertical: toDouble()),
+  );
+
+  EdgeInsets get insetL => _insetsMap.putIfAbsent(
+    'insetL_$this',
+        () => EdgeInsets.only(left: toDouble()),
+  );
+
+  EdgeInsets get insetT => _insetsMap.putIfAbsent(
+    'insetT_$this',
+        () => EdgeInsets.only(top: toDouble()),
+  );
+
+  EdgeInsets get insetR => _insetsMap.putIfAbsent(
+    'insetR_$this',
+        () => EdgeInsets.only(right: toDouble()),
+  );
+
+  EdgeInsets get insetB => _insetsMap.putIfAbsent(
+    'insetB_$this',
+        () => EdgeInsets.only(bottom: toDouble()),
+  );
+
+  EdgeInsets insetHV({double? horizontal, double? vertical}) {
+    final key = 'insetHV_${horizontal ?? this}_${vertical ?? this}';
+    return _insetsMap.putIfAbsent(
+      key,
+          () => EdgeInsets.symmetric(
+        horizontal: horizontal ?? toDouble(),
+        vertical: vertical ?? toDouble(),
+      ),
+    );
+  }
+
+  Radius get r => _radiusMap.putIfAbsent("all_$this", () => Radius.circular(toDouble()));
 }
 
 extension IntExt on int {
   static final _durationMap = <int, Duration>{};
-  static final _insetsMap = <String, EdgeInsets>{};
-  static final _radiusMap = <String, Radius>{};
 
   String get sizeStr {
     if (this < 0) {
@@ -110,53 +159,6 @@ extension IntExt on int {
     );
   }
 
-  EdgeInsets get insetAll => _insetsMap.putIfAbsent(
-    'insetAll_$this',
-    () => EdgeInsets.all(toDouble()),
-  );
-
-  EdgeInsets get insetH => _insetsMap.putIfAbsent(
-    'insetH_$this',
-    () => EdgeInsets.symmetric(horizontal: toDouble()),
-  );
-
-  EdgeInsets get insetV => _insetsMap.putIfAbsent(
-    'insetV_$this',
-    () => EdgeInsets.symmetric(vertical: toDouble()),
-  );
-
-  EdgeInsets get insetL => _insetsMap.putIfAbsent(
-    'insetL_$this',
-    () => EdgeInsets.only(left: toDouble()),
-  );
-
-  EdgeInsets get insetT => _insetsMap.putIfAbsent(
-    'insetT_$this',
-    () => EdgeInsets.only(top: toDouble()),
-  );
-
-  EdgeInsets get insetR => _insetsMap.putIfAbsent(
-    'insetR_$this',
-    () => EdgeInsets.only(right: toDouble()),
-  );
-
-  EdgeInsets get insetB => _insetsMap.putIfAbsent(
-    'insetB_$this',
-    () => EdgeInsets.only(bottom: toDouble()),
-  );
-
-  EdgeInsets insetHV({double? horizontal, double? vertical}) {
-    final key = 'insetHV_${horizontal ?? this}_${vertical ?? this}';
-    return _insetsMap.putIfAbsent(
-      key,
-      () => EdgeInsets.symmetric(
-        horizontal: horizontal ?? toDouble(),
-        vertical: vertical ?? toDouble(),
-      ),
-    );
-  }
-
-  Radius get r => _radiusMap.putIfAbsent("all_$this", () => Radius.circular(toDouble()));
 }
 
 extension DoubleExt on double {
