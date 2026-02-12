@@ -98,7 +98,7 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
   @override
   void initState() {
     controller.addListener(onDrawerChanged);
-    controller._state=this;
+    controller._state = this;
     _overlayController = AnimationController(
       duration: widget.duration ?? defaultDuration,
       vsync: this,
@@ -200,7 +200,7 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
             builder: (context, child) {
               final animation = _overlayAnimation;
               final sigma = animation.value * widget.blurSigma;
-              return BackdropFilter(
+              final filter = BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
                 child: GestureDetector(
                   onTap: pop,
@@ -209,6 +209,7 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
                   ),
                 ),
               );
+              return ClipRect(child: filter);
             },
           ),
           for (var i = 0; i < drawers.length; i++)
