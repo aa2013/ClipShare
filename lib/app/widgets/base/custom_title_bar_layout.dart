@@ -39,7 +39,8 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
           visible: PlatformExt.isDesktop && !Platform.isMacOS,
           child: SizedBox(
             height: CustomTitleBarLayout.titleBarHeight,
-            child: Container(
+            // 这里若使用 Container 而不是 Material 会导致窗体自定义按钮的悬浮背景色失效（内部的inkwell依赖于 Material 组件）
+            child: Material(
               color: Theme.of(context).colorScheme.surface,
               child: Row(
                 children: [
