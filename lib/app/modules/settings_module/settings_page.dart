@@ -290,51 +290,47 @@ class SettingsPage extends GetView<SettingsController> {
                             icon = Icons.dark_mode_outlined;
                             toolTip = TranslationKey.themeDark.name.tr;
                           }
-                          return ThemeSwitcher(
-                            builder: (switcherContext) {
-                              return Tooltip(
-                                message: toolTip,
-                                child: GestureDetector(
-                                  behavior: HitTestBehavior.opaque,
-                                  child: MouseRegion(
-                                    cursor: SystemMouseCursors.click,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 5),
-                                      child: Icon(icon),
-                                    ),
-                                  ),
-                                  onTapDown: (details) async {
-                                    final menu = ContextMenu(
-                                      entries: ThemeMode.values.map((mode) {
-                                        var icon = Icons.brightness_auto_outlined;
-                                        if (mode == ThemeMode.light) {
-                                          icon = Icons.light_mode_outlined;
-                                        } else if (mode == ThemeMode.dark) {
-                                          icon = Icons.dark_mode_outlined;
-                                        }
-                                        return MenuItem(
-                                          label: mode.tk.name.tr,
-                                          icon: icon,
-                                          enabled: mode != v,
-                                          onSelected: () async {
-                                            await appConfig.setAppTheme(mode, switcherContext, () {
-                                              final currentBg = controller.envStatusBgColor.value;
-                                              if (currentBg != null) {
-                                                controller.envStatusBgColor.value = controller.warningBgColor;
-                                              }
-                                            });
-                                          },
-                                        );
-                                      }).toList(),
-                                      position: details.globalPosition - const Offset(0, 50),
-                                      padding: const EdgeInsets.all(8.0),
-                                      borderRadius: BorderRadius.circular(8),
-                                    );
-                                    menu.show(context);
-                                  },
+                          return Tooltip(
+                            message: toolTip,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              child: MouseRegion(
+                                cursor: SystemMouseCursors.click,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 5),
+                                  child: Icon(icon),
                                 ),
-                              );
-                            },
+                              ),
+                              onTapDown: (details) async {
+                                final menu = ContextMenu(
+                                  entries: ThemeMode.values.map((mode) {
+                                    var icon = Icons.brightness_auto_outlined;
+                                    if (mode == ThemeMode.light) {
+                                      icon = Icons.light_mode_outlined;
+                                    } else if (mode == ThemeMode.dark) {
+                                      icon = Icons.dark_mode_outlined;
+                                    }
+                                    return MenuItem(
+                                      label: mode.tk.name.tr,
+                                      icon: icon,
+                                      enabled: mode != v,
+                                      onSelected: () async {
+                                        await appConfig.setAppTheme(mode, context, () {
+                                          final currentBg = controller.envStatusBgColor.value;
+                                          if (currentBg != null) {
+                                            controller.envStatusBgColor.value = controller.warningBgColor;
+                                          }
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                  position: details.globalPosition - const Offset(0, 50),
+                                  padding: const EdgeInsets.all(8.0),
+                                  borderRadius: BorderRadius.circular(8),
+                                );
+                                menu.show(context);
+                              },
+                            ),
                           );
                         },
                       ),

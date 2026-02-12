@@ -713,7 +713,6 @@ class ConfigService extends GetxService {
     _workingMode = (await cfg.getConfigByKey<EnvironmentType?>(ConfigKey.workingMode, null, convert: EnvironmentType.parse)).obs;
     _onlyForwardMode = (await cfg.getConfigByKey(ConfigKey.onlyForwardMode, false)).obs;
     _appTheme = (await cfg.getConfigByKey(ConfigKey.appTheme, ThemeMode.system.name)).obs;
-    changeThemeMode(appTheme);
     _autoCopyImageAfterSync = (await cfg.getConfigByKey(ConfigKey.autoCopyImageAfterSync, false)).obs;
     _autoCopyImageAfterScreenShot = (await cfg.getConfigByKey(ConfigKey.autoCopyImageAfterScreenShot, true)).obs;
     _ignoreUpdateVersion.value = (await cfg.getConfigByKey<String?>(ConfigKey.ignoreUpdateVersion, null));
@@ -1175,7 +1174,6 @@ class ConfigService extends GetxService {
     VoidCallback? onAnimationFinish,
   ]) async {
     await configDao.addOrUpdate(ConfigKey.appTheme, appTheme.name);
-    _appTheme.value = appTheme.name;
     var theme = appTheme == ThemeMode.dark ? darkThemeData : lightThemeData;
     if (appTheme == ThemeMode.system) {
       theme = Get.isPlatformDarkMode ? darkThemeData : lightThemeData;
@@ -1186,11 +1184,14 @@ class ConfigService extends GetxService {
       isReversed: false,
       onAnimationFinish: onAnimationFinish,
     );
-    if (isDarkTheme) {
-      setSystemUIOverlayDarkStyle();
-    } else {
-      setSystemUIOverlayLightStyle();
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      _appTheme.value = appTheme.name;
+      if (isDarkTheme) {
+        setSystemUIOverlayDarkStyle();
+      } else {
+        setSystemUIOverlayLightStyle();
+      }
+    });
   }
 
   Future<void> setIgnoreUpdateVersion(String versionCode) async {
@@ -1454,8 +1455,9 @@ class ConfigService extends GetxService {
 
   ///修改主题模式
   void changeThemeMode(ThemeMode theme) {
-    Get.changeThemeMode(theme);
-    setSystemUIOverlayAutoStyle();
+    setAppTheme(theme, Get.context!);
+    // Get.changeThemeMode(theme);
+    // setSystemUIOverlayAutoStyle();
   }
 
   ///更新语言选项

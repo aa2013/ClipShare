@@ -199,12 +199,15 @@ final logoImg = Image.asset(
 );
 
 void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
-  final isDarkMode = args?.themeMode == ThemeMode.dark || Get.isPlatformDarkMode;
+  var isDarkMode = args?.themeMode == ThemeMode.dark || Get.isPlatformDarkMode;
   Locale? locale;
   final isMultiWindow = args != null;
   if (isMultiWindow) {
     windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     locale = Locale(args.languageCode, args.countryCode);
+  }else{
+    final appConfig=Get.find<ConfigService>();
+    isDarkMode = appConfig.appTheme == ThemeMode.dark;
   }
   runApp(
     ThemeProvider(
@@ -215,22 +218,24 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
           defaultTransition: Transition.native,
           builder: (ctx, child) {
             return ThemeSwitchingArea(
-              child: Scaffold(
-                appBar: null,
-                backgroundColor: Colors.transparent,
-                body: CustomTitleBarLayout(
-                  children: [
-                    const SizedBox(width: 5),
-                    logoImg,
-                    const SizedBox(width: 5),
-                    Text(
-                      title,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                  child: child ?? const SizedBox.shrink(),
-                ),
-              ),
+              child: ThemeSwitcher(builder: (ctx){
+                return Scaffold(
+                  appBar: null,
+                  backgroundColor: Colors.transparent,
+                  body: CustomTitleBarLayout(
+                    children: [
+                      const SizedBox(width: 5),
+                      logoImg,
+                      const SizedBox(width: 5),
+                      Text(
+                        title,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                    child: child ?? const SizedBox.shrink(),
+                  ),
+                );
+              },),
             );
           },
           title: title,
