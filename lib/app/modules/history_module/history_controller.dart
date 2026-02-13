@@ -513,20 +513,25 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         //不是缺失数据的同步时放入本地剪贴板，如果是缺失数据但是需要豁免的也放行
         if (!loadingMissingData || _missingDataCopyMsg == history.id) {
           appConfig.innerCopy = true;
-          var type = ClipboardContentType.parse(history.type);
+          var clip = ClipData(history);
           var copy = false;
-          if (type != ClipboardContentType.image) {
-            copy = true;
-            clipboardManager.copy(type, history.content);
-          } else if (appConfig.autoCopyImageAfterSync) {
-            copy = true;
-            clipboardManager.copy(type, history.content);
-          }
-          if (_screenUnlocked == false && copy) {
-            _syncDataOnScreenOff = history;
-          }
-          if (_missingDataCopyMsg == history.id) {
-            _missingDataCopyMsg = null;
+          if(clip.isText || clip.isImage){
+            final type = ClipboardContentType.parse(history.type);
+            if (clip.isText) {
+              copy = true;
+              clipboardManager.copy(type, history.content);
+            } else if (clip.isImage && appConfig.autoCopyImageAfterSync) {
+              copy = true;
+              clipboardManager.copy(type, history.content);
+            }
+            if (_screenUnlocked == false && copy) {
+              _syncDataOnScreenOff = history;
+            }
+            if (_missingDataCopyMsg == history.id) {
+              _missingDataCopyMsg = null;
+            }
+          }else{
+            break;
           }
         }
         break;
@@ -752,7 +757,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (_syncDataOnScreenOff != null) {
       //已启用复制熄屏时的最新数据
       if (appConfig.reCopyOnScreenUnlocked) {
-        print("copy");
         //复制熄屏时的数据
         var type = ClipboardContentType.parse(_syncDataOnScreenOff!.type);
         var content = _syncDataOnScreenOff!.content;
