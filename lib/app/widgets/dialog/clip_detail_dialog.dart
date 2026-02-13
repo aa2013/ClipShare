@@ -131,7 +131,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                       tooltip: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
                     ),
                     Visibility(
-                      visible: !widget.clip.isFile,
+                      visible: widget.clip.isImage || widget.clip.isText,
                       child: IconButton(
                         icon: appConfig.innerCopy
                             ? const Icon(

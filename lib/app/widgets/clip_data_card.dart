@@ -229,7 +229,7 @@ class ClipDataCardState extends State<ClipDataCard> {
               home.showSegmentWordsView(context,widget.clip.data.content);
             },
           ),
-        if (!widget.clip.isFile)
+        if (widget.clip.isImage || widget.clip.isText)
           MenuItem(
             label: TranslationKey.copyContent.tr,
             icon: Icons.copy,
