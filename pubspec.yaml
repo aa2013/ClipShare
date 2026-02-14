@@ -186,6 +186,8 @@ dependencies:
   minio: ^3.5.8
   # Android/IOS deviceId generator
   persistent_device_id: ^1.1.0
+  # 滑动操作
+  flutter_slidable: ^4.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
