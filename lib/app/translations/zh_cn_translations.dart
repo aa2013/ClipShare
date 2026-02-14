@@ -1401,6 +1401,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "不记录排除格式";
       case TranslationKey.excludePrivateFormatTips:
         return "当检测到剪贴板含有特定标记（ExcludeClipboardContentFromMonitorProcessing）将不会记录";
+      case TranslationKey.moreActions:
+        return "更多操作";
     }
   }
 }
