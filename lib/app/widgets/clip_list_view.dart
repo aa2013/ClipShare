@@ -259,6 +259,24 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         onNeutral: () => deleteItem(item, true),
       );
     }
+    showClipBottomSheet(ClipData data){
+      showModalBottomSheet(
+        isScrollControlled: true,
+        clipBehavior: Clip.antiAlias,
+        context: context,
+        elevation: 100,
+        builder: (BuildContext context) {
+          return SafeArea(
+            child: ClipDetailDialog(
+              dlgContext: context,
+              clip: data,
+              onUpdate: widget.onUpdate,
+              onRemoveClicked: onRemoveClicked,
+            ),
+          );
+        },
+      );
+    }
 
     return ClipDataCard(
       clip: widget.list[i],
@@ -280,22 +298,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
               },
             );
           } else {
-            showModalBottomSheet(
-              isScrollControlled: true,
-              clipBehavior: Clip.antiAlias,
-              context: context,
-              elevation: 100,
-              builder: (BuildContext context) {
-                return SafeArea(
-                  child: ClipDetailDialog(
-                    dlgContext: context,
-                    clip: data,
-                    onUpdate: widget.onUpdate,
-                    onRemoveClicked: onRemoveClicked,
-                  ),
-                );
-              },
-            );
+            showClipBottomSheet(data);
           }
         }
       },
@@ -343,6 +346,9 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         setState(() {
 
         });
+      },
+      onMoreActionsTap: (){
+        showClipBottomSheet(widget.list[i]);
       },
       onLongPress: () {
         _enableSelectMode();

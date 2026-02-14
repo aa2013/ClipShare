@@ -1403,6 +1403,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Exclude Private Formats";
       case TranslationKey.excludePrivateFormatTips:
         return "Clipboard content with specific markers (ExcludeClipboardContentFromMonitorProcessing) will not be logged when detected";
+      case TranslationKey.moreActions:
+        return "More Actions";
     }
   }
 }
