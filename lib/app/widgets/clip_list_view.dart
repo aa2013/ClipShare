@@ -476,7 +476,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   ),
                 ),
                 Visibility(
-                  visible: false && _selectMode && _selectedItems.length > 1,
+                  visible: _selectMode && _selectedItems.length > 1,
                   child: IntrinsicHeight(
                     child: Container(
                       margin: _showBackToTopButton ? 10.insetR : null,
