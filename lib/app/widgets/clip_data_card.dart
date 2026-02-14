@@ -37,6 +37,7 @@ class ClipDataCard extends StatefulWidget {
   final void Function()? onLongPress;
   final void Function()? onDoubleTap;
   final void Function()? onToggleSelected;
+  final void Function()? onMoreActionsTap;
   final void Function() onUpdate;
   final void Function(ClipData item) onRemoveClicked;
   final bool routeToSearchOnClickChip;
@@ -54,6 +55,7 @@ class ClipDataCard extends StatefulWidget {
     this.onLongPress,
     this.onDoubleTap,
     this.onToggleSelected,
+    this.onMoreActionsTap,
     this.imageMode = false,
     this.selectMode = false,
     this.selected = false,
@@ -75,10 +77,21 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
   final appConfig = Get.find<ConfigService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final clipChannelService = Get.find<ClipChannelService>();
+  var _slided = false;
   late final SlidableController slidController = SlidableController(this);
+
   @override
   void initState() {
     super.initState();
+    slidController.animation.addListener(() {
+      _slided = slidController.animation.value != 0;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    slidController.dispose();
   }
 
   @override
@@ -89,6 +102,10 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
       child: InkWell(
         mouseCursor: SystemMouseCursors.basic,
         onTap: () {
+          if(_slided){
+            slidController.close();
+            return;
+          }
           if (widget.selectMode) {
             setState(() {
               _selected = !_selected;
@@ -128,7 +145,9 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
         },
         borderRadius: BorderRadius.circular(_borderRadius),
         child: Container(
-          margin: widget.selectMode && _selected ? null : const EdgeInsets.all(_borderWidth),
+          margin: widget.selectMode && _selected
+              ? null
+              : const EdgeInsets.all(_borderWidth),
           decoration: widget.selectMode && _selected
               ? BoxDecoration(
                   border: Border.all(
@@ -191,16 +210,16 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
       ),
     );
     return GestureDetector(
-      child: Slidable(
+      child: ClipRRect(child: Slidable(
         controller: slidController,
         key: ValueKey(widget.clip.data.id),
         startActionPane: ActionPane(
           motion: const SizedBox.shrink(),
           extentRatio: 0.01,
           dismissible: DismissiblePane(
-              onDismissed: () {},
-              dismissThreshold: 0.1,
-              confirmDismiss: () {
+            onDismissed: () {},
+            dismissThreshold: 0.1,
+            confirmDismiss: () {
               slidController.close();
               widget.onToggleSelected?.call();
               return Future.value(false);
@@ -208,8 +227,25 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
           ),
           children: const [],
         ),
+        endActionPane: widget.selectMode ? null : ActionPane(
+          extentRatio: 0.3,
+          motion: const ScrollMotion(),
+          children: [
+            SlidableAction(
+              onPressed: (context) {
+                widget.onMoreActionsTap?.call();
+              },
+              autoClose: true,
+              backgroundColor: Colors.blueGrey,
+              foregroundColor: Colors.white,
+              icon: Icons.menu,
+              borderRadius: BorderRadius.circular(_borderRadius),
+              label: TranslationKey.moreActions.tr,
+            ),
+          ],
+        ),
         child: content,
-      ),
+      ),),
       onSecondaryTapDown: (details) {
         showMenu(details.globalPosition - const Offset(0, 70));
       },
@@ -221,7 +257,9 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
     final menu = ContextMenu(
       entries: [
         MenuItem(
-          label: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
+          label: widget.clip.data.top
+              ? TranslationKey.cancelTopUp.tr
+              : TranslationKey.topUp.tr,
           icon: widget.clip.data.top ? Icons.push_pin : Icons.push_pin_outlined,
           onSelected: () {
             var id = widget.clip.data.id;
@@ -247,7 +285,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
             icon: Icons.grain,
             onSelected: () {
               final home = Get.find<HomeController>();
-              home.showSegmentWordsView(context,widget.clip.data.content);
+              home.showSegmentWordsView(context, widget.clip.data.content);
             },
           ),
         if (widget.clip.isImage || widget.clip.isText)
@@ -258,12 +296,17 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
               appConfig.innerCopy = true;
               var type = ClipboardContentType.parse(widget.clip.data.type);
               clipboardManager.copy(type, widget.clip.data.content);
-              Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+              Global.showSnackBarSuc(
+                text: TranslationKey.copySuccess.tr,
+                context: context,
+              );
             },
           ),
         if (!widget.clip.isFile)
           MenuItem(
-            label: widget.clip.data.sync ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
+            label: widget.clip.data.sync
+                ? TranslationKey.resyncRecord.tr
+                : TranslationKey.syncRecord.tr,
             icon: Icons.sync,
             onSelected: () {
               dbService.opRecordDao.resyncData(widget.clip.data.id);
