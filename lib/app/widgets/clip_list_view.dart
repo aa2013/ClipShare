@@ -219,6 +219,31 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     }
   }
 
+  ///进入选中状态
+  void _enableSelectMode(){
+    if(_selectMode){
+      return;
+    }
+    appConfig.enableMultiSelectionMode(
+      controller: widget.parentController,
+      selectionTips: TranslationKey.multiDelete.tr,
+    );
+    _selectMode = true;
+    setState(() {});
+  }
+
+  void _toggleSelectState(ClipData data){
+    if(!_selectMode){
+      return;
+    }
+    if (_selectedItems.contains(data)) {
+      _selectedItems.remove(data);
+    } else {
+      _selectedItems.add(data);
+    }
+    setState(() {});
+  }
+
   ///渲染列表项
   Widget renderItem(int i) {
     var item = widget.list[i];
@@ -243,12 +268,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
       selected: _selectedItems.contains(item),
       onTap: () {
         if (_selectMode) {
-          if (_selectedItems.contains(item)) {
-            _selectedItems.remove(item);
-          } else {
-            _selectedItems.add(item);
-          }
-          setState(() {});
+          _toggleSelectState(item);
         } else {
           var data = widget.list[i];
           if (isBigScreen) {
@@ -279,14 +299,54 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
           }
         }
       },
+      onToggleSelected: (){
+        if (!_selectMode) {
+          _enableSelectMode();
+        }
+        //如果为空或已经选中，直接切换选择状态
+        if (_selectedItems.isEmpty || _selectedItems.contains(item)) {
+          _toggleSelectState(item);
+          return;
+        }
+        //不为空，区间选择确定区间元素
+        var reverse = false;
+        var list = List.from(widget.list);
+        var start = -1;
+        var end = -1;
+        for (var i = 0; i < list.length; i++) {
+          //判断正序还是逆序区间
+          if (!reverse && list[i] == item && start == -1) {
+            //逆序区间
+            reverse = true;
+          }
+          if (reverse) {
+            //逆序区间
+            if (list[i] == item) {
+              start = i;
+            } else if (_selectedItems.contains(list[i])) {
+              end = i;
+            }
+          } else {
+            //正序区间
+            if (_selectedItems.contains(list[i]) && start == -1) {
+              start = i;
+            }
+            if (list[i] == item && start != -1) {
+              end = i;
+              break;
+            }
+          }
+        }
+        for (var i = start; i <= end; i++) {
+          _selectedItems.add(list[i]);
+        }
+        setState(() {
+
+        });
+      },
       onLongPress: () {
-        appConfig.enableMultiSelectionMode(
-          controller: widget.parentController,
-          selectionTips: TranslationKey.multiDelete.tr,
-        );
-        _selectMode = true;
+        _enableSelectMode();
         _selectedItems.add(item);
-        setState(() {});
       },
       onDoubleTap: () async {
         if (widget.list[i].isFile) {

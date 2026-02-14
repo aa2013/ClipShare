@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "flutter_slidable",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/flutter_slidable",
+    },
+    {
       "name": "jieba_flutter",
       "license": "GPL-3.0",
       "url": "https://pub.dev/packages/jieba_flutter",

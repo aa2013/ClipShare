@@ -27,6 +27,7 @@ import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/clip_simple_data_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
@@ -35,6 +36,7 @@ class ClipDataCard extends StatefulWidget {
   final void Function()? onTap;
   final void Function()? onLongPress;
   final void Function()? onDoubleTap;
+  final void Function()? onToggleSelected;
   final void Function() onUpdate;
   final void Function(ClipData item) onRemoveClicked;
   final bool routeToSearchOnClickChip;
@@ -51,6 +53,7 @@ class ClipDataCard extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.onDoubleTap,
+    this.onToggleSelected,
     this.imageMode = false,
     this.selectMode = false,
     this.selected = false,
@@ -58,11 +61,11 @@ class ClipDataCard extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return ClipDataCardState();
+    return _ClipDataCardState();
   }
 }
 
-class ClipDataCardState extends State<ClipDataCard> {
+class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMixin{
   var _readyDoubleClick = false;
   static const _borderWidth = 2.0;
   static const _borderRadius = 12.0;
@@ -72,7 +75,7 @@ class ClipDataCardState extends State<ClipDataCard> {
   final appConfig = Get.find<ConfigService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final clipChannelService = Get.find<ClipChannelService>();
-
+  late final SlidableController slidController = SlidableController(this);
   @override
   void initState() {
     super.initState();
@@ -188,7 +191,25 @@ class ClipDataCardState extends State<ClipDataCard> {
       ),
     );
     return GestureDetector(
-      child: content,
+      child: Slidable(
+        controller: slidController,
+        key: ValueKey(widget.clip.data.id),
+        startActionPane: ActionPane(
+          motion: const SizedBox.shrink(),
+          extentRatio: 0.01,
+          dismissible: DismissiblePane(
+              onDismissed: () {},
+              dismissThreshold: 0.1,
+              confirmDismiss: () {
+              slidController.close();
+              widget.onToggleSelected?.call();
+              return Future.value(false);
+            },
+          ),
+          children: const [],
+        ),
+        child: content,
+      ),
       onSecondaryTapDown: (details) {
         showMenu(details.globalPosition - const Offset(0, 70));
       },
