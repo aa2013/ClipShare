@@ -684,10 +684,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Unpin from Top";
       case TranslationKey.copyContent:
         return "Copy Content";
-      case TranslationKey.copyMultiContentAsc:
-        return "批量复制内容（顺序）";
-      case TranslationKey.copyMultiContentDesc:
-        return "批量复制内容（逆序）";
+      case TranslationKey.copyMergedContent:
+        return "Copy Merged Content";
       case TranslationKey.syncRecord:
         return "Sync Record";
       case TranslationKey.resyncRecord:

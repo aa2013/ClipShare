@@ -14,6 +14,7 @@ import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/listeners/tag_changed_listener.dart';
+import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -58,8 +59,6 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   int? _minId;
   final loading = true.obs;
   final filterLoading = true.obs;
-  var exporting = false;
-  var cancelExporting = false;
 
   //region 搜索相关
   Set<String> get selectedTags => filterController.selectedTags.value;
@@ -106,6 +105,14 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
     tagService.addListener(this);
     loadSearchCondition().whenComplete(
       () {
+        final historyController = Get.find<HistoryController>();
+
+        Future<List<History>> loadDataFunc(int lastId) => dbService.historyDao.getHistoriesPageByFilter(
+          appConfig.userId,
+          searchFilter,
+          true,
+          lastId,
+        );
         filterController = HistoryFilterController(
           allDevices: allDevices,
           allTagNames: allTagNames,
@@ -118,7 +125,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
           },
           onSearchBtnClicked: refreshData,
           filter: SearchFilter(),
-          onExportBtnClicked: _export,
+          onExportBtnClicked: () => historyController.export(loadDataFunc),
         );
         filterLoading.value = false;
         loadFromExternalParams(null, null);
@@ -237,227 +244,6 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
         });
   }
 
-  //region 导出
-  void _export() {
-    var loadingController = LoadingProgressController();
-    Global.showTipsDialog(
-      context: Get.context!,
-      text: TranslationKey.historyOutputTips.tr,
-      onOk: () {
-        Global.showLoadingDialog(
-          context: Get.context!,
-          loadingText: TranslationKey.exporting.tr,
-          showCancel: true,
-          controller: loadingController,
-          onCancel: () {
-            cancelExporting = true;
-            exporting = false;
-          },
-        );
-        export2Excel(loadingController)
-            .then((result) {
-              //关闭进度动画
-              Get.back();
-              //手动取消
-              if (!exporting) {
-                return;
-              }
-              if (result) {
-                Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
-              } else {
-                Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
-              }
-            })
-            .catchError((err, stack) {
-              //关闭进度动画
-              Get.back();
-              Global.showTipsDialog(
-                context: Get.context!,
-                title: TranslationKey.outputFailed.tr,
-                text: "$err. $stack",
-              );
-            })
-            .whenComplete(() {
-              //更新状态
-              exporting = false;
-              cancelExporting = false;
-            });
-      },
-      showCancel: true,
-    );
-  }
-
-  ///导出为 excel
-  Future<bool> export2Excel(LoadingProgressController loadingController) async {
-    if (exporting) return false;
-    exporting = true;
-    int lastId = 0;
-    //第一行是标题头，内容从第二行开始
-    int rowNum = 2;
-    var histories = List<History>.empty(growable: true);
-    while (true) {
-      if (cancelExporting) {
-        return false;
-      }
-      var list = await dbService.historyDao.getHistoriesPageByFilter(
-        appConfig.userId,
-        searchFilter,
-        true,
-        lastId,
-      );
-      if (list.isEmpty) {
-        break;
-      }
-      histories.addAll(list);
-      lastId = list.last.id;
-    }
-    histories.sort((a, b) {
-      // 首先按 top 排序（true 在前，false 在后）
-      if (a.top != b.top) {
-        return a.top ? -1 : 1; // true 在前，所以返回 -1
-      }
-      // 如果 top 相同，则按 id 降序排列
-      return b.id.compareTo(a.id); // 降序：b.id - a.id
-    });
-    final Workbook workbook = Workbook();
-    final Worksheet sheet = workbook.worksheets[0];
-    _addExcelHeader(sheet);
-    final Style dateTimeStyle = workbook.styles.add('CustomDateTimeStyle');
-    dateTimeStyle.numberFormat = 'yyyy-MM-dd HH:mm:ss';
-    dateTimeStyle.vAlign = VAlignType.center;
-    final Style vAlign = workbook.styles.add('verticalCenter');
-    vAlign.vAlign = VAlignType.center;
-
-    var lastTime = DateTime.now();
-    loadingController.update(0, histories.length);
-
-    for (var i = 0; i < histories.length; i++) {
-      var item = histories[i];
-      if (cancelExporting) {
-        return false;
-      }
-      //转换为excel数据(对于内容超过32767字符的会合并单元格，统计使用了多少行)
-      final useRows = await _add2ExcelSheet(sheet, item, rowNum, dateTimeStyle, vAlign);
-      rowNum += useRows;
-      var now = DateTime.now();
-      if (now.difference(lastTime).inMilliseconds.abs() > 10) {
-        loadingController.update(i + 1);
-      }
-      lastTime = now;
-
-      if (ClipData(item).isImage) {
-        await Future.delayed(50.ms);
-      }
-    }
-    loadingController.update(histories.length);
-    Log.debug(tag, "add2ExcelSheet finished");
-    final List<int> bytes = workbook.saveAsStream();
-    Log.debug(tag, "workbook bytes: ${bytes.length}(${bytes.length.sizeStr})");
-    await FileUtil.exportFileBytes(
-      TranslationKey.export2Excel.tr,
-      TranslationKey.export2ExcelFileName.tr,
-      Uint8List.fromList(bytes),
-    );
-    workbook.dispose();
-    return true;
-  }
-
-  ///添加导出excel的头（第一行）
-  void _addExcelHeader(Worksheet sheet) {
-    sheet.getRangeByName("A1").setText("时间");
-    sheet.setColumnWidthInPixels(1, 150);
-    sheet.getRangeByName("B1").setText("类型");
-    sheet.getRangeByName("C1").setText("设备");
-    sheet.getRangeByName("D1").setText("来源");
-    sheet.getRangeByName("E1").setText("是否置顶");
-    sheet.getRangeByName("F1").setText("内容");
-    sheet.setColumnWidthInPixels(6, 570);
-    sheet.getRangeByName("G1").setText("内容长度");
-  }
-
-  ///将历史数据添加到excel对象中，返回值为使用的行数
-  Future<int> _add2ExcelSheet(Worksheet sheet, History history, int rowNum, Style timeStyle, Style vAlignStyle) async {
-    if (rowNum <= 0) {
-      throw ArgumentError("rowNum cannot less than 0");
-    }
-    final clip = ClipData(history);
-    final time = DateTime.parse(history.time);
-    final type = HistoryContentType.parse(history.type);
-    if (type == HistoryContentType.file) {
-      //文件同步跳过
-      return 0;
-    }
-    var rowsOffset = 0;
-    const maxCellLength = 32767;
-    //转换 unicode 控制字符 \u0000 ~ \u001f，这些字符会导致 excel 打开失败
-    //需要替换为 _x0000_ 这样的
-    final content = history.content.replaceAllMapped(
-      RegExp(r'[\x00-\x1F]'),
-      (match) => '_x${match.group(0)!.codeUnitAt(0).toRadixString(16).padLeft(4, '0')}_',
-    );
-    if (content.length > maxCellLength) {
-      //单个单元格最多支持32767字符，否则会导致excel打开失败
-      rowsOffset = (content.length / maxCellLength).ceil() - 1;
-    }
-    final devName = devService.getName(history.devId);
-    final size = clip.sizeText;
-    sheet.getRangeByName("A$rowNum:A${rowNum + rowsOffset}")
-      ..merge()
-      ..cellStyle = timeStyle
-      ..setDateTime(time);
-    sheet.getRangeByName("B$rowNum:B${rowNum + rowsOffset}")
-      ..merge()
-      ..cellStyle = vAlignStyle
-      ..setText(type.label);
-    sheet.getRangeByName("C$rowNum:C${rowNum + rowsOffset}")
-      ..merge()
-      ..cellStyle = vAlignStyle
-      ..setText(devName);
-    final sourceService = Get.find<ClipboardSourceService>();
-    var source = "";
-    if (history.source != null) {
-      final app = sourceService.getAppInfoByAppId(history.source!);
-      if (app != null) {
-        source = app.name;
-      }
-    }
-    sheet.getRangeByName("D$rowNum:D${rowNum + rowsOffset}")
-      ..merge()
-      ..cellStyle = vAlignStyle
-      ..setText(source);
-    sheet.getRangeByName("E$rowNum:E${rowNum + rowsOffset}")
-      ..merge()
-      ..cellStyle = vAlignStyle
-      ..setNumber(history.top ? 1 : 0);
-    if (clip.isImage) {
-      final file = File(history.content);
-      final cell = sheet.getRangeByName("F$rowNum");
-      sheet.setRowHeightInPixels(rowNum, 100);
-      final rowHeight = cell.rowHeight;
-      final cellWidth = cell.columnWidth;
-      if (file.existsSync()) {
-        final List<int> bytes = await file.readAsBytes();
-        //only supports png and jpeg
-        final picture = sheet.pictures.addStream(rowNum, 5, bytes);
-        //rowHeight取出来是单位pt，转为像素需要 * 1.33
-        picture.height = min(rowHeight * 1.33, 100).toInt(); // 限制高度
-        picture.width = min(cellWidth * 1.33, 200).toInt(); // 限制宽度
-      }
-    } else {
-      for (var i = 0; i <= rowsOffset; i++) {
-        final start = i * maxCellLength;
-        final end = min((i + 1) * maxCellLength, content.length);
-        sheet.getRangeByName("F${rowNum + i}").setText(content.substring(start, end));
-      }
-    }
-    sheet.getRangeByName("G$rowNum:G${rowNum + rowsOffset}")
-      ..merge()
-      ..cellStyle = vAlignStyle
-      ..setText(size);
-    return rowsOffset + 1;
-  }
-
-  //endregion
   //endregion
 
   //region 设备变更监听

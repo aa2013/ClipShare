@@ -188,6 +188,8 @@ dependencies:
   persistent_device_id: ^1.1.0
   # 滑动操作
   flutter_slidable: ^4.0.3
+  # 扩展的浮动按钮
+  flutter_expandable_fab: ^2.5.2
 dev_dependencies:
   flutter_test:
     sdk: flutter

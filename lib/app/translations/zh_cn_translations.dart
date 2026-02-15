@@ -637,10 +637,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "取消置顶";
       case TranslationKey.copyContent:
         return "复制内容";
-      case TranslationKey.copyMultiContentAsc:
-        return "批量复制内容（顺序）";
-      case TranslationKey.copyMultiContentDesc:
-        return "批量复制内容（逆序）";
+      case TranslationKey.copyMergedContent:
+        return "合并复制";
       case TranslationKey.syncRecord:
         return "同步记录";
       case TranslationKey.resyncRecord:
