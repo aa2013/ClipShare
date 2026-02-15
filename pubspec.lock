@@ -471,6 +471,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.2.5"
+  flutter_expandable_fab:
+    dependency: "direct main"
+    description:
+      name: flutter_expandable_fab
+      sha256: "2a488600924fd2a041679ad889807ee5670414a7a518cf11d4854b9898b3504f"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.5.2"
   flutter_highlighting:
     dependency: "direct main"
     description:

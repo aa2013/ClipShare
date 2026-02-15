@@ -30,8 +30,10 @@ import 'package:clipshare/app/widgets/dialog/clip_detail_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import 'empty_content.dart';
@@ -374,236 +376,254 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     );
   }
 
+  FloatingActionButton _fabButtonFun({
+    required VoidCallback? onPressed,
+    String? tooltip,
+    Widget? child,
+  }) {
+    final bgColor = onPressed == null ? Colors.grey[400]: null;
+    if (appConfig.isSmallScreen || true){
+      return FloatingActionButton(
+        onPressed: onPressed,
+        tooltip: tooltip,
+        child: child,
+        backgroundColor: bgColor,
+      );
+    }else{
+      return FloatingActionButton.small(
+        onPressed: onPressed,
+        tooltip: tooltip,
+        child: child,
+        backgroundColor: bgColor,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // backgroundColor: appConfig.bgColor,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                return Future.delayed(
-                  500.ms,
-                  widget.onRefreshData,
+    const fabSize = ExpandableFabSize.regular;
+    const distance = 145.0;
+    final multiSelected = _selectMode && _selectedItems.length > 1;
+    final fab = <Widget>[
+      Visibility(
+        visible: _selectMode,
+        child: Positioned(
+          right: 85,
+          bottom: 15,
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xffc3e8ff),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child:
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  "${_selectedItems.length} / ${widget.list.length}",
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: appConfig.currentIsDarkMode
+                        ? Colors.white
+                        : Colors.black87,
+                  ),
+                ),
+            ),),
+          ),),
+      ),
+      Visibility(
+        visible: _showBackToTopButton,
+        child: AnimatedPositioned(
+          right: 15,
+          bottom: _selectMode ? 85 : 15,
+          duration: 300.ms,
+          child: Tooltip(
+            message: TranslationKey.backToTop.tr,
+            child: FloatingActionButton(
+              onPressed: () {
+                Future.delayed(100.ms, () {
+                  _scrollController.animateTo(
+                    0,
+                    duration: 500.ms,
+                    curve: Curves.easeInOut,
+                  );
+                });
+              },
+              child: const Icon(Icons.arrow_upward), // 可以选择其他图标
+            ),
+          ),),
+      ),
+      Visibility(
+        visible: _selectMode,
+        child: ExpandableFab(
+          distance: distance,
+          type: ExpandableFabType.fan,
+          overlayStyle: const ExpandableFabOverlayStyle(blur: 8),
+          openButtonBuilder: RotateFloatingActionButtonBuilder(
+            fabSize: fabSize,
+            child: Tooltip(
+              message: TranslationKey.moreFilter.tr,
+              child: const Icon(Icons.menu),
+            ),
+          ),
+          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+            fabSize: fabSize,
+            child: Tooltip(
+              message: TranslationKey.close.tr,
+              child: const Icon(Icons.close),
+            ),
+          ),
+          children: [
+            _fabButtonFun(
+              onPressed: () {
+                _cancelSelectionMode();
+                appConfig.disableMultiSelectionMode(true);
+                setState(() {});
+              },
+              tooltip: TranslationKey.deselect.tr,
+              child: Icon(MdiIcons.cancel),
+            ),
+            _fabButtonFun(
+              onPressed: () {
+                void multiDelete(bool deleteFile) async {
+                  Get.back();
+                  Global.showLoadingDialog(
+                    context: context,
+                    loadingText: TranslationKey.deleting.tr,
+                  );
+                  for (var item in _selectedItems) {
+                    await deleteItem(item, deleteFile);
+                  }
+                  Get.back();
+                  Global.showSnackBarSuc(
+                    context: context,
+                    text: TranslationKey.deleteCompleted.tr,
+                  );
+                  _selectedItems.clear();
+                  _selectMode = false;
+                  appConfig.disableMultiSelectionMode(true);
+                  setState(() {});
+                }
+                DialogController? dialog;
+                dialog = Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.clipListViewDeleteAsk
+                      .trParams(
+                      {"length": _selectedItems.length.toString()}),
+                  showCancel: true,
+                  autoDismiss: false,
+                  showNeutral: _selectedItems.any((item) =>
+                  item.isFile),
+                  neutralText: TranslationKey.deleteWithFiles.tr,
+                  onCancel: () {
+                    dialog!.close();
+                  },
+                  onNeutral: () => multiDelete(true),
+                  onOk: () => multiDelete(false),
                 );
               },
-              child: Obx(
-                () => ConditionWidget(
-                  visible: widget.list.isEmpty,
-                  replacement: LayoutBuilder(
-                    builder: (ctx, constraints) {
-                      return Obx(() {
-                        final isImageMode = widget.imageMasonryGridViewLayout;
-                        final maxWidth = isImageMode ? 200.0 : 395;
-                        final showMore = (appConfig.showMoreItemsInRow && !appConfig.isSmallScreen) || isImageMode;
-                        final count = showMore ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
-                        return Listener(
-                          child: MasonryGridView.count(
-                            crossAxisCount: count,
-                            mainAxisSpacing: 4,
-                            shrinkWrap: true,
-                            itemCount: widget.list.length,
-                            controller: _scrollController,
-                            physics: _scrollPhysics,
-                            itemBuilder: (context, index) {
-                              if (isImageMode) {
-                                return renderItem(index);
-                              } else {
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 2,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 150,
-                                    minHeight: 80,
-                                  ),
-                                  child: renderItem(index),
-                                );
-                              }
-                            },
-                          ),
-                          onPointerSignal: (e) {
-                            if (e is PointerScrollEvent) {
-                              // 已经滚动到底部，仍然尝试滚动
-                              if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-                                Log.debug(tag, "Try loading more data at the bottom");
-                                _loadMoreData();
-                              }
+              tooltip: TranslationKey.delete.tr,
+              child: const Icon(Icons.delete_forever),
+            ),
+            _fabButtonFun(
+              onPressed: multiSelected ? () async {
+                var list = _selectedItems.toList()
+                  ..sort((a, b) => a.data.id.compareTo(b.data.id));
+                var content = list.map((item) => item.data.content).join('\n');
+                await clipboardManager.copy(ClipboardContentType.text, content);
+                Global.showSnackBarSuc(
+                    text: TranslationKey.copySuccess.tr, context: context);
+              } : null,
+              tooltip: TranslationKey.copyMergedContent.tr,
+              child: const Icon(Icons.content_copy_rounded),
+            ),
+            _fabButtonFun(
+              onPressed: multiSelected ? () {
+                final historyController = Get.find<HistoryController>();
+                var loaded = false;
+                historyController.export((_) {
+                  if (loaded) {
+                    return [];
+                  }
+                  loaded = true;
+                  return _selectedItems.where((item) => !item.isFile)
+                      .map((item) => item.data)
+                      .toList();
+                });
+              } : null,
+              tooltip: TranslationKey.output.tr,
+              child: Icon(MdiIcons.export),
+            ),
+          ],
+        ),
+      ),
+    ];
+    return Scaffold(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          return Future.delayed(
+            500.ms,
+            widget.onRefreshData,
+          );
+        },
+        child: Obx(() => ConditionWidget(
+                visible: widget.list.isEmpty,
+                replacement: LayoutBuilder(
+                  builder: (ctx, constraints) {
+                    return Obx(() {
+                      final isImageMode = widget.imageMasonryGridViewLayout;
+                      final maxWidth = isImageMode ? 200.0 : 395;
+                      final showMore = (appConfig.showMoreItemsInRow && !appConfig.isSmallScreen) || isImageMode;
+                      final count = showMore ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
+                      return Listener(
+                        child: MasonryGridView.count(
+                          crossAxisCount: count,
+                          mainAxisSpacing: 4,
+                          shrinkWrap: true,
+                          itemCount: widget.list.length,
+                          controller: _scrollController,
+                          physics: _scrollPhysics,
+                          itemBuilder: (context, index) {
+                            if (isImageMode) {
+                              return renderItem(index);
+                            } else {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 2,
+                                ),
+                                constraints: const BoxConstraints(
+                                  maxHeight: 150,
+                                  minHeight: 80,
+                                ),
+                                child: renderItem(index),
+                              );
                             }
                           },
-                        );
-                      });
-                    },
-                  ),
-                  child: Stack(
-                    children: [
-                      ListView(),
-                      EmptyContent(),
-                    ],
-                  ),
+                        ),
+                        onPointerSignal: (e) {
+                          if (e is PointerScrollEvent) {
+                            // 已经滚动到底部，仍然尝试滚动
+                            if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+                              Log.debug(tag, "Try loading more data at the bottom");
+                              _loadMoreData();
+                            }
+                          }
+                        },
+                      );
+                    });
+                  },
+                ),
+                child: Stack(
+                  children: [
+                    ListView(),
+                    EmptyContent(),
+                  ],
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: Row(
-              children: [
-                Visibility(
-                  visible: _selectMode,
-                  child: Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: const Color(0xffc3e8ff),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    margin: const EdgeInsets.only(right: 10),
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          "${_selectedItems.length} / ${widget.list.length}",
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: appConfig.currentIsDarkMode ? Colors.white : Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Visibility(
-                  visible: _selectMode,
-                  child: Tooltip(
-                    message: TranslationKey.deselect.tr,
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          _cancelSelectionMode();
-                          appConfig.disableMultiSelectionMode(true);
-                          setState(() {});
-                        },
-                        heroTag: 'deselectHistory',
-                        child: const Icon(Icons.close),
-                      ),
-                    ),
-                  ),
-                ),
-                Visibility(
-                  visible: _selectMode && _selectedItems.isNotEmpty,
-                  child: Tooltip(
-                    message: TranslationKey.delete.tr,
-                    child: Container(
-                      margin: const EdgeInsets.only(right: 10),
-                      child: FloatingActionButton(
-                        onPressed: () {
-                          void multiDelete(bool deleteFile) async {
-                            Get.back();
-                            Global.showLoadingDialog(
-                              context: context,
-                              loadingText: TranslationKey.deleting.tr,
-                            );
-                            for (var item in _selectedItems) {
-                              await deleteItem(item, deleteFile);
-                            }
-                            Get.back();
-                            Global.showSnackBarSuc(
-                              context: context,
-                              text: TranslationKey.deleteCompleted.tr,
-                            );
-                            _selectedItems.clear();
-                            _selectMode = false;
-                            appConfig.disableMultiSelectionMode(true);
-                            setState(() {});
-                          }
-
-                          DialogController? dialog;
-                          dialog = Global.showTipsDialog(
-                            context: context,
-                            text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
-                            showCancel: true,
-                            autoDismiss: false,
-                            showNeutral: _selectedItems.any((item) => item.isFile),
-                            neutralText: TranslationKey.deleteWithFiles.tr,
-                            onCancel: () {
-                              dialog!.close();
-                            },
-                            onNeutral: () => multiDelete(true),
-                            onOk: () => multiDelete(false),
-                          );
-                        },
-                        heroTag: 'deleteHistory',
-                        child: const Icon(Icons.delete_forever),
-                      ),
-                    ),
-                  ),
-                ),
-                Visibility(
-                  visible: _selectMode && _selectedItems.length > 1,
-                  child: IntrinsicHeight(
-                    child: Container(
-                      margin: _showBackToTopButton ? 10.insetR : null,
-                      child: Column(
-                        children: [
-                          Tooltip(
-                            message: TranslationKey.copyMultiContentAsc.tr,
-                            child: FloatingActionButton(
-                              onPressed: () async {
-                                var list = _selectedItems.toList()..sort((a, b) => a.data.id.compareTo(b.data.id));
-                                var content = list.map((item) => item.data.content).join('\n');
-                                await clipboardManager.copy(ClipboardContentType.text, content);
-                                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-                              },
-                              mini: true,
-                              child: const Icon(Icons.content_copy_rounded),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Tooltip(
-                            message: TranslationKey.copyMultiContentDesc.tr,
-                            child: FloatingActionButton(
-                              onPressed: () async {
-                                var list = _selectedItems.toList()..sort((a, b) => b.data.id.compareTo(a.data.id));
-                                var content = list.map((item) => item.data.content).join('\n');
-                                await clipboardManager.copy(ClipboardContentType.text, content);
-                                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-                              },
-                              mini: true,
-                              child: const Icon(Icons.copy),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Visibility(
-                  visible: _showBackToTopButton,
-                  child: Tooltip(
-                    message: TranslationKey.backToTop.tr,
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        Future.delayed(100.ms, () {
-                          _scrollController.animateTo(
-                            0,
-                            duration: 500.ms,
-                            curve: Curves.easeInOut,
-                          );
-                        });
-                      },
-                      heroTag: 'backToTop',
-                      child: const Icon(Icons.arrow_upward), // 可以选择其他图标
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      ),),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: SizedBox.expand(child: Stack(children: fab),),
     );
   }
 
