@@ -143,17 +143,6 @@ class ConfigService extends GetxService {
 
   bool get isSmallScreen => Get.width <= Constants.smallScreenWidth;
 
-  final _innerCopy = false.obs;
-
-  bool get innerCopy => _innerCopy.value;
-
-  set innerCopy(bool value) {
-    _innerCopy.value = value;
-    Future.delayed(300.ms, () {
-      _innerCopy.value = false;
-    });
-  }
-
   final selectingWorkingMode = false.obs;
   final _isMultiSelectionMode = false.obs;
 

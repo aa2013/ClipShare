@@ -303,10 +303,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   }
 
   Future<void> _onChanged(HistoryContentType type, String content, ClipboardSource? source) async {
-    if (appConfig.innerCopy) {
-      appConfig.innerCopy = false;
-      return;
-    }
     //和上次复制的内容相同
     if (last?.type == type.value && last?.content == content) {
       return;
@@ -523,7 +519,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         cnt = await addData(history, false, notify);
         //不是缺失数据的同步时放入本地剪贴板，如果是缺失数据但是需要豁免的也放行
         if (!loadingMissingData || _missingDataCopyMsg == history.id) {
-          appConfig.innerCopy = true;
           var clip = ClipData(history);
           var copy = false;
           if(clip.isText || clip.isImage){

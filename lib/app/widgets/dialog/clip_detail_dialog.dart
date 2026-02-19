@@ -6,6 +6,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
+import 'package:clipshare/app/widgets/copy_icon_button.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -132,28 +133,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                     ),
                     Visibility(
                       visible: widget.clip.isImage || widget.clip.isText,
-                      child: IconButton(
-                        icon: appConfig.innerCopy
-                            ? const Icon(
-                                Icons.check,
-                                color: Colors.blueGrey,
-                              )
-                            : const Icon(
-                                Icons.copy,
-                                color: Colors.blueGrey,
-                              ),
-                        onPressed: () {
-                          appConfig.innerCopy = true;
-                          setState(() {});
-                          // 创建一个延迟0.5秒执行一次的定时器
-                          Future.delayed(500.ms, () {
-                            setState(() {});
-                          });
-                          var type = ClipboardContentType.parse(widget.clip.data.type);
-                          clipboardManager.copy(type, widget.clip.data.content);
-                        },
-                        tooltip: TranslationKey.copyContent.tr,
-                      ),
+                      child: CopyIconButton(clip: widget.clip),
                     ),
                     Visibility(
                       visible: widget.clip.isText,

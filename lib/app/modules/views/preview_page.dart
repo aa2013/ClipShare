@@ -15,6 +15,8 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/loading.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
@@ -162,8 +164,7 @@ class _PreviewPageState extends State<PreviewPage> {
                         ),
                       ),
                       onDoubleTap: () {
-                        appConfig?.innerCopy = true;
-                        Clipboard.setData(ClipboardData(text: _currentImage.content));
+                        clipboardManager.copy(ClipboardContentType.text, _currentImage.content);
                         Global.showSnackBarSuc(
                           text: TranslationKey.copyPathSuccess.tr,
                           context: Get.context,
