@@ -462,7 +462,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
           openButtonBuilder: RotateFloatingActionButtonBuilder(
             fabSize: fabSize,
             child: Tooltip(
-              message: TranslationKey.moreFilter.tr,
+              message: TranslationKey.moreActions.tr,
               child: const Icon(Icons.menu),
             ),
           ),
@@ -499,21 +499,16 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                     context: context,
                     text: TranslationKey.deleteCompleted.tr,
                   );
-                  _selectedItems.clear();
-                  _selectMode = false;
                   appConfig.disableMultiSelectionMode(true);
-                  setState(() {});
+                  _cancelSelectionMode();
                 }
                 DialogController? dialog;
                 dialog = Global.showTipsDialog(
                   context: context,
-                  text: TranslationKey.clipListViewDeleteAsk
-                      .trParams(
-                      {"length": _selectedItems.length.toString()}),
+                  text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
                   showCancel: true,
                   autoDismiss: false,
-                  showNeutral: _selectedItems.any((item) =>
-                  item.isFile),
+                  showNeutral: _selectedItems.any((item) => item.isFile),
                   neutralText: TranslationKey.deleteWithFiles.tr,
                   onCancel: () {
                     dialog!.close();
@@ -527,12 +522,11 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
             ),
             _fabButtonFun(
               onPressed: multiSelected ? () async {
-                var list = _selectedItems.toList()
-                  ..sort((a, b) => a.data.id.compareTo(b.data.id));
+                var list = _selectedItems.toList()..sort((a, b) => a.data.id.compareTo(b.data.id));
                 var content = list.map((item) => item.data.content).join('\n');
                 await clipboardManager.copy(ClipboardContentType.text, content);
-                Global.showSnackBarSuc(
-                    text: TranslationKey.copySuccess.tr, context: context);
+                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+                _cancelSelectionMode();
               } : null,
               tooltip: TranslationKey.copyMergedContent.tr,
               child: const Icon(Icons.content_copy_rounded),
@@ -549,7 +543,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   return _selectedItems.where((item) => !item.isFile)
                       .map((item) => item.data)
                       .toList();
-                });
+                }).whenComplete(() => _cancelSelectionMode());
               } : null,
               tooltip: TranslationKey.output.tr,
               child: Icon(MdiIcons.export),
