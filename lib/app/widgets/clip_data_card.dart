@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/double_tap_wrapper.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -68,7 +70,6 @@ class ClipDataCard extends StatefulWidget {
 }
 
 class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMixin{
-  var _readyDoubleClick = false;
   static const _borderWidth = 2.0;
   static const _borderRadius = 12.0;
   bool _selected = false;
@@ -78,6 +79,8 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
   final androidChannelService = Get.find<AndroidChannelService>();
   final clipChannelService = Get.find<ClipChannelService>();
   var _slided = false;
+  late final DoubleTapWrapper leftTapWrapper;
+  late final DoubleTapWrapper rightTapWrapper;
   late final SlidableController slidController = SlidableController(this);
 
   @override
@@ -86,6 +89,39 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
     slidController.animation.addListener(() {
       _slided = slidController.animation.value != 0;
     });
+    leftTapWrapper = DoubleTapWrapper(
+      doubleTapInterval: 200.ms,
+      onTap: (details) {
+        if (_slided) {
+          slidController.close();
+          return;
+        }
+        if (widget.selectMode) {
+          setState(() {
+            _selected = !_selected;
+          });
+          widget.onTap?.call();
+          return;
+        }
+        widget.onTap?.call();
+      },
+      onDoubleTap: PlatformExt.isDesktop ? null : (details) => widget.onDoubleTap?.call(),
+    );
+    rightTapWrapper = DoubleTapWrapper(
+      doubleTapInterval: 200.ms,
+      onTap: (details){
+        showMenu(details!.globalPosition - const Offset(0, 70));
+      },
+      onDoubleTap: (details) async {
+        var type = ClipboardContentType.parse(widget.clip.data.type);
+        final result = await clipboardManager.copy(type, widget.clip.data.content);
+        if(result){
+          Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr,context: context);
+        }else{
+          Global.showSnackBarErr(text: TranslationKey.copySuccess.tr,context: context);
+        }
+      }
+    );
   }
 
   @override
@@ -101,45 +137,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
       elevation: 0,
       child: InkWell(
         mouseCursor: SystemMouseCursors.basic,
-        onTap: () {
-          if(_slided){
-            slidController.close();
-            return;
-          }
-          if (widget.selectMode) {
-            setState(() {
-              _selected = !_selected;
-            });
-            widget.onTap?.call();
-            return;
-          }
-          if (PlatformExt.isDesktop) {
-            widget.onTap?.call();
-            return;
-          }
-          if (widget.onDoubleTap == null) {
-            //未设置双击，直接执行单击
-            widget.onTap?.call();
-          } else {
-            //设置了双击，且已经点击过一次，执行双击逻辑
-            if (_readyDoubleClick) {
-              widget.onDoubleTap!.call();
-              //双击结束，恢复状态
-              _readyDoubleClick = false;
-            } else {
-              _readyDoubleClick = true;
-              //设置了双击，但仅点击了一次，延迟一段时间
-              Future.delayed(300.ms, () {
-                if (_readyDoubleClick) {
-                  //指定时间后仍然没有进行第二次点击，进行单击逻辑
-                  widget.onTap?.call();
-                }
-                //指定时间后无论是否双击，恢复状态
-                _readyDoubleClick = false;
-              });
-            }
-          }
-        },
+        onTap: leftTapWrapper.wrapperTap,
         onLongPress: () {
           widget.onLongPress?.call();
         },
@@ -243,8 +241,8 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
         ),
         child: content,
       ),),
-      onSecondaryTapDown: (details) {
-        showMenu(details.globalPosition - const Offset(0, 70));
+      onSecondaryTapDown: (details){
+        rightTapWrapper.call(details);
       },
     );
   }
