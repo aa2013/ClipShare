@@ -205,7 +205,7 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
                 child: GestureDetector(
                   onTap: pop,
                   child: Container(
-                    color: Colors.black.withOpacity(animation.value * 0.3),
+                    color: Colors.black.withOpacity(animation.value * 0.1),
                   ),
                 ),
               );
