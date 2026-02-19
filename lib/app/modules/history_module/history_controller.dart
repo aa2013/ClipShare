@@ -780,8 +780,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   //endregion
 
   //region 导出
-  void export(FutureOr<List<History>> Function(int lastId) loadDataFunc) {
+  Future export(FutureOr<List<History>> Function(int lastId) loadDataFunc) {
     var loadingController = LoadingProgressController();
+    Completer<void> completer = Completer();
     Global.showTipsDialog(
       context: Get.context!,
       text: TranslationKey.historyOutputTips.tr,
@@ -808,8 +809,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           } else {
             Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
           }
-        })
-            .catchError((err, stack) {
+        }).catchError((err, stack) {
           //关闭进度动画
           Get.back();
           Global.showTipsDialog(
@@ -817,15 +817,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             title: TranslationKey.outputFailed.tr,
             text: "$err. $stack",
           );
-        })
-            .whenComplete(() {
+        }).whenComplete(() {
           //更新状态
           _exporting = false;
           _cancelExporting = false;
+          completer.complete();
         });
       },
       showCancel: true,
     );
+    return completer.future;
   }
 
   ///导出为 excel
