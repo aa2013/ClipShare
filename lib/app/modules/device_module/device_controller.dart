@@ -238,10 +238,12 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
 
   @override
-  void onConnected(DevInfo info,
+  void onConnected(
+      DevInfo info,
       AppVersion minVersion,
       AppVersion version,
-      TransportProtocol protocol,) async {
+      TransportProtocol protocol,
+  ) async {
     var dev = await Device.fromDevInfo(info);
     for (var i = 0; i < pairedList.length; i++) {
       var paired = pairedList[i];
@@ -388,6 +390,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
       uid: uid,
       type: dev.type,
       isPaired: true,
+      internalAddress: (address?.isInternalIPv4 ?? false) ? address : null,
       address: address,
     );
     var dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);

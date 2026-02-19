@@ -28,6 +28,9 @@ class Device {
   ///链接地址
   String? address;
 
+  ///内网地址
+  String? internalAddress;
+
   ///是否已配对
   bool isPaired;
 
@@ -43,6 +46,7 @@ class Device {
     this.customName,
     this.address,
     this.isPaired = false,
+    this.internalAddress,
   });
 
   Map<String, dynamic> toJson() {
@@ -54,6 +58,7 @@ class Device {
       "address": address,
       "customName": customName,
       "isPaired": isPaired,
+      "internalAddress": internalAddress,
     };
   }
 
@@ -84,6 +89,7 @@ class Device {
       type: map["type"],
       customName: map["customName"],
       address: map["address"],
+      internalAddress: map["internalAddress"],
       isPaired: map["isPaired"],
     );
   }
@@ -101,6 +107,7 @@ class Device {
     String? type,
     String? customName,
     String? address,
+    String? internalAddress,
     bool? isPaired,
   }) {
     return Device(
@@ -110,6 +117,7 @@ class Device {
       type: type ?? this.type,
       customName: customName ?? this.customName,
       address: address ?? this.address,
+      internalAddress: internalAddress ?? this.internalAddress,
       isPaired: isPaired ?? this.isPaired,
     );
   }
