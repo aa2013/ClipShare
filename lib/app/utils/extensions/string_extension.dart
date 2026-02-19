@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -28,6 +27,33 @@ extension StringExt on String {
 
   bool get isDomain {
     return matchRegExp(r'^[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?$');
+  }
+
+  bool get isInternalIPv4 {
+    try {
+      var ip = split(":")[0];
+      final parts = ip.split('.').map(int.parse).toList();
+      if (parts.length != 4) return false;
+
+      // 检查A类私有地址
+      if (parts[0] == 10) return true;
+
+      // 检查B类私有地址
+      if (parts[0] == 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+
+      // 检查C类私有地址
+      if (parts[0] == 192 && parts[1] == 168) return true;
+
+      // 检查回环地址
+      if (parts[0] == 127) return true;
+
+      // 检查链路本地地址
+      if (parts[0] == 169 && parts[1] == 254) return true;
+
+      return false;
+    } catch (e) {
+      return false;
+    }
   }
 
   String substringMinLen(int start, int end) {

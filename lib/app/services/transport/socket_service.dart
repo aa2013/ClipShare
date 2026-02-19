@@ -24,7 +24,7 @@ import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
-import 'package:clipshare/app/utils/task_runner.dart';
+import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
@@ -54,6 +54,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final connRegService = Get.find<ConnectionRegistryService>();
   final dbService = Get.find<DbService>();
   static const String tag = "SocketService";
+  static const maxParallelCnt = 10;
   Timer? _heartbeatTimer;
   Timer? _forwardClientHeartbeatTimer;
   DateTime? _lastForwardServerPingTime;
@@ -76,6 +77,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   bool screenOpened = true;
   Future? autoCloseConnTimer;
   bool _autoConnForwardServer = true;
+  CancelTokenSource _discoveryTokenSource = CancelTokenSource();
 
   String? get forwardServerHost {
     if (!appConfig.enableForward || appConfig.forwardWay != ForwardWay.server) return null;
@@ -382,11 +384,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
             Future.delayed(1.s, () async {
               final list = await _forwardDiscovering();
               //发现中转设备
-              TaskRunner<void>(
-                initialTasks: list,
-                onFinish: () async {},
-                concurrency: 50,
-              );
+              await ParallelTask(tasks: list, maxParallelCnt: maxParallelCnt).run();
             });
           }
         },
@@ -809,7 +807,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   var _discovering = false;
 
   bool get discovering => _discovering;
-  TaskRunner? _taskRunner;
 
   ///发现设备
   void startDiscoveryDevices({
@@ -830,6 +827,20 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       listener.onDiscoverStart();
     }
     Log.debug(tag, "开始发现设备");
+    onDiscoveryStopped(){
+      //设备发现流程结束
+      appConfig.deviceDiscoveryStatus.value = null;
+      if (!_discoveryTokenSource.token.isCanceled) {
+        _discoveryTokenSource.cancel();
+      }
+      _discovering = false;
+      for (var listener in _discoverListeners) {
+        listener.onDiscoverFinished();
+      }
+    }
+    //更新设备发现控制令牌
+    _discoveryTokenSource = CancelTokenSource();
+
     //重新更新广播监听
     try {
       if (!appConfig.onlyForwardMode) {
@@ -838,87 +849,60 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     } catch (err, stack) {
       Log.error(tag, "error: $e, $stack");
     }
-    List<Future<void> Function()> tasks = [];
-    if (appConfig.onlyForwardMode) {
-      tasks = []; //测试屏蔽发现用
-    } else {
-      //先发现自添加设备
-      tasks.addAll(await _pairedDiscovering());
-    }
-    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
     //尝试连接中转服务器
     if (_forwardClient == null) {
       await connectForwardServer();
     }
-    final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile;
-    //并行处理
-    TaskRunner<void>(
-      initialTasks: tasks,
-      onFinish: () {
-        if (PlatformExt.isMobile && isMobileNetwork) {
-          tasks = [];
-        } else if (scan) {
-          //广播发现
-          tasks.addAll(_multicastDiscovering());
-        } else {
-          tasks = [];
-        }
-        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
-        _taskRunner = TaskRunner<void>(
-          initialTasks: tasks,
-          onFinish: () async {
-            appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
-            if (appConfig.onlyForwardMode) {
-              tasks = []; //测试屏蔽发现用
-            } else {
-              if (PlatformExt.isMobile && isMobileNetwork) {
-                tasks = [];
-              } else if (scan) {
-                //发现子网设备
-                tasks = await _subNetDiscovering(manual);
-              } else {
-                tasks = [];
-              }
-            }
-            _taskRunner = TaskRunner<void>(
-              initialTasks: tasks,
-              onFinish: () async {
-                appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
-                if (scan) {
-                  //发现中转设备
-                  tasks = await _forwardDiscovering();
-                } else {
-                  tasks = [];
-                }
-                _taskRunner = TaskRunner<void>(
-                  initialTasks: tasks,
-                  onFinish: () async {
-                    appConfig.deviceDiscoveryStatus.value = null;
-                    _taskRunner = null;
-                    _discovering = false;
-                    for (var listener in _discoverListeners) {
-                      listener.onDiscoverFinished();
-                    }
-                  },
-                  concurrency: 50,
-                );
-              },
-              concurrency: 50,
-            );
-          },
-          concurrency: 1,
-        );
-      },
-      concurrency: 50,
-    );
+
+    //设备发现控制令牌
+    var token = _discoveryTokenSource.token;
+    //发现已配对设备
+    if(token.isCanceled){
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
+    final List<Future<void> Function()> pairedDiscoveryTasks = appConfig.onlyForwardMode ? [] : await _pairedDiscovering();
+    await ParallelTask(tasks: pairedDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+
+    //广播发现
+    if(token.isCanceled){
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
+    final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile && PlatformExt.isMobile;
+    final List<Future<void> Function()> multicastDiscoveryTasks = isMobileNetwork || !scan ? [] : _multicastDiscovering();
+    await ParallelTask(tasks: multicastDiscoveryTasks, maxParallelCnt: 1, token: token).run();
+
+    //子网扫描
+    if(token.isCanceled){
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
+    final List<Future<void> Function()> subnetDiscoveryTasks = isMobileNetwork || !scan || appConfig.onlyForwardMode ? [] : await _subNetDiscovering(manual);
+    await ParallelTask(tasks: subnetDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+
+    //中转发现
+    if(token.isCanceled){
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
+    final List<Future<void> Function()> forwardDiscoveryTasks = scan ? await _forwardDiscovering() : [];
+    await ParallelTask(tasks: forwardDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+    onDiscoveryStopped();
+
   }
 
   ///停止发现设备
   Future<void> stopDiscoveryDevices([bool restart = false]) async {
     appConfig.deviceDiscoveryStatus.value = null;
     Log.debug(tag, "停止发现设备");
-    _taskRunner?.stop();
-    _taskRunner = null;
+    if (!_discoveryTokenSource.token.isCanceled) {
+      _discoveryTokenSource.cancel();
+    }
     _discovering = false;
     if (!restart) {
       for (var listener in _discoverListeners) {
@@ -975,12 +959,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   ///发现已配对设备
   Future<List<Future<void> Function()>> _pairedDiscovering() async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
-    var lst = await dbService.deviceDao.getAllDevices(appConfig.userId);
-    var devices = lst.where((dev) => dev.address != null).toList();
-    final isWifi = appConfig.currentNetWorkType.value == ConnectivityResult.wifi;
-
-    //region 查找中转服务的ip
+    var devices = await dbService.deviceDao.getAllDevices(appConfig.userId);
     String? forwardIp;
+    //region 查找中转服务的ip
     //存在且不为ipv4时才查询
     if (forwardServerHost != null) {
       //如果是域名就进行查询对应ip
@@ -1000,23 +981,40 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     }
     //endregion
 
+    //先内网地址直连，若失败则尝试中转
     for (var dev in devices) {
-      if (!dev.address!.contains(":")) {
-        //如果先前通过存储服务连接，会解析失败，直接跳过
+      //已经连接，跳过
+      if(_devSockets.containsKey(dev.guid)){
         continue;
       }
-      var [ip, port] = dev.address!.split(":");
-      //检测当前网络环境，以下条件直接直接连接中转，而不是走完整设备发现流程
-      //1. 不是 WiFi 且为移动设备
-      //2. 不是 WiFi 且地址为中转地址
-      if (!isWifi) {
-        if (PlatformExt.isMobile || forwardIp == ip) {
-          print("connect by forward ${dev.name}(${dev.guid})");
+      if(dev.internalAddress != null){
+        //内网地址不为空，尝试直连
+        var [ip, port] = dev.internalAddress!.split(":");
+        tasks.add(() async {
+          try{
+            final result = await manualConnect(ip, port: int.parse(port));
+            if(!result){
+              //直连失败，尝试中转
+              if (forwardIp.isNotNullAndEmpty){
+                await manualConnectByForward(dev.guid);
+              }
+            }
+          }catch(err,stack){
+            Log.error(tag, err, stack);
+            //直连过程异常，尝试中转
+            if (forwardIp.isNotNullAndEmpty){
+              await manualConnectByForward(dev.guid);
+            }
+
+          }
+        });
+      }else{
+        //内网地址为空，尝试中转
+        if (forwardIp.isNotNullAndEmpty) {
+          Log.debug(tag, "connect by forward ${dev.name}(${dev.guid})");
           tasks.add(() => manualConnectByForward(dev.guid));
-          continue;
         }
       }
-      tasks.add(() => manualConnect(ip, port: int.parse(port)));
     }
     return tasks;
   }
@@ -1101,12 +1099,20 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     Map<String, dynamic> data = const {},
     bool forward = false,
     String? targetDevId,
-  }) {
+  }) async {
     port = port ?? Constants.port;
+    try {
+      //测试连接是否可用
+      final testSkt = await Socket.connect(ip, port, timeout: 2.s);
+      testSkt.close();
+    } catch (_) {
+      //地址不可连接
+      return false;
+    }
     String address = "$ip:$port:$targetDevId";
     if (_connectingAddress.contains(address)) {
       //已经在连接中，返回true
-      return Future.value(true);
+      return true;
     }
     _connectingAddress.add(address);
     Future.delayed(5.s, () {
@@ -1290,6 +1296,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
     //更新连接地址
     final address = "$ip:$port";
+    if(address.isInternalIPv4){
+      await dbService.deviceDao.updateDeviceInternalAddress(dev.guid, appConfig.userId, address);
+    }
     await dbService.deviceDao.updateDeviceAddress(dev.guid, appConfig.userId, address);
     _devSockets[dev.guid]!.updatePingTime();
     //添加到注册服务
@@ -1492,6 +1501,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   //endregion
+
   ///设备断开连接
   void _onDevDisconnected(
     String devId, {

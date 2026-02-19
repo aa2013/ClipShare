@@ -12,7 +12,6 @@ import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
-import 'package:clipshare/app/data/models/missing_data_sync_progress.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
 import 'package:clipshare/app/data/models/version.dart';
@@ -52,7 +51,7 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/utils/task_runner.dart';
+import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import "package:msgpack_dart/msgpack_dart.dart" as m2;
@@ -95,6 +94,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
   static const appInfoDir = "app-info";
+  static const maxParallelCnt = 10;
   static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
 
   String get _selfDevId => appConfig.device.guid;
@@ -382,13 +382,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
     //endregion
 
-    TaskRunner(
-      concurrency: 10,
-      initialTasks: tasks,
-      onFinish: () {
-        _loadingMissingData = false;
-      },
-    );
+    await ParallelTask(tasks: tasks, maxParallelCnt: maxParallelCnt).run();
+    _loadingMissingData = false;
   }
 
   Future<Map<String, List<String>>> _loadDevHistoryDirectoriesFromStorage(List<String> devIds) async {
@@ -507,13 +502,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         Log.error(tag, err, stack);
       }
     }
-    TaskRunner(
-      concurrency: 10,
-      initialTasks: tasks,
-      onFinish: () {
-        _uploadingSyncFailedData = false;
-      },
-    );
+
+    await ParallelTask(tasks: tasks, maxParallelCnt: maxParallelCnt).run();
+    _uploadingSyncFailedData = false;
   }
 
   //endregion
