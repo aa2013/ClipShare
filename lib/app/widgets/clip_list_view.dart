@@ -361,7 +361,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
           await OpenFile.open(widget.list[i].data.content);
           return;
         }
-        appConfig.innerCopy = true;
         History history = widget.list[i].data;
         var type = ClipboardContentType.parse(history.type);
         final res = await clipboardManager.copy(type, history.content);

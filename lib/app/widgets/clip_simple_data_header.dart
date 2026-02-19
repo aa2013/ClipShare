@@ -5,11 +5,15 @@ import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
+import 'package:clipshare/app/widgets/copy_icon_button.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -17,6 +21,7 @@ import 'package:get/get.dart';
 class ClipSimpleDataHeader extends StatelessWidget {
   final ClipData clip;
   final bool routeToSearchOnClickChip;
+  final appConfig = Get.find<ConfigService>();
   final devService = Get.find<DeviceService>();
   final tagService = Get.find<TagService>();
   final sourceService = Get.find<ClipboardSourceService>();
@@ -58,10 +63,15 @@ class ClipSimpleDataHeader extends StatelessWidget {
           ),
         ),
         //标签
-        ClipTagRowView(
+        Expanded(child: ClipRRect(child: ClipTagRowView(
           hisId: clip.data.id,
           clipBgColor: const Color(0x1a000000),
           routeToSearchOnClickChip: routeToSearchOnClickChip,
+        ),))
+        ,
+        Visibility(
+          visible: clip.isImage || clip.isText,
+          child: CopyIconButton(clip: clip),
         ),
       ],
     );

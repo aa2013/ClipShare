@@ -214,7 +214,6 @@ class SplashController extends GetxController {
           dbService.historyDao.getById(id).then(
             (history) async {
               if (history == null) return;
-              appConfig.innerCopy = true;
               var type = ClipboardContentType.parse(history.type);
               await clipboardManager.copy(type, history.content);
               clipboardManager.pasteToPreviousWindow();
@@ -264,7 +263,6 @@ class SplashController extends GetxController {
       var method = ClipChannelMethod.values.byName(call.method);
       switch (method) {
         case ClipChannelMethod.ignoreNextCopy:
-          appConfig.innerCopy = true;
           break;
         case ClipChannelMethod.setTop:
           int id = arguments['id'];

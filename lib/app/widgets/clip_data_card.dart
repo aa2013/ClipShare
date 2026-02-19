@@ -162,12 +162,9 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: ClipSimpleDataHeader(
-                    clip: widget.clip,
-                    routeToSearchOnClickChip: widget.routeToSearchOnClickChip,
-                  ),
+                ClipSimpleDataHeader(
+                  clip: widget.clip,
+                  routeToSearchOnClickChip: widget.routeToSearchOnClickChip,
                 ),
                 widget.imageMode
                     ? IntrinsicHeight(
@@ -293,7 +290,6 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
             label: TranslationKey.copyContent.tr,
             icon: Icons.copy,
             onSelected: () {
-              appConfig.innerCopy = true;
               var type = ClipboardContentType.parse(widget.clip.data.type);
               clipboardManager.copy(type, widget.clip.data.content);
               Global.showSnackBarSuc(
