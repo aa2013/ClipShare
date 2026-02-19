@@ -30,6 +30,7 @@ import 'package:clipshare/app/widgets/dialog/clip_detail_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
@@ -308,6 +309,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         if (!_selectMode) {
           _enableSelectMode();
         }
+        HapticFeedback.mediumImpact();
         //如果为空或已经选中，直接切换选择状态
         if (_selectedItems.isEmpty || _selectedItems.contains(item)) {
           _toggleSelectState(item);
@@ -355,6 +357,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
       onLongPress: () {
         _enableSelectMode();
         _selectedItems.add(item);
+        HapticFeedback.mediumImpact();
       },
       onDoubleTap: () async {
         if (widget.list[i].isFile) {
