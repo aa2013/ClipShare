@@ -11,6 +11,7 @@ import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
+import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -134,6 +135,26 @@ class DebugPage extends GetView<DebugController> {
             as.sendHistoryChangedBroadcast(HistoryContentType.text,"FSDFDS","devid111","devname222");
           },
           child: Text("666"),
+        ),
+        TextButton(
+          onPressed: () async {
+            final tasks = ParallelTask(
+              maxParallelCnt: 10,
+              tasks: List.generate(100, (i) {
+                return () async {
+                  await Future.delayed(Duration(seconds: 1));
+                  print('Task $i done');
+                };
+              }),
+            );
+
+            var start = DateTime.now();
+            await tasks.run();
+            var end = DateTime.now();
+            var offset = end.difference(start).inMilliseconds;
+            print("OffsetTime = $offset ms");
+          },
+          child: Text("Test ParallelTask"),
         ),
         Expanded(
           child: FileBrowser(

@@ -91,7 +91,7 @@ class _$_AppDb extends _AppDb {
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 7,
+      version: 8,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -109,7 +109,7 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Config` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, `uid` INTEGER NOT NULL, PRIMARY KEY (`key`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Device` (`guid` TEXT NOT NULL, `devName` TEXT NOT NULL, `uid` INTEGER NOT NULL, `customName` TEXT, `type` TEXT NOT NULL, `address` TEXT, `isPaired` INTEGER NOT NULL, PRIMARY KEY (`guid`))');
+            'CREATE TABLE IF NOT EXISTS `Device` (`guid` TEXT NOT NULL, `devName` TEXT NOT NULL, `uid` INTEGER NOT NULL, `customName` TEXT, `type` TEXT NOT NULL, `address` TEXT, `internalAddress` TEXT, `isPaired` INTEGER NOT NULL, PRIMARY KEY (`guid`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `History` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uid` INTEGER NOT NULL, `time` TEXT NOT NULL, `content` TEXT NOT NULL, `type` TEXT NOT NULL, `devId` TEXT NOT NULL, `top` INTEGER NOT NULL, `sync` INTEGER NOT NULL, `size` INTEGER NOT NULL, `updateTime` TEXT, `source` TEXT)');
         await database.execute(
@@ -761,6 +761,7 @@ class _$DeviceDao extends DeviceDao {
                   'customName': item.customName,
                   'type': item.type,
                   'address': item.address,
+                  'internalAddress': item.internalAddress,
                   'isPaired': item.isPaired ? 1 : 0
                 }),
         _deviceUpdateAdapter = UpdateAdapter(
@@ -774,6 +775,7 @@ class _$DeviceDao extends DeviceDao {
                   'customName': item.customName,
                   'type': item.type,
                   'address': item.address,
+                  'internalAddress': item.internalAddress,
                   'isPaired': item.isPaired ? 1 : 0
                 });
 
@@ -797,7 +799,8 @@ class _$DeviceDao extends DeviceDao {
             type: row['type'] as String,
             customName: row['customName'] as String?,
             address: row['address'] as String?,
-            isPaired: (row['isPaired'] as int) != 0),
+            isPaired: (row['isPaired'] as int) != 0,
+            internalAddress: row['internalAddress'] as String?),
         arguments: [uid]);
   }
 
@@ -815,7 +818,8 @@ class _$DeviceDao extends DeviceDao {
             type: row['type'] as String,
             customName: row['customName'] as String?,
             address: row['address'] as String?,
-            isPaired: (row['isPaired'] as int) != 0),
+            isPaired: (row['isPaired'] as int) != 0,
+            internalAddress: row['internalAddress'] as String?),
         arguments: [guid, uid]);
   }
 
@@ -857,6 +861,18 @@ class _$DeviceDao extends DeviceDao {
   ) async {
     return _queryAdapter.query(
         'update device set address = ?3 where uid = ?2 and guid = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [guid, uid, address]);
+  }
+
+  @override
+  Future<int?> updateDeviceInternalAddress(
+    String guid,
+    int uid,
+    String address,
+  ) async {
+    return _queryAdapter.query(
+        'update device set internalAddress = ?3 where uid = ?2 and guid = ?1',
         mapper: (Map<String, Object?> row) => row.values.first as int,
         arguments: [guid, uid, address]);
   }

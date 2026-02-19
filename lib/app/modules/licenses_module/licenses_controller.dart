@@ -286,11 +286,6 @@ class LicensesController extends GetxController {
       "url": "https://pub.dev/packages/msgpack_dart",
     },
     {
-      "name": "localsend",
-      "license": "Apache-2.0",
-      "url": "https://github.com/localsend/localsend",
-    },
-    {
       "name": "pointycastle",
       "license": "MIT",
       "url": "https://pub.dev/packages/pointycastle",

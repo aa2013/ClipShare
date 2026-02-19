@@ -38,4 +38,10 @@ abstract class DeviceDao {
     "update device set address = :address where uid = :uid and guid = :guid",
   )
   Future<int?> updateDeviceAddress(String guid, int uid, String address);
+
+  ///更新设备内网连接地址
+  @Query(
+    "update device set internalAddress = :address where uid = :uid and guid = :guid",
+  )
+  Future<int?> updateDeviceInternalAddress(String guid, int uid, String address);
 }

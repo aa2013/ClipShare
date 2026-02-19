@@ -54,7 +54,7 @@ const views = [VHistoryTagHold];
 ///
 /// 2. 直接执行 /scripts/db_gen.bat 一键完成
 @Database(
-  version: 7,
+  version: 8,
   entities: tables,
   views: views,
 )
@@ -127,6 +127,7 @@ class DbService extends GetxService {
       migration4to5,
       migration5to6,
       migration6to7,
+      migration7to8,
     ]).build();
     version = await _db.database.database.getVersion();
     return this;
@@ -229,5 +230,13 @@ class DbService extends GetxService {
   final migration6to7 = Migration(6, 7, (database) async {
     await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId` ON `History` (`devId`)');
     await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId_source` ON `History` (`devId`, `source`)');
+  });
+
+  ///v1.4.3 新增字段记录内网地址 7 -> 8
+  ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
+  final migration7to8 = Migration(7, 8, (database) async {
+    if (!await hasColumnInTable(database, 'Device', 'internalAddress')) {
+      await database.execute("ALTER TABLE `Device` ADD COLUMN `internalAddress` TEXT;");
+    }
   });
 }
