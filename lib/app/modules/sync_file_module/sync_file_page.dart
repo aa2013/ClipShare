@@ -79,7 +79,6 @@ class SyncFilePage extends GetView<SyncFileController> {
                                   controller.selectMode = true;
                                   appConfig.enableMultiSelectionMode(
                                     controller: controller,
-                                    selectionTips: TranslationKey.multiDelete.tr,
                                   );
                                 },
                                 onTap: () {

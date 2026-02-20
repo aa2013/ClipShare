@@ -441,8 +441,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "部分删除失败";
       case TranslationKey.deletionFailed:
         return "删除失败";
-      case TranslationKey.multiDelete:
-        return "多选删除";
       case TranslationKey.deselect:
         return "取消选择";
       case TranslationKey.delete:

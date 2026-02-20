@@ -212,7 +212,6 @@ enum TranslationKey {
   deleting,
   deletingSuccess,
   partialDeletionFailed,
-  multiDelete,
   deselect,
   delete,
   deleteWithFiles,

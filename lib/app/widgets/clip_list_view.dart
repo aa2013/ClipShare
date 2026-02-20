@@ -229,7 +229,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     }
     appConfig.enableMultiSelectionMode(
       controller: widget.parentController,
-      selectionTips: TranslationKey.multiDelete.tr,
     );
     _selectMode = true;
     setState(() {});

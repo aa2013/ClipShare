@@ -488,8 +488,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Partial Deletion Failed";
       case TranslationKey.deletionFailed:
         return "Delete Failed";
-      case TranslationKey.multiDelete:
-        return "Multi-Delete";
       case TranslationKey.deselect:
         return "Deselect";
       case TranslationKey.delete:
