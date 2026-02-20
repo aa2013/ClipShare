@@ -86,22 +86,16 @@ class HomePage extends GetView<HomeController> {
                                         final syncProgressService = Get.find<HistorySyncProgressService>();
                                         final selectionMode = appConfig.isMultiSelectionMode(currentPageController);
                                         final pageTitle = controller.navBarItems[controller.index].label!;
-                                        final selectionText = appConfig.multiSelectionText;
+                                        final selectionText = TranslationKey.multipleChoiceOperationAppBarTitle.tr;
                                         bool isSyncing = syncProgressService.syncing;
                                         final icon = controller.navBarItems[controller.index].icon;
                                         bool isHistoryPage = icon is Icon && icon.icon == Icons.history;
                                         if (!selectionMode && isSyncing && isHistoryPage) {
                                           int total = syncProgressService.total;
                                           int syncedCnt = syncProgressService.syncedCnt;
-                                          return LoadingDots(
-                                            text: Text(
-                                              "${TranslationKey.homeAppBarSyncingProgressText.tr}($syncedCnt/$total)",
-                                            ),
-                                          );
+                                          return LoadingDots(text: Text("${TranslationKey.homeAppBarSyncingProgressText.tr}($syncedCnt/$total)"));
                                         }
-                                        return Text(
-                                          selectionMode ? selectionText : pageTitle,
-                                        );
+                                        return Text(selectionMode ? selectionText : pageTitle);
                                       },
                                     ),
                                   ],

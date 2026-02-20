@@ -148,7 +148,6 @@ class ConfigService extends GetxService {
 
   bool get isEnableMultiSelectionMode => _isMultiSelectionMode.value;
   GetxController? _selectionModeController;
-  final _multiSelectionText = TranslationKey.multipleChoiceOperationAppBarTitle.tr.obs;
 
   bool isMultiSelectionMode(GetxController controller) {
     if (controller == _selectionModeController && _isMultiSelectionMode.value) {
@@ -157,19 +156,11 @@ class ConfigService extends GetxService {
     return false;
   }
 
-  String get multiSelectionText => _multiSelectionText.value;
-
-  set multiSelectionText(val) => _multiSelectionText.value = val;
-
   void enableMultiSelectionMode({
-    String? selectionTips,
     required GetxController controller,
   }) {
     _isMultiSelectionMode.value = true;
     _selectionModeController = controller;
-    if (selectionTips != null) {
-      _multiSelectionText.value = selectionTips;
-    }
   }
 
   void disableMultiSelectionMode([bool clear = true]) {
