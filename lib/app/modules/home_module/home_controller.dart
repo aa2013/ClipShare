@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:clipshare/app/data/models/drawer_model.dart';
 import 'package:clipshare/app/modules/rules_module/rules_page.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
