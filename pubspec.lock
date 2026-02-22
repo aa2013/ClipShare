@@ -463,6 +463,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.2.5"
+  flutter_embed_lua:
+    dependency: "direct main"
+    description:
+      path: "../github/flutter_embed_lua"
+      relative: true
+    source: path
+    version: "0.0.2"
   flutter_expandable_fab:
     dependency: "direct main"
     description:
@@ -977,6 +984,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.1"
+  multi_split_view:
+    dependency: "direct main"
+    description:
+      name: multi_split_view
+      sha256: "06f5126a65d3010ce0a9d5c003e793041fe99377b23e3534bb05059f79a580e9"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.6.1"
   nested:
     dependency: transitive
     description:
