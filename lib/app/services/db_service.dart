@@ -250,7 +250,7 @@ class DbService extends GetxService {
 
   ///v1.5.0 数据库版本 8 -> 9
   ///为历史表增加提取字段，可通过规则/脚本提取内容，该字段不为空时同步后将复制该内容
-  final migratio8to9 = Migration(8, 9, (database) async {
+  final migration8to9 = Migration(8, 9, (database) async {
     if (!await hasColumnInTable(database, 'History', 'extractContent')) {
       await database.execute("ALTER TABLE `History` ADD COLUMN `extractContent` TEXT;");
     }
