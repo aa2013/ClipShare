@@ -9,10 +9,13 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/app_info_groups_view.dart';
+import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
@@ -255,107 +258,146 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 日期过滤
                   Row(
                     children: [
-                      const Icon(
-                        Icons.date_range,
-                        color: Colors.blueGrey,
-                        size: 16,
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.date_range,
+                              color: Colors.blueGrey,
+                              size: 16,
+                            ),
+                            const SizedBox(
+                              width: 2,
+                            ),
+                            Text(
+                              TranslationKey.filterByDate.tr,
+                              style: const TextStyle(color: Colors.blueGrey),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(
-                        width: 2,
-                      ),
-                      Text(
-                        TranslationKey.filterByDate.tr,
-                        style: const TextStyle(color: Colors.blueGrey),
+                      Obx(
+                        () => RoundedChip(
+                          label: Text(TranslationKey.retainDays.tr),
+                          onSelected: (selected) {
+                            controller.useDaysFilter.value = selected;
+                          },
+                          selected: controller.useDaysFilter.value,
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 4,
-                  ),
+                  const SizedBox(height: 4),
 
-                  Row(
-                    children: [
-                      Obx(
-                        () => RoundedChip(
-                          onPressed: controller.showDateRangeSelectDialog,
-                          label: Obx(
-                            () => Text(
-                              controller.startDate.value ?? TranslationKey.startDate.tr,
-                              style: const TextStyle(
-                                color: Colors.blueGrey,
+                  Obx(
+                    () => ConditionWidget(
+                      visible: controller.useDaysFilter.value,
+                      replacement: Container(
+                        margin: 10.insetB,
+                        child: Row(
+                          children: [
+                            Obx(
+                              () => RoundedChip(
+                                onPressed: controller.showDateRangeSelectDialog,
+                                label: Obx(
+                                  () => Text(
+                                    controller.startDate.value ?? TranslationKey.startDate.tr,
+                                    style: const TextStyle(
+                                      color: Colors.blueGrey,
+                                    ),
+                                  ),
+                                ),
+                                avatar: const Icon(Icons.date_range_outlined),
+                                deleteIcon: Obx(
+                                  () => Visibility(
+                                    visible: controller.startDate.value == null,
+                                    replacement: const Icon(
+                                      Icons.close,
+                                      size: 17,
+                                      color: Colors.blue,
+                                    ),
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      size: 17,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                                deleteButtonTooltipMessage: controller.startDate.value == null ? TranslationKey.toToday.tr : TranslationKey.clear.tr,
+                                onDeleted: () {
+                                  final startDate = controller.startDate.value;
+                                  if (startDate == null) {
+                                    controller.startDate.value = DateTime.now().format("yyyy-MM-dd");
+                                  } else {
+                                    controller.startDate.value = null;
+                                  }
+                                },
                               ),
                             ),
-                          ),
-                          avatar: const Icon(Icons.date_range_outlined),
-                          deleteIcon: Obx(
-                            () => Visibility(
-                              visible: controller.startDate.value == null,
-                              replacement: const Icon(
-                                Icons.close,
-                                size: 17,
-                                color: Colors.blue,
-                              ),
-                              child: const Icon(
-                                Icons.location_on,
-                                size: 17,
-                                color: Colors.blue,
+                            Container(
+                              margin: const EdgeInsets.only(right: 10, left: 10),
+                              child: const Text("-"),
+                            ),
+                            Obx(
+                              () => RoundedChip(
+                                onPressed: controller.showDateRangeSelectDialog,
+                                label: Obx(
+                                  () => Text(
+                                    controller.endDate.value ?? TranslationKey.endDate.tr,
+                                    style: const TextStyle(
+                                      color: Colors.blueGrey,
+                                    ),
+                                  ),
+                                ),
+                                avatar: const Icon(Icons.date_range_outlined),
+                                deleteIcon: Obx(
+                                  () => Visibility(
+                                    visible: controller.endDate.value == null,
+                                    replacement: const Icon(
+                                      Icons.close,
+                                      size: 17,
+                                      color: Colors.blue,
+                                    ),
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      size: 17,
+                                      color: Colors.blue,
+                                    ),
+                                  ),
+                                ),
+                                deleteButtonTooltipMessage: controller.endDate.value == null ? TranslationKey.toToday.tr : TranslationKey.clear.tr,
+                                onDeleted: () {
+                                  final endDate = controller.endDate.value;
+                                  if (endDate == null) {
+                                    controller.endDate.value = DateTime.now().format("yyyy-MM-dd");
+                                  } else {
+                                    controller.endDate.value = null;
+                                  }
+                                },
                               ),
                             ),
-                          ),
-                          deleteButtonTooltipMessage: controller.startDate.value == null ? TranslationKey.toToday.tr : TranslationKey.clear.tr,
-                          onDeleted: () {
-                            final startDate = controller.startDate.value;
-                            if (startDate == null) {
-                              controller.startDate.value = DateTime.now().format("yyyy-MM-dd");
-                            } else {
-                              controller.startDate.value = null;
-                            }
-                          },
+                          ],
                         ),
                       ),
-                      Container(
-                        margin: const EdgeInsets.only(right: 10, left: 10),
-                        child: const Text("-"),
-                      ),
-                      Obx(
-                        () => RoundedChip(
-                          onPressed: controller.showDateRangeSelectDialog,
-                          label: Obx(
-                            () => Text(
-                              controller.endDate.value ?? TranslationKey.endDate.tr,
-                              style: const TextStyle(
-                                color: Colors.blueGrey,
-                              ),
-                            ),
-                          ),
-                          avatar: const Icon(Icons.date_range_outlined),
-                          deleteIcon: Obx(
-                            () => Visibility(
-                              visible: controller.endDate.value == null,
-                              replacement: const Icon(
-                                Icons.close,
-                                size: 17,
-                                color: Colors.blue,
-                              ),
-                              child: const Icon(
-                                Icons.location_on,
-                                size: 17,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                          deleteButtonTooltipMessage: controller.endDate.value == null ? TranslationKey.toToday.tr : TranslationKey.clear.tr,
-                          onDeleted: () {
-                            final endDate = controller.endDate.value;
-                            if (endDate == null) {
-                              controller.endDate.value = DateTime.now().format("yyyy-MM-dd");
-                            } else {
-                              controller.endDate.value = null;
-                            }
-                          },
+                      child: TextField(
+                        controller: controller.saveDaysController,
+                        decoration: InputDecoration(
+                          border: const OutlineInputBorder(),
+                          labelText: TranslationKey.retainDays.tr,
+                          isDense: true,
+                          suffixText: TranslationKey.day.tr,
                         ),
+                        autofocus: true,
+                        onChanged: (dayStr) {
+                          controller.saveDays.value = dayStr.toInt();
+                        },
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          // 限制只能输入数字
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
                       ),
-                    ],
+                    ),
                   ),
 
                   ///endregion
@@ -484,18 +526,24 @@ class CleanDataPage extends GetView<CleanDataController> {
                       Expanded(
                         child: TextButton(
                           onPressed: () async {
-                            final cnt =
-                                await dbService.historyDao.count(
+                            String? startTime = controller.startDate.value;
+                            String? endTime = controller.endDate.value;
+                            //如果启用了天数过滤，则删除指定天数前的数据
+                            if(controller.useDaysFilter.value){
+                              final now = DateTime.now();
+                              startTime = '1970-01-01';
+                              endTime = now.add(Duration(days: -1 * controller.saveDays.value)).format('yyyy-MM-dd');
+                            }
+                            final cnt = await dbService.historyDao.count(
                                   appConfig.userId,
                                   controller.selectedContentTypes.map((item) => item.value).toList(),
                                   controller.selectedTags.toList(),
                                   controller.selectedDevs.toList(),
                                   controller.selectedSources.toList(),
-                                  controller.startDate.value ?? "",
-                                  controller.endDate.value ?? "",
+                                  startTime ?? "",
+                                  endTime ?? "",
                                   controller.saveTopData.value,
-                                ) ??
-                                0;
+                                ) ?? 0;
                             if (cnt == 0) {
                               Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.noDataFromFilter.tr);
                               return;

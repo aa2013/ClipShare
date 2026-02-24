@@ -195,20 +195,22 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
   }
 
   ///删除项目
-  Future<void> deleteItem(ClipData item, [bool deleteFile = false]) async {
+  Future<void> deleteItem(ClipData item, {bool deleteFile = false, bool onlyDeleteLocal = false}) async {
     await dbService.historyDao.deleteByCascade(item.data.id);
     widget.onRemove(item.data.id);
     final historyController = Get.find<HistoryController>();
     //通知子窗体
     historyController.notifyHistoryWindow();
-    //添加删除记录
-    var opRecord = OperationRecord.fromSimple(
-      Module.history,
-      OpMethod.delete,
-      item.data.id,
-    );
-    //通知其他设备
-    dbService.opRecordDao.addAndNotify(opRecord);
+    if(!onlyDeleteLocal) {
+      //添加删除记录
+      var opRecord = OperationRecord.fromSimple(
+        Module.history,
+        OpMethod.delete,
+        item.data.id,
+      );
+      //通知其他设备
+      dbService.opRecordDao.addAndNotify(opRecord);
+    }
     if (!item.isImage && !item.isFile) {
       return;
     }
@@ -250,15 +252,27 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
   Widget renderItem(int i) {
     var item = widget.list[i];
     onRemoveClicked(ClipData item) {
+      final onlyDeleteLocal = false.obs;
       Global.showTipsDialog(
         context: context,
         text: TranslationKey.deleteRecordAck.tr,
         title: TranslationKey.deleteTips.tr,
+        customWidget: Container(
+          margin: 10.insetT,
+          child: Obx(() {
+            return CheckboxListTile(
+                title: Text(TranslationKey.onlyLocal.tr),
+                value: onlyDeleteLocal.value,
+                onChanged: (selected) {
+                  onlyDeleteLocal.value = selected ?? false;
+                });
+          }),
+        ),
         showCancel: true,
         showNeutral: item.isFile || item.isImage,
         neutralText: TranslationKey.deleteWithFiles.tr,
-        onOk: () => deleteItem(item),
-        onNeutral: () => deleteItem(item, true),
+        onOk: () => deleteItem(item, onlyDeleteLocal: onlyDeleteLocal.value),
+        onNeutral: () => deleteItem(item, deleteFile: true, onlyDeleteLocal: onlyDeleteLocal.value),
       );
     }
     showClipBottomSheet(ClipData data){
@@ -487,14 +501,14 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
             ),
             _fabButtonFun(
               onPressed: () {
-                void multiDelete(bool deleteFile) async {
+                void multiDelete(bool deleteFile, [bool onlyDeleteLocal = false]) async {
                   Get.back();
                   Global.showLoadingDialog(
                     context: context,
                     loadingText: TranslationKey.deleting.tr,
                   );
                   for (var item in _selectedItems) {
-                    await deleteItem(item, deleteFile);
+                    await deleteItem(item, deleteFile: true, onlyDeleteLocal: onlyDeleteLocal);
                   }
                   Get.back();
                   Global.showSnackBarSuc(
@@ -505,18 +519,30 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                   _cancelSelectionMode();
                 }
                 DialogController? dialog;
+                final onlyDeleteLocal = false.obs;
                 dialog = Global.showTipsDialog(
                   context: context,
                   text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
                   showCancel: true,
                   autoDismiss: false,
+                  customWidget: Container(
+                    margin: 10.insetT,
+                    child: Obx(() {
+                      return CheckboxListTile(
+                          title: Text(TranslationKey.onlyLocal.tr),
+                          value: onlyDeleteLocal.value,
+                          onChanged: (selected) {
+                            onlyDeleteLocal.value = selected ?? false;
+                          });
+                    }),
+                  ),
                   showNeutral: _selectedItems.any((item) => item.isFile),
                   neutralText: TranslationKey.deleteWithFiles.tr,
                   onCancel: () {
                     dialog!.close();
                   },
-                  onNeutral: () => multiDelete(true),
-                  onOk: () => multiDelete(false),
+                  onNeutral: () => multiDelete(true, onlyDeleteLocal.value),
+                  onOk: () => multiDelete(false, onlyDeleteLocal.value),
                 );
               },
               tooltip: TranslationKey.delete.tr,
