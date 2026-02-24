@@ -11,6 +11,7 @@ class S3Config {
   final String? region;
   final String displayName;
   final String baseDir;
+  final bool pathStyle;
 
   S3Config({
     required this.endPoint,
@@ -21,6 +22,7 @@ class S3Config {
     required this.baseDir,
     required this.type,
     this.region,
+    this.pathStyle = false,
   });
 
   factory S3Config.fromJson(Map<String, dynamic> json) {
@@ -33,6 +35,7 @@ class S3Config {
       baseDir: json['baseDir'],
       type: ObjStorageType.values.byName(json['type']),
       region: json['region'],
+      pathStyle: json['pathStyle'],
     );
   }
 
