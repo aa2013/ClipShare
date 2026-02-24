@@ -290,16 +290,15 @@ class SplashController extends GetxController {
             lst = await historyDao.getHistoriesPage(appConfig.userId, fromId);
           }
           var contentLst = lst
-              .map(
-                (e) => {
+              // 过滤掉非通知数据
+              .where((e) => !e.type.containsIgnoreCase(HistoryContentType.notification.name))
+              .map((e) => {
                   "id": e.id,
                   "content": e.content,
                   "time": e.time,
                   "top": e.top,
                   "type": e.type,
-                },
-              )
-              .toList();
+                }).toList();
           return Future(() => contentLst);
         default:
       }
