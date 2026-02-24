@@ -120,6 +120,7 @@ class Global {
   static DialogController? showTipsDialog({
     required BuildContext context,
     required String text,
+    Widget? customWidget,
     String? title,
     String? okText,
     String? cancelText,
@@ -169,7 +170,14 @@ class Global {
           key: dlgCtl.key,
           child: AlertDialog(
             title: Text(title!),
-            content: SingleChildScrollView(child: Text(text)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SingleChildScrollView(child: Text(text)),
+                ?customWidget,
+              ],
+            ),
             actions: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

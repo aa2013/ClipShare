@@ -1401,6 +1401,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Clipboard content with specific markers (ExcludeClipboardContentFromMonitorProcessing) will not be logged when detected";
       case TranslationKey.moreActions:
         return "More Actions";
+      case TranslationKey.retainDays:
+        return "Keep Last";
+      case TranslationKey.onlyLocal:
+        return "Only Local";
     }
   }
 }
