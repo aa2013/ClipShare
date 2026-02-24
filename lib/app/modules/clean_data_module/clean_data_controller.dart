@@ -63,6 +63,9 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   final removeFiles = false.obs;
   final startDate = Rx<String?>(null);
   final endDate = Rx<String?>(null);
+  final useDaysFilter = false.obs;
+  final saveDays = 0.obs;
+  final saveDaysController = TextEditingController();
   final selectedWeekDay = Rx<WeekDay?>(null);
   final selectedHour = Rx<String>("00");
   final selectedMinute = Rx<String>("00");
@@ -104,6 +107,9 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
       autoClean.value = cfg.autoClean;
       frequency.value = cfg.autoCleanFreq;
       cronInputCtl.text = cfg.cron ?? "";
+      useDaysFilter.value = cfg.saveDays != null;
+      saveDays.value = cfg.saveDays ?? 0;
+      saveDaysController.text = saveDays.value.toString();
     }
     loadData();
   }
@@ -200,8 +206,17 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
 
   ///清理数据
   Future<void> cleanData([bool mute = false]) async {
+    DialogController? dialog;
     if (!mute) {
-      Global.showLoadingDialog(context: Get.context!);
+      dialog = Global.showLoadingDialog(context: Get.context!);
+    }
+    String? startTime = startDate.value;
+    String? endTime = endDate.value;
+    //如果启用了天数过滤，则删除指定天数前的数据
+    if(useDaysFilter.value){
+      final now = DateTime.now();
+      startTime = '1970-01-01';
+      endTime = now.add(Duration(days: -1 * saveDays.value)).format('yyyy-MM-dd');
     }
     deleteCascade(
           uid: appConfig.userId,
@@ -209,15 +224,15 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
           tags: selectedTags.toList(),
           devIds: selectedDevs.toList(),
           appIds: selectedSources.toList(),
-          startTime: startDate.value,
-          endTime: endDate.value,
+          startTime: startTime,
+          endTime: endTime,
           removeFiles: removeFiles.value,
           saveTop: saveTopData.value,
         )
         .then((cnt) async {
           if (!mute) {
             //关闭加载弹窗
-            Get.back();
+            dialog?.close();
             Global.showSnackBarSuc(context: Get.context!, text: "${TranslationKey.deleteSuccess.tr}: $cnt ${TranslationKey.deleteItemsUnit.tr}");
           }
           refreshHistoryPage();
@@ -318,6 +333,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
               contentTypes: selectedContentTypes.toList(),
               saveTopData: saveTopData.value,
               removeFile: removeFiles.value,
+              saveDays: useDaysFilter.value ? saveDays.value : null,
             ),
           )
           .then((_) {
@@ -335,6 +351,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
               contentTypes: selectedContentTypes.toList(),
               saveTopData: saveTopData.value,
               removeFiles: removeFiles.value,
+              saveDays: useDaysFilter.value ? saveDays.value : null,
             ),
           )
           .then((_) {

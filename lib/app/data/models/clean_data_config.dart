@@ -16,6 +16,7 @@ class CleanDataConfig {
   final String? cron;
   final DateTime? lastCleanTime;
   final DateTime? nextCleanTime;
+  final int? saveDays;
 
   const CleanDataConfig({
     required this.tags,
@@ -28,6 +29,7 @@ class CleanDataConfig {
     this.cron,
     this.lastCleanTime,
     this.nextCleanTime,
+    this.saveDays,
   });
 
   CleanDataConfig copyWith({
@@ -41,6 +43,7 @@ class CleanDataConfig {
     String? cron,
     DateTime? lastCleanTime,
     DateTime? nextCleanTime,
+    int? saveDays,
   }) {
     return CleanDataConfig(
       tags: tags ?? this.tags,
@@ -53,12 +56,13 @@ class CleanDataConfig {
       autoCleanFreq: autoCleanFreq ?? this.autoCleanFreq,
       lastCleanTime: lastCleanTime ?? this.lastCleanTime,
       nextCleanTime: nextCleanTime ?? this.nextCleanTime,
+      saveDays: saveDays ?? this.saveDays,
     );
   }
 
   factory CleanDataConfig.fromJson(String json) {
     final map = jsonDecode(json);
-    final freq = CleanDataFreq.parse(map['autoCleanFreq'].toString());
+    final freq = CleanDataFreq.parse(map['autoCleanFreq']?.toString() ?? "");
     return CleanDataConfig(
       tags: (map['tags'] as List<dynamic>).cast<String>(),
       devIds: (map['devIds'] as List<dynamic>).cast<String>(),
@@ -70,6 +74,7 @@ class CleanDataConfig {
       autoCleanFreq: freq == CleanDataFreq.unknown ? CleanDataFreq.day : freq,
       lastCleanTime: DateTime.tryParse(map['lastCleanTime']?.toString() ?? ""),
       nextCleanTime: DateTime.tryParse(map['nextCleanTime']?.toString() ?? ""),
+      saveDays: map['saveDays']?.toString().toInt()
     );
   }
 
@@ -85,6 +90,7 @@ class CleanDataConfig {
       "autoCleanFreq": autoCleanFreq.name,
       "lastCleanTime": lastCleanTime?.format(),
       "nextCleanTime": nextCleanTime?.format(),
+      "saveDays": saveDays,
     };
   }
 
