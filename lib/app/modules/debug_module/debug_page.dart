@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/data/enums/obj_storage_type.dart';
+import 'package:clipshare/app/data/models/storage/s3_config.dart';
+import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/modules/debug_module/debug_controller.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
@@ -132,7 +135,7 @@ class DebugPage extends GetView<DebugController> {
         TextButton(
           onPressed: () async {
             final as = Get.find<AndroidChannelService>();
-            as.sendHistoryChangedBroadcast(HistoryContentType.text,"FSDFDS","devid111","devname222");
+            as.sendHistoryChangedBroadcast(HistoryContentType.text, "FSDFDS", "devid111", "devname222");
           },
           child: Text("666"),
         ),

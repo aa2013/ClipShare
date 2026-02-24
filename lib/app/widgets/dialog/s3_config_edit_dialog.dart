@@ -40,6 +40,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
   final secretKeyEditor = TextEditingController();
   final bucketNameEditor = TextEditingController();
   final regionEditor = TextEditingController();
+  var pathStyle = false;
   final baseDirEditor = TextEditingController(text: '/');
 
   ObjStorageType objectStorageType = ObjStorageType.s3;
@@ -63,6 +64,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     secretKey: secretKeyEditor.text,
     bucketName: bucketNameEditor.text,
     region: regionEditor.text.isNotEmpty ? regionEditor.text : null,
+    pathStyle: pathStyle,
     baseDir: baseDirEditor.text,
   );
 
@@ -83,6 +85,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     regionEditor.text = config.region ?? '';
     baseDirEditor.text = config.baseDir;
     objectStorageType = config.type;
+    pathStyle = config.pathStyle;
   }
 
   bool validateNameEditor() {
@@ -445,6 +448,27 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                     if (objectStorageType == ObjStorageType.aliyunOss) {
                       validateRegionEditor();
                     }
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // PathStyle
+                DropdownButtonFormField<bool>(
+                  value: pathStyle,
+                  decoration: const InputDecoration(
+                    labelText: "PathStyle",
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [true, false].map((v) {
+                    return DropdownMenuItem<bool>(
+                      value: v,
+                      child: Text(v.toString()),
+                    );
+                  }).toList(),
+                  onChanged: (bool? selected) {
+                    setState(() {
+                      pathStyle = selected ?? false;
+                    });
                   },
                 ),
                 const SizedBox(height: 16),

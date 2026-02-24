@@ -29,7 +29,8 @@ class S3Client implements StorageClient {
       endPoint: config.endPoint,
       accessKey: config.accessKey,
       secretKey: config.secretKey,
-      pathStyle: false,
+      region: config.region,
+      pathStyle: config.pathStyle,
     );
   }
 

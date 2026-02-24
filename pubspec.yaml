@@ -53,7 +53,7 @@ dependencies:
   encrypt: ^5.0.3
   # 工具类
   basic_utils: ^5.7.0
-  uuid: ^3.0.0
+  uuid: ^4.5.3
   # 验证码控件
   pinput: ^3.0.1
   # 日志
