@@ -711,7 +711,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final isWebDAV = _client is WebDAVClient;
     final protocol = isWebDAV ? TransportProtocol.webdav : TransportProtocol.s3;
     for (var listener in _devAliveListeners) {
-      listener.onConnected(DevInfo.fromDevice(device), version, minVersion, protocol);
+      listener.onConnected(DevInfo.fromDevice(device), minVersion, version, protocol);
     }
     _registry.addDevice(DevInfo.fromDevice(device), protocol);
     await _sendOnLineMsg(devId);
@@ -888,7 +888,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         return success;
       }
       for (var listener in _devAliveListeners) {
-        listener.onConnected(DevInfo.fromDevice(device), version, minVersion, protocol);
+        listener.onConnected(DevInfo.fromDevice(device), minVersion, version, protocol);
       }
       _registry.addDevice(DevInfo.fromDevice(device), protocol);
     } catch (err, stack) {
