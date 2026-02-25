@@ -49,6 +49,9 @@ class NotifyUtil {
     String? payload,
   }) async {
     int? notifyId;
+    if(title.isEmpty){
+      title = Constants.appName;
+    }
     if (Platform.isAndroid) {
       final androidChannelService = Get.find<AndroidChannelService>();
       notifyId = await androidChannelService.sendNotify(content);

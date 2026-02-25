@@ -48,7 +48,7 @@ class HistorySyncProgressService extends GetxService with DevAliveListener {
     timer.cancel();
   }
 
-  void addProgress(String devId, Map<String, dynamic>? syncData, int seq, int total) {
+  void addProgress(String devId, Map<String, dynamic>? syncData, int seq, int total, bool fromStorage) {
     MissingDataSyncProgress? newProgress;
     Module module = Module.getValue(syncData?["module"] ?? "");
     final opMethod = OpMethod.getValue(syncData?["method"] ?? "");
@@ -88,7 +88,7 @@ class HistorySyncProgressService extends GetxService with DevAliveListener {
       final historyController = Get.find<HistoryController>();
       try {
         if (syncData != null) {
-          historyController.setMissingDataCopyMsg(syncData, true);
+          historyController.setMissingDataCopyMsg(syncData, fromStorage);
         }
       } catch (err, stack) {
         Log.error(tag, err, stack);
