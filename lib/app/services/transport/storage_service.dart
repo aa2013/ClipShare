@@ -374,7 +374,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
               }
               Log.error(tag, "load missing data file from storage failed! devId = $devId, date = $date, id = $id", stack);
             } finally {
-              historySyncProgressService.addProgress(devId, syncData, ++syncedCnt, totalSyncCnt);
+              historySyncProgressService.addProgress(devId, syncData, ++syncedCnt, totalSyncCnt, true);
             }
           });
         }
