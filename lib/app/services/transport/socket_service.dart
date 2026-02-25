@@ -391,7 +391,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       );
     } catch (e) {
       _updateForwardDisConnectedStatus();
-      Log.debug(tag, "connect forward server failed $e");
+      Log.debug(tag, "connect forward server failed _autoConnForwardServer = $_autoConnForwardServer, error: $e");
       if (_autoConnForwardServer) {
         Log.debug(tag, "尝试重连中转");
         Future.delayed(
@@ -1060,7 +1060,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     final online = skt.lastPingTime.isWithinRange(waitTime);
     final now = DateTime.now();
     final offsetMs = now.difference(skt.lastPingTime).inMilliseconds;
-    Log.debug(tag, "testIsOnline: isWithinRange $online, offset $offsetMs ms");
+    Log.debug(tag, "testIsOnline: isWithinRange online: $online, offset $offsetMs ms");
     if (!online) {
       _onDevDisconnected(devId);
     }
@@ -1533,7 +1533,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
     }
     if (ds != null && autoReconnect) {
-      _attemptReconnect(ds);
+      _attemptReconnect(ds.dev.guid);
     }
   }
 
@@ -1604,33 +1604,59 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）
   ///会在一定时间内持续尝试重连，此处默认 3 分钟
-  void _attemptReconnect(DevSocket devSkt) async {
+  void _attemptReconnect(String guid) async {
     final startTime = DateTime.now();
     var endTime = DateTime.now();
     var diffMinutes = endTime.difference(startTime).inMinutes;
-    final ip = devSkt.socket.ip;
-    final port = devSkt.socket.port;
-    final String devNameAddr = "${devSkt.dev.name}($ip:$port)";
+    final dev = await dbService.deviceDao.getById(guid, appConfig.userId);
+    if(dev == null){
+      Log.warn(tag, "Device $guid not found in db");
+      return;
+    }
+    final internalAddress = dev.internalAddress;
     //三分钟内持续尝试
     while (diffMinutes < 3) {
       //延迟2s
       await Future.delayed(2.s);
-      if (_devSockets.containsKey(devSkt.dev.guid)) {
-        Log.debug(tag, "重连成功 $devNameAddr");
+      if (_devSockets.containsKey(guid)) {
+        final devSkt = _devSockets[guid];
+        Log.debug(tag, "重连成功 ${dev.name}(${devSkt!.socket.ip}:${devSkt.socket.port})");
         //已经成功连接，停止重连
         return;
       }
-      Log.debug(tag, "尝试重连 ${devSkt.dev.name}");
+      Log.debug(tag, "尝试重连 ${dev.name}");
       try {
-        if (devSkt.socket.isForwardMode) {
-          if (_forwardClient != null) {
-            await manualConnectByForward(devSkt.dev.guid);
-          } else {
-            Log.warn(tag, "中转连接已关闭");
-            break;
+        Log.debug(tag, "${dev.name} internalAddress = $internalAddress");
+        if(internalAddress != null){
+          var available = false;
+          final [ip, portStr] = internalAddress.split(":");
+          try{
+            //先尝试连接内网地址
+            final skt = await Socket.connect(ip, portStr.toInt(), timeout: 2.s);
+            skt.close();
+            available = true;
+          }catch(_){
+            available = false;
           }
-        } else {
-          await manualConnect(ip, port: port);
+          if(available) {
+            try {
+              //内网地址可用
+              available = await manualConnect(ip, port: portStr.toInt());
+            } catch (err, stack) {
+              Log.error(tag, err, stack);
+              available = false;
+            }
+          }
+          //内网地址不可用 尝试中转
+          if(!available && _forwardClient != null){
+            try{
+              Log.debug(tag, "${dev.name} reconnect by forward");
+              await manualConnectByForward(guid);
+            } catch (err, stack) {
+              Log.error(tag, err, stack);
+              available = false;
+            }
+          }
         }
       } catch (err) {
         Log.warn(tag, "attempt reconnect error: $err");
@@ -1638,7 +1664,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       endTime = DateTime.now();
       diffMinutes = endTime.difference(startTime).inMinutes;
     }
-    Log.debug(tag, "重连失败 $devNameAddr");
+    Log.debug(tag, "重连失败 ${dev.name}(${dev.guid})");
   }
 
   ///向兼容的设备发送消息
