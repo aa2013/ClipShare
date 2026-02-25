@@ -636,7 +636,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         final total = msg.data["total"];
         int seq = msg.data["seq"];
         final syncProgressService = Get.find<HistorySyncProgressService>();
-        syncProgressService.addProgress(copyMsg.send.guid, copyMsg.data, seq, total);
+        syncProgressService.addProgress(copyMsg.send.guid, copyMsg.data, seq, total, false);
         _onSyncMsg(copyMsg);
         break;
 

@@ -244,8 +244,12 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (last != null && history.id < last!.id) {
       return;
     }
+    var type = ClipboardContentType.parse(history.type);
+    if(type != ClipboardContentType.text && type != ClipboardContentType.image){
+      //不可复制，跳过
+      return;
+    }
     if (fromStorage) {
-      var type = ClipboardContentType.parse(history.type);
       var copy = false;
       if (type != ClipboardContentType.image) {
         copy = true;
@@ -484,8 +488,8 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
                   await file.writeAsBytes(appInfo.iconBytes);
                   iconUri = file.uri;
                 }
-                final notificationTitle = json["title"];
-                final notificationContent = json["content"];
+                final notificationTitle = json["title"] ?? "";
+                final notificationContent = json["content"] ?? "";
                 const notifyKey = "showMobileNotify";
                 final notifyId = await NotifyUtil.notify(
                   title: notificationTitle,
