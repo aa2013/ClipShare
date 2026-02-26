@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class TinySegmentedControl extends StatefulWidget {
   final List<Widget> options;
@@ -15,6 +15,8 @@ class TinySegmentedControl extends StatefulWidget {
   final bool enableSplash;
   final int initialSelected;
   final double segmentSpacing;
+  final ValueChanged<int> onSelected;
+  final int? selectedIndex;
   static const _defaultEnableSplash = true;
   static const _defaultInitialSelected = 0;
   static const _defaultSegmentSpacing = 4.0;
@@ -22,6 +24,7 @@ class TinySegmentedControl extends StatefulWidget {
   const TinySegmentedControl({
     super.key,
     required this.options,
+    required this.onSelected,
     this.padding,
     this.contentPadding,
     this.backgroundColor,
@@ -35,13 +38,15 @@ class TinySegmentedControl extends StatefulWidget {
     this.enableSplash = _defaultEnableSplash,
     this.initialSelected = _defaultInitialSelected,
     this.segmentSpacing = _defaultSegmentSpacing,
+    this.selectedIndex,
   }) : assert(segmentSpacing >= 0),
-       assert(initialSelected >= 0),
-       assert(options.length > 0);
+        assert(initialSelected >= 0),
+        assert(options.length > 0);
 
   factory TinySegmentedControl.fromStrings({
     Key? key,
     required List<String> options,
+    required ValueChanged<int> onSelected,
     TextStyle? textStyle,
     EdgeInsets? padding,
     EdgeInsets? contentPadding,
@@ -56,10 +61,12 @@ class TinySegmentedControl extends StatefulWidget {
     bool enableSplash = _defaultEnableSplash,
     int initialSelected = _defaultInitialSelected,
     double segmentSpacing = _defaultSegmentSpacing,
+    int? selectedIndex,
   }) {
     return TinySegmentedControl(
       key: key,
       options: options.map((e) => Text(e, style: textStyle)).toList(),
+      onSelected: onSelected,
       padding: padding,
       contentPadding: contentPadding,
       backgroundColor: backgroundColor,
@@ -73,6 +80,7 @@ class TinySegmentedControl extends StatefulWidget {
       enableSplash: enableSplash,
       initialSelected: initialSelected,
       segmentSpacing: segmentSpacing,
+      selectedIndex: selectedIndex,
     );
   }
 
@@ -119,6 +127,10 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
   void didUpdateWidget(covariant TinySegmentedControl oldWidget) {
     final diff = widget.options.length - _options.length;
     _options = [...widget.options];
+    if(widget.selectedIndex != null){
+      assert(widget.selectedIndex! < _options.length && widget.selectedIndex! >= 0);
+      _selectedIndex = widget.selectedIndex!;
+    }
     if (diff == 0) {
       return;
     }
@@ -239,18 +251,27 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
                   setState(() {
                     _selectedIndex = index;
                   });
+                  widget.onSelected(index);
                 },
                 child: Container(
                   key: _keys[index],
                   padding: widget.contentPadding ?? _defaultContentPadding,
-                  child: IconTheme(
-                    data: IconThemeData(color: color),
-                    child: DefaultTextStyle(
-                      style: TextStyle(
-                        color: color,
-                        fontWeight: widget.fontWeight,
-                      ),
-                      child: _options[index],
+                  child: AnimatedDefaultTextStyle(
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: widget.fontWeight,
+                    ),
+                    duration: widget.duration ?? _defaultDuration,
+                    child: TweenAnimationBuilder<Color?>(
+                      tween: ColorTween(end: color),
+                      duration: widget.duration ?? _defaultDuration,
+                      curve: Curves.easeInOut,
+                      builder: (context, animatedColor, child) {
+                        return IconTheme(
+                          data: IconThemeData(color: animatedColor),
+                          child: _options[index],
+                        );
+                      },
                     ),
                   ),
                 ),
