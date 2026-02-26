@@ -89,8 +89,8 @@ class TinySegmentedControl extends StatefulWidget {
 }
 
 class _TinySegmentedControlState extends State<TinySegmentedControl> {
-  static final _defaultPadding = EdgeInsets.all(4);
-  static final _defaultContentPadding = EdgeInsets.symmetric(
+  static const _defaultPadding = EdgeInsets.all(4);
+  static const _defaultContentPadding = EdgeInsets.symmetric(
     horizontal: 5,
     vertical: 2,
   );
@@ -98,15 +98,15 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
   static final _defaultContentBorderRadius = BorderRadius.circular(6);
   static const _defaultDuration = Duration(milliseconds: 300);
 
-  static final _defaultLightBackgroundColor = Color(0xFFE0E0E0); //Colors.grey[200]
+  static const _defaultLightBackgroundColor = Color(0xFFE0E0E0); //Colors.grey[200]
   static const _defaultLightSelectedBackgroundColor = Colors.white;
   static const _defaultLightSelectedColor = Colors.black;
   static const _defaultLightUnselectedColor = Colors.black;
 
-  static final _defaultDarkBackgroundColor = Color(0xFF303030); //Colors.grey[800]
-  static final _defaultDarkSelectedBackgroundColor = Color(0xFF212121); //Colors.grey[900]
+  static const _defaultDarkBackgroundColor = Color(0xFF303030); //Colors.grey[800]
+  static const _defaultDarkSelectedBackgroundColor = Color(0xFF212121); //Colors.grey[900]
   static const _defaultDarkSelectedColor = Colors.white;
-  static final _defaultDarkUnselectedColor = Color(0xFFB0B0B0); //Colors.grey[400]
+  static const _defaultDarkUnselectedColor = Color(0xFFB0B0B0); //Colors.grey[400]
 
   int _selectedIndex = 0;
 

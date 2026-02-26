@@ -6,7 +6,9 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
+import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -109,7 +111,6 @@ class HistoryFilterController {
 class HistoryFilter extends StatelessWidget {
   final HistoryFilterController controller;
   final void Function(HistoryContentType type)? onFilterTypeChanged;
-
   const HistoryFilter({
     super.key,
     required this.controller,
@@ -222,42 +223,15 @@ class HistoryFilter extends StatelessWidget {
           ),
           if (controller.showContentTypeFilter)
             Container(
-              margin: const EdgeInsets.only(top: 5),
-              child: Wrap(
-                children: [
-                  for (var type in [
-                    HistoryContentType.all,
-                    HistoryContentType.text,
-                    HistoryContentType.image,
-                    HistoryContentType.file,
-                    HistoryContentType.sms,
-                    HistoryContentType.notification,
-                  ])
-                    Container(
-                      margin: const EdgeInsets.only(right: 5, bottom: 5),
-                      child: Obx(
-                        () => RoundedChip(
-                          selected: controller.selectedType.value.label == type.label,
-                          onPressed: () {
-                            if (controller.selectedType.value.label == type.label) {
-                              return;
-                            }
-                            onFilterTypeChanged?.call(type);
-                            controller.selectedType.value = type;
-                            Future.delayed(
-                              200.ms,
-                              () {
-                                controller.onChanged(controller.filter);
-                              },
-                            );
-                          },
-                          selectedColor: controller.selectedType.value == type ? Theme.of(context).chipTheme.selectedColor : null,
-                          label: Text(type.label),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+              margin: const EdgeInsets.only(top: 5, left: 5),
+              child: FilterTypeSegmented(onSelected: (type) {
+                if (controller.selectedType.value.label == type.label) {
+                  return;
+                }
+                onFilterTypeChanged?.call(type);
+                controller.selectedType.value = type;
+                Future.delayed(300.ms, () => controller.onChanged(controller.filter));
+              }),
             ),
         ],
       ),

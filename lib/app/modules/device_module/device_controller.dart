@@ -93,23 +93,6 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   //endregion
 
-  Map<DevicePairedStatusFilter, Widget> get pairedFilterSegmented {
-    final result = <DevicePairedStatusFilter, Widget>{};
-    for (var status in DevicePairedStatusFilter.values) {
-      result[status] = Tooltip(
-        message: status.tr,
-        child: InkWell(
-          mouseCursor: SystemMouseCursors.click,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(status.icon, size: 10),
-          ),
-        ),
-      );
-    }
-    return result;
-  }
-
   //region 生命周期
   @override
   void onInit() {
