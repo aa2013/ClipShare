@@ -6,7 +6,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clipboard_source_chip.dart';
-import 'package:clipshare/app/widgets/copy_icon_button.dart';
+import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -133,7 +133,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                     ),
                     Visibility(
                       visible: widget.clip.isImage || widget.clip.isText,
-                      child: CopyIconButton(clip: widget.clip),
+                      child: ClipDataCopyIconButton(clip: widget.clip),
                     ),
                     Visibility(
                       visible: widget.clip.isText,

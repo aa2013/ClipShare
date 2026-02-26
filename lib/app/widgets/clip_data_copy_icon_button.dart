@@ -3,15 +3,38 @@ import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class CopyIconButton extends StatefulWidget {
+class ClipDataCopyIconButton extends StatelessWidget {
   final ClipData clip;
+  final String? tooltip;
+
+  const ClipDataCopyIconButton({
+    super.key,
+    required this.clip,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CopyIconButton(
+      tooltip: tooltip,
+      onClick: () {
+        var type = ClipboardContentType.parse(clip.data.type);
+        clipboardManager.copy(type, clip.data.content);
+      },
+    );
+  }
+}
+
+class CopyIconButton extends StatefulWidget {
+  final VoidCallback onClick;
+  final String? tooltip;
 
   const CopyIconButton({
     super.key,
-    required this.clip,
+    required this.onClick,
+    this.tooltip,
   });
 
   @override
@@ -34,8 +57,7 @@ class _CopyIconButtonState extends State<CopyIconButton> {
         if (copy) {
           return;
         }
-        var type = ClipboardContentType.parse(widget.clip.data.type);
-        clipboardManager.copy(type, widget.clip.data.content);
+        widget.onClick();
         setState(() {
           copy = true;
         });
@@ -44,7 +66,7 @@ class _CopyIconButtonState extends State<CopyIconButton> {
           copy = false;
         });
       },
-      tooltip: TranslationKey.copyContent.tr,
+      tooltip: widget.tooltip ?? TranslationKey.copyContent.tr,
     );
   }
 }

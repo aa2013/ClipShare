@@ -8,6 +8,7 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
+import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/notification_server_edit_dialog.dart';
@@ -854,19 +855,8 @@ class SettingsPage extends GetView<SettingsController> {
                               maxLines: 1,
                             ),
                             const SizedBox(width: 5),
-                            GestureDetector(
-                              child: MouseRegion(
-                                cursor: SystemMouseCursors.click,
-                                child: Tooltip(
-                                  message: TranslationKey.copyDeviceId.tr,
-                                  child: const Icon(
-                                    Icons.copy,
-                                    color: Colors.blueGrey,
-                                    size: 15,
-                                  ),
-                                ),
-                              ),
-                              onTap: () async {
+                            CopyIconButton(
+                              onClick: () {
                                 HapticFeedback.mediumImpact();
                                 Clipboard.setData(
                                   ClipboardData(
@@ -878,6 +868,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   text: TranslationKey.discoveringSettingsDeviceNameCopyTip.tr,
                                 );
                               },
+                              tooltip: TranslationKey.copyDeviceId.tr,
                             ),
                           ],
                         ),
