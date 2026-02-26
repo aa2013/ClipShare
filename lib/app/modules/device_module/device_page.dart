@@ -10,6 +10,7 @@ import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/dialog/add_device_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/device_card.dart';
@@ -63,16 +64,29 @@ class DevicePage extends GetView<DeviceController> {
                                     fontFamily: "宋体",
                                   ),
                                 ),
-                                CupertinoSegmentedControl(
-
-                                  //子标签
-                                  children: controller.pairedFilterSegmented,
-                                  //当前选中的索引
-                                  groupValue: appConfig.devicePairedStatusFilter,
-                                  //点击回调
-                                  onValueChanged: (filter) {
+                                const SizedBox(width: 2),
+                                TinySegmentedControl(
+                                  initialSelected: DevicePairedStatusFilter.values.indexOf(appConfig.devicePairedStatusFilter),
+                                  options: DevicePairedStatusFilter.values.map((status) {
+                                    return Tooltip(
+                                      message: status.tr,
+                                      child: InkWell(
+                                        mouseCursor: SystemMouseCursors.click,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                                          child: Icon(status.icon, size: 15),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onSelected: (int index) {
+                                    final filter = DevicePairedStatusFilter.values[index];
                                     appConfig.setDevicePairedStatusFilter(filter);
                                   },
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 4,horizontal: 0),
+                                  segmentSpacing: 2,
+                                  padding: EdgeInsets.zero,
+                                  selectedColor: Colors.blue,
                                 ),
                               ],
                             ),

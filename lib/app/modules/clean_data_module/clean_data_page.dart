@@ -15,6 +15,7 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/app_info_groups_view.dart';
+import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -646,6 +647,7 @@ class CleanDataPage extends GetView<CleanDataController> {
               padding: const EdgeInsets.all(8),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ///region 标题
                   Row(
@@ -703,19 +705,21 @@ class CleanDataPage extends GetView<CleanDataController> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Obx(
-                    () => CupertinoSegmentedControl(
-                      //子标签
-                      children: controller.freqSegmented,
-                      //当前选中的索引
-                      groupValue: controller.frequency.value,
-                      //点击回调
-                      onValueChanged: (index) {
-                        controller.frequency.value = index;
+                  Builder(builder: (ctx) {
+                    final freqs = [CleanDataFreq.day, CleanDataFreq.week, CleanDataFreq.cron];
+                    final labels = [TranslationKey.daily.tr, TranslationKey.weekly.tr, "Cron"];
+                    return TinySegmentedControl.fromStrings(
+                      options: labels,
+                      onSelected: (int index) {
+                        final freq = freqs[index];
+                        controller.frequency.value = freq;
                         controller.updateNextExecTime();
                       },
-                    ),
-                  ),
+                      selectedColor: Colors.white,
+                      selectedBackgroundColor: Colors.blueGrey,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    );
+                  }),
                   const SizedBox(height: 4),
 
                   ///endregion
