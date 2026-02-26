@@ -120,6 +120,7 @@ class Global {
   static DialogController? showTipsDialog({
     required BuildContext context,
     required String text,
+    bool selectable = false,
     Widget? customWidget,
     String? title,
     String? okText,
@@ -174,7 +175,7 @@ class Global {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SingleChildScrollView(child: Text(text)),
+                SingleChildScrollView(child: selectable ? SelectableText(text) : Text(text)),
                 ?customWidget,
               ],
             ),

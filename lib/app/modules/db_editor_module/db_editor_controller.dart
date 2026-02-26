@@ -76,6 +76,7 @@ class DbEditorController extends GetxController {
                     title: TranslationKey.content.tr,
                     text: text,
                     showCancel: true,
+                    selectable: true,
                     okText: TranslationKey.copyContent.tr,
                     cancelText: TranslationKey.close.tr,
                     onOk: () async {

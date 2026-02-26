@@ -2550,12 +2550,20 @@ class SettingsPage extends GetView<SettingsController> {
                       value: null,
                       action: (v) => IconButton(
                         onPressed: () {
-                          Constants.faqUrl.askOpenUrl();
+                          if (PlatformExt.isDesktop) {
+                            Constants.faqUrl.openUrl();
+                          } else {
+                            Constants.faqUrl.askOpenUrl();
+                          }
                         },
                         icon: arrowForwardIcon,
                       ),
                       onTap: () {
-                        Constants.faqUrl.askOpenUrl();
+                        if (PlatformExt.isDesktop) {
+                          Constants.faqUrl.openUrl();
+                        } else {
+                          Constants.faqUrl.askOpenUrl();
+                        }
                       },
                     ),
                   ],
