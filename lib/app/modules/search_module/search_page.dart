@@ -7,6 +7,7 @@ import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_list_view.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
+import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
@@ -39,50 +40,22 @@ class SearchPage extends GetView<search_module.SearchController> {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(5, 5, 5, 0),
+            padding: 5.insetH,
             child: Column(
               children: [
-                const SizedBox(height: 5),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (var type in [
-                        HistoryContentType.all,
-                        HistoryContentType.text,
-                        HistoryContentType.image,
-                        HistoryContentType.file,
-                        HistoryContentType.sms,
-                        HistoryContentType.notification,
-                      ])
-                        Row(
-                          children: [
-                            RoundedChip(
-                              selected: controller.searchType.label == type.label,
-                              onPressed: () {
-                                if (controller.searchType.label == type.label) {
-                                  return;
-                                }
-                                controller.loading.value = true;
-                                controller.searchType = type;
-                                Future.delayed(200.ms, controller.refreshData);
-                              },
-                              selectedColor: controller.searchType == type ? Theme.of(context).chipTheme.selectedColor : null,
-                              label: Text(type.label),
-                            ),
-                            const SizedBox(width: 5),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 5,
+                FilterTypeSegmented(
+                  onSelected: (type) {
+                    if (controller.searchType.label == type.label) {
+                      return;
+                    }
+                    controller.loading.value = true;
+                    controller.searchType = type;
+                    Future.delayed(300.ms, controller.refreshData);
+                  },
                 ),
                 Expanded(
                   child: ConditionWidget(
                     visible: controller.loading.value,
-                    child: const Loading(),
                     replacement: ClipListView(
                       list: controller.list,
                       parentController: controller,
@@ -102,6 +75,7 @@ class SearchPage extends GetView<search_module.SearchController> {
                       ),
                       imageMasonryGridViewLayout: controller.searchType == HistoryContentType.image,
                     ),
+                    child: const Loading(),
                   ),
                 ),
               ],
