@@ -106,8 +106,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     _rotationController = AnimationController(
       vsync: this,
       duration: 4.s,
-    )
-      ..repeat();
+    )..repeat();
     setRotationAnimation(true);
     dbService.deviceDao.getAllDevices(appConfig.userId).then((list) {
       pairedList.clear();
@@ -119,28 +118,8 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           DeviceCard(
             dev: dev,
             isPaired: true,
-            onTap: (device, isConnected, showReNameDlg) {
-              if (PlatformExt.isDesktop) {
-                _showBottomDetailSheet(
-                  device,
-                  isConnected,
-                  showReNameDlg,
-                  Get.context!,
-                  dev.protocol,
-                );
-              }
-            },
-            onLongPress: (device, isConnected, showReNameDlg) {
-              if (PlatformExt.isMobile) {
-                _showBottomDetailSheet(
-                  device,
-                  isConnected,
-                  showReNameDlg,
-                  Get.context!,
-                  device.protocol,
-                );
-              }
-            },
+            onTap: (device, isConnected, showReNameDlg) => _onDeviceCardTap(device, isConnected, showReNameDlg),
+            onLongPress: (device, isConnected, showReNameDlg) => _onDeviceCardLongPress(device, isConnected, showReNameDlg),
             isConnected: false,
             isSelf: false,
             minVersion: null,
@@ -209,11 +188,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     }
     //发送同步确认
     return f.then(
-          (v) =>
-          sender.sendData(
-            MsgType.ackSync,
-            {"id": opRecord.id, "module": Module.device.moduleName},
-          ),
+      (v) => sender.sendData(
+        MsgType.ackSync,
+        {"id": opRecord.id, "module": Module.device.moduleName},
+      ),
     );
   }
 
@@ -222,10 +200,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   @override
   void onConnected(
-      DevInfo info,
-      AppVersion minVersion,
-      AppVersion version,
-      TransportProtocol protocol,
+    DevInfo info,
+    AppVersion minVersion,
+    AppVersion version,
+    TransportProtocol protocol,
   ) async {
     var dev = await Device.fromDevInfo(info);
     for (var i = 0; i < pairedList.length; i++) {
@@ -257,6 +235,8 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           minVersion: minVersion,
           version: version,
           protocol: protocol,
+          onTap: (device, isConnected, showReNameDlg) => _onDeviceCardTap(device, isConnected, showReNameDlg),
+          onLongPress: (device, isConnected, showReNameDlg) => _onDeviceCardLongPress(device, isConnected, showReNameDlg),
         ),
       );
       pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
@@ -322,10 +302,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   void onForget(DevInfo dev, int uid) {
     //忘记设备，从已配对列表移动到发现设备列表
     var forgetDev = pairedList.firstWhereOrNull(
-          (element) => element.dev?.guid == dev.guid,
+      (element) => element.dev?.guid == dev.guid,
     );
     pairedList.removeWhere(
-          (element) => element.dev?.guid == dev.guid,
+      (element) => element.dev?.guid == dev.guid,
     );
     forgetDev = forgetDev?.copyWith(isPaired: false);
     if (forgetDev?.isConnected ?? false) {
@@ -421,191 +401,218 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   //region 页面方法
 
+  void _onDeviceCardTap(Device device, bool isConnected, void Function() showReNameDlg) {
+    if (PlatformExt.isDesktop) {
+      _showBottomDetailSheet(
+        device,
+        isConnected,
+        showReNameDlg,
+        Get.context!,
+        device.protocol,
+      );
+    }
+  }
+
+  void _onDeviceCardLongPress(Device device, bool isConnected, void Function() showReNameDlg) {
+    if (PlatformExt.isMobile) {
+      _showBottomDetailSheet(
+        device,
+        isConnected,
+        showReNameDlg,
+        Get.context!,
+        device.protocol,
+      );
+    }
+  }
+
   ///显示底部弹窗
-  void _showBottomDetailSheet(Device device,
-      bool isConnected,
-      void Function() showReNameDlg,
-      BuildContext context,
-      TransportProtocol protocol,) {
+  void _showBottomDetailSheet(
+    Device device,
+    bool isConnected,
+    void Function() showReNameDlg,
+    BuildContext context,
+    TransportProtocol protocol,
+  ) {
     showModalBottomSheet(
       isScrollControlled: true,
       clipBehavior: Clip.antiAlias,
       context: context,
       elevation: 100,
       builder: (BuildContext context) {
-        return SafeArea(child: Container(
-          height: 200,
-          constraints: const BoxConstraints(minWidth: 500),
-          child: Padding(
-            padding: const EdgeInsets.all(5),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Constants.devTypeIcons[device.type]!.icon,
-                        color: isConnected ? Colors.lightBlue : Colors.grey,
-                        size: Constants.devTypeIcons[device.type]!.size,
-                      ),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            device.name,
-                            style: const TextStyle(fontSize: 25),
-                          ),
-                          Text(
-                            device.address ?? "",
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                        ],
-                      ),
-                    ],
+        return SafeArea(
+          child: Container(
+            height: 200,
+            constraints: const BoxConstraints(minWidth: 500),
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Constants.devTypeIcons[device.type]!.icon,
+                          color: isConnected ? Colors.lightBlue : Colors.grey,
+                          size: Constants.devTypeIcons[device.type]!.size,
+                        ),
+                        const SizedBox(
+                          width: 20,
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              device.name,
+                              style: const TextStyle(fontSize: 25),
+                            ),
+                            Text(
+                              device.address ?? "",
+                              style: const TextStyle(fontSize: 18),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        splashColor: Colors.black12,
-                        onTap: showReNameDlg,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 5, bottom: 5),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.edit_note_rounded),
-                              Text(TranslationKey.rename.tr),
-                            ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: InkWell(
+                          splashColor: Colors.black12,
+                          onTap: showReNameDlg,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 5, bottom: 5),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.edit_note_rounded),
+                                Text(TranslationKey.rename.tr),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          var devInfo = DevInfo.fromDevice(device);
-                          if (isConnected) {
-                            if (protocol == TransportProtocol.webdav || protocol == TransportProtocol.s3) {
-                              storageService.disconnectDevice(devInfo.guid);
-                            } else {
-                              sktService.disconnectDevice(
-                                devInfo,
-                                true,
-                              );
-                            }
-                          } else {
-                            if (protocol == TransportProtocol.server) {
-                              sktService.manualConnectByForward(device.guid);
-                            } else if (protocol == TransportProtocol.direct) {
-                              var address = device.address;
-                              var [ip, port] = address!.split(":");
-                              sktService.manualConnect(ip, port: port.toInt());
-                            } else {
-                              storageService.connectDevice(devInfo.guid);
-                            }
-                          }
-                          Navigator.pop(context);
-                        },
-                        splashColor: Colors.black12,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 5, bottom: 5),
-                          child: Column(
-                            children: [
-                              Icon(
-                                isConnected ? Icons.link_off_outlined : Icons.link,
-                              ),
-                              Text(
-                                isConnected ? TranslationKey.devicePageDisconnect.tr : TranslationKey.devicePageReconnect.tr,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () {
-                          Global.showTipsDialog(
-                            context: context,
-                            text: TranslationKey.devicePageUnpairedDialogAck.tr,
-                            onOk: () {
-                              if (isConnected) {
-                                var devInfo = DevInfo.fromDevice(device);
-                                sktService.onDevForget(
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            var devInfo = DevInfo.fromDevice(device);
+                            if (isConnected) {
+                              if (protocol == TransportProtocol.webdav || protocol == TransportProtocol.s3) {
+                                storageService.disconnectDevice(devInfo.guid);
+                              } else {
+                                sktService.disconnectDevice(
                                   devInfo,
-                                  appConfig.userId,
-                                );
-                                devInfo.sendData(
-                                  MsgType.forgetDev,
-                                  {},
+                                  true,
                                 );
                               }
-                              //更新配对状态为未配对
-                              device.isPaired = false;
-                              dbService.deviceDao.updateDevice(device).then((cnt) {
-                                if (cnt <= 0) return;
-                                onForget(
-                                  DevInfo.fromDevice(device),
-                                  appConfig.userId,
-                                );
-                              });
-                              Navigator.pop(context);
-                            },
-                            showCancel: true,
-                          );
-                        },
-                        splashColor: Colors.black12,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 5, bottom: 5),
-                          child: Column(
-                            children: [
-                              const Icon(Icons.block_flipped),
-                              Text(TranslationKey.devicePageUnpairedButtonText.tr),
-                            ],
+                            } else {
+                              if (protocol == TransportProtocol.server) {
+                                sktService.manualConnectByForward(device.guid);
+                              } else if (protocol == TransportProtocol.direct) {
+                                var address = device.address;
+                                var [ip, port] = address!.split(":");
+                                sktService.manualConnect(ip, port: port.toInt());
+                              } else {
+                                storageService.connectDevice(devInfo.guid);
+                              }
+                            }
+                            Navigator.pop(context);
+                          },
+                          splashColor: Colors.black12,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 5, bottom: 5),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  isConnected ? Icons.link_off_outlined : Icons.link,
+                                ),
+                                Text(
+                                  isConnected ? TranslationKey.devicePageDisconnect.tr : TranslationKey.devicePageReconnect.tr,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Obx(
-                          () =>
-                          Visibility(
-                            visible: appConfig.autoSyncMissingData && isConnected,
-                            child: Expanded(
-                              child: InkWell(
-                                onTap: () {
-                                  Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
-                                  sktService.reqMissingData(device.guid);
-                                },
-                                splashColor: Colors.black12,
-                                borderRadius: BorderRadius.circular(12),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 5, bottom: 5),
-                                  child: Column(
-                                    children: [
-                                      const Icon(Icons.sync_rounded),
-                                      Text(TranslationKey.syncData.tr),
-                                    ],
-                                  ),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey.devicePageUnpairedDialogAck.tr,
+                              onOk: () {
+                                if (isConnected) {
+                                  var devInfo = DevInfo.fromDevice(device);
+                                  sktService.onDevForget(
+                                    devInfo,
+                                    appConfig.userId,
+                                  );
+                                  devInfo.sendData(
+                                    MsgType.forgetDev,
+                                    {},
+                                  );
+                                }
+                                //更新配对状态为未配对
+                                device.isPaired = false;
+                                dbService.deviceDao.updateDevice(device).then((cnt) {
+                                  if (cnt <= 0) return;
+                                  onForget(
+                                    DevInfo.fromDevice(device),
+                                    appConfig.userId,
+                                  );
+                                });
+                                Navigator.pop(context);
+                              },
+                              showCancel: true,
+                            );
+                          },
+                          splashColor: Colors.black12,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 5, bottom: 5),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.block_flipped),
+                                Text(TranslationKey.devicePageUnpairedButtonText.tr),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Obx(
+                        () => Visibility(
+                          visible: appConfig.autoSyncMissingData && isConnected,
+                          child: Expanded(
+                            child: InkWell(
+                              onTap: () {
+                                Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
+                                sktService.reqMissingData(device.guid);
+                              },
+                              splashColor: Colors.black12,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 5, bottom: 5),
+                                child: Column(
+                                  children: [
+                                    const Icon(Icons.sync_rounded),
+                                    Text(TranslationKey.syncData.tr),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                    ),
-                  ],
-                ),
-              ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),);
+        );
       },
     );
   }
@@ -714,10 +721,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                     ),
                     (showTimeoutText || pairingFailed.value)
                         ? Text(
-                      showTimeoutText ? TranslationKey.devicePagePairingTimeoutText.tr : TranslationKey.devicePagePairingErrorText.tr,
-                      textAlign: TextAlign.left,
-                      style: const TextStyle(color: Colors.redAccent),
-                    )
+                            showTimeoutText ? TranslationKey.devicePagePairingTimeoutText.tr : TranslationKey.devicePagePairingErrorText.tr,
+                            textAlign: TextAlign.left,
+                            style: const TextStyle(color: Colors.redAccent),
+                          )
                         : const SizedBox(),
                   ],
                 ),
@@ -729,18 +736,18 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                 ),
                 pairing.value
                     ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.0,
-                  ),
-                )
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                        ),
+                      )
                     : TextButton(
-                  onPressed: completedInputPin ? onSubmitted : null,
-                  child: Text(
-                    TranslationKey.devicePagePairingDialogConfirmText.tr,
-                  ),
-                ),
+                        onPressed: completedInputPin ? onSubmitted : null,
+                        child: Text(
+                          TranslationKey.devicePagePairingDialogConfirmText.tr,
+                        ),
+                      ),
               ],
             );
           },
@@ -812,5 +819,5 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
   }
 
-//endregion
+  //endregion
 }

@@ -1,8 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -26,48 +30,64 @@ class NetworkAddressDialog extends StatelessWidget {
       title: Text(TranslationKey.localIpAddress.tr),
       content: SingleChildScrollView(
         child: ListBody(
-          children: interfaces.map<Widget>((interface) {
-            final addresses = interface.addresses
-                .where((itf) => itf.type == InternetAddressType.IPv4);
-            if (addresses.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            qrInterfaces.add(
-              DeviceInterfaceInfo(
-                name: interface.name,
-                addresses: addresses.map((addr) => addr.address).toList(),
-              ),
-            );
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  interface.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blueGrey,
+          children:
+              interfaces.map<Widget>((interface) {
+                final addresses = interface.addresses
+                    .where((itf) => itf.type == InternetAddressType.IPv4);
+                if (addresses.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                qrInterfaces.add(
+                  DeviceInterfaceInfo(
+                    name: interface.name,
+                    addresses: addresses.map((addr) => addr.address).toList(),
+                  ),
+                );
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      interface.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                    ...addresses.map((address) {
+                      return Row(
+                        children: [
+                          CopyIconButton(
+                            onClick: () {
+                              clipboardManager.copy(ClipboardContentType.text, address.address);
+                            },
+                          ),
+                          Expanded(child: Tooltip(
+                            message: address.address,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Text(address.address),
+                            ),
+                          ))
+                          ,
+                        ],
+                      );
+                    }),
+                  ],
+                );
+              }).toList()..insert(
+                0,
+                Center(
+                  child: SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: QrImageView(
+                      data: jsonEncode(qrContent),
+                      version: QrVersions.auto,
+                      gapless: false,
+                    ),
                   ),
                 ),
-                ...addresses.map((address) {
-                  return Text(address.address);
-                }),
-              ],
-            );
-          }).toList()
-            ..insert(
-              0,
-              Center(
-                child: SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: QrImageView(
-                    data: jsonEncode(qrContent),
-                    version: QrVersions.auto,
-                    gapless: false,
-                  ),
-                ),
               ),
-            ),
         ),
       ),
       actions: [

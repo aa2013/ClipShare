@@ -1105,6 +1105,7 @@ class SettingsPage extends GetView<SettingsController> {
                                 defaultValues: appConfig.noDiscoveryIfs,
                                 minSelectedCnt: 0,
                                 selections: selections,
+                                textStyle: const TextStyle(fontSize: 13),
                                 title: Text(TranslationKey.noDiscoveryIfsSettingTitle.tr),
                               );
                             },
