@@ -960,27 +960,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   Future<List<Future<void> Function()>> _pairedDiscovering() async {
     List<Future<void> Function()> tasks = List.empty(growable: true);
     var devices = await dbService.deviceDao.getAllDevices(appConfig.userId);
-    String? forwardIp;
-    //region 查找中转服务的ip
-    //存在且不为ipv4时才查询
-    if (forwardServerHost != null) {
-      //如果是域名就进行查询对应ip
-      if (!forwardServerHost!.isIPv4) {
-        try {
-          final addresses = await InternetAddress.lookup(forwardServerHost!);
-          for (var address in addresses) {
-            if (address.type != InternetAddressType.IPv4) {
-              continue;
-            }
-            forwardIp = address.address;
-          }
-        } catch (_) {}
-      } else {
-        forwardIp = forwardServerHost;
-      }
-    }
-    //endregion
-
     //先内网地址直连，若失败则尝试中转
     for (var dev in devices) {
       //已经连接，跳过
@@ -995,14 +974,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
             final result = await manualConnect(ip, port: int.parse(port));
             if(!result){
               //直连失败，尝试中转
-              if (forwardIp.isNotNullAndEmpty){
+              if (forwardServerHost.isNotNullAndEmpty){
                 await manualConnectByForward(dev.guid);
               }
             }
           }catch(err,stack){
             Log.error(tag, err, stack);
             //直连过程异常，尝试中转
-            if (forwardIp.isNotNullAndEmpty){
+            if (forwardServerHost.isNotNullAndEmpty){
               await manualConnectByForward(dev.guid);
             }
 
@@ -1010,7 +989,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         });
       }else{
         //内网地址为空，尝试中转
-        if (forwardIp.isNotNullAndEmpty) {
+        if (forwardServerHost.isNotNullAndEmpty) {
           Log.debug(tag, "connect by forward ${dev.name}(${dev.guid})");
           tasks.add(() => manualConnectByForward(dev.guid));
         }
@@ -1093,7 +1072,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   ///手动连接 ip
   Future<bool> manualConnect(
-    String ip, {
+    String host, {
     int? port,
     Function? onErr,
     Map<String, dynamic> data = const {},
@@ -1103,13 +1082,13 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     port = port ?? Constants.port;
     try {
       //测试连接是否可用
-      final testSkt = await Socket.connect(ip, port, timeout: 2.s);
+      final testSkt = await Socket.connect(host, port, timeout: 2.s);
       testSkt.close();
     } catch (_) {
       //地址不可连接
       return false;
     }
-    String address = "$ip:$port:$targetDevId";
+    String address = "$host:$port:$targetDevId";
     if (_connectingAddress.contains(address)) {
       //已经在连接中，返回true
       return true;
@@ -1119,7 +1098,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       _connectingAddress.remove(address);
     });
     return SecureSocketClient.connect(
-      ip: ip,
+      ip: host,
       port: port,
       prime1: appConfig.prime1,
       prime2: appConfig.prime2,
@@ -1133,7 +1112,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           client.destroy();
           return;
         }
-        ipSetTemp.add("$ip:$port");
+        ipSetTemp.add("$host:$port");
         //发送本机信息给对方
         MessageData msg = MessageData(
           userId: appConfig.userId,
@@ -1155,20 +1134,20 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         } else {
           for (var devId in _devSockets.keys.toList()) {
             var skt = _devSockets[devId]!.socket;
-            if (skt.ip == ip && skt.port == port) {
+            if (skt.ip == host && skt.port == port) {
               _onDevDisconnected(devId);
             }
           }
         }
       },
       onError: (error, client) {
-        Log.error(tag, '${forward ? '中转' : '手动'}连接发生错误: $error $ip $port');
+        Log.error(tag, '${forward ? '中转' : '手动'}连接发生错误: $error $host $port');
         if (forward) {
           _onDevDisconnected(targetDevId!);
         } else {
           for (var devId in _devSockets.keys.toList()) {
             var skt = _devSockets[devId]!.socket;
-            if (skt.ip == ip && skt.port == port) {
+            if (skt.ip == host && skt.port == port) {
               _onDevDisconnected(devId);
             }
           }

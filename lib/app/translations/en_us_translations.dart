@@ -660,8 +660,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Connect";
       case TranslationKey.addDeviceAppBarTittle:
         return 'Add Device';
-      case TranslationKey.errorFormatIpv4:
-        return "Please enter a valid IPv4 address";
+      case TranslationKey.errorFormatIp:
+        return "Please enter a valid IPv4/v6 address";
       case TranslationKey.inputPassword:
         return "Enter Password";
       case TranslationKey.inputAgain:
@@ -836,8 +836,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Check";
       case TranslationKey.pleaseInputValidPort:
         return 'Please Enter a Valid Port';
-      case TranslationKey.pleaseInputValidDomainOrIpv4:
-        return 'Please Enter a Valid Domain/IPv4 Address';
+      case TranslationKey.pleaseInputValidDomainOrIpv4_6:
+        return 'Please Enter a Valid Domain or IPv4/v6 Address';
       case TranslationKey.historyRecord:
         return 'Records';
       case TranslationKey.myDevice:

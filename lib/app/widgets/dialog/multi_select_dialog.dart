@@ -34,6 +34,7 @@ class MultiSelectDialog<T> extends StatefulWidget {
     required List<T> defaultValues,
     required List<CheckboxData<T>> selections,
     required Widget title,
+    TextStyle? textStyle,
     int minSelectedCnt = 1,
     void Function()? onCancel,
     bool dismissable = false,
@@ -45,6 +46,7 @@ class MultiSelectDialog<T> extends StatefulWidget {
       _MultiSelectDialogContent<T>(
         title: title,
         selections: selections,
+        textStyle: textStyle,
         initialSelectedValues: defaultValues,
         onConfirmed: onSelected,
         onCancel: onCancel,
@@ -69,12 +71,14 @@ class _MultiSelectDialogContent<T> extends StatefulWidget {
   final String? cancelText;
   final String? confirmText;
   final int minSelectedCnt;
+  final TextStyle? textStyle;
 
   const _MultiSelectDialogContent({
     required this.title,
     required this.selections,
     required this.initialSelectedValues,
     required this.onConfirmed,
+    this.textStyle,
     this.minSelectedCnt = 1,
     this.onCancel,
     this.cancelText,
@@ -150,7 +154,7 @@ class _MultiSelectDialogContentState<T> extends State<_MultiSelectDialogContent<
                 onChanged: (bool? selected) {
                   _toggleSelection(item.value);
                 },
-                title: Text(item.text),
+                title: Text(item.text, style: widget.textStyle,),
                 controlAffinity: ListTileControlAffinity.leading,
               );
             }).toList(),
