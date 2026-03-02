@@ -613,8 +613,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "连接";
       case TranslationKey.addDeviceAppBarTittle:
         return '添加设备';
-      case TranslationKey.errorFormatIpv4:
-        return "请输入正确的IPv4地址";
+      case TranslationKey.errorFormatIp:
+        return "请输入正确的IPv4/v6地址";
       case TranslationKey.inputPassword:
         return "输入密码";
       case TranslationKey.inputAgain:
@@ -789,8 +789,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "连接检测";
       case TranslationKey.pleaseInputValidPort:
         return '请输入合法的端口';
-      case TranslationKey.pleaseInputValidDomainOrIpv4:
-        return '请输入合法的域名/ipv4地址';
+      case TranslationKey.pleaseInputValidDomainOrIpv4_6:
+        return '请输入合法的域名或IPv4/v6地址';
       case TranslationKey.historyRecord:
         return '历史记录';
       case TranslationKey.myDevice:

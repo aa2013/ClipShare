@@ -57,7 +57,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
   }
 
   bool checkHostEditor() {
-    hostErrText = !hostEditor.text.isDomain && !hostEditor.text.isIPv4 ? TranslationKey.pleaseInputValidDomainOrIpv4.tr : null;
+    hostErrText = !hostEditor.text.isDomain && !hostEditor.text.isIPv4 && !hostEditor.text.isIPv6 ? TranslationKey.pleaseInputValidDomainOrIpv4_6.tr : null;
     return hostErrText == null;
   }
 

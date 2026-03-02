@@ -26,7 +26,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
   final _ipEditor = TextEditingController();
   final _portEditor = TextEditingController()..text = Constants.port.toString();
   final _forwardIdEditor = TextEditingController();
-  final _ipErrTxt = TranslationKey.errorFormatIpv4.tr;
+  final _ipErrTxt = TranslationKey.errorFormatIp.tr;
   final _portErrTxt = "0-65535";
   final _forwardIdErrTxt = TranslationKey.pleaseInput.tr;
   var _showIpErr = false;
@@ -272,7 +272,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                             return;
                           }
                         } else {
-                          if (!_ipEditor.text.isIPv4) {
+                          if (!_ipEditor.text.isIPv4 && !_ipEditor.text.isIPv6) {
                             _showIpErr = true;
                           }
                           if (!_portEditor.text.isPort) {
