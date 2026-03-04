@@ -1,0 +1,66 @@
+name: build-ios-nosign
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      artifact-name:
+        value: ${{ jobs.build.outputs.artifact-name }}
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - platform: macos
+            os: macos-15
+            arch: arm64
+
+    steps:
+      - name: Verify Xcode
+        run: |
+          xcode-select -p
+          xcodebuild -version
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.35.3
+          cache: true
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build & Package ipa
+        run: |
+          cd scripts
+          chmod +x build_ios_nosign.sh
+          ./build_ios_nosign.sh
+        shell: bash
+        
+      - name: Find and Upload IPA artifact
+        run: |
+          IPA_FILE=$(find build/ios/iphoneos -name "*.ipa" -type f | head -1)
+          if [ -n "$IPA_FILE" ]; then
+            echo "Found ipa file: $IPA_FILE"
+            # 复制到固定位置便于上传
+            mkdir -p upload
+            cp "$IPA_FILE" upload/
+          else
+            echo "No IPA file found"
+            exit 1
+          fi
+        shell: bash
+
+      - name: Upload DMG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: clipshare-ipa
+          path: upload/*.ipa
+          overwrite: true

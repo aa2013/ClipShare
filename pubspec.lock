@@ -196,10 +196,12 @@ packages:
   clipshare_clipboard_listener:
     dependency: "direct main"
     description:
-      path: "../clipboard_listener"
-      relative: true
-    source: path
-    version: "1.2.8"
+      path: "."
+      ref: ios
+      resolved-ref: a9bfe6bca3d8aabec6d5ccfd93bda0eec69d625c
+      url: "https://github.com/aa2013/ClipboardListener"
+    source: git
+    version: "1.2.7"
   clock:
     dependency: transitive
     description:
