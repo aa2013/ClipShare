@@ -1,6 +1,9 @@
 name: build-ios-nosign
 
 on:
+  push:
+    branches:
+      - ios-test
   workflow_dispatch:
   workflow_call:
     outputs:
