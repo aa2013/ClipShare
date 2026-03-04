@@ -6,7 +6,7 @@ PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 VERSION=$(grep "version:" "$PROJECT_ROOT"/pubspec.yaml | head -1 | awk '{print $2}' | cut -d'+' -f1)
 BUILD_NUMBER=$(grep "version:" "$PROJECT_ROOT"/pubspec.yaml | head -1 | awk '{print $2}' | cut -d'+' -f2)
 
-cd ../ && flutter build ios --release
+cd ../ && flutter build ios --release --no-codesign
 path=build/ios/iphoneos
 payload=$path/Payload
 mkdir $payload && cp -r $path/Runner.app $payload
