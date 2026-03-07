@@ -2,6 +2,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -191,4 +192,18 @@ class IgnoreBatteryHandler extends AbstractPermissionHandler {
   Future<bool> hasPermission() async {
     return Permission.ignoreBatteryOptimizations.isGranted;
   }
+}
+
+///剪贴板权限
+class ClipboardPermHandler extends AbstractPermissionHandler{
+  @override
+  Future<bool> hasPermission() {
+    return clipboardManager.checkClipboardPermission();
+  }
+
+  @override
+  void request() {
+    clipboardManager.requestClipboardPermission();
+  }
+
 }

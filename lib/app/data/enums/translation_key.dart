@@ -344,6 +344,7 @@ enum TranslationKey {
   notCompatibleDialogText,
   emptyData,
   requestFailed,
+  requestSuccess,
   waitingRequestResult,
   shizukuMode,
   shizukuModeDesc,
@@ -692,7 +693,10 @@ enum TranslationKey {
   excludePrivateFormatTips,
   moreActions,
   retainDays,
-  onlyLocal;
+  onlyLocal,
+  permissionSettingsClipboardTitle,
+  permissionSettingsClipboardDesc,
+  clipboardPermissionRequestFailed;
 
   String get tr => name.tr;
 

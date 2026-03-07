@@ -60,11 +60,16 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   //region 属性
   final tag = "SettingsController";
 
+  final hasWorkingModePerm = false.obs;
+
   //通知权限
   var notifyHandler = NotifyPermHandler();
 
   //悬浮窗权限
   var floatHandler = FloatPermHandler();
+
+  //剪贴板权限
+  var clipboardHandler = ClipboardPermHandler();
 
   //检查电池优化
   var ignoreBatteryHandler = IgnoreBatteryHandler();
@@ -75,6 +80,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasSmsReadPerm = true.obs;
   final hasAccessibilityPerm = false.obs;
   final hasNotificationRecordPerm = false.obs;
+  final hasClipboardPerm = false.obs;
   final forwardServerStatus = ForwardServerStatus.disconnected.obs;
   final updater = 0.obs;
   Timer? _screenEventTimer;
@@ -386,6 +392,9 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     ignoreBatteryHandler.hasPermission().then((v) {
       hasIgnoreBattery.value = v;
     });
+    clipboardHandler.hasPermission().then((v){
+      hasClipboardPerm.value = v;
+    });
     PermissionHelper.testAndroidReadSms().then((granted) {
       //有权限或者不需要读取短信则视为有权限
       hasSmsReadPerm.value = granted || !appConfig.enableSmsSync;
@@ -467,6 +476,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
     envStatusIcon.value = hasPermission && listening ? normalIcon : warningIcon;
     envStatusBgColor.value = hasPermission && listening ? null : warningBgColor;
+    hasWorkingModePerm.value = hasPermission;
     if (restart) {
       await clipboardManager.stopListening();
       clipboardManager.startListening(
