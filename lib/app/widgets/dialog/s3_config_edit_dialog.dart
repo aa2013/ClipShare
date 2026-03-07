@@ -17,6 +17,7 @@ import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class S3ConfigEditDialog extends StatefulWidget {
   final void Function(S3Config config) onOk;
@@ -251,14 +252,15 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                 onPressed: testingConnection
                     ? null
                     : () async {
-                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                        var hasPerm = await PermissionHelper.testCameraPerm();
                         if (!hasPerm) {
-                          await PermissionHelper.reqAndroidCameraPerm();
-                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                          await PermissionHelper.reqCameraPerm();
+                          hasPerm = await PermissionHelper.testCameraPerm();
                           if (!hasPerm) {
                             Global.showTipsDialog(
                               context: context,
                               text: TranslationKey.noCameraPermission.tr,
+                              onOk: () => openAppSettings(),
                             );
                             return;
                           }

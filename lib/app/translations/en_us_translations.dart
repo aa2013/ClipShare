@@ -874,6 +874,14 @@ class EnUSTranslation extends AbstractTranslations {
         return "Scan QRCode";
       case TranslationKey.noCameraPermission:
         return "Please grant camera permission";
+      case TranslationKey.noPhotoPermission:
+        return "Please grant photo permission";
+      case TranslationKey.noNotificationPermission:
+        return "Please grant notification permission";
+      case TranslationKey.permissionSettingsIOSPhotosTitle:
+        return "Photo Permission";
+      case TranslationKey.permissionSettingsIOSPhotosDesc:
+        return "Unable to save images to Photo Library without permission";
       case TranslationKey.qrCodeScannerPageTitle:
         return "Scan QR code";
       case TranslationKey.qrCodeScanError:

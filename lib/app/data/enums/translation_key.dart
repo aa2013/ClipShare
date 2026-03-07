@@ -694,7 +694,11 @@ enum TranslationKey {
   retainDays,
   onlyLocal,
   enablePIP,
-  enablePIPTip;
+  enablePIPTip,
+  noPhotoPermission,
+  noNotificationPermission,
+  permissionSettingsIOSPhotosTitle,
+  permissionSettingsIOSPhotosDesc;
 
   String get tr => name.tr;
 

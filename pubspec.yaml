@@ -133,7 +133,7 @@ dependencies:
   # 二维码生成
   qr_flutter: ^4.1.0
   # 二维码扫描
-  qr_code_scanner_plus: ^2.0.10+1
+  qr_code_scanner_plus: 2.0.10+1
   # 截屏检测（Android/IOS）
   flutter_screenshot_detect:
     git:
@@ -190,6 +190,8 @@ dependencies:
   flutter_slidable: ^4.0.3
   # 扩展的浮动按钮
   flutter_expandable_fab: ^2.5.2
+  # 保存图片至相册
+  flutter_image_gallery_saver: ^1.1.3
 dev_dependencies:
   flutter_test:
     sdk: flutter

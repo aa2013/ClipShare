@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -143,31 +146,40 @@ class ShizukuPermHandler extends AbstractPermissionHandler {
 class NotifyPermHandler extends AbstractPermissionHandler {
   @override
   void request() {
-    AbstractPermissionHandler.showRequestDialog(
-      title: TranslationKey.notificationPermRequestDialogTitle.tr,
-      content: Text(
-        TranslationKey.notificationPermRequestDialogContent.tr,
-      ),
-      onConfirm: (ctx) {
-        final androidChannelService = Get.find<AndroidChannelService>();
-        androidChannelService.androidChannel
-            .invokeMethod<bool>("grantNotification")
-            .then((hasPerm) {
-          //启动服务
-          androidChannelService.androidChannel.invokeMethod("startService");
-        });
-        return true;
-      },
-    );
+    if(!Platform.isAndroid && !Platform.isIOS) return;
+    if(Platform.isAndroid){
+      AbstractPermissionHandler.showRequestDialog(
+          title: TranslationKey.notificationPermRequestDialogTitle.tr,
+          content: Text(
+            TranslationKey.notificationPermRequestDialogContent.tr,
+          ),
+          onConfirm: (ctx) {
+            final androidChannelService = Get.find<AndroidChannelService>();
+            androidChannelService.androidChannel
+                .invokeMethod<bool>("grantNotification")
+                .then((hasPerm) {
+              //启动服务
+              androidChannelService.androidChannel.invokeMethod("startService");
+            });
+            return true;
+          },
+        );
+    } else {
+      PermissionHelper.reqIOSNotificationPermission();
+    }
   }
 
   @override
   Future<bool> hasPermission() async {
-    final androidChannelService = Get.find<AndroidChannelService>();
-    var res = await androidChannelService.androidChannel
-        .invokeMethod<bool>("checkNotification");
-    if (res == null) return false;
-    return res;
+    if(!Platform.isAndroid && !Platform.isIOS) return false;
+    if(Platform.isAndroid){
+      final androidChannelService = Get.find<AndroidChannelService>();
+      var res = await androidChannelService.androidChannel.invokeMethod<bool>("checkNotification");
+      if (res == null) return false;
+      return res;
+    }else{
+      return PermissionHelper.checkIOSNotificationPermission();
+    }
   }
 }
 
@@ -191,4 +203,20 @@ class IgnoreBatteryHandler extends AbstractPermissionHandler {
   Future<bool> hasPermission() async {
     return Permission.ignoreBatteryOptimizations.isGranted;
   }
+}
+
+///IOS 相册权限
+class IosPhotosHandler extends AbstractPermissionHandler{
+  @override
+  Future<bool> hasPermission() async {
+    if(!Platform.isIOS) return false;
+    return await PermissionHelper.checkIOSPhotoPermission();
+  }
+
+  @override
+  void request() {
+    if(!Platform.isIOS) return;
+    PermissionHelper.reqIOSPhotoPermission();
+  }
+
 }

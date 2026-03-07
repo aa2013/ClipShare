@@ -196,11 +196,9 @@ packages:
   clipshare_clipboard_listener:
     dependency: "direct main"
     description:
-      path: "."
-      ref: ios
-      resolved-ref: a9bfe6bca3d8aabec6d5ccfd93bda0eec69d625c
-      url: "https://github.com/aa2013/ClipboardListener"
-    source: git
+      path: "../clipboard_listener"
+      relative: true
+    source: path
     version: "1.2.7"
   clock:
     dependency: transitive
@@ -481,6 +479,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.9.0+11.8.0"
+  flutter_image_gallery_saver:
+    dependency: "direct main"
+    description:
+      name: flutter_image_gallery_saver
+      sha256: "0721aaacc7da38882f671f999dacb3ee32867b6aaae3b9386d523540bba9c7b4"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.1.3"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -1266,10 +1272,10 @@ packages:
     dependency: "direct main"
     description:
       name: qr_code_scanner_plus
-      sha256: "11a91e185fbcd3314b470369878bcae7ecd233d0c3d78f864b67fa9a264f22c3"
+      sha256: "39696b50d277097ee4d90d4292de36f38c66213a4f5216a06b2bdd2b63117859"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.0"
+    version: "2.0.10+1"
   qr_flutter:
     dependency: "direct main"
     description:

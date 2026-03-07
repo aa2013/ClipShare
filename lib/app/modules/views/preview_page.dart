@@ -20,6 +20,7 @@ import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
 import 'package:get/get.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:share_plus/share_plus.dart';
@@ -405,27 +406,44 @@ class _PreviewPageState extends State<PreviewPage> {
   void showMenu(String imgPath, Offset? position) {
     final menu = ContextMenu(
       entries: [
-        if (Platform.isAndroid && !appConfig!.saveToPictures && imgPath.startsWith(Constants.androidDataPath))
+        if ((Platform.isAndroid && imgPath.startsWith(Constants.androidDataPath) && !appConfig!.saveToPictures || (Platform.isIOS && !appConfig!.saveToPictures) ))
           MenuItem(
             label: TranslationKey.saveToAlbum.tr,
             icon: Icons.save_alt,
             onSelected: () async {
-              //如果没有权限则请求
-              if (!(await PermissionHelper.testAndroidStoragePerm())) {
-                await PermissionHelper.reqAndroidStoragePerm();
+              if(Platform.isAndroid){
+                //如果没有权限则请求
+                if (!(await PermissionHelper.testAndroidStoragePerm())) {
+                  await PermissionHelper.reqAndroidStoragePerm();
+                }
+                final file = File(imgPath);
+                final fileName = file.fileName;
+                final newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+                try {
+                  file.copySync(newPath);
+                  Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+                  final androidChannelService = Get.find<AndroidChannelService>();
+                  androidChannelService.notifyMediaScan(newPath);
+                } catch (err, stack) {
+                  Log.error(tag, "$err $stack");
+                  Global.showSnackBarWarn(text: TranslationKey.saveFailed.tr, context: context);
+                }
+              } else {
+                if(await PermissionHelper.checkIOSPhotoPermission()){
+                  if(!await PermissionHelper.reqIOSPhotoPermission()){
+                    Global.showTipsDialog(context: Get.context!, text: TranslationKey.noPhotoPermission.tr);
+                    return;
+                  }
+                  final file = File(imgPath);
+                  final bytes = await file.readAsBytes();
+                  final imageSaver = ImageGallerySaver();
+                  await imageSaver.saveImage(bytes);
+                  Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+                }else{
+                  Global.showTipsDialog(context: Get.context!, text: TranslationKey.noPhotoPermission.tr);
+                }
               }
-              final file = File(imgPath);
-              final fileName = file.fileName;
-              final newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
-              try {
-                file.copySync(newPath);
-                Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
-                final androidChannelService = Get.find<AndroidChannelService>();
-                androidChannelService.notifyMediaScan(newPath);
-              } catch (err, stack) {
-                Log.error(tag, "$err $stack");
-                Global.showSnackBarWarn(text: TranslationKey.saveFailed.tr, context: context);
-              }
+
             },
           ),
         if (PlatformExt.isDesktop)

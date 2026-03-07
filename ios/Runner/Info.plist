@@ -48,9 +48,13 @@
     <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>
-        <string>picture-in-picture</string>
     </array>
-
+    <key>NSCameraUsageDescription</key>
+    <string>使用相机来扫描二维码</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>保存图片到相册</string>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>我们需要向您发送重要提醒和更新。</string>
     <!-- Add for share_handler start -->
     <!-- The 'NSUserActivityTypes' key is only needed if you plan to use the recordSentMessage API allowing for conversations to show up as direct share suggestions -->
     <key>NSUserActivityTypes</key>

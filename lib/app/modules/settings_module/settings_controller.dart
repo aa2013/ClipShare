@@ -68,7 +68,12 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   //检查电池优化
   var ignoreBatteryHandler = IgnoreBatteryHandler();
+
+  //检查IOS相册权限
+  var iosPhotosHandler = IosPhotosHandler();
+
   final hasNotifyPerm = false.obs;
+  final hasIOSPhotosPerm = false.obs;
   final hasShizukuPerm = false.obs;
   final hasFloatPerm = false.obs;
   final hasIgnoreBattery = false.obs;
@@ -374,57 +379,64 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   ///检查必要权限
   Future<void> checkPermissions() async {
-    if (!Platform.isAndroid) {
+    if (!Platform.isAndroid && !Platform.isIOS) {
       return;
+    }
+    if(Platform.isAndroid){
+      floatHandler.hasPermission().then((v) {
+        hasFloatPerm.value = v;
+      });
+      ignoreBatteryHandler.hasPermission().then((v) {
+        hasIgnoreBattery.value = v;
+      });
+      PermissionHelper.testAndroidReadSms().then((granted) {
+        //有权限或者不需要读取短信则视为有权限
+        hasSmsReadPerm.value = granted || !appConfig.enableSmsSync;
+      });
+      PermissionHelper.testAndroidAccessibilityPerm().then((granted) {
+        hasAccessibilityPerm.value = granted;
+        if (!granted && !appConfig.ignoreAccessibility && appConfig.sourceRecord) {
+          Global.showTipsDialog(
+            context: Get.context!,
+            text: TranslationKey.noAccessibilityPermTips.tr,
+            showCancel: true,
+            okText: TranslationKey.goAuthorize.tr,
+            onOk: () {
+              PermissionHelper.reqAndroidAccessibilityPerm();
+            },
+            showNeutral: true,
+            neutralText: TranslationKey.notNow.tr,
+            onNeutral: () {
+              appConfig.ignoreAccessibility = true;
+            },
+          );
+        }
+      });
+      NotificationListenerService.isPermissionGranted().then((granted) {
+        hasNotificationRecordPerm.value = granted;
+        final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
+        if (granted && appConfig.enableRecordNotification && !androidNotificationListenerService.listening) {
+          androidNotificationListenerService.startListening();
+        } else if (!granted && appConfig.enableRecordNotification) {
+          Global.showTipsDialog(
+            context: Get.context!,
+            text: TranslationKey.noNotificationRecordPermTips.tr,
+            showCancel: true,
+            okText: TranslationKey.goAuthorize.tr,
+            onOk: () {
+              NotificationListenerService.requestPermission();
+            },
+          );
+        }
+      });
+    }
+    if(Platform.isIOS){
+      iosPhotosHandler.hasPermission().then((v){
+        hasIOSPhotosPerm.value = v;
+      });
     }
     notifyHandler.hasPermission().then((v) {
       hasNotifyPerm.value = v;
-    });
-    floatHandler.hasPermission().then((v) {
-      hasFloatPerm.value = v;
-    });
-    ignoreBatteryHandler.hasPermission().then((v) {
-      hasIgnoreBattery.value = v;
-    });
-    PermissionHelper.testAndroidReadSms().then((granted) {
-      //有权限或者不需要读取短信则视为有权限
-      hasSmsReadPerm.value = granted || !appConfig.enableSmsSync;
-    });
-    PermissionHelper.testAndroidAccessibilityPerm().then((granted) {
-      hasAccessibilityPerm.value = granted;
-      if (!granted && !appConfig.ignoreAccessibility && appConfig.sourceRecord) {
-        Global.showTipsDialog(
-          context: Get.context!,
-          text: TranslationKey.noAccessibilityPermTips.tr,
-          showCancel: true,
-          okText: TranslationKey.goAuthorize.tr,
-          onOk: () {
-            PermissionHelper.reqAndroidAccessibilityPerm();
-          },
-          showNeutral: true,
-          neutralText: TranslationKey.notNow.tr,
-          onNeutral: () {
-            appConfig.ignoreAccessibility = true;
-          },
-        );
-      }
-    });
-    NotificationListenerService.isPermissionGranted().then((granted) {
-      hasNotificationRecordPerm.value = granted;
-      final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
-      if (granted && appConfig.enableRecordNotification && !androidNotificationListenerService.listening) {
-        androidNotificationListenerService.startListening();
-      } else if (!granted && appConfig.enableRecordNotification) {
-        Global.showTipsDialog(
-          context: Get.context!,
-          text: TranslationKey.noNotificationRecordPermTips.tr,
-          showCancel: true,
-          okText: TranslationKey.goAuthorize.tr,
-          onOk: () {
-            NotificationListenerService.requestPermission();
-          },
-        );
-      }
     });
   }
 
