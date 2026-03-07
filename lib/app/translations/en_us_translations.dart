@@ -748,6 +748,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Shizuku permission request failed, please ensure Shizuku is started and try again";
       case TranslationKey.requestFailed:
         return 'Request Failed';
+      case TranslationKey.requestSuccess:
+        return 'Request Success';
+      case TranslationKey.clipboardPermissionRequestFailed:
+        return 'Requesting clipboard permission requires Shizuku or Root';
       case TranslationKey.rootMode:
         return "Root Mode";
       case TranslationKey.rootModeDesc:
@@ -1405,6 +1409,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Keep Last";
       case TranslationKey.onlyLocal:
         return "Only Local";
+      case TranslationKey.permissionSettingsClipboardTitle:
+        return "Clipboard Permission";
+      case TranslationKey.permissionSettingsClipboardDesc:
+        return "On some Android systems, the default is 'allow only while using the app,' which prevents the app from accessing the clipboard in the background. Requesting this permission resolves the issue.";
     }
   }
 }

@@ -460,6 +460,32 @@ class SettingsPage extends GetView<SettingsController> {
                           NotificationListenerService.requestPermission();
                         },
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.permissionSettingsClipboardTitle.tr),
+                        description: Text(TranslationKey.permissionSettingsClipboardDesc.tr),
+                        value: controller.hasClipboardPerm.value,
+                        action: (val) => const Icon(
+                          Icons.help,
+                          color: Colors.orange,
+                        ),
+                        show: (v) => Platform.isAndroid && !v,
+                        onTap: () async {
+                          final isValidWorkingMode = appConfig.workingMode == EnvironmentType.shizuku ||appConfig.workingMode == EnvironmentType.root;
+                          if(!isValidWorkingMode){
+                            Global.showTipsDialog(context: context, text: TranslationKey.clipboardPermissionRequestFailed.tr);
+                            return;
+                          }else{
+                            try {
+                              await clipboardManager.requestClipboardPermission();
+                              controller.hasClipboardPerm.value = await clipboardManager.checkClipboardPermission();
+                              final tips = controller.hasClipboardPerm.value ? TranslationKey.requestSuccess.tr : TranslationKey.requestFailed.tr;
+                              Global.showSnackBarSuc(context: context, text: tips);
+                            } catch (err, stack) {
+                              Global.showTipsDialog(context: context, text: "$err,$stack", title: TranslationKey.requestFailed.tr);
+                            }
+                          }
+                        },
+                      ),
                     ],
                   ),
                 ),

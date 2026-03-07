@@ -701,6 +701,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "Shizuku 权限请求失败，请确保已启动Shizuku并重试";
       case TranslationKey.requestFailed:
         return '请求失败';
+      case TranslationKey.requestSuccess:
+        return '请求成功';
+      case TranslationKey.clipboardPermissionRequestFailed:
+        return '剪贴板权限请求需要 Shizuku 或 Root 权限';
       case TranslationKey.rootMode:
         return "Root模式";
       case TranslationKey.rootModeDesc:
@@ -1033,6 +1037,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "无障碍权限";
       case TranslationKey.permissionSettingsAccessibilityDesc:
         return "启用无障碍权限以辅助记录剪贴板来源";
+      case TranslationKey.permissionSettingsClipboardTitle:
+        return "剪贴板权限";
+      case TranslationKey.permissionSettingsClipboardDesc:
+        return "Android 上部分系统默认设置为使用时允许，此时应用无法在后台操作剪贴板，请求该权限可解决";
       case TranslationKey.noAccessibilityPermTips:
         return "无障碍服务未启动，无法检测到用户主动复制的来源，是否授权无障碍服务权限？";
       case TranslationKey.appIconLoadError:
