@@ -133,6 +133,7 @@ class Global {
     void Function()? onCancel,
     void Function()? onNeutral,
     bool autoDismiss = true,
+    double maxWidth = double.maxFinite,
   }) {
     try {
       final appConfig = Get.find<ConfigService>();
@@ -171,13 +172,16 @@ class Global {
           key: dlgCtl.key,
           child: AlertDialog(
             title: Text(title!),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SingleChildScrollView(child: selectable ? SelectableText(text) : Text(text)),
-                ?customWidget,
-              ],
+            content: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SingleChildScrollView(child: selectable ? SelectableText(text) : Text(text)),
+                  ?customWidget,
+                ],
+              ),
             ),
             actions: [
               Row(

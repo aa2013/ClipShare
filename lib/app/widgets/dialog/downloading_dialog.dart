@@ -39,6 +39,36 @@ class _DownloadDialogState extends State<DownloadDialog> {
   final tag = "DownloadDialog";
   bool cancel = false;
 
+  Future _downloadFile(void Function(bool success) onComplete) async {
+    await dio
+        .download(
+          widget.url,
+          widget.savePath,
+          onReceiveProgress: (received, total) {
+            if (total != -1) {
+              // 计算进度百分比
+              final p = (received / total * 100);
+              setState(() {
+                progress = p.toInt();
+              });
+            }
+          },
+        )
+        .catchError((err, stack) {
+          Get.back();
+          if (!cancel) {
+            widget.onError?.call(err, stack);
+            error = true;
+          }
+        })
+        .whenComplete(() {
+          if (!error) {
+            Get.back();
+            onComplete(true);
+          }
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -72,30 +102,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
                               downloading = true;
                             });
                             // 开始下载
-                            dio.download(
-                              widget.url,
-                              widget.savePath,
-                              onReceiveProgress: (received, total) {
-                                if (total != -1) {
-                                  // 计算进度百分比
-                                  final p = (received / total * 100);
-                                  setState(() {
-                                    progress = p.toInt();
-                                  });
-                                }
-                              },
-                            ).catchError((err, stack) {
-                              Get.back();
-                              if (!cancel) {
-                                widget.onError?.call(err, stack);
-                                error = true;
-                              }
-                            }).whenComplete(() {
-                              if (!error) {
-                                Get.back();
-                                widget.onFinished(true);
-                              }
-                            });
+                            _downloadFile(widget.onFinished);
                           },
                     child: Visibility(
                       replacement: Text(TranslationKey.download.tr),
@@ -119,7 +126,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }

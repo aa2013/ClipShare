@@ -696,7 +696,9 @@ enum TranslationKey {
   onlyLocal,
   permissionSettingsClipboardTitle,
   permissionSettingsClipboardDesc,
-  clipboardPermissionRequestFailed;
+  clipboardPermissionRequestFailed,
+  selectInstallerType,
+  openPathAfterDownload;
 
   String get tr => name.tr;
 
