@@ -135,7 +135,7 @@ extension FileExt on File {
 
   Future<void> openPath() async {
     if (Platform.isWindows) {
-      await Process.run("explorer /select,\"${this.path}\"", []);
+      await Process.run("explorer /select,\"${this.path.normalizePath}\"", []);
     } else {
       if (Platform.isAndroid && this.path.toString().toLowerCase().endsWith("apk")) {
         final granted = await Permission.requestInstallPackages.isGranted;

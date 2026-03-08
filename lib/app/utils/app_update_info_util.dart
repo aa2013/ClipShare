@@ -6,20 +6,30 @@ import 'package:clipshare/app/data/models/update_log.dart';
 import 'package:clipshare/app/exceptions/fetch_update_logs_exception.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:clipshare/app/widgets/single_group_chip.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:open_file_plus/open_file_plus.dart';
+import 'package:zip_flutter/zip_flutter.dart';
+import 'package:path/path.dart' as p;
 
 class AppUpdateInfoUtil {
   //上次检测app更新的时间
   static DateTime? _lastCheckUpdateTime;
   static const tag = "AppUpdateInfoUtil";
+  static final _installerTypes = <TargetPlatform, List<String>>{
+    TargetPlatform.windows: [".exe", ".zip"],
+    TargetPlatform.linux: [".deb", ".AppImage", ".rpm"],
+  };
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
     try {
@@ -38,8 +48,7 @@ class AppUpdateInfoUtil {
         log['url'] = body["downloads"][system.upperFirst]["url"];
         final ul = UpdateLog.fromJson(log);
         final platform = ul.platform.toLowerCase();
-        if ((platform != system && platform != 'all') ||
-            ul.version <= currentVersion) {
+        if ((platform != system && platform != 'all') || ul.version <= currentVersion) {
           continue;
         }
         updateLogs.add(ul);
@@ -47,8 +56,7 @@ class AppUpdateInfoUtil {
       updateLogs.sort((a, b) => b.version - a.version);
       return updateLogs;
     } catch (e) {
-      final errorMsg =
-          "检查update log的过程中出现异常\n错误: $e";
+      final errorMsg = "检查update log的过程中出现异常\n错误: $e";
       Log.error(tag, errorMsg);
       throw FetchUpdateLogsException(errorMsg);
     }
@@ -83,15 +91,61 @@ class AppUpdateInfoUtil {
       if (latestVersion == "") {
         latestVersion = "ClipShare-${version.name}_${version.code}";
       }
-      content += "🏷️${version}\n";
+      content += "🏷️$version\n";
       content += "${log.desc}\n\n";
     }
+    List<String> pkgTypes = _installerTypes[defaultTargetPlatform] ?? [];
+    Widget? customWidget;
+    final selectedType = Rx<String?>(null);
+    if (pkgTypes.isNotEmpty) {
+      selectedType.value = pkgTypes[0];
+      const widthBox = SizedBox(width: 5);
+      customWidget = Obx(() {
+        final theme = Theme.of(Get.context!);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: 8.insetB,
+              child: Text(
+                TranslationKey.selectInstallerType.tr,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface.withOpacity(0.8),
+                ),
+              ),
+            ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: pkgTypes
+                    .map((pkgType) {
+                      return SingleGroupChip(
+                        text: pkgType,
+                        isSelected: pkgType == selectedType.value,
+                        onTap: () {
+                          selectedType.value = pkgType;
+                        },
+                      );
+                    })
+                    .cast<Widget>()
+                    .separateWith(widthBox)
+                    .toList(),
+              ),
+            ),
+          ],
+        );
+      });
+    }
+    var downloadUrl = logs.first.downloadUrl;
     Global.showTipsDialog(
       context: Get.context!,
       title: TranslationKey.newVersionDialogTitle.tr,
       text: content,
       showCancel: true,
       showNeutral: true,
+      maxWidth: 300,
       neutralText: TranslationKey.newVersionDialogSkipText.tr,
       cancelText: TranslationKey.dialogCancelText.tr,
       onNeutral: () {
@@ -101,7 +155,10 @@ class AppUpdateInfoUtil {
       okText: TranslationKey.newVersionDialogOkText.tr,
       onOk: () async {
         try {
-          var fileName = Uri.parse(logs.first.downloadUrl).path.replaceAll("\\", "/").split("/").last;
+          if (selectedType.value != null) {
+            downloadUrl = _replaceUrlExtension(downloadUrl, selectedType.value!);
+          }
+          var fileName = Uri.parse(downloadUrl).path.replaceAll("\\", "/").split("/").last;
           var downPath = "";
 
           if (Platform.isAndroid) {
@@ -109,14 +166,38 @@ class AppUpdateInfoUtil {
           }
           downPath = "${await Constants.updateDownloadFileDirPath}/$fileName";
           await File(downPath).parent.create();
+          final openFolderAfterDownload = false.obs;
           Global.showDownloadingDialog(
             context: Get.context!,
-            url: logs.first.downloadUrl,
+            url: downloadUrl,
             filePath: downPath,
-            content: Text(fileName),
-            onFinished: (success) {
+            content: Column(
+              children: [
+                Text(fileName),
+                const SizedBox(height: 5),
+                Obx(() {
+                  return CheckboxListTile(
+                    value: openFolderAfterDownload.value,
+                    title: Text(TranslationKey.openPathAfterDownload.tr),
+                    onChanged: (selected) {
+                      openFolderAfterDownload.value = selected ?? false;
+                    },
+                  );
+                }),
+              ],
+            ),
+            onFinished: (success) async {
               if (success) {
-                OpenFile.open(downPath);
+                final updateFile = File(downPath);
+                if (openFolderAfterDownload.value) {
+                  updateFile.openPath();
+                } else {
+                  if (selectedType.value == ".zip") {
+                    _updateWindowsFromZip(updateFile);
+                  } else {
+                    OpenFile.open(downPath);
+                  }
+                }
               }
             },
             onError: (error, stack) {
@@ -125,9 +206,10 @@ class AppUpdateInfoUtil {
           );
         } catch (err, stack) {
           Log.error(tag, "error: $err. $stack");
-          logs.first.downloadUrl.askOpenUrl();
+          downloadUrl.askOpenUrl();
         }
       },
+      customWidget: customWidget,
     );
     const notifyKey = "appUpdate";
     final notifyId = await NotifyUtil.notify(
@@ -140,5 +222,49 @@ class AppUpdateInfoUtil {
       });
     }
     return true;
+  }
+
+  static String _replaceUrlExtension(String url, String newExtension) {
+    assert(newExtension[0] == ".");
+    // 找到最后一个 "." 的位置（文件名中的扩展名分隔符）
+    int lastDotIndex = url.lastIndexOf('.');
+    if (lastDotIndex == -1) {
+      // 如果没有扩展名，直接附加
+      return url + newExtension;
+    }
+
+    // 找到最后一个 "/" 的位置，确保 "." 是文件名的一部分而不是路径的一部分
+    int lastSlashIndex = url.lastIndexOf('/');
+    if (lastSlashIndex > lastDotIndex) {
+      // 如果最后一个 "." 在最后一个 "/" 之前，说明没有扩展名
+      return url + newExtension;
+    }
+
+    // 替换扩展名
+    return url.substring(0, lastDotIndex) + newExtension;
+  }
+
+  static Future<void> _updateWindowsFromZip(File updateFile) async {
+    Log.debug(tag, "update zip file downloaded");
+    final downDirPath = updateFile.parent.absolute.path;
+    final updateFileExtractDirPath = p.join(downDirPath, "temp").normalizePath;
+    await Directory(updateFileExtractDirPath).create(recursive: true);
+    Log.debug(tag, "zip file extracting");
+    //解压zip
+    await ZipFile.openAndExtractAsync(updateFile.absolute.path, updateFileExtractDirPath);
+    Log.debug(tag, "zip file extracted");
+    final execDirPath = File(Platform.resolvedExecutable).parent.absolute.path;
+    final batFilePath = p.join(execDirPath, "data","flutter_assets","assets", "scripts", "update_windows.bat").normalizePath;
+    final process = await Process.start(
+      "cmd",
+      ['/c', batFilePath, pid.toString(), updateFileExtractDirPath],
+      runInShell: true,
+      mode: ProcessStartMode.detached,
+      workingDirectory: execDirPath,
+    );
+    Log.debug(tag, 'Update process started (PID: ${process.pid})');
+    await Future.delayed(1.s);
+    Log.debug(tag, 'Exiting application, waiting for batch update...');
+    exit(0);
   }
 }

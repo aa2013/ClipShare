@@ -748,6 +748,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Shizuku permission request failed, please ensure Shizuku is started and try again";
       case TranslationKey.requestFailed:
         return 'Request Failed';
+      case TranslationKey.selectInstallerType:
+        return 'Select Installer Type';
+      case TranslationKey.openPathAfterDownload:
+        return 'Open after download';
       case TranslationKey.requestSuccess:
         return 'Request Success';
       case TranslationKey.clipboardPermissionRequestFailed:

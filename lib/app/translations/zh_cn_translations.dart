@@ -705,6 +705,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '请求成功';
       case TranslationKey.clipboardPermissionRequestFailed:
         return '剪贴板权限请求需要 Shizuku 或 Root 权限';
+      case TranslationKey.selectInstallerType:
+        return '选择安装包格式';
+      case TranslationKey.openPathAfterDownload:
+        return '下载完成后打开文件夹';
       case TranslationKey.rootMode:
         return "Root模式";
       case TranslationKey.rootModeDesc:
