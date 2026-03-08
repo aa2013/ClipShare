@@ -698,7 +698,8 @@ enum TranslationKey {
   permissionSettingsClipboardDesc,
   clipboardPermissionRequestFailed,
   selectInstallerType,
-  openPathAfterDownload;
+  openPathAfterDownload,
+  updateFromZipTips;
 
   String get tr => name.tr;
 

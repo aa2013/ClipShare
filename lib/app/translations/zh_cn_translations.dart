@@ -709,6 +709,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return '选择安装包格式';
       case TranslationKey.openPathAfterDownload:
         return '下载完成后打开文件夹';
+      case TranslationKey.updateFromZipTips:
+        return 'zip便携版本下载后也可自动进行更新操作';
       case TranslationKey.rootMode:
         return "Root模式";
       case TranslationKey.rootModeDesc:

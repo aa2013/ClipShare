@@ -752,6 +752,8 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Select Installer Type';
       case TranslationKey.openPathAfterDownload:
         return 'Open after download';
+      case TranslationKey.updateFromZipTips:
+        return 'The portable ZIP also supports auto-updating upon download completion.';
       case TranslationKey.requestSuccess:
         return 'Request Success';
       case TranslationKey.clipboardPermissionRequestFailed:

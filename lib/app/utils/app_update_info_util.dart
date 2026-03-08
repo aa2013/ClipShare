@@ -99,24 +99,24 @@ class AppUpdateInfoUtil {
     final selectedType = Rx<String?>(null);
     if (pkgTypes.isNotEmpty) {
       selectedType.value = pkgTypes[0];
+      final theme = Theme.of(Get.context!);
       const widthBox = SizedBox(width: 5);
-      customWidget = Obx(() {
-        final theme = Theme.of(Get.context!);
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              margin: 8.insetB,
-              child: Text(
-                TranslationKey.selectInstallerType.tr,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
-                ),
+      customWidget = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: 8.insetB,
+            child: Text(
+              TranslationKey.selectInstallerType.tr,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface.withOpacity(0.8),
               ),
             ),
-            SingleChildScrollView(
+          ),
+          Obx(() {
+            return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: pkgTypes
@@ -133,10 +133,25 @@ class AppUpdateInfoUtil {
                     .separateWith(widthBox)
                     .toList(),
               ),
-            ),
-          ],
-        );
-      });
+            );
+          }),
+          Obx(() {
+            return Visibility(
+              visible: selectedType.value == ".zip",
+              child: Container(
+                margin: 5.insetT,
+                child: Text(
+                  TranslationKey.updateFromZipTips.tr,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: theme.colorScheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
+      );
     }
     var downloadUrl = logs.first.downloadUrl;
     Global.showTipsDialog(
@@ -148,6 +163,7 @@ class AppUpdateInfoUtil {
       maxWidth: 300,
       neutralText: TranslationKey.newVersionDialogSkipText.tr,
       cancelText: TranslationKey.dialogCancelText.tr,
+      customWidget: customWidget,
       onNeutral: () {
         //写入数据库跳过更新的版本号
         appConfig.setIgnoreUpdateVersion(latestVersionCode);
@@ -209,7 +225,6 @@ class AppUpdateInfoUtil {
           downloadUrl.askOpenUrl();
         }
       },
-      customWidget: customWidget,
     );
     const notifyKey = "appUpdate";
     final notifyId = await NotifyUtil.notify(
@@ -254,7 +269,7 @@ class AppUpdateInfoUtil {
     await ZipFile.openAndExtractAsync(updateFile.absolute.path, updateFileExtractDirPath);
     Log.debug(tag, "zip file extracted");
     final execDirPath = File(Platform.resolvedExecutable).parent.absolute.path;
-    final batFilePath = p.join(execDirPath, "data","flutter_assets","assets", "scripts", "update_windows.bat").normalizePath;
+    final batFilePath = p.join(execDirPath, "data", "flutter_assets", "assets", "scripts", "update_windows.bat").normalizePath;
     final process = await Process.start(
       "cmd",
       ['/c', batFilePath, pid.toString(), updateFileExtractDirPath],
