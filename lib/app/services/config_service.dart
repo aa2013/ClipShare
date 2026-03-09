@@ -102,6 +102,9 @@ class ConfigService extends GetxService {
     late String path;
     if (Platform.isAndroid) {
       path = "${Constants.androidDownloadPath}/${Constants.appName}";
+    } else if(Platform.isMacOS && kReleaseMode){
+      var dir = await getApplicationDocumentsDirectory();
+      path = dir.path + "/${Constants.appName}/files".normalizePath;
     } else {
       path = "${Directory(Platform.resolvedExecutable).parent.path}/files";
       //如果当前路径可写则使用当前路径，如开发环境或者便携版本
