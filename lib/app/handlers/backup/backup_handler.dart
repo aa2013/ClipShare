@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/models/BackupVersionInfo.dart';
+import 'package:clipshare/app/data/models/backup_result.dart';
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_data_packet_splitter.dart';
@@ -71,7 +72,7 @@ class BackupHandler {
     }
   }
 
-  Future<ExceptionInfo?> backup(Directory storeDir, List<BackupType> types) async {
+  Future<BackupResult> backup(Directory storeDir, List<BackupType> types) async {
     _restoreIds.clear();
     await storeDir.create(recursive: true);
     final tempDir = await storeDir.createTemp("temp_");
@@ -112,7 +113,8 @@ class BackupHandler {
         Log.info(tag, "backup $filename finished");
       }
       final backupFileName = "backup-${appConfig.localName}-${DateTime.now().format("yyyyMMdd")}.zip";
-      var zip = ZipFile.open('${storeDir.path}/$backupFileName');
+      final zipPath = '${storeDir.path}/$backupFileName';
+      var zip = ZipFile.open(zipPath);
       await for (final entity in tempDir.list(recursive: true)) {
         if (entity is! File) {
           continue;
@@ -124,10 +126,13 @@ class BackupHandler {
       }
       zip.close();
       Log.info(tag, "backup all finished!!!");
+      return BackupResult(success: true, localPath: zipPath, exception: null);
     } catch (err, stack) {
       catchErr = err;
       stackTrace = stack;
       Log.debug(tag, "backup failed! Error: $err,$stack");
+      final ex = ExceptionInfo(err: catchErr, stackTrace: stackTrace);
+      return BackupResult(success: false, localPath: null, exception: ex);
     } finally {
       _processing = false;
       _cancel.value = false;
@@ -135,10 +140,6 @@ class BackupHandler {
         await tempDir.delete(recursive: true);
       }
     }
-    if (stackTrace == null) {
-      return null;
-    }
-    return ExceptionInfo(err: catchErr, stackTrace: stackTrace);
   }
 
   Future<ExceptionInfo?> restore(File file, LoadingProgressController loadingController, List<BackupType> types) async {

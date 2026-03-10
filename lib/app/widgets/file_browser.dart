@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 typedef FileListLoader = FutureOr<List<FileItem>> Function(String path);
 typedef DirectoryCreator = Future<bool> Function(String currentPath, String name);
 typedef ShouldShowUpLevel = bool Function(String currentPath);
+typedef FileClickedCallback = void Function(FileItem file);
 
 class FileItem {
   final String name;
@@ -31,6 +32,7 @@ class FileBrowser extends StatefulWidget {
   final DirectoryCreator? onCreateDirectory;
   final ShouldShowUpLevel shouldShowUpLevel;
   final String initialPath;
+  final FileClickedCallback? onFileClicked;
 
   const FileBrowser({
     super.key,
@@ -38,6 +40,7 @@ class FileBrowser extends StatefulWidget {
     required this.shouldShowUpLevel,
     required this.initialPath,
     this.onCreateDirectory,
+    this.onFileClicked,
   });
 
   @override
@@ -79,8 +82,7 @@ class _FileBrowserState extends State<FileBrowser> {
       });
       _loadFiles();
     } else {
-      // Handle file tap if needed
-      debugPrint('File tapped: ${item.name}');
+      widget.onFileClicked?.call(item);
     }
   }
 

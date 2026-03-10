@@ -1417,6 +1417,16 @@ class ZhCNTranslation extends AbstractTranslations {
         return "保留最近";
       case TranslationKey.onlyLocal:
         return "仅本地";
+      case TranslationKey.local:
+        return "本地";
+      case TranslationKey.selectBackupSource:
+        return "备份文件存储位置";
+      case TranslationKey.notConfigured:
+        return "未配置";
+      case TranslationKey.storagePathTips:
+        return "注意：备份文件和中转文件存储于同一目录下的不同文件夹中\n如若存储路径选择为 /ClipShare\n则中转文件则存储于 /ClipShare/history 中\n备份文件存储于 /ClipShare/backup 中";
+      case TranslationKey.uploading:
+        return "上传中";
     }
   }
 }
