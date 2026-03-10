@@ -797,7 +797,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
     String? localFilePath;
     StorageClient? storageClient;
-    //todo 若为存储服务，显示文件列表然后下载到临时目录执行解压，显示下载进度弹窗
+    //若为存储服务，显示文件列表然后下载到临时目录执行解压，显示下载进度弹窗
     if (backupSource == BackupSource.local) {
       final result = await FilePicker.platform.pickFiles();
       if (result == null) {
@@ -836,30 +836,32 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       late DialogController fileBrowserDialog;
       fileBrowserDialog = Global.showDialog(
         context,
-        AlertDialog(
-          title: Text(TranslationKey.selectStoragePath.tr),
-          content: SizedBox(
-            width: 350,
-            child: FileBrowser(
-              onLoadFiles: (String path) async {
-                final subPath = path.replaceFirst(baseDir, "").replaceFirst(Constants.unixDirSeparate, "");
-                final list = await storageClient!.list(path: subPath);
-                return list.where((item) => item.isDir || item.name.endsWith(".zip")).map((item) => FileItem(name: item.name, isDirectory: item.isDir, fullPath: item.path)).toList();
-              },
-              shouldShowUpLevel: (path) => path != baseDir || path.isNullOrEmpty,
-              initialPath: initPath,
-              onFileClicked: (item) {
-                selectedFile = item;
-                fileBrowserDialog.close();
-              },
+        SafeArea(
+          child: AlertDialog(
+            title: Text(TranslationKey.selectStoragePath.tr),
+            content: SizedBox(
+              width: 350,
+              child: FileBrowser(
+                onLoadFiles: (String path) async {
+                  final subPath = path.replaceFirst(baseDir, "").replaceFirst(Constants.unixDirSeparate, "");
+                  final list = await storageClient!.list(path: subPath);
+                  return list.where((item) => item.isDir || item.name.endsWith(".zip")).map((item) => FileItem(name: item.name, isDirectory: item.isDir, fullPath: item.path)).toList();
+                },
+                shouldShowUpLevel: (path) => path != baseDir || path.isNullOrEmpty,
+                initialPath: initPath,
+                onFileClicked: (item) {
+                  selectedFile = item;
+                  fileBrowserDialog.close();
+                },
+              ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => fileBrowserDialog.close(),
+                child: Text(TranslationKey.dialogCancelText.tr),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => fileBrowserDialog.close(),
-              child: Text(TranslationKey.dialogCancelText.tr),
-            ),
-          ],
         ),
       );
       await fileBrowserDialog.future;
