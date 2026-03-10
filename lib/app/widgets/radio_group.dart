@@ -56,11 +56,10 @@ class _RadioGroupState<T> extends State<RadioGroup<T>> {
       },
     );
     return widget.direction == Axis.horizontal
-        ? IntrinsicWidth(
-            child: Row(children: widgets),
-          )
-        : IntrinsicHeight(
-            child: Column(children: widgets),
+        ? Row(children: widgets)
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: widgets,
           );
   }
 }

@@ -1419,6 +1419,16 @@ class EnUSTranslation extends AbstractTranslations {
         return "Clipboard Permission";
       case TranslationKey.permissionSettingsClipboardDesc:
         return "On some Android systems, the default is 'allow only while using the app,' which prevents the app from accessing the clipboard in the background. Requesting this permission resolves the issue.";
+      case TranslationKey.local:
+        return "Local";
+      case TranslationKey.selectBackupSource:
+        return "Backup Source";
+      case TranslationKey.notConfigured:
+        return "Not Configured";
+      case TranslationKey.storagePathTips:
+        return "Tips: Backup files and transfer files are stored in different folders within the same directory.\nIf the storage path is set to /ClipShare\nthen the temporary transfer files are stored in /ClipShare/history, \nthe backup files are stored in /ClipShare/backup.";
+      case TranslationKey.uploading:
+        return "Uploading";
     }
   }
 }

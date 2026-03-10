@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/backup_source.dart';
 import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
+import 'package:clipshare/app/handlers/storage/storage_client.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/about_module/about_controller.dart';
@@ -22,9 +24,18 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/storage_config_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/s3_config_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/single_select_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/webdav_config_edit_dialog.dart';
+import 'package:clipshare/app/widgets/file_browser.dart';
+import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -45,6 +56,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
+import 'package:uuid/uuid.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -392,7 +404,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     ignoreBatteryHandler.hasPermission().then((v) {
       hasIgnoreBattery.value = v;
     });
-    clipboardHandler.hasPermission().then((v){
+    clipboardHandler.hasPermission().then((v) {
       hasClipboardPerm.value = v;
     });
     PermissionHelper.testAndroidReadSms().then((granted) {
@@ -523,6 +535,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   //region 备份与恢复
 
+  ///选择备份恢复项
   Future<List<BackupType>> _showBackupTypesDialog(BuildContext context) {
     Completer<List<BackupType>> completer = Completer();
     final types = BackupType.values.where((item) => item != BackupType.version).toList();
@@ -545,6 +558,141 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     return completer.future;
   }
 
+  ///选择备份恢复来源，本地，s3，webdav
+  Future<BackupSource?> _showBackupSourceDialog(BuildContext context) {
+    Completer<BackupSource?> completer = Completer();
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      fontWeight: FontWeight.w400,
+      color: theme.colorScheme.onSurface.withOpacity(0.8),
+    );
+    Future<bool> configWebdav() async {
+      Completer<bool> inputCompleter = Completer();
+      final dialog = Global.showDialog(
+        context,
+        WebDAVConfigEditDialog(
+          initValue: appConfig.webDAVConfig,
+          onOk: (config) {
+            appConfig.setWebDavConfig(config);
+            inputCompleter.complete(true);
+          },
+        ),
+      );
+      await dialog.future;
+      if (!inputCompleter.isCompleted) {
+        inputCompleter.complete(false);
+      }
+      return inputCompleter.future;
+    }
+
+    Future<bool> configS3() async {
+      Completer<bool> inputCompleter = Completer();
+      final dialog = Global.showDialog(
+        context,
+        S3ConfigEditDialog(
+          initValue: appConfig.s3Config,
+          onOk: (config) {
+            appConfig.setS3Config(config);
+            inputCompleter.complete(true);
+          },
+        ),
+      );
+      await dialog.future;
+      if (!inputCompleter.isCompleted) {
+        inputCompleter.complete(false);
+      }
+      return inputCompleter.future;
+    }
+
+    late DialogController dlgController;
+    dlgController = SingleSelectDialog.show<BackupSource>(
+      context: context,
+      onSelected: (BackupSource source) async {
+        if (source == BackupSource.s3 && appConfig.s3Config == null) {
+          //配置s3
+          if (!await configS3()) {
+            completer.complete(null);
+            dlgController.close();
+            return;
+          }
+        }
+        if (source == BackupSource.webdav && appConfig.webDAVConfig == null) {
+          //配置 webDAV
+          if (!await configWebdav()) {
+            completer.complete(null);
+            dlgController.close();
+            return;
+          }
+        }
+        completer.complete(source);
+      },
+      defaultValue: BackupSource.unknown,
+      selections: BackupSource.values.where((item) => item != BackupSource.unknown).map((item) {
+        Widget? desc;
+        var showEditIcon = false;
+        if (item == BackupSource.s3) {
+          desc = Obx(
+            () => Text(
+              appConfig.s3Config?.displayName ?? TranslationKey.notConfigured.tr,
+              style: textStyle,
+            ),
+          );
+          showEditIcon = appConfig.s3Config?.displayName != null;
+        } else if (item == BackupSource.webdav) {
+          desc = Obx(
+            () => Text(
+              appConfig.webDAVConfig?.displayName ?? TranslationKey.notConfigured.tr,
+              style: textStyle,
+            ),
+          );
+          showEditIcon = appConfig.webDAVConfig?.displayName != null;
+        }
+        return RadioData(
+          value: item,
+          label: item.tr,
+          widget: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.tr),
+                    ?desc,
+                  ],
+                ),
+              ),
+              Visibility(
+                visible: showEditIcon,
+                child: Tooltip(
+                  message: TranslationKey.modify.tr,
+                  child: IconButton(
+                    onPressed: () {
+                      if (item == BackupSource.s3) {
+                        configS3();
+                      } else {
+                        configWebdav();
+                      }
+                    },
+                    icon: const Icon(
+                      Icons.edit_note,
+                      color: Colors.blueGrey,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+      title: Text(TranslationKey.selectBackupSource.tr),
+      onCancel: () {
+        completer.complete(null);
+        dlgController.close();
+      },
+    );
+    return completer.future.whenComplete(() => dlgController.close());
+  }
+
   ///备份
   Future<void> startBackup(BuildContext context) async {
     final backupTypes = await _showBackupTypesDialog(context);
@@ -552,7 +700,33 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
       return;
     }
-    final path = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+    final backupSource = await _showBackupSourceDialog(context);
+    if (backupSource == null) {
+      Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
+      return;
+    }
+    //若为存储服务，文件写入临时位置，备份完毕后上传至存储服务
+    String? path;
+    StorageClient? storageClient;
+    if (backupSource == BackupSource.local) {
+      path = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+    } else {
+      //todo 路径整理
+      path = await Constants.documentsPath;
+      if (backupSource == BackupSource.webdav) {
+        storageClient = appConfig.webDAVConfig?.toClient();
+      } else {
+        storageClient = appConfig.s3Config?.toClient();
+      }
+      if (storageClient == null) {
+        var text = TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr;
+        if (backupSource != BackupSource.webdav) {
+          text = TranslationKey.forwardSettingsForwardEnableRequiredS3Text.tr;
+        }
+        Global.showTipsDialog(text: text, context: context);
+        return;
+      }
+    }
     if (path == null) return;
     final dialog = Global.showLoadingDialog(
       context: context,
@@ -569,16 +743,36 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     try {
       //如果启用了截图复制，临时关闭
       clipboardService.stopListenScreenshot();
-      final exInfo = await backupHandler.backup(Directory(path), backupTypes);
+      final result = await backupHandler.backup(Directory(path), backupTypes);
       dialog.close();
-      if (exInfo != null) {
-        if (exInfo.err is UserCancelBackup) {
+      if (!result.success) {
+        if (result.exception?.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
         } else {
           Global.showTipsDialog(text: TranslationKey.exportFailedAndViewLogs.tr, context: context);
         }
       } else {
-        Global.showTipsDialog(text: TranslationKey.exportSuccess.tr, context: context);
+        //文件备份完毕，若为存储服务，上传，显示上传进度弹窗
+        final loadingController = LoadingProgressController(total: 100);
+        final dialog = Global.showLoadingDialog(
+          context: context,
+          dismissible: false,
+          loadingText: TranslationKey.uploading.tr,
+          controller: loadingController,
+        );
+        final backupFileName = File(result.localPath!).fileName;
+        final uploadSuccess = await storageClient!.uploadFile(
+          "backup/$backupFileName",
+          result.localPath!,
+          onProgress: (count, total) {
+            int percentage = (count * 100 / total).toInt();
+            loadingController.update(percentage);
+          },
+        );
+        await dialog.close();
+        final text = uploadSuccess ? TranslationKey.exportSuccess.tr : TranslationKey.exportFailedAndViewLogs.tr;
+        Global.showTipsDialog(text: text, context: context);
+        File(result.localPath!).delete();
       }
     } catch (err, stack) {
       Log.error(tag, "$err,$stack");
@@ -596,9 +790,105 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
       return;
     }
-    final result = await FilePicker.platform.pickFiles();
-    if (result == null) {
+    final backupSource = await _showBackupSourceDialog(context);
+    if (backupSource == null) {
+      Global.showSnackBarWarn(text: TranslationKey.userCancelled.tr, context: context);
       return;
+    }
+    String? localFilePath;
+    StorageClient? storageClient;
+    //todo 若为存储服务，显示文件列表然后下载到临时目录执行解压，显示下载进度弹窗
+    if (backupSource == BackupSource.local) {
+      final result = await FilePicker.platform.pickFiles();
+      if (result == null) {
+        return;
+      }
+      localFilePath = result.files[0].path!;
+    } else {
+      if (backupSource == BackupSource.webdav) {
+        storageClient = appConfig.webDAVConfig?.toClient();
+      } else {
+        storageClient = appConfig.s3Config?.toClient();
+      }
+      if (storageClient == null) {
+        var text = TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr;
+        if (backupSource != BackupSource.webdav) {
+          text = TranslationKey.forwardSettingsForwardEnableRequiredS3Text.tr;
+        }
+        Global.showTipsDialog(text: text, context: context);
+        return;
+      }
+      late String baseDir;
+      if (backupSource == BackupSource.webdav) {
+        baseDir = appConfig.webDAVConfig!.baseDir;
+      } else {
+        baseDir = appConfig.s3Config!.baseDir;
+      }
+      final initPath = "$baseDir/backup";
+      if (!await storageClient.isDirectory("backup")) {
+        if (!await storageClient.createDirectory("backup")) {
+          Global.showTipsDialog(text: TranslationKey.createFolder.tr, context: context);
+          return;
+        }
+      }
+
+      FileItem? selectedFile;
+      late DialogController fileBrowserDialog;
+      fileBrowserDialog = Global.showDialog(
+        context,
+        AlertDialog(
+          title: Text(TranslationKey.selectStoragePath.tr),
+          content: SizedBox(
+            width: 350,
+            child: FileBrowser(
+              onLoadFiles: (String path) async {
+                final subPath = path.replaceFirst(baseDir, "").replaceFirst(Constants.unixDirSeparate, "");
+                final list = await storageClient!.list(path: subPath);
+                return list.where((item) => item.isDir || item.name.endsWith(".zip")).map((item) => FileItem(name: item.name, isDirectory: item.isDir, fullPath: item.path)).toList();
+              },
+              shouldShowUpLevel: (path) => path != baseDir || path.isNullOrEmpty,
+              initialPath: initPath,
+              onFileClicked: (item) {
+                selectedFile = item;
+                fileBrowserDialog.close();
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => fileBrowserDialog.close(),
+              child: Text(TranslationKey.dialogCancelText.tr),
+            ),
+          ],
+        ),
+      );
+      await fileBrowserDialog.future;
+      if (selectedFile?.fullPath == null) {
+        Global.showSnackBarWarn(context: context, text: TranslationKey.userCancelled.tr);
+        return;
+      }
+      final subPath = selectedFile!.fullPath!.replaceFirst(baseDir, "").replaceFirst(Constants.unixDirSeparate, "");
+      //todo 路径整理
+      localFilePath = "${await Constants.documentsPath}/${selectedFile!.name}".normalizePath;
+      final loadingController = LoadingProgressController();
+      final loadingDialog = Global.showLoadingDialog(
+        context: context,
+        loadingText: TranslationKey.downloading.tr,
+        controller: loadingController,
+      );
+      final downloadResult = await storageClient.downloadFile(
+        subPath,
+        localFilePath,
+        onProgress: (int count, int total) {
+          int percentage = (count * 100 / total).toInt();
+          loadingController.update(percentage, 100);
+        },
+      );
+      await loadingDialog.close();
+      if (!downloadResult) {
+        Global.showTipsDialog(context: context, text: TranslationKey.downloadFailed.tr);
+        return;
+      }
     }
     var loadingController = LoadingProgressController();
     final dialog = Global.showLoadingDialog(
@@ -616,9 +906,12 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     try {
       //如果启用了截图复制，临时关闭
       clipboardService.stopListenScreenshot();
-      final exInfo = await backupHandler.restore(File(result.files[0].path!), loadingController, backupTypes);
+      final exInfo = await backupHandler.restore(File(localFilePath), loadingController, backupTypes);
       dialog.close();
       if (exInfo != null) {
+        if (backupSource != BackupSource.local) {
+          File(localFilePath).delete();
+        }
         if (exInfo.err is UserCancelBackup) {
           Global.showSnackBarWarn(context: context, text: TranslationKey.cancelled.tr);
         } else {

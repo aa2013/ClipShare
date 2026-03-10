@@ -1,3 +1,4 @@
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/radio_group.dart' as rg;
 import 'package:flutter/material.dart';
@@ -44,7 +45,7 @@ class SingleSelectDialog<T> extends StatelessWidget {
                     onCancel.call();
                   }
                 },
-                child: Text(cancelText ?? "取消"),
+                child: Text(cancelText ?? TranslationKey.dialogCancelText.tr),
               ),
             ],
       ),

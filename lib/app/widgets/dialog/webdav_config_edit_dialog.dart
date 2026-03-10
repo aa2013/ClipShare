@@ -178,6 +178,11 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      fontWeight: FontWeight.w400,
+      color: theme.colorScheme.onSurface.withOpacity(0.8),
+    );
     return AlertDialog(
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -231,6 +236,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
         child: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextField(
                 controller: nameEditor,
@@ -368,6 +374,12 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
                     child: Text(TranslationKey.selection.tr),
                   ),
                 ],
+              ),
+
+              const SizedBox(height: 4),
+              Text(
+                TranslationKey.storagePathTips.tr,
+                style: textStyle,
               ),
             ],
           ),

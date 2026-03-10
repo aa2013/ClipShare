@@ -699,7 +699,12 @@ enum TranslationKey {
   clipboardPermissionRequestFailed,
   selectInstallerType,
   openPathAfterDownload,
-  updateFromZipTips;
+  updateFromZipTips,
+  local,
+  selectBackupSource,
+  notConfigured,
+  storagePathTips,
+  uploading;
 
   String get tr => name.tr;
 
