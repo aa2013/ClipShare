@@ -506,46 +506,48 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                               String selectedPath = baseDirEditor.text;
                               dialog = Global.showDialog(
                                 context,
-                                AlertDialog(
-                                  title: Text(TranslationKey.selectStoragePath.tr),
-                                  content: SizedBox(
-                                    width: 350,
-                                    child: FileBrowser(
-                                      onLoadFiles: (String path) async {
-                                        selectedPath = path.unixPath;
-                                        final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                        final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
-                                        final list = await s3client.list(path: path);
-                                        final dirs = list.where((item) => item.isDir);
-                                        return dirs.map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
-                                      },
-                                      onCreateDirectory: (current, name) {
-                                        final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                        final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
-                                        return s3client.createDirectory("$current/$name/");
-                                      },
-                                      shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
-                                      initialPath: Constants.unixDirSeparate,
+                                SafeArea(
+                                  child: AlertDialog(
+                                    title: Text(TranslationKey.selectStoragePath.tr),
+                                    content: SizedBox(
+                                      width: 350,
+                                      child: FileBrowser(
+                                        onLoadFiles: (String path) async {
+                                          selectedPath = path.unixPath;
+                                          final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                          final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                          final list = await s3client.list(path: path);
+                                          final dirs = list.where((item) => item.isDir);
+                                          return dirs.map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
+                                        },
+                                        onCreateDirectory: (current, name) {
+                                          final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                          final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                          return s3client.createDirectory("$current/$name/");
+                                        },
+                                        shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
+                                        initialPath: Constants.unixDirSeparate,
+                                      ),
                                     ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => dialog?.close(),
+                                        child: Text(TranslationKey.dialogCancelText.tr),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          if (selectedPath == "/") {
+                                            Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
+                                            return;
+                                          }
+                                          baseDirEditor.text = selectedPath;
+                                          dialog?.close();
+                                          validateFields();
+                                        },
+                                        child: Text(TranslationKey.dialogConfirmText.tr),
+                                      ),
+                                    ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => dialog?.close(),
-                                      child: Text(TranslationKey.dialogCancelText.tr),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        if (selectedPath == "/") {
-                                          Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
-                                          return;
-                                        }
-                                        baseDirEditor.text = selectedPath;
-                                        dialog?.close();
-                                        validateFields();
-                                      },
-                                      child: Text(TranslationKey.dialogConfirmText.tr),
-                                    ),
-                                  ],
                                 ),
                               );
                             },
