@@ -34,10 +34,10 @@ class AndroidNotificationListenerService extends GetxService {
         map["pkg"] = event.packageName;
         map["title"] = event.title;
         map["content"] = event.content;
-        if(hasImg){
-          try{
+        if (hasImg) {
+          try {
             map["img"] = base64Encode(event.extrasPicture!);
-          }catch(err,stack){
+          } catch (err, stack) {
             Log.debug(tag, "$err, $stack");
           }
         }
@@ -45,14 +45,17 @@ class AndroidNotificationListenerService extends GetxService {
         var appInfo = _sourceService.getAppInfoByAppId(pkgName);
         final missing = appInfo == null;
         appInfo = _sourceService.getAppInfoByAppId(pkgName);
-        var source = ClipboardSource(
-          id: pkgName,
-          name: appInfo?.name ?? "",
-          time: null,
-          iconB64: appInfo?.iconB64 ?? "",
-        );
+        ClipboardSource? source;
         if (missing && appInfo != null) {
           _sourceService.addOrUpdate(appInfo, true);
+        }
+        if (appInfo != null) {
+          source = ClipboardSource(
+            id: pkgName,
+            name: appInfo.name,
+            time: null,
+            iconB64: appInfo.iconB64,
+          );
         }
         HistoryDataListener.inst.onChanged(HistoryContentType.notification, jsonEncode(map), source);
       } catch (err, stack) {

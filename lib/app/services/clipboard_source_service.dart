@@ -83,6 +83,10 @@ class ClipboardSourceService extends GetxService {
     if (isCached(appInfo)) {
       return true;
     }
+    //如果图标为空，不要更新
+    if(appInfo.iconB64.isEmpty){
+      return true;
+    }
     final data = await _dbService.appInfoDao.getByUniqueIndex(appInfo.devId, appInfo.appId);
     var cnt = 0;
     if (data == null) {
