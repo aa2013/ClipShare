@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/obj_storage_type.dart';
@@ -33,6 +34,7 @@ class DebugPage extends GetView<DebugController> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Text(Abi.current().toString()),
         TextButton(
           onPressed: () async {
             for (var value in List.generate(100, (i) => i)) {

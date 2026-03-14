@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -30,6 +31,11 @@ class AppUpdateInfoUtil {
     TargetPlatform.windows: [".exe", ".zip"],
     TargetPlatform.linux: [".deb", ".AppImage", ".rpm"],
   };
+  static const String _archArm32 = "arm";
+  static const String _archArm64 = "arm64";
+  static const String _archX86 = "ia32";
+  static const String _archX64 = "x64";
+  static final String _currentArch = Abi.current().toString().split("_").last;
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
     try {
@@ -178,6 +184,14 @@ class AppUpdateInfoUtil {
           var downPath = "";
 
           if (Platform.isAndroid) {
+            //根据架构确定下载的安装包
+            if (_currentArch == _archArm32) {
+              downloadUrl = downloadUrl.replaceFirst("arm64-v8a", "armeabi-v7a");
+              fileName = fileName.replaceFirst("arm64-v8a", "armeabi-v7a");
+            } else if (_currentArch == _archX64) {
+              downloadUrl = downloadUrl.replaceFirst("arm64-v8a", "x86_64");
+              fileName = fileName.replaceFirst("arm64-v8a", "x86_64");
+            }
             fileName = "${latestVersion}_$fileName";
           }
           downPath = "${await Constants.updateDownloadFileDirPath}/$fileName";
