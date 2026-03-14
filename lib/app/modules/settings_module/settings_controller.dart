@@ -98,7 +98,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   Timer? _screenEventTimer;
 
   //region environment status widgets
-  final Rx<Widget> envStatusIcon = Rx<Widget>(const Loading(width: 32));
+  final Rx<Widget> envStatusIcon = Rx<Widget>(envLoadingIcon);
   final Rx<Widget> envStatusTipContent = Rx<Widget>(
     Text(
       TranslationKey.envStatusLoadingText.tr,
@@ -108,13 +108,14 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final Rx<Widget> envStatusTipDesc = Rx<Widget>(const SizedBox.shrink());
   final Rx<Color?> envStatusBgColor = Rx<Color?>(null);
   final Rx<Widget?> envStatusAction = Rx<Widget?>(null);
-  final warningIcon = const Icon(
+  static const envLoadingIcon = Loading(width: 32);
+  static const warningIcon = Icon(
     Icons.warning,
     size: 40,
   );
 
   Color get warningBgColor => Theme.of(Get.context!).colorScheme.surface;
-  final normalIcon = const Icon(
+  static const  normalIcon = const Icon(
     Icons.check_circle_outline_outlined,
     size: 40,
     color: Colors.blue,
@@ -489,9 +490,15 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     envStatusIcon.value = hasPermission && listening ? normalIcon : warningIcon;
     envStatusBgColor.value = hasPermission && listening ? null : warningBgColor;
     hasWorkingModePerm.value = hasPermission;
+    //有Shizuku/root权限后检查剪贴板权限状态
+    if(hasPermission){
+      clipboardHandler.hasPermission().then((v) {
+        hasClipboardPerm.value = v;
+      });
+    }
     if (restart) {
       await clipboardManager.stopListening();
-      clipboardManager.startListening(
+      await clipboardManager.startListening(
         env: mode,
         way: appConfig.clipboardListeningWay,
         notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
