@@ -52,7 +52,7 @@ class ClipboardService extends GetxService with ClipboardListener {
     if (Platform.isWindows) {
       final execDir = Directory(Platform.resolvedExecutable).parent.path;
       if (!FileUtil.testWriteable(execDir)) {
-        clipboardManager.setTempFileDir(await Constants.documentsPath);
+        clipboardManager.setTempFileDir(appConfig.documentsPath);
       }
       await clipboardManager.setExcludeFormatEnabled(appConfig.isExcludeFormat);
       _isExcludeFormat.value = await clipboardManager.isEnableExcludeFormat();

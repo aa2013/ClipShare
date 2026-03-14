@@ -18,6 +18,7 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_record.dar
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/data/repository/entity/tables/user.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -108,19 +109,20 @@ class DbService extends GetxService {
   }
 
   Future<DbService> init() async {
+    final appConfig = Get.find<ConfigService>();
     // 获取应用程序的文件目录
     var dbPath = "clipshare.db";
     //桌面端如果当前路径可写则使用当前路径，如开发环境或者便携版本
     if (PlatformExt.isDesktop) {
       if (Platform.isMacOS) {
-        var dirPath = await Constants.documentsPath;
+        var dirPath = appConfig.documentsPath;
         dbPath = "$dirPath/$dbPath".normalizePath;
       } else {
         var dirPath = Directory(Platform.resolvedExecutable).parent.path;
         if (FileUtil.testWriteable(dirPath)) {
           dbPath = "$dirPath/$dbPath".normalizePath;
         } else {
-          var dirPath = await Constants.documentsPath;
+          var dirPath = appConfig.documentsPath;
           dbPath = "$dirPath/$dbPath".normalizePath;
         }
       }

@@ -102,7 +102,7 @@ class SplashController extends GetxController {
         final startupPaths = <String>[
           Constants.windowsStartUpPath,
         ];
-        final userStartupPath = Constants.windowsUserStartUpPath;
+        final userStartupPath = appConfig.windowsUserStartUpPath;
         if (userStartupPath != null) {
           startupPaths.add(userStartupPath);
         }
@@ -117,7 +117,7 @@ class SplashController extends GetxController {
       }
       Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
       appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
-      var updateDir = Directory(await Constants.updateDownloadFileDirPath);
+      var updateDir = Directory(appConfig.updateDownloadFileDirPath);
       Log.debug(tag, "updateDir = $updateDir");
       if (await updateDir.exists()) {
         updateDir.delete(recursive: true);
