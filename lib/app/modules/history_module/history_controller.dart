@@ -482,7 +482,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
                 final appInfo = sourceService.getAppInfoByAppId(pkgName);
                 Uri? iconUri;
                 if (appInfo != null) {
-                  final documentsPath = await Constants.documentsPath;
+                  final documentsPath = appConfig.documentsPath;
                   final file = File(p.join(documentsPath, "appIcons", "${appInfo.appId}.png"));
                   await file.parent.create(recursive: true);
                   await file.writeAsBytes(appInfo.iconBytes);

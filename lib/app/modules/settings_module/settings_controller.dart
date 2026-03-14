@@ -711,8 +711,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     if (backupSource == BackupSource.local) {
       path = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
     } else {
-      //todo 路径整理
-      path = await Constants.documentsPath;
+      path = appConfig.documentsPath;
       if (backupSource == BackupSource.webdav) {
         storageClient = appConfig.webDAVConfig?.toClient();
       } else {
@@ -870,8 +869,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         return;
       }
       final subPath = selectedFile!.fullPath!.replaceFirst(baseDir, "").replaceFirst(Constants.unixDirSeparate, "");
-      //todo 路径整理
-      localFilePath = "${await Constants.documentsPath}/${selectedFile!.name}".normalizePath;
+      localFilePath = "${appConfig.documentsPath}/${selectedFile!.name}".normalizePath;
       final loadingController = LoadingProgressController();
       final loadingDialog = Global.showLoadingDialog(
         context: context,

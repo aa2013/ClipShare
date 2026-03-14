@@ -499,7 +499,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
           if (Platform.isAndroid) {
             downPath = "${Constants.androidDownloadPath}/ClipShare/$fileName";
           } else {
-            downPath = "${await Constants.documentsPath}/temp/$fileName";
+            downPath = "${appConfig.documentsPath}/temp/$fileName";
           }
           await dialog?.close();
           Global.showDownloadingDialog(

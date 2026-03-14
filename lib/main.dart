@@ -162,8 +162,11 @@ void showErrorInfoOnStartFailed(dynamic err, dynamic stack){
 
 //初始化主窗体服务
 Future<void> initMainServices() async {
+  final appConfig = ConfigService();
+  Get.put(appConfig, permanent: true);
+  await appConfig.initPath();
   await Get.putAsync(() => DbService().init(), permanent: true);
-  await Get.putAsync(() => ConfigService().init(), permanent: true);
+  await appConfig.init();
   final connRegistryService = ConnectionRegistryService();
   final registry = connRegistryService.registry;
   Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);

@@ -94,33 +94,7 @@ class Constants {
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
   static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
-
-  static Future<String> get documentsPath async {
-    String dir;
-    if (Platform.isAndroid) {
-      dir = "$androidDocumentsPath/ClipShare/";
-    } else {
-      dir = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
-    }
-    await Directory(dir).create(recursive: true);
-    return dir;
-  }
-
-  static Future<String> get updateDownloadFileDirPath async {
-    if (Platform.isAndroid) {
-      return Constants.androidDownloadPath;
-    } else {
-      return "${await Constants.documentsPath}/update";
-    }
-  }
-
   static const windowsStartUpPath = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
-
-  static String? get windowsUserStartUpPath {
-    final username = Platform.environment['USERNAME'];
-    if (username == null) return null;
-    return r'C:\Users\' + username + r'\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup';
-  }
 
   //配对时限（秒）
   static const pairingLimit = 60;

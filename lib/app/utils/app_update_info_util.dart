@@ -29,7 +29,7 @@ class AppUpdateInfoUtil {
   static const tag = "AppUpdateInfoUtil";
   static final _installerTypes = <TargetPlatform, List<String>>{
     TargetPlatform.windows: [".exe", ".zip"],
-    TargetPlatform.linux: [".deb", ".AppImage", ".rpm"],
+    TargetPlatform.linux: [".deb", ".rpm", ".AppImage"],
   };
   static const String _archArm32 = "arm";
   static const String _archArm64 = "arm64";
@@ -106,7 +106,6 @@ class AppUpdateInfoUtil {
     if (pkgTypes.isNotEmpty) {
       selectedType.value = pkgTypes[0];
       final theme = Theme.of(Get.context!);
-      const widthBox = SizedBox(width: 5);
       customWidget = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,23 +121,19 @@ class AppUpdateInfoUtil {
             ),
           ),
           Obx(() {
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: pkgTypes
-                    .map((pkgType) {
-                      return SingleGroupChip(
-                        text: pkgType,
-                        isSelected: pkgType == selectedType.value,
-                        onTap: () {
-                          selectedType.value = pkgType;
-                        },
-                      );
-                    })
-                    .cast<Widget>()
-                    .separateWith(widthBox)
-                    .toList(),
-              ),
+            return Wrap(
+              spacing: 5,
+              runSpacing: 5,
+              children: pkgTypes.map((pkgType) {
+                return SingleGroupChip(
+                  text: pkgType,
+                  isSelected: pkgType == selectedType.value,
+                  onTap: () {
+                    selectedType.value = pkgType;
+                  },
+                );
+              }).cast<Widget>()
+                .toList(),
             );
           }),
           Obx(() {
@@ -194,9 +189,12 @@ class AppUpdateInfoUtil {
             }
             fileName = "${latestVersion}_$fileName";
           }
-          downPath = "${await Constants.updateDownloadFileDirPath}/$fileName";
+          downPath = "${appConfig.updateDownloadFileDirPath}/$fileName";
           await File(downPath).parent.create();
           final openFolderAfterDownload = false.obs;
+          if(Platform.isLinux || Platform.isMacOS){
+            openFolderAfterDownload.value = true;
+          }
           Global.showDownloadingDialog(
             context: Get.context!,
             url: downloadUrl,
