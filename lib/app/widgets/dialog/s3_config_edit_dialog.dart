@@ -73,6 +73,8 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     super.initState();
     if (widget.initValue != null) {
       reset(widget.initValue!);
+    }else{
+      regionEditor.text = "us-east-1";
     }
   }
 

@@ -49,6 +49,7 @@ class S3Config {
       "baseDir": baseDir,
       "region": region,
       "type": type.name,
+      "pathStyle": pathStyle,
     };
   }
 
@@ -68,6 +69,7 @@ class S3Config {
     String? baseDir,
     ObjStorageType? type,
     String? region,
+    bool? pathStyle,
   }) {
     return S3Config(
       endPoint: endPoint ?? this.endPoint,
@@ -78,6 +80,7 @@ class S3Config {
       baseDir: baseDir ?? this.baseDir,
       type: type ?? this.type,
       region: region ?? this.region,
+      pathStyle: pathStyle ?? this.pathStyle,
     );
   }
 }
