@@ -27,8 +27,7 @@ class EnvironmentStatusCard extends StatelessWidget {
     return Card(
       color: backgroundColor,
       elevation: 0,
-      margin:
-          EdgeInsets.symmetric(vertical: edgeInset),
+      margin: EdgeInsets.symmetric(vertical: edgeInset),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap ?? () {},

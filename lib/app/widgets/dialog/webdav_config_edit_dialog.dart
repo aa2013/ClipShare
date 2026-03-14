@@ -183,254 +183,257 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
       fontWeight: FontWeight.w400,
       color: theme.colorScheme.onSurface.withOpacity(0.8),
     );
-    return AlertDialog(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(TranslationKey.configureWebDAVServer.tr),
-          if (PlatformExt.isMobile)
-            Tooltip(
-              message: TranslationKey.scan.tr,
-              child: IconButton(
-                onPressed: testingConnection
-                    ? null
-                    : () async {
-                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
-                        if (!hasPerm) {
-                          await PermissionHelper.reqAndroidCameraPerm();
-                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+    return SafeArea(
+      child: AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(TranslationKey.configureWebDAVServer.tr),
+            if (PlatformExt.isMobile)
+              Tooltip(
+                message: TranslationKey.scan.tr,
+                child: IconButton(
+                  onPressed: testingConnection
+                      ? null
+                      : () async {
+                          var hasPerm = await PermissionHelper.testAndroidCameraPerm();
                           if (!hasPerm) {
-                            Global.showTipsDialog(
-                              context: context,
-                              text: TranslationKey.noCameraPermission.tr,
-                            );
-                            return;
+                            await PermissionHelper.reqAndroidCameraPerm();
+                            hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                            if (!hasPerm) {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.noCameraPermission.tr,
+                              );
+                              return;
+                            }
                           }
-                        }
-                        final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
-                        try {
-                          if (json != null) {
-                            final result = WebDAVConfig.fromJson(json);
-                            setState(() {
-                              reset(result);
-                            });
-                          } else {
+                          final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                          try {
+                            if (json != null) {
+                              final result = WebDAVConfig.fromJson(json);
+                              setState(() {
+                                reset(result);
+                              });
+                            } else {
+                              Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                              Log.warn(tag, "scan result is null");
+                            }
+                          } catch (err, stack) {
                             Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                            Log.warn(tag, "scan result is null");
+                            Log.error(tag, err, stack);
                           }
-                        } catch (err, stack) {
-                          Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                          Log.error(tag, err, stack);
-                        }
-                      },
-                icon: const Icon(
-                  Icons.qr_code_scanner,
-                  color: Colors.blueGrey,
-                ),
-              ),
-            ),
-        ],
-      ),
-      content: SizedBox(
-        width: 350,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: nameEditor,
-                enabled: !testingConnection,
-                decoration: InputDecoration(
-                  labelText: TranslationKey.configName.tr,
-                  errorText: nameErrText,
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (v) {
-                  validateNameEditor();
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: serverEditor,
-                enabled: !testingConnection,
-                decoration: InputDecoration(
-                  labelText: TranslationKey.serverUrl.tr,
-                  hintText: "https://example.com/webdav",
-                  hintStyle: TextStyle(color: Colors.grey[400]),
-                  errorText: serverErrText,
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (v) {
-                  validateServerEditor();
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: usernameEditor,
-                enabled: !testingConnection,
-                decoration: InputDecoration(
-                  labelText: TranslationKey.username.tr,
-                  errorText: usernameErrText,
-                  border: const OutlineInputBorder(),
-                ),
-                onChanged: (v) {
-                  validateUsernameEditor();
-                },
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordEditor,
-                enabled: !testingConnection,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: TranslationKey.password.tr,
-                  errorText: passwordErrText,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+                        },
+                  icon: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.blueGrey,
                   ),
                 ),
-                onChanged: (v) {
-                  validatePasswordEditor();
-                },
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Tooltip(
-                      message: TranslationKey.readonly.tr,
-                      child: TextField(
-                        controller: baseDirEditor,
-                        readOnly: true,
-                        decoration: InputDecoration(
-                          labelText: TranslationKey.storagePath.tr,
-                          hintText: TranslationKey.storagePathHint.tr,
-                          hintStyle: TextStyle(color: Colors.grey[400]),
-                          errorText: baseDirErrText,
-                          border: const OutlineInputBorder(),
+          ],
+        ),
+        content: SizedBox(
+          width: 350,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.configName.tr,
+                    errorText: nameErrText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (v) {
+                    validateNameEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: serverEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.serverUrl.tr,
+                    hintText: "https://example.com/webdav",
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    errorText: serverErrText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (v) {
+                    validateServerEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: usernameEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.username.tr,
+                    errorText: usernameErrText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (v) {
+                    validateUsernameEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordEditor,
+                  enabled: !testingConnection,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.password.tr,
+                    errorText: passwordErrText,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  onChanged: (v) {
+                    validatePasswordEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Tooltip(
+                        message: TranslationKey.readonly.tr,
+                        child: TextField(
+                          controller: baseDirEditor,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: TranslationKey.storagePath.tr,
+                            hintText: TranslationKey.storagePathHint.tr,
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            errorText: baseDirErrText,
+                            border: const OutlineInputBorder(),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton(
-                    onPressed: testingConnection
-                        ? null
-                        : () {
-                            DialogController? dialog;
-                            String selectedPath = baseDirEditor.text;
-                            dialog = Global.showDialog(
-                              context,
-                              SafeArea(
-                                child: AlertDialog(
-                                  title: Text(TranslationKey.selectStoragePath.tr),
-                                  content: SizedBox(
-                                    width: 350,
-                                    child: FileBrowser(
-                                      onLoadFiles: (String path) async {
-                                        selectedPath = path.unixPath;
-                                        final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                        final list = await WebDAVClient(tempConfig).list(path: path);
-                                        return list.where((item) => item.isDir).map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
-                                      },
-                                      onCreateDirectory: (current, name) {
-                                        final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                        final client = WebDAVClient(tempConfig);
-                                        return client.createDirectory("$current/$name/");
-                                      },
-                                      shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
-                                      initialPath: Constants.unixDirSeparate,
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: testingConnection
+                          ? null
+                          : () {
+                              DialogController? dialog;
+                              String selectedPath = baseDirEditor.text;
+                              dialog = Global.showDialog(
+                                context,
+                                SafeArea(
+                                  child: AlertDialog(
+                                    title: Text(TranslationKey.selectStoragePath.tr),
+                                    content: SizedBox(
+                                      width: 350,
+                                      child: FileBrowser(
+                                        onLoadFiles: (String path) async {
+                                          selectedPath = path.unixPath;
+                                          final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                          final list = await WebDAVClient(tempConfig).list(path: path);
+                                          return list.where((item) => item.isDir).map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
+                                        },
+                                        onCreateDirectory: (current, name) {
+                                          final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                          final client = WebDAVClient(tempConfig);
+                                          return client.createDirectory("$current/$name/");
+                                        },
+                                        shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
+                                        initialPath: Constants.unixDirSeparate,
+                                      ),
                                     ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => dialog?.close(),
+                                        child: Text(TranslationKey.dialogCancelText.tr),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          if (selectedPath == "/") {
+                                            Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
+                                            return;
+                                          }
+                                          baseDirEditor.text = selectedPath;
+                                          dialog?.close();
+                                          validateFields();
+                                        },
+                                        child: Text(TranslationKey.dialogConfirmText.tr),
+                                      ),
+                                    ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => dialog?.close(),
-                                      child: Text(TranslationKey.dialogCancelText.tr),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        if (selectedPath == "/") {
-                                          Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
-                                          return;
-                                        }
-                                        baseDirEditor.text = selectedPath;
-                                        dialog?.close();
-                                        validateFields();
-                                      },
-                                      child: Text(TranslationKey.dialogConfirmText.tr),
-                                    ),
-                                  ],
                                 ),
-                              ),
-                            );
-                          },
-                    child: Text(TranslationKey.selection.tr),
-                  ),
-                ],
-              ),
+                              );
+                            },
+                      child: Text(TranslationKey.selection.tr),
+                    ),
+                  ],
+                ),
 
-              const SizedBox(height: 4),
-              Text(
-                TranslationKey.storagePathTips.tr,
-                style: textStyle,
+                const SizedBox(height: 4),
+                Text(
+                  TranslationKey.storagePathTips.tr,
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          Row(
+            children: [
+              Visibility(
+                visible: testingConnection,
+                replacement: TextButton(
+                  onPressed: _testConnection,
+                  child: Text(TranslationKey.checkConnection.tr),
+                ),
+                child: const Loading(),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        if (testingConnection) {
+                          setState(() {
+                            testingConnection = false;
+                          });
+                          return;
+                        }
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(TranslationKey.dialogCancelText.tr),
+                    ),
+                    TextButton(
+                      onPressed: testingConnection
+                          ? null
+                          : () {
+                              if (validateFields()) {
+                                widget.onOk(config);
+                                Navigator.of(context).pop();
+                              }
+                            },
+
+                      child: Text(TranslationKey.save.tr),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
-      actions: [
-        Row(
-          children: [
-            Visibility(
-              visible: testingConnection,
-              replacement: TextButton(
-                onPressed: _testConnection,
-                child: Text(TranslationKey.checkConnection.tr),
-              ),
-              child: const Loading(),
-            ),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      if (testingConnection) {
-                        setState(() {
-                          testingConnection = false;
-                        });
-                        return;
-                      }
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(TranslationKey.dialogCancelText.tr),
-                  ),
-                  TextButton(
-                    onPressed: testingConnection
-                        ? null
-                        : () {
-                            if (validateFields()) {
-                              widget.onOk(config);
-                              Navigator.of(context).pop();
-                            }
-                          },
-                    child: Text(TranslationKey.save.tr),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
 }

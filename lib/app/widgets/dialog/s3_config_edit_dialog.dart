@@ -73,7 +73,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     super.initState();
     if (widget.initValue != null) {
       reset(widget.initValue!);
-    }else{
+    } else {
       regionEditor.text = "us-east-1";
     }
   }
@@ -246,372 +246,374 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
       fontWeight: FontWeight.w400,
       color: theme.colorScheme.onSurface.withOpacity(0.8),
     );
-    return AlertDialog(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(TranslationKey.configureS3Storage.tr),
-          if (PlatformExt.isMobile)
-            Tooltip(
-              message: TranslationKey.scan.tr,
-              child: IconButton(
-                onPressed: testingConnection
-                    ? null
-                    : () async {
-                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
-                        if (!hasPerm) {
-                          await PermissionHelper.reqAndroidCameraPerm();
-                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+    return SafeArea(
+      child: AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(TranslationKey.configureS3Storage.tr),
+            if (PlatformExt.isMobile)
+              Tooltip(
+                message: TranslationKey.scan.tr,
+                child: IconButton(
+                  onPressed: testingConnection
+                      ? null
+                      : () async {
+                          var hasPerm = await PermissionHelper.testAndroidCameraPerm();
                           if (!hasPerm) {
-                            Global.showTipsDialog(
-                              context: context,
-                              text: TranslationKey.noCameraPermission.tr,
-                            );
-                            return;
+                            await PermissionHelper.reqAndroidCameraPerm();
+                            hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                            if (!hasPerm) {
+                              Global.showTipsDialog(
+                                context: context,
+                                text: TranslationKey.noCameraPermission.tr,
+                              );
+                              return;
+                            }
                           }
-                        }
-                        final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
-                        try {
-                          if (json != null) {
-                            final result = S3Config.fromJson(json);
-                            setState(() {
-                              reset(result);
-                            });
-                          } else {
+                          final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                          try {
+                            if (json != null) {
+                              final result = S3Config.fromJson(json);
+                              setState(() {
+                                reset(result);
+                              });
+                            } else {
+                              Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                              Log.warn(tag, "scan result is null");
+                            }
+                          } catch (err, stack) {
+                            Log.error(tag, err, stack);
                             Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                            Log.warn(tag, "scan result is null");
                           }
-                        } catch (err, stack) {
-                          Log.error(tag, err, stack);
-                          Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                        }
-                      },
-                icon: const Icon(
-                  Icons.qr_code_scanner,
-                  color: Colors.blueGrey,
+                        },
+                  icon: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.blueGrey,
+                  ),
                 ),
               ),
-            ),
-        ],
-      ),
-      content: SizedBox(
-        width: 350,
-        child: SingleChildScrollView(
-          child: Container(
-            margin: 5.insetV,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Storage Type Selector
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<ObjStorageType>(
-                        value: objectStorageType,
-                        decoration: InputDecoration(
-                          labelText: TranslationKey.objectStorageType.tr,
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: ObjStorageType.values.map((type) {
-                          return DropdownMenuItem<ObjStorageType>(
-                            value: type,
-                            child: Text(type.displayName),
-                          );
-                        }).toList(),
-                        onChanged: testingConnection
-                            ? null
-                            : (ObjStorageType? value) {
-                                if (value != null) {
-                                  setState(() {
-                                    objectStorageType = value;
-                                    if (objectStorageType != ObjStorageType.aliyunOss) {
-                                      regionErrText = null;
-                                    }
-                                  });
-                                }
-                              },
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.info_outline, color: Colors.blueGrey),
-                      onPressed: () {
-                        Global.showTipsDialog(context: context, text: TranslationKey.s3TypeTips.tr);
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Configuration Name
-                TextField(
-                  controller: nameEditor,
-                  enabled: !testingConnection,
-                  decoration: InputDecoration(
-                    labelText: TranslationKey.configName.tr,
-                    errorText: nameErrText,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (v) {
-                    validateNameEditor();
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Endpoint
-                TextField(
-                  controller: endPointEditor,
-                  enabled: !testingConnection,
-                  decoration: InputDecoration(
-                    labelText: TranslationKey.endpoint.tr,
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    errorText: endPointErrText,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (v) {
-                    validateEndPointEditor();
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Access Key
-                TextField(
-                  controller: accessKeyEditor,
-                  enabled: !testingConnection,
-                  obscureText: _obscureAccessKey,
-                  decoration: InputDecoration(
-                    labelText: TranslationKey.s3AccessKey.tr,
-                    errorText: accessKeyErrText,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureAccessKey ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureAccessKey = !_obscureAccessKey;
-                        });
-                      },
-                    ),
-                  ),
-                  onChanged: (v) {
-                    validateAccessKeyEditor();
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Secret Key
-                TextField(
-                  controller: secretKeyEditor,
-                  enabled: !testingConnection,
-                  obscureText: _obscureSecretKey,
-                  decoration: InputDecoration(
-                    labelText: TranslationKey.s3SecretKey.tr,
-                    errorText: secretKeyErrText,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscureSecretKey ? Icons.visibility : Icons.visibility_off,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureSecretKey = !_obscureSecretKey;
-                        });
-                      },
-                    ),
-                  ),
-                  onChanged: (v) {
-                    validateSecretKeyEditor();
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Bucket Name
-                TextField(
-                  controller: bucketNameEditor,
-                  enabled: !testingConnection,
-                  decoration: InputDecoration(
-                    labelText: TranslationKey.bucketName.tr,
-                    errorText: bucketNameErrText,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (v) {
-                    validateBucketNameEditor();
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Region (optional)
-                TextField(
-                  controller: regionEditor,
-                  enabled: !testingConnection,
-                  decoration: InputDecoration(
-                    labelText: '${TranslationKey.region.tr}${objectStorageType == ObjStorageType.aliyunOss ? '' : ' (${TranslationKey.optional.tr})'}',
-                    hintStyle: TextStyle(color: Colors.grey[400]),
-                    border: const OutlineInputBorder(),
-                    errorText: regionErrText,
-                  ),
-                  onChanged: (v) {
-                    if (objectStorageType == ObjStorageType.aliyunOss) {
-                      validateRegionEditor();
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // PathStyle
-                DropdownButtonFormField<bool>(
-                  value: pathStyle,
-                  decoration: const InputDecoration(
-                    labelText: "PathStyle",
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [true, false].map((v) {
-                    return DropdownMenuItem<bool>(
-                      value: v,
-                      child: Text(v.toString()),
-                    );
-                  }).toList(),
-                  onChanged: (bool? selected) {
-                    setState(() {
-                      pathStyle = selected ?? false;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Base Directory
-                Row(
-                  children: [
-                    Expanded(
-                      child: Tooltip(
-                        message: TranslationKey.readonly.tr,
-                        child: TextField(
-                          controller: baseDirEditor,
-                          readOnly: true,
+          ],
+        ),
+        content: SizedBox(
+          width: 350,
+          child: SingleChildScrollView(
+            child: Container(
+              margin: 5.insetV,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Storage Type Selector
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<ObjStorageType>(
+                          value: objectStorageType,
                           decoration: InputDecoration(
-                            labelText: TranslationKey.storagePath.tr,
-                            hintText: TranslationKey.storagePathHint.tr,
-                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            labelText: TranslationKey.objectStorageType.tr,
                             border: const OutlineInputBorder(),
-                            errorText: baseDirErrText,
+                          ),
+                          items: ObjStorageType.values.map((type) {
+                            return DropdownMenuItem<ObjStorageType>(
+                              value: type,
+                              child: Text(type.displayName),
+                            );
+                          }).toList(),
+                          onChanged: testingConnection
+                              ? null
+                              : (ObjStorageType? value) {
+                                  if (value != null) {
+                                    setState(() {
+                                      objectStorageType = value;
+                                      if (objectStorageType != ObjStorageType.aliyunOss) {
+                                        regionErrText = null;
+                                      }
+                                    });
+                                  }
+                                },
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline, color: Colors.blueGrey),
+                        onPressed: () {
+                          Global.showTipsDialog(context: context, text: TranslationKey.s3TypeTips.tr);
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Configuration Name
+                  TextField(
+                    controller: nameEditor,
+                    enabled: !testingConnection,
+                    decoration: InputDecoration(
+                      labelText: TranslationKey.configName.tr,
+                      errorText: nameErrText,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (v) {
+                      validateNameEditor();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Endpoint
+                  TextField(
+                    controller: endPointEditor,
+                    enabled: !testingConnection,
+                    decoration: InputDecoration(
+                      labelText: TranslationKey.endpoint.tr,
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      errorText: endPointErrText,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (v) {
+                      validateEndPointEditor();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Access Key
+                  TextField(
+                    controller: accessKeyEditor,
+                    enabled: !testingConnection,
+                    obscureText: _obscureAccessKey,
+                    decoration: InputDecoration(
+                      labelText: TranslationKey.s3AccessKey.tr,
+                      errorText: accessKeyErrText,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureAccessKey ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureAccessKey = !_obscureAccessKey;
+                          });
+                        },
+                      ),
+                    ),
+                    onChanged: (v) {
+                      validateAccessKeyEditor();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Secret Key
+                  TextField(
+                    controller: secretKeyEditor,
+                    enabled: !testingConnection,
+                    obscureText: _obscureSecretKey,
+                    decoration: InputDecoration(
+                      labelText: TranslationKey.s3SecretKey.tr,
+                      errorText: secretKeyErrText,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureSecretKey ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureSecretKey = !_obscureSecretKey;
+                          });
+                        },
+                      ),
+                    ),
+                    onChanged: (v) {
+                      validateSecretKeyEditor();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Bucket Name
+                  TextField(
+                    controller: bucketNameEditor,
+                    enabled: !testingConnection,
+                    decoration: InputDecoration(
+                      labelText: TranslationKey.bucketName.tr,
+                      errorText: bucketNameErrText,
+                      border: const OutlineInputBorder(),
+                    ),
+                    onChanged: (v) {
+                      validateBucketNameEditor();
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Region (optional)
+                  TextField(
+                    controller: regionEditor,
+                    enabled: !testingConnection,
+                    decoration: InputDecoration(
+                      labelText: '${TranslationKey.region.tr}${objectStorageType == ObjStorageType.aliyunOss ? '' : ' (${TranslationKey.optional.tr})'}',
+                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      border: const OutlineInputBorder(),
+                      errorText: regionErrText,
+                    ),
+                    onChanged: (v) {
+                      if (objectStorageType == ObjStorageType.aliyunOss) {
+                        validateRegionEditor();
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // PathStyle
+                  DropdownButtonFormField<bool>(
+                    value: pathStyle,
+                    decoration: const InputDecoration(
+                      labelText: "PathStyle",
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [true, false].map((v) {
+                      return DropdownMenuItem<bool>(
+                        value: v,
+                        child: Text(v.toString()),
+                      );
+                    }).toList(),
+                    onChanged: (bool? selected) {
+                      setState(() {
+                        pathStyle = selected ?? false;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Base Directory
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Tooltip(
+                          message: TranslationKey.readonly.tr,
+                          child: TextField(
+                            controller: baseDirEditor,
+                            readOnly: true,
+                            decoration: InputDecoration(
+                              labelText: TranslationKey.storagePath.tr,
+                              hintText: TranslationKey.storagePathHint.tr,
+                              hintStyle: TextStyle(color: Colors.grey[400]),
+                              border: const OutlineInputBorder(),
+                              errorText: baseDirErrText,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton(
-                      onPressed: testingConnection
-                          ? null
-                          : () {
-                              DialogController? dialog;
-                              String selectedPath = baseDirEditor.text;
-                              dialog = Global.showDialog(
-                                context,
-                                SafeArea(
-                                  child: AlertDialog(
-                                    title: Text(TranslationKey.selectStoragePath.tr),
-                                    content: SizedBox(
-                                      width: 350,
-                                      child: FileBrowser(
-                                        onLoadFiles: (String path) async {
-                                          selectedPath = path.unixPath;
-                                          final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                          final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
-                                          final list = await s3client.list(path: path);
-                                          final dirs = list.where((item) => item.isDir);
-                                          return dirs.map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
-                                        },
-                                        onCreateDirectory: (current, name) {
-                                          final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                          final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
-                                          return s3client.createDirectory("$current/$name/");
-                                        },
-                                        shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
-                                        initialPath: Constants.unixDirSeparate,
+                      const SizedBox(width: 8),
+                      TextButton(
+                        onPressed: testingConnection
+                            ? null
+                            : () {
+                                DialogController? dialog;
+                                String selectedPath = baseDirEditor.text;
+                                dialog = Global.showDialog(
+                                  context,
+                                  SafeArea(
+                                    child: AlertDialog(
+                                      title: Text(TranslationKey.selectStoragePath.tr),
+                                      content: SizedBox(
+                                        width: 350,
+                                        child: FileBrowser(
+                                          onLoadFiles: (String path) async {
+                                            selectedPath = path.unixPath;
+                                            final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                            final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                            final list = await s3client.list(path: path);
+                                            final dirs = list.where((item) => item.isDir);
+                                            return dirs.map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
+                                          },
+                                          onCreateDirectory: (current, name) {
+                                            final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
+                                            final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                            return s3client.createDirectory("$current/$name/");
+                                          },
+                                          shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,
+                                          initialPath: Constants.unixDirSeparate,
+                                        ),
                                       ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => dialog?.close(),
+                                          child: Text(TranslationKey.dialogCancelText.tr),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            if (selectedPath == "/") {
+                                              Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
+                                              return;
+                                            }
+                                            baseDirEditor.text = selectedPath;
+                                            dialog?.close();
+                                            validateFields();
+                                          },
+                                          child: Text(TranslationKey.dialogConfirmText.tr),
+                                        ),
+                                      ],
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => dialog?.close(),
-                                        child: Text(TranslationKey.dialogCancelText.tr),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          if (selectedPath == "/") {
-                                            Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
-                                            return;
-                                          }
-                                          baseDirEditor.text = selectedPath;
-                                          dialog?.close();
-                                          validateFields();
-                                        },
-                                        child: Text(TranslationKey.dialogConfirmText.tr),
-                                      ),
-                                    ],
                                   ),
-                                ),
-                              );
-                            },
-                      child: Text(TranslationKey.selection.tr),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 4),
-                Text(
-                  TranslationKey.storagePathTips.tr,
-                  style: textStyle,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        Row(
-          children: [
-            Visibility(
-              visible: testingConnection,
-              replacement: TextButton(
-                onPressed: _testConnection,
-                child: Text(TranslationKey.checkConnection.tr),
-              ),
-              child: const Loading(),
-            ),
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      if (testingConnection) {
-                        setState(() {
-                          testingConnection = false;
-                        });
-                        return;
-                      }
-                      Navigator.of(context).pop();
-                    },
-                    child: Text(TranslationKey.dialogCancelText.tr),
+                                );
+                              },
+                        child: Text(TranslationKey.selection.tr),
+                      ),
+                    ],
                   ),
-                  TextButton(
-                    onPressed: testingConnection
-                        ? null
-                        : () {
-                            if (validateFields()) {
-                              widget.onOk(config);
-                              Navigator.of(context).pop();
-                            }
-                          },
-                    child: Text(TranslationKey.save.tr),
+
+                  const SizedBox(height: 4),
+                  Text(
+                    TranslationKey.storagePathTips.tr,
+                    style: textStyle,
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ],
+        actions: [
+          Row(
+            children: [
+              Visibility(
+                visible: testingConnection,
+                replacement: TextButton(
+                  onPressed: _testConnection,
+                  child: Text(TranslationKey.checkConnection.tr),
+                ),
+                child: const Loading(),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        if (testingConnection) {
+                          setState(() {
+                            testingConnection = false;
+                          });
+                          return;
+                        }
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(TranslationKey.dialogCancelText.tr),
+                    ),
+                    TextButton(
+                      onPressed: testingConnection
+                          ? null
+                          : () {
+                              if (validateFields()) {
+                                widget.onOk(config);
+                                Navigator.of(context).pop();
+                              }
+                            },
+                      child: Text(TranslationKey.save.tr),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
