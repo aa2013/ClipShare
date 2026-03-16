@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
+import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
@@ -132,6 +133,13 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   }
 
   @override
+  Future<void> onWindowResized() async {
+    super.onWindowResized();
+    final size = await windowManager.getSize();
+    await multiWindowChannelService.updateWindowSize(0, WindowType.history, size);
+  }
+
+  @override
   void onCloseBtnClicked(bool isHide) {
     multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
   }
@@ -256,8 +264,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     return Scaffold(
       body: Column(
         children: [
-          if(Platform.isMacOS)
-            const SizedBox(height: 15),
+          if (Platform.isMacOS) const SizedBox(height: 15),
           if (!filterLoading)
             Container(
               margin: const EdgeInsets.only(top: 10),

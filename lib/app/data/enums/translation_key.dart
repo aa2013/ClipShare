@@ -704,7 +704,8 @@ enum TranslationKey {
   selectBackupSource,
   notConfigured,
   storagePathTips,
-  uploading;
+  uploading,
+  preferenceSettingsRecordsDialogSize;
 
   String get tr => name.tr;
 

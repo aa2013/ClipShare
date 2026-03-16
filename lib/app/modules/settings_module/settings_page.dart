@@ -515,7 +515,7 @@ class SettingsPage extends GetView<SettingsController> {
                         ),
                         show: (v) => Platform.isWindows || Platform.isMacOS,
                       ),
-                      //历史记录弹窗记住上次位置
+                      //弹窗记住上次位置
                       SettingCard(
                         title: Text(
                           TranslationKey.preferenceSettingsRecordsDialogLocation.tr,
@@ -530,6 +530,21 @@ class SettingsPage extends GetView<SettingsController> {
                             if (checked) {
                               appConfig.setHistoryDialogPosition("");
                             }
+                          },
+                        ),
+                        show: (v) => PlatformExt.isDesktop,
+                      ),
+                      //弹窗记住上次尺寸
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.preferenceSettingsRecordsDialogSize.tr,
+                        ),
+                        value: appConfig.rememberPopupWindowSize,
+                        action: (v) => Switch(
+                          value: v,
+                          onChanged: (checked) {
+                            HapticFeedback.mediumImpact();
+                            appConfig.setRememberPopupWindowSize(checked);
                           },
                         ),
                         show: (v) => PlatformExt.isDesktop,

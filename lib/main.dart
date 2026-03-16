@@ -54,14 +54,6 @@ Future<void> main(List<String> args) async {
       multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
       switch (multiWindowArgs.tag) {
         case MultiWindowTag.history:
-          final wcs = Get.find<WindowControlService>();
-          wcs.setAlwaysOnTop(true);
-          //linux会导致窗口变成初始大小
-          if (Platform.isWindows) {
-            wcs.setResizable(false);
-          }
-          wcs.setMinimizable(false);
-          wcs.setMaximizable(false);
           home = HistoryWindow(
             windowController: WindowController.fromWindowId(windowId),
             args: multiWindowArgs.otherArgs,
@@ -69,14 +61,6 @@ Future<void> main(List<String> args) async {
           title = multiWindowArgs.title;
           break;
         case MultiWindowTag.devices:
-          final wcs = Get.find<WindowControlService>();
-          wcs.setAlwaysOnTop(true);
-          //linux会导致窗口变成初始大小
-          if (Platform.isWindows) {
-            wcs.setResizable(false);
-          }
-          wcs.setMinimizable(false);
-          wcs.setMaximizable(false);
           home = FileSenderWindow(
             windowController: WindowController.fromWindowId(windowId),
             args: multiWindowArgs.otherArgs,
@@ -84,6 +68,10 @@ Future<void> main(List<String> args) async {
           title = multiWindowArgs.title;
           break;
       }
+      final wcs = Get.find<WindowControlService>();
+      wcs.setAlwaysOnTop(true);
+      wcs.setMinimizable(false);
+      wcs.setMaximizable(false);
       await initMultiWindowServices();
       runMain(home, title, multiWindowArgs);
     } else {

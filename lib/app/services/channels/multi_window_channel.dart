@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
+import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
@@ -163,6 +164,18 @@ class MultiWindowChannelService extends GetxService {
       targetWindowId,
       MultiWindowMethod.updateAllBaseData.name,
       jsonEncode({}),
+    );
+  }
+
+  ///更新窗体尺寸
+  Future<void> updateWindowSize(int targetWindowId, WindowType windowType, Size size) {
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.updateWindowSize.name,
+      jsonEncode({
+        "size": "${size.width}x${size.height}",
+        "type": windowType.name,
+      }),
     );
   }
 }

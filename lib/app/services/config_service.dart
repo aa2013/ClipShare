@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
@@ -566,6 +567,21 @@ class ConfigService extends GetxService {
 
   bool get isExcludeFormat => _excludeFormat.value;
 
+  ///是否记录弹窗大小
+  final _rememberPopupWindowSize = false.obs;
+
+  bool get rememberPopupWindowSize => _rememberPopupWindowSize.value;
+
+  ///历史记录弹窗大小
+  final _historyWindowSize = Rx<Size?>(null);
+
+  Size? get historyWindowSize => _historyWindowSize.value;
+
+  ///文件发送弹窗大小
+  final _fileSenderWindowSize = Rx<Size?>(null);
+
+  Size? get fileSenderWindowSize => _fileSenderWindowSize.value;
+
   //endregion
 
   //endregion
@@ -774,6 +790,33 @@ class ConfigService extends GetxService {
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
     _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
     _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
+    _rememberPopupWindowSize.value = await cfg.getConfigByKey(ConfigKey.rememberPopupWindowSize, false);
+    _historyWindowSize.value = await cfg.getConfigByKey(
+      ConfigKey.historyWindowSize,
+      null,
+      convert: (sizeStr) {
+        try {
+          final [width, height] = sizeStr.split("x").map((e) => e.toDouble()).toList();
+          return Size(width, height);
+        } catch (_) {
+          //ignored
+        }
+        return null;
+      },
+    );
+    _fileSenderWindowSize.value = await cfg.getConfigByKey(
+      ConfigKey.fileSenderWindowSize,
+      null,
+      convert: (sizeStr) {
+        try {
+          final [width, height] = sizeStr.split("x").map((e) => e.toDouble()).toList();
+          return Size(width, height);
+        } catch (_) {
+          //ignored
+        }
+        return null;
+      },
+    );
   }
 
   ///初始化路径信息
@@ -1399,6 +1442,34 @@ class ConfigService extends GetxService {
     _excludeFormat.value = value;
     final clipboardService = Get.find<ClipboardService>();
     await clipboardService.setExcludeFormat(value);
+  }
+
+  ///设置是否记录弹窗大小
+  Future<void> setRememberPopupWindowSize(bool value) async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.rememberPopupWindowSize, value.toString());
+    _rememberPopupWindowSize.value = value;
+  }
+
+  ///更新弹窗大小
+  Future<void> updatePopupWindowSize(WindowType type, Size size) async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    late final ConfigKey key;
+    switch (type) {
+      case WindowType.history:
+        key = ConfigKey.historyWindowSize;
+        break;
+      case WindowType.fileSender:
+        key = ConfigKey.fileSenderWindowSize;
+        break;
+      default:
+        return;
+    }
+    await configDao.addOrUpdate(key, "${size.width.toStringAsFixed(2)}x${size.height.toStringAsFixed(2)}");
   }
 
   //endregion

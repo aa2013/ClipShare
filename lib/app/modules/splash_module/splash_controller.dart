@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
@@ -250,6 +251,16 @@ class SplashController extends GetxController {
           var windowId = args["closeWindowId"] as int;
           multiWindowService.addHideWindow(windowId);
           break;
+        case MultiWindowMethod.updateWindowSize:
+          //判断是否记录窗体大小，并记录
+          if (!appConfig.rememberPopupWindowSize) {
+            break;
+          }
+          final type = WindowType.parse(args["type"]);
+          final [width, height] = (args["size"] as String).split("x").map((item) => item.toDouble()).toList();
+          final size = Size(width, height);
+          await appConfig.updatePopupWindowSize(type, size);
+          break;
         default:
       }
       //都不符合，返回空
@@ -292,13 +303,16 @@ class SplashController extends GetxController {
           var contentLst = lst
               // 过滤掉非通知数据
               .where((e) => !e.type.containsIgnoreCase(HistoryContentType.notification.name))
-              .map((e) => {
+              .map(
+                (e) => {
                   "id": e.id,
                   "content": e.content,
                   "time": e.time,
                   "top": e.top,
                   "type": e.type,
-                }).toList();
+                },
+              )
+              .toList();
           return Future(() => contentLst);
         default:
       }
