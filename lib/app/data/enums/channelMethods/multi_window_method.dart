@@ -10,5 +10,6 @@ enum MultiWindowMethod {
   syncFiles,
   storeWindowPos,
   showWindowFromHide,
-  closeWindow;
+  closeWindow,
+  updateWindowSize,
 }

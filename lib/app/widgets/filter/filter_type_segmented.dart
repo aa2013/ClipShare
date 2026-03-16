@@ -22,15 +22,19 @@ class FilterTypeSegmented extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     bool isDarkMode = Get.theme.brightness == Brightness.dark;
-    return TinySegmentedControl(
-      options: _filterTypes.map((e) => Text(e.label)).toList(),
-      backgroundColor: Colors.transparent,
-      selectedBackgroundColor: isDarkMode ? Colors.blueGrey : null,
-      contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-      onSelected: (int index) {
-        final type = _filterTypes[index];
-        onSelected(type);
-      },
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: TinySegmentedControl(
+        options: _filterTypes.map((e) => Text(e.label)).toList(),
+        backgroundColor: Colors.transparent,
+        selectedBackgroundColor: isDarkMode ? Colors.blueGrey : Color(0xff62baf8),
+        selectedColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        onSelected: (int index) {
+          final type = _filterTypes[index];
+          onSelected(type);
+        },
+      ),
     );
   }
 }

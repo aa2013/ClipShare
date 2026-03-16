@@ -82,7 +82,12 @@ class AppHotKeyHandler {
         }
         //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
         Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
-        final [width, height] = [370.0 * radio, 630.0 * radio];
+        var [width, height] = [370.0 * radio, 630.0 * radio];
+        if (appConfig.rememberPopupWindowSize && appConfig.historyWindowSize != null) {
+          final size = appConfig.historyWindowSize!;
+          width = size.width * radio;
+          height = size.height * radio;
+        }
         final maxX = max(screenSize.width - width, 0.0);
         final maxY = max(screenSize.height - height, 0.0);
         //限制在屏幕范围内
@@ -156,7 +161,12 @@ class AppHotKeyHandler {
         var offset = await screenRetriever.getCursorScreenPoint();
         //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
         Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
-        final [width, height] = [355.0 * radio, 630.0 * radio];
+        var [width, height] = [355.0 * radio, 630.0 * radio];
+        if (appConfig.rememberPopupWindowSize && appConfig.historyWindowSize != null) {
+          final size = appConfig.historyWindowSize!;
+          width = size.width * radio;
+          height = size.height * radio;
+        }
         final maxX = max(screenSize.width - width, 0.0);
         final maxY = max(screenSize.height - height, 0.0);
         //限制在屏幕范围内

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_page.dart';
@@ -33,7 +34,7 @@ class FileSenderWindow extends StatefulWidget {
   }
 }
 
-class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBindingObserver, WindowControlClickedListener {
+class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener, WidgetsBindingObserver, WindowControlClickedListener {
   List<Device> _devices = [];
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
   final pendingFileService = Get.find<PendingFileService>();
@@ -45,6 +46,7 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
     windowControlService.addListener(this);
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
+    windowManager.addListener(this);
     if (widget.args.containsKey("files")) {
       var files = widget.args["files"] as List<dynamic>;
       addPendingFiles(files.cast<String>());
@@ -88,6 +90,13 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
     refresh();
   }
 
+  @override
+  Future<void> onWindowResized() async {
+    super.onWindowResized();
+    final size = await windowManager.getSize();
+    await multiWindowChannelService.updateWindowSize(0, WindowType.history, size);
+  }
+
   void addPendingFiles(List<String> filePaths) {
     pendingFileService.addDropItems(filePaths.map((path) => DropItemFile(path)).toList());
   }
@@ -101,6 +110,7 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WidgetsBinding
   void dispose() {
     super.dispose();
     windowControlService.removeListener(this);
+    windowManager.removeListener(this);
   }
 
   void refresh() async {

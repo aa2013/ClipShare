@@ -815,6 +815,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "偏好";
       case TranslationKey.preferenceSettingsRecordsDialogLocation:
         return "历史记录弹窗显示位置";
+      case TranslationKey.preferenceSettingsRecordsDialogSize:
+        return "记住上次弹窗尺寸";
       case TranslationKey.current:
         return "当前";
       case TranslationKey.followMousePos:

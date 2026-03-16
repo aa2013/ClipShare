@@ -862,6 +862,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Preference";
       case TranslationKey.preferenceSettingsRecordsDialogLocation:
         return "Records Dialog Position Follows Mouse";
+      case TranslationKey.preferenceSettingsRecordsDialogSize:
+        return "Records Dialog Size";
       case TranslationKey.current:
         return "Current";
       case TranslationKey.followMousePos:
