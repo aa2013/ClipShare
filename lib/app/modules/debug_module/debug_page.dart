@@ -17,6 +17,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -143,23 +144,13 @@ class DebugPage extends GetView<DebugController> {
         ),
         TextButton(
           onPressed: () async {
-            final tasks = ParallelTask(
-              maxParallelCnt: 10,
-              tasks: List.generate(100, (i) {
-                return () async {
-                  await Future.delayed(Duration(seconds: 1));
-                  print('Task $i done');
-                };
-              }),
-            );
-
-            var start = DateTime.now();
-            await tasks.run();
-            var end = DateTime.now();
-            var offset = end.difference(start).inMilliseconds;
-            print("OffsetTime = $offset ms");
+            print("555");
+            const oldPath = "/storage/emulated/0/DCIM/Camera/IMG_20251004_231910.jpg";
+            final newPath = appConfig.cachePath;
+            final result = await clipboardManager.executePrivilegedCommand("cp $oldPath $newPath/aa.jpg && echo 0");
+            print("result: $result，${result=="0"}");
           },
-          child: Text("Test ParallelTask"),
+          child: Text("Execute Privileged Command"),
         ),
         Expanded(
           child: FileBrowser(

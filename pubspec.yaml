@@ -113,7 +113,8 @@ dependencies:
   # 月份选择
   month_picker_dialog: ^5.1.2
   # 剪贴板监听
-  clipshare_clipboard_listener: ^1.2.11
+  clipshare_clipboard_listener: ^1.2.12
+#  clipshare_clipboard_listener:
 #    path: ../clipboard_listener
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
@@ -153,7 +154,9 @@ dependencies:
   no_screenshot:
     git: https://github.com/aa2013/no_screenshot.git
   # Android uri读取
-  uri_file_reader: ^1.0.1
+  uri_file_reader: ^1.0.3
+#  uri_file_reader:
+#    path: ../uri_file_reader
   # 分词 (去除了分词文件减小压缩包体积，改为下载或导入)
   jieba_flutter:
     git:

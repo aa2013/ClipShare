@@ -197,10 +197,10 @@ packages:
     dependency: "direct main"
     description:
       name: clipshare_clipboard_listener
-      sha256: "6fed9bb8b2d7496cb8c74126fc23e4f2152521dde10af829f433df3abf6b9522"
+      sha256: "51c8212f218f8244eb431f6c8362bebf90047229e637c15f6e3ce0f7000a3483"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.2.11"
+    version: "1.2.12"
   clock:
     dependency: transitive
     description:
@@ -1703,10 +1703,10 @@ packages:
     dependency: "direct main"
     description:
       name: uri_file_reader
-      sha256: b8d4b333ce49d880a5f682dfdc0b6fd9b13b21229c7f0149fea6e1113caf6160
+      sha256: "4a47f0feb0d52c78ac0d35ba809fe01dfc52dd8178f1693b21a0a0e3e6ca9cd0"
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "1.0.2"
+    version: "1.0.3"
   url_launcher:
     dependency: "direct main"
     description:

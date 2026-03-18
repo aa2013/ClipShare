@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -18,6 +19,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter_screenshot_detect/flutter_screenshot_detect.dart';
 import 'package:get/get.dart';
 import 'package:uri_file_reader/uri_file_reader.dart';
+import 'package:path/path.dart' as p;
 
 class ClipboardService extends GetxService with ClipboardListener {
   final tag = "ClipboardService";
@@ -67,68 +69,121 @@ class ClipboardService extends GetxService with ClipboardListener {
     }
     stopListenScreenshot();
     _detector = FlutterScreenshotDetect();
-    _detector.startListening((event) {
-      if (event.path != null && _lastScreenshotContent != event.path) {
-        _lastScreenshotContent = event.path;
-        final androidChannelService = Get.find<AndroidChannelService>();
-        Future.delayed(500.ms, () {
-          uriFileReader.getFileInfoFromUri(event.path!).then((info) async {
-            Log.debug(tag, "content uri: ${event.path!}");
-            var realPath = info?.path;
-            Log.debug(tag, "realPath: $realPath");
-            bool checkLatestImage = false;
-            if (realPath == null) {
-              Log.debug(
-                tag,
-                "real path is null, attempt to get latest image path",
-              );
-              try {
-                checkLatestImage = true;
-                final latestImagePath = await androidChannelService.getLatestImagePath();
-                if (latestImagePath == null) {
-                  Log.warn(tag, "latest image path is null");
-                  return;
-                }
-                Log.debug(tag, "latest image path is $latestImagePath");
-                realPath = latestImagePath;
-              } catch (e) {
-                return;
-              }
-            }
-            final file = File(realPath);
-            final lastModified = file.lastModifiedSync();
-            final now = DateTime.now();
-            final diffMs = now.difference(lastModified).inMilliseconds;
-            Log.debug(
-              tag,
-              "file lastModifiedTime $lastModified. diff: $diffMs ms",
-            );
-            if (diffMs > 3000 && checkLatestImage) {
-              //最新图片的修改时间与当前时间差距超过3s，忽略
-              Log.debug(tag, "$diffMs ms More than 3 seconds.");
-              return;
-            }
-            bool isScreenShot = false;
-            for (var screenshotKey in Constants.screenshotKeywords) {
-              screenshotKey = screenshotKey.toLowerCase();
-              if (realPath.toLowerCase().contains(screenshotKey)) {
-                isScreenShot = true;
-                break;
-              }
-            }
-            if (!isScreenShot) {
-              return;
-            }
-            uriFileReader.copyFileFromUri(event.path!, appConfig.cachePath).then((res) {
-              Log.debug(tag, "ScreenshotDetect: $realPath");
-              if (res != null) {
-                HistoryDataListener.inst.onChanged(HistoryContentType.image, res, null);
-              }
-            });
-          });
-        });
+    _detector.startListening((event) async {
+      if (event.path == null || _lastScreenshotContent == event.path) {
+        return;
+      }
+      _lastScreenshotContent = event.path;
+      try {
+        await _detectScreenShotFile(event);
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
       }
     });
+  }
+
+  Future<void> _detectScreenShotFile(FlutterScreenshotEvent event) async {
+    final androidChannelService = Get.find<AndroidChannelService>();
+    await Future.delayed(500.ms);
+    final uriFileInfo = await uriFileReader.getFileInfoFromUri(event.path!);
+    Log.debug(tag, "content uri: ${event.path!}");
+    var realPath = uriFileInfo?.path;
+    Log.debug(tag, "realPath: $realPath");
+    bool checkLatestImage = false;
+    if (realPath == null) {
+      Log.debug(
+        tag,
+        "real path is null, attempt to get latest image path",
+      );
+      try {
+        checkLatestImage = true;
+        final latestImagePath = await androidChannelService.getLatestImagePath();
+        if (latestImagePath == null) {
+          Log.warn(tag, "latest image path is null");
+          return;
+        }
+        Log.debug(tag, "latest image path is $latestImagePath");
+        realPath = latestImagePath;
+      } catch (e) {
+        return;
+      }
+    }
+    final screenshotFile = File(realPath);
+    final lastModified = screenshotFile.lastModifiedSync();
+    final now = DateTime.now();
+    final diffMs = now.difference(lastModified).inMilliseconds;
+    Log.debug(
+      tag,
+      "file lastModifiedTime $lastModified. diff: $diffMs ms",
+    );
+    if (diffMs > 3000 && checkLatestImage) {
+      //最新图片的修改时间与当前时间差距超过3s，忽略
+      Log.debug(tag, "$diffMs ms More than 3 seconds.");
+      return;
+    }
+    bool isScreenShot = false;
+    for (var screenshotKey in Constants.screenshotKeywords) {
+      screenshotKey = screenshotKey.toLowerCase();
+      if (realPath.toLowerCase().contains(screenshotKey)) {
+        isScreenShot = true;
+        break;
+      }
+    }
+    if (!isScreenShot) {
+      return;
+    }
+    var copySuccess = false;
+    try {
+      final newFilePath = await uriFileReader.copyFileFromUri(event.path!, appConfig.cachePath);
+      Log.debug(tag, "ScreenshotDetect: $realPath");
+      if (newFilePath != null) {
+        HistoryDataListener.inst.onChanged(HistoryContentType.image, newFilePath, null);
+        copySuccess = true;
+      } else {
+        Log.warn(tag, "Copy screenshot file failed!");
+      }
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+    }
+    if (copySuccess) {
+      return;
+    }
+    //尝试复制源文件
+    var newPath = "${appConfig.cachePath}/${appConfig.snowflake.nextIdStr()}.jpg";
+    final result = await clipboardManager.executePrivilegedCommand("cp ${screenshotFile.absolute.path} $newPath && echo 0");
+    if (result == "0") {
+      HistoryDataListener.inst.onChanged(HistoryContentType.image, newPath, null);
+      Log.debug(tag, "attempt copy origin file via command success");
+    } else {
+      Log.debug(tag, "attempt copy origin file via command failed: $result");
+      //源文件复制失败，判断是否是pending文件
+      if (screenshotFile.fileName.startsWith(".pending-")) {
+        final newFileName = screenshotFile.fileName.split("-").sublist(2).join('-');
+        final path = p.join(screenshotFile.parent.absolute.path, newFileName);
+        Log.debug(tag, "newPath = $path");
+        var retryCnt = 0;
+        while (retryCnt < 5) {
+          Log.debug(tag, "retry ${retryCnt + 1} times..");
+          final exists = await File(path).exists();
+          //尝试直接判断保存的文件是否存在
+          if (exists) {
+            HistoryDataListener.inst.onChanged(HistoryContentType.image, path, null);
+          } else {
+            //尝试提权复制
+            final result = await clipboardManager.executePrivilegedCommand("cp $path $newPath && echo 0");
+            if (result == "0") {
+              Log.debug(tag, "attempt copy file via command success");
+              HistoryDataListener.inst.onChanged(HistoryContentType.image, path, null);
+              break;
+            } else {
+              Log.debug(tag, "attempt copy file via command failed: $result");
+            }
+          }
+          await Future.delayed(2.s);
+          retryCnt++;
+        }
+      }
+    }
   }
 
   void stopListenScreenshot() {
