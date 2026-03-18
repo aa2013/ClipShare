@@ -1626,7 +1626,16 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
               await manualConnectByForward(guid);
             } catch (err, stack) {
               Log.error(tag, err, stack);
-              available = false;
+            }
+          }
+        }else{
+          //无本地地址，尝试中转
+          if(_forwardClient != null){
+            try{
+              Log.debug(tag, "${dev.name} reconnect by forward");
+              await manualConnectByForward(guid);
+            } catch (err, stack) {
+              Log.error(tag, err, stack);
             }
           }
         }
