@@ -16,10 +16,10 @@ class NotifyUtil {
   static Future<void> _initNotifications() async {
     if (_notificationReady) return;
     const iosSettings = DarwinInitializationSettings();
-    var iconPath = File.fromUri(WindowsImage.getAssetUri(Constants.logoPngPath)).absolute.path;
+    var iconPath = File.fromUri(WindowsImage.getAssetUri(Constants.logoIcoPath)).absolute.path;
     final windowsSettings = WindowsInitializationSettings(
       appName: Constants.appName,
-      appUserModelId: Constants.pkgName,
+      appUserModelId: Constants.appGuid,
       guid: Constants.appGuid,
       iconPath: iconPath,
     );
