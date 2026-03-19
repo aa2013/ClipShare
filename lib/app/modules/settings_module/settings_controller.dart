@@ -92,7 +92,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final hasSmsReadPerm = true.obs;
   final hasAccessibilityPerm = false.obs;
   final hasNotificationRecordPerm = false.obs;
-  final hasClipboardPerm = false.obs;
+  final hasClipboardPerm = true.obs;
   final forwardServerStatus = ForwardServerStatus.disconnected.obs;
   final updater = 0.obs;
   Timer? _screenEventTimer;
