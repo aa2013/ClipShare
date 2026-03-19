@@ -1,8 +1,0 @@
-name: build-all
-
-# 仓库写入权限
-permissions:
-  contents: write
-  
-on:
-  workflow_dispatch:
