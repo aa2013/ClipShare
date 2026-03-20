@@ -69,9 +69,9 @@ jobs:
         chmod +x build_linux.sh
         ./build_linux.sh pack
         cd ../ && mkdir output
-        find ClipShare/dist -name "*.deb" -exec cp {} output/ \;
-        find ClipShare/dist -name "*.AppImage" -exec cp {} output/ \;
-        find ClipShare/dist -name "*.rpm" -exec cp {} output/ \;
+        find dist -name "*.deb" -exec cp {} output/ \;
+        find dist -name "*.AppImage" -exec cp {} output/ \;
+        find dist -name "*.rpm" -exec cp {} output/ \;
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
