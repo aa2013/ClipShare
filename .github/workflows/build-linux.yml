@@ -21,15 +21,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        path: ClipShare
-
-    - name: Checkout ClipboardListener dependency
-      uses: actions/checkout@v4
-      with:
-        repository: aa2013/ClipboardListener
-        path: clipboard_listener
-
+      
     - name: Install Linux dependencies
       run: |
         sudo apt-get update
@@ -61,17 +53,10 @@ jobs:
 
     - name: Flutter pub get
       run: |
-        cd ClipShare
         flutter pub get
-
-    - name: Build Flutter Linux Release
-      run: |
-        cd ClipShare
-        flutter build linux --release
 
     - name: Build & Package with Fastforge
       run: |
-        cd ClipShare
         cd scripts
         chmod +x build_linux.sh
         ./build_linux.sh pack
