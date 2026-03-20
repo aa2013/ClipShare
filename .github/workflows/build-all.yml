@@ -74,22 +74,16 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.tag_name }}
           name: ${{ steps.tag.outputs.tag_name }}
-          files: artifacts/**/*
+          files: artifacts/
           draft: true
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-      # 复制到服务器
-      - name: Deploy via SSH
-        uses: appleboy/scp-action@v1
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          host: ${{ secrets.SSH_HOST }}      # 服务器IP/域名
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USER }}   # SSH用户名
-          key: ${{ secrets.SSH_PRIVATE_KEY }} # SSH私钥
-          source: "artifacts/*"                   # 要上传的文件
-          target: ${{ secrets.RELEASE_PATH_PREFIX }}/${{ steps.tag.outputs.tag_name_clean }}  # 服务器目标路径
-          rm: false                           # 上传前清空目标目录
-          overwrite: true                    # 强制覆盖现有文件
+          name: artifact-${{ steps.tag.outputs.tag_name }}
+          path: artifacts/*
+          overwrite: true
           
