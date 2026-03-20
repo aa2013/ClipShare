@@ -19,9 +19,9 @@ jobs:
   windows:
     uses: ./.github/workflows/build-windows.yml
 
-  android:
-    uses: ./.github/workflows/build-android.yml
-    secrets: inherit
+  # android:
+  #   uses: ./.github/workflows/build-android.yml
+  #   secrets: inherit
 
   linux:
     uses: ./.github/workflows/build-linux.yml
@@ -33,7 +33,8 @@ jobs:
   # 2️⃣ 汇总 + 发布
   # ========================
   release:
-    needs: [windows, android, linux, macos]
+    # needs: [windows, android, linux, macos]
+    needs: [windows, linux, macos]
     runs-on: ubuntu-latest
 
     steps:
@@ -45,6 +46,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
 
       - name: Show files
         run: ls -R artifacts
@@ -60,8 +62,11 @@ jobs:
             git tag -f "$TAG_NAME"
             git push origin "$TAG_NAME" --force
           fi
+          # 去掉前缀 v
+          TAG_NAME_CLEAN="${TAG_NAME#v}"
 
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "tag_name_clean=$TAG_NAME_CLEAN" >> $GITHUB_OUTPUT
 
       # 创建 Release
       - name: Create Release
@@ -74,3 +79,17 @@ jobs:
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+      # 复制到服务器
+      - name: Deploy via SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}      # 服务器IP/域名
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}   # SSH用户名
+          key: ${{ secrets.SSH_PRIVATE_KEY }} # SSH私钥
+          source: "artifacts/*"                   # 要上传的文件
+          target: ${{ secrets.RELEASE_PATH_PREFIX }}/${{ steps.tag.outputs.tag_name_clean }}  # 服务器目标路径
+          rm: false                           # 上传前清空目标目录
+          overwrite: true                    # 强制覆盖现有文件
+          
