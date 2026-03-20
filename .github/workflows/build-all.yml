@@ -6,3 +6,9 @@ permissions:
   
 on:
   workflow_dispatch:
+jobs:
+  do-nothing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Do nothing
+        run: echo "This workflow does nothing"
