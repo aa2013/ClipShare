@@ -6,6 +6,12 @@ permissions:
   
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for test build'
+        required: true
+        default: 'test'
+        type: string
   workflow_call:
     outputs:
       artifact-name:
@@ -90,7 +96,7 @@ jobs:
           TAG_NAME="${GITHUB_REF_NAME}"
           echo "Triggered by tag: $TAG_NAME"
         else
-          TAG_NAME="test"
+          TAG_NAME="${{github.event.inputs.tag}}"
           echo "Triggered manually, force update tag: $TAG_NAME"
     
           git tag -f "$TAG_NAME"
