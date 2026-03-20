@@ -71,7 +71,7 @@ jobs:
         cd scripts
         chmod +x build_linux.sh
         ./build_linux.sh pack
-        cd ../ && mkdir output
+        cd ../../ && mkdir output
         find dist -name "*.deb" -exec cp {} output/ \;
         find dist -name "*.AppImage" -exec cp {} output/ \;
         find dist -name "*.rpm" -exec cp {} output/ \;
