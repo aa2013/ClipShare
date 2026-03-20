@@ -7,8 +7,60 @@ permissions:
 on:
   workflow_dispatch:
 jobs:
-  do-nothing:
+  # ========================
+  # 1️⃣ 并行调用各平台
+  # ========================
+  windows:
+    uses: ./.github/workflows/build-windows.yml
+
+  # android:
+  #   uses: ./.github/workflows/build-android.yml
+  #   secrets: inherit
+
+  linux:
+    uses: ./.github/workflows/build-linux.yml
+
+  macos:
+    uses: ./.github/workflows/build-macos.yml
+
+  # ========================
+  # 2️⃣ 汇总 + 发布
+  # ========================
+  release:
+    needs: [windows, linux, macos]
     runs-on: ubuntu-latest
+
     steps:
-      - name: Do nothing
-        run: echo "This workflow does nothing"
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Show files
+        run: ls -R artifacts
+
+      # 🔥 生成 tag
+      - name: Determine tag
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="test"
+            git tag -f "$TAG_NAME"
+            git push origin "$TAG_NAME" --force
+          fi
+
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      # 🔥 创建 Release（统一在这里）
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: ${{ steps.tag.outputs.tag_name }}
+          files: artifacts/**/*
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
