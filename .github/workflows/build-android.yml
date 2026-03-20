@@ -5,7 +5,7 @@ on:
   workflow_call:
     outputs:
       artifact-name:
-        value: ${{ jobs.build.outputs.artifact-name }}
+        value: android-package
 
 jobs:
   build:
