@@ -74,7 +74,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.tag_name }}
           name: ${{ steps.tag.outputs.tag_name }}
-          files: artifacts/
+          files: artifacts/*
           draft: true
           generate_release_notes: true
         env:
