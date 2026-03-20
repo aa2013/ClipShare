@@ -9,7 +9,7 @@ on:
   workflow_call:
     outputs:
       artifact-name:
-        value: ${{ jobs.build.outputs.artifact-name }}
+        value: windows-package
 
 jobs:
   build-windows:
