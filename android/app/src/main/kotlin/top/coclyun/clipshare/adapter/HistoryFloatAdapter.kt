@@ -4,8 +4,11 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
 import android.view.DragEvent
 import android.view.LayoutInflater
@@ -17,11 +20,13 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat.getSystemService
+import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.RecyclerView
 import io.flutter.plugin.common.MethodChannel.Result
 import top.coclyun.clipshare.MainActivity
 import top.coclyun.clipshare.MyApplication
 import top.coclyun.clipshare.R
+import java.io.File
 import kotlin.math.min
 
 
@@ -61,9 +66,10 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
     private val pinIcon = itemView.findViewById<ImageView>(R.id.pinIcon)
     private lateinit var onDragStart: () -> Unit
     private lateinit var onDragEnd: () -> Unit
-    private fun ignoreNextCopy(){
-        MyApplication.clipChannel.invokeMethod("ignoreNextCopy",null)
+    private fun ignoreNextCopy() {
+        MyApplication.clipChannel.invokeMethod("ignoreNextCopy", null)
     }
+
     @SuppressLint("ClickableViewAccessibility")
     private val onTouchLinear: View.OnTouchListener = View.OnTouchListener { _, event ->
         itemView.onTouchEvent(event)
@@ -83,13 +89,29 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
         true
     }
 
+    private fun getImageClipData(path: String, context: Context): ClipData {
+        val file = File(path)
+        val uri = FileProvider.getUriForFile(
+            context,
+            context.packageName + ".FileProvider",
+            file
+        )
+        return ClipData(
+            ClipDescription(
+                "image",
+                arrayOf("image/*")
+            ),
+            ClipData.Item(uri)
+        )
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     fun bind(item: History, onDragStart: () -> Unit, onDragEnd: () -> Unit) {
         this.onDragStart = onDragStart
         this.onDragEnd = onDragEnd
         //region 设置显示内容
         val type = item.type
-        val content = item.content;
+        val content = item.content
         if (type.lowercase() == "image") {
             //图片
             textView.visibility = GONE
@@ -99,13 +121,14 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 
             imageView.setOnLongClickListener {
                 //开始startDragAndDrop
-                val dragData = ClipData.newUri(
-                    itemView.context.contentResolver,
-                    "image",
-                    Uri.parse("content://top.coclyun.clipshare.FileProvider/${item.content}")
-                )
+                val clipData = getImageClipData(item.content, itemView.context)
                 val shadow = DragShadowBuilder(imageView)
-                imageView.startDragAndDrop(dragData, shadow, null, View.DRAG_FLAG_GLOBAL)
+                imageView.startDragAndDrop(
+                    clipData,
+                    shadow,
+                    null,
+                    View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ
+                )
                 false
             }
             imageView.setOnDragListener(onDragListener)
@@ -142,12 +165,7 @@ class HistoryFloatViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
                 // 将数据放入剪贴板
                 clipboardManager.setPrimaryClip(clipData)
             } else {
-                val pkgName = itemView.context.packageName
-                val clipData = ClipData.newUri(
-                    itemView.context.contentResolver,
-                    "image",
-                    Uri.parse("content://${pkgName}.clipboard_listener.FileProvider/${item.content}")
-                )
+                val clipData = getImageClipData(item.content, itemView.context)
                 ignoreNextCopy()
                 // 将数据放入剪贴板
                 clipboardManager.setPrimaryClip(clipData)
