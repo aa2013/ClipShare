@@ -12,7 +12,7 @@ on:
   workflow_call:
     outputs:
       artifact-name:
-        value: linux-pack
+        value: linux-package
 
 jobs:
   build-linux:
