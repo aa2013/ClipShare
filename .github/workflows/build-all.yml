@@ -19,9 +19,9 @@ jobs:
   windows:
     uses: ./.github/workflows/build-windows.yml
 
-  android:
-    uses: ./.github/workflows/build-android.yml
-    secrets: inherit
+  # android:
+  #   uses: ./.github/workflows/build-android.yml
+  #   secrets: inherit
 
   linux:
     uses: ./.github/workflows/build-linux.yml
