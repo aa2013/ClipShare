@@ -75,7 +75,6 @@ jobs:
         overwrite: true
         
     - name: Determine tag
-      if: github.event_name != 'workflow_call'
       id: tag
       shell: bash
       run: |
@@ -93,7 +92,6 @@ jobs:
         echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
         
     - name: Create Release
-      if: github.event_name != 'workflow_call'
       uses: softprops/action-gh-release@v1
       with:
         name: ${{ steps.tag.outputs.tag_name }}
