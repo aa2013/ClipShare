@@ -19,9 +19,9 @@ jobs:
   windows:
     uses: ./.github/workflows/build-windows.yml
 
-  # android:
-  #   uses: ./.github/workflows/build-android.yml
-  #   secrets: inherit
+  android:
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
 
   linux:
     uses: ./.github/workflows/build-linux.yml
@@ -33,7 +33,7 @@ jobs:
   # 2️⃣ 汇总 + 发布
   # ========================
   release:
-    needs: [windows, linux, macos]
+    needs: [windows, android, linux, macos]
     runs-on: ubuntu-latest
 
     steps:
