@@ -1,0 +1,24 @@
+name: build-all-notify
+
+on:
+  workflow_run:
+    workflows: ["build-all"]
+    types: [completed]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send DingTalk
+        run: |
+          STATUS="${{ github.event.workflow_run.conclusion }}"
+
+          if [ "$STATUS" == "success" ]; then
+            MSG="✅ ClipShare 构建成功"
+          else
+            MSG="❌ ClipShare 构建失败"
+          fi
+
+          curl -X POST "${{ secrets.DINGTALK_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"msgtype\":\"text\",\"text\":{\"content\":\"$MSG\"}}"
