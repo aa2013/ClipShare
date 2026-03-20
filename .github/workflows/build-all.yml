@@ -6,6 +6,12 @@ permissions:
   
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for test build'
+        required: true
+        default: 'test'
+        type: string
 jobs:
   # ========================
   # 1️⃣ 并行调用各平台
