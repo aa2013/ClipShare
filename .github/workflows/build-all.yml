@@ -19,9 +19,9 @@ jobs:
   windows:
     uses: ./.github/workflows/build-windows.yml
 
-  # android:
-  #   uses: ./.github/workflows/build-android.yml
-  #   secrets: inherit
+  android:
+    uses: ./.github/workflows/build-android.yml
+    secrets: inherit
 
   linux:
     uses: ./.github/workflows/build-linux.yml
@@ -49,21 +49,21 @@ jobs:
       - name: Show files
         run: ls -R artifacts
 
-      # 🔥 生成 tag
+      # 生成 tag
       - name: Determine tag
         id: tag
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             TAG_NAME="${GITHUB_REF_NAME}"
           else
-            TAG_NAME="test"
+            TAG_NAME="${{github.event.inputs.tag}}"
             git tag -f "$TAG_NAME"
             git push origin "$TAG_NAME" --force
           fi
 
           echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      # 🔥 创建 Release（统一在这里）
+      # 创建 Release
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
