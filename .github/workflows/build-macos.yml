@@ -106,7 +106,7 @@ jobs:
           name: ${{ steps.tag.outputs.tag_name }}
           tag_name: ${{ steps.tag.outputs.tag_name }}
           files: |
-            output/*
+            upload/*
           generate_release_notes: true
           draft: true
           prerelease: false
