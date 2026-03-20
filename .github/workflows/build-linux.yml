@@ -9,6 +9,10 @@ on:
   #     - master
   #     - dev
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      artifact-name:
+        value: linux-pack
 
 jobs:
   build-linux:
@@ -72,7 +76,7 @@ jobs:
         chmod +x build_linux.sh
         ./build_linux.sh pack
         cd ../../ && mkdir output
-        find dist -name "*.deb" -exec cp {} output/ \;
+        find ClipShare/dist -name "*.deb" -exec cp {} output/ \;
         find dist -name "*.AppImage" -exec cp {} output/ \;
         find dist -name "*.rpm" -exec cp {} output/ \;
 
