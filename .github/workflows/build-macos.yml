@@ -8,18 +8,11 @@ on:
   workflow_call:
     outputs:
       artifact-name:
-        value: ${{ jobs.build.outputs.artifact-name }}
+        value: macos-dmg
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - platform: macos
-            os: macos-15
-            arch: arm64
-
+    runs-on: macos-15
     steps:
       - name: Verify Xcode
         run: |
@@ -77,7 +70,7 @@ jobs:
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg-${{ matrix.arch }}
+          name: macos-dmg
           path: upload/*.dmg
           overwrite: true
           
