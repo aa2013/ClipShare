@@ -1,5 +1,8 @@
 name: build-linux-packages
 
+# 仓库写入权限
+permissions:
+  contents: write
 on:
   # push: # 暂时通过手动触发
   #   branches:
