@@ -1,22 +1,24 @@
 name: build-macos-dmg
 
+# 仓库写入权限
+permissions:
+  contents: write
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for test build'
+        required: true
+        default: 'test'
+        type: string
   workflow_call:
     outputs:
       artifact-name:
-        value: ${{ jobs.build.outputs.artifact-name }}
+        value: macos-package
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - platform: macos
-            os: macos-15
-            arch: arm64
-
+    runs-on: macos-15
     steps:
       - name: Verify Xcode
         run: |
@@ -74,6 +76,38 @@ jobs:
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
         with:
-          name: macos-dmg-${{ matrix.arch }}
+          name: macos-dmg
           path: upload/*.dmg
           overwrite: true
+          
+      - name: Determine tag
+        if: github.event_name != 'workflow_call'
+        id: tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+            echo "Triggered by tag: $TAG_NAME"
+          else
+            TAG_NAME="${{github.event.inputs.tag}}"
+            echo "Triggered manually, force update tag: $TAG_NAME"
+      
+            git tag -f "$TAG_NAME"
+            git push origin "$TAG_NAME" --force
+          fi
+      
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          
+      - name: Create Release
+        if: github.event_name != 'workflow_call'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ steps.tag.outputs.tag_name }}
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          files: |
+            upload/*
+          generate_release_notes: true
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    

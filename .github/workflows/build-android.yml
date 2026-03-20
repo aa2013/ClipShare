@@ -5,10 +5,16 @@ permissions:
   contents: write
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for test build'
+        required: true
+        default: 'test'
+        type: string
   workflow_call:
     outputs:
       artifact-name:
-        value: ${{ jobs.build.outputs.artifact-name }}
+        value: android-package
 
 jobs:
   build:
@@ -54,12 +60,6 @@ jobs:
           Write-Host "Listing C:\Android"
           Get-ChildItem C:\Android -Force
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: C:\Program Files (x86)\Android\android-sdk
-          key: android-sdk-v1
-
       - name: Build APK
         shell: pwsh
         run: |
@@ -100,3 +100,37 @@ jobs:
           name: android-apk
           path: upload/*.apk
           overwrite: true
+          
+          
+      - name: Determine tag
+        if: github.event_name != 'workflow_call'
+        id: tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+            echo "Triggered by tag: $TAG_NAME"
+          else 
+            TAG_NAME="${{github.event.inputs.tag}}"
+            echo "Triggered manually, force update tag: $TAG_NAME"
+      
+            git tag -f "$TAG_NAME"
+            git push origin "$TAG_NAME" --force
+          fi
+      
+          echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          
+      - name: Create Release
+        if: github.event_name != 'workflow_call'
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ steps.tag.outputs.tag_name }}
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          files: |
+            upload/*.apk
+          generate_release_notes: false
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+

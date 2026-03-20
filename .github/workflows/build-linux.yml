@@ -1,28 +1,31 @@
 name: build-linux-packages
 
+# 仓库写入权限
+permissions:
+  contents: write
 on:
-  # push: # 暂时通过手动触发
-  #   branches:
-  #     - master
-  #     - dev
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for test build'
+        required: true
+        default: 'test'
+        type: string
+  workflow_call:
+    outputs:
+      artifact-name:
+        value: linux-package
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        path: ClipShare
-
-    - name: Checkout ClipboardListener dependency
-      uses: actions/checkout@v4
-      with:
-        repository: aa2013/ClipboardListener
-        path: clipboard_listener
-
+        submodules: recursive
+      
     - name: Install Linux dependencies
       run: |
         sudo apt-get update
@@ -54,38 +57,53 @@ jobs:
 
     - name: Flutter pub get
       run: |
-        cd ClipShare
         flutter pub get
-
-    - name: Build Flutter Linux Release
-      run: |
-        cd ClipShare
-        flutter build linux --release
 
     - name: Build & Package with Fastforge
       run: |
-        cd ClipShare
         cd scripts
         chmod +x build_linux.sh
         ./build_linux.sh pack
+        cd ../ && mkdir output
+        find dist -name "*.deb" -exec cp {} output/ \;
+        find dist -name "*.AppImage" -exec cp {} output/ \;
+        find dist -name "*.rpm" -exec cp {} output/ \;
 
-    - name: Upload deb artifact
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: linux-deb
-        path: ClipShare/dist/**/*.deb
+        name: linux-pack
+        path: output/*
         overwrite: true
-
-    - name: Upload AppImage artifact
-      uses: actions/upload-artifact@v4
+        
+    - name: Determine tag
+      if: github.event_name != 'workflow_call'
+      id: tag
+      shell: bash
+      run: |
+        if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+          TAG_NAME="${GITHUB_REF_NAME}"
+          echo "Triggered by tag: $TAG_NAME"
+        else
+          TAG_NAME="${{github.event.inputs.tag}}"
+          echo "Triggered manually, force update tag: $TAG_NAME"
+    
+          git tag -f "$TAG_NAME"
+          git push origin "$TAG_NAME" --force
+        fi
+    
+        echo "tag_name=$TAG_NAME" >> "$GITHUB_OUTPUT"
+        
+    - name: Create Release
+      if: github.event_name != 'workflow_call'
+      uses: softprops/action-gh-release@v1
       with:
-        name: linux-appimage
-        path: ClipShare/dist/**/*.AppImage
-        overwrite: true
-
-    - name: Upload rpm artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: linux-rpm
-        path: ClipShare/dist/**/*.rpm
-        overwrite: true
+        name: ${{ steps.tag.outputs.tag_name }}
+        tag_name: ${{ steps.tag.outputs.tag_name }}
+        files: |
+          output/*
+        generate_release_notes: true
+        draft: true
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    

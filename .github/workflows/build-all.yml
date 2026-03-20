@@ -6,3 +6,122 @@ permissions:
   
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag for test build'
+        required: true
+        default: 'test'
+        type: string
+jobs:
+  # ========================
+  # 1️⃣ 并行调用各平台
+  # ========================
+  windows:
+    uses: ./.github/workflows/build-windows.yml
+
+  # android:
+  #   uses: ./.github/workflows/build-android.yml
+  #   secrets: inherit
+
+  linux:
+    uses: ./.github/workflows/build-linux.yml
+
+  macos:
+    uses: ./.github/workflows/build-macos.yml
+
+  # ========================
+  # 2️⃣ 汇总 + 发布
+  # ========================
+  release:
+    # needs: [windows, android, linux, macos]
+    needs: [windows, linux, macos]
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+      tag_name_clean: ${{ steps.tag.outputs.tag_name_clean }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Show files
+        run: ls -R artifacts
+
+      # 生成 tag
+      - name: Determine tag
+        id: tag
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            TAG_NAME="${GITHUB_REF_NAME}"
+          else
+            TAG_NAME="${{github.event.inputs.tag}}"
+            git tag -f "$TAG_NAME"
+            git push origin "$TAG_NAME" --force
+          fi
+          # 去掉前缀 v
+          TAG_NAME_CLEAN="${TAG_NAME#v}"
+
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "tag_name_clean=$TAG_NAME_CLEAN" >> $GITHUB_OUTPUT
+
+      # 创建 Release
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: ${{ steps.tag.outputs.tag_name }}
+          files: artifacts/*
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ steps.tag.outputs.tag_name }}
+          path: artifacts/*
+          overwrite: true
+          
+  notify:
+    needs: [release]
+    runs-on: ubuntu-latest
+    if: always()
+  
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "status=FAILED" >> $GITHUB_OUTPUT
+          else
+            echo "status=SUCCESS" >> $GITHUB_OUTPUT
+          fi
+  
+      - name: Send DingTalk notification
+        run: |
+          STATUS="${{ steps.status.outputs.status }}"
+          TAG="${{ needs.release.outputs.tag_name }}"
+  
+          if [ "$STATUS" == "SUCCESS" ]; then
+            MSG="✅ ClipShare 发布成功\nVersion: $TAG"
+          else
+            MSG="❌ ClipShare 发布失败\nVersion: $TAG"
+          fi
+  
+          curl -X POST "${{ secrets.DINGTALK_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"msgtype\": \"text\",
+              \"text\": {
+                \"content\": \"$MSG\"
+              }
+            }"
+          
