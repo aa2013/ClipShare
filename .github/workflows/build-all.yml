@@ -36,6 +36,9 @@ jobs:
     # needs: [windows, android, linux, macos]
     needs: [windows, linux, macos]
     runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.tag.outputs.tag_name }}
+      tag_name_clean: ${{ steps.tag.outputs.tag_name_clean }}
 
     steps:
       - name: Checkout repository
@@ -86,4 +89,39 @@ jobs:
           name: artifact-${{ steps.tag.outputs.tag_name }}
           path: artifacts/*
           overwrite: true
+          
+  notify:
+    needs: [release]
+    runs-on: ubuntu-latest
+    if: always()
+  
+    steps:
+      - name: Determine status
+        id: status
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "status=FAILED" >> $GITHUB_OUTPUT
+          else
+            echo "status=SUCCESS" >> $GITHUB_OUTPUT
+          fi
+  
+      - name: Send DingTalk notification
+        run: |
+          STATUS="${{ steps.status.outputs.status }}"
+          TAG="${{ needs.release.outputs.tag_name }}"
+  
+          if [ "$STATUS" == "SUCCESS" ]; then
+            MSG="✅ ClipShare 发布成功\nVersion: $TAG"
+          else
+            MSG="❌ ClipShare 发布失败\nVersion: $TAG"
+          fi
+  
+          curl -X POST "${{ secrets.DINGTALK_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"msgtype\": \"text\",
+              \"text\": {
+                \"content\": \"$MSG\"
+              }
+            }"
           
