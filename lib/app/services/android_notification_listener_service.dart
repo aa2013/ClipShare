@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/listeners/history_data_listener.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
 import 'package:get/get.dart';
@@ -34,6 +35,9 @@ class AndroidNotificationListenerService extends GetxService {
         map["pkg"] = event.packageName;
         map["title"] = event.title;
         map["content"] = event.content;
+        if (event.content?.isNullOrEmpty ?? true) {
+          return;
+        }
         if (hasImg) {
           try {
             map["img"] = base64Encode(event.extrasPicture!);
