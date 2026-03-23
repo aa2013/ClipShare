@@ -127,8 +127,8 @@ class SplashController extends GetxController {
     }
     if (Platform.isAndroid) {
       androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
-      await copyAssetsInAndroid();
     }
+    await copyAssets();
     // 初始化channel
     initChannel();
     initShareHandler();
@@ -139,14 +139,13 @@ class SplashController extends GetxController {
     }
   }
 
-  Future<void> copyAssetsInAndroid() async {
+  Future<void> copyAssets() async {
     try {
-      var luaSaveDirPath = p.join(Constants.androidPrivateDataPath, 'lua');
-      final newLuaPath = File(p.join(luaSaveDirPath, 'dkjson.lua'));
+      final newLuaPath = File(p.join(appConfig.luaLibDirPath, 'dkjson.lua'));
       if (await newLuaPath.exists()) {
         return;
       }
-      await Directory(luaSaveDirPath).create();
+      await newLuaPath.parent.create();
       final bytes = await rootBundle.load('assets/lua/dkjson.lua');
       await newLuaPath.writeAsBytes(
         bytes.buffer.asUint8List(),

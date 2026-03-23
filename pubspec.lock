@@ -467,10 +467,12 @@ packages:
   flutter_embed_lua:
     dependency: "direct main"
     description:
-      path: "../github/flutter_embed_lua"
-      relative: true
-    source: path
-    version: "0.0.2"
+      path: "."
+      ref: HEAD
+      resolved-ref: b23a228e73d7c12c18f4692e29c75ef6cdb40ede
+      url: "https://github.com/aa2013/flutter_embed_lua"
+    source: git
+    version: "0.0.3"
   flutter_expandable_fab:
     dependency: "direct main"
     description:
