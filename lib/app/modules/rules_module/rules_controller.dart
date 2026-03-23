@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -25,6 +26,7 @@ import 'package:path/path.dart' as p;
 
 class RulesController extends GetxController {
   static const String tag = "RulesController";
+  final appConfig = Get.find<ConfigService>();
 
   // final MultiSplitViewController splitViewController = MultiSplitViewController();
   final rules = <RuleItem>[].obs;
@@ -55,13 +57,10 @@ class RulesController extends GetxController {
   }
 
   void _initLuaFunc() {
-    var dkJsonPath = 'assets/lua/dkjson.lua';
-    var result = '';
-    if (Platform.isAndroid) {
-      dkJsonPath = p.join(Constants.androidPrivateDataPath, 'lua', 'dkjson.lua');
-    }
-    result = _lua.run('''
-      json = assert(loadfile("$dkJsonPath"))()
+    final luaLibPath = p.join(appConfig.luaLibDirPath,"?.lua").replaceAll("\\", "/");
+    var result = _lua.run('''
+      package.path = package.path..';'..'$luaLibPath'
+      json = require('dkjson')
       print(json)
       ''');
     Log.debug(tag, "init dkJson: $result");

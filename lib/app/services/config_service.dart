@@ -54,6 +54,7 @@ import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:no_screenshot/no_screenshot.dart';
+import 'package:path/path.dart' as p;
 
 final _noScreenshot = NoScreenshot.instance;
 
@@ -96,6 +97,7 @@ class ConfigService extends GetxService {
   //路径
   late final String androidPrivateDocumentPath;
   late final String androidPrivatePicturesPath;
+  late final String luaLibDirPath;
   late final String cachePath;
   late final String documentsPath;
   late final String updateDownloadFileDirPath;
@@ -834,9 +836,12 @@ class ConfigService extends GetxService {
       cachePath = (await getExternalCacheDirectories())![0].path;
       documentsPath = "${Constants.androidDocumentsPath}/ClipShare/";
       updateDownloadFileDirPath = Constants.androidDownloadPath;
+      final filesPath = await getExternalStorageDirectory();
+      luaLibDirPath = p.join(filesPath!.path, "lua");
     } else {
       cachePath = (await getApplicationCacheDirectory()).path;
       documentsPath = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+      luaLibDirPath = p.join(documentsPath, "lua");
       updateDownloadFileDirPath = "$documentsPath/update";
       if (Platform.isWindows) {
         final username = Platform.environment['USERNAME'];
