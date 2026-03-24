@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
@@ -53,9 +52,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -705,7 +704,7 @@ class SettingsPage extends GetView<SettingsController> {
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.clipboardSettingsGroupName.tr,
-                    icon: Icon(MdiIcons.clipboardOutline),
+                    icon: const Icon(MdiIcons.clipboardOutline),
                     cardList: [
                       SettingCard(
                         title: Text(
@@ -2559,7 +2558,7 @@ class SettingsPage extends GetView<SettingsController> {
                 ///region 备份和恢复
                 SettingCardGroup(
                   groupName: TranslationKey.backupRestore.tr,
-                  icon: Icon(MdiIcons.backupRestore),
+                  icon: const Icon(MdiIcons.backupRestore),
                   cardList: [
                     SettingCard(
                       title: Text(TranslationKey.backup.tr),

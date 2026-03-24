@@ -12,7 +12,8 @@ import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class HistoryFilterController {
   final allDevices = <Device>[].obs;
@@ -213,7 +214,7 @@ class HistoryFilter extends StatelessWidget {
                   child: IconButton(
                     onPressed: controller.onExportBtnClicked,
                     tooltip: TranslationKey.export2Excel.tr,
-                    icon: Icon(
+                    icon: const Icon(
                       MdiIcons.export,
                       size: 20,
                     ),

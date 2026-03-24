@@ -6,7 +6,7 @@ import 'package:clipshare/app/widgets/base/platform_title_button.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:window_manager/window_manager.dart';
 
 class CustomTitleBarLayout extends StatefulWidget {

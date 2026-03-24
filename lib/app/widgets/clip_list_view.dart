@@ -34,7 +34,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 import 'empty_content.dart';
@@ -497,7 +498,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                 setState(() {});
               },
               tooltip: TranslationKey.deselect.tr,
-              child: Icon(MdiIcons.cancel),
+              child: const Icon(MdiIcons.cancel),
             ),
             _fabButtonFun(
               onPressed: () {
@@ -574,7 +575,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                 }).whenComplete(() => _cancelSelectionMode());
               } : null,
               tooltip: TranslationKey.output.tr,
-              child: Icon(MdiIcons.export),
+              child: const Icon(MdiIcons.export),
             ),
           ],
         ),

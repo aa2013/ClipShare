@@ -8,11 +8,10 @@ import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/lua.dart';
 import 'package:re_highlight/languages/sql.dart';
+import 'package:simple_icons/simple_icons.dart';
 
 class Constants {
   Constants._private();
@@ -169,8 +168,8 @@ class Constants {
       color: Colors.grey,
       size: 48,
     ),
-    'Linux': Icon(
-      MdiIcons.linux,
+    'Linux': const Icon(
+      SimpleIcons.linux,
       color: Colors.grey,
       size: 48,
     ),

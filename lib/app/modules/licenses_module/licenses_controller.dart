@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "simple_icons",
+      "license": "unknown",
+      "url": "https://pub.dev/packages/simple_icons",
+    },
+    {
       "name": "flutter_embed_lua",
       "license": "BSD-3-Clause",
       "url": "https://github.com/aa2013/flutter_embed_lua",
@@ -231,9 +236,9 @@ class LicensesController extends GetxController {
       "url": "https://pub.dev/packages/flutter_staggered_grid_view",
     },
     {
-      "name": "material_design_icons_flutter",
+      "name": "flutter_material_design_icons",
       "license": "MIT",
-      "url": "https://pub.dev/packages/material_design_icons_flutter",
+      "url": "https://pub.dev/packages/flutter_material_design_icons",
     },
     {
       "name": "local_auth",
