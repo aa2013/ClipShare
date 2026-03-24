@@ -14,6 +14,11 @@ extension StringExt on String {
     return '${this[0].toUpperCase()}${substring(1)}';
   }
 
+  String get lowerFirst {
+    if (isEmpty) return this;
+    return '${this[0].toLowerCase()}${substring(1)}';
+  }
+
   String get normalizePath {
     return replaceAll(RegExp(r'(/+|\\+)'), Constants.dirSeparate);
   }

@@ -10,6 +10,7 @@ import 'package:clipshare/app/data/models/rule/rule_script_content.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
@@ -47,7 +48,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
   final appConfig = Get.find<ConfigService>();
   static const tag = "RuleListView";
   var multiSelectMode = false;
-  final Set<String> selectedRules = {};
+  final Set<int> selectedRules = {};
 
   @override
   void initState() {
@@ -103,8 +104,14 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
       onEnabledChanged: (enabled) {
+        final validateResult = rule.validate();
+        if (validateResult != null) {
+          Global.showSnackBarWarn(text: validateResult, context: context);
+          return;
+        }
         setState(() {
           rule.enabled = enabled;
+          rule.version++;
         });
         widget.onItemChanged(rule);
       },
@@ -166,29 +173,28 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
             controller: tabController,
             children: Constants.ruleCategoryItems.map((category) {
               final controller = getScrollController(category);
-              final allRules = widget.rules;
               if (category == RuleCategory.all) {
-                if (allRules.isEmpty) {
+                if (widget.rules.isEmpty) {
                   return Constants.emptyContent;
                 }
                 return ReorderableListView.builder(
                   scrollController: controller,
                   itemBuilder: (BuildContext context, int index) {
-                    return buildRuleCard(category, allRules[index], index);
+                    return buildRuleCard(category, widget.rules[index], index);
                   },
-                  itemCount: allRules.length,
+                  itemCount: widget.rules.length,
                   buildDefaultDragHandles: false,
                   onReorder: (int oldIndex, int newIndex) {
                     if (oldIndex < newIndex) {
                       newIndex -= 1;
                     }
-                    final item = allRules.removeAt(oldIndex);
-                    allRules.insert(newIndex, item);
+                    final item = widget.rules.removeAt(oldIndex);
+                    widget.rules.insert(newIndex, item);
                     widget.onDragged();
                   },
                 );
               }
-              final rules = allRules.where((item) => item.category == category).toList();
+              final rules = widget.rules.where((item) => item.category == category).toList();
               if (rules.isEmpty) {
                 return Constants.emptyContent;
               }
@@ -287,7 +293,14 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
             ),
           if (multiSelectMode)
             fabButtonFun(
-              onPressed: () {},
+              onPressed: () {
+                final selectedList = widget.rules.where((e)=>selectedRules.contains(e.id)).toList();
+                //todo 删除
+                setState(() {
+                  multiSelectMode = false;
+                  selectedRules.clear();
+                });
+              },
               tooltip: TranslationKey.delete.tr,
               child: const Icon(Icons.delete),
             ),
@@ -296,7 +309,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
               onPressed: () {
                 var currentTab = Constants.ruleCategoryItems[tabController.index];
                 var newRule = RuleItem(
-                  id: appConfig.snowflake.nextIdStr(),
+                  id: appConfig.snowflake.nextId(),
                   version: 0,
                   name: "Rule${widget.rules.length + 1}",
                   category: currentTab == RuleCategory.all ? RuleCategory.common : currentTab,
@@ -316,6 +329,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                   script: RuleScriptContent(language: RuleScriptLanguage.lua, content: ''),
                   allowSync: false,
                   enabled: false,
+                  order: widget.rules.length + 1,
                 );
                 widget.onItemAdd(newRule);
                 //controller 只会attach到当前的tab

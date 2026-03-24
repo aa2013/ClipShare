@@ -4,7 +4,7 @@ import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/rule.dart';
+import 'package:clipshare/app/data/models/old_rule.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/modules/views/settings/rules_setting_page.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -25,7 +25,7 @@ class TagRuleSettingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return RuleSettingPage(
       title: TranslationKey.tagRuleSettingPageAppBarTitle.tr,
-      initData: Rule.fromJson(
+      initData: OldRule.fromJson(
         (jsonDecode(
           appConfig.tagRules,
         )["data"] as List<dynamic>)

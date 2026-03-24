@@ -1,9 +1,9 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/rule.dart';
+import 'package:clipshare/app/data/models/old_rule.dart';
 import 'package:flutter/material.dart';
 
 class RuleItem extends StatefulWidget {
-  final Rule rule;
+  final OldRule rule;
   final Widget action;
   final void Function(bool selected) onSelectionChange;
   final BorderRadius borderRadius;

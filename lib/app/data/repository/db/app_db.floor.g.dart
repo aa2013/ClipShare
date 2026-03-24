@@ -85,6 +85,8 @@ class _$_AppDb extends _AppDb {
 
   AppInfoDao? _appInfoDaoInstance;
 
+  RuleDao? _ruleDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -122,6 +124,8 @@ class _$_AppDb extends _AppDb {
             'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `category` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtract` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexPreventSync` INTEGER NOT NULL, `regexIsFinal` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `allowSync` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
         await database.execute(
@@ -181,6 +185,11 @@ class _$_AppDb extends _AppDb {
   @override
   AppInfoDao get appInfoDao {
     return _appInfoDaoInstance ??= _$AppInfoDao(database, changeListener);
+  }
+
+  @override
+  RuleDao get ruleDao {
+    return _ruleDaoInstance ??= _$RuleDao(database, changeListener);
   }
 }
 
@@ -1501,6 +1510,156 @@ class _$AppInfoDao extends AppInfoDao {
   @override
   Future<int> remove(AppInfo appInfo) {
     return _appInfoDeletionAdapter.deleteAndReturnChangedRows(appInfo);
+  }
+}
+
+class _$RuleDao extends RuleDao {
+  _$RuleDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _ruleInsertionAdapter = InsertionAdapter(
+            database,
+            'Rule',
+            (Rule item) => <String, Object?>{
+                  'id': item.id,
+                  'name': item.name,
+                  'category': item.category,
+                  'platforms': item.platforms,
+                  'sources': item.sources,
+                  'trigger': item.trigger,
+                  'type': item.type,
+                  'regexWhiteBlackMode': item.regexWhiteBlackMode,
+                  'regexMain': item.regexMain,
+                  'regexAllowExtractData': item.regexAllowExtractData ? 1 : 0,
+                  'regexExtract': item.regexExtract,
+                  'regexAllowAddTag': item.regexAllowAddTag ? 1 : 0,
+                  'regexTags': item.regexTags,
+                  'regexPreventSync': item.regexPreventSync ? 1 : 0,
+                  'regexIsFinal': item.regexIsFinal ? 1 : 0,
+                  'scriptLanguage': item.scriptLanguage,
+                  'scriptContent': item.scriptContent,
+                  'version': item.version,
+                  'allowSync': item.allowSync ? 1 : 0,
+                  'enabled': item.enabled ? 1 : 0,
+                  'order': item.order
+                }),
+        _ruleUpdateAdapter = UpdateAdapter(
+            database,
+            'Rule',
+            ['id'],
+            (Rule item) => <String, Object?>{
+                  'id': item.id,
+                  'name': item.name,
+                  'category': item.category,
+                  'platforms': item.platforms,
+                  'sources': item.sources,
+                  'trigger': item.trigger,
+                  'type': item.type,
+                  'regexWhiteBlackMode': item.regexWhiteBlackMode,
+                  'regexMain': item.regexMain,
+                  'regexAllowExtractData': item.regexAllowExtractData ? 1 : 0,
+                  'regexExtract': item.regexExtract,
+                  'regexAllowAddTag': item.regexAllowAddTag ? 1 : 0,
+                  'regexTags': item.regexTags,
+                  'regexPreventSync': item.regexPreventSync ? 1 : 0,
+                  'regexIsFinal': item.regexIsFinal ? 1 : 0,
+                  'scriptLanguage': item.scriptLanguage,
+                  'scriptContent': item.scriptContent,
+                  'version': item.version,
+                  'allowSync': item.allowSync ? 1 : 0,
+                  'enabled': item.enabled ? 1 : 0,
+                  'order': item.order
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<Rule> _ruleInsertionAdapter;
+
+  final UpdateAdapter<Rule> _ruleUpdateAdapter;
+
+  @override
+  Future<int?> remove(int id) async {
+    return _queryAdapter.query('delete from rule where id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [id]);
+  }
+
+  @override
+  Future<Rule?> getById(int id) async {
+    return _queryAdapter.query('select * from rule where id = ?1',
+        mapper: (Map<String, Object?> row) => Rule(
+            id: row['id'] as int,
+            name: row['name'] as String,
+            category: row['category'] as String,
+            platforms: row['platforms'] as String,
+            sources: row['sources'] as String,
+            trigger: row['trigger'] as String,
+            type: row['type'] as String,
+            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String?,
+            regexMain: row['regexMain'] as String,
+            regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
+            regexExtract: row['regexExtract'] as String,
+            regexAllowAddTag: (row['regexAllowAddTag'] as int) != 0,
+            regexTags: row['regexTags'] as String,
+            regexPreventSync: (row['regexPreventSync'] as int) != 0,
+            regexIsFinal: (row['regexIsFinal'] as int) != 0,
+            scriptLanguage: row['scriptLanguage'] as String,
+            scriptContent: row['scriptContent'] as String,
+            version: row['version'] as int,
+            allowSync: (row['allowSync'] as int) != 0,
+            enabled: (row['enabled'] as int) != 0,
+            order: row['order'] as int),
+        arguments: [id]);
+  }
+
+  @override
+  Future<List<Rule>> getAllRules() async {
+    return _queryAdapter.queryList('select * from rule order by `order`',
+        mapper: (Map<String, Object?> row) => Rule(
+            id: row['id'] as int,
+            name: row['name'] as String,
+            category: row['category'] as String,
+            platforms: row['platforms'] as String,
+            sources: row['sources'] as String,
+            trigger: row['trigger'] as String,
+            type: row['type'] as String,
+            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String?,
+            regexMain: row['regexMain'] as String,
+            regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
+            regexExtract: row['regexExtract'] as String,
+            regexAllowAddTag: (row['regexAllowAddTag'] as int) != 0,
+            regexTags: row['regexTags'] as String,
+            regexPreventSync: (row['regexPreventSync'] as int) != 0,
+            regexIsFinal: (row['regexIsFinal'] as int) != 0,
+            scriptLanguage: row['scriptLanguage'] as String,
+            scriptContent: row['scriptContent'] as String,
+            version: row['version'] as int,
+            allowSync: (row['allowSync'] as int) != 0,
+            enabled: (row['enabled'] as int) != 0,
+            order: row['order'] as int));
+  }
+
+  @override
+  Future<int> add(Rule rule) {
+    return _ruleInsertionAdapter.insertAndReturnId(
+        rule, OnConflictStrategy.ignore);
+  }
+
+  @override
+  Future<int> updateRule(Rule rule) {
+    return _ruleUpdateAdapter.updateAndReturnChangedRows(
+        rule, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateRules(List<Rule> rules) {
+    return _ruleUpdateAdapter.updateListAndReturnChangedRows(
+        rules, OnConflictStrategy.abort);
   }
 }
 

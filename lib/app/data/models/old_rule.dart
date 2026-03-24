@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 @Deprecated("1.5.0版本起不再使用，改为使用 RuleItem")
-class Rule {
+class OldRule {
   final String name;
   final String rule;
 
-  const Rule({required this.name, required this.rule});
+  const OldRule({required this.name, required this.rule});
 
-  static List<Rule> fromJson(List<Map<String, dynamic>> json) {
-    List<Rule> list = List.empty(growable: true);
+  static List<OldRule> fromJson(List<Map<String, dynamic>> json) {
+    List<OldRule> list = List.empty(growable: true);
     for (var r in json) {
-      list.add(Rule(name: r['name']!, rule: r['rule']!));
+      list.add(OldRule(name: r['name']!, rule: r['rule']!));
     }
     return list;
   }
@@ -31,5 +31,5 @@ class Rule {
   int get hashCode => name.hashCode;
 
   @override
-  bool operator ==(Object other) => identical(this, other) || other is Rule && runtimeType == other.runtimeType && name == other.name;
+  bool operator ==(Object other) => identical(this, other) || other is OldRule && runtimeType == other.runtimeType && name == other.name;
 }
