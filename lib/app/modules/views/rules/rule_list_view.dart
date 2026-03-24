@@ -19,7 +19,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class RuleListView extends StatefulWidget {
   final List<RuleItem> rules;
@@ -283,13 +283,13 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
             fabButtonFun(
               onPressed: () {},
               tooltip: TranslationKey.import.tr,
-              child: Icon(MdiIcons.import),
+              child: const Icon(MdiIcons.import),
             ),
           if (multiSelectMode)
             fabButtonFun(
               onPressed: () {},
               tooltip: TranslationKey.output.tr,
-              child: Icon(MdiIcons.export),
+              child: const Icon(MdiIcons.export),
             ),
           if (multiSelectMode)
             fabButtonFun(
@@ -362,7 +362,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                 });
               },
               tooltip: '退出选择模式',
-              child: Icon(MdiIcons.cancel),
+              child: const Icon(MdiIcons.cancel),
             ),
         ],
       ),

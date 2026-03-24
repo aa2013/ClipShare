@@ -45,9 +45,6 @@ dependencies:
   window_manager: ^0.5.0
   # 开机启动
   launch_at_startup: ^0.5.1
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.2
   # 加密
   crypto: ^3.0.3
   encrypt: ^5.0.3
@@ -99,8 +96,10 @@ dependencies:
   permission_handler: ^11.3.1
   # 瀑布流布局
   flutter_staggered_grid_view: ^0.7.0
-  # 图标库
-  material_design_icons_flutter: ^7.0.7296
+  # material 图标库
+  flutter_material_design_icons: ^3.0.0+7447
+  # 品牌图标库，material图标库将在 v8 版本移除所有品牌图标
+  simple_icons: ^14.6.1
   # 本地身份认证
   local_auth: ^2.2.0
   # 接受其他应用的分享操作

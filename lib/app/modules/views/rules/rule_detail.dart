@@ -30,7 +30,7 @@ import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/languages/lua.dart';
 import 'package:re_highlight/languages/sql.dart';
@@ -289,7 +289,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           ///region 来源
           Row(
             children: [
-              Icon(
+              const Icon(
                 MdiIcons.listBoxOutline,
                 color: Colors.blueGrey,
                 size: 16,

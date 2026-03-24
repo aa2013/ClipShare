@@ -265,14 +265,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.7"
-  cupertino_icons:
-    dependency: "direct main"
-    description:
-      name: cupertino_icons
-      sha256: ba631d1c7f7bef6b729a622b7b752645a2d076dba9976925b8f25725a30e1ee6
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.8"
   dart_aliyun_oss:
     dependency: "direct main"
     description:
@@ -558,6 +550,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.6.23"
+  flutter_material_design_icons:
+    dependency: "direct main"
+    description:
+      name: flutter_material_design_icons
+      sha256: "16bd35790b4eaa64c1b7c08622619530a939aee890327b6aeb2907997dfbc894"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.0.0+7447"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -931,14 +931,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.11.1"
-  material_design_icons_flutter:
-    dependency: "direct main"
-    description:
-      name: material_design_icons_flutter
-      sha256: "6f986b7a51f3ad4c00e33c5c84e8de1bdd140489bbcdc8b66fc1283dad4dea5a"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "7.0.7296"
   menu_base:
     dependency: transitive
     description:
@@ -1438,6 +1430,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.1.2"
+  simple_icons:
+    dependency: "direct main"
+    description:
+      name: simple_icons
+      sha256: "2ca3cd79c9f12e97a8588cae0f342609f19fd2e82315356cb09b5c4987ad0808"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "14.6.1"
   sky_engine:
     dependency: transitive
     description: flutter

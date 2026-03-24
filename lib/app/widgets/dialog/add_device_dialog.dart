@@ -10,7 +10,8 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class AddDeviceDialog extends StatefulWidget {
   const AddDeviceDialog({super.key});
@@ -112,7 +113,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
               },
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     MdiIcons.qrcodeScan,
                     size: 14,
                   ),
