@@ -1,9 +1,8 @@
 import 'dart:ffi';
-import 'dart:io';
 import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:ffi/ffi.dart';
 
@@ -27,12 +26,13 @@ import 'package:path/path.dart' as p;
 class RulesController extends GetxController {
   static const String tag = "RulesController";
   final appConfig = Get.find<ConfigService>();
+  final ruleDao = Get.find<DbService>().ruleDao;
 
   // final MultiSplitViewController splitViewController = MultiSplitViewController();
   final rules = <RuleItem>[].obs;
   final selectedItem = Rx<RuleItem?>(null);
   final LuaRuntime _lua = LuaRuntime();
-  final _loadedLuaFun = <String, String>{};
+  final _loadedLuaFun = <String, int>{};
 
   //region 初始化 lua
   static int _log(Pointer<lua_State> L) {
@@ -57,7 +57,9 @@ class RulesController extends GetxController {
   }
 
   void _initLuaFunc() {
-    final luaLibPath = p.join(appConfig.luaLibDirPath,"?.lua").replaceAll("\\", "/");
+    final luaLibPath = p
+        .join(appConfig.luaLibDirPath, "?.lua")
+        .replaceAll("\\", "/");
     var result = _lua.run('''
       package.path = package.path..';'..'$luaLibPath'
       json = require('dkjson')
@@ -73,7 +75,10 @@ class RulesController extends GetxController {
     _lua.registerFunction("__log", logFunPtr);
   }
 
-  (bool success, String hash, String? error) _loadLuaUserFun(String funName, String code) {
+  (bool success, String hash, String? error) _loadLuaUserFun(
+    String funName,
+    String code,
+  ) {
     final funHash = code.toMd5();
     final sandboxWrapper =
         """
@@ -143,11 +148,17 @@ class RulesController extends GetxController {
       if (!rule.isUseScript) {
         continue;
       }
-      final (result, hash, error) = _loadLuaUserFun(rule.name, rule.script.content);
+      final (result, hash, error) = _loadLuaUserFun(
+        rule.name,
+        rule.script.content,
+      );
       if (result) {
         _loadedLuaFun[hash] = rule.id;
       } else {
-        Log.warn(tag, 'load user lua function failed! name = ${rule.name}, script = ${rule.script.content}');
+        Log.warn(
+          tag,
+          'load user lua function failed! name = ${rule.name}, script = ${rule.script.content}',
+        );
       }
     }
   }
@@ -159,39 +170,11 @@ class RulesController extends GetxController {
   //endregion
 
   @override
-  void onInit() {
+  Future<void> onInit() async {
     _initLuaFunc();
     super.onInit();
-
-    rules.add(
-      RuleItem(
-        id: "666",
-        version: 0,
-        name: "测试规则${rules.length + 1}",
-        category: RuleCategory.tag,
-        platforms: {SupportPlatForm.windows, SupportPlatForm.android},
-        sources: {},
-        trigger: RuleTrigger.onCopy,
-        type: RuleContentType.script,
-        regex: RuleRegexContent(
-          mainRegex: r"\d+",
-          allowExtractData: false,
-          extractRegex: '',
-          allowAddTag: false,
-          tags: {},
-          preventSync: false,
-          isFinal: false,
-        ),
-        script: RuleScriptContent(
-          language: RuleScriptLanguage.lua,
-          content: """
-          print(json.encode({a=1,b=2}))
-          """,
-        ),
-        allowSync: true,
-        enabled: true,
-      ),
-    );
+    final list = await ruleDao.getAllRules();
+    rules.value = list.map((e) => RuleItem.fromRule(e)).toList();
     _loadAllLuaUserFun();
     // splitViewController.areas = [
     //   Area(size: 250),
@@ -199,12 +182,20 @@ class RulesController extends GetxController {
     // ];
   }
 
-  void saveRules() {}
+  void saveRules() {
+    for (var i = 0; i < rules.length; i++) {
+      rules[i].order = i+1;
+    }
+    ruleDao.updateRules(rules.map((e) => e.toRule()).toList());
+  }
 
   RuleExecResult run(RuleItem rule) {
     if (rule.isUseScript) {
       var content = "-- temp\n${rule.script.content}";
-      final (compileSuccess, hash, errorMsg) = _loadLuaUserFun("${rule.name}-temp", content);
+      final (compileSuccess, hash, errorMsg) = _loadLuaUserFun(
+        "${rule.name}-temp",
+        content,
+      );
       if (compileSuccess) {
         final result = _lua.run("return run_user_sandbox_method('$hash')");
         _removeLuaUserFun(hash);

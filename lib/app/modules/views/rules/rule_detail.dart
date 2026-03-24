@@ -117,6 +117,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       ),
       allowSync: isSyncRule,
       enabled: origin.enabled,
+      order: origin.order,
     );
   }
 
@@ -759,9 +760,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                   child: IntrinsicWidth(
                     child: Row(
                       children: <Widget>[
-                        if (newRule != null && originRule.toString() != newRule.toString())
+                        if (newRule != null && (newRule.version == 0 || originRule.toString() != newRule.toString()))
                           FloatingActionButton(
                             onPressed: () {
+                              final validateResult = newRule.validate();
+                              if (validateResult != null) {
+                                Global.showSnackBarWarn(text: validateResult, context: context);
+                                return;
+                              }
                               widget.onSaveClicked(newRule);
                               setState(() {
                                 originRule = newRule;

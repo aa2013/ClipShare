@@ -8,6 +8,7 @@ import 'package:clipshare/app/data/repository/dao/history_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_tag_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
+import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
 import 'package:clipshare/app/data/repository/dao/user_dao.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/config.dart';
@@ -17,6 +18,7 @@ import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/data/repository/entity/tables/user.dart';
+import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -40,6 +42,7 @@ const tables = [
   HistoryTag,
   OperationRecord,
   AppInfo,
+  Rule,
 ];
 const views = [VHistoryTagHold];
 
@@ -73,6 +76,8 @@ abstract class _AppDb extends FloorDatabase {
   OperationRecordDao get operationRecordDao;
 
   AppInfoDao get appInfoDao;
+
+  RuleDao get ruleDao;
 }
 
 class DbService extends GetxService {
@@ -94,6 +99,8 @@ class DbService extends GetxService {
   OperationRecordDao get opRecordDao => _db.operationRecordDao;
 
   AppInfoDao get appInfoDao => _db.appInfoDao;
+
+  RuleDao get ruleDao => _db.ruleDao;
 
   final tag = "DbService";
 
@@ -252,5 +259,31 @@ class DbService extends GetxService {
     if (!await hasColumnInTable(database, 'History', 'extracted')) {
       await database.execute("ALTER TABLE `History` ADD COLUMN `extracted` TEXT;");
     }
+    await database.execute("""
+      CREATE TABLE IF NOT EXISTS `Rule` (
+        `id` INTEGER NOT NULL,
+        `name` TEXT NOT NULL,
+        `category` TEXT NOT NULL,
+        `platforms` TEXT NOT NULL,
+        `sources` TEXT NOT NULL,
+        `trigger` TEXT NOT NULL,
+        `type` TEXT NOT NULL,
+        `regexWhiteBlackMode` TEXT,
+        `regexMain` TEXT NOT NULL,
+        `regexAllowExtractData` INTEGER NOT NULL,
+        `regexExtract` TEXT NOT NULL,
+        `regexAllowAddTag` INTEGER NOT NULL,
+        `regexTags` TEXT NOT NULL,
+        `regexPreventSync` INTEGER NOT NULL,
+        `regexIsFinal` INTEGER NOT NULL,
+        `scriptLanguage` TEXT NOT NULL,
+        `scriptContent` TEXT NOT NULL,
+        `version` INTEGER NOT NULL,
+        `allowSync` INTEGER NOT NULL,
+        `enabled` INTEGER NOT NULL,
+        `order` INTEGER NOT NULL,
+        PRIMARY KEY (`id`)
+      )
+    """);
   });
 }

@@ -5,7 +5,9 @@ import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/modules/views/rules/rule_detail.dart';
 import 'package:clipshare/app/modules/views/rules/rule_list_view.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 /**
@@ -16,6 +18,7 @@ class RulesPage extends GetView<RulesController> {
   RulesPage({super.key});
 
   final appConfig = Get.find<ConfigService>();
+  final ruleDao = Get.find<DbService>().ruleDao;
 
   Widget _buildRuleList() {
     final listView = Obx(
@@ -25,9 +28,10 @@ class RulesPage extends GetView<RulesController> {
           controller.saveRules();
           // todo 同步
         },
-        onItemChanged: (RuleItem value) {
+        onItemChanged: (RuleItem item) {
           // todo 同步
-          controller.saveRules();
+          // controller.saveRules();
+          ruleDao.updateRule(item.toRule());
           controller.update();
         },
         onItemTap: (RuleItem item) {
@@ -62,11 +66,24 @@ class RulesPage extends GetView<RulesController> {
               var old = controller.rules[i];
               if (old.id == item.id) {
                 item.version++;
-                controller.rules[i] = item;
+                late final Future<int> saveFuture;
+                if(item.version == 1){
+                  saveFuture = ruleDao.add(item.toRule());
+                }else{
+                  saveFuture = ruleDao.updateRule(item.toRule());
+                }
+                saveFuture.then((cnt){
+                  if(cnt == 0){
+                    Global.showSnackBarErr(text: TranslationKey.saveFailed.tr, context: Get.context!);
+                    // controller.rules.assignAll([...controller.rules]);
+                  }else{
+                    Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: Get.context!);
+                    controller.rules[i] = item;
+                  }
+                });
                 break;
               }
             }
-            controller.saveRules();
           },
         ),
       ),

@@ -1,14 +1,14 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/rule.dart';
+import 'package:clipshare/app/data/models/old_rule.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:flutter/material.dart';
 
 class RuleSettingDialog extends StatefulWidget {
-  final Function(Rule) onChange;
+  final Function(OldRule) onChange;
   final String labelText;
   final String hintText;
 
-  final Rule? initData;
+  final OldRule? initData;
 
   const RuleSettingDialog({
     super.key,
@@ -36,7 +36,7 @@ class _RuleSettingDialogState extends State<RuleSettingDialog> {
   bool _useVerify = false;
 
   void _onChange() {
-    widget.onChange(Rule(name: _tagName, rule: _rule));
+    widget.onChange(OldRule(name: _tagName, rule: _rule));
   }
 
   @override
