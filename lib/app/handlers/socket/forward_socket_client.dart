@@ -6,7 +6,9 @@ import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/handlers/socket/data_packet_splitter.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -27,6 +29,9 @@ class ForwardSocketClient {
 
   int get port => _port;
   late final Socket _socket;
+
+  DateTime? _lastPingTime;
+  Timer? _heartbeatTimer;
   bool _listening = false;
   late final void Function(ForwardSocketClient client, String data)? _onMessage;
   void Function(Exception e, ForwardSocketClient client)? _onError;
@@ -83,6 +88,7 @@ class ForwardSocketClient {
     ssc._onDone = onDone;
     ssc._cancelOnError = cancelOnError;
     ssc._listen();
+    ssc._startJudgeForwardClientAlivePeriod();
     return ssc;
   }
 
@@ -93,24 +99,32 @@ class ForwardSocketClient {
     }
     _listening = true;
     try {
-      _stream = _socket.transform(DataPacketSplitter()).listen(
-        (e) {
-          var rec = utf8.decode(e);
-          _onMessage?.call(this, rec);
-        },
-        onError: (e) {
-          Log.error(tag, "error:$e");
-          if (_onError != null) {
-            _onError!(e, this);
-          }
-        },
-        onDone: () {
-          _onDone?.call(this);
-          Log.debug(tag, "_onDone");
-          _socket.close();
-        },
-        cancelOnError: _cancelOnError,
-      );
+      _stream = _socket
+          .transform(DataPacketSplitter())
+          .listen(
+            (e) {
+              var rec = utf8.decode(e);
+              if (rec == '{"type":"ping"}') {
+                _lastPingTime = DateTime.now();
+                Log.debug(tag, "forward client ping, update pingTime = ${_lastPingTime!.format()}");
+              } else {
+                _onMessage?.call(this, rec);
+              }
+            },
+            onError: (e) {
+              Log.error(tag, "error:$e");
+              if (_onError != null) {
+                _onError!(e, this);
+              }
+            },
+            onDone: () {
+              _stopJudgeForwardClientAlive();
+              _onDone?.call(this);
+              Log.debug(tag, "_onDone");
+              _socket.close();
+            },
+            cancelOnError: _cancelOnError,
+          );
     } catch (e) {
       _listening = false;
       rethrow;
@@ -145,6 +159,38 @@ class ForwardSocketClient {
         _onDone!.call(this);
       }
     }
+  }
+
+  ///定时判断中转服务连接存活状态
+  void _startJudgeForwardClientAlivePeriod() {
+    //先停止
+    if (_heartbeatTimer != null) {
+      _stopJudgeForwardClientAlive();
+    }
+    _lastPingTime = DateTime.now();
+    //更新timer
+    _heartbeatTimer = Timer.periodic(35.s, (timer) {
+      var disconnected = false;
+      if (_lastPingTime == null) {
+        disconnected = true;
+        Log.debug(tag, "startJudgeForwardClientAlivePeriod _lastForwardServerPingTime is null");
+      } else {
+        final now = DateTime.now();
+        if (now.difference(_lastPingTime!).inSeconds >= 35) {
+          disconnected = true;
+          Log.debug(tag, "startJudgeForwardClientAlivePeriod _lastForwardServerPingTime is ${_lastPingTime!.format()}");
+        }
+      }
+      Log.debug(tag, "startJudgeForwardClientAlivePeriod disconnected: $disconnected");
+      if (!disconnected) return;
+      destroy();
+    });
+  }
+
+  ///停止定时判断中转服务连接存活状态
+  void _stopJudgeForwardClientAlive() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
   }
 
   ///关闭连接

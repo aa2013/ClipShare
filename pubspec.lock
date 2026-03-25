@@ -196,10 +196,11 @@ packages:
   clipshare_clipboard_listener:
     dependency: "direct main"
     description:
-      path: "../clipboard_listener"
-      relative: true
-    source: path
-    version: "1.2.13"
+      name: clipshare_clipboard_listener
+      sha256: "13a48db2ab67740f0f580a452777a1b7a576610930951796571425414871ba27"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.14"
   clock:
     dependency: transitive
     description:
