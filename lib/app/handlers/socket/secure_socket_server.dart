@@ -116,8 +116,8 @@ class SecureSocketServer {
   }
 
   ///发送数据
-  void send(SecureSocketClient client, Map map) {
-    client.send(map);
+  Future<void> send(SecureSocketClient client, Map map) async {
+    await client.send(map);
   }
 
   ///关闭连接

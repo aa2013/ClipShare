@@ -56,8 +56,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   static const String tag = "SocketService";
   static const maxParallelCnt = 10;
   Timer? _heartbeatTimer;
-  Timer? _forwardClientHeartbeatTimer;
-  DateTime? _lastForwardServerPingTime;
 
   // devId => DevSocket
   final Map<String, DevSocket> _devSockets = {};
@@ -320,7 +318,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   ///连接中转服务器
   Future<void> connectForwardServer([bool startDiscovery = false]) async {
     if (_forwardClient != null) {
-      disConnectForwardServer();
+      await disConnectForwardServer();
     }
     if (appConfig.forwardWay != ForwardWay.server) {
       Log.debug(tag, "connectForwardServer forward way is ${appConfig.forwardWay.name}");
@@ -345,7 +343,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         onDone: (self) {
           _forwardClient = null;
           _updateForwardDisConnectedStatus();
-          _stopJudgeForwardClientAlive();
           Log.debug(tag, "forwardClient done");
           if (_autoConnForwardServer) {
             Log.debug(tag, "尝试重连中转");
@@ -362,7 +359,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           _autoConnForwardServer = true;
           Log.debug(tag, "forwardClient onConnected");
           _updateForwardConnectedStatus();
-          _startJudgeForwardClientAlivePeriod();
           //中转服务器连接成功后发送本机信息
           final connData = ForwardSocketClient.baseMsg
             ..addAll({
@@ -435,17 +431,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     for (var devId in keys) {
       var skt = _devSockets[devId];
       if (skt == null || !skt.socket.isForwardMode) continue;
-      _onDevDisconnected(devId, autoReconnect: true);
       skt.socket.destroy();
+      _onDevDisconnected(devId, autoReconnect: false);
     }
   }
 
   Future<void> _onForwardServerReceived(Map<String, dynamic> data) async {
     final type = ForwardMsgType.getValue(data["type"]);
     switch (type) {
-      case ForwardMsgType.ping:
-        _lastForwardServerPingTime = DateTime.now();
-        break;
       case ForwardMsgType.fileSyncNotAllowed:
         Global.showTipsDialog(
           context: Get.context!,
@@ -1387,35 +1380,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     _heartbeatTimer = null;
   }
 
-  ///定时判断中转服务连接存活状态
-  void _startJudgeForwardClientAlivePeriod() {
-    //先停止
-    if (_forwardClientHeartbeatTimer != null) {
-      _stopJudgeForwardClientAlive();
-    }
-    //更新timer
-    _forwardClientHeartbeatTimer = Timer.periodic(35.s, (timer) {
-      var disconnected = false;
-      if (_lastForwardServerPingTime == null) {
-        disconnected = true;
-      } else {
-        final now = DateTime.now();
-        if (now.difference(_lastForwardServerPingTime!).inSeconds >= 35) {
-          disconnected = true;
-        }
-      }
-      Log.debug(tag, "startJudgeForwardClientAlivePeriod disconnected: $disconnected");
-      if (!disconnected) return;
-      _forwardClient?.destroy();
-    });
-  }
-
-  ///停止定时判断中转服务连接存活状态
-  void _stopJudgeForwardClientAlive() {
-    _forwardClientHeartbeatTimer?.cancel();
-    _forwardClientHeartbeatTimer = null;
-  }
-
   ///判断设备心跳是否超时
   void judgeDeviceHeartbeatTimeout() {
     //手机在息屏后无法发送网络数据
@@ -1467,7 +1431,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       autoCloseConnTimer = null;
       disConnectAllConnections();
       stopHeartbeatTest();
-      _stopJudgeForwardClientAlive();
     });
     // Log.debug(tag, "定时器激活状态: ${autoCloseConnTimer?.isActive}");
   }

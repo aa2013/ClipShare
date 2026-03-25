@@ -96,10 +96,10 @@ class SecureSocketClient {
     );
     if (ssc._connectionMode == ConnectionMode.direct) {
       //直连模式主动连接，发送素数，底数，公钥
-      ssc.sendKey();
+      await ssc.sendKey();
     } else {
       //中转模式发送初始信息
-      ssc.send({
+      await ssc.send({
         "self": selfDevId,
         "target": targetDevId,
       });
@@ -164,7 +164,7 @@ class SecureSocketClient {
         Log.debug(tag, "forward ${type.name}");
         switch (type) {
           case ForwardMsgType.bothConnected:
-            send({"type": ForwardMsgType.bothConnected.name});
+            await send({"type": ForwardMsgType.bothConnected.name});
             String sender = json["sender"];
             if (sender != _selfDevId) {
               _forwardReady = true;
@@ -172,7 +172,7 @@ class SecureSocketClient {
             break;
           case ForwardMsgType.forwardReady:
             _forwardReady = true;
-            sendKey();
+            await sendKey();
             break;
           default:
         }
@@ -205,7 +205,7 @@ class SecureSocketClient {
           }
         } else {
           //密钥未交换
-          _exchange(utf8.decode(bytes));
+          await _exchange(utf8.decode(bytes));
         }
         //endregion
       }
@@ -225,9 +225,9 @@ class SecureSocketClient {
       _socket
           .transform(_dataSplitter)
           .listen(
-            (bytes) {
+            (bytes) async {
               //接收完成，进行解码
-              _recDataLock.synchronized(() => _onDataReceive(bytes));
+              await _recDataLock.synchronized(() => _onDataReceive(bytes));
             },
             onError: (e) {
               Log.error(tag, "error:$e");
@@ -235,12 +235,12 @@ class SecureSocketClient {
                 _onError!(e, this);
               }
             },
-            onDone: () {
+            onDone: () async {
               if (_keyIsExchanged) {
                 _onDone?.call(this);
               }
               Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
-              _socket.close();
+              await _socket.close();
             },
             cancelOnError: _cancelOnError,
           );
@@ -265,7 +265,7 @@ class SecureSocketClient {
   }
 
   ///DH 算法发送 key 和 素数、底数
-  void sendKey() {
+  Future<void> sendKey() async {
     if (_keyIsExchanged) {
       throw Exception("already ready");
     }
@@ -282,11 +282,11 @@ class SecureSocketClient {
       "key": _dhEncrypt(_dh.publicKey.toString()),
       "port": appConfig.port,
     };
-    send(map);
+    await send(map);
   }
 
   ///密钥交换
-  void _exchange(String msg) {
+  Future<void> _exchange(String msg) async {
     var data = jsonDecode(msg);
     //A(client) -------> B(server)
     if (data["seq"] == 1) {
@@ -312,7 +312,7 @@ class SecureSocketClient {
         "port": appConfig.port,
       };
       //发送
-      send(map);
+      await send(map);
     }
     //A(client) <------- B(server)
     if (data["seq"] == 2) {
@@ -414,14 +414,14 @@ class SecureSocketClient {
   }
 
   ///关闭连接
-  Future close() {
-    _msgStreamController.close();
+  Future close() async {
+    await _msgStreamController.close();
     return _socket.close();
   }
 
   ///强制关闭
-  void destroy() {
-    _msgStreamController.close();
+  Future<void> destroy() async {
+    await _msgStreamController.close();
     return _socket.destroy();
   }
 
