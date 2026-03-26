@@ -29,6 +29,7 @@ class ForwardSocketClient {
 
   int get port => _port;
   late final Socket _socket;
+  bool _enableHeartbeat = true;
 
   DateTime? _lastPingTime;
   Timer? _heartbeatTimer;
@@ -53,6 +54,7 @@ class ForwardSocketClient {
     void Function(Exception e, ForwardSocketClient client)? onError,
     void Function(ForwardSocketClient client)? onDone,
     bool? cancelOnError,
+    bool enableHeartbeat = true,
   }) async {
     var socket = await Socket.connect(
       ip,
@@ -65,6 +67,7 @@ class ForwardSocketClient {
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
+      enableHeartbeat: enableHeartbeat,
     );
     onConnected?.call(ssc);
     return ssc;
@@ -77,6 +80,7 @@ class ForwardSocketClient {
     void Function(Exception e, ForwardSocketClient self)? onError,
     void Function(ForwardSocketClient self)? onDone,
     bool? cancelOnError,
+    bool enableHeartbeat = true,
   }) {
     var ssc = ForwardSocketClient._private(socket.remoteAddress.address);
     if (serverPort != null) {
@@ -87,8 +91,11 @@ class ForwardSocketClient {
     ssc._onError = onError;
     ssc._onDone = onDone;
     ssc._cancelOnError = cancelOnError;
+    ssc._enableHeartbeat = enableHeartbeat;
     ssc._listen();
-    ssc._startJudgeForwardClientAlivePeriod();
+    if (enableHeartbeat) {
+      ssc._startJudgeForwardClientAlivePeriod();
+    }
     return ssc;
   }
 
@@ -163,6 +170,9 @@ class ForwardSocketClient {
 
   ///定时判断中转服务连接存活状态
   void _startJudgeForwardClientAlivePeriod() {
+    if (!_enableHeartbeat) {
+      return;
+    }
     //先停止
     if (_heartbeatTimer != null) {
       _stopJudgeForwardClientAlive();
@@ -191,15 +201,36 @@ class ForwardSocketClient {
   void _stopJudgeForwardClientAlive() {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+    _lastPingTime = null;
+  }
+
+  void enableHeartbeatTest() {
+    if (_enableHeartbeat) {
+      return;
+    }
+    _enableHeartbeat = true;
+    if (_heartbeatTimer != null) {
+      _startJudgeForwardClientAlivePeriod();
+    }
+  }
+
+  void disableHeartbeatTest() {
+    if (!_enableHeartbeat) {
+      return;
+    }
+    _enableHeartbeat = false;
+    _stopJudgeForwardClientAlive();
   }
 
   ///关闭连接
   Future close() {
+    _stopJudgeForwardClientAlive();
     return _socket.close();
   }
 
   ///强制关闭
   void destroy() {
+    _stopJudgeForwardClientAlive();
     return _socket.destroy();
   }
 }

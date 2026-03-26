@@ -71,4 +71,5 @@ enum ConfigKey {
   rememberPopupWindowSize,
   historyWindowSize,
   fileSenderWindowSize,
+  enableForwardHeartbeat,
 }

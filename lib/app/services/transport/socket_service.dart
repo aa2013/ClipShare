@@ -336,6 +336,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       _forwardClient = await ForwardSocketClient.connect(
         ip: forwardServerHost!,
         port: forwardServerPort!,
+        enableHeartbeat: appConfig.enableForwardHeartbeat,
         onMessage: (self, data) {
           Log.debug(tag, "forwardClient onMessage $data");
           _onForwardServerReceived(jsonDecode(data));
@@ -389,6 +390,16 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         );
       }
     }
+  }
+
+  ///启用中转心跳检测
+  void enableForwardServerHeartbeat(){
+    _forwardClient?.enableHeartbeatTest();
+  }
+
+  ///禁用中转心跳检测
+  void disableForwardServerHeartbeat(){
+    _forwardClient?.disableHeartbeatTest();
   }
 
   ///断开中转服务器
