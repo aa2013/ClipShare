@@ -582,6 +582,11 @@ class ConfigService extends GetxService {
 
   Size? get fileSenderWindowSize => _fileSenderWindowSize.value;
 
+  ///中转心跳检测开关
+  final _enableForwardHeartbeat = true.obs;
+
+  bool get enableForwardHeartbeat => _enableForwardHeartbeat.value;
+
   //endregion
 
   //endregion
@@ -817,6 +822,7 @@ class ConfigService extends GetxService {
         return null;
       },
     );
+    _enableForwardHeartbeat.value = await cfg.getConfigByKey(ConfigKey.enableForwardHeartbeat, true);
   }
 
   ///初始化路径信息
@@ -1470,6 +1476,12 @@ class ConfigService extends GetxService {
         return;
     }
     await configDao.addOrUpdate(key, "${size.width.toStringAsFixed(2)}x${size.height.toStringAsFixed(2)}");
+  }
+
+  ///启用/禁用中转心跳检测
+  Future<void> setEnableForwardHeartbeat(bool enable) async {
+    await configDao.addOrUpdate(ConfigKey.enableForwardHeartbeat, enable.toString());
+    _enableForwardHeartbeat.value = enable;
   }
 
   //endregion

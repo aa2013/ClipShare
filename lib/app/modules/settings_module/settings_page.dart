@@ -1459,6 +1459,30 @@ class SettingsPage extends GetView<SettingsController> {
                             );
                           },
                         ),
+                      //中转程序心跳检测开关
+                      if (appConfig.forwardWay == ForwardWay.server)
+                        SettingCard(
+                          title: Text(
+                            TranslationKey.forwardSettingsForwardHeartbeatTitle.tr,
+                            maxLines: 1,
+                          ),
+                          description: Text(TranslationKey.forwardSettingsForwardHeartbeatDesc.tr),
+                          value: appConfig.enableForwardHeartbeat,
+                          action: (v) {
+                            return Switch(
+                              value: v,
+                              onChanged: (checked) async {
+                                HapticFeedback.mediumImpact();
+                                appConfig.setEnableForwardHeartbeat(checked);
+                                if (checked) {
+                                  sktService.enableForwardServerHeartbeat();
+                                } else {
+                                  sktService.disableForwardServerHeartbeat();
+                                }
+                              },
+                            );
+                          },
+                        ),
                       if (appConfig.forwardWay == ForwardWay.server)
                         SettingCard(
                           title: Text(

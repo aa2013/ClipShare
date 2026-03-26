@@ -705,7 +705,9 @@ enum TranslationKey {
   notConfigured,
   storagePathTips,
   uploading,
-  preferenceSettingsRecordsDialogSize;
+  preferenceSettingsRecordsDialogSize,
+  forwardSettingsForwardHeartbeatTitle,
+  forwardSettingsForwardHeartbeatDesc;
 
   String get tr => name.tr;
 
