@@ -1,8 +1,8 @@
+import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class RuleCard extends StatelessWidget {
@@ -13,7 +13,9 @@ class RuleCard extends StatelessWidget {
   final GestureTapCallback onTap;
   final GestureLongPressCallback? onLongPress;
   final bool selectMode;
+  final bool disabledDrag;
   final bool selected;
+  final bool isActive;
 
   const RuleCard({
     super.key,
@@ -25,16 +27,39 @@ class RuleCard extends StatelessWidget {
     this.selected = false,
     this.onSelectedChanged,
     this.orderedIndex,
+    this.isActive = false,
+    this.disabledDrag = false,
   });
+
+  static const _activeStyle = TextStyle(
+    color: Colors.blueGrey,
+    fontWeight: FontWeight.bold,
+  );
 
   @override
   Widget build(BuildContext context) {
+    IconData icon = Icons.tag;
+    TranslationKey tooltip = TranslationKey.unknown;
+    switch (rule.trigger) {
+      case RuleTrigger.onCopy:
+        icon = Icons.text_snippet_outlined;
+        tooltip = TranslationKey.triggerOnCopy;
+        break;
+      case RuleTrigger.onNotification:
+        icon = Icons.notifications_active_outlined;
+        tooltip = TranslationKey.triggerOnNotification;
+        break;
+      case RuleTrigger.onSms:
+        icon = Icons.sms_outlined;
+        tooltip = TranslationKey.triggerOnSms;
+        break;
+    }
     return SizedBox(
       child: Card(
         elevation: 0,
         margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
         child: InkWell(
-          mouseCursor: SystemMouseCursors.basic,
+          mouseCursor: SystemMouseCursors.click,
           onTap: onTap,
           onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(12.0),
@@ -59,7 +84,23 @@ class RuleCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(rule.name),
+                      Row(
+                        children: [
+                          Tooltip(
+                            message: tooltip.tr,
+                            child: Icon(
+                              icon,
+                              size: 14,
+                              color: Colors.blueGrey,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Text(
+                            rule.name,
+                            style: isActive ? _activeStyle : null,
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 2),
                       Wrap(
                         children: [
@@ -98,14 +139,17 @@ class RuleCard extends StatelessWidget {
                     if (orderedIndex != null)
                       ReorderableDragStartListener(
                         index: orderedIndex!,
-                        child: selectMode
-                            ? const SizedBox.shrink()
-                            : IconButton(
-                                onPressed: () {},
-                                tooltip: '拖拽排序',
-                                icon: const Icon(Icons.drag_indicator),
-                                padding: EdgeInsets.zero,
-                              ),
+                        child: Visibility(
+                          visible: selectMode,
+                          replacement: IconButton(
+                            mouseCursor: disabledDrag ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
+                            onPressed: disabledDrag ? null : () {},
+                            tooltip: disabledDrag ? '保存数据后可拖拽排序' : '拖拽排序',
+                            icon: const Icon(Icons.drag_indicator),
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: const SizedBox.shrink(),
+                        ),
                       ),
                   ],
                 ),

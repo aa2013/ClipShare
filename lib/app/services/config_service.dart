@@ -1565,52 +1565,6 @@ class ConfigService extends GetxService {
     }
   }
 
-  ///判断是否命中内容黑名单
-  FilterRuleMatchResult matchesContentBlacklist(HistoryContentType type, String content, ClipboardSource? source) {
-    if (!enableContentBlackList) {
-      return FilterRuleMatchResult.notMatched;
-    }
-    // 遍历所有黑名单规则
-    for (final rule in contentBlackList) {
-      // 跳过未启用的规则
-      if (!rule.enable) continue;
-      if (rule.matched(type, content, source)) {
-        return FilterRuleMatchResult.matched(rule);
-      }
-    }
-
-    // 没有命中任何黑名单规则
-    return FilterRuleMatchResult.notMatched;
-  }
-
-  ///判断是否命中通知黑白名单规则
-  FilterRuleMatchResult matchesNotificationRuleList(String content, String pkgName) {
-    //未启用
-    if (!enableRecordNotification) {
-      return FilterRuleMatchResult.notMatched;
-    }
-    try {
-      final json = jsonDecode(content);
-      final title = json["title"];
-      final detail = json["content"];
-      content = "$title\n$detail";
-    } catch (err, stack) {
-      Log.error(tag, "matchesNotificationRuleList error: $err,$stack");
-    }
-    final ruleList = currentNotificationWhiteBlackMode == WhiteBlackMode.black ? notificationBlackList : notificationWhiteList;
-    final source = ClipboardSource(id: pkgName, name: "", time: null, iconB64: "");
-    for (var rule in ruleList) {
-      // 跳过未启用的规则
-      if (!rule.enable) continue;
-      if (rule.matched(HistoryContentType.notification, content, source)) {
-        return FilterRuleMatchResult.matched(rule);
-      }
-    }
-
-    //未命中
-    return FilterRuleMatchResult.notMatched;
-  }
-
   ///获取分词文件的存储位置
   Future<String> getJiebaSegmentFileDirPath() async {
     late String dirPath;

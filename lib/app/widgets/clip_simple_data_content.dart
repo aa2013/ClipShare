@@ -14,15 +14,26 @@ class ClipSimpleDataContent extends StatelessWidget {
   final ClipData clip;
   final bool imgOnlyView;
   final bool imgSingleView;
+  final bool showOriginData;
 
-  const ClipSimpleDataContent({super.key, required this.clip, this.imgOnlyView = false, this.imgSingleView = false});
+  const ClipSimpleDataContent({
+    super.key,
+    required this.clip,
+    this.imgOnlyView = false,
+    this.imgSingleView = false,
+    this.showOriginData = false,
+  });
 
   Widget _renderText() {
     String content = "";
     if (clip.isNotification) {
       content = clip.notificationContent!;
     } else {
-      content = clip.data.content;
+      if (clip.data.extracted != null && !showOriginData) {
+        content = clip.data.extracted!;
+      } else {
+        content = clip.data.content;
+      }
     }
     content = content.substringMinLen(0, 200);
     return Text(

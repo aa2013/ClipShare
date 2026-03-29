@@ -405,6 +405,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "该文件无法直接读取\n\n是否先保存到【文件存储路径】？";
       case TranslationKey.save:
         return "保存";
+      case TranslationKey.saved:
+        return "已保存";
       case TranslationKey.saveFileNotSupportDialogText:
         return "不支持的类型";
       case TranslationKey.pieDataStatisticsLocalItemLabel:
@@ -1127,7 +1129,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "黑名单规则";
       case TranslationKey.whitelistRules:
         return "白名单规则";
-        return "当前仅对文本内容生效";
       case TranslationKey.ignoreCase:
         return "忽略大小写";
       case TranslationKey.application:
@@ -1439,6 +1440,80 @@ class ZhCNTranslation extends AbstractTranslations {
         return "若启用则表示使用托盘闪烁的方式否则为默认的系统通知";
       case TranslationKey.rulesManagement:
         return "规则管理";
+      case TranslationKey.displayExtractedContent:
+        return "显示提取内容";
+      case TranslationKey.displayOriginContent:
+        return "显示原始内容";
+      case TranslationKey.codePromptParamsContentIsSyncDisabled:
+        return "是否阻止同步";
+      case TranslationKey.codePromptParamsContentTags:
+        return "标签";
+      case TranslationKey.codePromptParamsContentExtracted:
+        return "提取的内容";
+      case TranslationKey.codePromptParamsContentDetail:
+        return "内容";
+      case TranslationKey.codePromptParamsContentNotificationTitle:
+        return "通知标题，仅在类型为通知时可用";
+      case TranslationKey.codePromptParamsContentSouce:
+        return "内容来源，可能是本机路径或者是App包名";
+      case TranslationKey.codePromptParamsContentTpye:
+        return "内容类型";
+      case TranslationKey.codePromptNotificationTpye:
+        return "通知";
+      case TranslationKey.codePromptImageType:
+        return "图片";
+      case TranslationKey.codePromptTextType:
+        return "文本";
+      case TranslationKey.codePromptSmsType:
+        return "短信";
+      case TranslationKey.codePromptJsonDecode:
+        return "Json解码";
+      case TranslationKey.codePromptLogError:
+        return "输出错误级别的日志信息";
+      case TranslationKey.codePromptLogWarn:
+        return "输出警告级别的日志信息";
+      case TranslationKey.codePromptLogDebug:
+        return "输出调试级别的日志信息";
+      case TranslationKey.codePromptLogInfo:
+        return "输出信息级别的日志信息";
+      case TranslationKey.codePromptParams:
+        return "脚本参数，代表剪贴板/通知/短信详情信息，也可能是上一个脚本处理后的数据";
+      case TranslationKey.codePromptContentType:
+        return "内容类型";
+      case TranslationKey.codePromptJson:
+        return "Json库";
+      case TranslationKey.codePromptLog:
+        return "日志库";
+      case TranslationKey.codePromptPrint:
+        return "打印输出，等同于 log.debug() ";
+      case TranslationKey.success:
+        return '成功';
+      case TranslationKey.error:
+        return '错误';
+      case TranslationKey.extracted:
+        return '提取内容';
+      case TranslationKey.tags:
+        return '标签';
+      case TranslationKey.flags:
+        return '标记';
+      case TranslationKey.finalRule:
+        return '最终规则';
+      case TranslationKey.dropped:
+        return '丢弃';
+      case TranslationKey.syncDisabled:
+        return '阻止同步';
+      case TranslationKey.rules:
+        return '规则';
+      case TranslationKey.libs:
+        return '库';
+      case TranslationKey.unknown:
+        return '未知';
+      case TranslationKey.triggerOnCopy:
+        return '触发模式：复制';
+      case TranslationKey.triggerOnNotification:
+        return '触发模式：通知';
+      case TranslationKey.triggerOnSms:
+        return '触发模式：短信';
     }
   }
 }

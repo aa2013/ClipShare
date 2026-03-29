@@ -105,7 +105,7 @@ class HistoryFilterController {
   }
 
   String getDevNameById(devId) {
-    return allDevices.firstWhereOrNull((item) => item.guid == devId)?.name ?? "Unknown";
+    return allDevices.firstWhereOrNull((item) => item.guid == devId)?.name ?? TranslationKey.unknown.tr;
   }
 }
 

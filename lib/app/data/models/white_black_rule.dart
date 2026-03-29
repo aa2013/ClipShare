@@ -73,7 +73,7 @@ class FilterRule {
   ///判断是否命中
   bool matched(HistoryContentType type, String content, ClipboardSource? source) {
     // 检查内容匹配
-    final contentMatched = isAllContent || content.matchRegExp(this.content, ignoreCase == false);
+    final contentMatched = isAllContent || content.matchRegExp(this.content, caseSensitive: ignoreCase == false);
     // 检查应用匹配
     final appMatched = isAllApp || (source != null && appIds.contains(source.id));
 

@@ -1,16 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:clipshare/app/data/enums/rule/rule_category.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/models/re-editor/field_prompt.dart';
+import 'package:clipshare/app/data/models/re-editor/function_prompt.dart';
+import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_prompt.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_log.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_lua.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_sqlite.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:re_editor/re_editor.dart';
-import 'package:re_highlight/languages/lua.dart';
-import 'package:re_highlight/languages/sql.dart';
 import 'package:simple_icons/simple_icons.dart';
 
 class Constants {
@@ -180,9 +183,6 @@ class Constants {
     ),
   };
 
-  ///规则类别
-  static final List<RuleCategory> ruleCategoryItems = RuleCategory.values.where((item) => item != RuleCategory.unknown).toList();
-
   //按键名称映射
   static final keyNameMap = [
     {
@@ -251,16 +251,19 @@ class Constants {
   static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
   static const appIconSize = 17.0;
   static final emptyContent = EmptyContent();
-  static final codeSQLTheme = CodeHighlightThemeMode(mode: langSql);
-  static final codeLuaTheme = CodeHighlightThemeMode(mode: langLua);
+  static final codeSQLTheme = CodeHighlightThemeMode(mode: langSqliteHighlight);
+  static final codeLuaTheme = CodeHighlightThemeMode(mode: langLuaHighlight);
+  static final codeLogTheme = CodeHighlightThemeMode(mode: langLogHighlight);
+
+  //region lua code
 
   // language=lua
-  static const String globalLuaFun = """
+  static const String luaGlobalFun = """
     __userscripts_map = {}
     function remove_user_sandbox_method(script_hash)
       __userscripts_map[script_hash] = nil
     end
-    function run_user_sandbox_method(script_hash)
+    function run_user_sandbox_method(script_hash, paramsJson)
       if not script_hash then
         script_hash = ''
       end
@@ -268,7 +271,7 @@ class Constants {
       if not script then
         error('ERR: not found user script: ' .. script_hash, 0)
       end
-      local result = script()
+      local result = script(json.decode(paramsJson))
       if type(result) == "table" then
         return json.encode(result)
       else
@@ -277,4 +280,240 @@ class Constants {
       
     end 
   """;
+
+  // language=lua
+  static const String luaTemplateRule = """
+  -- 内容
+  local content = params.content
+  
+  -- 返回结果
+  return {
+    -- 通知的标题(仅当类型为通知时有效)
+    title = params.title,
+    -- 内容/通知的内容
+    content = content,
+    -- 提取出的内容
+    extractedContent = params.extractedContent,
+    -- 标签
+    tags = params.tags or {},
+    -- 是否阻止同步
+    isSyncDisabled = params.isSyncDisabled or false,
+    -- 是否丢弃
+    isDropped = false,
+    -- 是否最终规则
+    isFinalRule = false,
+  }
+  """;
+
+  // language=lua
+  static const String luaSandboxWrapper = """
+        local wrapper = function() 
+          local not_allow_func = function()
+            return error("not allow operation in sandbox", 2)
+          end
+          local log = {
+            debug = function(...) __log({{isTest}}, 'debug','{{funName}}', table.concat({...}, ", ")) end,
+            warn = function(...) __log({{isTest}}, 'warn','{{funName}}', table.concat({...}, ", ")) end,
+            info = function(...) __log({{isTest}}, 'info','{{funName}}', table.concat({...}, ", ")) end,
+            error = function(...) __log({{isTest}}, 'error','{{funName}}', table.concat({...}, ", ")) end,
+          }
+          local safe_os = {}
+          for k, v in pairs(os) do
+            safe_os[k] = v
+          end
+          safe_os.exit = not_allow_func
+          safe_os.execute = not_allow_func
+          
+          local forbidden_keys = {
+              "__userscripts_map", "_G", "_ENV",
+              "load", "loadstring", "dofile", "package",
+              "debug", "getmetatable", "setmetatable",
+              "rawget", "rawset", "rawequal", 
+              'run_user_sandbox_method'
+          }
+          
+          local scope = {
+            log = log,
+            print = log.debug,
+            os = safe_os,
+            json = json,
+            ContentType = {
+              sms = 'sms',
+              text = 'text',
+              image = 'image',
+              notification = 'notification',
+            }
+          }
+          
+          for _, k in ipairs(forbidden_keys) do
+            scope[k] = not_allow_func
+          end
+          
+          local env = setmetatable(scope, {
+              __index = _G,
+              __newindex = function(_, k)
+                  error("global '" .. k .. "' is readonly", 2)
+              end
+          })
+          local chunk, err = load([[return function(params) {{code}} end]], "sandbox", "t", env)
+          if not chunk then
+              return err
+          end
+      
+          __userscripts_map['{{funHash}}']= chunk()
+          log.debug('loaded fun: '..'{{funName}}: {{funHash}}')
+          return 'OK'
+        end
+        print(wrapper())
+    """;
+
+  //endregion
+
+  //region lua key prompt
+
+  static final List<CaseInsensitiveKeywordPrompt> luaKeywordPrompts = [];
+  static final List<CodePrompt> luaDirectPrompts = [
+    FunctionPrompt(
+      word: 'print',
+      returnType: 'void',
+      parameters: {
+        'log': 'string',
+      },
+      desc: TranslationKey.codePromptPrint,
+    ),
+    FieldPrompt(
+      word: 'log',
+      type: "table",
+      desc: TranslationKey.codePromptLog,
+    ),
+    FieldPrompt(
+      word: 'json',
+      type: "table",
+      desc: TranslationKey.codePromptJson,
+    ),
+    FieldPrompt(
+      word: 'ContentType',
+      type: "table",
+      desc: TranslationKey.codePromptContentType,
+    ),
+    FieldPrompt(
+      word: 'params',
+      type: "table",
+      desc: TranslationKey.codePromptParams,
+    ),
+  ];
+  static final Map<String, List<CodePrompt>> luaRelatedPrompts = {
+    'log': [
+      FunctionPrompt(
+        word: 'info',
+        returnType: 'void',
+        parameters: {
+          "log": "string",
+        },
+        desc: TranslationKey.codePromptLogInfo,
+      ),
+      FunctionPrompt(
+        word: 'debug',
+        returnType: 'void',
+        parameters: {
+          "log": "string",
+        },
+        desc: TranslationKey.codePromptLogDebug,
+      ),
+      FunctionPrompt(
+        word: 'warn',
+        returnType: 'void',
+        parameters: {
+          "log": "string",
+        },
+        desc: TranslationKey.codePromptLogWarn,
+      ),
+      FunctionPrompt(
+        word: 'error',
+        returnType: 'void',
+        parameters: {
+          "log": "string",
+        },
+        desc: TranslationKey.codePromptLogError,
+      ),
+    ],
+    'json': [
+      FunctionPrompt(
+        word: 'encode',
+        returnType: 'string',
+        parameters: {
+          "value": "table",
+        },
+        desc: TranslationKey.codePromptJsonDecode,
+      ),
+      FunctionPrompt(
+        word: 'decode',
+        returnType: 'table',
+        parameters: {
+          "json": "string",
+        },
+        desc: TranslationKey.codePromptJsonDecode,
+      ),
+    ],
+    'ContentType': [
+      FieldPrompt(
+        word: "sms",
+        type: "string",
+        desc: TranslationKey.codePromptSmsType,
+      ),
+      FieldPrompt(
+        word: "text",
+        type: "string",
+        desc: TranslationKey.codePromptTextType,
+      ),
+      FieldPrompt(
+        word: "image",
+        type: "string",
+        desc: TranslationKey.codePromptImageType,
+      ),
+      FieldPrompt(
+        word: "notification",
+        type: "string",
+        desc: TranslationKey.codePromptNotificationTpye,
+      ),
+    ],
+    'params': [
+      FieldPrompt(
+        word: "type",
+        type: "ContentType",
+        desc: TranslationKey.codePromptParamsContentTpye,
+      ),
+      FieldPrompt(
+        word: "source",
+        type: "string?",
+        desc: TranslationKey.codePromptParamsContentSouce,
+      ),
+      FieldPrompt(
+        word: "title",
+        type: "string?",
+        desc: TranslationKey.codePromptParamsContentNotificationTitle,
+      ),
+      FieldPrompt(
+        word: "content",
+        type: "string",
+        desc: TranslationKey.codePromptParamsContentDetail,
+      ),
+      FieldPrompt(
+        word: "extractedContent",
+        type: "string?",
+        desc: TranslationKey.codePromptParamsContentExtracted,
+      ),
+      FieldPrompt(
+        word: "tags",
+        type: "table?",
+        desc: TranslationKey.codePromptParamsContentTags,
+      ),
+      FieldPrompt(
+        word: "isSyncDisabled",
+        type: "bool?",
+        desc: TranslationKey.codePromptParamsContentIsSyncDisabled,
+      ),
+    ],
+  };
+  //endregion
 }

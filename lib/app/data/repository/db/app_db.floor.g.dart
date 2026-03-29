@@ -87,6 +87,8 @@ class _$_AppDb extends _AppDb {
 
   RuleDao? _ruleDaoInstance;
 
+  LuaLibDao? _luaLibDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
@@ -125,7 +127,9 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `category` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtract` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexPreventSync` INTEGER NOT NULL, `regexIsFinal` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `allowSync` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `LuaLib` (`libName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`libName`))');
         await database.execute(
             'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
         await database.execute(
@@ -190,6 +194,11 @@ class _$_AppDb extends _AppDb {
   @override
   RuleDao get ruleDao {
     return _ruleDaoInstance ??= _$RuleDao(database, changeListener);
+  }
+
+  @override
+  LuaLibDao get luaLibDao {
+    return _luaLibDaoInstance ??= _$LuaLibDao(database, changeListener);
   }
 }
 
@@ -1524,7 +1533,6 @@ class _$RuleDao extends RuleDao {
             (Rule item) => <String, Object?>{
                   'id': item.id,
                   'name': item.name,
-                  'category': item.category,
                   'platforms': item.platforms,
                   'sources': item.sources,
                   'trigger': item.trigger,
@@ -1532,15 +1540,14 @@ class _$RuleDao extends RuleDao {
                   'regexWhiteBlackMode': item.regexWhiteBlackMode,
                   'regexMain': item.regexMain,
                   'regexAllowExtractData': item.regexAllowExtractData ? 1 : 0,
-                  'regexExtract': item.regexExtract,
+                  'regexExtractedContent': item.regexExtractedContent,
                   'regexAllowAddTag': item.regexAllowAddTag ? 1 : 0,
                   'regexTags': item.regexTags,
-                  'regexPreventSync': item.regexPreventSync ? 1 : 0,
-                  'regexIsFinal': item.regexIsFinal ? 1 : 0,
+                  'regexIsSyncDisabled': item.regexIsSyncDisabled ? 1 : 0,
+                  'regexIsFinalRule': item.regexIsFinalRule ? 1 : 0,
                   'scriptLanguage': item.scriptLanguage,
                   'scriptContent': item.scriptContent,
                   'version': item.version,
-                  'allowSync': item.allowSync ? 1 : 0,
                   'enabled': item.enabled ? 1 : 0,
                   'order': item.order
                 }),
@@ -1551,7 +1558,6 @@ class _$RuleDao extends RuleDao {
             (Rule item) => <String, Object?>{
                   'id': item.id,
                   'name': item.name,
-                  'category': item.category,
                   'platforms': item.platforms,
                   'sources': item.sources,
                   'trigger': item.trigger,
@@ -1559,15 +1565,14 @@ class _$RuleDao extends RuleDao {
                   'regexWhiteBlackMode': item.regexWhiteBlackMode,
                   'regexMain': item.regexMain,
                   'regexAllowExtractData': item.regexAllowExtractData ? 1 : 0,
-                  'regexExtract': item.regexExtract,
+                  'regexExtractedContent': item.regexExtractedContent,
                   'regexAllowAddTag': item.regexAllowAddTag ? 1 : 0,
                   'regexTags': item.regexTags,
-                  'regexPreventSync': item.regexPreventSync ? 1 : 0,
-                  'regexIsFinal': item.regexIsFinal ? 1 : 0,
+                  'regexIsSyncDisabled': item.regexIsSyncDisabled ? 1 : 0,
+                  'regexIsFinalRule': item.regexIsFinalRule ? 1 : 0,
                   'scriptLanguage': item.scriptLanguage,
                   'scriptContent': item.scriptContent,
                   'version': item.version,
-                  'allowSync': item.allowSync ? 1 : 0,
                   'enabled': item.enabled ? 1 : 0,
                   'order': item.order
                 });
@@ -1595,7 +1600,6 @@ class _$RuleDao extends RuleDao {
         mapper: (Map<String, Object?> row) => Rule(
             id: row['id'] as int,
             name: row['name'] as String,
-            category: row['category'] as String,
             platforms: row['platforms'] as String,
             sources: row['sources'] as String,
             trigger: row['trigger'] as String,
@@ -1603,15 +1607,14 @@ class _$RuleDao extends RuleDao {
             regexWhiteBlackMode: row['regexWhiteBlackMode'] as String?,
             regexMain: row['regexMain'] as String,
             regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
-            regexExtract: row['regexExtract'] as String,
+            regexExtractedContent: row['regexExtractedContent'] as String,
             regexAllowAddTag: (row['regexAllowAddTag'] as int) != 0,
             regexTags: row['regexTags'] as String,
-            regexPreventSync: (row['regexPreventSync'] as int) != 0,
-            regexIsFinal: (row['regexIsFinal'] as int) != 0,
+            regexIsSyncDisabled: (row['regexIsSyncDisabled'] as int) != 0,
+            regexIsFinalRule: (row['regexIsFinalRule'] as int) != 0,
             scriptLanguage: row['scriptLanguage'] as String,
             scriptContent: row['scriptContent'] as String,
             version: row['version'] as int,
-            allowSync: (row['allowSync'] as int) != 0,
             enabled: (row['enabled'] as int) != 0,
             order: row['order'] as int),
         arguments: [id]);
@@ -1623,7 +1626,6 @@ class _$RuleDao extends RuleDao {
         mapper: (Map<String, Object?> row) => Rule(
             id: row['id'] as int,
             name: row['name'] as String,
-            category: row['category'] as String,
             platforms: row['platforms'] as String,
             sources: row['sources'] as String,
             trigger: row['trigger'] as String,
@@ -1631,22 +1633,27 @@ class _$RuleDao extends RuleDao {
             regexWhiteBlackMode: row['regexWhiteBlackMode'] as String?,
             regexMain: row['regexMain'] as String,
             regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
-            regexExtract: row['regexExtract'] as String,
+            regexExtractedContent: row['regexExtractedContent'] as String,
             regexAllowAddTag: (row['regexAllowAddTag'] as int) != 0,
             regexTags: row['regexTags'] as String,
-            regexPreventSync: (row['regexPreventSync'] as int) != 0,
-            regexIsFinal: (row['regexIsFinal'] as int) != 0,
+            regexIsSyncDisabled: (row['regexIsSyncDisabled'] as int) != 0,
+            regexIsFinalRule: (row['regexIsFinalRule'] as int) != 0,
             scriptLanguage: row['scriptLanguage'] as String,
             scriptContent: row['scriptContent'] as String,
             version: row['version'] as int,
-            allowSync: (row['allowSync'] as int) != 0,
             enabled: (row['enabled'] as int) != 0,
             order: row['order'] as int));
   }
 
   @override
-  Future<int> add(Rule rule) {
+  Future<int> addRule(Rule rule) {
     return _ruleInsertionAdapter.insertAndReturnId(
+        rule, OnConflictStrategy.ignore);
+  }
+
+  @override
+  Future<List<int>> addRules(List<Rule> rule) {
+    return _ruleInsertionAdapter.insertListAndReturnIds(
         rule, OnConflictStrategy.ignore);
   }
 
@@ -1660,6 +1667,82 @@ class _$RuleDao extends RuleDao {
   Future<int> updateRules(List<Rule> rules) {
     return _ruleUpdateAdapter.updateListAndReturnChangedRows(
         rules, OnConflictStrategy.abort);
+  }
+}
+
+class _$LuaLibDao extends LuaLibDao {
+  _$LuaLibDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _luaLibInsertionAdapter = InsertionAdapter(
+            database,
+            'LuaLib',
+            (LuaLib item) => <String, Object?>{
+                  'libName': item.libName,
+                  'displayName': item.displayName,
+                  'source': item.source,
+                  'version': item.version
+                }),
+        _luaLibUpdateAdapter = UpdateAdapter(
+            database,
+            'LuaLib',
+            ['libName'],
+            (LuaLib item) => <String, Object?>{
+                  'libName': item.libName,
+                  'displayName': item.displayName,
+                  'source': item.source,
+                  'version': item.version
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<LuaLib> _luaLibInsertionAdapter;
+
+  final UpdateAdapter<LuaLib> _luaLibUpdateAdapter;
+
+  @override
+  Future<int?> remove(String libName) async {
+    return _queryAdapter.query('delete from LuaLib where libName = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [libName]);
+  }
+
+  @override
+  Future<LuaLib?> getByLibName(String libName) async {
+    return _queryAdapter.query('select * from LuaLib where libName = ?1',
+        mapper: (Map<String, Object?> row) => LuaLib(
+            libName: row['libName'] as String,
+            displayName: row['displayName'] as String,
+            source: row['source'] as String,
+            version: row['version'] as int),
+        arguments: [libName]);
+  }
+
+  @override
+  Future<List<LuaLib>> getAllLibs() async {
+    return _queryAdapter.queryList('select * from LuaLib',
+        mapper: (Map<String, Object?> row) => LuaLib(
+            libName: row['libName'] as String,
+            displayName: row['displayName'] as String,
+            source: row['source'] as String,
+            version: row['version'] as int));
+  }
+
+  @override
+  Future<int> addLib(LuaLib lib) {
+    return _luaLibInsertionAdapter.insertAndReturnId(
+        lib, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateLib(LuaLib lib) {
+    return _luaLibUpdateAdapter.updateAndReturnChangedRows(
+        lib, OnConflictStrategy.abort);
   }
 }
 

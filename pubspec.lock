@@ -473,14 +473,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.5.2"
-  flutter_highlighting:
-    dependency: "direct main"
-    description:
-      name: flutter_highlighting
-      sha256: "426770b1453e8302f8cc58455ebcaad33e3049e73ca18f9d3c83554552bf3baf"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.9.0+11.8.0"
   flutter_launcher_icons:
     dependency: "direct dev"
     description:
@@ -650,14 +642,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.3.2"
-  highlighting:
-    dependency: transitive
-    description:
-      name: highlighting
-      sha256: "196005ed9c98ee559939fcecd466fa941b9e99b3a93394691b86780ad4da50f3"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.9.0+11.8.0"
   hotkey_manager:
     dependency: "direct main"
     description:
@@ -1676,14 +1660,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.5.2"
-  tuple:
-    dependency: transitive
-    description:
-      name: tuple
-      sha256: a97ce2013f240b2f3807bcbaf218765b6f301c3eff91092bcfa23a039e7dd151
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "2.0.2"
   typed_data:
     dependency: transitive
     description:

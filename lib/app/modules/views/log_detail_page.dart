@@ -2,12 +2,15 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/theme/code_editor_theme.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/widgets/largeText/large_text.dart';
 import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:re_editor/re_editor.dart';
 import 'package:share_plus/share_plus.dart';
 
 class LogDetailPage extends StatelessWidget {
@@ -50,7 +53,14 @@ class LogDetailPage extends StatelessWidget {
     );
     final content = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: LargeText(text: this.content, readonly: true),
+      child: LargeText(
+        text: this.content,
+        readonly: false,
+        codeTheme: CodeHighlightTheme(
+          languages: {'log': Constants.codeLogTheme},
+          theme: customCodeLightTheme,
+        ),
+      ),
     );
     if (showAppBar) {
       return Scaffold(

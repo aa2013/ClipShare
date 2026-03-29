@@ -18,7 +18,7 @@ class Log {
   );
 
   static void debug(String tag, dynamic) {
-    var log = "${DateTime.now().format()} [$tag] | $dynamic";
+    var log = "${DateTime.now().format()} | [$tag] | $dynamic";
     _logger.d(log);
     writeLog("[debug] | $log");
   }

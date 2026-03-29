@@ -452,6 +452,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "This file cannot be read directly\n\nSave to [File Storage Path] first?";
       case TranslationKey.save:
         return "Save";
+      case TranslationKey.saved:
+        return "Saved";
       case TranslationKey.saveFileNotSupportDialogText:
         return "Unsupported Type";
       case TranslationKey.pieDataStatisticsLocalItemLabel:
@@ -1441,6 +1443,80 @@ class EnUSTranslation extends AbstractTranslations {
         return "Flash system tray on connection or disconnection";
       case TranslationKey.useTrayFlashingForConnectionDesc:
         return "If enabled, flash the system tray; otherwise, use default system notifications";
+      case TranslationKey.displayExtractedContent:
+        return "Display Extracted Content";
+      case TranslationKey.displayOriginContent:
+        return "Display Origin Content";
+      case TranslationKey.codePromptParamsContentIsSyncDisabled:
+        return "Whether to prevent sync";
+      case TranslationKey.codePromptParamsContentTags:
+        return "Tags";
+      case TranslationKey.codePromptParamsContentExtracted:
+        return "Extracted content";
+      case TranslationKey.codePromptParamsContentDetail:
+        return "Content";
+      case TranslationKey.codePromptParamsContentNotificationTitle:
+        return "Notification title (available only when type is notification)";
+      case TranslationKey.codePromptParamsContentSouce: // Note: "Souce" might be a typo for "Source"
+        return "Content source, either a local path or an App package name";
+      case TranslationKey.codePromptParamsContentTpye: // Note: "Tpye" might be a typo for "Type"
+        return "Content type";
+      case TranslationKey.codePromptNotificationTpye: // Note: "Tpye" might be a typo for "Type"
+        return "Notification";
+      case TranslationKey.codePromptImageType:
+        return "Image";
+      case TranslationKey.codePromptTextType:
+        return "Text";
+      case TranslationKey.codePromptSmsType:
+        return "SMS";
+      case TranslationKey.codePromptJsonDecode:
+        return "JSON decode";
+      case TranslationKey.codePromptLogError:
+        return "Output error-level log information";
+      case TranslationKey.codePromptLogWarn:
+        return "Output warning-level log information";
+      case TranslationKey.codePromptLogDebug:
+        return "Output debug-level log information";
+      case TranslationKey.codePromptLogInfo:
+        return "Output info-level log information";
+      case TranslationKey.codePromptParams:
+        return "Script parameters, representing clipboard/notification/SMS details, or data processed by the previous script";
+      case TranslationKey.codePromptContentType:
+        return "Content type";
+      case TranslationKey.codePromptJson:
+        return "JSON library";
+      case TranslationKey.codePromptLog:
+        return "Log library";
+      case TranslationKey.codePromptPrint:
+        return "Print output, equivalent to log.debug()";
+      case TranslationKey.success:
+        return 'Success';
+      case TranslationKey.error:
+        return 'Error';
+      case TranslationKey.extracted:
+        return 'Extracted';
+      case TranslationKey.tags:
+        return 'Tags';
+      case TranslationKey.flags:
+        return 'Flags';
+      case TranslationKey.finalRule:
+        return 'Final';
+      case TranslationKey.dropped:
+        return 'Dropped';
+      case TranslationKey.syncDisabled:
+        return 'Prevent Sync';
+      case TranslationKey.rules:
+        return 'Rules';
+      case TranslationKey.libs:
+        return 'libs';
+      case TranslationKey.unknown:
+        return 'Unknown';
+      case TranslationKey.triggerOnCopy:
+        return 'Trigger: Copy';
+      case TranslationKey.triggerOnNotification:
+        return 'Trigger: Notification';
+      case TranslationKey.triggerOnSms:
+        return 'Trigger: SMS';
     }
   }
 }

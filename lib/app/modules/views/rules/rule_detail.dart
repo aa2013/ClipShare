@@ -1,6 +1,4 @@
-import 'dart:math';
-
-import 'package:clipshare/app/data/enums/rule/rule_category.dart';
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
@@ -8,41 +6,48 @@ import 'package:clipshare/app/data/enums/support_platform.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
-import 'package:clipshare/app/data/models/my_code_keyword_prompt.dart';
+import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
+import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/data/models/rule/rule_regex_content.dart';
 import 'package:clipshare/app/data/models/rule/rule_script_content.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
-import 'package:clipshare/app/modules/views/code_edit_view.dart';
+import 'package:clipshare/app/modules/views/rules/script_edit_test_view.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/dialog/text_edit_dialog.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
+import 'package:clipshare/app/widgets/lua_code_edit_view.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
+import 'package:clipshare/app/widgets/rule/script_test_pannel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:re_editor/re_editor.dart';
-import 'package:re_highlight/languages/lua.dart';
-import 'package:re_highlight/languages/sql.dart';
 
 class RuleDetail extends StatefulWidget {
   final RuleItem? rule;
   final ValueChanged<RuleItem> onSaveClicked;
+  final ValueChanged<bool>? onSaveStatusChanged;
 
   const RuleDetail({
     super.key,
     required this.rule,
     required this.onSaveClicked,
+    this.onSaveStatusChanged,
   });
 
   @override
@@ -54,6 +59,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   final devService = Get.find<DeviceService>();
   final appConfig = Get.find<ConfigService>();
   final ruleController = Get.find<RulesController>();
+  var shouldSave = false;
+  static const tag = "RuleDetail";
+  var isScriptFullScreen = false;
 
   static const int regexTextFieldMaxLines = 4;
   static const InputDecoration regexTextFieldDecoration = InputDecoration(
@@ -70,20 +78,20 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
 
   Set<SupportPlatForm> selectedPlatforms = {SupportPlatForm.android};
   Set<String> selectedSourceIds = {};
-  RuleCategory selectedCategory = RuleCategory.common;
   RuleTrigger selectedTrigger = RuleTrigger.onCopy;
   var ruleContentType = RuleContentType.regex;
-  var isSyncRule = true;
   WhiteBlackMode? whiteBlackModes;
   var isAllowExtractData = false;
   var isPreventSync = false;
   var isFinalRule = false;
   var isAllowPostAddTags = false;
   var postTags = <String>{};
-  var regexTextController = TextEditingController();
-  var extractTextController = TextEditingController();
-  var ruleNameTextController = TextEditingController();
-  var codeController = CodeLineEditingController();
+  final regexTextController = TextEditingController();
+  final extractTextController = TextEditingController();
+  final ruleNameTextController = TextEditingController();
+  final testParamsContentController = TextEditingController();
+  final codeController = CodeLineEditingController();
+  RuleExecResult? testResult;
 
   RuleItem? originRule;
 
@@ -96,7 +104,6 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       id: origin.id,
       version: origin.version,
       name: ruleNameTextController.text,
-      category: selectedCategory,
       platforms: selectedPlatforms,
       sources: selectedSourceIds,
       trigger: selectedTrigger,
@@ -115,9 +122,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         language: RuleScriptLanguage.lua,
         content: codeController.text,
       ),
-      allowSync: isSyncRule,
       enabled: origin.enabled,
       order: origin.order,
+      isNewData: origin.isNewData,
     );
   }
 
@@ -125,10 +132,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     originRule = rule.copy();
     selectedPlatforms = rule.platforms;
     selectedSourceIds = rule.sources;
-    selectedCategory = rule.category;
     selectedTrigger = rule.trigger;
     ruleContentType = rule.type;
-    isSyncRule = rule.allowSync;
     isAllowExtractData = rule.regex.allowExtractData;
     isPreventSync = rule.regex.preventSync;
     isFinalRule = rule.regex.isFinal;
@@ -137,8 +142,13 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     regexTextController.text = rule.regex.mainRegex;
     extractTextController.text = rule.regex.extractRegex;
     ruleNameTextController.text = rule.name;
+    isScriptFullScreen = false;
     updateTabIndex(ruleContentType);
-    codeController.text = rule.script.content;
+    if (rule.script.content.trim().isNullOrEmpty) {
+      codeController.text = Constants.luaTemplateRule;
+    } else {
+      codeController.text = rule.script.content;
+    }
   }
 
   void updateTabIndex(RuleContentType type) {
@@ -153,17 +163,35 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       updateStateData(widget.rule!);
     }
     tabController.addListener(onTabChanged);
-    void updateState() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        setState(() {});
-      });
-    }
-
     regexTextController.addListener(updateState);
     extractTextController.addListener(updateState);
     ruleNameTextController.addListener(updateState);
     codeController.addListener(updateState);
     super.initState();
+  }
+
+  void updateState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    tabController.removeListener(onTabChanged);
+    regexTextController.removeListener(updateState);
+    extractTextController.removeListener(updateState);
+    ruleNameTextController.removeListener(updateState);
+    codeController.removeListener(updateState);
+    codeController.dispose();
+    regexTextController.dispose();
+    extractTextController.dispose();
+    ruleNameTextController.dispose();
+    testParamsContentController.dispose();
+    super.dispose();
   }
 
   @override
@@ -180,7 +208,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     });
   }
 
-  Widget buildRuleInfo() {
+  Widget buildRuleInfo(BuildContext context) {
     return IntrinsicHeight(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -211,41 +239,6 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
 
           ///endregion
 
-          ///region 类别
-          Row(
-            children: [
-              Icon(
-                Icons.category,
-                color: Colors.blueGrey,
-                size: 16,
-              ),
-              const SizedBox(width: 2),
-              Text(
-                "分类",
-                style: const TextStyle(color: Colors.blueGrey),
-              ),
-            ],
-          ),
-          Wrap(
-            direction: Axis.horizontal,
-            children: [
-              for (var category in Constants.ruleCategoryItems.where((item) => item != RuleCategory.all))
-                Container(
-                  margin: 5.insetL,
-                  child: RoundedChip(
-                    label: Text(category.tr),
-                    selected: selectedCategory == category,
-                    onPressed: () {
-                      selectedCategory = category;
-                      setState(() {});
-                    },
-                  ),
-                ),
-            ],
-          ),
-
-          ///endregion
-
           ///region 平台
           Row(
             children: [
@@ -261,6 +254,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
               ),
             ],
           ),
+
           Wrap(
             direction: Axis.horizontal,
             children: [
@@ -368,22 +362,15 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
               ),
             ],
           ),
-          Wrap(
-            direction: Axis.horizontal,
-            children: [
-              for (var trigger in RuleTrigger.values)
-                Container(
-                  margin: 5.insetL,
-                  child: RoundedChip(
-                    label: Text(trigger.tr),
-                    selected: selectedTrigger == trigger,
-                    onPressed: () {
-                      selectedTrigger = trigger;
-                      setState(() {});
-                    },
-                  ),
-                ),
-            ],
+
+          TinySegmentedControl.fromStrings(
+            options: RuleTrigger.values.map((e) => e.tr).toList(),
+            selectedIndex: RuleTrigger.values.indexOf(selectedTrigger),
+            onSelected: (i) {
+              setState(() {
+                selectedTrigger = RuleTrigger.values[i];
+              });
+            },
           ),
 
           ///endregion
@@ -392,7 +379,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     );
   }
 
-  Widget buildRuleTabBar() {
+  Widget buildRuleTabBar(BuildContext context) {
+    final bool isUseScript = currentTab == RuleContentType.script && ruleContentType == RuleContentType.script;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -414,48 +402,57 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
 
         Row(
           children: [
-            TabBar(
-              tabAlignment: TabAlignment.start,
-              controller: tabController,
-              isScrollable: true,
-              dividerHeight: 0,
-              tabs: [
-                for (var tab in [RuleContentType.regex, RuleContentType.script])
-                  Container(
-                    margin: 5.insetV,
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: ruleContentType == tab,
-                          onChanged: (checked) {
-                            if (checked == true) {
-                              setState(() {
-                                ruleContentType = tab;
-                              });
-                              updateTabIndex(tab);
-                            }
-                          },
-                          visualDensity: VisualDensity.compact,
-                        ),
-                        Text(tab == RuleContentType.regex ? '正则表达式' : "脚本"),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            IntrinsicWidth(
+            Expanded(
               child: Row(
                 children: [
-                  Checkbox(
-                    value: isSyncRule,
-                    onChanged: (changed) {
-                      setState(() {
-                        isSyncRule = changed ?? false;
-                      });
-                    },
+                  TabBar(
+                    tabAlignment: TabAlignment.start,
+                    controller: tabController,
+                    isScrollable: true,
+                    dividerHeight: 0,
+                    tabs: [
+                      for (var tab in [RuleContentType.regex, RuleContentType.script])
+                        Container(
+                          margin: 5.insetV,
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: ruleContentType == tab,
+                                onChanged: (checked) {
+                                  if (checked == true) {
+                                    setState(() {
+                                      ruleContentType = tab;
+                                    });
+                                    updateTabIndex(tab);
+                                  }
+                                },
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              Text(tab == RuleContentType.regex ? '正则表达式' : "脚本"),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
-                  Text("同步规则"),
                 ],
+              ),
+            ),
+            AnimatedScale(
+              duration: 200.ms,
+              scale: isUseScript ? 1 : 0,
+              child: IconButton(
+                onPressed: () {
+                  setState(() {
+                    isScriptFullScreen = true;
+                  });
+                },
+                tooltip: '进入全屏编辑模式',
+                icon: const Icon(
+                  Icons.fullscreen,
+                  size: 20,
+                  color: Colors.blueGrey,
+                ),
+                visualDensity: VisualDensity.compact,
               ),
             ),
           ],
@@ -466,7 +463,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     );
   }
 
-  Widget buildRuleContent(double parentMaxHeight) {
+  Widget buildRuleContent(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return IndexedStack(
@@ -477,7 +474,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
             return Visibility(
               maintainState: true,
               visible: tabIndex == index,
-              child: builder(parentMaxHeight),
+              child: builder(context),
             );
           }).toList(),
         );
@@ -485,7 +482,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     );
   }
 
-  Widget buildRuleRegexTab(double maxHeight) {
+  Widget buildRuleRegexTab(BuildContext context) {
+    final whiteBlackModeLabels = ["默认", "黑名单", "白名单"];
+    final whiteBlackModeValues = [null, WhiteBlackMode.black, WhiteBlackMode.white];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -555,38 +554,15 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
             ),
           ],
         ),
-        Container(
-          margin: 5.insetV,
-          child: SegmentedButton<WhiteBlackMode?>(
-            showSelectedIcon: false,
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              padding: WidgetStateProperty.all(
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              ),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            segments: const [
-              ButtonSegment(
-                value: null,
-                label: Text('默认'),
-              ),
-              ButtonSegment(
-                value: WhiteBlackMode.black,
-                label: Text('黑名单'),
-              ),
-              ButtonSegment(
-                value: WhiteBlackMode.white,
-                label: Text('白名单'),
-              ),
-            ],
-            selected: {whiteBlackModes},
-            onSelectionChanged: (value) {
-              setState(() {
-                whiteBlackModes = value.first;
-              });
-            },
-          ),
+
+        TinySegmentedControl.fromStrings(
+          options: whiteBlackModeLabels,
+          selectedIndex: whiteBlackModeValues.indexOf(whiteBlackModes),
+          onSelected: (i) {
+            setState(() {
+              whiteBlackModes = whiteBlackModeValues[i];
+            });
+          },
         ),
 
         ///endregion
@@ -609,8 +585,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         Row(
           children: [
             Checkbox(
-              value: whiteBlackModes == WhiteBlackMode.black ? false : isAllowPostAddTags,
-              onChanged: whiteBlackModes == WhiteBlackMode.black
+              value: whiteBlackModeLabels == WhiteBlackMode.black ? false : isAllowPostAddTags,
+              onChanged: whiteBlackModeLabels == WhiteBlackMode.black
                   ? null
                   : (checked) {
                       setState(() {
@@ -619,7 +595,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                     },
             ),
             Text("添加标签："),
-            if (isAllowPostAddTags && whiteBlackModes != WhiteBlackMode.black)
+            if (isAllowPostAddTags && whiteBlackModeLabels != WhiteBlackMode.black)
               RoundedChip(
                 avatar: const Icon(Icons.add),
                 label: Text(TranslationKey.add.tr),
@@ -643,7 +619,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
               ),
           ],
         ),
-        if (isAllowPostAddTags && whiteBlackModes != WhiteBlackMode.black)
+        if (isAllowPostAddTags && whiteBlackModeLabels != WhiteBlackMode.black)
           Wrap(
             children: [
               for (var tag in postTags)
@@ -667,8 +643,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         Row(
           children: [
             Checkbox(
-              value: whiteBlackModes == WhiteBlackMode.black ? false : isPreventSync,
-              onChanged: whiteBlackModes == WhiteBlackMode.black
+              value: whiteBlackModeLabels == WhiteBlackMode.black ? false : isPreventSync,
+              onChanged: whiteBlackModeLabels == WhiteBlackMode.black
                   ? null
                   : (checked) {
                       setState(() {
@@ -698,29 +674,79 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     );
   }
 
-  Widget buildRuleScriptViewTab(double maxHeight) {
-    var height = 200.0;
-    //动态计算最大高度
-    final renderBox = topContentKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox != null) {
-      var calcHeight = maxHeight - renderBox.size.height;
-      height = max(calcHeight, height);
+  void onSaveShortcutTriggered() {
+    if (!shouldSave) {
+      Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+      return;
     }
-    return CodeEditView(
-      height: height - contentMargin * 2,
+    final newRule = toRule();
+    if (newRule != null) {
+      saveData(newRule);
+    } else {
+      Log.warn(tag, "newRule is null");
+    }
+  }
+
+  Widget buildRuleScriptViewTab(BuildContext context) {
+    const height = 200.0;
+    return LuaCodeEditView(
       controller: codeController,
-      language: langLua,
-      codeTheme: Constants.codeLuaTheme,
-      keywordPrompts: [
-        MyCodeKeywordPrompt(word: 'log.debug'),
-        MyCodeKeywordPrompt(word: 'log.info'),
-        MyCodeKeywordPrompt(word: 'log.warn'),
-        MyCodeKeywordPrompt(word: 'log.error'),
-        MyCodeKeywordPrompt(word: 'print'),
-        MyCodeKeywordPrompt(word: 'json.encode'),
-        MyCodeKeywordPrompt(word: 'json.decode'),
-      ],
+      height: height,
+      onSaveShortcutTriggered: onSaveShortcutTriggered,
     );
+  }
+
+  Widget buildTestPanelWidget(BuildContext context) {
+    return SizedBox(
+      height: 150,
+      child: ScriptTestPanel(
+        paramsController: testParamsContentController,
+        showCompileInfo: false,
+        showOutputsInfo: currentTab == RuleContentType.script,
+        initialIndex: 0,
+        runningResult: testResult,
+        showUnfoldButton: false,
+      ),
+    );
+  }
+
+  void saveData(RuleItem newRule) {
+    final validateResult = newRule.validate();
+    if (validateResult != null) {
+      Global.showSnackBarWarn(text: validateResult, context: context);
+      return;
+    }
+    final compileInfo = compile();
+    if (compileInfo != null) {
+      Global.showSnackBarWarn(text: compileInfo, context: context);
+      return;
+    }
+    widget.onSaveClicked(newRule);
+    setState(() {
+      originRule = newRule;
+    });
+  }
+
+  RuleExecResult runningTest(RuleItem? newRule) {
+    return ruleController.test(
+      newRule ?? originRule!,
+      //todo type
+      RuleExecParams(type: HistoryContentType.text, content: testParamsContentController.text, source: null),
+    );
+  }
+
+  ///编译，若返回值为null代表编译成功
+  String? compile() {
+    final rule = toRule() ?? originRule;
+    if (rule == null) {
+      return "Not found code";
+    }
+    final (_, hash, errorMsg) = ruleController.loadLuaUserFunc(
+      "${rule.name}-temp",
+      rule.script.content,
+    );
+    ruleController.removeLuaUserFun(hash);
+    return errorMsg;
   }
 
   @override
@@ -730,68 +756,86 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       body = EmptyContent();
     } else {
       final newRule = toRule();
-      body = LayoutBuilder(
-        builder: (context, constraints) {
-          final maxHeight = constraints.maxHeight;
-          return Stack(
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Container(
-                  margin: contentMargin.insetAll,
-                  child: Column(
-                    children: [
-                      Column(
-                        key: topContentKey,
-                        children: [
-                          buildRuleInfo(),
-                          buildRuleTabBar(),
-                        ],
-                      ),
-                      buildRuleContent(maxHeight),
-                    ],
-                  ),
+      final saveStatus = newRule != null && (newRule.isNewData || originRule.toString() != newRule.toString());
+      if (saveStatus != shouldSave) {
+        shouldSave = saveStatus;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          widget.onSaveStatusChanged?.call(shouldSave);
+        });
+      }
+      if (isScriptFullScreen) {
+        body = ScriptEditTestView(
+          paramsController: testParamsContentController,
+          controller: codeController,
+          showSaveButton: shouldSave,
+          name: ruleNameTextController.text,
+          onSaveTriggered: onSaveShortcutTriggered,
+          compile: compile,
+          onExitFullScreen: () {
+            setState(() {
+              isScriptFullScreen = false;
+            });
+          },
+          onRunButtonClicked: () {
+            return runningTest(newRule);
+          },
+        );
+      } else {
+        body = Stack(
+          children: [
+            SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Container(
+                margin: contentMargin.insetAll,
+                child: Column(
+                  children: [
+                    buildRuleInfo(context),
+                    buildRuleTabBar(context),
+                    buildRuleContent(context),
+                    buildTestPanelWidget(context),
+                  ],
                 ),
               ),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 30, bottom: 30),
-                  child: IntrinsicWidth(
-                    child: Row(
-                      children: <Widget>[
-                        if (newRule != null && (newRule.version == 0 || originRule.toString() != newRule.toString()))
-                          FloatingActionButton(
-                            onPressed: () {
-                              final validateResult = newRule.validate();
-                              if (validateResult != null) {
-                                Global.showSnackBarWarn(text: validateResult, context: context);
-                                return;
-                              }
-                              widget.onSaveClicked(newRule);
-                              setState(() {
-                                originRule = newRule;
-                              });
-                            },
-                            tooltip: TranslationKey.save.tr,
-                            child: const Icon(Icons.save_outlined),
-                          ),
-                        FloatingActionButton(
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 30, bottom: 30),
+                child: IntrinsicWidth(
+                  child: Row(
+                    children: <Widget>[
+                      AnimatedScale(
+                        duration: 200.ms,
+                        scale: saveStatus ? 1 : 0,
+                        child: FloatingActionButton(
                           onPressed: () {
-                            ruleController.run(newRule ?? originRule!);
+                            if (!saveStatus) {
+                              return;
+                            }
+                            saveData(newRule);
                           },
-                          tooltip: '运行测试',
-                          child: const Icon(Icons.play_arrow),
+                          tooltip: TranslationKey.save.tr,
+                          child: const Icon(Icons.save_outlined),
                         ),
-                      ].separateWith(const SizedBox(width: 10)),
-                    ),
+                      ),
+                      FloatingActionButton(
+                        onPressed: () {
+                          final result = runningTest(newRule);
+                          setState(() {
+                            testResult = result;
+                          });
+                        },
+                        tooltip: '运行测试',
+                        child: const Icon(Icons.play_arrow),
+                      ),
+                    ].separateWith(const SizedBox(width: 10)),
                   ),
                 ),
               ),
-            ],
-          );
-        },
-      );
+            ),
+          ],
+        );
+      }
     }
     if (appConfig.isSmallScreen) {
       return Scaffold(

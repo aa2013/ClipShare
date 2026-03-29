@@ -16,10 +16,10 @@ class HomeBinding implements Bindings {
   void dependencies() {
     Get.put(SettingsController(), permanent: true);
     Get.put(HomeController(), permanent: true);
+    Get.put(RulesController(), permanent: true);
     Get.put(HistoryController(), permanent: true);
     Get.put(SearchController(), permanent: true);
     Get.put(SyncFileController(), permanent: true);
-    Get.put(RulesController(), permanent: true);
     assert((){
       Get.put(DebugController(), permanent: true);
       return true;

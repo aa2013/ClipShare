@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
+import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
+import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
 
 class RuleScriptContent {
   RuleScriptLanguage language;

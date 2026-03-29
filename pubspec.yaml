@@ -69,8 +69,6 @@ dependencies:
   animated_snack_bar: ^0.4.0
   # 打开链接
   url_launcher: ^6.2.5
-  # 代码高亮
-  flutter_highlighting: ^0.9.0+11.8.0
   # 多窗口
   desktop_multi_window: ^0.2.1
   # 解析 windows 快捷方式实际地址

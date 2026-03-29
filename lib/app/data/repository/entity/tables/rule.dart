@@ -12,9 +12,6 @@ class Rule {
   /// 规则名称
   String name;
 
-  /// 分类，对应 [RuleCategory]
-  String category;
-
   /// 支持平台，对应 [SupportPlatForm]，以 ',' 分割
   String platforms;
 
@@ -39,7 +36,7 @@ class Rule {
   bool regexAllowExtractData;
 
   /// 数据提取正则
-  String regexExtract;
+  String regexExtractedContent;
 
   /// 允许匹配后增加标签
   bool regexAllowAddTag;
@@ -48,10 +45,10 @@ class Rule {
   String regexTags;
 
   /// 匹配后是否阻止同步
-  bool regexPreventSync;
+  bool regexIsSyncDisabled;
 
   /// 是否是最终规则
-  bool regexIsFinal;
+  bool regexIsFinalRule;
 
   // endregion
 
@@ -68,9 +65,6 @@ class Rule {
   /// 版本号
   int version;
 
-  /// 允许同步
-  bool allowSync;
-
   /// 是否启用
   bool enabled;
 
@@ -80,7 +74,6 @@ class Rule {
   Rule({
     required this.id,
     required this.name,
-    required this.category,
     required this.platforms,
     this.sources = "",
     required this.trigger,
@@ -88,15 +81,14 @@ class Rule {
     this.regexWhiteBlackMode,
     required this.regexMain,
     this.regexAllowExtractData = false,
-    this.regexExtract = "",
+    this.regexExtractedContent = "",
     this.regexAllowAddTag = false,
     this.regexTags = "",
-    this.regexPreventSync = false,
-    this.regexIsFinal = false,
+    this.regexIsSyncDisabled = false,
+    this.regexIsFinalRule = false,
     this.scriptLanguage = "lua",
     this.scriptContent = "",
     required this.version,
-    this.allowSync = false,
     this.enabled = false,
     required this.order,
   }) {
@@ -104,7 +96,7 @@ class Rule {
     if (RuleContentType.regex.name.equalsIgnoreCase(type)) {
       assert(regexMain.isNotNullAndEmpty);
       if (regexAllowExtractData) {
-        assert(regexExtract.isNotNullAndEmpty);
+        assert(regexExtractedContent.isNotNullAndEmpty);
       }
     } else {
       assert(scriptContent.isNotNullAndEmpty);
@@ -116,7 +108,6 @@ class Rule {
     return Rule(
       id: json['id'] as int,
       name: json['name'] as String,
-      category: json['category'] as String,
       platforms: json['platforms'] as String,
       sources: json['sources'] as String,
       trigger: json['trigger'] as String,
@@ -124,15 +115,14 @@ class Rule {
       regexWhiteBlackMode: json['regexWhiteBlackMode'] as String?,
       regexMain: json['regexMain'] as String,
       regexAllowExtractData: json['regexAllowExtractData'] as bool,
-      regexExtract: json['regexExtract'] as String,
+      regexExtractedContent: json['regexExtractedContent'] as String,
       regexAllowAddTag: json['regexAllowAddTag'] as bool,
       regexTags: json['regexTags'] as String,
-      regexPreventSync: json['regexPreventSync'] as bool,
-      regexIsFinal: json['regexIsFinal'] as bool,
+      regexIsSyncDisabled: json['regexIsSyncDisabled'] as bool,
+      regexIsFinalRule: json['regexIsFinalRule'] as bool,
       scriptLanguage: json['language'] as String,
       scriptContent: json['content'] as String,
       version: json['version'] as int,
-      allowSync: json['allowSync'] as bool,
       enabled: json['enabled'] as bool,
       order: json['order'] as int,
     );
@@ -143,7 +133,6 @@ class Rule {
     return {
       'id': id,
       'name': name,
-      'category': category,
       'platforms': platforms,
       'sources': sources,
       'trigger': trigger,
@@ -151,15 +140,14 @@ class Rule {
       'regexWhiteBlackMode': regexWhiteBlackMode,
       'regexMain': regexMain,
       'regexAllowExtractData': regexAllowExtractData,
-      'regexExtract': regexExtract,
+      'regexExtractedContent': regexExtractedContent,
       'regexAllowAddTag': regexAllowAddTag,
       'regexTags': regexTags,
-      'regexPreventSync': regexPreventSync,
-      'regexIsFinal': regexIsFinal,
+      'regexIsSyncDisabled': regexIsSyncDisabled,
+      'regexIsFinalRule': regexIsFinalRule,
       'language': scriptLanguage,
       'content': scriptContent,
       'version': version,
-      'allowSync': allowSync,
       'enabled': enabled,
       'order': order,
     };
