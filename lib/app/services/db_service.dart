@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/repository/dao/config_dao.dart';
 import 'package:clipshare/app/data/repository/dao/device_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_tag_dao.dart';
+import 'package:clipshare/app/data/repository/dao/lua_lib_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
 import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
@@ -15,6 +16,7 @@ import 'package:clipshare/app/data/repository/entity/tables/config.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
+import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/data/repository/entity/tables/user.dart';
@@ -43,6 +45,7 @@ const tables = [
   OperationRecord,
   AppInfo,
   Rule,
+  LuaLib,
 ];
 const views = [VHistoryTagHold];
 
@@ -78,6 +81,8 @@ abstract class _AppDb extends FloorDatabase {
   AppInfoDao get appInfoDao;
 
   RuleDao get ruleDao;
+
+  LuaLibDao get luaLibDao;
 }
 
 class DbService extends GetxService {
@@ -101,6 +106,8 @@ class DbService extends GetxService {
   AppInfoDao get appInfoDao => _db.appInfoDao;
 
   RuleDao get ruleDao => _db.ruleDao;
+
+  LuaLibDao get luaLibDao => _db.luaLibDao;
 
   final tag = "DbService";
 

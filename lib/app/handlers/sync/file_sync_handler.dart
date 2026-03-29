@@ -220,7 +220,7 @@ class FileSyncHandler {
             sync: true,
           );
           final historyController = Get.find<HistoryController>();
-          historyController.addData(history, false);
+          historyController.addData(history, null, false);
           syncingFile.setState(SyncingFileState.done);
         })
         .catchError((err, stack) {
@@ -472,7 +472,7 @@ class FileSyncHandler {
           sync: true,
         );
         final historyController = Get.find<HistoryController>();
-        historyController.addData(history, false).whenComplete(() => syncingFile.close(true));
+        historyController.addData(history, null, false).whenComplete(() => syncingFile.close(true));
         if (file.isMediaFile) {
           //媒体文件，刷新媒体库
           if (Platform.isAndroid) {

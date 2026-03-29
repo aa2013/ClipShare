@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 class TinySegmentedControl extends StatefulWidget {
@@ -40,8 +42,8 @@ class TinySegmentedControl extends StatefulWidget {
     this.segmentSpacing = _defaultSegmentSpacing,
     this.selectedIndex,
   }) : assert(segmentSpacing >= 0),
-        assert(initialSelected >= 0),
-        assert(options.length > 0);
+       assert(initialSelected >= 0),
+       assert(options.length > 0);
 
   factory TinySegmentedControl.fromStrings({
     Key? key,
@@ -127,7 +129,7 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
   void didUpdateWidget(covariant TinySegmentedControl oldWidget) {
     final diff = widget.options.length - _options.length;
     _options = [...widget.options];
-    if(widget.selectedIndex != null){
+    if (widget.selectedIndex != null) {
       assert(widget.selectedIndex! < _options.length && widget.selectedIndex! >= 0);
       _selectedIndex = widget.selectedIndex!;
     }
@@ -141,6 +143,7 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
     } else {
       _keys.removeRange(widget.options.length, _keys.length);
     }
+    _selectedIndex = min(_selectedIndex, widget.options.length - 1);
     super.didUpdateWidget(oldWidget);
   }
 
@@ -242,9 +245,7 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
             mainAxisSize: MainAxisSize.min,
             spacing: widget.segmentSpacing,
             children: List.generate(_options.length, (index) {
-              final color = _selectedIndex == index
-                  ? widget.selectedColor ?? defaultSelectedColor
-                  : widget.unselectedColor ?? defaultUnselectedColor;
+              final color = _selectedIndex == index ? widget.selectedColor ?? defaultSelectedColor : widget.unselectedColor ?? defaultUnselectedColor;
               final child = InkWell(
                 borderRadius: widget.contentBorderRadius ?? _defaultContentBorderRadius,
                 onTap: () {

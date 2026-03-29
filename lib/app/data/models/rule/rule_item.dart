@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:clipshare/app/data/enums/rule/rule_category.dart';
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
@@ -11,20 +10,21 @@ import '../../repository/entity/tables/rule.dart';
 import 'rule_regex_content.dart';
 import 'rule_script_content.dart';
 
-class RuleItem {
+class RuleItem implements Comparable<RuleItem> {
   int version;
   final int id;
   String name;
-  RuleCategory category;
   Set<SupportPlatForm> platforms;
   Set<String> sources;
   RuleTrigger trigger;
   RuleContentType type;
   RuleRegexContent regex;
   RuleScriptContent script;
-  bool allowSync;
   bool enabled;
   int order;
+
+  ///标记是否脏数据需要保存数据库
+  bool dirty;
 
   bool get isUseScript => type == RuleContentType.script;
 
@@ -34,16 +34,15 @@ class RuleItem {
     required this.id,
     required this.version,
     required this.name,
-    required this.category,
     required this.platforms,
     required this.sources,
     required this.trigger,
     required this.type,
     required this.regex,
     required this.script,
-    required this.allowSync,
     required this.enabled,
     required this.order,
+    this.dirty = false,
   });
 
   factory RuleItem.fromJson(Map<String, dynamic> json) {
@@ -51,15 +50,8 @@ class RuleItem {
       id: json['id'] as int,
       version: json['version'] as int,
       name: json['name'] as String,
-      category: RuleCategory.values.byName(
-        json['category'] as String,
-      ),
-      platforms: (json['platforms'] as List<dynamic>)
-          .map((e) => SupportPlatForm.values.byName(e as String))
-          .toSet(),
-      sources: (json['sources'] as List<dynamic>)
-          .map((e) => e as String)
-          .toSet(),
+      platforms: (json['platforms'] as List<dynamic>).map((e) => SupportPlatForm.values.byName(e as String)).toSet(),
+      sources: (json['sources'] as List<dynamic>).map((e) => e as String).toSet(),
       trigger: RuleTrigger.values.byName(
         json['trigger'] as String,
       ),
@@ -72,7 +64,6 @@ class RuleItem {
       script: RuleScriptContent.fromJson(
         json['script'] as Map<String, dynamic>,
       ),
-      allowSync: json['allowSync'] as bool,
       enabled: json['enabled'] as bool,
       order: json['order'] as int,
     );
@@ -83,35 +74,23 @@ class RuleItem {
       id: rule.id,
       version: rule.version,
       name: rule.name,
-      category: RuleCategory.values.byName(rule.category),
-      platforms: rule.platforms
-          .split(",")
-          .where((e) => e.isNotNullAndEmpty)
-          .map((e) => SupportPlatForm.values.byName(e.lowerFirst))
-          .toSet(),
-      sources: rule.sources
-          .split(",")
-          .where((e) => e.isNotNullAndEmpty)
-          .toSet(),
+      platforms: rule.platforms.split(",").where((e) => e.isNotNullAndEmpty).map((e) => SupportPlatForm.values.byName(e.lowerFirst)).toSet(),
+      sources: rule.sources.split(",").where((e) => e.isNotNullAndEmpty).toSet(),
       trigger: RuleTrigger.values.byName(rule.trigger),
       type: RuleContentType.values.byName(rule.type),
       regex: RuleRegexContent(
         mainRegex: rule.regexMain,
         allowExtractData: rule.regexAllowExtractData,
-        extractRegex: rule.regexExtract,
+        extractRegex: rule.regexExtractedContent,
         allowAddTag: rule.regexAllowAddTag,
-        tags: rule.regexTags
-          .split(",")
-          .where((e) => e.isNotNullAndEmpty)
-          .toSet(),
-        preventSync: rule.regexPreventSync,
-        isFinal: rule.regexIsFinal,
+        tags: rule.regexTags.split(",").where((e) => e.isNotNullAndEmpty).toSet(),
+        preventSync: rule.regexIsSyncDisabled,
+        isFinal: rule.regexIsFinalRule,
       ),
       script: RuleScriptContent(
         language: RuleScriptLanguage.getValue(rule.scriptLanguage),
         content: rule.scriptContent,
       ),
-      allowSync: rule.allowSync,
       enabled: rule.enabled,
       order: rule.order,
     );
@@ -122,14 +101,12 @@ class RuleItem {
       'id': id,
       'version': version,
       'name': name,
-      'category': category.name,
       'platforms': platforms.map((e) => e.name).toList(),
       'sources': sources.toList(),
       'trigger': trigger.name,
       'type': type.name,
       'regex': regex.toJson(),
       'script': script.toJson(),
-      'allowSync': allowSync,
       'enabled': enabled,
       'order': order,
     };
@@ -139,7 +116,6 @@ class RuleItem {
     return Rule(
       id: id,
       name: name,
-      category: category.name,
       platforms: platforms.join(","),
       sources: sources.join(","),
       trigger: trigger.name,
@@ -147,15 +123,14 @@ class RuleItem {
       regexWhiteBlackMode: regex.mode?.name,
       regexMain: regex.mainRegex,
       regexAllowExtractData: regex.allowExtractData,
-      regexExtract: regex.extractRegex,
+      regexExtractedContent: regex.extractRegex,
       regexAllowAddTag: regex.allowAddTag,
       regexTags: regex.tags.join(","),
-      regexPreventSync: regex.preventSync,
-      regexIsFinal: regex.isFinal,
+      regexIsSyncDisabled: regex.preventSync,
+      regexIsFinalRule: regex.isFinal,
       scriptLanguage: script.language.name,
       scriptContent: script.content,
       version: version,
-      allowSync: allowSync,
       enabled: enabled,
       order: order,
     );
@@ -186,5 +161,10 @@ class RuleItem {
       return "不支持的操作";
     }
     return null;
+  }
+
+  @override
+  int compareTo(other) {
+    return order - other.order;
   }
 }

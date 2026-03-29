@@ -66,12 +66,36 @@ extension StringExt on String {
     return substring(start, min(end, length));
   }
 
-  bool matchRegExp(String regExp, [bool caseSensitive = false]) {
+  bool matchRegExp(
+    String regExp, {
+    bool caseSensitive = false,
+    bool multiLines = false,
+    bool dotAll = false,
+  }) {
     var reg = RegExp(
       regExp,
       caseSensitive: caseSensitive,
+      multiLine: multiLines,
+      dotAll: dotAll,
     );
     return reg.hasMatch(this);
+  }
+
+  String? firstRegMatch(
+    String regExp, {
+    bool caseSensitive = false,
+    bool multiLines = false,
+    bool dotAll = false,
+  }) {
+    var reg = RegExp(
+      regExp,
+      caseSensitive: caseSensitive,
+      multiLine: multiLines,
+      dotAll: dotAll,
+    );
+
+    final match = reg.firstMatch(this);
+    return match?.group(0);
   }
 
   bool get isPort {
@@ -166,6 +190,10 @@ extension StringExt on String {
 
   bool containsIgnoreCase(String input) {
     return toLowerCase().contains(input.toLowerCase());
+  }
+
+  bool startsWithIgnoreCase(String input) {
+    return toLowerCase().startsWith(input.toLowerCase());
   }
 
   bool get isValidVariablePart {

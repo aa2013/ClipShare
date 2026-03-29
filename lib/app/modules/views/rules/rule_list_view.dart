@@ -1,4 +1,5 @@
-import 'package:clipshare/app/data/enums/rule/rule_category.dart';
+import 'dart:async';
+
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
@@ -12,21 +13,23 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/utils/snowflake.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/rule_card.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
+typedef OnRuleItemTap = FutureOr<bool> Function(RuleItem item);
+
 class RuleListView extends StatefulWidget {
   final List<RuleItem> rules;
   final VoidCallback onDragged;
   final ValueChanged<RuleItem> onItemChanged;
-  final ValueChanged<RuleItem> onItemTap;
+  final OnRuleItemTap onItemTap;
   final ValueChanged<RuleItem> onItemAdd;
+  final ValueChanged<Set<int>> onItemRemove;
+  final bool disableDrag;
 
   const RuleListView({
     super.key,
@@ -35,6 +38,8 @@ class RuleListView extends StatefulWidget {
     required this.onItemChanged,
     required this.onItemTap,
     required this.onItemAdd,
+    required this.onItemRemove,
+    this.disableDrag = false,
   });
 
   @override
@@ -44,16 +49,20 @@ class RuleListView extends StatefulWidget {
 class _RuleListViewState extends State<RuleListView> with SingleTickerProviderStateMixin {
   final TextEditingController textController = TextEditingController();
   late final TabController tabController;
-  final Map<RuleCategory, ScrollController> scrollerControllersMap = {};
+  final rulesController = ScrollController();
+  final libsController = ScrollController();
+  static const categories = [TranslationKey.rules, TranslationKey.libs];
+  late final controllers = [rulesController, libsController];
   final appConfig = Get.find<ConfigService>();
   static const tag = "RuleListView";
   var multiSelectMode = false;
   final Set<int> selectedRules = {};
+  RuleItem? activeItem;
 
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: Constants.ruleCategoryItems.length, vsync: this, initialIndex: 0);
+    tabController = TabController(length: categories.length, vsync: this, initialIndex: 0);
   }
 
   Widget buildSearchField() {
@@ -96,13 +105,15 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
     );
   }
 
-  Widget buildRuleCard(RuleCategory category, RuleItem rule, [int? orderedIndex]) {
+  Widget buildRuleCard(RuleItem rule, [int? orderedIndex]) {
     return RuleCard(
-      key: Key("$category-${rule.id}"),
+      key: Key("${rule.id}"),
       orderedIndex: orderedIndex,
       rule: rule,
+      isActive: rule.id == activeItem?.id,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
+      disabledDrag: widget.disableDrag,
       onEnabledChanged: (enabled) {
         final validateResult = rule.validate();
         if (validateResult != null) {
@@ -112,14 +123,20 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
         setState(() {
           rule.enabled = enabled;
           rule.version++;
+          rule.dirty = true;
         });
         widget.onItemChanged(rule);
       },
-      onTap: () {
+      onTap: () async {
         if (multiSelectMode) {
           return;
         }
-        widget.onItemTap(rule);
+        final success = await widget.onItemTap(rule);
+        if (success) {
+          setState(() {
+            activeItem = rule;
+          });
+        }
       },
       onLongPress: !multiSelectMode
           ? () {
@@ -142,16 +159,6 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
     );
   }
 
-  ScrollController getScrollController(RuleCategory category) {
-    if (scrollerControllersMap.containsKey(category)) {
-      return scrollerControllersMap[category]!;
-    } else {
-      var controller = ScrollController();
-      scrollerControllersMap[category] = controller;
-      return controller;
-    }
-  }
-
   Widget buildListView() {
     return Column(
       children: [
@@ -161,7 +168,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           isScrollable: true,
           dividerHeight: 0,
           tabs: [
-            for (var tab in Constants.ruleCategoryItems)
+            for (var tab in categories)
               Container(
                 margin: 5.insetV,
                 child: Text(tab.tr),
@@ -171,45 +178,49 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
         Expanded(
           child: TabBarView(
             controller: tabController,
-            children: Constants.ruleCategoryItems.map((category) {
-              final controller = getScrollController(category);
-              if (category == RuleCategory.all) {
-                if (widget.rules.isEmpty) {
-                  return Constants.emptyContent;
-                }
-                return ReorderableListView.builder(
-                  scrollController: controller,
-                  itemBuilder: (BuildContext context, int index) {
-                    return buildRuleCard(category, widget.rules[index], index);
-                  },
-                  itemCount: widget.rules.length,
-                  buildDefaultDragHandles: false,
-                  onReorder: (int oldIndex, int newIndex) {
-                    if (oldIndex < newIndex) {
-                      newIndex -= 1;
-                    }
-                    final item = widget.rules.removeAt(oldIndex);
-                    widget.rules.insert(newIndex, item);
-                    widget.onDragged();
-                  },
-                );
-              }
-              final rules = widget.rules.where((item) => item.category == category).toList();
-              if (rules.isEmpty) {
-                return Constants.emptyContent;
-              }
-              return ListView.builder(
-                controller: controller,
-                itemBuilder: (context, index) {
-                  return buildRuleCard(category, rules[index], null);
-                },
-                itemCount: rules.length,
-              );
-            }).toList(),
+            children: [
+              buildRulesListView(),
+              buildLibsListView(),
+            ],
           ),
         ),
       ],
     );
+  }
+
+  Widget buildRulesListView() {
+    if (widget.rules.isEmpty) {
+      return Constants.emptyContent;
+    }
+    return Padding(
+      padding: 2.insetH,
+      child: ReorderableListView.builder(
+        scrollController: rulesController,
+        itemBuilder: (BuildContext context, int index) {
+          return buildRuleCard(widget.rules[index], index);
+        },
+        itemCount: widget.rules.length,
+        buildDefaultDragHandles: false,
+        onReorder: (int oldIndex, int newIndex) {
+          if (oldIndex < newIndex) {
+            newIndex -= 1;
+          }
+          final oldIndexRule = widget.rules[oldIndex];
+          final newIndexRule = widget.rules[newIndex];
+          oldIndexRule.version++;
+          newIndexRule.version++;
+          oldIndexRule.dirty = true;
+          newIndexRule.dirty = true;
+          final item = widget.rules.removeAt(oldIndex);
+          widget.rules.insert(newIndex, item);
+          widget.onDragged();
+        },
+      ),
+    );
+  }
+
+  Widget buildLibsListView() {
+    return EmptyContent();
   }
 
   FloatingActionButton _regularFab({
@@ -228,7 +239,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final fabSize = appConfig.isSmallScreen ? ExpandableFabSize.regular : ExpandableFabSize.small;
     final fabButtonFun = appConfig.isSmallScreen ? _regularFab : FloatingActionButton.small;
-    double distance = appConfig.isSmallScreen&&multiSelectMode?145:100;
+    double distance = appConfig.isSmallScreen && multiSelectMode ? 145 : 100;
     return Scaffold(
       body: Padding(
         padding: 5.insetAll,
@@ -294,8 +305,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           if (multiSelectMode)
             fabButtonFun(
               onPressed: () {
-                final selectedList = widget.rules.where((e)=>selectedRules.contains(e.id)).toList();
-                //todo 删除
+                widget.onItemRemove(selectedRules);
                 setState(() {
                   multiSelectMode = false;
                   selectedRules.clear();
@@ -307,12 +317,12 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           if (!multiSelectMode)
             fabButtonFun(
               onPressed: () {
-                var currentTab = Constants.ruleCategoryItems[tabController.index];
+                final currentTab = categories[tabController.index];
+                final controller = controllers[tabController.index];
                 var newRule = RuleItem(
                   id: appConfig.snowflake.nextId(),
                   version: 0,
                   name: "Rule${widget.rules.length + 1}",
-                  category: currentTab == RuleCategory.all ? RuleCategory.common : currentTab,
                   platforms: SupportPlatForm.values.toSet(),
                   sources: {},
                   trigger: RuleTrigger.onCopy,
@@ -327,13 +337,11 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                     isFinal: false,
                   ),
                   script: RuleScriptContent(language: RuleScriptLanguage.lua, content: ''),
-                  allowSync: false,
                   enabled: false,
                   order: widget.rules.length + 1,
                 );
                 widget.onItemAdd(newRule);
                 //controller 只会attach到当前的tab
-                final controller = getScrollController(currentTab);
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!controller.hasClients) {
                     Log.debug(tag, "$currentTab scroller controller not clients");

@@ -360,7 +360,7 @@ class SettingsPage extends GetView<SettingsController> {
                               return Text(lg.label);
                             }
                           }
-                          return const Text("Unknown");
+                          return Text(TranslationKey.unknown.tr);
                         },
                       ),
                     ],

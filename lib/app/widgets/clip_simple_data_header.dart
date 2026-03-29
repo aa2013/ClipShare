@@ -15,22 +15,27 @@ import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 
 ///历史记录中的卡片显示的额外信息部分，如时间，大小等
 class ClipSimpleDataHeader extends StatelessWidget {
   final ClipData clip;
   final bool routeToSearchOnClickChip;
+  final bool showOriginData;
   final appConfig = Get.find<ConfigService>();
   final devService = Get.find<DeviceService>();
   final tagService = Get.find<TagService>();
   final sourceService = Get.find<ClipboardSourceService>();
   final homeController = Get.find<HomeController>();
+  final VoidCallback? onShowOriginButtonClicked;
 
   ClipSimpleDataHeader({
     super.key,
     required this.clip,
     required this.routeToSearchOnClickChip,
+    this.showOriginData = false,
+    this.onShowOriginButtonClicked,
   });
 
   @override
@@ -63,12 +68,28 @@ class ClipSimpleDataHeader extends StatelessWidget {
           ),
         ),
         //标签
-        Expanded(child: ClipRRect(child: ClipTagRowView(
-          hisId: clip.data.id,
-          clipBgColor: const Color(0x1a000000),
-          routeToSearchOnClickChip: routeToSearchOnClickChip,
-        ),))
-        ,
+        Expanded(
+          child: ClipRRect(
+            child: ClipTagRowView(
+              hisId: clip.data.id,
+              clipBgColor: const Color(0x1a000000),
+              routeToSearchOnClickChip: routeToSearchOnClickChip,
+            ),
+          ),
+        ),
+        Visibility(
+          visible: clip.data.extracted != null,
+          child: IconButton(
+            onPressed: onShowOriginButtonClicked,
+            icon: Icon(
+              showOriginData ? Icons.zoom_in_map : Icons.zoom_out_map,
+              size: 16,
+              color: Colors.blueGrey,
+            ),
+            visualDensity: VisualDensity.compact,
+            tooltip: showOriginData ? TranslationKey.displayExtractedContent.tr : TranslationKey.displayOriginContent.tr,
+          ),
+        ),
         Visibility(
           visible: clip.isImage || clip.isText,
           child: ClipDataCopyIconButton(clip: clip),

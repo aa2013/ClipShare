@@ -11,6 +11,6 @@ enum ObjStorageType {
       case ObjStorageType.s3:
         return TranslationKey.standardS3Protocol.tr;
     }
-    return "Unknown";
+    return TranslationKey.unknown.tr;
   }
 }

@@ -15,7 +15,7 @@ enum BackupSource {
       case BackupSource.webdav:
         return 'WebDAV';
       case BackupSource.unknown:
-        return 'unknown';
+        return TranslationKey.unknown.tr;
     }
   }
 }

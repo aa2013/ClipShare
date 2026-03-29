@@ -6,10 +6,12 @@ import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -67,13 +69,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   final sourceService = Get.find<ClipboardSourceService>();
   final tagService = Get.find<TagService>();
   final devService = Get.find<DeviceService>();
+  final ruleController = Get.find<RulesController>();
 
   //region 属性
   final String tag = "HistoryController";
 
   var _exporting = false;
+
   bool get exporting => _exporting;
   var _cancelExporting = false;
+
   bool get cancelExporting => _cancelExporting;
 
   ///不要直接操作这个list，请操作 _tempList 并执行 debounceUpdate() 方法以进行防抖更新
@@ -245,7 +250,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       return;
     }
     var type = ClipboardContentType.parse(history.type);
-    if(type != ClipboardContentType.text && type != ClipboardContentType.image){
+    if (type != ClipboardContentType.text && type != ClipboardContentType.image) {
       //不可复制，跳过
       return;
     }
@@ -312,15 +317,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       return;
     }
     int size = content.length;
-    final matchResult = appConfig.matchesContentBlacklist(type, content, source);
-    if (matchResult.matched) {
-      Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
-      return;
-    }
     switch (type) {
-      case HistoryContentType.text:
-        //文本无特殊实现，此处留空
-        break;
       case HistoryContentType.image:
         //如果上次也是复制的图片/文件，判断其md5与本次比较，若相同则跳过
         if (last?.type == HistoryContentType.image.value) {
@@ -339,45 +336,33 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         FileUtil.moveFile(content, newPath);
         content = newFile.normalizePath;
         break;
-      case HistoryContentType.richText:
-        break;
-      case HistoryContentType.file:
-        break;
-      case HistoryContentType.sms:
-        //判断是否符合短信同步规则，符合则继续，否则终止
-        var rules = jsonDecode(appConfig.smsRules)["data"] as List<dynamic>;
-        var hasMatch = false;
-        for (var rule in rules) {
-          if (content.matchRegExp(rule["rule"])) {
-            hasMatch = true;
-            break;
-          }
-        }
-        //规则列表不为空且未匹配成功，忽略
-        if (rules.isNotEmpty && !hasMatch) {
-          return;
-        }
-        break;
       case HistoryContentType.notification:
         if (!appConfig.enableRecordNotification) {
           Log.warn(tag, "Not allow to record notification");
           return;
         }
-        final matchResult = appConfig.matchesNotificationRuleList(content, source!.id);
-        final isBlacklistMode = appConfig.currentNotificationWhiteBlackMode == WhiteBlackMode.black;
-        //匹配到黑名单，结束
-        if (matchResult.matched && isBlacklistMode) {
-          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
-          return;
-        }
-        //白名单模式，但未匹配到，结束
-        if (!isBlacklistMode && !matchResult.matched) {
-          Log.info(tag, "not matched whitelist, content $content");
-          return;
-        }
         break;
       default:
-        throw Exception("UnSupport Type: ${type.label}-${type.value}");
+    }
+
+    //todo 规则列表不为空且未匹配成功，忽略
+    var applyResult = ruleController.apply(type, content, source);
+    if (applyResult.result?.isDropped ?? false) {
+      //丢弃
+      Log.info(tag, "content: $content，dropped");
+      return;
+    }
+    switch (type) {
+      case HistoryContentType.image:
+        content = applyResult.result?.content ?? content;
+        break;
+      case HistoryContentType.notification:
+        content = jsonEncode({
+          "title": applyResult.result?.title ?? TranslationKey.unknown.tr,
+          "content": applyResult.result?.content ?? TranslationKey.unknown.tr,
+        });
+        break;
+      default:
     }
     var history = History(
       id: appConfig.snowflake.nextId(),
@@ -388,6 +373,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       type: type.value,
       size: size,
       source: source?.id,
+      extracted: applyResult.result?.extractedContent,
     );
     if (appConfig.sourceRecord || type == HistoryContentType.notification) {
       if (source != null) {
@@ -405,7 +391,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     } else {
       history.source = null;
     }
-    await addData(history, true);
+    await addData(history, applyResult.result, true);
   }
 
   ///抽取历史数据的map，因为有可能是 map，后续需要反序列化为操作记录
@@ -520,12 +506,12 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     var cnt = 0;
     switch (method) {
       case OpMethod.add:
-        cnt = await addData(history, false, notify);
+        cnt = await addData(history, null, false, notify);
         //不是缺失数据的同步时放入本地剪贴板，如果是缺失数据但是需要豁免的也放行
         if (!loadingMissingData || _missingDataCopyMsg == history.id) {
           var clip = ClipData(history);
           var copy = false;
-          if(clip.isText || clip.isImage){
+          if (clip.isText || clip.isImage) {
             final type = ClipboardContentType.parse(history.type);
             if (clip.isText) {
               copy = true;
@@ -540,7 +526,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             if (_missingDataCopyMsg == history.id) {
               _missingDataCopyMsg = null;
             }
-          }else{
+          } else {
             break;
           }
         }
@@ -642,7 +628,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   }
 
   ///添加页面和数据库数据
-  Future<int> addData(History history, bool shouldSync, [bool notify = true]) async {
+  Future<int> addData(History history, RuleApplyResult? applyResult, bool shouldSync, [bool notify = true]) async {
     var clip = ClipData(history);
     final contentType = HistoryContentType.parse(history.type);
     if (appConfig.sendBroadcastOnAdd) {
@@ -673,25 +659,28 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       OpMethod.add,
       history.id.toString(),
     );
-    if (notify) {
-      await dbService.opRecordDao.addAndNotify(opRecord);
-      //若启用存储同步检查是否同步成功
-      if (appConfig.enableStorageSync) {
-        final record = await dbService.opRecordDao.getById(opRecord.id);
-        if (record != null && record.storageSync == true) {
-          await dbService.historyDao.setSync(history.id, true).then((_) {
-            for (var clip in _tempList) {
-              if (clip.data.id.toString() == history.id.toString()) {
-                clip.data.sync = true;
-                debounceUpdate();
-                break;
+    if ((applyResult?.isSyncDisabled ?? true)) {
+      //允许同步
+      if (notify) {
+        await dbService.opRecordDao.addAndNotify(opRecord);
+        //若启用存储同步检查是否同步成功
+        if (appConfig.enableStorageSync) {
+          final record = await dbService.opRecordDao.getById(opRecord.id);
+          if (record != null && record.storageSync == true) {
+            await dbService.historyDao.setSync(history.id, true).then((_) {
+              for (var clip in _tempList) {
+                if (clip.data.id.toString() == history.id.toString()) {
+                  clip.data.sync = true;
+                  debounceUpdate();
+                  break;
+                }
               }
-            }
-          });
+            });
+          }
         }
+      } else {
+        await dbService.opRecordDao.add(opRecord);
       }
-    } else {
-      await dbService.opRecordDao.add(opRecord);
     }
 
     //region update source on Android
@@ -733,6 +722,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     //endregion
 
+    //todo 废弃旧规则逻辑
     switch (contentType) {
       case HistoryContentType.text:
         var rules = jsonDecode(appConfig.tagRules)["data"];
@@ -801,32 +791,35 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             _exporting = false;
           },
         );
-        export2Excel(loadingController, loadDataFunc).then((result) {
-          //关闭进度动画
-          Get.back();
-          //手动取消
-          if (!exporting) {
-            return;
-          }
-          if (result) {
-            Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
-          } else {
-            Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
-          }
-        }).catchError((err, stack) {
-          //关闭进度动画
-          Get.back();
-          Global.showTipsDialog(
-            context: Get.context!,
-            title: TranslationKey.outputFailed.tr,
-            text: "$err. $stack",
-          );
-        }).whenComplete(() {
-          //更新状态
-          _exporting = false;
-          _cancelExporting = false;
-          completer.complete();
-        });
+        export2Excel(loadingController, loadDataFunc)
+            .then((result) {
+              //关闭进度动画
+              Get.back();
+              //手动取消
+              if (!exporting) {
+                return;
+              }
+              if (result) {
+                Global.showSnackBarSuc(context: Get.context!, text: TranslationKey.outputSuccess.tr);
+              } else {
+                Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.outputFailed.tr);
+              }
+            })
+            .catchError((err, stack) {
+              //关闭进度动画
+              Get.back();
+              Global.showTipsDialog(
+                context: Get.context!,
+                title: TranslationKey.outputFailed.tr,
+                text: "$err. $stack",
+              );
+            })
+            .whenComplete(() {
+              //更新状态
+              _exporting = false;
+              _cancelExporting = false;
+              completer.complete();
+            });
       },
       showCancel: true,
     );
@@ -930,14 +923,14 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     late final String content;
     const maxCellLength = 32767;
-    if(type == HistoryContentType.notification){
+    if (type == HistoryContentType.notification) {
       content = ClipData(history).notificationContent ?? "[❌ Parse Data Failed]";
-    }else{
+    } else {
       //转换 unicode 控制字符 \u0000 ~ \u001f，这些字符会导致 excel 打开失败
       //需要替换为 _x0000_ 这样的
       content = history.content.replaceAllMapped(
         RegExp(r'[\x00-\x1F]'),
-            (match) => '_x${match.group(0)!.codeUnitAt(0).toRadixString(16).padLeft(4, '0')}_',
+        (match) => '_x${match.group(0)!.codeUnitAt(0).toRadixString(16).padLeft(4, '0')}_',
       );
     }
     var rowsOffset = 0;
@@ -1003,6 +996,5 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     return rowsOffset + 1;
   }
 
-//endregion
-
+  //endregion
 }

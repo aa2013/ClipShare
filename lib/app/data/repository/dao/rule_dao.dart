@@ -5,7 +5,11 @@ import 'package:floor/floor.dart';
 abstract class RuleDao {
   ///添加规则
   @Insert(onConflict: OnConflictStrategy.ignore)
-  Future<int> add(Rule rule);
+  Future<int> addRule(Rule rule);
+
+  ///添加规则
+  @Insert(onConflict: OnConflictStrategy.ignore)
+  Future<List<int>> addRules(List<Rule> rule);
 
   ///更新规则
   @update

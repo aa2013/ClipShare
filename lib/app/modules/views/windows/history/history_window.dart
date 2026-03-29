@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
@@ -201,7 +202,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
               for (var history in lst) {
                 res.add(
                   CompactClipData(
-                    devName: devInfos[history.devId] ?? "unknown",
+                    devName: devInfos[history.devId] ?? TranslationKey.unknown.tr,
                     data: ClipData(history),
                   ),
                 );

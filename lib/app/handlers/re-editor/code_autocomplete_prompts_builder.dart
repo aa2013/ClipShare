@@ -1,4 +1,4 @@
-import 'package:clipshare/app/data/models/my_code_keyword_prompt.dart';
+import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_prompt.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
@@ -6,7 +6,7 @@ import 'package:re_highlight/re_highlight.dart';
 
 class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePromptsBuilder {
   final Mode? language;
-  late final List<MyCodeKeywordPrompt> keywordPrompts;
+  late final List<CodePrompt> keywordPrompts;
   late final List<CodePrompt> directPrompts;
   late final Map<String, List<CodePrompt>> relatedPrompts;
 
@@ -14,7 +14,7 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
 
   MyCodeAutocompletePromptsBuilder({
     this.language,
-    List<MyCodeKeywordPrompt>? keywordPrompts,
+    List<CodePrompt>? keywordPrompts,
     List<CodePrompt>? directPrompts,
     Map<String, List<CodePrompt>>? relatedPrompts,
   }) {
@@ -32,7 +32,7 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         keywordList = keywordContent;
       }
-      _allKeywordPrompts.addAll(keywordList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(keywordList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
 
       final dynamic builtInContent = keywords['built_in'];
       late final List<dynamic> builtInList;
@@ -41,7 +41,7 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         builtInList = builtInContent;
       }
-      _allKeywordPrompts.addAll(builtInList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(builtInList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
 
       final dynamic literalContent = keywords['literal'];
       late final List<dynamic> literalList;
@@ -50,7 +50,7 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         literalList = literalContent;
       }
-      _allKeywordPrompts.addAll(literalList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(literalList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
 
       final dynamic typeContent = keywords['type'];
       late final List<dynamic> typeList;
@@ -59,7 +59,7 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         typeList = typeContent;
       }
-      _allKeywordPrompts.addAll(typeList.map((keyword) => MyCodeKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(typeList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
     }
   }
 

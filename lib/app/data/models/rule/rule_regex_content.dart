@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
+import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 class RuleRegexContent {
   WhiteBlackMode? mode;
@@ -36,7 +39,6 @@ class RuleRegexContent {
     );
   }
 
-
   Map<String, dynamic> toJson() {
     return {
       'mode': mode?.name,
@@ -48,6 +50,36 @@ class RuleRegexContent {
       'preventSync': preventSync,
       'isFinal': isFinal,
     };
+  }
+
+  RuleApplyResult apply(RuleExecParams params) {
+    final content = params.content;
+    final matched = content.matchRegExp(mainRegex, multiLines: true, dotAll: true);
+    if (mode != null) {
+      //白名单模式，未命中则丢弃
+      if (mode == WhiteBlackMode.white) {
+        if (!matched) {
+          return RuleApplyResult.discard;
+        }
+      } else {
+        //黑名单模式，命中则丢弃
+        if (matched) {
+          return RuleApplyResult.discard;
+        }
+      }
+    }
+    //默认模式，根据规则判断
+    String? extracted;
+    if (matched && extractRegex.isNotNullAndEmpty && allowExtractData) {
+      extracted = content.firstRegMatch(extractRegex, multiLines: true, dotAll: true);
+    }
+    return RuleApplyResult(
+      content: params.content,
+      tags: matched ? tags : {},
+      isSyncDisabled: matched ? preventSync : false,
+      isFinalRule: matched ? isFinal : false,
+      extractedContent: extracted,
+    );
   }
 
   @override
