@@ -38,6 +38,15 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
+    packaging {
+        dex {
+            useLegacyPackaging true
+        }
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+
     kotlinOptions {
         jvmTarget = 17
     }
