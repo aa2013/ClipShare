@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
+import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -28,10 +29,13 @@ class RulesController extends GetxController {
   static const String tag = "RulesController";
   final appConfig = Get.find<ConfigService>();
   final ruleDao = Get.find<DbService>().ruleDao;
+  final luaLibDao = Get.find<DbService>().luaLibDao;
 
   // final MultiSplitViewController splitViewController = MultiSplitViewController();
   final rules = <RuleItem>[].obs;
-  final selectedItem = Rx<RuleItem?>(null);
+  final luaLibs = <LuaLib>[].obs;
+  final selectedRuleItem = Rx<RuleItem?>(null);
+  final selectedLuaLibItem = Rx<LuaLib?>(null);
   final LuaRuntime _lua = LuaRuntime();
   final _loadedLuaFun = <String, int>{};
   final activeItemChanged = false.obs;
@@ -94,7 +98,14 @@ class RulesController extends GetxController {
     return (result, funHash, result ? null : msg);
   }
 
-  void _loadAllLuaUserFun() {
+  void _loadAllLuaLibs() {
+    for (var lib in luaLibs) {
+      final msg = loadLuaLib(lib);
+      Log.debug(tag, "load lib(${lib.libName}): $msg");
+    }
+  }
+
+  void _loadAllLuaUserFn() {
     for (var rule in rules) {
       if (!rule.isUseScript) {
         continue;
@@ -124,10 +135,12 @@ class RulesController extends GetxController {
   @override
   Future<void> onInit() async {
     _initLuaFunc();
-    super.onInit();
     final list = await ruleDao.getAllRules();
     rules.value = list.map((e) => RuleItem.fromRule(e)).toList();
-    _loadAllLuaUserFun();
+    luaLibs.value = await luaLibDao.getAllLibs();
+    _loadAllLuaLibs();
+    _loadAllLuaUserFn();
+    super.onInit();
   }
 
   Future<void> saveRules() async {
@@ -167,6 +180,15 @@ class RulesController extends GetxController {
     //todo 同步数据
     //保存成功
     update();
+  }
+
+  String loadLuaLib(LuaLib lib, {bool reloadAllUserFn = false}) {
+    final sandboxWrapper = Constants.luaLibSandboxWrapper.replaceAll("{{funName}}", "loaLuaLib").replaceAll("{{libName}}", lib.libName).replaceAll("{{code}}", lib.source);
+    final msg = _lua.run(sandboxWrapper);
+    if (msg == 'OK' && reloadAllUserFn) {
+      _loadAllLuaUserFn();
+    }
+    return msg;
   }
 
   RuleExecResult apply(HistoryContentType type, String content, ClipboardSource? source) {

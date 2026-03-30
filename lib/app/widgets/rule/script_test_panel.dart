@@ -8,26 +8,32 @@ import 'package:clipshare/app/widgets/rule/rule_compile_info_highlight.dart';
 import 'package:clipshare/app/widgets/rule/rule_result_highlight.dart';
 import 'package:flutter/material.dart';
 
+typedef WidgetBuilder = Widget Function(BuildContext context);
+
 class ScriptTestPanel extends StatefulWidget {
   final bool showUnfoldButton;
-  final TextEditingController paramsController;
+  final TextEditingController? paramsController;
   final RuleExecResult? runningResult;
+  final WidgetBuilder? toolWidget;
   final String compileInfo;
   final bool showCompileInfo;
   final bool showOutputsInfo;
   final int initialIndex;
   final VoidCallback? onUnfoldButtonClicked;
+  final WidgetBuilder? resultPanelBuilder;
 
   const ScriptTestPanel({
     super.key,
-    required this.paramsController,
-    this.runningResult,
     required this.showCompileInfo,
-    this.showOutputsInfo = true,
     required this.initialIndex,
+    this.runningResult,
+    this.showOutputsInfo = true,
+    this.paramsController,
     this.compileInfo = "",
     this.showUnfoldButton = false,
     this.onUnfoldButtonClicked,
+    this.toolWidget,
+    this.resultPanelBuilder,
   });
 
   @override
@@ -38,7 +44,7 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
   var panelIndex = 1;
 
   List<String> get tabs => [
-    '参数',
+    if (widget.paramsController != null) '参数',
     if (widget.showCompileInfo) '编译信息',
     if (widget.showOutputsInfo) '输出',
     '运行结果',
@@ -101,10 +107,16 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
 
   Widget buildRunningResultPanel(BuildContext context) {
     Widget child = const SizedBox.shrink();
-    if (widget.runningResult != null) {
-      child = RuleResultHighLight(result: widget.runningResult!);
+    if (widget.resultPanelBuilder != null) {
+      child = widget.resultPanelBuilder!.call(context);
+    }else{
+      if (widget.runningResult != null) {
+        child = RuleResultHighLight(result: widget.runningResult!);
+      }
     }
     return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 120),
       decoration: BoxDecoration(
         border: Border.all(color: const Color(0xFFADAFB6)),
         borderRadius: BorderRadius.circular(4),
@@ -132,17 +144,25 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
                 });
               },
             ),
-            if (widget.showUnfoldButton)
-              IconButton(
-                onPressed: widget.onUnfoldButtonClicked,
-                tooltip: '折叠',
-                icon: const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 20,
-                  color: Colors.blueGrey,
-                ),
-                visualDensity: VisualDensity.compact,
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ?widget.toolWidget?.call(context),
+                  if (widget.showUnfoldButton)
+                    IconButton(
+                      onPressed: widget.onUnfoldButtonClicked,
+                      tooltip: '折叠',
+                      icon: const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 20,
+                        color: Colors.blueGrey,
+                      ),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                ],
               ),
+            ),
           ],
         ),
         const SizedBox(height: 2),
@@ -150,7 +170,7 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
           child: IndexedStack(
             index: panelIndex,
             children: [
-              buildParamsPanel(context),
+              if (widget.paramsController != null) buildParamsPanel(context),
               if (widget.showCompileInfo) buildCompileInfoPanel(context),
               if (widget.showOutputsInfo) buildOutPutsInfoPanel(context),
               buildRunningResultPanel(context),

@@ -41,6 +41,7 @@ class RuleResultHighLight extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            emptyLine,
             if (!result.success) ...[
               TextSpan(
                 text: '${TranslationKey.error.tr.upperFirst}: ',
@@ -50,67 +51,69 @@ class RuleResultHighLight extends StatelessWidget {
                 text: result.errorMsg ?? '',
                 style: const TextStyle(color: Color(0xffE06C75)),
               ),
-            ],
-            emptyLine,
-            if (r?.title != null) ...[
-              TextSpan(
-                text: '${TranslationKey.title.tr.upperFirst}: ',
-                style: const TextStyle(color: Color(0xffC678DD)),
-              ),
-              TextSpan(
-                text: r?.title ?? '',
-              ),
               emptyLine,
             ],
-            TextSpan(
-              text: '${TranslationKey.content.tr.upperFirst}: ',
-              style: const TextStyle(color: Color(0xff61AFEF)),
-            ),
-            TextSpan(
-              text: r?.content ?? '',
-            ),
-            emptyLine,
-            TextSpan(
-              text: '${TranslationKey.extracted.tr.upperFirst}: ',
-              style: const TextStyle(color: Color(0xffE5C07B)),
-            ),
-            TextSpan(
-              text: r?.extractedContent ?? '',
-            ),
-            emptyLine,
-            TextSpan(
-              text: '${TranslationKey.tags.tr.upperFirst}: ',
-              style: const TextStyle(color: Color(0xff56B6C2)),
-            ),
-            if (r != null && r.tags.isNotEmpty)
-              ...r.tags.map(
-                (tag) => TextSpan(
-                  text: '[$tag] ',
-                  style: const TextStyle(color: Color(0xff56B6C2)),
+            if (result.success) ...[
+              if (r?.title != null) ...[
+                TextSpan(
+                  text: '${TranslationKey.title.tr.upperFirst}: ',
+                  style: const TextStyle(color: Color(0xffC678DD)),
                 ),
-              )
-            else
-              const TextSpan(text: ''),
-            emptyLine,
-            TextSpan(
-              text: '${TranslationKey.flags.tr.upperFirst}: ',
-              style: const TextStyle(color: Color(0xffA0A1A7)),
-            ),
-            if (r?.isFinalRule == true)
+                TextSpan(
+                  text: r?.title ?? '',
+                ),
+                emptyLine,
+              ],
               TextSpan(
-                text: '[${TranslationKey.finalRule.tr.toUpperCase()}] ',
-                style: const TextStyle(color: Color(0xff98C379)),
+                text: '${TranslationKey.content.tr.upperFirst}: ',
+                style: const TextStyle(color: Color(0xff61AFEF)),
               ),
-            if (r?.isDropped == true)
               TextSpan(
-                text: '[${TranslationKey.dropped.tr.toUpperCase()}] ',
-                style: const TextStyle(color: Color(0xffE06C75)),
+                text: r?.content ?? '',
               ),
-            if (r?.isSyncDisabled == true)
+              emptyLine,
               TextSpan(
-                text: '[${TranslationKey.syncDisabled.tr.replaceAll(' ', '_').toUpperCase()}] ',
-                style: const TextStyle(color: Color(0xffD19A66)),
+                text: '${TranslationKey.extracted.tr.upperFirst}: ',
+                style: const TextStyle(color: Color(0xffE5C07B)),
               ),
+              TextSpan(
+                text: r?.extractedContent ?? '',
+              ),
+              emptyLine,
+              TextSpan(
+                text: '${TranslationKey.tags.tr.upperFirst}: ',
+                style: const TextStyle(color: Color(0xff56B6C2)),
+              ),
+              if (r != null && r.tags.isNotEmpty)
+                ...r.tags.map(
+                  (tag) => TextSpan(
+                    text: '[$tag] ',
+                    style: const TextStyle(color: Color(0xff56B6C2)),
+                  ),
+                )
+              else
+                const TextSpan(text: ''),
+              emptyLine,
+              TextSpan(
+                text: '${TranslationKey.flags.tr.upperFirst}: ',
+                style: const TextStyle(color: Color(0xffA0A1A7)),
+              ),
+              if (r?.isFinalRule == true)
+                TextSpan(
+                  text: '[${TranslationKey.finalRule.tr.toUpperCase()}] ',
+                  style: const TextStyle(color: Color(0xff98C379)),
+                ),
+              if (r?.isDropped == true)
+                TextSpan(
+                  text: '[${TranslationKey.dropped.tr.toUpperCase()}] ',
+                  style: const TextStyle(color: Color(0xffE06C75)),
+                ),
+              if (r?.isSyncDisabled == true)
+                TextSpan(
+                  text: '[${TranslationKey.syncDisabled.tr.replaceAll(' ', '_').toUpperCase()}] ',
+                  style: const TextStyle(color: Color(0xffD19A66)),
+                ),
+            ],
           ],
         ),
       ),

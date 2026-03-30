@@ -30,7 +30,7 @@ import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/lua_code_edit_view.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
-import 'package:clipshare/app/widgets/rule/script_test_pannel.dart';
+import 'package:clipshare/app/widgets/rule/script_test_panel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';

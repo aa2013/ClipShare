@@ -8,39 +8,51 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/data/models/rule/rule_regex_content.dart';
 import 'package:clipshare/app/data/models/rule/rule_script_content.dart';
+import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
-import 'package:clipshare/app/widgets/rule_card.dart';
+import 'package:clipshare/app/widgets/rule/lua_lib_card.dart';
+import 'package:clipshare/app/widgets/rule/rule_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 typedef OnRuleItemTap = FutureOr<bool> Function(RuleItem item);
+typedef OnLuaLibItemTap = FutureOr<bool> Function(LuaLib item);
 
 class RuleListView extends StatefulWidget {
   final List<RuleItem> rules;
-  final VoidCallback onDragged;
-  final ValueChanged<RuleItem> onItemChanged;
-  final OnRuleItemTap onItemTap;
-  final ValueChanged<RuleItem> onItemAdd;
-  final ValueChanged<Set<int>> onItemRemove;
-  final bool disableDrag;
+  final List<LuaLib> luaLibs;
+  final VoidCallback onRuleDragged;
+  final ValueChanged<RuleItem> onRuleItemChanged;
+  final OnRuleItemTap onRuleItemTap;
+  final ValueChanged<RuleItem> onRuleItemAdd;
+  final ValueChanged<Set<int>> onRuleItemRemove;
+  final OnLuaLibItemTap onLuaLibItemTap;
+  final ValueChanged<LuaLib> onLuaLibItemAdd;
+  final ValueChanged<LuaLib> onLuaLibItemRemove;
+  final bool disableRulesDrag;
 
   const RuleListView({
     super.key,
     required this.rules,
-    required this.onDragged,
-    required this.onItemChanged,
-    required this.onItemTap,
-    required this.onItemAdd,
-    required this.onItemRemove,
-    this.disableDrag = false,
+    required this.luaLibs,
+    required this.onRuleDragged,
+    required this.onRuleItemChanged,
+    required this.onRuleItemTap,
+    required this.onRuleItemAdd,
+    required this.onRuleItemRemove,
+    required this.onLuaLibItemTap,
+    required this.onLuaLibItemAdd,
+    required this.onLuaLibItemRemove,
+    this.disableRulesDrag = false,
   });
 
   @override
@@ -48,7 +60,7 @@ class RuleListView extends StatefulWidget {
 }
 
 class _RuleListViewState extends State<RuleListView> with SingleTickerProviderStateMixin {
-  final TextEditingController textController = TextEditingController();
+  final TextEditingController searchEditor = TextEditingController();
   late final TabController tabController;
   final rulesController = ScrollController();
   final libsController = ScrollController();
@@ -58,12 +70,33 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
   static const tag = "RuleListView";
   var multiSelectMode = false;
   final Set<int> selectedRules = {};
-  RuleItem? activeItem;
+  RuleItem? activeRuleItem;
+  LuaLib? activeLuaLibItem;
+  List<RuleItem> searchRules = [];
+  List<LuaLib> searchLuaLibs = [];
+
+  TranslationKey get currentTab => categories[tabController.index];
+
+  bool get isRulesTab => currentTab == TranslationKey.rules;
 
   @override
   void initState() {
     super.initState();
+    searchRules = List.from(widget.rules);
+    searchLuaLibs = List.from(widget.luaLibs);
     tabController = TabController(length: categories.length, vsync: this, initialIndex: 0);
+  }
+
+  @override
+  void didUpdateWidget(covariant RuleListView oldWidget) {
+    updateSearchResult();
+    super.didUpdateWidget(oldWidget);
+  }
+
+  void updateSearchResult() {
+    final search = searchEditor.text;
+    searchRules = widget.rules.where((e) => search.isNullOrEmpty || e.name.containsIgnoreCase(search)).toList();
+    searchLuaLibs = widget.luaLibs.where((e) => search.isNullOrEmpty || e.libName.containsIgnoreCase(search) || e.displayName.containsIgnoreCase(search)).toList();
   }
 
   Widget buildSearchField() {
@@ -72,8 +105,13 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
         Expanded(
           child: TextField(
             autofocus: true,
-            controller: textController,
+            controller: searchEditor,
             textAlignVertical: TextAlignVertical.center,
+            onChanged: (text) {
+              setState(() {
+                updateSearchResult();
+              });
+            },
             decoration: InputDecoration(
               isDense: true,
               contentPadding: 8.insetH,
@@ -86,7 +124,11 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                 ), // 边框样式
               ),
               suffixIcon: InkWell(
-                onTap: () {},
+                onTap: () {
+                  setState(() {
+                    updateSearchResult();
+                  });
+                },
                 splashColor: Colors.black12,
                 highlightColor: Colors.black12,
                 borderRadius: BorderRadius.circular(50),
@@ -111,10 +153,10 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
       key: Key("${rule.id}"),
       orderedIndex: orderedIndex,
       rule: rule,
-      isActive: rule.id == activeItem?.id,
+      isActive: rule.id == activeRuleItem?.id,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
-      disabledDrag: widget.disableDrag,
+      disabledDrag: widget.disableRulesDrag || searchRules.length!=widget.rules.length,
       onEnabledChanged: (enabled) {
         final validateResult = rule.validate();
         if (validateResult != null) {
@@ -126,16 +168,16 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           rule.version = DateTime.now().yyyyMMddHHmmss;
           rule.dirty = true;
         });
-        widget.onItemChanged(rule);
+        widget.onRuleItemChanged(rule);
       },
       onTap: () async {
         if (multiSelectMode) {
           return;
         }
-        final success = await widget.onItemTap(rule);
+        final success = await widget.onRuleItemTap(rule);
         if (success) {
           setState(() {
-            activeItem = rule;
+            activeRuleItem = rule;
           });
         }
       },
@@ -190,7 +232,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
   }
 
   Widget buildRulesListView() {
-    if (widget.rules.isEmpty) {
+    if (searchRules.isEmpty) {
       return Constants.emptyContent;
     }
     return Padding(
@@ -198,9 +240,9 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
       child: ReorderableListView.builder(
         scrollController: rulesController,
         itemBuilder: (BuildContext context, int index) {
-          return buildRuleCard(widget.rules[index], index);
+          return buildRuleCard(searchRules[index], index);
         },
-        itemCount: widget.rules.length,
+        itemCount: searchRules.length,
         buildDefaultDragHandles: false,
         onReorder: (int oldIndex, int newIndex) {
           if (oldIndex < newIndex) {
@@ -214,14 +256,48 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           newIndexRule.dirty = true;
           final item = widget.rules.removeAt(oldIndex);
           widget.rules.insert(newIndex, item);
-          widget.onDragged();
+          widget.onRuleDragged();
         },
       ),
     );
   }
 
   Widget buildLibsListView() {
-    return EmptyContent();
+    if (searchLuaLibs.isEmpty) {
+      return Constants.emptyContent;
+    }
+    return Padding(
+      padding: 2.insetH,
+      child: ListView.builder(
+        itemBuilder: (BuildContext context, int index) {
+          final lib = searchLuaLibs[index];
+          return LuaLibCard(
+            luaLib: lib,
+            isActive: lib.libName == activeLuaLibItem?.libName,
+            onTap: () async {
+              final success = await widget.onLuaLibItemTap(lib);
+              if (success) {
+                setState(() {
+                  activeLuaLibItem = lib;
+                });
+              }
+            },
+            onDeleteTap: () {
+              Global.showTipsDialog(
+                context: context,
+                title: TranslationKey.deleteTips.tr,
+                text: '是否删除？若有其他脚本在使用，脚本将会失效！',
+                onOk: () {
+                  widget.onLuaLibItemRemove(lib);
+                },
+                showCancel: true,
+              );
+            },
+          );
+        },
+        itemCount: searchLuaLibs.length,
+      ),
+    );
   }
 
   FloatingActionButton _regularFab({
@@ -306,7 +382,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           if (multiSelectMode)
             fabButtonFun(
               onPressed: () {
-                widget.onItemRemove(selectedRules);
+                widget.onRuleItemRemove(selectedRules);
                 setState(() {
                   multiSelectMode = false;
                   selectedRules.clear();
@@ -318,31 +394,43 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           if (!multiSelectMode)
             fabButtonFun(
               onPressed: () {
-                final currentTab = categories[tabController.index];
                 final controller = controllers[tabController.index];
-                var newRule = RuleItem(
-                  id: appConfig.snowflake.nextId(),
-                  version: DateTime.now().yyyyMMddHHmmss,
-                  name: "Rule${widget.rules.length + 1}",
-                  platforms: SupportPlatForm.values.toSet(),
-                  sources: {},
-                  trigger: RuleTrigger.onCopy,
-                  type: RuleContentType.regex,
-                  regex: RuleRegexContent(
-                    mainRegex: '',
-                    allowExtractData: false,
-                    extractRegex: '',
-                    allowAddTag: false,
-                    tags: {},
-                    preventSync: false,
-                    isFinal: false,
-                  ),
-                  script: RuleScriptContent(language: RuleScriptLanguage.lua, content: ''),
-                  enabled: false,
-                  order: widget.rules.length + 1,
-                  isNewData: true,
-                );
-                widget.onItemAdd(newRule);
+                if (isRulesTab) {
+                  var newRule = RuleItem(
+                    id: appConfig.snowflake.nextId(),
+                    version: DateTime.now().yyyyMMddHHmmss,
+                    name: "Rule${widget.rules.length + 1}",
+                    platforms: SupportPlatForm.values.toSet(),
+                    sources: {},
+                    trigger: RuleTrigger.onCopy,
+                    type: RuleContentType.regex,
+                    regex: RuleRegexContent(
+                      mainRegex: '',
+                      allowExtractData: false,
+                      extractRegex: '',
+                      allowAddTag: false,
+                      tags: {},
+                      preventSync: false,
+                      isFinal: false,
+                    ),
+                    script: RuleScriptContent(language: RuleScriptLanguage.lua, content: ''),
+                    enabled: false,
+                    order: widget.rules.length + 1,
+                    isNewData: true,
+                  );
+                  widget.onRuleItemAdd(newRule);
+                } else {
+                  //lualib
+                  var newLuaLib = LuaLib(
+                    libName: 'LuaLib${widget.luaLibs.length + 1}',
+                    displayName: 'LuaLib${widget.luaLibs.length + 1}',
+                    language: RuleScriptLanguage.lua.name,
+                    source: '',
+                    version: 0,
+                    isNewData: true,
+                  );
+                  widget.onLuaLibItemAdd(newLuaLib);
+                }
                 //controller 只会attach到当前的tab
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!controller.hasClients) {
@@ -352,7 +440,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                   try {
                     controller.animateTo(
                       controller.position.maxScrollExtent,
-                      duration: const Duration(milliseconds: 200),
+                      duration: 200.ms,
                       curve: Curves.easeOut,
                     );
                   } catch (err, stack) {

@@ -41,16 +41,19 @@ class Constants {
   static const heartbeatInterval = 30;
 
   //中转程序下载地址
-  static const forwardDownloadUrl = "https://clipshare.coclyun.top/usages/forward.html";
+  static const forwardDownloadUrl =
+      "https://clipshare.coclyun.top/usages/forward.html";
 
   //更新信息地址
-  static const appUpdateInfoUrl = "https://clipshare.coclyun.top/version-info.json";
+  static const appUpdateInfoUrl =
+      "https://clipshare.coclyun.top/version-info.json";
 
   //常见问题地址
   static const faqUrl = "https://clipshare.coclyun.top/faq.html";
 
   //数据广播Action
-  static const kOnHistoryChangedBroadcastAction = "$appPkg.ACTION_ON_HISTORY_CHANGED";
+  static const kOnHistoryChangedBroadcastAction =
+      "$appPkg.ACTION_ON_HISTORY_CHANGED";
 
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
@@ -80,29 +83,35 @@ class Constants {
   static const githubRepo = "https://github.com/aa2013/ClipShare";
 
   //QQ group
-  static const qqGroup = "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=HQGbGZ-eYPNGLiawtVRuTk21RJyh87vp&authKey=mm0grlVTMpUJriGac5qBe8X50wShxlKILoeF9K6F2%2FmOpMPv60cBxZBZKs%2BSYmFI&noverify=0&group_code=622786394";
+  static const qqGroup =
+      "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=HQGbGZ-eYPNGLiawtVRuTk21RJyh87vp&authKey=mm0grlVTMpUJriGac5qBe8X50wShxlKILoeF9K6F2%2FmOpMPv60cBxZBZKs%2BSYmFI&noverify=0&group_code=622786394";
 
   //ClipShare 官网
   static const clipshareSite = "https://clipshare.coclyun.top";
 
   //默认历史弹窗快捷键（Ctrl + Alt + H）
-  static final defaultHistoryWindowKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
+  static final defaultHistoryWindowKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
 
   //文件同步快捷键（Ctrl + Shift + C）
-  static final defaultSyncFileHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
+  static final defaultSyncFileHotKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
 
   //显示主窗体快捷键（Ctrl + Shift + S）
-  static final defaultShowMainWindowHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
+  static final defaultShowMainWindowHotKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
 
   //退出程序快捷键（Ctrl + Shift + Q）
-  static final defaultExitAppHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
+  static final defaultExitAppHotKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
 
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
   static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
-  static const windowsStartUpPath = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
+  static const windowsStartUpPath =
+      r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
 
   //配对时限（秒）
   static const pairingLimit = 60;
@@ -240,15 +249,18 @@ class Constants {
   static const httpUrlRegex = r'^(http|https)://[^\s]+$';
   static const wsUrlRegex = r'^(ws|wss)://[^\s]+$';
 
-  static String get dirSeparate => Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
+  static String get dirSeparate =>
+      Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
 
   static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
 
   static const defaultWsPingIntervalTime = 30;
 
-  static const jiebaDownloadUrl = 'https://download.clipshare.coclyun.top/others/jieba.zip';
+  static const jiebaDownloadUrl =
+      'https://download.clipshare.coclyun.top/others/jieba.zip';
 
-  static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
+  static const jiebaGithubUrl =
+      'https://github.com/w568w/jieba_flutter/tree/master/assets';
   static const appIconSize = 17.0;
   static final emptyContent = EmptyContent();
   static final codeSQLTheme = CodeHighlightThemeMode(mode: langSqliteHighlight);
@@ -260,6 +272,16 @@ class Constants {
   // language=lua
   static const String luaGlobalFun = """
     __userscripts_map = {}
+    __customLibs = {
+      json = {
+        encode = function(...)
+          return json.encode(...)
+        end,
+        decode = function(...)
+          return json.decode(...)
+        end,
+      }
+    }
     function remove_user_sandbox_method(script_hash)
       __userscripts_map[script_hash] = nil
     end
@@ -325,18 +347,18 @@ class Constants {
           safe_os.execute = not_allow_func
           
           local forbidden_keys = {
-              "__userscripts_map", "_G", "_ENV",
+              "__userscripts_map", "__customLibs", "_G", "_ENV",
               "load", "loadstring", "dofile", "package",
               "debug", "getmetatable", "setmetatable",
-              "rawget", "rawset", "rawequal", 
-              'run_user_sandbox_method'
+              "rawget", "rawset", "rawequal", "io","file",
+              'run_user_sandbox_method', "collectgarbage",
+              "require", "module", "coroutine"
           }
           
           local scope = {
             log = log,
             print = log.debug,
             os = safe_os,
-            json = json,
             ContentType = {
               sms = 'sms',
               text = 'text',
@@ -344,6 +366,9 @@ class Constants {
               notification = 'notification',
             }
           }
+          for lib, t in pairs(__customLibs) do
+            scope[lib] = t
+          end
           
           for _, k in ipairs(forbidden_keys) do
             scope[k] = not_allow_func
@@ -361,10 +386,90 @@ class Constants {
           end
       
           __userscripts_map['{{funHash}}']= chunk()
-          log.debug('loaded fun: '..'{{funName}}: {{funHash}}')
+          log.debug('loaded fun: ' .. '{{funName}}: {{funHash}}')
           return 'OK'
         end
         print(wrapper())
+    """;
+
+  // language=lua
+  static const String luaLibSandboxWrapper = """
+        local wrapper = function() 
+          local log = {
+            debug = function(...) __log({{isTest}}, 'debug','{{funName}}', table.concat({...}, ", ")) end,
+            warn = function(...) __log({{isTest}}, 'warn','{{funName}}', table.concat({...}, ", ")) end,
+            info = function(...) __log({{isTest}}, 'info','{{funName}}', table.concat({...}, ", ")) end,
+            error = function(...) __log({{isTest}}, 'error','{{funName}}', table.concat({...}, ", ")) end,
+          }
+          local not_allow_func = function()
+            return error("not allow operation in sandbox", 2)
+          end
+          local safe_os = {}
+          for k, v in pairs(os) do
+            safe_os[k] = v
+          end
+          safe_os.exit = not_allow_func
+          safe_os.execute = not_allow_func
+          
+          local forbidden_keys = {
+              "__userscripts_map", "__customLibs", "_G", "_ENV",
+              "load", "loadstring", "dofile", "package",
+              "debug", "getmetatable", "setmetatable",
+              "rawget", "rawset", "rawequal", "io","file",
+              'run_user_sandbox_method', "collectgarbage",
+              "require", "module", "coroutine"
+          }
+          
+          local scope = {
+            os = safe_os,
+          }
+          for _, k in ipairs(forbidden_keys) do
+            scope[k] = not_allow_func
+          end
+          
+          local env = setmetatable(scope, {
+              __index = _G,
+              __newindex = function(_, k)
+                  error("global '" .. k .. "' is readonly", 2)
+              end
+          })
+          local chunk, err = load([[{{code}}]], "sandbox", "t", env)
+          if not chunk then
+              return err
+          end
+      
+          __customLibs['{{libName}}'] = chunk()
+          log.debug('loaded lib: ' .. '{{libName}}')
+          return 'OK'
+        end
+        print(wrapper())
+  """;
+
+  // language=lua
+  static const String luaLibCompileWrapper = """
+     local chunk, err = load([[{{code}}]])
+     if not chunk then
+        return err
+     end
+     function table_to_string(t)
+        local result = {}
+        for k, v in pairs(t) do
+            if type(v) == "function" then
+                table.insert(result, string.format("%s = [function]", k))
+            else
+                table.insert(result, string.format("%s = %s", k, tostring(v)))
+            end
+        end
+        return table.concat(result, "\\n")
+    end
+    local ok,result = pcall(chunk)
+    if not ok then
+      return result
+    end
+    if type(result) ~= "table" then
+      return 'the library return value must be a table.'
+    end
+    return 'table:' .. table_to_string(result)
     """;
 
   //endregion

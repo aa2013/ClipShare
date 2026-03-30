@@ -129,7 +129,7 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `LuaLib` (`libName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`libName`))');
+            'CREATE TABLE IF NOT EXISTS `LuaLib` (`libName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `language` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`libName`))');
         await database.execute(
             'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
         await database.execute(
@@ -1681,6 +1681,7 @@ class _$LuaLibDao extends LuaLibDao {
             (LuaLib item) => <String, Object?>{
                   'libName': item.libName,
                   'displayName': item.displayName,
+                  'language': item.language,
                   'source': item.source,
                   'version': item.version
                 }),
@@ -1691,6 +1692,7 @@ class _$LuaLibDao extends LuaLibDao {
             (LuaLib item) => <String, Object?>{
                   'libName': item.libName,
                   'displayName': item.displayName,
+                  'language': item.language,
                   'source': item.source,
                   'version': item.version
                 });
@@ -1718,6 +1720,7 @@ class _$LuaLibDao extends LuaLibDao {
         mapper: (Map<String, Object?> row) => LuaLib(
             libName: row['libName'] as String,
             displayName: row['displayName'] as String,
+            language: row['language'] as String,
             source: row['source'] as String,
             version: row['version'] as int),
         arguments: [libName]);
@@ -1729,6 +1732,7 @@ class _$LuaLibDao extends LuaLibDao {
         mapper: (Map<String, Object?> row) => LuaLib(
             libName: row['libName'] as String,
             displayName: row['displayName'] as String,
+            language: row['language'] as String,
             source: row['source'] as String,
             version: row['version'] as int));
   }

@@ -4,7 +4,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/lua_code_edit_view.dart';
-import 'package:clipshare/app/widgets/rule/script_test_pannel.dart';
+import 'package:clipshare/app/widgets/rule/script_test_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:multi_split_view/multi_split_view.dart';
