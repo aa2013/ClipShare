@@ -98,6 +98,7 @@ class HistorySourceSyncHandler implements SyncListener {
 
   @override
   Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
+    //todo 存储中转实现
     await _syncData(map);
   }
 }

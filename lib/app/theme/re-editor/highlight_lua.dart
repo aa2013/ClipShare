@@ -15,7 +15,6 @@ final langLuaHighlight = Mode(
       begin: r"--(?!\[=*?\[)", // -- 开头但不是多行注释
       end: r"$",
       contains: [
-        // TODO / FIXME 高亮
         Mode(
           scope: 'doctag',
           begin: r"[ ]*(?=(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):)",

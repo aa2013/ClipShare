@@ -1,10 +1,13 @@
 library rules;
 
+import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
-import 'package:clipshare/app/modules/views/rules/lib_detail.dart';
+import 'package:clipshare/app/modules/views/rules/rule_lib_detail.dart';
 import 'package:clipshare/app/modules/views/rules/rule_detail.dart';
 import 'package:clipshare/app/modules/views/rules/rule_list_view.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -26,7 +29,8 @@ class RulesPage extends GetView<RulesController> {
   static const logTag = 'RulesPage';
   final appConfig = Get.find<ConfigService>();
   final ruleDao = Get.find<DbService>().ruleDao;
-  final libDao = Get.find<DbService>().luaLibDao;
+  final libDao = Get.find<DbService>().ruleLibDao;
+  final opRecordDao = Get.find<DbService>().opRecordDao;
 
   ///返回true则放弃
   Future<bool> _abortAskDialog(BuildContext context) async {
@@ -55,16 +59,13 @@ class RulesPage extends GetView<RulesController> {
     final listView = Obx(
       () => RuleListView(
         rules: controller.rules.value,
-        luaLibs: controller.luaLibs.value,
+        luaLibs: controller.ruleLibs.value,
         disableRulesDrag: controller.activeItemChanged.value,
         onRuleDragged: () {
-          // todo 同步
           controller.saveRules();
         },
         onRuleItemChanged: (RuleItem item) {
-          // todo 同步
           controller.saveRules();
-          // ruleDao.updateRule(item.toRule());
         },
         onRuleItemTap: (RuleItem item) async {
           final isCurrent = item.id == controller.selectedRuleItem.value?.id;
@@ -113,7 +114,9 @@ class RulesPage extends GetView<RulesController> {
             if (!success) {
               replayItems.add(rule);
             } else {
-              //todo 同步数据
+              //同步数据
+              await opRecordDao.deleteByDataWithCascade(rule.id.toString());
+              await opRecordDao.add(OperationRecord.fromSimple(Module.rule, OpMethod.delete, rule.id));
             }
           }
           if (replayItems.isNotEmpty) {
@@ -127,7 +130,7 @@ class RulesPage extends GetView<RulesController> {
             context: context,
           );
         },
-        onLuaLibItemTap: (LuaLib item) async {
+        onLuaLibItemTap: (RuleLib item) async {
           final isCurrent = item.libName == controller.selectedLuaLibItem.value?.libName;
           if (isCurrent && !appConfig.isSmallScreen) {
             return false;
@@ -142,27 +145,30 @@ class RulesPage extends GetView<RulesController> {
           }
           return Future.value(false);
         },
-        onLuaLibItemAdd: (LuaLib value) async {
+        onLuaLibItemAdd: (RuleLib value) async {
           if (await _abortAskDialog(context)) {
             return;
           }
-          controller.luaLibs.add(value);
+          controller.ruleLibs.add(value);
           controller.selectedLuaLibItem.value = value;
           controller.selectedRuleItem.value = null;
         },
-        onLuaLibItemRemove: (LuaLib lib) async {
+        onLuaLibItemRemove: (RuleLib lib) async {
           if (lib.isNewData) {
-            controller.luaLibs.removeWhere((e) => e.libName == lib.libName);
+            controller.ruleLibs.removeWhere((e) => e.libName == lib.libName);
             Global.showSnackBarSuc(text: TranslationKey.deleteSuccess.tr, context: context);
             controller.selectedLuaLibItem.value = null;
             return;
           }
           final result = (await libDao.remove(lib.libName) ?? 0) > 0;
           if (result) {
-            controller.luaLibs.removeWhere((e) => e.libName == lib.libName);
+            controller.ruleLibs.removeWhere((e) => e.libName == lib.libName);
             if (lib.libName == controller.selectedLuaLibItem.value?.libName) {
               controller.selectedLuaLibItem.value = null;
             }
+            //同步数据
+            await opRecordDao.deleteByDataWithCascade(lib.libName);
+            await opRecordDao.add(OperationRecord.fromSimple(Module.ruleLib, OpMethod.delete, lib.libName));
             Global.showSnackBarSuc(text: TranslationKey.deleteSuccess.tr, context: context);
           } else {
             Global.showSnackBarSuc(text: TranslationKey.deletionFailed.tr, context: context);
@@ -194,16 +200,15 @@ class RulesPage extends GetView<RulesController> {
 
               item.version = DateTime.now().yyyyMMddHHmmss;
               late final Future<int> saveFuture;
+              final newRule = item.toRule();
               if (item.isNewData) {
-                //todo 同步数据
                 item.isNewData = false;
-                saveFuture = ruleDao.addRule(item.toRule());
+                saveFuture = ruleDao.addRule(newRule);
               } else {
-                //todo 同步数据
-                saveFuture = ruleDao.updateRule(item.toRule());
+                saveFuture = ruleDao.updateRule(newRule);
               }
               saveFuture
-                  .then((cnt) {
+                  .then((cnt) async {
                     if (cnt == 0) {
                       Global.showSnackBarErr(
                         text: TranslationKey.saveFailed.tr,
@@ -220,6 +225,9 @@ class RulesPage extends GetView<RulesController> {
                         item.script.content,
                         hash: item.id.toString(),
                       );
+                      //同步数据
+                      await opRecordDao.deleteByDataWithCascade(newRule.id.toString());
+                      await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.add, newRule.id));
                     }
                   })
                   .catchError((err, stack) {
@@ -253,23 +261,21 @@ class RulesPage extends GetView<RulesController> {
             lib: lib,
             onSaveClicked: (oldValue, newValue) {
               //todo
-              for (var i = 0; i < controller.luaLibs.length; i++) {
-                var old = controller.luaLibs[i];
+              for (var i = 0; i < controller.ruleLibs.length; i++) {
+                var old = controller.ruleLibs[i];
                 if (old.libName != oldValue.libName) {
                   continue;
                 }
                 newValue.version = DateTime.now().yyyyMMddHHmmss;
                 late final Future<int> saveFuture;
                 if (newValue.isNewData) {
-                  //todo 同步数据
                   newValue.isNewData = false;
                   saveFuture = libDao.addLib(newValue);
                 } else {
-                  //todo 同步数据
                   saveFuture = libDao.updateLib(newValue);
                 }
                 saveFuture
-                    .then((cnt) {
+                    .then((cnt) async {
                       if (cnt == 0) {
                         Global.showSnackBarErr(
                           text: TranslationKey.saveFailed.tr,
@@ -280,11 +286,14 @@ class RulesPage extends GetView<RulesController> {
                           text: TranslationKey.saveSuccess.tr,
                           context: Get.context!,
                         );
-                        controller.luaLibs[i] = newValue;
+                        controller.ruleLibs[i] = newValue;
                         controller.selectedLuaLibItem.value = newValue;
                         //加载到全局函数
                         final result = controller.loadLuaLib(newValue);
                         Log.debug(logTag, "load lib(${lib.libName}): $result");
+                        //同步数据
+                        await opRecordDao.deleteByDataWithCascade(lib.libName);
+                        await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.ruleLib, OpMethod.add, lib.libName));
                       }
                     })
                     .catchError((err, stack) {

@@ -4,17 +4,17 @@ import 'package:floor/floor.dart';
 @dao
 abstract class LuaLibDao {
   @insert
-  Future<int> addLib(LuaLib lib);
+  Future<int> addLib(RuleLib lib);
 
   @update
-  Future<int> updateLib(LuaLib lib);
+  Future<int> updateLib(RuleLib lib);
 
-  @Query("delete from LuaLib where libName = :libName")
+  @Query("delete from RuleLib where libName = :libName")
   Future<int?> remove(String libName);
 
-  @Query("select * from LuaLib where libName = :libName")
-  Future<LuaLib?> getByLibName(String libName);
+  @Query("select * from RuleLib where libName = :libName")
+  Future<RuleLib?> getByLibName(String libName);
 
-  @Query("select * from LuaLib")
-  Future<List<LuaLib>> getAllLibs();
+  @Query("select * from RuleLib")
+  Future<List<RuleLib>> getAllLibs();
 }

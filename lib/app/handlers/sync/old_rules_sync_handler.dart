@@ -15,11 +15,12 @@ import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
 ///规则同步器
-class RulesSyncHandler implements SyncListener {
+@Deprecated('no longer use')
+class OldRulesSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
 
-  RulesSyncHandler() {
+  OldRulesSyncHandler() {
     DataSender.addSyncListener(Module.rules, this);
   }
 

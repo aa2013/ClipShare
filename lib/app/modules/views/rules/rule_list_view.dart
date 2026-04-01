@@ -25,19 +25,19 @@ import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 typedef OnRuleItemTap = FutureOr<bool> Function(RuleItem item);
-typedef OnLuaLibItemTap = FutureOr<bool> Function(LuaLib item);
+typedef OnLuaLibItemTap = FutureOr<bool> Function(RuleLib item);
 
 class RuleListView extends StatefulWidget {
   final List<RuleItem> rules;
-  final List<LuaLib> luaLibs;
+  final List<RuleLib> luaLibs;
   final VoidCallback onRuleDragged;
   final ValueChanged<RuleItem> onRuleItemChanged;
   final OnRuleItemTap onRuleItemTap;
   final ValueChanged<RuleItem> onRuleItemAdd;
   final ValueChanged<Set<int>> onRuleItemRemove;
   final OnLuaLibItemTap onLuaLibItemTap;
-  final ValueChanged<LuaLib> onLuaLibItemAdd;
-  final ValueChanged<LuaLib> onLuaLibItemRemove;
+  final ValueChanged<RuleLib> onLuaLibItemAdd;
+  final ValueChanged<RuleLib> onLuaLibItemRemove;
   final bool disableRulesDrag;
 
   const RuleListView({
@@ -71,9 +71,9 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
   var multiSelectMode = false;
   final Set<int> selectedRules = {};
   RuleItem? activeRuleItem;
-  LuaLib? activeLuaLibItem;
+  RuleLib? activeLuaLibItem;
   List<RuleItem> searchRules = [];
-  List<LuaLib> searchLuaLibs = [];
+  List<RuleLib> searchLuaLibs = [];
 
   TranslationKey get currentTab => categories[tabController.index];
 
@@ -156,7 +156,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
       isActive: rule.id == activeRuleItem?.id,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
-      disabledDrag: widget.disableRulesDrag || searchRules.length!=widget.rules.length,
+      disabledDrag: widget.disableRulesDrag || searchRules.length != widget.rules.length,
       onEnabledChanged: (enabled) {
         final validateResult = rule.validate();
         if (validateResult != null) {
@@ -349,23 +349,28 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
         ),
         children: [
           fabButtonFun(
-            onPressed: () {
-              if (selectedRules.length >= widget.rules.length) {
-                setState(() {
-                  selectedRules.clear();
-                  multiSelectMode = false;
-                });
-                return;
-              }
-              selectedRules.addAll(widget.rules.map((item) => item.id));
-              if (selectedRules.isNotEmpty) {
-                setState(() {
-                  multiSelectMode = true;
-                });
-              }
-            },
+            onPressed: widget.rules.isEmpty
+                ? null
+                : () {
+                    if (selectedRules.length >= widget.rules.length) {
+                      setState(() {
+                        selectedRules.clear();
+                        multiSelectMode = false;
+                      });
+                      return;
+                    }
+                    selectedRules.addAll(widget.rules.map((item) => item.id));
+                    if (selectedRules.isNotEmpty) {
+                      setState(() {
+                        multiSelectMode = true;
+                      });
+                    }
+                  },
             tooltip: selectedRules.length >= widget.rules.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
-            child: Icon(selectedRules.length >= widget.rules.length ? Icons.deselect : Icons.select_all),
+            child: Icon(
+              selectedRules.length >= widget.rules.length ? Icons.deselect : Icons.select_all,
+              color: widget.rules.isEmpty ? Colors.grey : null,
+            ),
           ),
           if (!multiSelectMode)
             fabButtonFun(
@@ -421,10 +426,10 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                   widget.onRuleItemAdd(newRule);
                 } else {
                   //lualib
-                  var newLuaLib = LuaLib(
+                  var newLuaLib = RuleLib(
                     libName: 'LuaLib${widget.luaLibs.length + 1}',
                     displayName: 'LuaLib${widget.luaLibs.length + 1}',
-                    language: RuleScriptLanguage.lua.name,
+                    language: RuleScriptLanguage.lua,
                     source: '',
                     version: 0,
                     isNewData: true,

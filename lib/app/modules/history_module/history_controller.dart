@@ -345,7 +345,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       default:
     }
 
-    //todo 规则列表不为空且未匹配成功，忽略
     var applyResult = ruleController.apply(type, content, source);
     if (applyResult.result?.isDropped ?? false) {
       //丢弃
@@ -659,7 +658,8 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       OpMethod.add,
       history.id.toString(),
     );
-    if ((applyResult?.isSyncDisabled ?? true)) {
+    final syncDisabled = applyResult?.isSyncDisabled ?? false;
+    if (!syncDisabled) {
       //允许同步
       if (notify) {
         await dbService.opRecordDao.addAndNotify(opRecord);
@@ -721,28 +721,21 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       });
     }
     //endregion
-
-    //todo 废弃旧规则逻辑
+    final tags = <String>{};
+    tags.addAll(applyResult?.tags??{});
     switch (contentType) {
-      case HistoryContentType.text:
-        var rules = jsonDecode(appConfig.tagRules)["data"];
-        for (var rule in rules) {
-          if (history.content.matchRegExp(rule["rule"])) {
-            //添加标签
-            var tag = HistoryTag(rule["name"], history.id);
-            tagService.add(tag);
-          }
-        }
-        break;
       case HistoryContentType.sms:
-        //添加标签
-        tagService.add(HistoryTag(TranslationKey.sms.tr, history.id));
+        tags.add(TranslationKey.sms.tr);
         break;
       case HistoryContentType.notification:
-        //添加通知标签
-        tagService.add(HistoryTag(TranslationKey.notification.tr, history.id));
+        tags.add(TranslationKey.notification.tr);
         break;
       default:
+    }
+    if(tags.isNotEmpty){
+      for(var tag in tags){
+        tagService.add(HistoryTag(tag, history.id));
+      }
     }
     return cnt;
   }

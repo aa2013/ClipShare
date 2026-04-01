@@ -5,7 +5,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:simple_icons/simple_icons.dart';
 
 class LuaLibCard extends StatelessWidget {
-  final LuaLib luaLib;
+  final RuleLib luaLib;
   final VoidCallback onTap;
   final VoidCallback onDeleteTap;
   final bool isActive;
@@ -37,7 +37,7 @@ class LuaLibCard extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                luaLib.scriptLanguage.icon,
+                luaLib.language.icon,
                 color: Colors.blueGrey,
               ),
               const SizedBox(width: 8),

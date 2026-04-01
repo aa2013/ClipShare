@@ -4,21 +4,18 @@ import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:floor/floor.dart';
 
 @entity
-class LuaLib {
+class RuleLib {
   @PrimaryKey(autoGenerate: false)
   String libName;
   String displayName;
-  String language;
+  @TypeConverters([RuleScriptLanguageConverter])
+  RuleScriptLanguage language;
   String source;
   int version;
   @ignore
   bool isNewData;
 
-  RuleScriptLanguage get scriptLanguage {
-    return RuleScriptLanguage.getValue(language);
-  }
-
-  LuaLib({
+  RuleLib({
     required this.libName,
     required this.displayName,
     required this.language,
@@ -27,11 +24,11 @@ class LuaLib {
     this.isNewData = false,
   });
 
-  factory LuaLib.fromJson(Map<String, dynamic> json) {
-    return LuaLib(
+  factory RuleLib.fromJson(Map<String, dynamic> json) {
+    return RuleLib(
       libName: json["libName"],
       displayName: json["displayName"],
-      language: json["language"],
+      language: RuleScriptLanguage.getValue(json["language"]),
       source: json["source"],
       version: json["version"],
       isNewData: json["isNewData"],
@@ -40,14 +37,7 @@ class LuaLib {
 
   @override
   bool operator ==(Object other) {
-    return identical(this, other) ||
-        other is LuaLib &&
-            runtimeType == other.runtimeType &&
-            libName == other.libName &&
-            displayName == other.displayName &&
-            language == other.language &&
-            source == other.source &&
-            version == other.version;
+    return identical(this, other) || other is RuleLib && runtimeType == other.runtimeType && libName == other.libName && displayName == other.displayName && language == other.language && source == other.source && version == other.version;
   }
 
   @override
@@ -59,7 +49,7 @@ class LuaLib {
     return {
       "libName": libName,
       "displayName": displayName,
-      "language": language,
+      "language": language.name,
       "source": source,
       "version": version,
       "isNewData": isNewData,
@@ -69,5 +59,28 @@ class LuaLib {
   @override
   String toString() {
     return jsonEncode(this);
+  }
+
+  static RuleLib empty() {
+    return RuleLib(
+      libName: '',
+      displayName: '',
+      language: RuleScriptLanguage.unknown,
+      source: '',
+      version: 0,
+    );
+  }
+}
+
+// 枚举类型到String的转换器
+class RuleScriptLanguageConverter extends TypeConverter<RuleScriptLanguage, String> {
+  @override
+  RuleScriptLanguage decode(String name) {
+    return RuleScriptLanguage.getValue(name);
+  }
+
+  @override
+  String encode(RuleScriptLanguage value) {
+    return value.name;
   }
 }

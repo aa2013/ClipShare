@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
 import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -29,13 +33,14 @@ class RulesController extends GetxController {
   static const String tag = "RulesController";
   final appConfig = Get.find<ConfigService>();
   final ruleDao = Get.find<DbService>().ruleDao;
-  final luaLibDao = Get.find<DbService>().luaLibDao;
+  final ruleLibDao = Get.find<DbService>().ruleLibDao;
+  final opRecordDao = Get.find<DbService>().opRecordDao;
 
   // final MultiSplitViewController splitViewController = MultiSplitViewController();
   final rules = <RuleItem>[].obs;
-  final luaLibs = <LuaLib>[].obs;
+  final ruleLibs = <RuleLib>[].obs;
   final selectedRuleItem = Rx<RuleItem?>(null);
-  final selectedLuaLibItem = Rx<LuaLib?>(null);
+  final selectedLuaLibItem = Rx<RuleLib?>(null);
   final LuaRuntime _lua = LuaRuntime();
   final _loadedLuaFun = <String, int>{};
   final activeItemChanged = false.obs;
@@ -99,7 +104,7 @@ class RulesController extends GetxController {
   }
 
   void _loadAllLuaLibs() {
-    for (var lib in luaLibs) {
+    for (var lib in ruleLibs) {
       final msg = loadLuaLib(lib);
       Log.debug(tag, "load lib(${lib.libName}): $msg");
     }
@@ -137,7 +142,7 @@ class RulesController extends GetxController {
     _initLuaFunc();
     final list = await ruleDao.getAllRules();
     rules.value = list.map((e) => RuleItem.fromRule(e)).toList();
-    luaLibs.value = await luaLibDao.getAllLibs();
+    ruleLibs.value = await ruleLibDao.getAllLibs();
     _loadAllLuaLibs();
     _loadAllLuaUserFn();
     super.onInit();
@@ -159,9 +164,8 @@ class RulesController extends GetxController {
         if (rule.dirty) {
           updateList.add(rule);
           rule.dirty = false;
-        } else {
-          continue;
         }
+        continue;
       }
       //顺序变化需要保存
       rule.dirty = false;
@@ -177,12 +181,18 @@ class RulesController extends GetxController {
     }
     await ruleDao.updateRules(updateList.map((e) => e.toRule()).toList());
     await ruleDao.addRules(saveList.map((e) => e.toRule()).toList());
-    //todo 同步数据
+    //同步数据
+    for (var updateData in updateList) {
+      await opRecordDao.deleteByDataWithCascade(updateData.id.toString());
+    }
+    for (var saveData in [...saveList, ...updateList]) {
+      await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.add, saveData.id));
+    }
     //保存成功
     update();
   }
 
-  String loadLuaLib(LuaLib lib, {bool reloadAllUserFn = false}) {
+  String loadLuaLib(RuleLib lib, {bool reloadAllUserFn = false}) {
     final sandboxWrapper = Constants.luaLibSandboxWrapper.replaceAll("{{funName}}", "loaLuaLib").replaceAll("{{libName}}", lib.libName).replaceAll("{{code}}", lib.source);
     final msg = _lua.run(sandboxWrapper);
     if (msg == 'OK' && reloadAllUserFn) {
@@ -294,5 +304,43 @@ class RulesController extends GetxController {
         return RuleExecResult.error(msg);
       }
     }
+  }
+
+  void addOrUpdateRule(Rule rule) {
+    var exists = false;
+    final ruleItem = RuleItem.fromRule(rule);
+    for (var i = 0; i < rules.length; i++) {
+      if (rules[i].id == rule.id) {
+        rules[i] = ruleItem;
+        exists = true;
+        update();
+        break;
+      }
+    }
+    if (!exists) {
+      rules.add(ruleItem);
+    }
+    loadLuaUserFunc(
+      ruleItem.name,
+      ruleItem.script.content,
+      hash: ruleItem.id.toString(),
+    );
+  }
+
+  void addOrUpdateRuleLib(RuleLib lib) {
+    var exists = false;
+    for (var i = 0; i < ruleLibs.length; i++) {
+      if (ruleLibs[i].libName == lib.libName) {
+        ruleLibs[i] = lib;
+        exists = true;
+        update();
+        break;
+      }
+    }
+    if (!exists) {
+      ruleLibs.add(lib);
+    }
+    final result = loadLuaLib(lib);
+    Log.debug(tag, "load lib(${lib.libName}): $result");
   }
 }

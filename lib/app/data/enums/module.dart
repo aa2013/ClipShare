@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 
 enum Module {
@@ -5,7 +6,10 @@ enum Module {
   device(moduleName: "设备管理"),
   tag(moduleName: "标签管理"),
   history(moduleName: "历史记录"),
+  @Deprecated('no longer use')
   rules(moduleName: "规则设置"),
+  rule(moduleName: "规则管理"),
+  ruleLib(moduleName: "规则库"),
   historyTop(moduleName: "历史记录置顶"),
   historySource(moduleName: "历史记录来源"),
   appInfo(moduleName: "App信息");
@@ -15,7 +19,7 @@ enum Module {
   final String moduleName;
 
   static Module getValue(String name) => Module.values.firstWhere(
-        (e) => e.moduleName == name,
+        (e) => e.moduleName == name || e.name.equalsIgnoreCase(name),
         orElse: () {
           Log.debug("Module", "key '$name' unknown");
           return Module.unknown;

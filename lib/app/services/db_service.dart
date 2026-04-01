@@ -45,7 +45,7 @@ const tables = [
   OperationRecord,
   AppInfo,
   Rule,
-  LuaLib,
+  RuleLib,
 ];
 const views = [VHistoryTagHold];
 
@@ -107,7 +107,7 @@ class DbService extends GetxService {
 
   RuleDao get ruleDao => _db.ruleDao;
 
-  LuaLibDao get luaLibDao => _db.luaLibDao;
+  LuaLibDao get ruleLibDao => _db.luaLibDao;
 
   final tag = "DbService";
 
@@ -262,35 +262,50 @@ class DbService extends GetxService {
 
   ///v1.5.0 数据库版本 8 -> 9
   ///为历史表增加提取字段，可通过规则/脚本提取内容，该字段不为空时同步后将复制该内容
+  ///增加规则表和规则库表
   final migration8to9 = Migration(8, 9, (database) async {
     if (!await hasColumnInTable(database, 'History', 'extracted')) {
       await database.execute("ALTER TABLE `History` ADD COLUMN `extracted` TEXT;");
     }
+    if (!await hasColumnInTable(database, 'OperationRecord', 'moduleEn')) {
+      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `moduleEn` TEXT;");
+    }
+    await database.execute('CREATE INDEX `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
+    //规则表
     await database.execute("""
-      CREATE TABLE IF NOT EXISTS `Rule` (
-        `id` INTEGER NOT NULL,
-        `name` TEXT NOT NULL,
-        `category` TEXT NOT NULL,
-        `platforms` TEXT NOT NULL,
-        `sources` TEXT NOT NULL,
-        `trigger` TEXT NOT NULL,
-        `type` TEXT NOT NULL,
-        `regexWhiteBlackMode` TEXT,
-        `regexMain` TEXT NOT NULL,
-        `regexAllowExtractData` INTEGER NOT NULL,
-        `regexExtract` TEXT NOT NULL,
-        `regexAllowAddTag` INTEGER NOT NULL,
-        `regexTags` TEXT NOT NULL,
-        `regexPreventSync` INTEGER NOT NULL,
-        `regexIsFinal` INTEGER NOT NULL,
-        `scriptLanguage` TEXT NOT NULL,
-        `scriptContent` TEXT NOT NULL,
-        `version` INTEGER NOT NULL,
-        `allowSync` INTEGER NOT NULL,
-        `enabled` INTEGER NOT NULL,
-        `order` INTEGER NOT NULL,
+        CREATE TABLE IF NOT EXISTS `Rule` (
+        `id`                      INTEGER NOT NULL,
+        `name`                    TEXT NOT NULL,
+        `platforms`               TEXT NOT NULL,
+        `sources`                 TEXT NOT NULL,
+        `trigger`                 TEXT NOT NULL,
+        `type`                    TEXT NOT NULL,
+        `regexWhiteBlackMode`     TEXT,
+        `regexMain`               TEXT NOT NULL,
+        `regexAllowExtractData`   INTEGER NOT NULL,
+        `regexExtractedContent`   TEXT NOT NULL,
+        `regexAllowAddTag`        INTEGER NOT NULL,
+        `regexTags`               TEXT NOT NULL,
+        `regexIsSyncDisabled`     INTEGER NOT NULL,
+        `regexIsFinalRule`        INTEGER NOT NULL,
+        `scriptLanguage`          TEXT NOT NULL,
+        `scriptContent`           TEXT NOT NULL,
+        `version`                 INTEGER NOT NULL,
+        `enabled`                 INTEGER NOT NULL,
+        `order`                   INTEGER NOT NULL,
         PRIMARY KEY (`id`)
-      )
+    )
+    """);
+    //规则库
+    await database.execute("""
+    CREATE TABLE IF NOT EXISTS `RuleLib` (
+        `libName`     TEXT NOT NULL,
+        `displayName` TEXT NOT NULL,
+        `language`    TEXT NOT NULL,
+        `source`      TEXT NOT NULL,
+        `version`     INTEGER NOT NULL,
+        PRIMARY KEY (`libName`)
+    )
     """);
   });
 }

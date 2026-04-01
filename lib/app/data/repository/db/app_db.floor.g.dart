@@ -123,13 +123,13 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `HistoryTag` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tagName` TEXT NOT NULL, `hisId` INTEGER NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `moduleEn` TEXT, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `LuaLib` (`libName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `language` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`libName`))');
+            'CREATE TABLE IF NOT EXISTS `RuleLib` (`libName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `language` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`libName`))');
         await database.execute(
             'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
         await database.execute(
@@ -138,6 +138,8 @@ class _$_AppDb extends _AppDb {
             'CREATE UNIQUE INDEX `index_HistoryTag_tagName_hisId` ON `HistoryTag` (`tagName`, `hisId`)');
         await database.execute(
             'CREATE INDEX `index_OperationRecord_uid_module_method` ON `OperationRecord` (`uid`, `module`, `method`)');
+        await database.execute(
+            'CREATE INDEX `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
         await database.execute(
             'CREATE UNIQUE INDEX `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`)');
         await database.execute(
@@ -1174,6 +1176,7 @@ class _$OperationRecordDao extends OperationRecordDao {
                   'uid': item.uid,
                   'devId': item.devId,
                   'module': _moduleTypeConverter.encode(item.module),
+                  'moduleEn': item.moduleEn,
                   'method': _opMethodTypeConverter.encode(item.method),
                   'data': item.data,
                   'time': item.time,
@@ -1200,7 +1203,7 @@ class _$OperationRecordDao extends OperationRecordDao {
   ) async {
     return _queryAdapter.queryList(
         'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId = ?3   and (     ?4 <= 0      or      (strftime(\'%s\', \'now\') + ?5 - strftime(\'%s\', record.time)) <= ?4   )   order by case when module=\'App信息\' then 1 else 0 end desc, id desc',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), moduleEn: row['moduleEn'] as String?, method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [
           uid,
           toDevId,
@@ -1254,7 +1257,7 @@ class _$OperationRecordDao extends OperationRecordDao {
   ) async {
     return _queryAdapter.query(
         'select * from OperationRecord where uid = ?4 and module = ?2 and method = ?3 and data = ?1 order by id desc limit 1',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), moduleEn: row['moduleEn'] as String?, method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [id, module, opMethod, uid]);
   }
 
@@ -1263,7 +1266,7 @@ class _$OperationRecordDao extends OperationRecordDao {
       String devId) async {
     return _queryAdapter.query(
         'select * from OperationRecord where devId = ?1 and storageSync = 1 order by id desc limit 1',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), moduleEn: row['moduleEn'] as String?, method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [devId]);
   }
 
@@ -1322,6 +1325,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1349,6 +1353,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1377,6 +1382,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1393,6 +1399,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1675,24 +1682,26 @@ class _$LuaLibDao extends LuaLibDao {
     this.database,
     this.changeListener,
   )   : _queryAdapter = QueryAdapter(database),
-        _luaLibInsertionAdapter = InsertionAdapter(
+        _ruleLibInsertionAdapter = InsertionAdapter(
             database,
-            'LuaLib',
-            (LuaLib item) => <String, Object?>{
+            'RuleLib',
+            (RuleLib item) => <String, Object?>{
                   'libName': item.libName,
                   'displayName': item.displayName,
-                  'language': item.language,
+                  'language':
+                      _ruleScriptLanguageConverter.encode(item.language),
                   'source': item.source,
                   'version': item.version
                 }),
-        _luaLibUpdateAdapter = UpdateAdapter(
+        _ruleLibUpdateAdapter = UpdateAdapter(
             database,
-            'LuaLib',
+            'RuleLib',
             ['libName'],
-            (LuaLib item) => <String, Object?>{
+            (RuleLib item) => <String, Object?>{
                   'libName': item.libName,
                   'displayName': item.displayName,
-                  'language': item.language,
+                  'language':
+                      _ruleScriptLanguageConverter.encode(item.language),
                   'source': item.source,
                   'version': item.version
                 });
@@ -1703,49 +1712,51 @@ class _$LuaLibDao extends LuaLibDao {
 
   final QueryAdapter _queryAdapter;
 
-  final InsertionAdapter<LuaLib> _luaLibInsertionAdapter;
+  final InsertionAdapter<RuleLib> _ruleLibInsertionAdapter;
 
-  final UpdateAdapter<LuaLib> _luaLibUpdateAdapter;
+  final UpdateAdapter<RuleLib> _ruleLibUpdateAdapter;
 
   @override
   Future<int?> remove(String libName) async {
-    return _queryAdapter.query('delete from LuaLib where libName = ?1',
+    return _queryAdapter.query('delete from RuleLib where libName = ?1',
         mapper: (Map<String, Object?> row) => row.values.first as int,
         arguments: [libName]);
   }
 
   @override
-  Future<LuaLib?> getByLibName(String libName) async {
-    return _queryAdapter.query('select * from LuaLib where libName = ?1',
-        mapper: (Map<String, Object?> row) => LuaLib(
+  Future<RuleLib?> getByLibName(String libName) async {
+    return _queryAdapter.query('select * from RuleLib where libName = ?1',
+        mapper: (Map<String, Object?> row) => RuleLib(
             libName: row['libName'] as String,
             displayName: row['displayName'] as String,
-            language: row['language'] as String,
+            language:
+                _ruleScriptLanguageConverter.decode(row['language'] as String),
             source: row['source'] as String,
             version: row['version'] as int),
         arguments: [libName]);
   }
 
   @override
-  Future<List<LuaLib>> getAllLibs() async {
-    return _queryAdapter.queryList('select * from LuaLib',
-        mapper: (Map<String, Object?> row) => LuaLib(
+  Future<List<RuleLib>> getAllLibs() async {
+    return _queryAdapter.queryList('select * from RuleLib',
+        mapper: (Map<String, Object?> row) => RuleLib(
             libName: row['libName'] as String,
             displayName: row['displayName'] as String,
-            language: row['language'] as String,
+            language:
+                _ruleScriptLanguageConverter.decode(row['language'] as String),
             source: row['source'] as String,
             version: row['version'] as int));
   }
 
   @override
-  Future<int> addLib(LuaLib lib) {
-    return _luaLibInsertionAdapter.insertAndReturnId(
+  Future<int> addLib(RuleLib lib) {
+    return _ruleLibInsertionAdapter.insertAndReturnId(
         lib, OnConflictStrategy.abort);
   }
 
   @override
-  Future<int> updateLib(LuaLib lib) {
-    return _luaLibUpdateAdapter.updateAndReturnChangedRows(
+  Future<int> updateLib(RuleLib lib) {
+    return _ruleLibUpdateAdapter.updateAndReturnChangedRows(
         lib, OnConflictStrategy.abort);
   }
 }
@@ -1753,3 +1764,4 @@ class _$LuaLibDao extends LuaLibDao {
 // ignore_for_file: unused_element
 final _moduleTypeConverter = ModuleTypeConverter();
 final _opMethodTypeConverter = OpMethodTypeConverter();
+final _ruleScriptLanguageConverter = RuleScriptLanguageConverter();

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/handlers/sync/rule_lib_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/rule_sync_handler.dart';
 import 'package:clipshare/app/modules/rules_module/rules_page.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -14,7 +16,7 @@ import 'package:clipshare/app/handlers/permission_handler.dart';
 import 'package:clipshare/app/handlers/sync/app_info_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_source_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_top_sync_handler.dart';
-import 'package:clipshare/app/handlers/sync/rules_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/old_rules_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/tag_sync_handler.dart';
 import 'package:clipshare/app/listeners/multi_selection_pop_scope_disable_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
@@ -137,7 +139,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   late HistoryTopSyncHandler _historyTopSyncer;
   late HistorySourceSyncHandler _historySourceSyncer;
   late AppInfoSyncHandler _appInfoSyncer;
-  late RulesSyncHandler _rulesSyncer;
+  late RuleSyncHandler _ruleSyncer;
+  late RuleLibSyncHandler _ruleLibSyncer;
 
   //endregion
 
@@ -228,7 +231,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     _historyTopSyncer.dispose();
     _historySourceSyncer.dispose();
     _appInfoSyncer.dispose();
-    _rulesSyncer.dispose();
+    _ruleSyncer.dispose();
+    _ruleLibSyncer.dispose();
     _networkListener.cancel();
     drawer.dispose();
     super.onClose();
@@ -289,7 +293,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     _historyTopSyncer = HistoryTopSyncHandler();
     _historySourceSyncer = HistorySourceSyncHandler();
     _appInfoSyncer = AppInfoSyncHandler();
-    _rulesSyncer = RulesSyncHandler();
+    _ruleSyncer = RuleSyncHandler();
+    _ruleLibSyncer = RuleLibSyncHandler();
     //进入主页面后标记为不是第一次进入
     if (appConfig.firstStartup) {
       appConfig.setNotFirstStartup();

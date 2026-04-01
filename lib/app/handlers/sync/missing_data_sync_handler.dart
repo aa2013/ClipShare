@@ -10,7 +10,9 @@ import 'package:clipshare/app/data/models/sync_data_process_result.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
+import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -127,8 +129,33 @@ class MissingDataSyncHandler {
           result["data"] = history.toJson();
         }
         break;
-      case Module.rules:
-        //什么都不做
+      case Module.rule:
+        final rule = await dbService.ruleDao.getById(int.parse(id));
+        if (rule == null) {
+          if (opRecord.method != OpMethod.delete) {
+            shouldRemove = true;
+          } else {
+            final empty = Rule.empty();
+            empty.id = int.parse(id);
+            result["data"] = empty.toJson();
+          }
+        } else {
+          result["data"] = rule.toJson();
+        }
+        break;
+      case Module.ruleLib:
+        final ruleLib = await dbService.ruleLibDao.getByLibName(id);
+        if (ruleLib == null) {
+          if (opRecord.method != OpMethod.delete) {
+            shouldRemove = true;
+          } else {
+            final empty = RuleLib.empty();
+            empty.libName = id;
+            result["data"] = empty.toJson();
+          }
+        } else {
+          result["data"] = ruleLib.toJson();
+        }
         break;
       case Module.historySource:
         final history = await dbService.historyDao.getById(int.parse(id));

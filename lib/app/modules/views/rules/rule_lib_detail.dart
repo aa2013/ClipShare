@@ -14,8 +14,8 @@ import 'package:get/get.dart';
 import 'package:re_editor/re_editor.dart';
 
 class LuaLibDetail extends StatefulWidget {
-  final LuaLib lib;
-  final void Function(LuaLib oldValue, LuaLib newValue) onSaveClicked;
+  final RuleLib lib;
+  final void Function(RuleLib oldValue, RuleLib newValue) onSaveClicked;
   final ValueChanged<bool> onSaveStatusChanged;
 
   const LuaLibDetail({
@@ -34,14 +34,14 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
   final codeEditor = CodeLineEditingController();
   final libNameEditor = TextEditingController();
   final displayNameEditor = TextEditingController();
-  final libDao = Get.find<DbService>().luaLibDao;
+  final libDao = Get.find<DbService>().ruleLibDao;
   var compileInfo = '';
   var result = '';
   var shouldSave = false;
   var luaRuntime = LuaRuntime();
 
-  LuaLib toNewLib() {
-    return LuaLib(
+  RuleLib toNewLib() {
+    return RuleLib(
       libName: libNameEditor.text,
       displayName: displayNameEditor.text,
       language: widget.lib.language,
@@ -51,7 +51,7 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
     );
   }
 
-  Future<String?> validate(LuaLib lib) async {
+  Future<String?> validate(RuleLib lib) async {
     if (!compileInfo.containsIgnoreCase("success")) {
       return "包含语法错误，请修正";
     }
@@ -152,7 +152,7 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
     super.dispose();
   }
 
-  Future<void> saveData(LuaLib newLib) async {
+  Future<void> saveData(RuleLib newLib) async {
     final result = await validate(newLib);
     if (result != null) {
       Global.showSnackBarWarn(text: result, context: context);

@@ -1,4 +1,5 @@
 ﻿import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
+import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:floor/floor.dart';
 import 'dart:convert';
@@ -155,4 +156,17 @@ class Rule {
 
   @override
   String toString() => jsonEncode(toJson());
+
+  static Rule empty() {
+    return Rule(
+      id: 0,
+      name: "",
+      platforms: "",
+      trigger: RuleTrigger.onCopy.name,
+      type: "",
+      regexMain: "",
+      version: 0,
+      order: 0,
+    );
+  }
 }
