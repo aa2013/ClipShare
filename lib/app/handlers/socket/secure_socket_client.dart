@@ -23,6 +23,7 @@ class SecureSocketClient {
 
   int get port => _port;
   late final Socket _socket;
+  int get localPort => _socket.port;
   bool _listening = false;
   bool _keyIsExchanged = false;
   late final void Function(SecureSocketClient)? _onConnected;
@@ -417,12 +418,6 @@ class SecureSocketClient {
   Future close() async {
     await _msgStreamController.close();
     return _socket.close();
-  }
-
-  ///强制关闭
-  Future<void> destroy() async {
-    await _msgStreamController.close();
-    return _socket.destroy();
   }
 
   static Uint8List createPacketHeader(

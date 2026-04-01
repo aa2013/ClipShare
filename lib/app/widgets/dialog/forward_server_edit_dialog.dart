@@ -189,7 +189,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
             );
           }
         }
-        client.destroy();
+        client.close();
       },
       onError: (err, client) {
         Log.error(tag, "onError $err");

@@ -179,7 +179,7 @@ class ForwardSocketClient {
     }
     _lastPingTime = DateTime.now();
     //更新timer
-    _heartbeatTimer = Timer.periodic(35.s, (timer) {
+    _heartbeatTimer = Timer.periodic(35.s, (timer) async {
       var disconnected = false;
       if (_lastPingTime == null) {
         disconnected = true;
@@ -193,7 +193,7 @@ class ForwardSocketClient {
       }
       Log.debug(tag, "startJudgeForwardClientAlivePeriod disconnected: $disconnected");
       if (!disconnected) return;
-      destroy();
+      await close();
     });
   }
 
@@ -228,9 +228,4 @@ class ForwardSocketClient {
     return _socket.close();
   }
 
-  ///强制关闭
-  void destroy() {
-    _stopJudgeForwardClientAlive();
-    return _socket.destroy();
-  }
 }

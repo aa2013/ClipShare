@@ -244,11 +244,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         _onSocketReceived(client, msg);
       },
       onDone: (SecureSocketClient client) {
-        Log.debug(tag, "从广播连接，服务端连接关闭");
+        Log.debug(tag, "从广播连接，服务端连接关闭, localPort: ${client.localPort}");
         _onDevDisconnected(dev.guid);
       },
       onError: (error, client) {
-        Log.debug(tag, '从广播连接，发生错误: $error');
+        Log.debug(tag, '从广播连接，发生错误: $error, localPort: ${client.localPort}');
         _onDevDisconnected(dev.guid);
       },
     );
@@ -274,7 +274,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       },
       onClientError: (e, ip, port, client) {
         //此处端口不是客户端的服务端口，是客户端的socket进程端口
-        Log.error(tag, "client 出现错误 $ip $port $e");
+        Log.error(tag, "client 出现错误 $ip $port $e, localPort: ${client.localPort}");
         final keys = _devSockets.keys;
         for (var id in keys) {
           var skt = _devSockets[id]!;
@@ -286,7 +286,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       },
       onClientDone: (ip, port, client) {
         //此处端口不是客户端的服务端口，是客户端的socket进程端口
-        Log.error(tag, "client done $ip $port");
+        Log.error(tag, "client done $ip $port, localPort: ${client.localPort}");
         final keys = _devSockets.keys;
         for (var id in keys) {
           var skt = _devSockets[id]!;
@@ -437,12 +437,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   //endregion
 
   ///断开所有通过中转服务器的连接
-  void _disconnectForwardSockets() {
+  Future<void> _disconnectForwardSockets() async {
     final keys = _devSockets.keys.toList();
     for (var devId in keys) {
       var skt = _devSockets[devId];
       if (skt == null || !skt.socket.isForwardMode) continue;
-      skt.socket.destroy();
+      await skt.socket.close();
       _onDevDisconnected(devId, autoReconnect: false);
     }
   }
@@ -573,12 +573,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         var isPaired = device != null && device.isPaired;
         //未配对且不允许被发现，关闭链接
         if (!appConfig.allowDiscover && !isPaired) {
-          client.destroy();
+          await client.close();
           return;
         }
         //设备是自身
         if (dev.guid == appConfig.device.guid) {
-          client.destroy();
+          await client.close();
           return;
         }
         if (_devSockets.containsKey(dev.guid)) {
@@ -611,7 +611,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       ///主动断开连接
       case MsgType.disConnect:
         _onDevDisconnected(dev.guid, autoReconnect: false);
-        client.destroy();
+        await client.close();
         break;
 
       ///忘记设备
@@ -1103,10 +1103,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       targetDevId: forward ? targetDevId : null,
       selfDevId: forward ? appConfig.device.guid : null,
       connectionMode: forward ? ConnectionMode.forward : ConnectionMode.direct,
-      onConnected: (SecureSocketClient client) {
+      onConnected: (SecureSocketClient client) async {
         //外部终止连接
         if (data.containsKey('stop') && data['stop'] == true) {
-          client.destroy();
+          await client.close();
           return;
         }
         ipSetTemp.add("$host:$port");
@@ -1125,7 +1125,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         _onSocketReceived(client, msg);
       },
       onDone: (SecureSocketClient client) {
-        Log.debug(tag, "${forward ? '中转' : '手动'}连接关闭");
+        Log.debug(tag, "${forward ? '中转' : '内网'}连接关闭, localPort: ${client.localPort}");
         if (forward) {
           _onDevDisconnected(targetDevId!);
         } else {
@@ -1138,7 +1138,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         }
       },
       onError: (error, client) {
-        Log.error(tag, '${forward ? '中转' : '手动'}连接发生错误: $error $host $port');
+        Log.error(tag, '${forward ? '中转' : '内网'}连接发生错误: $error $host $port, localPort: ${client.localPort}');
         if (forward) {
           _onDevDisconnected(targetDevId!);
         } else {
@@ -1310,7 +1310,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///主动断开设备连接
-  bool disconnectDevice(DevInfo dev, bool backSend) {
+  Future<bool> disconnectDevice(DevInfo dev, bool backSend) async {
     var id = dev.guid;
     if (!_devSockets.containsKey(id)) {
       return false;
@@ -1319,7 +1319,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       dev.sendData(MsgType.disConnect, {});
     }
     _onDevDisconnected(id, autoReconnect: false);
-    _devSockets[id]?.socket.destroy();
+    await _devSockets[id]?.socket.close();
     return true;
   }
 
