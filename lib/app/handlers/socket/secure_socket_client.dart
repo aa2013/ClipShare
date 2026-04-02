@@ -240,8 +240,8 @@ class SecureSocketClient {
               if (_keyIsExchanged) {
                 _onDone?.call(this);
               }
-              Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
-              await _socket.close();
+              // 尝试修复端口不释放的问题
+              _socket.destroy();
             },
             cancelOnError: _cancelOnError,
           );
