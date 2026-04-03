@@ -587,6 +587,11 @@ class ConfigService extends GetxService {
 
   bool get enableForwardHeartbeat => _enableForwardHeartbeat.value;
 
+  ///设备连接和断开使用系统通知，若为true则使用托盘闪烁
+  final _useTrayFlashingForConnection = false.obs;
+
+  bool get useTrayFlashingForConnection => _useTrayFlashingForConnection.value;
+
   //endregion
 
   //endregion
@@ -823,6 +828,7 @@ class ConfigService extends GetxService {
       },
     );
     _enableForwardHeartbeat.value = await cfg.getConfigByKey(ConfigKey.enableForwardHeartbeat, true);
+    _useTrayFlashingForConnection.value = await cfg.getConfigByKey(ConfigKey.useTrayFlashingForConnection, false);
   }
 
   ///初始化路径信息
@@ -1482,6 +1488,12 @@ class ConfigService extends GetxService {
   Future<void> setEnableForwardHeartbeat(bool enable) async {
     await configDao.addOrUpdate(ConfigKey.enableForwardHeartbeat, enable.toString());
     _enableForwardHeartbeat.value = enable;
+  }
+
+  ///设备连接和断开使用系统通知，若为false则使用托盘闪烁
+  Future<void> setUseTrayFlashingForConnection(bool enable) async {
+    await configDao.addOrUpdate(ConfigKey.useTrayFlashingForConnection, enable.toString());
+    _useTrayFlashingForConnection.value = enable;
   }
 
   //endregion

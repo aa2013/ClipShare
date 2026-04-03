@@ -1435,6 +1435,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Forward Heartbeat Detection";
       case TranslationKey.forwardSettingsForwardHeartbeatDesc:
         return "If frequent disconnections (around 35s) of the forward server occur, you can try turning off the heartbeat detection.";
+      case TranslationKey.useTrayFlashingForConnectionTitle:
+        return "Flash system tray on connection or disconnection";
+      case TranslationKey.useTrayFlashingForConnectionDesc:
+        return "If enabled, flash the system tray; otherwise, use default system notifications";
     }
   }
 }

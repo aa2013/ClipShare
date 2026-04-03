@@ -707,7 +707,9 @@ enum TranslationKey {
   uploading,
   preferenceSettingsRecordsDialogSize,
   forwardSettingsForwardHeartbeatTitle,
-  forwardSettingsForwardHeartbeatDesc;
+  forwardSettingsForwardHeartbeatDesc,
+  useTrayFlashingForConnectionTitle,
+  useTrayFlashingForConnectionDesc;
 
   String get tr => name.tr;
 

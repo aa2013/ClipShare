@@ -1433,6 +1433,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "中转心跳检测";
       case TranslationKey.forwardSettingsForwardHeartbeatDesc:
         return "若出现频繁中转服务器断连（35s左右）可尝试关闭心跳检测";
+      case TranslationKey.useTrayFlashingForConnectionTitle:
+        return "设备连接或断开后使用托盘闪烁";
+      case TranslationKey.useTrayFlashingForConnectionDesc:
+        return "若启用则表示使用托盘闪烁的方式否则为默认的系统通知";
     }
   }
 }

@@ -72,4 +72,5 @@ enum ConfigKey {
   historyWindowSize,
   fileSenderWindowSize,
   enableForwardHeartbeat,
+  useTrayFlashingForConnection,
 }

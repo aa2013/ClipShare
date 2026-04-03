@@ -23,6 +23,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
+import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
@@ -1510,17 +1511,24 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     _devNotifyTimer = Timer(_debounceTime, () async {
       _devNotifyIdMap.remove(devId);
       final devService = Get.find<DeviceService>();
+      final notifyContent = TranslationKey.devConnectedNotifyContent.trParams({
+        "devName": devService.getName(devId),
+      });
       final key = "dev-conn-$devId";
-      NotifyUtil.cancelAll(key);
-      final notifyId = await NotifyUtil.notify(
-        key: key,
-        content: TranslationKey.devConnectedNotifyContent.trParams({
-          "devName": devService.getName(devId),
-        }),
-      );
+      int? notifyId;
+      if(!appConfig.useTrayFlashingForConnection){
+        await NotifyUtil.cancelAll(key);
+        notifyId = await NotifyUtil.notify(
+          key: key,
+          content: notifyContent,
+        );
+      }else{
+        final trayService = Get.find<TrayService>();
+        trayService.flashTrayNormal(notifyContent);
+      }
       if (notifyId != null) {
         Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId);
+          NotifyUtil.cancel(key, notifyId!);
         });
       }
     });
@@ -1540,17 +1548,24 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     _devNotifyTimer = Timer(_debounceTime, () async {
       _devNotifyIdMap.remove(devId);
       final devService = Get.find<DeviceService>();
+      final notifyContent = TranslationKey.devDisconnectNotifyContent.trParams({
+        "devName": devService.getName(devId),
+      });
       final key = "dev-disconn-$devId";
-      NotifyUtil.cancelAll(key);
-      final notifyId = await NotifyUtil.notify(
-        key: key,
-        content: TranslationKey.devDisconnectNotifyContent.trParams({
-          "devName": devService.getName(devId),
-        }),
-      );
+      int? notifyId;
+      if(!appConfig.useTrayFlashingForConnection){
+        await NotifyUtil.cancelAll(key);
+        notifyId = await NotifyUtil.notify(
+          key: key,
+          content: notifyContent,
+        );
+      }else{
+        final trayService = Get.find<TrayService>();
+        trayService.flashTrayWarning(notifyContent);
+      }
       if (notifyId != null) {
         Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId);
+          NotifyUtil.cancel(key, notifyId!);
         });
       }
     });
