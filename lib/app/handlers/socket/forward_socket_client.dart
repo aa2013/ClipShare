@@ -126,9 +126,9 @@ class ForwardSocketClient {
             },
             onDone: () {
               _stopJudgeForwardClientAlive();
+              // 尝试修复端口不释放的问题
+              _socket.destroy();
               _onDone?.call(this);
-              Log.debug(tag, "_onDone");
-              _socket.close();
             },
             cancelOnError: _cancelOnError,
           );

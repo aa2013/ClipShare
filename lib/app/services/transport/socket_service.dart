@@ -1077,13 +1077,21 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     String? targetDevId,
   }) async {
     port = port ?? Constants.port;
+    Socket? testSkt;
     try {
       //测试连接是否可用
-      final testSkt = await Socket.connect(host, port, timeout: 2.s);
+      testSkt = await Socket.connect(host, port, timeout: 2.s);
       testSkt.close();
+      testSkt.destroy();
     } catch (_) {
       //地址不可连接
       return false;
+    }finally{
+      try{
+        testSkt?.destroy();
+      }catch(_){
+        //ignored
+      }
     }
     String address = "$host:$port:$targetDevId";
     if (_connectingAddress.contains(address)) {
@@ -1576,13 +1584,21 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         if(internalAddress != null){
           var available = false;
           final [ip, portStr] = internalAddress.split(":");
+          Socket? skt;
           try{
             //先尝试连接内网地址
-            final skt = await Socket.connect(ip, portStr.toInt(), timeout: 2.s);
-            skt.close();
+            skt = await Socket.connect(ip, portStr.toInt(), timeout: 2.s);
             available = true;
+            skt.close();
+            skt.destroy();
           }catch(_){
             available = false;
+          }finally{
+            try{
+              skt?.destroy();
+            }catch(_){
+              //ignored
+            }
           }
           if(available) {
             try {
