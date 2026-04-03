@@ -31,9 +31,7 @@ import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/lua_code_edit_view.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:clipshare/app/widgets/rule/script_test_panel.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:re_editor/re_editor.dart';
@@ -54,27 +52,27 @@ class RuleDetail extends StatefulWidget {
   State<StatefulWidget> createState() => _RuleDetailState();
 }
 
-class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateMixin {
+class _RuleDetailState extends State<RuleDetail>
+    with SingleTickerProviderStateMixin {
   final sourceService = Get.find<ClipboardSourceService>();
   final devService = Get.find<DeviceService>();
   final appConfig = Get.find<ConfigService>();
   final ruleController = Get.find<RulesController>();
+  final GlobalKey codeEditorKey = GlobalKey();
   var shouldSave = false;
   static const tag = "RuleDetail";
   var isScriptFullScreen = false;
+  var autoWrapText = false;
 
   static const int regexTextFieldMaxLines = 4;
-  static const InputDecoration regexTextFieldDecoration = InputDecoration(
-    border: OutlineInputBorder(),
-    hint: Text("请输入正则表达式"),
-  );
   static const contentMargin = 5;
   late final TabController tabController;
   List<AppInfo> selectedAppInfos = [];
   var tabIndex = 0;
   final topContentKey = GlobalKey();
 
-  RuleContentType get currentTab => tabIndex == 0 ? RuleContentType.regex : RuleContentType.script;
+  RuleContentType get currentTab =>
+      tabIndex == 0 ? RuleContentType.regex : RuleContentType.script;
 
   Set<SupportPlatForm> selectedPlatforms = {SupportPlatForm.android};
   Set<String> selectedSourceIds = {};
@@ -216,24 +214,24 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           ///region 名称
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info_outline,
                 color: Colors.blueGrey,
                 size: 16,
               ),
               const SizedBox(width: 2),
               Text(
-                "规则名称: ",
+                TranslationKey.ruleDetailNameLabel.tr,
                 style: const TextStyle(color: Colors.blueGrey),
               ),
             ],
           ),
           TextField(
             controller: ruleNameTextController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
               isDense: true,
-              hint: Text("请输入规则名称"),
+              hint: Text(TranslationKey.ruleDetailNameHint.tr),
             ),
           ),
 
@@ -242,14 +240,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           ///region 平台
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.apps,
                 color: Colors.blueGrey,
                 size: 16,
               ),
               const SizedBox(width: 2),
               Text(
-                "平台",
+                TranslationKey.ruleDetailPlatformLabel.tr,
                 style: const TextStyle(color: Colors.blueGrey),
               ),
             ],
@@ -302,7 +300,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                   margin: const EdgeInsets.only(right: 5, bottom: 5),
                   child: RoundedChip(
                     showCheckmark: false,
-                    deleteIcon: Icon(
+                    deleteIcon: const Icon(
                       Icons.delete,
                       color: Colors.blueGrey,
                     ),
@@ -310,7 +308,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                       final appId = app.appId;
                       setState(() {
                         selectedSourceIds.remove(appId);
-                        selectedAppInfos.removeWhere((item) => item.appId == appId);
+                        selectedAppInfos.removeWhere(
+                          (item) => item.appId == appId,
+                        );
                       });
                     },
                     label: Text(app.name),
@@ -325,13 +325,17 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                     loadDeviceName: devService.getName,
                     selectedIds: selectedSourceIds,
                     loadAppInfos: () {
-                      final list = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
+                      final list = sourceService.appInfos
+                          .map((item) => LocalAppInfo.fromAppInfo(item, false))
+                          .toList();
                       return Future<List<LocalAppInfo>>.value(list);
                     },
                     onSelectedDone: (selected) {
                       setState(() {
                         selectedAppInfos = List.from(selected);
-                        selectedSourceIds.addAll(selected.map((item) => item.appId));
+                        selectedSourceIds.addAll(
+                          selected.map((item) => item.appId),
+                        );
                       });
                     },
                   );
@@ -350,14 +354,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           ///region 触发时机
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.access_time,
                 color: Colors.blueGrey,
                 size: 16,
               ),
               const SizedBox(width: 2),
               Text(
-                "触发时机",
+                TranslationKey.ruleDetailTriggerLabel.tr,
                 style: const TextStyle(color: Colors.blueGrey),
               ),
             ],
@@ -380,21 +384,23 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   }
 
   Widget buildRuleTabBar(BuildContext context) {
-    final bool isUseScript = currentTab == RuleContentType.script && ruleContentType == RuleContentType.script;
+    final bool isUseScript =
+        currentTab == RuleContentType.script &&
+        ruleContentType == RuleContentType.script;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ///region 规则
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.rule,
               color: Colors.blueGrey,
               size: 16,
             ),
             const SizedBox(width: 2),
             Text(
-              "规则",
+              TranslationKey.ruleDetailRuleLabel.tr,
               style: const TextStyle(color: Colors.blueGrey),
             ),
           ],
@@ -411,7 +417,10 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                     isScrollable: true,
                     dividerHeight: 0,
                     tabs: [
-                      for (var tab in [RuleContentType.regex, RuleContentType.script])
+                      for (var tab in [
+                        RuleContentType.regex,
+                        RuleContentType.script,
+                      ])
                         Container(
                           margin: 5.insetV,
                           child: Row(
@@ -428,7 +437,11 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                                 },
                                 visualDensity: VisualDensity.compact,
                               ),
-                              Text(tab == RuleContentType.regex ? '正则表达式' : "脚本"),
+                              Text(
+                                tab == RuleContentType.regex
+                                    ? TranslationKey.ruleDetailRegexTab.tr
+                                    : TranslationKey.ruleDetailScriptTab.tr,
+                              ),
                             ],
                           ),
                         ),
@@ -436,6 +449,21 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  autoWrapText = !autoWrapText;
+                });
+              },
+              tooltip: TranslationKey.ruleDetailAutoWrapTooltip.tr,
+              icon: Icon(
+                Icons.wrap_text,
+                size: 20,
+                fontWeight: autoWrapText ? FontWeight.bold : null,
+                color: autoWrapText ? Colors.blueGrey : Colors.grey,
+              ),
+              visualDensity: VisualDensity.compact,
             ),
             AnimatedScale(
               duration: 200.ms,
@@ -446,7 +474,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                     isScriptFullScreen = true;
                   });
                 },
-                tooltip: '进入全屏编辑模式',
+                tooltip: TranslationKey.ruleDetailFullScreenTooltip.tr,
                 icon: const Icon(
                   Icons.fullscreen,
                   size: 20,
@@ -468,23 +496,32 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       builder: (context, constraints) {
         return IndexedStack(
           index: tabIndex,
-          children: [buildRuleRegexTab, buildRuleScriptViewTab].asMap().entries.map((entry) {
-            final index = entry.key;
-            final builder = entry.value;
-            return Visibility(
-              maintainState: true,
-              visible: tabIndex == index,
-              child: builder(context),
-            );
-          }).toList(),
+          children: [buildRuleRegexTab, buildRuleScriptViewTab]
+              .asMap()
+              .entries
+              .map((entry) {
+                final index = entry.key;
+                final builder = entry.value;
+                return Visibility(
+                  maintainState: true,
+                  visible: tabIndex == index,
+                  child: builder(context),
+                );
+              })
+              .toList(),
         );
       },
     );
   }
 
   Widget buildRuleRegexTab(BuildContext context) {
-    final whiteBlackModeLabels = ["默认", "黑名单", "白名单"];
-    final whiteBlackModeValues = [null, WhiteBlackMode.black, WhiteBlackMode.white];
+    final whiteBlackModeValues = <WhiteBlackMode?>[
+      WhiteBlackMode.defaultMode,
+      WhiteBlackMode.black,
+      WhiteBlackMode.white,
+    ];
+    final currentMode = whiteBlackModes ?? WhiteBlackMode.defaultMode;
+    final isBlacklistMode = currentMode == WhiteBlackMode.black;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -495,18 +532,21 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    child: Text("规则："),
                     margin: 10.insetV,
+                    child: Text(TranslationKey.ruleDetailRegexLabel.tr),
                   ),
                   TextField(
                     maxLines: regexTextFieldMaxLines,
-                    decoration: regexTextFieldDecoration,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      hint: Text(TranslationKey.ruleDetailRegexHint.tr),
+                    ),
                     controller: regexTextController,
                   ),
                 ],
               ),
             ),
-            SizedBox(width: 5),
+            const SizedBox(width: 5),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -522,15 +562,18 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                             });
                           },
                         ),
-                        Text("提取内容"),
+                        Text(TranslationKey.ruleDetailExtractContent.tr),
                       ],
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   TextField(
                     enabled: isAllowExtractData,
                     maxLines: regexTextFieldMaxLines,
-                    decoration: regexTextFieldDecoration,
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      hint: Text(TranslationKey.ruleDetailRegexHint.tr),
+                    ),
                     controller: extractTextController,
                   ),
                 ],
@@ -542,25 +585,26 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         ///region 规则模式
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.swipe,
               color: Colors.blueGrey,
               size: 16,
             ),
             const SizedBox(width: 2),
             Text(
-              "规则模式",
+              TranslationKey.ruleDetailModeLabel.tr,
               style: const TextStyle(color: Colors.blueGrey),
             ),
           ],
         ),
 
         TinySegmentedControl.fromStrings(
-          options: whiteBlackModeLabels,
-          selectedIndex: whiteBlackModeValues.indexOf(whiteBlackModes),
+          options: whiteBlackModeValues.map((mode) => mode!.tr).toList(),
+          selectedIndex: whiteBlackModeValues.indexOf(currentMode),
           onSelected: (i) {
             setState(() {
-              whiteBlackModes = whiteBlackModeValues[i];
+              final mode = whiteBlackModeValues[i];
+              whiteBlackModes = mode == WhiteBlackMode.defaultMode ? null : mode;
             });
           },
         ),
@@ -570,14 +614,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            Icon(
+            const Icon(
               Icons.touch_app,
               color: Colors.blueGrey,
               size: 16,
             ),
             const SizedBox(width: 2),
             Text(
-              "动作",
+              TranslationKey.ruleDetailActionLabel.tr,
               style: const TextStyle(color: Colors.blueGrey),
             ),
           ],
@@ -585,8 +629,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         Row(
           children: [
             Checkbox(
-              value: whiteBlackModeLabels == WhiteBlackMode.black ? false : isAllowPostAddTags,
-              onChanged: whiteBlackModeLabels == WhiteBlackMode.black
+              value: isBlacklistMode ? false : isAllowPostAddTags,
+              onChanged: isBlacklistMode
                   ? null
                   : (checked) {
                       setState(() {
@@ -594,8 +638,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                       });
                     },
             ),
-            Text("添加标签："),
-            if (isAllowPostAddTags && whiteBlackModeLabels != WhiteBlackMode.black)
+            Text(TranslationKey.ruleDetailAddTagLabel.tr),
+            if (isAllowPostAddTags && !isBlacklistMode)
               RoundedChip(
                 avatar: const Icon(Icons.add),
                 label: Text(TranslationKey.add.tr),
@@ -603,11 +647,11 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                   Global.showDialog(
                     context,
                     TextEditDialog(
-                      title: '添加标签',
+                      title: TranslationKey.ruleDetailAddTagDialogTitle.tr,
                       labelText: TranslationKey.pleaseInput.tr,
                       initStr: '',
                       verify: (str) => str.isNotEmpty,
-                      errorText: '不能为空',
+                      errorText: TranslationKey.cannotEmpty.tr,
                       onOk: (String str) {
                         setState(() {
                           postTags.add(str);
@@ -619,7 +663,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
               ),
           ],
         ),
-        if (isAllowPostAddTags && whiteBlackModeLabels != WhiteBlackMode.black)
+        if (isAllowPostAddTags && !isBlacklistMode)
           Wrap(
             children: [
               for (var tag in postTags)
@@ -643,8 +687,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         Row(
           children: [
             Checkbox(
-              value: whiteBlackModeLabels == WhiteBlackMode.black ? false : isPreventSync,
-              onChanged: whiteBlackModeLabels == WhiteBlackMode.black
+              value: isBlacklistMode ? false : isPreventSync,
+              onChanged: isBlacklistMode
                   ? null
                   : (checked) {
                       setState(() {
@@ -652,7 +696,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                       });
                     },
             ),
-            Text("阻止同步"),
+            Text(TranslationKey.syncDisabled.tr),
           ],
         ),
         Row(
@@ -665,7 +709,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                 });
               },
             ),
-            Text("终止后续规则"),
+            Text(TranslationKey.ruleDetailFinalRule.tr),
           ],
         ),
 
@@ -676,7 +720,10 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
 
   void onSaveShortcutTriggered() {
     if (!shouldSave) {
-      Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+      Global.showSnackBarSuc(
+        text: TranslationKey.saveSuccess.tr,
+        context: context,
+      );
       return;
     }
     final newRule = toRule();
@@ -690,7 +737,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   Widget buildRuleScriptViewTab(BuildContext context) {
     const height = 200.0;
     return LuaCodeEditView(
+      editorKey: codeEditorKey,
       controller: codeController,
+      autoWrapText: autoWrapText,
       height: height,
       onSaveShortcutTriggered: onSaveShortcutTriggered,
     );
@@ -731,7 +780,11 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     return ruleController.test(
       newRule ?? originRule!,
       //todo type
-      RuleExecParams(type: HistoryContentType.text, content: testParamsContentController.text, source: null),
+      RuleExecParams(
+        type: HistoryContentType.text,
+        content: testParamsContentController.text,
+        source: null,
+      ),
     );
   }
 
@@ -739,7 +792,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   String? compile() {
     final rule = toRule() ?? originRule;
     if (rule == null) {
-      return "Not found code";
+      return TranslationKey.ruleCompileCodeNotFound.tr;
     }
     final (_, hash, errorMsg) = ruleController.loadLuaUserFunc(
       "${rule.name}-temp",
@@ -756,7 +809,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       body = EmptyContent();
     } else {
       final newRule = toRule();
-      final saveStatus = newRule != null && (newRule.isNewData || originRule.toString() != newRule.toString());
+      final saveStatus =
+          newRule != null &&
+          (newRule.isNewData || originRule.toString() != newRule.toString());
       if (saveStatus != shouldSave) {
         shouldSave = saveStatus;
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -765,6 +820,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       }
       if (isScriptFullScreen) {
         body = ScriptEditTestView(
+          autoWrapText: autoWrapText,
+          editorKey: codeEditorKey,
           paramsController: testParamsContentController,
           controller: codeController,
           showSaveButton: shouldSave,
@@ -808,6 +865,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                         duration: 200.ms,
                         scale: saveStatus ? 1 : 0,
                         child: FloatingActionButton(
+                          heroTag: "$tag.save",
                           onPressed: () {
                             if (!saveStatus) {
                               return;
@@ -819,13 +877,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                         ),
                       ),
                       FloatingActionButton(
+                        heroTag: "$tag.running-test",
                         onPressed: () {
                           final result = runningTest(newRule);
                           setState(() {
                             testResult = result;
                           });
                         },
-                        tooltip: '运行测试',
+                        tooltip: TranslationKey.ruleDetailRunTestTooltip.tr,
                         child: const Icon(Icons.play_arrow),
                       ),
                     ].separateWith(const SizedBox(width: 10)),
@@ -841,9 +900,27 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text("规则详情"),
+          title: Text(TranslationKey.ruleDetailPageTitle.tr),
         ),
-        body: body,
+        body: PopScope(
+          canPop: !shouldSave,
+          onPopInvokedWithResult: (bool didPop, dynamic result) {
+            if (didPop) {
+              return;
+            }
+            Global.showTipsDialog(
+              context: context,
+              text: TranslationKey.unsavedTips.tr,
+              showCancel: true,
+              onOk: () {
+                widget.onSaveStatusChanged?.call(false);
+                //退出页面
+                Navigator.of(context).pop();
+              },
+            );
+          },
+          child: body,
+        ),
       );
     } else {
       return body;

@@ -1,5 +1,7 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
+import 'package:clipshare/app/handlers/re-editor/lua_code_prompt.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -31,11 +33,13 @@ class LuaLibDetail extends StatefulWidget {
 
 class _LuaLibDetailState extends State<LuaLibDetail> {
   static const tag = "LuaLibDetail";
+  final appConfig = Get.find<ConfigService>();
   final codeEditor = CodeLineEditingController();
   final libNameEditor = TextEditingController();
   final displayNameEditor = TextEditingController();
   final libDao = Get.find<DbService>().ruleLibDao;
   var compileInfo = '';
+  var compileSuccess = false;
   var result = '';
   var shouldSave = false;
   var luaRuntime = LuaRuntime();
@@ -52,23 +56,23 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
   }
 
   Future<String?> validate(RuleLib lib) async {
-    if (!compileInfo.containsIgnoreCase("success")) {
-      return "包含语法错误，请修正";
+    if (!compileSuccess) {
+      return TranslationKey.ruleLibDetailSyntaxError.tr;
     }
     if (lib.displayName.isNullOrEmpty) {
-      return "显示名称不能为空";
+      return TranslationKey.ruleLibDetailDisplayNameRequired.tr;
     }
     if (lib.libName.isNullOrEmpty) {
-      return "库名称不能为空";
+      return TranslationKey.ruleLibDetailLibNameRequired.tr;
     }
-    if(lib.isNewData){
+    if (lib.isNewData) {
       final dbLib = await libDao.getByLibName(lib.libName);
       if (dbLib != null) {
-        return "库名称不能重复";
+        return TranslationKey.ruleLibDetailLibNameDuplicated.tr;
       }
     }
     if (lib.source.trim().isNullOrEmpty) {
-      return '内容不能为空';
+      return TranslationKey.ruleLibDetailContentRequired.tr;
     }
     return null;
   }
@@ -88,6 +92,7 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
 
   void updateState() {
     compileInfo = '';
+    compileSuccess = false;
     result = '';
     if (widget.lib.source.trim().isNullOrEmpty) {
       codeEditor.text = "return {}";
@@ -106,7 +111,10 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
     if (code.isNullOrEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          compileInfo = "Compile Failed:\nNot found code";
+          compileInfo = TranslationKey.ruleCompileFailedPrefix.trParams({
+            "message": TranslationKey.ruleCompileCodeNotFound.tr,
+          });
+          compileSuccess = false;
           this.result = '';
         });
       });
@@ -122,21 +130,28 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
     if (result.isNullOrEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          compileInfo = "Compilation failed:\nthe library return value must be a table.";
+          compileInfo = TranslationKey.ruleCompileFailedPrefix.trParams({
+            "message": TranslationKey.ruleLibCompileReturnTableRequired.tr,
+          });
+          compileSuccess = false;
           this.result = '';
         });
       });
     } else if (!result.startsWithIgnoreCase('table:')) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          compileInfo = "Compile Failed:\n$result";
+          compileInfo = TranslationKey.ruleCompileFailedPrefix.trParams({
+            "message": result,
+          });
+          compileSuccess = false;
           this.result = '';
         });
       });
     } else {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {
-          compileInfo = "Compile Success.";
+          compileInfo = TranslationKey.ruleCompileSuccess.tr;
+          compileSuccess = true;
           this.result = result.replaceFirst("table:", "");
         });
       });
@@ -168,21 +183,21 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onSaveStatusChanged(shouldSave);
     });
-    return Padding(
+    final body = Padding(
       padding: 5.insetAll,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info_outline,
                 color: Colors.blueGrey,
                 size: 16,
               ),
               const SizedBox(width: 2),
               Text(
-                "显示名称: ",
+                TranslationKey.ruleLibDetailDisplayNameLabel.tr,
                 style: const TextStyle(color: Colors.blueGrey),
               ),
             ],
@@ -190,37 +205,39 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
           const SizedBox(height: 5),
           TextField(
             controller: displayNameEditor,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
               isDense: true,
-              hintText: "请输入显示名称",
+              hintText: TranslationKey.ruleLibDetailDisplayNameHint.tr,
             ),
             maxLines: 1,
           ),
           const SizedBox(height: 5),
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.info_outline,
                 color: Colors.blueGrey,
                 size: 16,
               ),
               const SizedBox(width: 2),
               Text(
-                "库名: ",
+                TranslationKey.ruleLibDetailLibNameLabel.tr,
                 style: const TextStyle(color: Colors.blueGrey),
               ),
             ],
           ),
           const SizedBox(height: 5),
           Tooltip(
-            message: widget.lib.isNewData ? '保存后将不再支持修改库名' : TranslationKey.readonly.tr,
+            message: widget.lib.isNewData
+                ? TranslationKey.ruleLibDetailLibNameImmutableTooltip.tr
+                : TranslationKey.readonly.tr,
             child: TextField(
               controller: libNameEditor,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                border: const OutlineInputBorder(),
                 isDense: true,
-                hintText: "库名",
+                hintText: TranslationKey.ruleLibDetailLibNameHint.tr,
               ),
               readOnly: !widget.lib.isNewData,
               maxLines: 1,
@@ -231,6 +248,8 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
           Expanded(
             child: LuaCodeEditView(
               controller: codeEditor,
+              relatedPrompts: luaBuiltinRelatedPrompts,
+              directPrompts: luaBuiltinDirectPrompts,
               onSaveShortcutTriggered: () {
                 saveData(toNewLib());
               },
@@ -263,5 +282,34 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
         ],
       ),
     );
+    if (appConfig.isSmallScreen) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(TranslationKey.ruleLibDetailPageTitle.tr),
+        ),
+        body: PopScope(
+          canPop: !shouldSave,
+          onPopInvokedWithResult: (bool didPop, dynamic result) {
+            if (didPop) {
+              return;
+            }
+            Global.showTipsDialog(
+              context: context,
+              text: TranslationKey.unsavedTips.tr,
+              showCancel: true,
+              onOk: () {
+                widget.onSaveStatusChanged.call(false);
+                //退出页面
+                Navigator.of(context).pop();
+              },
+            );
+          },
+          child: body,
+        ),
+      );
+    } else {
+      return body;
+    }
   }
 }

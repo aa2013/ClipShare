@@ -59,7 +59,8 @@ class RuleListView extends StatefulWidget {
   State<StatefulWidget> createState() => _RuleListViewState();
 }
 
-class _RuleListViewState extends State<RuleListView> with SingleTickerProviderStateMixin {
+class _RuleListViewState extends State<RuleListView>
+    with SingleTickerProviderStateMixin {
   final TextEditingController searchEditor = TextEditingController();
   late final TabController tabController;
   final rulesController = ScrollController();
@@ -75,7 +76,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
   List<RuleItem> searchRules = [];
   List<RuleLib> searchLuaLibs = [];
 
-  TranslationKey get currentTab => categories[tabController.index];
+  TranslationKey currentTab = TranslationKey.rules;
 
   bool get isRulesTab => currentTab == TranslationKey.rules;
 
@@ -84,7 +85,16 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
     super.initState();
     searchRules = List.from(widget.rules);
     searchLuaLibs = List.from(widget.luaLibs);
-    tabController = TabController(length: categories.length, vsync: this, initialIndex: 0);
+    tabController = TabController(
+      length: categories.length,
+      vsync: this,
+      initialIndex: 0,
+    );
+    tabController.addListener(() {
+      setState(() {
+        currentTab = categories[tabController.index];
+      });
+    });
   }
 
   @override
@@ -95,8 +105,17 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
 
   void updateSearchResult() {
     final search = searchEditor.text;
-    searchRules = widget.rules.where((e) => search.isNullOrEmpty || e.name.containsIgnoreCase(search)).toList();
-    searchLuaLibs = widget.luaLibs.where((e) => search.isNullOrEmpty || e.libName.containsIgnoreCase(search) || e.displayName.containsIgnoreCase(search)).toList();
+    searchRules = widget.rules
+        .where((e) => search.isNullOrEmpty || e.name.containsIgnoreCase(search))
+        .toList();
+    searchLuaLibs = widget.luaLibs
+        .where(
+          (e) =>
+              search.isNullOrEmpty ||
+              e.libName.containsIgnoreCase(search) ||
+              e.displayName.containsIgnoreCase(search),
+        )
+        .toList();
   }
 
   Widget buildSearchField() {
@@ -156,7 +175,8 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
       isActive: rule.id == activeRuleItem?.id,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
-      disabledDrag: widget.disableRulesDrag || searchRules.length != widget.rules.length,
+      disabledDrag:
+          widget.disableRulesDrag || searchRules.length != widget.rules.length,
       onEnabledChanged: (enabled) {
         final validateResult = rule.validate();
         if (validateResult != null) {
@@ -286,7 +306,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
               Global.showTipsDialog(
                 context: context,
                 title: TranslationKey.deleteTips.tr,
-                text: '是否删除？若有其他脚本在使用，脚本将会失效！',
+                text: TranslationKey.ruleListDeleteLibConfirm.tr,
                 onOk: () {
                   widget.onLuaLibItemRemove(lib);
                 },
@@ -304,8 +324,10 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
     required VoidCallback? onPressed,
     String? tooltip,
     Widget? child,
+    Object? heroTag,
   }) {
     return FloatingActionButton(
+      heroTag: heroTag,
       onPressed: onPressed,
       tooltip: tooltip,
       child: child,
@@ -314,8 +336,12 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final fabSize = appConfig.isSmallScreen ? ExpandableFabSize.regular : ExpandableFabSize.small;
-    final fabButtonFun = appConfig.isSmallScreen ? _regularFab : FloatingActionButton.small;
+    final fabSize = appConfig.isSmallScreen
+        ? ExpandableFabSize.regular
+        : ExpandableFabSize.small;
+    final fabButtonFun = appConfig.isSmallScreen
+        ? _regularFab
+        : FloatingActionButton.small;
     double distance = appConfig.isSmallScreen && multiSelectMode ? 145 : 100;
     return Scaffold(
       body: Padding(
@@ -348,44 +374,53 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           ),
         ),
         children: [
-          fabButtonFun(
-            onPressed: widget.rules.isEmpty
-                ? null
-                : () {
-                    if (selectedRules.length >= widget.rules.length) {
-                      setState(() {
-                        selectedRules.clear();
-                        multiSelectMode = false;
-                      });
-                      return;
-                    }
-                    selectedRules.addAll(widget.rules.map((item) => item.id));
-                    if (selectedRules.isNotEmpty) {
-                      setState(() {
-                        multiSelectMode = true;
-                      });
-                    }
-                  },
-            tooltip: selectedRules.length >= widget.rules.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
-            child: Icon(
-              selectedRules.length >= widget.rules.length ? Icons.deselect : Icons.select_all,
-              color: widget.rules.isEmpty ? Colors.grey : null,
+          if (isRulesTab)
+            fabButtonFun(
+              heroTag: "$tag.multi-select",
+              onPressed: widget.rules.isEmpty
+                  ? null
+                  : () {
+                      if (selectedRules.length >= widget.rules.length) {
+                        setState(() {
+                          selectedRules.clear();
+                          multiSelectMode = false;
+                        });
+                        return;
+                      }
+                      selectedRules.addAll(widget.rules.map((item) => item.id));
+                      if (selectedRules.isNotEmpty) {
+                        setState(() {
+                          multiSelectMode = true;
+                        });
+                      }
+                    },
+              tooltip: selectedRules.length >= widget.rules.length
+                  ? TranslationKey.cancelSelectAll.tr
+                  : TranslationKey.selectAll.tr,
+              child: Icon(
+                selectedRules.length >= widget.rules.length
+                    ? Icons.deselect
+                    : Icons.select_all,
+                color: widget.rules.isEmpty ? Colors.grey : null,
+              ),
             ),
-          ),
           if (!multiSelectMode)
             fabButtonFun(
+              heroTag: "$tag.import",
               onPressed: () {},
               tooltip: TranslationKey.import.tr,
               child: const Icon(MdiIcons.import),
             ),
           if (multiSelectMode)
             fabButtonFun(
+              heroTag: "$tag.output",
               onPressed: () {},
               tooltip: TranslationKey.output.tr,
               child: const Icon(MdiIcons.export),
             ),
           if (multiSelectMode)
             fabButtonFun(
+              heroTag: "$tag.remove",
               onPressed: () {
                 widget.onRuleItemRemove(selectedRules);
                 setState(() {
@@ -398,6 +433,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
             ),
           if (!multiSelectMode)
             fabButtonFun(
+              heroTag: "$tag.add",
               onPressed: () {
                 final controller = controllers[tabController.index];
                 if (isRulesTab) {
@@ -418,7 +454,10 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                       preventSync: false,
                       isFinal: false,
                     ),
-                    script: RuleScriptContent(language: RuleScriptLanguage.lua, content: ''),
+                    script: RuleScriptContent(
+                      language: RuleScriptLanguage.lua,
+                      content: '',
+                    ),
                     enabled: false,
                     order: widget.rules.length + 1,
                     isNewData: true,
@@ -439,7 +478,10 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                 //controller 只会attach到当前的tab
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (!controller.hasClients) {
-                    Log.debug(tag, "$currentTab scroller controller not clients");
+                    Log.debug(
+                      tag,
+                      "$currentTab scroller controller not clients",
+                    );
                     return;
                   }
                   try {
@@ -458,13 +500,14 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
             ),
           if (multiSelectMode)
             fabButtonFun(
+              heroTag: "$tag.exit-select-mode",
               onPressed: () {
                 setState(() {
                   multiSelectMode = false;
                   selectedRules.clear();
                 });
               },
-              tooltip: '退出选择模式',
+              tooltip: TranslationKey.ruleListExitSelectionModeTooltip.tr,
               child: const Icon(MdiIcons.cancel),
             ),
         ],

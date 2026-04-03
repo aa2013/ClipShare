@@ -46,25 +46,6 @@ final langLuaHighlight = Mode(
 
     // Lua 5.4 关键字
     "keyword": "and break do else elseif end for goto if in local not or repeat return then until while function",
-
-    // 内置函数 + 标准库（增强版）
-    "built_in": """
-      assert collectgarbage dofile error getmetatable ipairs load loadfile next pairs pcall print rawequal rawget rawset require select setmetatable tonumber tostring type warn xpcall
-
-      coroutine create resume running status wrap yield
-
-      string byte char dump find format gmatch gsub len lower match pack packsize rep reverse sub upper unpack
-
-      table concat insert move pack remove sort unpack
-
-      math abs acos asin atan ceil cos deg exp floor fmod huge log max min modf pi rad random randomseed sin sqrt tan tointeger type ult
-
-      io close flush input lines open output popen read tmpfile type write
-
-      os clock date difftime execute exit getenv remove rename setlocale time tmpname
-
-      utf8 char charpattern codepoint codes len offset
-    """,
   },
 
   // =========================

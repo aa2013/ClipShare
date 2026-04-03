@@ -4,6 +4,7 @@ import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/support_platform.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 import '../../repository/entity/tables/rule.dart';
@@ -154,17 +155,17 @@ class RuleItem implements Comparable<RuleItem> {
   String? validate() {
     if (type == RuleContentType.regex) {
       if (regex.mainRegex.isNullOrEmpty) {
-        return "规则内容不可为空";
+        return TranslationKey.ruleItemContentRequired.tr;
       }
       if (regex.allowExtractData && regex.extractRegex.isNullOrEmpty) {
-        return "内容提取规则不可为空";
+        return TranslationKey.ruleItemExtractRuleRequired.tr;
       }
     } else if (type == RuleContentType.script) {
       if (script.content.trim().isNullOrEmpty) {
-        return "脚本内容不可为空";
+        return TranslationKey.ruleItemScriptContentRequired.tr;
       }
     } else {
-      return "不支持的操作";
+      return TranslationKey.ruleItemUnsupportedOperation.tr;
     }
     return null;
   }

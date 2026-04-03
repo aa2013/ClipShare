@@ -40,7 +40,7 @@ class RulesPage extends GetView<RulesController> {
       dialog = Global.showTipsDialog(
         context: context,
         autoDismiss: false,
-        text: "尚有未保存的修改，确认继续操作？",
+        text: TranslationKey.rulesPageUnsavedChangesConfirm.tr,
         showCancel: true,
         onCancel: () {
           abort = true;
@@ -89,6 +89,9 @@ class RulesPage extends GetView<RulesController> {
           controller.rules.add(newRule);
           controller.selectedRuleItem.value = newRule;
           controller.selectedLuaLibItem.value = null;
+          if (appConfig.isSmallScreen) {
+            Get.to(_buildRuleDetail());
+          }
         },
         onRuleItemRemove: (Set<int> ids) async {
           final loading = Global.showLoadingDialog(
@@ -152,6 +155,9 @@ class RulesPage extends GetView<RulesController> {
           controller.ruleLibs.add(value);
           controller.selectedLuaLibItem.value = value;
           controller.selectedRuleItem.value = null;
+          if (appConfig.isSmallScreen) {
+            Get.to(_buildLibDetail());
+          }
         },
         onLuaLibItemRemove: (RuleLib lib) async {
           if (lib.isNewData) {
@@ -318,7 +324,17 @@ class RulesPage extends GetView<RulesController> {
   @override
   Widget build(BuildContext context) {
     if (appConfig.isSmallScreen) {
-      return _buildRuleList(context);
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Row(
+            children: [
+              Text(TranslationKey.rulesManagement.tr),
+            ],
+          ),
+        ),
+        body: _buildRuleList(context),
+      );
     }
     return Container(
       color: Colors.transparent,

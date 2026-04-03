@@ -11,16 +11,18 @@ import 'package:re_editor/re_editor.dart';
 import 'auto_scroll_listview.dart';
 
 class DefaultCodeAutocompleteListView extends StatefulWidget implements PreferredSizeWidget {
-  static const double kItemHeight = 26;
+  static const double kItemHeight = 40;
   static const TextStyle kCommentStyle = TextStyle(color: Colors.brown, fontSize: 12);
 
   final ValueNotifier<CodeAutocompleteEditingValue> notifier;
   final ValueChanged<CodeAutocompleteResult> onSelected;
+  final CodeLineEditingController? editor;
 
   const DefaultCodeAutocompleteListView({
     super.key,
     required this.notifier,
     required this.onSelected,
+    this.editor,
   });
 
   @override
@@ -77,8 +79,8 @@ class _DefaultCodeAutocompleteListViewState extends State<DefaultCodeAutocomplet
             width: double.infinity,
             padding: const EdgeInsets.only(left: 5, right: 5),
             alignment: Alignment.centerLeft,
-            constraints: BoxConstraints(
-              minHeight: widget.notifier.value.prompts.length == 1 ? 50 : DefaultCodeAutocompleteListView.kItemHeight,
+            constraints: const BoxConstraints(
+              minHeight: DefaultCodeAutocompleteListView.kItemHeight,
               maxHeight: double.infinity,
             ),
             decoration: BoxDecoration(

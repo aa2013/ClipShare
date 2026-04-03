@@ -1,6 +1,6 @@
 import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_prompt.dart';
 import 'package:clipshare/app/handlers/re-editor/code_autocomplete_prompts_builder.dart';
-import 'package:clipshare/app/handlers/re-editor/default_code_autocomplete_listview.dart';
+import 'package:clipshare/app/widgets/re-editor/default_code_autocomplete_listview.dart';
 import 'package:clipshare/app/theme/code_editor_theme.dart';
 import 'package:clipshare/app/widgets/largeText/find.dart';
 import 'package:clipshare/app/widgets/largeText/menu.dart';
@@ -11,6 +11,7 @@ import 'package:re_highlight/re_highlight.dart';
 
 class CodeEditView extends StatelessWidget {
   final double? height;
+  final Key? editorKey;
   final CodeLineEditingController controller;
   final CodeHighlightThemeMode codeTheme;
   final Mode language;
@@ -20,9 +21,11 @@ class CodeEditView extends StatelessWidget {
   final Map<String, List<CodePrompt>>? relatedPrompts;
   final String? hintText;
   final Map<Type, Action<Intent>>? shortcutOverrideActions;
+  final bool autoWrapText;
 
   const CodeEditView({
     super.key,
+    this.editorKey,
     required this.controller,
     required this.language,
     required this.codeTheme,
@@ -32,6 +35,7 @@ class CodeEditView extends StatelessWidget {
     this.relatedPrompts,
     this.hintText,
     this.height,
+    this.autoWrapText = false,
     this.shortcutOverrideActions,
   });
 
@@ -53,8 +57,9 @@ class CodeEditView extends StatelessWidget {
           directPrompts: directPrompts,
         ),
         child: CodeEditor(
+          key: editorKey,
           controller: controller,
-          wordWrap: true,
+          wordWrap: autoWrapText,
           hint: hintText,
           autofocus: true,
           shortcutsActivatorsBuilder: const DefaultCodeShortcutsActivatorsBuilder(),

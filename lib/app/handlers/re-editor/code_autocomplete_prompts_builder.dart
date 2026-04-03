@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/re_highlight.dart';
 
-class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePromptsBuilder {
+class MyCodeAutocompletePromptsBuilder
+    implements DefaultCodeAutocompletePromptsBuilder {
   final Mode? language;
   late final List<CodePrompt> keywordPrompts;
   late final List<CodePrompt> directPrompts;
@@ -32,7 +33,11 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         keywordList = keywordContent;
       }
-      _allKeywordPrompts.addAll(keywordList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(
+        keywordList.map(
+          (keyword) => CaseInsensitiveKeywordPrompt(word: keyword),
+        ),
+      );
 
       final dynamic builtInContent = keywords['built_in'];
       late final List<dynamic> builtInList;
@@ -41,7 +46,11 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         builtInList = builtInContent;
       }
-      _allKeywordPrompts.addAll(builtInList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(
+        builtInList.map(
+          (keyword) => CaseInsensitiveKeywordPrompt(word: keyword),
+        ),
+      );
 
       final dynamic literalContent = keywords['literal'];
       late final List<dynamic> literalList;
@@ -50,7 +59,11 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         literalList = literalContent;
       }
-      _allKeywordPrompts.addAll(literalList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(
+        literalList.map(
+          (keyword) => CaseInsensitiveKeywordPrompt(word: keyword),
+        ),
+      );
 
       final dynamic typeContent = keywords['type'];
       late final List<dynamic> typeList;
@@ -59,22 +72,35 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       } else {
         typeList = typeContent;
       }
-      _allKeywordPrompts.addAll(typeList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)));
+      _allKeywordPrompts.addAll(
+        typeList.map((keyword) => CaseInsensitiveKeywordPrompt(word: keyword)),
+      );
     }
   }
 
   @override
-  CodeAutocompleteEditingValue? build(BuildContext context, CodeLine codeLine, CodeLineSelection selection) {
+  CodeAutocompleteEditingValue? build(
+    BuildContext context,
+    CodeLine codeLine,
+    CodeLineSelection selection,
+  ) {
     final String text = codeLine.text;
-    final Characters charactersBefore = text.substring(0, selection.extentOffset).characters;
+    Characters charactersBefore = text
+        .substring(0, selection.extentOffset)
+        .characters;
     if (charactersBefore.isEmpty) {
       return null;
     }
-    final Characters charactersAfter = text.substring(selection.extentOffset).characters;
+    final Characters charactersAfter = text
+        .substring(selection.extentOffset)
+        .characters;
     // FIXME：Check whether the position is inside a string
-    if (charactersBefore.containsSymbols(const ['\'', '"']) && charactersAfter.containsSymbols(const ['\'', '"'])) {
+    if (charactersBefore.containsSymbols(const ['\'', '"']) &&
+        charactersAfter.containsSymbols(const ['\'', '"'])) {
       return null;
     }
+    //按空格分割取最后一部分，否则 如果内容是 ' 1base64' 也会被作为合法变量参与补全提示逻辑
+    charactersBefore = charactersBefore.split(Characters(' ')).last;
     // TODO Should check operator `->` for some languages like c/c++
     final Iterable<CodePrompt> prompts;
     final String input;
@@ -82,32 +108,54 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
       input = '';
       int start = charactersBefore.length - 2;
       for (; start >= 0; start--) {
-        if (!charactersBefore.elementAt(start).isValidVariablePart) {
+        var char = charactersBefore.elementAt(start);
+        if (!char.isValidVariablePart) {
+          //如果是数字且不为第一个字符则算合法部分
+          if (int.tryParse(char) != null && start != 0) {
+            print("$start：$char");
+            continue;
+          }
           break;
         }
       }
-      final String target = charactersBefore.getRange(start + 1, charactersBefore.length - 1).string;
+      final String target = charactersBefore
+          .getRange(start + 1, charactersBefore.length - 1)
+          .string;
       prompts = relatedPrompts[target] ?? const [];
     } else {
       int start = charactersBefore.length - 1;
       for (; start >= 0; start--) {
-        if (!charactersBefore.elementAt(start).isValidVariablePart) {
+        var char = charactersBefore.elementAt(start);
+        if (!char.isValidVariablePart) {
+          //如果是数字且不为第一个字符则算合法部分
+          if (int.tryParse(char) != null && start != 0) {
+            continue;
+          }
           break;
         }
       }
-      input = charactersBefore.getRange(start + 1, charactersBefore.length).string;
+      input = charactersBefore
+          .getRange(start + 1, charactersBefore.length)
+          .string;
       if (input.isEmpty) {
         return null;
       }
       if (start > 0 && charactersBefore.elementAt(start) == '.') {
         final int mark = start;
         for (start = start - 1; start >= 0; start--) {
-          if (!charactersBefore.elementAt(start).isValidVariablePart) {
+          var char = charactersBefore.elementAt(start);
+          if (!char.isValidVariablePart) {
+            //如果是数字且不为第一个字符则算合法部分
+            if (int.tryParse(char) != null && start != 0) {
+              continue;
+            }
             break;
           }
         }
         final String target = charactersBefore.getRange(start + 1, mark).string;
-        prompts = relatedPrompts[target]?.where((prompt) => prompt.match(input)) ?? const [];
+        prompts =
+            relatedPrompts[target]?.where((prompt) => prompt.match(input)) ??
+            const [];
       } else {
         prompts = _allKeywordPrompts.where((prompt) => prompt.match(input));
       }
@@ -115,6 +163,10 @@ class MyCodeAutocompletePromptsBuilder implements DefaultCodeAutocompletePrompts
     if (prompts.isEmpty) {
       return null;
     }
-    return CodeAutocompleteEditingValue(input: input, prompts: prompts.toList(), index: 0);
+    return CodeAutocompleteEditingValue(
+      input: input,
+      prompts: prompts.toList(),
+      index: 0,
+    );
   }
 }

@@ -6,7 +6,7 @@ class FunctionPrompt extends CaseInsensitiveKeywordPrompt {
   final String returnType;
   final Map<String, String> parameters;
 
-  FunctionPrompt({
+  const FunctionPrompt({
     required super.word,
     required this.returnType,
     required this.parameters,
@@ -20,7 +20,7 @@ class FunctionPrompt extends CaseInsensitiveKeywordPrompt {
           if (parameters[key]?.equalsIgnoreCase("string") ?? false) {
             return "'$key'";
           }
-          return key;
+          return "\$$key";
         })
         .join(", ");
     return CodeAutocompleteResult.fromWord("$word($keys)");

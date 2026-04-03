@@ -2,7 +2,7 @@ import 'dart:ui';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/re-editor/code_autocomplete_prompts_builder.dart';
-import 'package:clipshare/app/handlers/re-editor/default_code_autocomplete_listview.dart';
+import 'package:clipshare/app/widgets/re-editor/default_code_autocomplete_listview.dart';
 import 'package:clipshare/app/modules/views/code_edit_view.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_sqlite.dart';

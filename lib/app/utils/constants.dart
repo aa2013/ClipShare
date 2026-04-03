@@ -2,9 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/re-editor/field_prompt.dart';
-import 'package:clipshare/app/data/models/re-editor/function_prompt.dart';
-import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_prompt.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_log.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_lua.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_sqlite.dart';
@@ -15,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:simple_icons/simple_icons.dart';
+
 
 class Constants {
   Constants._private();
@@ -282,6 +280,17 @@ class Constants {
         end,
       }
     }
+    -- 全局变量
+    __devId = '{{devId}}'
+    __devName = '{{devName}}'
+    __versionNumber = {{versionNumber}}
+    __versionName = '{{versionName}}'
+    __platformIsAndroid = {{platformIsAndroid}}
+    __platformIsLinux = {{platformIsLinux}}
+    __platformIsWindows = {{platformIsWindows}}
+    __platformIsMacOS = {{platformIsMacOS}}
+    __platformIsIOS = {{platformIsIOS}}
+    
     function remove_user_sandbox_method(script_hash)
       __userscripts_map[script_hash] = nil
     end
@@ -334,21 +343,21 @@ class Constants {
             return error("not allow operation in sandbox", 2)
           end
           local log = {
-            debug = function(...) __log({{isTest}}, 'debug','{{funName}}', table.concat({...}, ", ")) end,
-            warn = function(...) __log({{isTest}}, 'warn','{{funName}}', table.concat({...}, ", ")) end,
-            info = function(...) __log({{isTest}}, 'info','{{funName}}', table.concat({...}, ", ")) end,
-            error = function(...) __log({{isTest}}, 'error','{{funName}}', table.concat({...}, ", ")) end,
+            debug = function(...) __log({{isTest}}, 'debug','{{funcName}}', table.concat({...}, ", ")) end,
+            warn = function(...) __log({{isTest}}, 'warn','{{funcName}}', table.concat({...}, ", ")) end,
+            info = function(...) __log({{isTest}}, 'info','{{funcName}}', table.concat({...}, ", ")) end,
+            error = function(...) __log({{isTest}}, 'error','{{funcName}}', table.concat({...}, ", ")) end,
           }
-          local safe_os = {}
-          for k, v in pairs(os) do
-            safe_os[k] = v
-          end
-          safe_os.exit = not_allow_func
-          safe_os.execute = not_allow_func
+          local safe_os = {
+            clock = os.clock,
+            date = os.date,
+            time = os.time,
+            difftime = os.difftime,
+          }
           
           local forbidden_keys = {
               "__userscripts_map", "__customLibs", "_G", "_ENV",
-              "load", "loadstring", "dofile", "package",
+              "load", "loadfile", "loadstring", "dofile", "package",
               "debug", "getmetatable", "setmetatable",
               "rawget", "rawset", "rawequal", "io","file",
               'run_user_sandbox_method', "collectgarbage",
@@ -359,11 +368,45 @@ class Constants {
             log = log,
             print = log.debug,
             os = safe_os,
+            notify = __notify,
             ContentType = {
               sms = 'sms',
               text = 'text',
               image = 'image',
               notification = 'notification',
+            },
+            self = {
+              devId = __devId,
+              devName = __devName,
+            },
+            app = {
+              versionName = __versionName,
+              versionNumber = __versionNumber,
+            },
+            Platform = {
+              isAndroid = __platformIsAndroid,
+              isIOS = __platformIsIOS,
+              isWindows = __platformIsWindows,
+              isMacOS = __platformIsMacOS,
+              isLinux = __platformIsLinux,
+            },
+            android = {
+              notifyMediaScan = __androidNotifyMediaScan,
+              toast = __androidToast,
+              sendHistoryChangedBroadcast = __androidSendHistoryChangedBroadcast,
+            },
+            crypto = {
+              calcMD5 = __calcMD5,
+              calcSHA1 = __calcSHA1,
+              calcSHA256 = __calcSHA256,
+            },
+            base64 = {
+              encode = __base64Encode,
+              decode = __base64Decode,
+            },
+            regex = {
+               match = __regexMatch,
+               matchGroups = __regexMatchGroups,
             }
           }
           for lib, t in pairs(__customLibs) do
@@ -385,8 +428,8 @@ class Constants {
               return err
           end
       
-          __userscripts_map['{{funHash}}']= chunk()
-          log.debug('loaded fun: ' .. '{{funName}}: {{funHash}}')
+          __userscripts_map['{{funcHash}}']= chunk()
+          log.debug('loaded fun: ' .. '{{funcName}}: {{funcHash}}')
           return 'OK'
         end
         print(wrapper())
@@ -396,24 +439,24 @@ class Constants {
   static const String luaLibSandboxWrapper = """
         local wrapper = function() 
           local log = {
-            debug = function(...) __log({{isTest}}, 'debug','{{funName}}', table.concat({...}, ", ")) end,
-            warn = function(...) __log({{isTest}}, 'warn','{{funName}}', table.concat({...}, ", ")) end,
-            info = function(...) __log({{isTest}}, 'info','{{funName}}', table.concat({...}, ", ")) end,
-            error = function(...) __log({{isTest}}, 'error','{{funName}}', table.concat({...}, ", ")) end,
+            debug = function(...) __log({{isTest}}, 'debug','{{funcName}}', table.concat({...}, ", ")) end,
+            warn = function(...) __log({{isTest}}, 'warn','{{funcName}}', table.concat({...}, ", ")) end,
+            info = function(...) __log({{isTest}}, 'info','{{funcName}}', table.concat({...}, ", ")) end,
+            error = function(...) __log({{isTest}}, 'error','{{funcName}}', table.concat({...}, ", ")) end,
           }
           local not_allow_func = function()
             return error("not allow operation in sandbox", 2)
           end
-          local safe_os = {}
-          for k, v in pairs(os) do
-            safe_os[k] = v
-          end
-          safe_os.exit = not_allow_func
-          safe_os.execute = not_allow_func
+          local safe_os = {
+            clock = os.clock,
+            date = os.date,
+            time = os.time,
+            difftime = os.difftime,
+          }
           
           local forbidden_keys = {
               "__userscripts_map", "__customLibs", "_G", "_ENV",
-              "load", "loadstring", "dofile", "package",
+              "load", "loadfile", "loadstring", "dofile", "package",
               "debug", "getmetatable", "setmetatable",
               "rawget", "rawset", "rawequal", "io","file",
               'run_user_sandbox_method', "collectgarbage",
@@ -472,153 +515,5 @@ class Constants {
     return 'table:' .. table_to_string(result)
     """;
 
-  //endregion
-
-  //region lua key prompt
-
-  static final List<CaseInsensitiveKeywordPrompt> luaKeywordPrompts = [];
-  static final List<CodePrompt> luaDirectPrompts = [
-    FunctionPrompt(
-      word: 'print',
-      returnType: 'void',
-      parameters: {
-        'log': 'string',
-      },
-      desc: TranslationKey.codePromptPrint,
-    ),
-    FieldPrompt(
-      word: 'log',
-      type: "table",
-      desc: TranslationKey.codePromptLog,
-    ),
-    FieldPrompt(
-      word: 'json',
-      type: "table",
-      desc: TranslationKey.codePromptJson,
-    ),
-    FieldPrompt(
-      word: 'ContentType',
-      type: "table",
-      desc: TranslationKey.codePromptContentType,
-    ),
-    FieldPrompt(
-      word: 'params',
-      type: "table",
-      desc: TranslationKey.codePromptParams,
-    ),
-  ];
-  static final Map<String, List<CodePrompt>> luaRelatedPrompts = {
-    'log': [
-      FunctionPrompt(
-        word: 'info',
-        returnType: 'void',
-        parameters: {
-          "log": "string",
-        },
-        desc: TranslationKey.codePromptLogInfo,
-      ),
-      FunctionPrompt(
-        word: 'debug',
-        returnType: 'void',
-        parameters: {
-          "log": "string",
-        },
-        desc: TranslationKey.codePromptLogDebug,
-      ),
-      FunctionPrompt(
-        word: 'warn',
-        returnType: 'void',
-        parameters: {
-          "log": "string",
-        },
-        desc: TranslationKey.codePromptLogWarn,
-      ),
-      FunctionPrompt(
-        word: 'error',
-        returnType: 'void',
-        parameters: {
-          "log": "string",
-        },
-        desc: TranslationKey.codePromptLogError,
-      ),
-    ],
-    'json': [
-      FunctionPrompt(
-        word: 'encode',
-        returnType: 'string',
-        parameters: {
-          "value": "table",
-        },
-        desc: TranslationKey.codePromptJsonDecode,
-      ),
-      FunctionPrompt(
-        word: 'decode',
-        returnType: 'table',
-        parameters: {
-          "json": "string",
-        },
-        desc: TranslationKey.codePromptJsonDecode,
-      ),
-    ],
-    'ContentType': [
-      FieldPrompt(
-        word: "sms",
-        type: "string",
-        desc: TranslationKey.codePromptSmsType,
-      ),
-      FieldPrompt(
-        word: "text",
-        type: "string",
-        desc: TranslationKey.codePromptTextType,
-      ),
-      FieldPrompt(
-        word: "image",
-        type: "string",
-        desc: TranslationKey.codePromptImageType,
-      ),
-      FieldPrompt(
-        word: "notification",
-        type: "string",
-        desc: TranslationKey.codePromptNotificationTpye,
-      ),
-    ],
-    'params': [
-      FieldPrompt(
-        word: "type",
-        type: "ContentType",
-        desc: TranslationKey.codePromptParamsContentTpye,
-      ),
-      FieldPrompt(
-        word: "source",
-        type: "string?",
-        desc: TranslationKey.codePromptParamsContentSouce,
-      ),
-      FieldPrompt(
-        word: "title",
-        type: "string?",
-        desc: TranslationKey.codePromptParamsContentNotificationTitle,
-      ),
-      FieldPrompt(
-        word: "content",
-        type: "string",
-        desc: TranslationKey.codePromptParamsContentDetail,
-      ),
-      FieldPrompt(
-        word: "extractedContent",
-        type: "string?",
-        desc: TranslationKey.codePromptParamsContentExtracted,
-      ),
-      FieldPrompt(
-        word: "tags",
-        type: "table?",
-        desc: TranslationKey.codePromptParamsContentTags,
-      ),
-      FieldPrompt(
-        word: "isSyncDisabled",
-        type: "bool?",
-        desc: TranslationKey.codePromptParamsContentIsSyncDisabled,
-      ),
-    ],
-  };
   //endregion
 }

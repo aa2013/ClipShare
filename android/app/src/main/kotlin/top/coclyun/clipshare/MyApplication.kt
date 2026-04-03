@@ -84,10 +84,10 @@ class MyApplication : Application() {
         /**
          * 发送通知
          */
-        fun commonNotify(content: String): Int {
+        fun commonNotify(title:String?, content: String): Int {
             // 构建通知
             val builder = NotificationCompat.Builder(applicationContext, commonNotifyChannelId)
-                .setSmallIcon(R.drawable.launcher_icon).setContentTitle("ClipShare")
+                .setSmallIcon(R.drawable.launcher_icon).setContentTitle( title ?: "ClipShare")
                 .setContentText(content).setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent).setFullScreenIntent(pendingIntent, true)
                 // 点击通知后自动关闭
@@ -320,8 +320,9 @@ class MyApplication : Application() {
                 }
                 //发送通知
                 "sendNotify" -> {
+                    val title = args["title"].toString();
                     val content = args["content"].toString();
-                    result.success(commonNotify(content));
+                    result.success(commonNotify(title, content));
                 }
                 //发送通知
                 "cancelNotify" -> {

@@ -75,7 +75,7 @@ class RuleRegexContent {
     }
     return RuleApplyResult(
       content: params.content,
-      tags: matched ? tags : {},
+      tags: matched && allowAddTag ? tags : {},
       isSyncDisabled: matched ? preventSync : false,
       isFinalRule: matched ? isFinal : false,
       extractedContent: extracted,

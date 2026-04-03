@@ -144,7 +144,9 @@ class RuleCard extends StatelessWidget {
                           replacement: IconButton(
                             mouseCursor: disabledDrag ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
                             onPressed: disabledDrag ? null : () {},
-                            tooltip: disabledDrag ? '保存数据或清空搜索输入后可拖拽排序' : '拖拽排序',
+                            tooltip: disabledDrag
+                                ? TranslationKey.ruleCardDragDisabledTooltip.tr
+                                : TranslationKey.ruleCardDragTooltip.tr,
                             icon: const Icon(Icons.drag_indicator),
                             padding: EdgeInsets.zero,
                           ),

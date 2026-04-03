@@ -5,13 +5,14 @@ import 'package:re_editor/re_editor.dart';
 class CaseInsensitiveKeywordPrompt extends CodeKeywordPrompt {
   final TranslationKey? desc;
 
-  CaseInsensitiveKeywordPrompt({
+  const CaseInsensitiveKeywordPrompt({
     required super.word,
     this.desc,
   });
 
   @override
   bool match(String input) {
-    return word != input && word.startsWithIgnoreCase(input);
+    final result = word != input && word.startsWithIgnoreCase(input);
+    return result;
   }
 }

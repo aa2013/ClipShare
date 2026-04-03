@@ -18,6 +18,18 @@ class CryptoUtil {
     return digest.toString();
   }
 
+  static String toSHA1(Object obj) {
+    var bytes = utf8.encode(obj.toString());
+    var digest = sha1.convert(bytes);
+    return digest.toString();
+  }
+
+  static String toSHA256(Object obj) {
+    var bytes = utf8.encode(obj.toString());
+    var digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   static Future<String?> calcFileMD5(String filePath) async {
     var file = File(filePath);
     if (!file.existsSync()) {
@@ -52,8 +64,12 @@ class CryptoUtil {
   /// 第一个参数是 privateKey，第二个是 publicKey
   static List<String> genRSAKey() {
     AsymmetricKeyPair pair = CryptoUtils.generateRSAKeyPair();
-    var privateKey = CryptoUtils.encodeRSAPrivateKeyToPem(pair.privateKey as RSAPrivateKey);
-    var publicKey = CryptoUtils.encodeRSAPublicKeyToPem(pair.publicKey as RSAPublicKey);
+    var privateKey = CryptoUtils.encodeRSAPrivateKeyToPem(
+      pair.privateKey as RSAPrivateKey,
+    );
+    var publicKey = CryptoUtils.encodeRSAPublicKeyToPem(
+      pair.publicKey as RSAPublicKey,
+    );
     return [privateKey, publicKey];
   }
 
@@ -146,7 +162,10 @@ class CryptoUtil {
     int ivLen = 16,
   }) {
     final iv = IV.fromUtf8(key.substring(0, ivLen));
-    final list = (encrypter ?? getEncrypter(key)).decryptBytes(Encrypted(encoded), iv: iv);
+    final list = (encrypter ?? getEncrypter(key)).decryptBytes(
+      Encrypted(encoded),
+      iv: iv,
+    );
     return Uint8List.fromList(list);
   }
 
@@ -161,7 +180,12 @@ class CryptoUtil {
   }
 
   ///密钥派生
-  static Uint8List pbkdf2WithHmacSHA256Bytes(String password, String salt, int iterations, int keyLength) {
+  static Uint8List pbkdf2WithHmacSHA256Bytes(
+    String password,
+    String salt,
+    int iterations,
+    int keyLength,
+  ) {
     final generator = PBKDF2KeyDerivator(HMac(SHA256Digest(), 64))
       ..init(
         Pbkdf2Parameters(
@@ -180,8 +204,15 @@ class CryptoUtil {
   }
 
   ///密钥派生
-  static String pbkdf2WithHmacSHA256(String password, String salt, int iterations, int keyLength) {
-    return ascii.decode(pbkdf2WithHmacSHA256Bytes(password, salt, iterations, keyLength));
+  static String pbkdf2WithHmacSHA256(
+    String password,
+    String salt,
+    int iterations,
+    int keyLength,
+  ) {
+    return ascii.decode(
+      pbkdf2WithHmacSHA256Bytes(password, salt, iterations, keyLength),
+    );
   }
 }
 

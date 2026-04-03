@@ -54,7 +54,7 @@ class NotifyUtil {
     }
     if (Platform.isAndroid) {
       final androidChannelService = Get.find<AndroidChannelService>();
-      notifyId = await androidChannelService.sendNotify(content);
+      notifyId = await androidChannelService.sendNotify(title, content);
     } else {
       if (!_notificationReady) {
         await _initNotifications();

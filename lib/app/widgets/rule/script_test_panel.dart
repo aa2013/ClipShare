@@ -44,10 +44,10 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
   var panelIndex = 1;
 
   List<String> get tabs => [
-    if (widget.paramsController != null) '参数',
-    if (widget.showCompileInfo) '编译信息',
-    if (widget.showOutputsInfo) '输出',
-    '运行结果',
+    if (widget.paramsController != null) TranslationKey.scriptTestPanelParamsTab.tr,
+    if (widget.showCompileInfo) TranslationKey.scriptTestPanelCompileInfoTab.tr,
+    if (widget.showOutputsInfo) TranslationKey.scriptTestPanelOutputTab.tr,
+    TranslationKey.scriptTestPanelRunResultTab.tr,
   ];
 
   @override
@@ -152,7 +152,7 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
                   if (widget.showUnfoldButton)
                     IconButton(
                       onPressed: widget.onUnfoldButtonClicked,
-                      tooltip: '折叠',
+                      tooltip: TranslationKey.scriptTestPanelCollapseTooltip.tr,
                       icon: const Icon(
                         Icons.keyboard_arrow_down,
                         size: 20,

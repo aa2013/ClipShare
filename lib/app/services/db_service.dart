@@ -270,7 +270,7 @@ class DbService extends GetxService {
     if (!await hasColumnInTable(database, 'OperationRecord', 'moduleEn')) {
       await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `moduleEn` TEXT;");
     }
-    await database.execute('CREATE INDEX `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
+    await database.execute('CREATE INDEX IF NOT EXISTS `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
     //规则表
     await database.execute("""
         CREATE TABLE IF NOT EXISTS `Rule` (

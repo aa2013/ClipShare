@@ -12,6 +12,7 @@ import 'package:re_editor/re_editor.dart';
 
 class ScriptEditTestView extends StatefulWidget {
   final CodeLineEditingController controller;
+  final Key? editorKey;
   final TextEditingController paramsController;
   final String name;
   final VoidCallback? onExitFullScreen;
@@ -19,9 +20,12 @@ class ScriptEditTestView extends StatefulWidget {
   final RuleExecResult Function() onRunButtonClicked;
   final String? Function() compile;
   final bool showSaveButton;
+  final bool autoWrapText;
 
   const ScriptEditTestView({
     super.key,
+    this.editorKey,
+    this.autoWrapText = false,
     required this.controller,
     required this.paramsController,
     required this.name,
@@ -63,7 +67,9 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
   void onCodeContentChanged() {
     if (widget.controller.text.trim().isEmpty) {
       setState(() {
-        compileInfo = "Compile Failed:\nCode is empty.";
+        compileInfo = TranslationKey.ruleCompileFailedPrefix.trParams({
+          "message": TranslationKey.ruleCompileCodeEmpty.tr,
+        });
       });
       return;
     }
@@ -71,30 +77,62 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
     try {
       final result = widget.compile();
       if (result == null) {
-        compileResult = "Compile Success.";
+        compileResult = TranslationKey.ruleCompileSuccess.tr;
       } else {
-        compileResult = "Compile Failed:\n$result";
+        compileResult = TranslationKey.ruleCompileFailedPrefix.trParams({
+          "message": result,
+        });
       }
     } catch (err, stack) {
-      compileResult = "Compile Failed:\n$err\n$stack";
+      compileResult = TranslationKey.ruleCompileFailedPrefix.trParams({
+        "message": "$err\n$stack",
+      });
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      setState(() {
-        compileInfo = compileResult;
-      });
+      if (mounted) {
+        setState(() {
+          compileInfo = compileResult;
+        });
+      }
     });
   }
 
   Widget buildTitle(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: Text(widget.name)),
+        Expanded(
+          child: Row(
+            children: [
+              const Icon(
+                Icons.info_outline,
+                color: Colors.blueGrey,
+                size: 16,
+              ),
+              const SizedBox(width: 2),
+              Text(
+                TranslationKey.ruleDetailNameLabel.tr,
+                style: const TextStyle(color: Colors.blueGrey),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                widget.name,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey,
+                ),
+              ),
+            ],
+          ),
+        ),
         IconButton(
           onPressed: widget.showSaveButton
               ? () {
                   final compileInfo = widget.compile();
                   if (compileInfo != null) {
-                    Global.showSnackBarWarn(text: compileInfo, context: context);
+                    Global.showSnackBarWarn(
+                      text: compileInfo,
+                      context: context,
+                    );
                     return;
                   }
                   widget.onSaveTriggered();
@@ -117,7 +155,7 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
               area.size = 0;
             }
           },
-          tooltip: '运行面板',
+          tooltip: TranslationKey.scriptEditTestViewPanelTooltip.tr,
           icon: const Icon(
             Icons.dashboard,
             size: 20,
@@ -132,7 +170,7 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
               runningResult = result;
             });
           },
-          tooltip: '运行',
+          tooltip: TranslationKey.scriptEditTestViewRunTooltip.tr,
           icon: const Icon(
             Icons.play_arrow,
             size: 20,
@@ -143,7 +181,7 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
         if (!appConfig.isSmallScreen)
           IconButton(
             onPressed: widget.onExitFullScreen,
-            tooltip: '退出全屏编辑模式',
+            tooltip: TranslationKey.scriptEditTestViewExitFullScreenTooltip.tr,
             icon: const Icon(
               Icons.fullscreen_exit,
               size: 20,
@@ -164,6 +202,8 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
           child: Stack(
             children: [
               LuaCodeEditView(
+                autoWrapText: widget.autoWrapText,
+                editorKey: widget.editorKey,
                 controller: widget.controller,
                 onSaveShortcutTriggered: widget.onSaveTriggered,
               ),
@@ -174,7 +214,14 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
     );
   }
 
-  Widget buildDivider(Axis axis, int index, bool resizable, bool dragging, bool highlighted, MultiSplitViewThemeData themeData) {
+  Widget buildDivider(
+    Axis axis,
+    int index,
+    bool resizable,
+    bool dragging,
+    bool highlighted,
+    MultiSplitViewThemeData themeData,
+  ) {
     final bar = Container(
       margin: 2.insetV,
       child: IntrinsicWidth(
@@ -182,7 +229,10 @@ class _ScriptEditTestViewState extends State<ScriptEditTestView> {
           width: 50,
           height: 10,
           child: Container(
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(2), color: Colors.black),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(2),
+              color: Colors.black,
+            ),
           ),
         ),
       ),

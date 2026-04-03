@@ -1444,6 +1444,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "显示提取内容";
       case TranslationKey.displayOriginContent:
         return "显示原始内容";
+
+      //region lua代码提示
       case TranslationKey.codePromptParamsContentIsSyncDisabled:
         return "是否阻止同步";
       case TranslationKey.codePromptParamsContentTags:
@@ -1476,8 +1478,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "输出调试级别的日志信息";
       case TranslationKey.codePromptLogInfo:
         return "输出信息级别的日志信息";
-      case TranslationKey.codePromptParams:
-        return "脚本参数，代表剪贴板/通知/短信详情信息，也可能是上一个脚本处理后的数据";
       case TranslationKey.codePromptContentType:
         return "内容类型";
       case TranslationKey.codePromptJson:
@@ -1486,6 +1486,360 @@ class ZhCNTranslation extends AbstractTranslations {
         return "日志库";
       case TranslationKey.codePromptPrint:
         return "打印输出，等同于 log.debug() ";
+      case TranslationKey.codePromptMath:
+        return '数学库';
+      case TranslationKey.codePromptString:
+        return '字符串库';
+      case TranslationKey.codePromptTable:
+        return '表操作库';
+      case TranslationKey.codePromptUtf8:
+        return 'UTF8 编码库';
+      case TranslationKey.codePromptOs:
+        return '系统库（安全子集）';
+      case TranslationKey.codePromptBasic:
+        return '基础函数';
+      case TranslationKey.codePromptType:
+        return '获取变量类型';
+      case TranslationKey.codePromptToString:
+        return '转换为字符串';
+      case TranslationKey.codePromptToNumber:
+        return '转换为数字';
+      case TranslationKey.codePromptPairs:
+        return '遍历 table（键值对）';
+      case TranslationKey.codePromptIpairs:
+        return '遍历数组';
+      case TranslationKey.codePromptNext:
+        return '获取下一个元素';
+      case TranslationKey.codePromptPcall:
+        return '安全调用函数';
+      case TranslationKey.codePromptXpcall:
+        return '带错误处理的调用';
+      case TranslationKey.codePromptSelect:
+        return '获取可变参数';
+      case TranslationKey.codePromptAssert:
+        return '断言检查';
+      case TranslationKey.codePromptError:
+        return '抛出错误';
+      case TranslationKey.codePromptMathAbs:
+        return '绝对值';
+      case TranslationKey.codePromptMathAcos:
+        return '反余弦';
+      case TranslationKey.codePromptMathAsin:
+        return '反正弦';
+      case TranslationKey.codePromptMathAtan:
+        return '反正切';
+      case TranslationKey.codePromptMathCeil:
+        return '向上取整';
+      case TranslationKey.codePromptMathCos:
+        return '余弦';
+      case TranslationKey.codePromptMathDeg:
+        return '弧度转角度';
+      case TranslationKey.codePromptMathExp:
+        return '指数运算';
+      case TranslationKey.codePromptMathFloor:
+        return '向下取整';
+      case TranslationKey.codePromptMathFmod:
+        return '取模余数';
+      case TranslationKey.codePromptMathHuge:
+        return '最大浮点值';
+      case TranslationKey.codePromptMathLog:
+        return '对数';
+      case TranslationKey.codePromptMathMax:
+        return '最大值';
+      case TranslationKey.codePromptMathMaxInteger:
+        return '最大整数';
+      case TranslationKey.codePromptMathMin:
+        return '最小值';
+      case TranslationKey.codePromptMathMinInteger:
+        return '最小整数';
+      case TranslationKey.codePromptMathModf:
+        return '拆分整数和小数部分';
+      case TranslationKey.codePromptMathPi:
+        return '圆周率常量';
+      case TranslationKey.codePromptMathRad:
+        return '角度转弧度';
+      case TranslationKey.codePromptMathRandom:
+        return '随机数';
+      case TranslationKey.codePromptMathRandomSeed:
+        return '设置随机种子';
+      case TranslationKey.codePromptMathSin:
+        return '正弦';
+      case TranslationKey.codePromptMathSqrt:
+        return '平方根';
+      case TranslationKey.codePromptMathTan:
+        return '正切';
+      case TranslationKey.codePromptMathToInteger:
+        return '转换为整数';
+      case TranslationKey.codePromptMathType:
+        return '数字子类型';
+      case TranslationKey.codePromptMathUlt:
+        return '无符号整数比较';
+      case TranslationKey.codePromptStringByte:
+        return '获取字符编码';
+      case TranslationKey.codePromptStringChar:
+        return '根据字符编码生成字符串';
+      case TranslationKey.codePromptStringDump:
+        return '导出函数字节码';
+      case TranslationKey.codePromptStringLen:
+        return '字符串长度';
+      case TranslationKey.codePromptStringSub:
+        return '截取字符串';
+      case TranslationKey.codePromptStringFind:
+        return '查找子串';
+      case TranslationKey.codePromptStringFormat:
+        return '格式化字符串';
+      case TranslationKey.codePromptStringGMatch:
+        return '迭代匹配结果';
+      case TranslationKey.codePromptStringGSub:
+        return '替换匹配内容';
+      case TranslationKey.codePromptStringLower:
+        return '转小写';
+      case TranslationKey.codePromptStringMatch:
+        return '模式匹配';
+      case TranslationKey.codePromptStringPack:
+        return '打包为二进制字符串';
+      case TranslationKey.codePromptStringPackSize:
+        return '获取打包后的大小';
+      case TranslationKey.codePromptStringRep:
+        return '重复字符串';
+      case TranslationKey.codePromptStringReverse:
+        return '反转字符串';
+      case TranslationKey.codePromptStringUnpack:
+        return '解包二进制字符串';
+      case TranslationKey.codePromptStringUpper:
+        return '转大写';
+      case TranslationKey.codePromptTableInsert:
+        return '插入元素';
+      case TranslationKey.codePromptTableMove:
+        return '在表之间移动元素';
+      case TranslationKey.codePromptTableRemove:
+        return '删除元素';
+      case TranslationKey.codePromptTableSort:
+        return '排序';
+      case TranslationKey.codePromptTableConcat:
+        return '拼接字符串';
+      case TranslationKey.codePromptUtf8Len:
+        return 'UTF8 字符串长度';
+      case TranslationKey.codePromptUtf8Char:
+        return '生成 UTF8 字符';
+      case TranslationKey.codePromptUtf8CharPattern:
+        return 'UTF8 字符匹配模式';
+      case TranslationKey.codePromptUtf8Codes:
+        return '迭代 UTF8 码点';
+      case TranslationKey.codePromptUtf8CodePoint:
+        return '获取 UTF8 码点';
+      case TranslationKey.codePromptUtf8Offset:
+        return '获取 UTF8 偏移位置';
+      case TranslationKey.codePromptOsClock:
+        return 'CPU 时间';
+      case TranslationKey.codePromptOsDate:
+        return '获取日期';
+      case TranslationKey.codePromptOsTime:
+        return '获取时间戳';
+      case TranslationKey.codePromptOsDiffTime:
+        return '时间差';
+      case TranslationKey.codePromptLuaVersion:
+        return 'Lua 版本字符串';
+      case TranslationKey.codePromptTablePack:
+        return '打包参数为表';
+      case TranslationKey.codePromptTableUnpack:
+        return '展开表为多个返回值';
+      case TranslationKey.codePromptScriptParams:
+        return '脚本参数，包含内容，类型，来源等信息';
+      case TranslationKey.codePromptIfSnippet:
+        return 'if 条件判断代码片段';
+      case TranslationKey.codePromptElseSnippet:
+        return 'else 分支代码片段';
+      case TranslationKey.codePromptElseIfSnippet:
+        return 'elseif 分支代码片段';
+      case TranslationKey.codePromptWhileSnippet:
+        return 'while 循环代码片段';
+      case TranslationKey.codePromptRepeatSnippet:
+        return 'repeat 循环代码片段';
+      case TranslationKey.codePromptForSnippet:
+        return 'for 数值循环代码片段';
+      case TranslationKey.codePromptForStepSnippet:
+        return 'for 步长循环代码片段';
+      case TranslationKey.codePromptIPairsSnippet:
+        return 'ipairs 数组遍历代码片段';
+      case TranslationKey.codePromptPairsSnippet:
+        return 'pairs 表遍历代码片段';
+      case TranslationKey.codePromptFunctionSnippet:
+        return '函数定义代码片段';
+      case TranslationKey.codePromptLocalFunctionSnippet:
+        return '本地函数定义代码片段';
+      case TranslationKey.codePromptPlatformAndroid:
+        return 'Android 平台';
+      case TranslationKey.codePromptNotify:
+        return '通知';
+      case TranslationKey.codePromptAndroidNotifyMediaScan:
+        return 'Android 通知媒体扫描';
+      case TranslationKey.codePromptAndroidToast:
+        return 'Android Toast 提示';
+      case TranslationKey.codePromptAndroidSendHistoryChangedBroadcast:
+        return 'Android 发送历史变更广播';
+      case TranslationKey.codePromptPlatform:
+        return '平台';
+      case TranslationKey.codePromptPlatformIsAndroid:
+        return '判断是否为 Android 平台';
+      case TranslationKey.codePromptPlatformIsIOS:
+        return '判断是否为 iOS 平台';
+      case TranslationKey.codePromptPlatformIsWindows:
+        return '判断是否为 Windows 平台';
+      case TranslationKey.codePromptPlatformIsMacOS:
+        return '判断是否为 macOS 平台';
+      case TranslationKey.codePromptPlatformIsLinux:
+        return '判断是否为 Linux 平台';
+      case TranslationKey.codePromptApp:
+        return 'App';
+      case TranslationKey.codePromptAppVersionName:
+        return 'App 版本名称';
+      case TranslationKey.codePromptAppVersionNumber:
+        return 'App 版本号';
+      case TranslationKey.codePromptDeviceSelf:
+        return '当前设备';
+      case TranslationKey.codePromptDeviceSelfName:
+        return '当前设备名称';
+      case TranslationKey.codePromptDeviceSelfId:
+        return '当前设备 ID';
+      case TranslationKey.codePromptCrypto:
+        return '加密校验';
+      case TranslationKey.codePromptCryptoMD5:
+        return '计算 MD5 哈希';
+      case TranslationKey.codePromptCryptoSHA256:
+        return '计算 SHA-256 哈希';
+      case TranslationKey.codePromptCryptoSHA1:
+        return '计算 SHA-1 哈希';
+      case TranslationKey.codePromptBase64:
+        return 'Base64 计算';
+      case TranslationKey.codePromptBase64Encode:
+        return '编码为 Base64 ';
+      case TranslationKey.codePromptBase64Decode:
+        return '解码 Base64';
+      case TranslationKey.codePromptRegex:
+        return '正则表达式';
+      case TranslationKey.codePromptRegexMatch:
+        return '匹配所有完整结果并返回列表';
+      case TranslationKey.codePromptRegexMatchGroups:
+        return '匹配所有捕获组并返回嵌套列表';
+      //endregion
+      case TranslationKey.rulesPageUnsavedChangesConfirm:
+        return '尚有未保存的修改，确认继续操作？';
+      case TranslationKey.ruleItemContentRequired:
+        return '规则内容不可为空';
+      case TranslationKey.ruleItemExtractRuleRequired:
+        return '内容提取规则不可为空';
+      case TranslationKey.ruleItemScriptContentRequired:
+        return '脚本内容不可为空';
+      case TranslationKey.ruleItemUnsupportedOperation:
+        return '不支持的操作';
+      case TranslationKey.ruleTriggerOnCopyText:
+        return '复制后';
+      case TranslationKey.ruleTriggerOnNotificationText:
+        return '新通知';
+      case TranslationKey.ruleTriggerOnSmsText:
+        return '新短信';
+      case TranslationKey.ruleDetailRegexHint:
+        return '请输入正则表达式';
+      case TranslationKey.ruleDetailNameLabel:
+        return '规则名称: ';
+      case TranslationKey.ruleDetailNameHint:
+        return '请输入规则名称';
+      case TranslationKey.ruleDetailPlatformLabel:
+        return '平台';
+      case TranslationKey.ruleDetailTriggerLabel:
+        return '触发时机';
+      case TranslationKey.ruleDetailRuleLabel:
+        return '规则';
+      case TranslationKey.ruleDetailRegexTab:
+        return '正则表达式';
+      case TranslationKey.ruleDetailScriptTab:
+        return '脚本';
+      case TranslationKey.ruleDetailAutoWrapTooltip:
+        return '自动换行';
+      case TranslationKey.ruleDetailFullScreenTooltip:
+        return '进入全屏编辑模式';
+      case TranslationKey.ruleDetailModeDefault:
+        return '默认';
+      case TranslationKey.ruleDetailModeBlacklist:
+        return '黑名单';
+      case TranslationKey.ruleDetailModeWhitelist:
+        return '白名单';
+      case TranslationKey.ruleDetailRegexLabel:
+        return '规则：';
+      case TranslationKey.ruleDetailExtractContent:
+        return '提取内容';
+      case TranslationKey.ruleDetailModeLabel:
+        return '规则模式';
+      case TranslationKey.ruleDetailActionLabel:
+        return '动作';
+      case TranslationKey.ruleDetailAddTagLabel:
+        return '添加标签：';
+      case TranslationKey.ruleDetailAddTagDialogTitle:
+        return '添加标签';
+      case TranslationKey.ruleDetailFinalRule:
+        return '终止后续规则';
+      case TranslationKey.ruleDetailRunTestTooltip:
+        return '运行测试';
+      case TranslationKey.ruleDetailPageTitle:
+        return '规则详情';
+      case TranslationKey.ruleLibDetailSyntaxError:
+        return '包含语法错误，请修正';
+      case TranslationKey.ruleLibDetailDisplayNameRequired:
+        return '显示名称不能为空';
+      case TranslationKey.ruleLibDetailLibNameRequired:
+        return '库名称不能为空';
+      case TranslationKey.ruleLibDetailLibNameDuplicated:
+        return '库名称不能重复';
+      case TranslationKey.ruleLibDetailContentRequired:
+        return '内容不能为空';
+      case TranslationKey.ruleLibDetailDisplayNameLabel:
+        return '显示名称: ';
+      case TranslationKey.ruleLibDetailDisplayNameHint:
+        return '请输入显示名称';
+      case TranslationKey.ruleLibDetailLibNameLabel:
+        return '库名: ';
+      case TranslationKey.ruleLibDetailLibNameImmutableTooltip:
+        return '保存后将不再支持修改库名';
+      case TranslationKey.ruleLibDetailLibNameHint:
+        return '库名';
+      case TranslationKey.ruleLibDetailPageTitle:
+        return '规则库详情';
+      case TranslationKey.ruleListDeleteLibConfirm:
+        return '是否删除？若有其他脚本在使用，脚本将会失效！';
+      case TranslationKey.ruleListExitSelectionModeTooltip:
+        return '退出选择模式';
+      case TranslationKey.ruleCardDragDisabledTooltip:
+        return '保存数据或清空搜索输入后可拖拽排序';
+      case TranslationKey.ruleCardDragTooltip:
+        return '拖拽排序';
+      case TranslationKey.scriptEditTestViewPanelTooltip:
+        return '运行面板';
+      case TranslationKey.scriptEditTestViewRunTooltip:
+        return '运行';
+      case TranslationKey.scriptEditTestViewExitFullScreenTooltip:
+        return '退出全屏编辑模式';
+      case TranslationKey.scriptTestPanelParamsTab:
+        return '参数';
+      case TranslationKey.scriptTestPanelCompileInfoTab:
+        return '编译信息';
+      case TranslationKey.scriptTestPanelOutputTab:
+        return '输出';
+      case TranslationKey.scriptTestPanelRunResultTab:
+        return '运行结果';
+      case TranslationKey.scriptTestPanelCollapseTooltip:
+        return '折叠';
+      case TranslationKey.ruleCompileCodeNotFound:
+        return '未找到代码';
+      case TranslationKey.ruleCompileCodeEmpty:
+        return '代码为空';
+      case TranslationKey.ruleCompileSuccess:
+        return '编译成功。';
+      case TranslationKey.ruleCompileFailedPrefix:
+        return '编译失败：\n@message';
+      case TranslationKey.ruleLibCompileReturnTableRequired:
+        return '库的返回值必须是 table。';
+
       case TranslationKey.success:
         return '成功';
       case TranslationKey.error:

@@ -16,7 +16,6 @@ import 'package:clipshare/app/handlers/permission_handler.dart';
 import 'package:clipshare/app/handlers/sync/app_info_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_source_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_top_sync_handler.dart';
-import 'package:clipshare/app/handlers/sync/old_rules_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/tag_sync_handler.dart';
 import 'package:clipshare/app/listeners/multi_selection_pop_scope_disable_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
@@ -66,8 +65,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   static const _rulesNavItemKey = Key('rules');
   static const _searchPageKey = Key('search');
   static const _rulesPageKey = Key('rules');
-  static const _notShowNavItemKeys = [_searchNavItemKey];
-  static const _notShowPageKeys = [_searchPageKey];
+  static const _notShowNavItemKeys = [_searchNavItemKey, _rulesNavItemKey];
+  static const _notShowPageKeys = [_searchPageKey, _rulesPageKey];
 
   //endregion
 

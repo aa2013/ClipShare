@@ -1,4 +1,5 @@
 import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 
 enum RuleTrigger {
   onCopy,
@@ -19,11 +20,11 @@ enum RuleTrigger {
   String get tr {
     switch (this) {
       case RuleTrigger.onCopy:
-        return "复制后";
+        return TranslationKey.ruleTriggerOnCopyText.tr;
       case RuleTrigger.onNotification:
-        return "新通知";
+        return TranslationKey.ruleTriggerOnNotificationText.tr;
       case RuleTrigger.onSms:
-        return "新短信";
+        return TranslationKey.ruleTriggerOnSmsText.tr;
     }
   }
 }

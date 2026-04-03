@@ -343,7 +343,7 @@ class _WhiteBlackListPageState extends State<WhiteBlackListPage> {
                   Obx(
                     () {
                       //判断当前模式是什么模式
-                      final isAllMode = widget.showMode == WhiteBlackMode.all;
+                      final isAllMode = widget.showMode == WhiteBlackMode.defaultMode;
                       final currentMode = isBlacklistMode.value ? WhiteBlackMode.black : WhiteBlackMode.white;
                       bool value;
                       if (isAllMode) {

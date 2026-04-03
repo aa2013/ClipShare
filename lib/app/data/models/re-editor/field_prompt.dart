@@ -4,7 +4,7 @@ import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_pro
 class FieldPrompt extends CaseInsensitiveKeywordPrompt {
   final String type;
 
-  FieldPrompt({
+  const FieldPrompt({
     required super.word,
     required this.type,
     super.desc,

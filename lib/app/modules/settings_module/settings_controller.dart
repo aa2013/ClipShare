@@ -270,7 +270,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     final page = Obx(
       () => WhiteBlackListPage(
         title: TranslationKey.notificationRules.tr,
-        showMode: WhiteBlackMode.all,
+        showMode: WhiteBlackMode.defaultMode,
         currentMode: currentMode.value,
         showTypesFilter: false,
         blacklist: List.from(appConfig.notificationBlackList),

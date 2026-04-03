@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
@@ -469,11 +470,11 @@ class SettingsPage extends GetView<SettingsController> {
                         ),
                         show: (v) => Platform.isAndroid && !v,
                         onTap: () async {
-                          final isValidWorkingMode = appConfig.workingMode == EnvironmentType.shizuku ||appConfig.workingMode == EnvironmentType.root;
-                          if(!isValidWorkingMode){
+                          final isValidWorkingMode = appConfig.workingMode == EnvironmentType.shizuku || appConfig.workingMode == EnvironmentType.root;
+                          if (!isValidWorkingMode) {
                             Global.showTipsDialog(context: context, text: TranslationKey.clipboardPermissionRequestFailed.tr);
                             return;
-                          }else{
+                          } else {
                             try {
                               await clipboardManager.requestClipboardPermission();
                               controller.hasClipboardPerm.value = await clipboardManager.checkClipboardPermission();
@@ -2338,6 +2339,23 @@ class SettingsPage extends GetView<SettingsController> {
                   groupName: TranslationKey.ruleSettingsGroupName.tr,
                   icon: const Icon(Icons.assignment_outlined),
                   cardList: [
+                    SettingCard(
+                      title: Text(
+                        TranslationKey.rulesManagement.tr,
+                        maxLines: 1,
+                      ),
+                      value: false,
+                      action: (v) => IconButton(
+                        onPressed: () {
+                          Get.toNamed(Routes.RULES);
+                        },
+                        icon: arrowForwardIcon,
+                      ),
+                      onTap: (){
+                        Get.toNamed(Routes.RULES);
+                      },
+                      show: (v) => appConfig.isSmallScreen,
+                    ),
                     SettingCard(
                       title: Text(
                         TranslationKey.ruleSettingsTagRuleTitle.tr,
