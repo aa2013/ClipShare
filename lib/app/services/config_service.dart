@@ -582,6 +582,11 @@ class ConfigService extends GetxService {
 
   Size? get fileSenderWindowSize => _fileSenderWindowSize.value;
 
+  ///设备连接和断开使用系统通知，若为true则使用托盘闪烁
+  final _useTrayFlashingForConnection = false.obs;
+
+  bool get useTrayFlashingForConnection => _useTrayFlashingForConnection.value;
+
   //endregion
 
   //endregion
@@ -817,6 +822,7 @@ class ConfigService extends GetxService {
         return null;
       },
     );
+    _useTrayFlashingForConnection.value = await cfg.getConfigByKey(ConfigKey.useTrayFlashingForConnection, false);
   }
 
   ///初始化路径信息
@@ -1470,6 +1476,12 @@ class ConfigService extends GetxService {
         return;
     }
     await configDao.addOrUpdate(key, "${size.width.toStringAsFixed(2)}x${size.height.toStringAsFixed(2)}");
+  }
+
+  ///设备连接和断开使用系统通知，若为false则使用托盘闪烁
+  Future<void> setUseTrayFlashingForConnection(bool enable) async {
+    await configDao.addOrUpdate(ConfigKey.useTrayFlashingForConnection, enable.toString());
+    _useTrayFlashingForConnection.value = enable;
   }
 
   //endregion

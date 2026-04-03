@@ -705,7 +705,9 @@ enum TranslationKey {
   notConfigured,
   storagePathTips,
   uploading,
-  preferenceSettingsRecordsDialogSize;
+  preferenceSettingsRecordsDialogSize,
+  useTrayFlashingForConnectionTitle,
+  useTrayFlashingForConnectionDesc;
 
   String get tr => name.tr;
 

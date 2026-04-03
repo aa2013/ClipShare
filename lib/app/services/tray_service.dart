@@ -29,13 +29,66 @@ class TrayService extends GetxService with TrayListener {
   ///初始化托盘
   Future<void> _initTrayManager() async {
     trayManager.addListener(this);
-    if(!Platform.isLinux) {
-      trayManager.setToolTip(Constants.appName);
+    await setToolTip(Constants.appName);
+    await _resetIcon();
+    updateTrayMenus();
+  }
+
+  Future<void> setToolTip(String toolTip) async {
+    if (!Platform.isLinux) {
+      trayManager.setToolTip(toolTip);
     }
+  }
+
+  Future<void> _resetIcon() async {
     await trayManager.setIcon(
       Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
     );
-    updateTrayMenus();
+    await setToolTip(Constants.appName);
+  }
+
+  Future<void> flashTray(
+    String iconAssetPath, {
+    Duration? totalDuration,
+    Duration? intervalDuration,
+    String? toolTip,
+  }) async {
+    intervalDuration ??= const Duration(milliseconds: 300);
+    totalDuration ??= const Duration(seconds: 3);
+
+    final endTime = DateTime.now().add(totalDuration);
+    DateTime now;
+    if (toolTip != null) {
+      await setToolTip(toolTip);
+    }
+    do {
+      await trayManager.setIcon("");
+      await Future.delayed(intervalDuration);
+
+      await trayManager.setIcon(iconAssetPath);
+      await Future.delayed(intervalDuration);
+
+      now = DateTime.now();
+    } while (now.isBefore(endTime));
+    await trayManager.setIcon("");
+    await Future.delayed(intervalDuration);
+    await _resetIcon();
+  }
+
+  Future<void> flashTrayWarning([String? toolTip]) async {
+    await flashTray(
+      Platform.isWindows
+          ? Constants.logoWarnIcoPath
+          : Constants.logoWarnPngPath,
+      toolTip: toolTip,
+    );
+  }
+
+  Future<void> flashTrayNormal([String? toolTip]) async {
+    await flashTray(
+      Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
+      toolTip: toolTip,
+    );
   }
 
   Future<void> updateTrayMenus([bool registerKey = true]) async {
@@ -44,21 +97,27 @@ class TrayService extends GetxService with TrayListener {
     if (registerKey) {
       try {
         if (showMainWindowKeys.isNotEmpty) {
-          await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
+          await AppHotKeyHandler.registerShowMainWindow(
+            AppHotKeyHandler.toSystemHotKey(showMainWindowKeys),
+          );
         }
       } catch (err, stack) {
         Log.error(tag, err, stack);
       }
       try {
         if (exitAppKeys.isNotEmpty) {
-          await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
+          await AppHotKeyHandler.registerExitApp(
+            AppHotKeyHandler.toSystemHotKey(exitAppKeys),
+          );
         }
       } catch (err, stack) {
         Log.error(tag, err, stack);
       }
     }
-    var showWindowLabel = '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';
-    var exitAppLabel = '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}';
+    var showWindowLabel =
+        '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';
+    var exitAppLabel =
+        '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}';
     List<MenuItem> items = [
       MenuItem(
         key: 'show_window',

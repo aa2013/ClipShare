@@ -598,6 +598,21 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                         show: (v) => PlatformExt.isDesktop,
                       ),
+                      SettingCard(
+                        title: Text(TranslationKey.useTrayFlashingForConnectionTitle.tr),
+                        description: Text(TranslationKey.useTrayFlashingForConnectionDesc.tr),
+                        value: appConfig.useTrayFlashingForConnection,
+                        action: (v) {
+                          return Switch(
+                            value: v,
+                            onChanged: (checked) {
+                              HapticFeedback.mediumImpact();
+                              appConfig.setUseTrayFlashingForConnection(checked);
+                            },
+                          );
+                        },
+                        show: (v) => PlatformExt.isDesktop && (appConfig.notifyOnDevConn || appConfig.notifyOnDevDisconn),
+                      ),
                     ],
                   ),
                 ),

@@ -11,6 +11,8 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/tray_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -22,6 +24,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
+import 'package:tray_manager/tray_manager.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -144,13 +147,10 @@ class DebugPage extends GetView<DebugController> {
         ),
         TextButton(
           onPressed: () async {
-            print("555");
-            const oldPath = "/storage/emulated/0/DCIM/Camera/IMG_20251004_231910.jpg";
-            final newPath = appConfig.cachePath;
-            final result = await clipboardManager.executePrivilegedCommand("cp $oldPath $newPath/aa.jpg && echo 0");
-            print("result: $result，${result=="0"}");
+            final trayService = Get.find<TrayService>();
+            await trayService.flashTrayWarning("6666");
           },
-          child: Text("Execute Privileged Command"),
+          child: Text("Test"),
         ),
         Expanded(
           child: FileBrowser(
