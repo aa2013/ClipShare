@@ -100,7 +100,7 @@ class _TinySegmentedControlState extends State<TinySegmentedControl> {
   static final _defaultContentBorderRadius = BorderRadius.circular(6);
   static const _defaultDuration = Duration(milliseconds: 300);
 
-  static const _defaultLightBackgroundColor = Color(0xFFE0E0E0); //Colors.grey[200]
+  static const _defaultLightBackgroundColor = Color.fromARGB(255, 236, 237, 243); //Colors.grey[200]
   static const _defaultLightSelectedBackgroundColor = Colors.white;
   static const _defaultLightSelectedColor = Colors.black;
   static const _defaultLightUnselectedColor = Colors.black;

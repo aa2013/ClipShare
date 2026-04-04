@@ -60,6 +60,8 @@ class RulesPage extends GetView<RulesController> {
       () => RuleListView(
         rules: controller.rules.value,
         luaLibs: controller.ruleLibs.value,
+        activeLuaLibItem: controller.selectedLuaLibItem.value,
+        activeRuleItem: controller.selectedRuleItem.value,
         disableRulesDrag: controller.activeItemChanged.value,
         onRuleDragged: () {
           controller.saveRules();
@@ -146,7 +148,7 @@ class RulesPage extends GetView<RulesController> {
           if (appConfig.isSmallScreen) {
             Get.to(_buildLibDetail());
           }
-          return Future.value(false);
+          return Future.value(true);
         },
         onLuaLibItemAdd: (RuleLib value) async {
           if (await _abortAskDialog(context)) {

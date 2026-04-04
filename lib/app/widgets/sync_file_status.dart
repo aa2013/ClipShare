@@ -78,7 +78,6 @@ class SyncFileStatus extends StatelessWidget {
       child: Card(
         elevation: 0,
         margin: EdgeInsets.zero,
-        color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
           mouseCursor: SystemMouseCursors.basic,

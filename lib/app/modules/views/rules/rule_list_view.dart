@@ -39,6 +39,8 @@ class RuleListView extends StatefulWidget {
   final ValueChanged<RuleLib> onLuaLibItemAdd;
   final ValueChanged<RuleLib> onLuaLibItemRemove;
   final bool disableRulesDrag;
+  final RuleItem? activeRuleItem;
+  final RuleLib? activeLuaLibItem;
 
   const RuleListView({
     super.key,
@@ -53,6 +55,8 @@ class RuleListView extends StatefulWidget {
     required this.onLuaLibItemAdd,
     required this.onLuaLibItemRemove,
     this.disableRulesDrag = false,
+    this.activeRuleItem,
+    this.activeLuaLibItem,
   });
 
   @override
@@ -95,12 +99,19 @@ class _RuleListViewState extends State<RuleListView>
         currentTab = categories[tabController.index];
       });
     });
+    updateActiveItem();
   }
 
   @override
   void didUpdateWidget(covariant RuleListView oldWidget) {
     updateSearchResult();
+    updateActiveItem();
     super.didUpdateWidget(oldWidget);
+  }
+
+  void updateActiveItem(){
+    activeRuleItem = widget.activeRuleItem;
+    activeLuaLibItem = widget.activeLuaLibItem;
   }
 
   void updateSearchResult() {
@@ -172,7 +183,7 @@ class _RuleListViewState extends State<RuleListView>
       key: Key("${rule.id}"),
       orderedIndex: orderedIndex,
       rule: rule,
-      isActive: rule.id == activeRuleItem?.id,
+      isActive: rule.id == activeRuleItem?.id && currentTab == TranslationKey.rules,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
       disabledDrag:
@@ -198,6 +209,7 @@ class _RuleListViewState extends State<RuleListView>
         if (success) {
           setState(() {
             activeRuleItem = rule;
+            activeLuaLibItem = null;
           });
         }
       },
@@ -293,12 +305,13 @@ class _RuleListViewState extends State<RuleListView>
           final lib = searchLuaLibs[index];
           return LuaLibCard(
             luaLib: lib,
-            isActive: lib.libName == activeLuaLibItem?.libName,
+            isActive: lib.libName == activeLuaLibItem?.libName && currentTab == TranslationKey.libs,
             onTap: () async {
               final success = await widget.onLuaLibItemTap(lib);
               if (success) {
                 setState(() {
                   activeLuaLibItem = lib;
+                  activeRuleItem = null;
                 });
               }
             },

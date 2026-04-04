@@ -52,8 +52,7 @@ class RuleDetail extends StatefulWidget {
   State<StatefulWidget> createState() => _RuleDetailState();
 }
 
-class _RuleDetailState extends State<RuleDetail>
-    with SingleTickerProviderStateMixin {
+class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateMixin {
   final sourceService = Get.find<ClipboardSourceService>();
   final devService = Get.find<DeviceService>();
   final appConfig = Get.find<ConfigService>();
@@ -71,10 +70,9 @@ class _RuleDetailState extends State<RuleDetail>
   var tabIndex = 0;
   final topContentKey = GlobalKey();
 
-  RuleContentType get currentTab =>
-      tabIndex == 0 ? RuleContentType.regex : RuleContentType.script;
+  RuleContentType get currentTab => tabIndex == 0 ? RuleContentType.regex : RuleContentType.script;
 
-  Set<SupportPlatForm> selectedPlatforms = {SupportPlatForm.android};
+  Set<SupportPlatForm> selectedPlatforms = {};
   Set<String> selectedSourceIds = {};
   RuleTrigger selectedTrigger = RuleTrigger.onCopy;
   var ruleContentType = RuleContentType.regex;
@@ -102,8 +100,8 @@ class _RuleDetailState extends State<RuleDetail>
       id: origin.id,
       version: origin.version,
       name: ruleNameTextController.text,
-      platforms: selectedPlatforms,
-      sources: selectedSourceIds,
+      platforms: {...selectedPlatforms},
+      sources: {...selectedSourceIds},
       trigger: selectedTrigger,
       type: ruleContentType,
       regex: RuleRegexContent(
@@ -111,7 +109,7 @@ class _RuleDetailState extends State<RuleDetail>
         allowExtractData: isAllowExtractData,
         extractRegex: extractTextController.text,
         allowAddTag: isAllowPostAddTags,
-        tags: postTags,
+        tags: {...postTags},
         preventSync: isPreventSync,
         isFinal: isFinalRule,
         mode: whiteBlackModes,
@@ -260,6 +258,11 @@ class _RuleDetailState extends State<RuleDetail>
                 Container(
                   margin: 5.insetLT,
                   child: RoundedChip(
+                    showCheckmark: false,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
+                    avatar: Icon(pf.icon),
                     label: Text(pf.toString()),
                     selected: selectedPlatforms.contains(pf),
                     onPressed: () {
@@ -325,9 +328,7 @@ class _RuleDetailState extends State<RuleDetail>
                     loadDeviceName: devService.getName,
                     selectedIds: selectedSourceIds,
                     loadAppInfos: () {
-                      final list = sourceService.appInfos
-                          .map((item) => LocalAppInfo.fromAppInfo(item, false))
-                          .toList();
+                      final list = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
                       return Future<List<LocalAppInfo>>.value(list);
                     },
                     onSelectedDone: (selected) {
@@ -384,9 +385,7 @@ class _RuleDetailState extends State<RuleDetail>
   }
 
   Widget buildRuleTabBar(BuildContext context) {
-    final bool isUseScript =
-        currentTab == RuleContentType.script &&
-        ruleContentType == RuleContentType.script;
+    final bool isUseScript = currentTab == RuleContentType.script && ruleContentType == RuleContentType.script;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -438,9 +437,7 @@ class _RuleDetailState extends State<RuleDetail>
                                 visualDensity: VisualDensity.compact,
                               ),
                               Text(
-                                tab == RuleContentType.regex
-                                    ? TranslationKey.ruleDetailRegexTab.tr
-                                    : TranslationKey.ruleDetailScriptTab.tr,
+                                tab == RuleContentType.regex ? TranslationKey.ruleDetailRegexTab.tr : TranslationKey.ruleDetailScriptTab.tr,
                               ),
                             ],
                           ),
@@ -450,25 +447,24 @@ class _RuleDetailState extends State<RuleDetail>
                 ],
               ),
             ),
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  autoWrapText = !autoWrapText;
-                });
-              },
-              tooltip: TranslationKey.ruleDetailAutoWrapTooltip.tr,
-              icon: Icon(
-                Icons.wrap_text,
-                size: 20,
-                fontWeight: autoWrapText ? FontWeight.bold : null,
-                color: autoWrapText ? Colors.blueGrey : Colors.grey,
+            if (isUseScript)
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    autoWrapText = !autoWrapText;
+                  });
+                },
+                tooltip: TranslationKey.ruleDetailAutoWrapTooltip.tr,
+                icon: Icon(
+                  Icons.wrap_text,
+                  size: 20,
+                  fontWeight: autoWrapText ? FontWeight.bold : null,
+                  color: autoWrapText ? Colors.blueGrey : Colors.grey,
+                ),
+                visualDensity: VisualDensity.compact,
               ),
-              visualDensity: VisualDensity.compact,
-            ),
-            AnimatedScale(
-              duration: 200.ms,
-              scale: isUseScript ? 1 : 0,
-              child: IconButton(
+            if (isUseScript)
+              IconButton(
                 onPressed: () {
                   setState(() {
                     isScriptFullScreen = true;
@@ -482,7 +478,6 @@ class _RuleDetailState extends State<RuleDetail>
                 ),
                 visualDensity: VisualDensity.compact,
               ),
-            ),
           ],
         ),
 
@@ -496,19 +491,15 @@ class _RuleDetailState extends State<RuleDetail>
       builder: (context, constraints) {
         return IndexedStack(
           index: tabIndex,
-          children: [buildRuleRegexTab, buildRuleScriptViewTab]
-              .asMap()
-              .entries
-              .map((entry) {
-                final index = entry.key;
-                final builder = entry.value;
-                return Visibility(
-                  maintainState: true,
-                  visible: tabIndex == index,
-                  child: builder(context),
-                );
-              })
-              .toList(),
+          children: [buildRuleRegexTab, buildRuleScriptViewTab].asMap().entries.map((entry) {
+            final index = entry.key;
+            final builder = entry.value;
+            return Visibility(
+              maintainState: true,
+              visible: tabIndex == index,
+              child: builder(context),
+            );
+          }).toList(),
         );
       },
     );
@@ -809,9 +800,7 @@ class _RuleDetailState extends State<RuleDetail>
       body = EmptyContent();
     } else {
       final newRule = toRule();
-      final saveStatus =
-          newRule != null &&
-          (newRule.isNewData || originRule.toString() != newRule.toString());
+      final saveStatus = newRule != null && (newRule.isNewData || originRule.toString() != newRule.toString());
       if (saveStatus != shouldSave) {
         shouldSave = saveStatus;
         WidgetsBinding.instance.addPostFrameCallback((_) {

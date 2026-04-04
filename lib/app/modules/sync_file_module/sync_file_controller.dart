@@ -4,6 +4,7 @@ import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/models/pending_file.dart';
+import 'package:clipshare/app/data/models/syncing_file.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
@@ -15,6 +16,8 @@ import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -47,7 +50,7 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
   final tag = "SyncFileController";
   late TabController tabController;
   final emptyContent = EmptyContent(
-    description: TranslationKey.dragFileToSend.tr,
+    description: PlatformExt.isDesktop ? TranslationKey.dragFileToSend.tr : null,
   );
 
   bool selectMode = false;
@@ -81,48 +84,37 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
 
   List<SyncFileStatus> get recHistories => _recHistories;
 
-  List<Column> get sendList {
+  List<Widget> get sendList {
     final syncingList = syncingFileService.syncingFiles;
-    return syncingList
-        .where((file) => file.isSender && file.state != SyncingFileState.done)
-        .map(
-          (e) => Column(
-            children: [
-              SyncFileStatus(
-                syncingFile: e,
-                factor: e.savedBytes / e.totalSize,
-              ),
-              const Divider(
-                height: 0,
-                indent: 10,
-                endIndent: 10,
-              ),
-            ],
+    return syncingList.where((file) => file.isSender && file.state != SyncingFileState.done).map(
+      (e) {
+        return Card(
+          elevation: 0,
+          child: Container(
+            margin: 5.insetT,
+            child: SyncFileStatus(
+              syncingFile: e,
+              factor: e.savedBytes / e.totalSize,
+            ),
           ),
-        )
-        .toList();
+        );
+      },
+    ).toList();
   }
 
-  List<Column> get recList {
+  List<Widget> get recList {
     final syncingList = syncingFileService.syncingFiles;
-    return syncingList
-        .where((file) => !file.isSender && file.state != SyncingFileState.done)
-        .map(
-          (e) => Column(
-            children: [
-              SyncFileStatus(
-                syncingFile: e,
-                factor: e.savedBytes / e.totalSize,
-              ),
-              const Divider(
-                height: 0,
-                indent: 10,
-                endIndent: 10,
-              ),
-            ],
+    return syncingList.where((file) => !file.isSender && file.state != SyncingFileState.done).map(
+      (e) {
+        return Container(
+          margin: 5.insetT,
+          child: SyncFileStatus(
+            syncingFile: e,
+            factor: e.savedBytes / e.totalSize,
           ),
-        )
-        .toList();
+        );
+      },
+    ).toList();
   }
 
   ///endregion

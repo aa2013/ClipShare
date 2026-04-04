@@ -102,12 +102,13 @@ class RuleItem implements Comparable<RuleItem> {
   }
 
   Map<String, dynamic> toJson() {
+    final platformNames = platforms.map((e) => e.name).toList()..sort();
     return {
       'id': id,
       'version': version,
       'name': name,
-      'platforms': platforms.map((e) => e.name).toList(),
-      'sources': sources.toList(),
+      'platforms': platformNames,
+      'sources': sources.toList()..sort(),
       'trigger': trigger.name,
       'type': type.name,
       'regex': regex.toJson(),

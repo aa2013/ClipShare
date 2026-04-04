@@ -5,6 +5,8 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/sync_file_status.dart';
@@ -21,16 +23,17 @@ class SyncFilePage extends GetView<SyncFileController> {
   final dbService = Get.find<DbService>();
   final syncingFileService = Get.find<SyncingFileProgressService>();
   final pendingFileService = Get.find<PendingFileService>();
+  static final _borderRadius = BorderRadius.circular(12.0);
 
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: controller.tabs.length,
       child: Scaffold(
-        // backgroundColor: appConfig.bgColor,
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight),
           child: TabBar(
+            dividerHeight: 0,
             controller: controller.tabController,
             tabs: [
               for (var tab in controller.tabs)
@@ -40,9 +43,7 @@ class SyncFilePage extends GetView<SyncFileController> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(tab.name),
-                        const SizedBox(
-                          width: 5,
-                        ),
+                        const SizedBox(width: 5),
                         tab.icon,
                       ],
                     ),
@@ -67,37 +68,39 @@ class SyncFilePage extends GetView<SyncFileController> {
                           var data = controller.recHistories[i];
                           final id = data.historyId!;
                           var selected = controller.selected.containsKey(id);
-                          return Column(
-                            children: [
-                              InkWell(
+                          return Card(
+                            elevation: 0,
+                            child: InkWell(
+                              borderRadius: _borderRadius,
+                              child: AnimatedContainer(
+                                duration: 200.ms,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: selected ? Colors.blueGrey : Colors.white,
+                                    width: 0,
+                                  ),
+                                  borderRadius: _borderRadius,
+                                ),
                                 child: controller.recHistories[i].copyWith(
                                   selectMode: controller.selectMode,
                                   selected: selected,
                                 ),
-                                onLongPress: () {
+                              ),
+                              onLongPress: () {
+                                controller.selected[id] = data;
+                                controller.selectMode = true;
+                                appConfig.enableMultiSelectionMode(
+                                  controller: controller,
+                                );
+                              },
+                              onTap: () {
+                                if (controller.selected.containsKey(id)) {
+                                  controller.selected.remove(id);
+                                } else {
                                   controller.selected[id] = data;
-                                  controller.selectMode = true;
-                                  appConfig.enableMultiSelectionMode(
-                                    controller: controller,
-                                  );
-                                },
-                                onTap: () {
-                                  if (controller.selected.containsKey(id)) {
-                                    controller.selected.remove(id);
-                                  } else {
-                                    controller.selected[id] = data;
-                                  }
-                                },
-                              ),
-                              Visibility(
-                                visible: i != controller.recHistories.length - 1,
-                                child: const Divider(
-                                  height: 0,
-                                  indent: 10,
-                                  endIndent: 10,
-                                ),
-                              ),
-                            ],
+                                }
+                              },
+                            ),
                           );
                         },
                       ),
@@ -112,7 +115,7 @@ class SyncFilePage extends GetView<SyncFileController> {
                               child: Container(
                                 height: 48,
                                 decoration: BoxDecoration(
-                                  color: Colors.lightBlue.withOpacity(0.2),
+                                  color: const Color(0xffc3e8ff),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 margin: const EdgeInsets.only(right: 10),
@@ -125,7 +128,7 @@ class SyncFilePage extends GetView<SyncFileController> {
                                       "${controller.selected.length} / ${controller.recHistories.length}",
                                       style: TextStyle(
                                         fontSize: 20,
-                                        color: appConfig.currentIsDarkMode ? Colors.white : Colors.black45,
+                                        color: appConfig.currentIsDarkMode ? Colors.white : Colors.black87,
                                       ),
                                     ),
                                   ),

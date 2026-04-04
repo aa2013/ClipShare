@@ -46,7 +46,7 @@ class RuleRegexContent {
       'allowExtractData': allowExtractData,
       'extractRegex': extractRegex,
       'allowAddTag': allowAddTag,
-      'tags': tags.toList(),
+      'tags': tags.toList()..sort(),
       'preventSync': preventSync,
       'isFinal': isFinal,
     };

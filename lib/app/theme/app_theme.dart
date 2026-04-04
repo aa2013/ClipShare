@@ -1,13 +1,14 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
-const lightBackgroundColor = Color.fromARGB(255, 238, 238, 238);
+const lightBackgroundColor = Color.fromARGB(255, 246, 249, 255);
 const darkBackgroundColor = Colors.black;
 final lightThemeData = ThemeData.light().copyWith(
   colorScheme: ColorScheme.fromSeed(
