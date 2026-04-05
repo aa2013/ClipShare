@@ -180,11 +180,12 @@ class _RuleListViewState extends State<RuleListView>
   }
 
   Widget buildRuleCard(RuleItem rule, [int? orderedIndex]) {
+    final isSmallScreen = appConfig.isSmallScreen;
     return RuleCard(
       key: Key("${rule.id}"),
       orderedIndex: orderedIndex,
       rule: rule,
-      isActive: rule.id == activeRuleItem?.id && currentTab == TranslationKey.rules,
+      isActive: !isSmallScreen && rule.id == activeRuleItem?.id && currentTab == TranslationKey.rules,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
       disabledDrag:
@@ -304,9 +305,10 @@ class _RuleListViewState extends State<RuleListView>
       child: ListView.builder(
         itemBuilder: (BuildContext context, int index) {
           final lib = searchLuaLibs[index];
+          final isSmallScreen = appConfig.isSmallScreen;
           return LuaLibCard(
             luaLib: lib,
-            isActive: lib.libName == activeLuaLibItem?.libName && currentTab == TranslationKey.libs,
+            isActive: !isSmallScreen && lib.libName == activeLuaLibItem?.libName && currentTab == TranslationKey.libs,
             onTap: () async {
               final success = await widget.onLuaLibItemTap(lib);
               if (success) {
