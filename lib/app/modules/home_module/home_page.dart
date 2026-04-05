@@ -224,7 +224,7 @@ class HomePage extends GetView<HomeController> {
             Obx(
               () => Visibility(
                 visible: controller.showPendingItemsDetail.value,
-                child: Positioned.fill(
+                child: ClipRRect(
                   child: BlurBackground(
                     child: DragAndSendFilePage(
                       onItemRemove: (item) {
