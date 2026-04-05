@@ -759,6 +759,9 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         }
       } else {
         //文件备份完毕，若为存储服务，上传，显示上传进度弹窗
+        if(backupSource == BackupSource.local || storageClient == null){
+          return;
+        }
         final loadingController = LoadingProgressController(total: 100);
         final dialog = Global.showLoadingDialog(
           context: context,
