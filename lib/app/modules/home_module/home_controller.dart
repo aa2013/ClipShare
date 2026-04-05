@@ -10,6 +10,7 @@ import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
+import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -124,11 +125,12 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   //大屏下侧边导航菜单
   List<GetView> get _leftBarPages => _pages.value;
 
-  List<NavigationRailDestination> get leftBarItems => _navBarItems
+  List<MyNavigationItem> get leftBarItems => _navBarItems
       .map(
-        (item) => NavigationRailDestination(
+        (item) => MyNavigationItem(
           icon: item.icon,
           label: Text(item.label ?? ""),
+          tooltip: item.label!,
         ),
       )
       .toList();
@@ -340,38 +342,68 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   ///初始化导航栏
   void initNavBarItems() {
+    const color = Color(0xB3000000);
+    const size = 20.0;
     final items = [
       BottomNavigationBarItem(
-        icon: const Icon(Icons.history),
+        icon: const Icon(
+          Icons.history,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.historyRecord.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.devices_rounded),
+        icon: const Icon(
+          Icons.devices_rounded,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.myDevice.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.sync_alt_outlined),
+        icon: const Icon(
+          Icons.sync_alt_outlined,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.fileTransfer.tr,
       ),
       BottomNavigationBarItem(
         key: _searchNavItemKey,
-        icon: const Icon(Icons.search),
+        icon: const Icon(
+          Icons.search,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.bottomNavigationSearchHistoryBarItemLabel.tr,
       ),
       BottomNavigationBarItem(
         key: _rulesNavItemKey,
-        icon: const Icon(Icons.code_outlined),
+        icon: const Icon(
+          Icons.code_outlined,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.rulesManagement.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.settings),
+        icon: const Icon(
+          Icons.settings,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.appSettings.tr,
       ),
     ];
     assert(() {
       items.add(
         const BottomNavigationBarItem(
-          icon: Icon(Icons.bug_report_outlined),
+          icon: Icon(
+            Icons.bug_report_outlined,
+            color: color,
+            size: size,
+          ),
           label: "Debug",
         ),
       );

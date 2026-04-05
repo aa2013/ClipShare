@@ -16,6 +16,7 @@ import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
+import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/drag_file_mask.dart';
@@ -128,27 +129,13 @@ class HomePage extends GetView<HomeController> {
                     children: [
                       controller.isBigScreen
                           ? Obx(
-                              () => NavigationRail(
-                                leading: Container(
-                                  margin: Platform.isMacOS ? const EdgeInsets.only(top: 20) : null,
-                                  child: controller.leftMenuExtend.value
-                                      ? Row(
-                                          children: [
-                                            controller.logoImg,
-                                            const SizedBox(
-                                              width: 10,
-                                            ),
-                                            const Text(Constants.appName),
-                                          ],
-                                        )
-                                      : controller.logoImg,
-                                ),
+                              () => MyNavigationRail(
                                 extended: controller.leftMenuExtend.value,
-                                onDestinationSelected: (i) {
+                                onSelected: (i) {
                                   controller.index = i;
                                 },
                                 minExtendedWidth: 200,
-                                destinations: controller.leftBarItems,
+                                items: controller.leftBarItems,
                                 selectedIndex: controller.index,
                                 trailing: Expanded(
                                   child: Align(
