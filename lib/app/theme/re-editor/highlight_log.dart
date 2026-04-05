@@ -31,7 +31,7 @@ final langLogHighlight = Mode(
     // =========================
     Mode(
       className: 'log_time',
-      begin: r"(?<=\|\s)\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}",
+      begin: r"(?<=\|\s)\d{2}:\d{2}:\d{2}",
     ),
 
     // =========================
