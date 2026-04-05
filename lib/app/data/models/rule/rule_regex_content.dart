@@ -55,16 +55,17 @@ class RuleRegexContent {
   RuleApplyResult apply(RuleExecParams params) {
     final content = params.content;
     final matched = content.matchRegExp(mainRegex, multiLines: true, dotAll: true);
+    final isWhiteMode = mode == WhiteBlackMode.white;
     if (mode != WhiteBlackMode.defaultMode) {
       //白名单模式，未命中则丢弃
-      if (mode == WhiteBlackMode.white) {
+      if (isWhiteMode) {
         if (!matched) {
-          return RuleApplyResult.discard;
+          return params.toApplyResult(drop: true, isFinal: isFinal);
         }
       } else {
         //黑名单模式，命中则丢弃
         if (matched) {
-          return RuleApplyResult.discard;
+          return params.toApplyResult(drop: true, isFinal: isFinal);
         }
       }
     }
@@ -73,11 +74,13 @@ class RuleRegexContent {
     if (matched && extractRegex.isNotNullAndEmpty && allowExtractData) {
       extracted = content.firstRegMatch(extractRegex, multiLines: true, dotAll: true);
     }
+
     return RuleApplyResult(
+      title: params.title,
       content: params.content,
       tags: matched && allowAddTag ? tags : {},
       isSyncDisabled: matched ? preventSync : false,
-      isFinalRule: matched ? isFinal : false,
+      isFinalRule: isFinal,
       extractedContent: extracted,
     );
   }

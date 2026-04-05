@@ -96,6 +96,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       return null;
     }
     var origin = originRule!;
+    var isFinal = isFinalRule;
+    if (currentTab == RuleContentType.regex) {
+      if (whiteBlackMode == WhiteBlackMode.black) {
+        isFinal = true;
+      } else if (whiteBlackMode == WhiteBlackMode.white) {
+        isFinal = false;
+      }
+    }
     return RuleItem(
       id: origin.id,
       version: origin.version,
@@ -111,7 +119,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         allowAddTag: isAllowPostAddTags,
         tags: {...postTags},
         preventSync: isPreventSync,
-        isFinal: isFinalRule,
+        isFinal: isFinal,
         mode: whiteBlackMode,
       ),
       script: RuleScriptContent(
@@ -146,6 +154,13 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     } else {
       codeController.text = rule.script.content;
     }
+    selectedAppInfos = selectedSourceIds.map((appId) {
+      final appInfo = sourceService.getAppInfoByAppId(appId);
+      if (appInfo != null) {
+        return appInfo;
+      }
+      return AppInfo(id: 0, appId: appId, devId: "", name: appId, iconB64: "");
+    }).toList();
   }
 
   void updateTabIndex(RuleContentType type) {
@@ -512,8 +527,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
       WhiteBlackMode.black,
       WhiteBlackMode.white,
     ];
-    final currentMode = whiteBlackMode ?? WhiteBlackMode.defaultMode;
+    final currentMode = whiteBlackMode;
     final isBlacklistMode = currentMode == WhiteBlackMode.black;
+    final isWhitelistMode = currentMode == WhiteBlackMode.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -591,7 +607,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         ),
 
         TinySegmentedControl.fromStrings(
-          options: whiteBlackModeValues.map((mode) => mode!.tr).toList(),
+          options: whiteBlackModeValues.map((mode) => mode.tr).toList(),
           selectedIndex: whiteBlackModeValues.indexOf(currentMode),
           onSelected: (i) {
             setState(() {
@@ -693,12 +709,14 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         Row(
           children: [
             Checkbox(
-              value: isFinalRule,
-              onChanged: (checked) {
-                setState(() {
-                  isFinalRule = checked ?? false;
-                });
-              },
+              value: (isFinalRule || isBlacklistMode) && !isWhitelistMode,
+              onChanged: currentMode != WhiteBlackMode.defaultMode
+                  ? null
+                  : (checked) {
+                      setState(() {
+                        isFinalRule = checked ?? false;
+                      });
+                    },
             ),
             Text(TranslationKey.ruleDetailFinalRule.tr),
           ],
@@ -894,7 +912,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         body: PopScope(
           canPop: !shouldSave,
           onPopInvokedWithResult: (bool didPop, dynamic result) {
+            final ruleController = Get.find<RulesController>();
             if (didPop) {
+              ruleController.selectedRuleItem.value = null;
               return;
             }
             Global.showTipsDialog(
@@ -903,12 +923,13 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
               showCancel: true,
               onOk: () {
                 widget.onSaveStatusChanged?.call(false);
+                ruleController.selectedRuleItem.value = null;
                 //退出页面
                 Navigator.of(context).pop();
               },
             );
           },
-          child: body,
+          child: SafeArea(child: body),
         ),
       );
     } else {

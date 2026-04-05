@@ -158,7 +158,6 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.filterBySource:
         return "筛选来源";
       case TranslationKey.envStatusLoadingText:
-        // "Loading Environment Status..."
         return "正在加载环境状态";
       case TranslationKey.shizukuModeStatusTitle:
         return "Shizuku 模式";

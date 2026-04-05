@@ -22,14 +22,6 @@ class RuleApplyResult {
   ///是否丢弃
   final bool isDropped;
 
-  static const RuleApplyResult discard = RuleApplyResult(
-    content: "",
-    tags: {},
-    isSyncDisabled: false,
-    isFinalRule: false,
-    isDropped: true,
-  );
-
   const RuleApplyResult({
     required this.content,
     required this.tags,

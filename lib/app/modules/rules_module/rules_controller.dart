@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
@@ -252,9 +253,9 @@ class RulesController extends GetxController {
     final matches = regExp.allMatches(content);
     bindings.lua_createtable(L, 0, 0);
     int index = 1;
-    for(var match in matches){
+    for (var match in matches) {
       final groupStr = match.group(0);
-      if(groupStr == null){
+      if (groupStr == null) {
         continue;
       }
       final ptr = groupStr.toNativeUtf8();
@@ -341,25 +342,14 @@ class RulesController extends GetxController {
   //endregion
 
   void _initLuaFunc() {
-    final luaLibPath = p
-        .join(appConfig.luaLibDirPath, "?.lua")
-        .replaceAll("\\", "/");
+    final luaLibPath = p.join(appConfig.luaLibDirPath, "?.lua").replaceAll("\\", "/");
     var result = _lua.run('''
       package.path = package.path..';'..'$luaLibPath'
       json = require('dkjson')
       print(json)
       ''');
     Log.debug(tag, "init dkJson: $result");
-    final global = Constants.luaGlobalFun
-        .replaceAll("{{devId}}", appConfig.devInfo.guid)
-        .replaceAll("{{devName}}", appConfig.devInfo.name)
-        .replaceAll("{{versionNumber}}", appConfig.version.code)
-        .replaceAll("{{versionName}}", appConfig.version.name)
-        .replaceAll("{{platformIsAndroid}}", "${Platform.isAndroid}")
-        .replaceAll("{{platformIsLinux}}", "${Platform.isLinux}")
-        .replaceAll("{{platformIsWindows}}", "${Platform.isWindows}")
-        .replaceAll("{{platformIsMacOS}}", "${Platform.isMacOS}")
-        .replaceAll("{{platformIsIOS}}", "${Platform.isIOS}");
+    final global = Constants.luaGlobalFun.replaceAll("{{devId}}", appConfig.devInfo.guid).replaceAll("{{devName}}", appConfig.devInfo.name).replaceAll("{{versionNumber}}", appConfig.version.code).replaceAll("{{versionName}}", appConfig.version.name).replaceAll("{{platformIsAndroid}}", "${Platform.isAndroid}").replaceAll("{{platformIsLinux}}", "${Platform.isLinux}").replaceAll("{{platformIsWindows}}", "${Platform.isWindows}").replaceAll("{{platformIsMacOS}}", "${Platform.isMacOS}").replaceAll("{{platformIsIOS}}", "${Platform.isIOS}");
 
     result = _lua.run(global);
     Log.debug(tag, "init global lua fun: $result");
@@ -408,11 +398,7 @@ class RulesController extends GetxController {
     bool isTest = false,
   }) {
     final funcHash = hash ?? code.toMd5();
-    final sandboxWrapper = Constants.luaSandboxWrapper
-        .replaceAll("{{isTest}}", isTest.toString())
-        .replaceAll("{{funcName}}", funcName)
-        .replaceAll("{{funcHash}}", funcHash)
-        .replaceAll("{{code}}", code);
+    final sandboxWrapper = Constants.luaSandboxWrapper.replaceAll("{{isTest}}", isTest.toString()).replaceAll("{{funcName}}", funcName).replaceAll("{{funcHash}}", funcHash).replaceAll("{{code}}", code);
     final msg = _lua.run(sandboxWrapper);
     final result = msg == 'OK';
     return (result, funcHash, result ? null : msg);
@@ -510,10 +496,7 @@ class RulesController extends GetxController {
   }
 
   String loadLuaLib(RuleLib lib, {bool reloadAllUserFn = false}) {
-    final sandboxWrapper = Constants.luaLibSandboxWrapper
-        .replaceAll("{{funcName}}", "loaLuaLib")
-        .replaceAll("{{libName}}", lib.libName)
-        .replaceAll("{{code}}", lib.source);
+    final sandboxWrapper = Constants.luaLibSandboxWrapper.replaceAll("{{funcName}}", "loaLuaLib").replaceAll("{{libName}}", lib.libName).replaceAll("{{code}}", lib.source);
     final msg = _lua.run(sandboxWrapper);
     if (msg == 'OK' && reloadAllUserFn) {
       _loadAllLuaUserFn();
@@ -559,19 +542,32 @@ class RulesController extends GetxController {
       if (!rule.platforms.contains(currentPlatform)) {
         continue;
       }
+      RuleExecResult? execResult;
+      //正则白名单模式
+      final isRegexWhiteMode = rule.isUseRegex && rule.regex.mode == WhiteBlackMode.white;
+      //来源配置为空或不再设定的来源内
       if (rule.sources.isNotEmpty && !rule.sources.contains(source?.id)) {
-        continue;
+        if (isRegexWhiteMode) {
+          //白名单丢弃，但需等待所有规则过完后统一判断，若有一个白名单通过则算通过
+          execResult = RuleExecResult.success(params.toApplyResult(drop: true, isFinal: rule.regex.isFinal));
+        } else {
+          //其他不在来源范围内的规则忽略
+          continue;
+        }
       }
-      final applyResult = _apply(rule, params);
-      if (!applyResult.success) {
+      execResult ??= _apply(rule, params);
+      if (!execResult.success) {
         Log.warn(
           tag,
           "apply rule failed! content = $content, rule = ${rule.name}",
         );
       } else {
-        final result = applyResult.result!;
-        params.merge(result);
-        if (result.isDropped || result.isFinalRule) {
+        final result = execResult.result!;
+        params.merge(rule, result);
+        //如果当前是规则白名单模式，需要等到最终才知道是否丢弃结果
+        if (isRegexWhiteMode) {
+          continue;
+        } else if (result.isDropped || result.isFinalRule) {
           return RuleExecResult.success(params.toApplyResult());
         }
       }

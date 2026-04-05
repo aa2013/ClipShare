@@ -1,6 +1,7 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
 import 'package:clipshare/app/handlers/re-editor/lua_code_prompt.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -291,7 +292,9 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
         body: PopScope(
           canPop: !shouldSave,
           onPopInvokedWithResult: (bool didPop, dynamic result) {
+            final ruleController = Get.find<RulesController>();
             if (didPop) {
+              ruleController.selectedLuaLibItem.value = null;
               return;
             }
             Global.showTipsDialog(
@@ -300,12 +303,13 @@ class _LuaLibDetailState extends State<LuaLibDetail> {
               showCancel: true,
               onOk: () {
                 widget.onSaveStatusChanged.call(false);
+                ruleController.selectedLuaLibItem.value = null;
                 //退出页面
                 Navigator.of(context).pop();
               },
             );
           },
-          child: body,
+          child: SafeArea(child: body),
         ),
       );
     } else {
