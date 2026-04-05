@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/support_platform.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 import '../../repository/entity/tables/rule.dart';
@@ -91,6 +92,7 @@ class RuleItem implements Comparable<RuleItem> {
         tags: rule.regexTags.split(",").where((e) => e.isNotNullAndEmpty).toSet(),
         preventSync: rule.regexIsSyncDisabled,
         isFinal: rule.regexIsFinalRule,
+        mode: WhiteBlackMode.values.byName(rule.regexWhiteBlackMode)
       ),
       script: RuleScriptContent(
         language: RuleScriptLanguage.getValue(rule.scriptLanguage),
@@ -128,7 +130,7 @@ class RuleItem implements Comparable<RuleItem> {
       sources: sources.join(","),
       trigger: trigger.name,
       type: type.name,
-      regexWhiteBlackMode: regex.mode?.name,
+      regexWhiteBlackMode: regex.mode.name,
       regexMain: regex.mainRegex,
       regexAllowExtractData: regex.allowExtractData,
       regexExtractedContent: regex.extractRegex,

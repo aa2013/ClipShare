@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/support_platform.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/data/models/rule/rule_regex_content.dart';
 import 'package:clipshare/app/data/models/rule/rule_script_content.dart';
@@ -466,6 +467,7 @@ class _RuleListViewState extends State<RuleListView>
                       tags: {},
                       preventSync: false,
                       isFinal: false,
+                      mode: WhiteBlackMode.defaultMode,
                     ),
                     script: RuleScriptContent(
                       language: RuleScriptLanguage.lua,

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/handlers/sync/rule_lib_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/rule_sync_handler.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/modules/rules_module/rules_page.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -53,6 +54,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   String get tag => "HomeController";
   final appConfig = Get.find<ConfigService>();
   final sktService = Get.find<SocketService>();
+  final ruleController = Get.find<RulesController>();
   final settingsController = Get.find<SettingsController>();
   final storageService = Get.find<StorageService>();
   final androidChannelService = Get.find<AndroidChannelService>();
@@ -327,7 +329,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       });
     }
     //如果开启短信同步且有短信权限则启动短信监听
-    if (appConfig.enableSmsSync && await PermissionHelper.testAndroidReadSms()) {
+    if (ruleController.enableSmsSync && await PermissionHelper.testAndroidReadSms()) {
       androidChannelService.startSmsListen();
     }
     androidChannelService.showOnRecentTasks(appConfig.showOnRecentTasks);

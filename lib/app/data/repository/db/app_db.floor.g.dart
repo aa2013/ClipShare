@@ -127,7 +127,7 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT NOT NULL, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `RuleLib` (`libName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `language` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`libName`))');
         await database.execute(
@@ -1611,7 +1611,7 @@ class _$RuleDao extends RuleDao {
             sources: row['sources'] as String,
             trigger: row['trigger'] as String,
             type: row['type'] as String,
-            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String?,
+            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String,
             regexMain: row['regexMain'] as String,
             regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
             regexExtractedContent: row['regexExtractedContent'] as String,
@@ -1637,7 +1637,7 @@ class _$RuleDao extends RuleDao {
             sources: row['sources'] as String,
             trigger: row['trigger'] as String,
             type: row['type'] as String,
-            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String?,
+            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String,
             regexMain: row['regexMain'] as String,
             regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
             regexExtractedContent: row['regexExtractedContent'] as String,
@@ -1653,15 +1653,21 @@ class _$RuleDao extends RuleDao {
   }
 
   @override
+  Future<int?> count() async {
+    return _queryAdapter.query('select count(*) from rule',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
   Future<int> addRule(Rule rule) {
     return _ruleInsertionAdapter.insertAndReturnId(
-        rule, OnConflictStrategy.ignore);
+        rule, OnConflictStrategy.replace);
   }
 
   @override
   Future<List<int>> addRules(List<Rule> rule) {
     return _ruleInsertionAdapter.insertListAndReturnIds(
-        rule, OnConflictStrategy.ignore);
+        rule, OnConflictStrategy.replace);
   }
 
   @override

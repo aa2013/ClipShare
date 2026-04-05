@@ -70,6 +70,10 @@ class RuleLib {
       version: 0,
     );
   }
+
+  RuleLib copy() {
+    return RuleLib.fromJson(jsonDecode(jsonEncode(this)));
+  }
 }
 
 // 枚举类型到String的转换器

@@ -76,7 +76,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   Set<String> selectedSourceIds = {};
   RuleTrigger selectedTrigger = RuleTrigger.onCopy;
   var ruleContentType = RuleContentType.regex;
-  WhiteBlackMode? whiteBlackModes;
+  WhiteBlackMode whiteBlackMode = WhiteBlackMode.defaultMode;
   var isAllowExtractData = false;
   var isPreventSync = false;
   var isFinalRule = false;
@@ -112,7 +112,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         tags: {...postTags},
         preventSync: isPreventSync,
         isFinal: isFinalRule,
-        mode: whiteBlackModes,
+        mode: whiteBlackMode,
       ),
       script: RuleScriptContent(
         language: RuleScriptLanguage.lua,
@@ -139,6 +139,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     extractTextController.text = rule.regex.extractRegex;
     ruleNameTextController.text = rule.name;
     isScriptFullScreen = false;
+    whiteBlackMode = rule.regex.mode;
     updateTabIndex(ruleContentType);
     if (rule.script.content.trim().isNullOrEmpty) {
       codeController.text = Constants.luaTemplateRule;
@@ -506,12 +507,12 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   }
 
   Widget buildRuleRegexTab(BuildContext context) {
-    final whiteBlackModeValues = <WhiteBlackMode?>[
+    final whiteBlackModeValues = <WhiteBlackMode>[
       WhiteBlackMode.defaultMode,
       WhiteBlackMode.black,
       WhiteBlackMode.white,
     ];
-    final currentMode = whiteBlackModes ?? WhiteBlackMode.defaultMode;
+    final currentMode = whiteBlackMode ?? WhiteBlackMode.defaultMode;
     final isBlacklistMode = currentMode == WhiteBlackMode.black;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -594,8 +595,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           selectedIndex: whiteBlackModeValues.indexOf(currentMode),
           onSelected: (i) {
             setState(() {
-              final mode = whiteBlackModeValues[i];
-              whiteBlackModes = mode == WhiteBlackMode.defaultMode ? null : mode;
+              whiteBlackMode = whiteBlackModeValues[i];
             });
           },
         ),

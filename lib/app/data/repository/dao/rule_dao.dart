@@ -30,4 +30,8 @@ abstract class RuleDao {
   ///查询所有
   @Query("select * from rule order by `order`")
   Future<List<Rule>> getAllRules();
+
+  ///查询所有
+  @Query("select count(*) from rule")
+  Future<int?> count();
 }

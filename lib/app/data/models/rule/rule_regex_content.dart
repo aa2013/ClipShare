@@ -6,7 +6,7 @@ import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 class RuleRegexContent {
-  WhiteBlackMode? mode;
+  WhiteBlackMode mode;
   String mainRegex;
   bool allowExtractData;
   String extractRegex;
@@ -23,12 +23,12 @@ class RuleRegexContent {
     required this.tags,
     required this.preventSync,
     required this.isFinal,
-    this.mode,
+    required this.mode,
   });
 
   factory RuleRegexContent.fromJson(Map<String, dynamic> json) {
     return RuleRegexContent(
-      mode: json['mode'] != null ? WhiteBlackMode.values.byName(json['mode'] as String) : null,
+      mode: WhiteBlackMode.values.byName(json['mode'] as String),
       mainRegex: json['mainRegex'] as String,
       allowExtractData: json['allowExtractData'] as bool,
       extractRegex: json['extractRegex'] as String,
@@ -41,7 +41,7 @@ class RuleRegexContent {
 
   Map<String, dynamic> toJson() {
     return {
-      'mode': mode?.name,
+      'mode': mode.name,
       'mainRegex': mainRegex,
       'allowExtractData': allowExtractData,
       'extractRegex': extractRegex,
@@ -55,7 +55,7 @@ class RuleRegexContent {
   RuleApplyResult apply(RuleExecParams params) {
     final content = params.content;
     final matched = content.matchRegExp(mainRegex, multiLines: true, dotAll: true);
-    if (mode != null) {
+    if (mode != WhiteBlackMode.defaultMode) {
       //白名单模式，未命中则丢弃
       if (mode == WhiteBlackMode.white) {
         if (!matched) {

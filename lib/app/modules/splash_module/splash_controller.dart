@@ -137,6 +137,7 @@ class SplashController extends GetxController {
     if (PlatformExt.isDesktop) {
       await Get.putAsync(() => TrayService().init(), permanent: true);
     }
+    await appConfig.migrateRules();
   }
 
   Future<void> copyAssets() async {

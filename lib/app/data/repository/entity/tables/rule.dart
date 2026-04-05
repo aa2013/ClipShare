@@ -1,5 +1,6 @@
 ﻿import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
+import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:floor/floor.dart';
 import 'dart:convert';
@@ -28,7 +29,7 @@ class Rule {
   // region 正则规则，对应 [RuleRegexContent]
 
   /// 黑白名单模式
-  String? regexWhiteBlackMode;
+  String regexWhiteBlackMode;
 
   /// 主识别正则
   String regexMain;
@@ -79,7 +80,7 @@ class Rule {
     this.sources = "",
     required this.trigger,
     required this.type,
-    this.regexWhiteBlackMode,
+    required this.regexWhiteBlackMode,
     required this.regexMain,
     this.regexAllowExtractData = false,
     this.regexExtractedContent = "",
@@ -113,7 +114,7 @@ class Rule {
       sources: json['sources'] as String,
       trigger: json['trigger'] as String,
       type: json['type'] as String,
-      regexWhiteBlackMode: json['regexWhiteBlackMode'] as String?,
+      regexWhiteBlackMode: json['regexWhiteBlackMode'] as String,
       regexMain: json['regexMain'] as String,
       regexAllowExtractData: json['regexAllowExtractData'] as bool,
       regexExtractedContent: json['regexExtractedContent'] as String,
@@ -167,6 +168,7 @@ class Rule {
       regexMain: "",
       version: 0,
       order: 0,
+      regexWhiteBlackMode: WhiteBlackMode.defaultMode.name
     );
   }
 }

@@ -8,16 +8,23 @@ import 'package:clipshare/app/data/enums/device_paried_filter_status.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
+import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
+import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
+import 'package:clipshare/app/data/enums/support_platform.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/data/repository/dao/config_dao.dart';
+import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
+import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -60,6 +67,8 @@ final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
   ConfigDao get configDao => Get.find<DbService>().configDao;
+
+  RuleDao get ruleDao => Get.find<DbService>().ruleDao;
   final tag = "ConfigService";
 
   //region 属性
@@ -112,6 +121,8 @@ class ConfigService extends GetxService {
   //region 响应式
 
   //region 应用内配置
+  //规则是否已迁移
+  bool _rulesMigrated = false;
 
   //当前是否是深色模式
   bool get currentIsDarkMode {
@@ -297,16 +308,6 @@ class ConfigService extends GetxService {
 
   String get language => _language.value;
 
-  //标签规则
-  final _tagRules = Rx<String?>(null);
-
-  String get tagRules => _tagRules.value ?? Constants.defaultTagRules;
-
-  //短信规则
-  final _smsRules = Rx<String?>(null);
-
-  String get smsRules => _smsRules.value ?? Constants.defaultSmsRules;
-
   //启用日志记录
   late final RxBool _enableLogsRecord;
 
@@ -375,11 +376,6 @@ class ConfigService extends GetxService {
   late final Rx<String?> _appPassword;
 
   String? get appPassword => _appPassword.value;
-
-  //是否启用短信同步
-  late final RxBool _enableSmsSync;
-
-  bool get enableSmsSync => _enableSmsSync.value;
 
   //是否启用中转服务
   late final RxBool _enableForward;
@@ -470,21 +466,6 @@ class ConfigService extends GetxService {
   final _enableRecordNotification = false.obs;
 
   bool get enableRecordNotification => _enableRecordNotification.value;
-
-  //通知黑白名单模式
-  final _currentNotificationWhiteBlackMode = WhiteBlackMode.black.obs;
-
-  WhiteBlackMode get currentNotificationWhiteBlackMode => _currentNotificationWhiteBlackMode.value;
-
-  //通知黑名单列表
-  final _notificationBlackList = <FilterRule>[].obs;
-
-  List<FilterRule> get notificationBlackList => _notificationBlackList.value;
-
-  //通知白名单列表
-  final _notificationWhiteList = <FilterRule>[].obs;
-
-  List<FilterRule> get notificationWhiteList => _notificationWhiteList.value;
 
   //显示移动设备的通知
   final _enableShowMobileNotification = false.obs;
@@ -632,8 +613,6 @@ class ConfigService extends GetxService {
     _lockHistoryFloatLoc = (await cfg.getConfigByKey(ConfigKey.lockHistoryFloatLoc, true)).obs;
     _enableLogsRecord = (await cfg.getConfigByKey(ConfigKey.enableLogsRecord, false)).obs;
     _enableAutoUploadCrashLogs = (await cfg.getConfigByKey(ConfigKey.enableAutoUploadCrashLogs, false)).obs;
-    _tagRules.value = (await cfg.getConfigByKey<String?>(ConfigKey.tagRules, null));
-    _smsRules.value = (await cfg.getConfigByKey<String?>(ConfigKey.smsRules, null));
     _historyWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.historyWindowHotKeys, Constants.defaultHistoryWindowKeys)).obs;
     _syncFileHotKeys = (await cfg.getConfigByKey(ConfigKey.syncFileHotKeys, Constants.defaultSyncFileHotKeys)).obs;
     _showMainWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.showMainWindowHotKeys, "")).obs;
@@ -649,7 +628,6 @@ class ConfigService extends GetxService {
     _useAuthentication = (await cfg.getConfigByKey(ConfigKey.useAuthentication, false)).obs;
     _appRevalidateDuration = (await cfg.getConfigByKey(ConfigKey.appRevalidateDuration, 0)).obs;
     _appPassword = (await cfg.getConfigByKey<String?>(ConfigKey.appPassword, null)).obs;
-    _enableSmsSync = (await cfg.getConfigByKey(ConfigKey.enableSmsSync, false)).obs;
     _enableForward = (await cfg.getConfigByKey(ConfigKey.enableForward, false)).obs;
     _notificationServer.value = await cfg.getConfigByKey<String>(ConfigKey.notificationServer, Constants.defaultNotificationServer);
     _forwardWay.value = await cfg.getConfigByKey<ForwardWay>(
@@ -751,23 +729,6 @@ class ConfigService extends GetxService {
     ));
     _enableRecordNotification.value = (await cfg.getConfigByKey(ConfigKey.enableRecordNotification, false));
     _enableShowMobileNotification.value = (await cfg.getConfigByKey(ConfigKey.enableShowMobileNotification, false));
-    final notificationBlackWhiteList = await cfg.getConfigByKey(ConfigKey.notificationBlackWhiteList, "");
-    try {
-      if (notificationBlackWhiteList.isNullOrEmpty) {
-        _notificationWhiteList.value = [];
-        _notificationBlackList.value = [];
-      } else {
-        final map = jsonDecode(notificationBlackWhiteList) as Map<String, dynamic>;
-        _currentNotificationWhiteBlackMode.value = WhiteBlackMode.values.byName(map["mode"].toString());
-        _notificationBlackList.value = (map["blacklist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
-        _notificationWhiteList.value = (map["whitelist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
-      }
-    } catch (err, stack) {
-      debugPrint(err.toString());
-      debugPrintStack(stackTrace: stack);
-      _notificationWhiteList.value = [];
-      _notificationBlackList.value = [];
-    }
     _webdavConfig.value = (await cfg.getConfigByKey(
       ConfigKey.webdavConfig,
       null,
@@ -1102,20 +1063,6 @@ class ConfigService extends GetxService {
     _enableAutoUploadCrashLogs.value = enableAutoUploadCrashLogs;
   }
 
-  Future<void> setTagRules(String tagRules) async {
-    await configDao.addOrUpdate(ConfigKey.tagRules, tagRules.toString());
-    _tagRules.value = tagRules;
-  }
-
-  Future<void> setSmsRules(String smsRules) async {
-    await configDao.addOrUpdate(ConfigKey.smsRules, smsRules);
-    if (_smsRules.value == null) {
-      _smsRules.value = smsRules;
-    } else {
-      _smsRules!.value = smsRules;
-    }
-  }
-
   Future<void> setHistoryWindowHotKeys(String historyWindowHotKeys) async {
     await configDao.addOrUpdate(ConfigKey.historyWindowHotKeys, historyWindowHotKeys);
     _historyWindowHotKeys.value = historyWindowHotKeys;
@@ -1177,11 +1124,6 @@ class ConfigService extends GetxService {
     appPassword = CryptoUtil.toMD5(appPassword);
     await configDao.addOrUpdate(ConfigKey.appPassword, appPassword);
     _appPassword.value = appPassword;
-  }
-
-  Future<void> setEnableSmsSync(bool enableSmsSync) async {
-    await configDao.addOrUpdate(ConfigKey.enableSmsSync, enableSmsSync.toString());
-    _enableSmsSync.value = enableSmsSync;
   }
 
   Future<void> setEnableForward(bool enableForward) async {
@@ -1323,21 +1265,6 @@ class ConfigService extends GetxService {
   Future<void> setContentBlacklist(List<FilterRule> rules) async {
     await configDao.addOrUpdate(ConfigKey.blacklist, jsonEncode(rules));
     _contentBlackList.value = rules;
-  }
-
-  ///更新通知黑白名单数据
-  Future<void> setNotificationBlackWhiteList(WhiteBlackMode mode, List<FilterRule> blacklist, List<FilterRule> whitelist) async {
-    await configDao.addOrUpdate(
-      ConfigKey.notificationBlackWhiteList,
-      jsonEncode({
-        "mode": mode.name,
-        "blacklist": blacklist,
-        "whitelist": whitelist,
-      }),
-    );
-    _currentNotificationWhiteBlackMode.value = mode;
-    _notificationBlackList.value = blacklist;
-    _notificationWhiteList.value = whitelist;
   }
 
   ///启用通知历史记录
@@ -1553,6 +1480,213 @@ class ConfigService extends GetxService {
     setAppTheme(theme, Get.context!);
     // Get.changeThemeMode(theme);
     // setSystemUIOverlayAutoStyle();
+  }
+
+  ///迁移 1.5.0 以前的规则到现版本
+  Future<void> migrateRules() async {
+    if (_rulesMigrated) {
+      throw 'Rules Migrated';
+    }
+    final dbRulesCnt = ((await ruleDao.count()) ?? 0);
+    if (dbRulesCnt != 0) {
+      _rulesMigrated = true;
+      return;
+    }
+    final cfg = configDao;
+    var rules = <Rule>[];
+    int order = 1;
+    final version = DateTime.now().yyyyMMddHHmmss;
+    final allPlatforms = (SupportPlatForm.values.map((e) => e.name).toList()..sort()).join(',');
+
+    final enableSmsSync = (await cfg.getConfigByKey(ConfigKey.enableSmsSync, false));
+    final tagRulesStr = (await cfg.getConfigByKey<String?>(ConfigKey.tagRules, null));
+
+    //region 老标签规则转换
+    try {
+      final tagRules = jsonDecode(tagRulesStr ?? Constants.defaultTagRules) as Map<String, dynamic>;
+      for (var rule in (tagRules["data"] as List<dynamic>).cast<Map<String, dynamic>>()) {
+        try {
+          final name = rule['name'];
+          final regex = rule['rule'];
+          rules.add(
+            Rule(
+              id: snowflake.nextId(),
+              name: name,
+              platforms: allPlatforms,
+              trigger: RuleTrigger.onCopy.name,
+              type: RuleContentType.regex.name,
+              regexTags: name,
+              regexMain: regex,
+              regexAllowAddTag: true,
+              version: version,
+              order: order++,
+              enabled: true,
+              regexWhiteBlackMode: WhiteBlackMode.defaultMode.name,
+              scriptContent: Constants.luaTemplateRule,
+              scriptLanguage: RuleScriptLanguage.lua.name,
+            ),
+          );
+        } catch (err, stack) {
+          Log.error(tag, err, stack);
+        }
+      }
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+    }
+    //endregion
+
+    //region 老短信规则转换
+    final smsRulesStr = (await cfg.getConfigByKey<String?>(ConfigKey.smsRules, null));
+    try {
+      final smsRules = jsonDecode(smsRulesStr ?? Constants.defaultSmsRules) as Map<String, dynamic>;
+      final allSmsRules = (smsRules["data"] as List<dynamic>).cast<Map<String, dynamic>>();
+      for (var rule in allSmsRules) {
+        try {
+          final name = rule['name'];
+          final regex = rule['rule'];
+          rules.add(
+            Rule(
+              id: snowflake.nextId(),
+              name: name,
+              platforms: SupportPlatForm.android.name,
+              trigger: RuleTrigger.onSms.name,
+              type: RuleContentType.regex.name,
+              regexMain: regex,
+              version: version,
+              order: order++,
+              enabled: enableSmsSync,
+              regexWhiteBlackMode: WhiteBlackMode.defaultMode.name,
+              scriptContent: Constants.luaTemplateRule,
+              scriptLanguage: RuleScriptLanguage.lua.name,
+            ),
+          );
+        } catch (err, stack) {
+          Log.error(tag, err, stack);
+        }
+      }
+      if (allSmsRules.isEmpty && enableSmsSync) {
+        try {
+          //若启用但是规则为空则代表所有短信都同步
+          rules.add(
+            Rule(
+              id: snowflake.nextId(),
+              name: TranslationKey.all.tr,
+              platforms: SupportPlatForm.android.name,
+              trigger: RuleTrigger.onSms.name,
+              type: RuleContentType.regex.name,
+              regexMain: ".+",
+              version: version,
+              order: order++,
+              enabled: enableSmsSync,
+              regexWhiteBlackMode: WhiteBlackMode.defaultMode.name,
+              scriptContent: Constants.luaTemplateRule,
+              scriptLanguage: RuleScriptLanguage.lua.name,
+            ),
+          );
+        } catch (err, stack) {
+          Log.error(tag, err, stack);
+        }
+      }
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+    }
+    //endregion
+
+    //region 老通知规则转换
+
+    //region 老通知规则反序列化
+    List<FilterRule> notificationWhiteList = [];
+    List<FilterRule> notificationBlackList = [];
+    WhiteBlackMode? currentNotificationWhiteBlackMode;
+    final notificationBlackWhiteList = await cfg.getConfigByKey(ConfigKey.notificationBlackWhiteList, "");
+    try {
+      if (notificationBlackWhiteList.isNullOrEmpty) {
+        notificationWhiteList = [];
+        notificationBlackList = [];
+      } else {
+        final map = jsonDecode(notificationBlackWhiteList) as Map<String, dynamic>;
+        currentNotificationWhiteBlackMode = WhiteBlackMode.values.byName(map["mode"].toString());
+        notificationBlackList = (map["blacklist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
+        notificationWhiteList = (map["whitelist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
+      }
+    } catch (err, stack) {
+      debugPrint(err.toString());
+      debugPrintStack(stackTrace: stack);
+      notificationWhiteList = [];
+      notificationBlackList = [];
+    }
+    //endregion
+
+    var index = 1;
+
+    //region 黑名单通知规则
+    for (var rule in notificationBlackList) {
+      try {
+        var regex = rule.content;
+        if (rule.isAllContent) {
+          regex = ".+";
+        }
+        final sources = (rule.appIds.toList()..sort()).join(",");
+        rules.add(
+          Rule(
+            id: snowflake.nextId(),
+            name: "${TranslationKey.notification.tr}${index++}",
+            platforms: SupportPlatForm.android.name,
+            trigger: RuleTrigger.onNotification.name,
+            type: RuleContentType.regex.name,
+            sources: sources,
+            regexMain: regex,
+            version: version,
+            order: order++,
+            regexWhiteBlackMode: WhiteBlackMode.black.name,
+            enabled: currentNotificationWhiteBlackMode == WhiteBlackMode.black && rule.enable,
+            scriptContent: Constants.luaTemplateRule,
+            scriptLanguage: RuleScriptLanguage.lua.name,
+          ),
+        );
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+    //endregion
+
+    //region 白名单通知规则
+    for (var rule in notificationWhiteList) {
+      try {
+        var regex = rule.content;
+        if (rule.isAllContent) {
+          regex = ".+";
+        }
+        final sources = (rule.appIds.toList()..sort()).join(",");
+        rules.add(
+          Rule(
+            id: snowflake.nextId(),
+            name: "${TranslationKey.notification.tr}${index++}",
+            platforms: SupportPlatForm.android.name,
+            trigger: RuleTrigger.onNotification.name,
+            type: RuleContentType.regex.name,
+            sources: sources,
+            regexMain: regex,
+            version: version,
+            order: order++,
+            regexWhiteBlackMode: WhiteBlackMode.white.name,
+            enabled: currentNotificationWhiteBlackMode == WhiteBlackMode.white && rule.enable,
+            scriptContent: Constants.luaTemplateRule,
+            scriptLanguage: RuleScriptLanguage.lua.name,
+          ),
+        );
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+    //endregion
+
+    //endregion
+
+    if (rules.isNotEmpty) {
+      await ruleDao.addRules(rules);
+    }
+    _rulesMigrated = true;
   }
 
   ///更新语言选项

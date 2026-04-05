@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
+import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
@@ -51,6 +52,11 @@ class RulesController extends GetxController {
   final _loadedLuaFun = <String, int>{};
   final activeItemChanged = false.obs;
   static final List<String> _testOutputs = [];
+
+  bool get enableSmsSync {
+    final smsRules = rules.where((e) => e.trigger == RuleTrigger.onSms && e.enabled);
+    return smsRules.isNotEmpty;
+  }
 
   //region 初始化 lua
 

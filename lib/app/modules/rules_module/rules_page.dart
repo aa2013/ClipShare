@@ -77,7 +77,16 @@ class RulesPage extends GetView<RulesController> {
           if (await _abortAskDialog(context)) {
             return false;
           }
-          controller.selectedRuleItem.value = item;
+          //如果是新规则，直接丢弃
+          if (controller.selectedRuleItem.value?.isNewData ?? false) {
+            controller.rules.removeWhere((e) => e.id == controller.selectedRuleItem.value?.id);
+          }
+          //如果是新的，直接丢弃
+          if (controller.selectedLuaLibItem.value?.isNewData ?? false) {
+            controller.ruleLibs.removeWhere((e) => e.libName == controller.selectedLuaLibItem.value?.libName);
+          }
+
+          controller.selectedRuleItem.value = item.copy();
           controller.selectedLuaLibItem.value = null;
           if (appConfig.isSmallScreen) {
             Get.to(_buildRuleDetail());
@@ -87,6 +96,14 @@ class RulesPage extends GetView<RulesController> {
         onRuleItemAdd: (RuleItem newRule) async {
           if (await _abortAskDialog(context)) {
             return;
+          }
+          //如果是新规则，直接丢弃
+          if (controller.selectedRuleItem.value?.isNewData ?? false) {
+            controller.rules.removeWhere((e) => e.id == controller.selectedRuleItem.value?.id);
+          }
+          //如果是新的，直接丢弃
+          if (controller.selectedLuaLibItem.value?.isNewData ?? false) {
+            controller.ruleLibs.removeWhere((e) => e.libName == controller.selectedLuaLibItem.value?.libName);
           }
           controller.rules.add(newRule);
           controller.selectedRuleItem.value = newRule;
@@ -106,7 +123,11 @@ class RulesPage extends GetView<RulesController> {
               return false;
             }
             //未保存的直接删除
-            if (rule.version <= 0) {
+            if (rule.version <= 0 || rule.isNewData) {
+              if (controller.selectedRuleItem.value?.id == rule.id) {
+                controller.selectedRuleItem.value = null;
+                controller.activeItemChanged.value = false;
+              }
               return true;
             }
             //保存过的删除数据库数据
@@ -143,7 +164,15 @@ class RulesPage extends GetView<RulesController> {
           if (await _abortAskDialog(context)) {
             return false;
           }
-          controller.selectedLuaLibItem.value = item;
+          //如果是新规则，直接丢弃
+          if (controller.selectedRuleItem.value?.isNewData ?? false) {
+            controller.rules.removeWhere((e) => e.id == controller.selectedRuleItem.value?.id);
+          }
+          //如果是新的，直接丢弃
+          if (controller.selectedLuaLibItem.value?.isNewData ?? false) {
+            controller.ruleLibs.removeWhere((e) => e.libName == controller.selectedLuaLibItem.value?.libName);
+          }
+          controller.selectedLuaLibItem.value = item.copy();
           controller.selectedRuleItem.value = null;
           if (appConfig.isSmallScreen) {
             Get.to(_buildLibDetail());
@@ -153,6 +182,14 @@ class RulesPage extends GetView<RulesController> {
         onLuaLibItemAdd: (RuleLib value) async {
           if (await _abortAskDialog(context)) {
             return;
+          }
+          //如果是新规则，直接丢弃
+          if (controller.selectedRuleItem.value?.isNewData ?? false) {
+            controller.rules.removeWhere((e) => e.id == controller.selectedRuleItem.value?.id);
+          }
+          //如果是新的，直接丢弃
+          if (controller.selectedLuaLibItem.value?.isNewData ?? false) {
+            controller.ruleLibs.removeWhere((e) => e.libName == controller.selectedLuaLibItem.value?.libName);
           }
           controller.ruleLibs.add(value);
           controller.selectedLuaLibItem.value = value;
@@ -166,6 +203,7 @@ class RulesPage extends GetView<RulesController> {
             controller.ruleLibs.removeWhere((e) => e.libName == lib.libName);
             Global.showSnackBarSuc(text: TranslationKey.deleteSuccess.tr, context: context);
             controller.selectedLuaLibItem.value = null;
+            controller.activeItemChanged.value = false;
             return;
           }
           final result = (await libDao.remove(lib.libName) ?? 0) > 0;
@@ -173,6 +211,7 @@ class RulesPage extends GetView<RulesController> {
             controller.ruleLibs.removeWhere((e) => e.libName == lib.libName);
             if (lib.libName == controller.selectedLuaLibItem.value?.libName) {
               controller.selectedLuaLibItem.value = null;
+              controller.activeItemChanged.value = false;
             }
             //同步数据
             await opRecordDao.deleteByDataWithCascade(lib.libName);
@@ -228,6 +267,7 @@ class RulesPage extends GetView<RulesController> {
                         context: Get.context!,
                       );
                       controller.rules[i] = item;
+                      controller.selectedRuleItem.value = item;
                       controller.loadLuaUserFunc(
                         item.name,
                         item.script.content,
@@ -268,7 +308,6 @@ class RulesPage extends GetView<RulesController> {
           return LuaLibDetail(
             lib: lib,
             onSaveClicked: (oldValue, newValue) {
-              //todo
               for (var i = 0; i < controller.ruleLibs.length; i++) {
                 var old = controller.ruleLibs[i];
                 if (old.libName != oldValue.libName) {

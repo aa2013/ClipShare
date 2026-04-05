@@ -390,10 +390,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Sync selected files to other devices (invalid on desktop)";
       case TranslationKey.syncSettingsGroupName:
         return "Sync";
-      case TranslationKey.syncSettingsSmsTitle:
-        return "SMS Sync";
-      case TranslationKey.syncSettingsSmsDesc:
-        return "SMS that match the rules will be automatically synced";
       case TranslationKey.syncSettingsSmsPermissionRequired:
         return "Please grant SMS read permission first";
       case TranslationKey.syncSettingsStoreImg2PicturesTitle:
@@ -414,14 +410,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "If enabled, images copied on other devices will be automatically copied on this device";
       case TranslationKey.ruleSettingsGroupName:
         return "Rules";
-      case TranslationKey.ruleSettingsTagRuleTitle:
-        return "Tag Rules";
-      case TranslationKey.ruleSettingsTagRuleDesc:
-        return "Records that match the rules will be automatically tagged";
-      case TranslationKey.ruleSettingsSmsRuleTitle:
-        return "SMS Rules";
-      case TranslationKey.ruleSettingsSmsRuleDesc:
-        return "SMS that match the rules will be synced, if not configured, all will be synced";
       case TranslationKey.logSettingsGroupName:
         return "Logs";
       case TranslationKey.logSettingsEnableTitle:
@@ -580,16 +568,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Select All";
       case TranslationKey.cancelSelectAll:
         return "Cancel Select All";
-      case TranslationKey.smsRuleSettingPageAppBarTitle:
-        return "SMS Rule Configuration";
       case TranslationKey.inputCompletedErrorText:
         return "Please complete the input!";
-      case TranslationKey.ruleSettingAddDialogLabel:
-        return "Rule Name";
-      case TranslationKey.ruleSettingAddDialogHint:
-        return "Please enter the rule name";
-      case TranslationKey.tagRuleSettingPageAppBarTitle:
-        return "Tag Rule Configuration";
       case TranslationKey.onlineDevicesPageSelectDeviceToSend:
         return "Select devices";
       case TranslationKey.send:
@@ -1116,10 +1096,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Content cannot be empty";
       case TranslationKey.contentAndSourceCannotEmpty:
         return "Both content, source, types cannot be empty";
-      case TranslationKey.blacklistRules:
-        return "Blacklist Rules";
-      case TranslationKey.whitelistRules:
-        return "Currently only applies to Text";
       case TranslationKey.ignoreCase:
         return "Case insensitive";
       case TranslationKey.application:
@@ -1130,16 +1106,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Content";
       case TranslationKey.title:
         return "Title";
-      case TranslationKey.addWhitelistRule:
-        return "Add Whitelist";
-      case TranslationKey.addBlacklistRule:
-        return "Add Blacklist";
       case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
         return "Receive Mobile Device Notifications";
       case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
         return "Notifications from connected mobile devices will display on this device (requires enabling notification logging on source device)";
-      case TranslationKey.notificationRules:
-        return "Notification History Rules";
       case TranslationKey.permissionSettingsNotificationRecordTitle:
         return "Notification History";
       case TranslationKey.permissionSettingsNotificationRecordDesc:

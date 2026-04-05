@@ -343,10 +343,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "将选定的文件同步到其他设备（桌面无效）";
       case TranslationKey.syncSettingsGroupName:
         return "同步";
-      case TranslationKey.syncSettingsSmsTitle:
-        return "短信同步";
-      case TranslationKey.syncSettingsSmsDesc:
-        return "符合规则的短信将自动同步";
       case TranslationKey.syncSettingsSmsPermissionRequired:
         return "请先授予短信读取权限";
       case TranslationKey.syncSettingsStoreImg2PicturesTitle:
@@ -367,14 +363,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "启用后若其他设备复制了图片本机也会自动复制";
       case TranslationKey.ruleSettingsGroupName:
         return "规则";
-      case TranslationKey.ruleSettingsTagRuleTitle:
-        return "标签规则";
-      case TranslationKey.ruleSettingsTagRuleDesc:
-        return "符合规则的记录将会自动打上对应标签";
-      case TranslationKey.ruleSettingsSmsRuleTitle:
-        return "短信规则";
-      case TranslationKey.ruleSettingsSmsRuleDesc:
-        return "符合规则的短信将会同步，若未配置则全部同步";
       case TranslationKey.logSettingsGroupName:
         return "日志";
       case TranslationKey.logSettingsEnableTitle:
@@ -533,16 +521,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "全选";
       case TranslationKey.cancelSelectAll:
         return "取消全选";
-      case TranslationKey.smsRuleSettingPageAppBarTitle:
-        return "短信规则配置";
       case TranslationKey.inputCompletedErrorText:
         return "请输入完整！";
-      case TranslationKey.ruleSettingAddDialogLabel:
-        return "规则名";
-      case TranslationKey.ruleSettingAddDialogHint:
-        return "请输入规则名";
-      case TranslationKey.tagRuleSettingPageAppBarTitle:
-        return "标签规则配置";
       case TranslationKey.onlineDevicesPageSelectDeviceToSend:
         return "请选择要发送的设备";
       case TranslationKey.send:
@@ -1125,10 +1105,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "内容不能为空";
       case TranslationKey.contentAndSourceCannotEmpty:
         return "内容、来源、类型不能都为空";
-      case TranslationKey.blacklistRules:
-        return "黑名单规则";
-      case TranslationKey.whitelistRules:
-        return "白名单规则";
       case TranslationKey.ignoreCase:
         return "忽略大小写";
       case TranslationKey.application:
@@ -1139,16 +1115,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "内容";
       case TranslationKey.title:
         return "标题";
-      case TranslationKey.addWhitelistRule:
-        return "添加白名单";
-      case TranslationKey.addBlacklistRule:
-        return "添加黑名单";
       case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
         return "接收移动端设备通知";
       case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
         return "已连接的移动端设备的通知将显示在本设备（需在源设备开启通知记录功能）";
-      case TranslationKey.notificationRules:
-        return "通知历史记录规则";
       case TranslationKey.permissionSettingsNotificationRecordTitle:
         return "通知历史访问权限";
       case TranslationKey.permissionSettingsNotificationRecordDesc:
