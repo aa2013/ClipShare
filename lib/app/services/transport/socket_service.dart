@@ -22,6 +22,7 @@ import 'package:clipshare/app/handlers/socket/secure_socket_server.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
@@ -646,16 +647,30 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       case MsgType.reqAppInfo:
         final appId = msg.data["appId"];
         final sourceService = Get.find<ClipboardSourceService>();
-        final appInfo = sourceService.appInfos.firstWhereOrNull((item) => item.devId == appConfig.device.guid && appId == item.appId);
-        if (appInfo == null) {
+        Log.debug(tag, "await loadFuture");
+        await sourceService.loadFuture;
+        Log.debug(tag, "loadFuture completed");
+        final appInfo = sourceService.getAppInfoByAppId(appId);
+        if(appInfo == null){
+          Log.debug(tag, "not found app info $appId");
           break;
         }
+        Log.debug(tag, "found app info $appId");
         dev.sendData(MsgType.appInfo, appInfo.toJson());
         break;
       case MsgType.appInfo:
         final appInfo = AppInfo.fromJson(msg.data);
         final sourceService = Get.find<ClipboardSourceService>();
-        sourceService.addOrUpdate(appInfo);
+
+        final ruleController = Get.find<RulesController>();
+        final notExists = ruleController.isNotExistAppInfo(appInfo.appId);
+        if(appInfo.id == 0){
+          appInfo.id = appInfo.appId.hash64;
+        }
+        final success = await sourceService.addOrUpdate(appInfo);
+        if(success && notExists){
+          ruleController.update();
+        }
         break;
 
       ///请求配对我方，生成四位配对码
@@ -1232,6 +1247,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (paired) {
       //已配对，请求所有缺失数据
       reqMissingData();
+      //请求规则中缺少的app图标信息
+      final ruleController = Get.find<RulesController>();
+      await ruleController.requestAppInfo(dev.guid);
     }
   }
 

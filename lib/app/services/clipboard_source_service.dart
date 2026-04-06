@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,6 +20,9 @@ class ClipboardSourceService extends GetxService {
   final _appConfig = Get.find<ConfigService>();
   final _getAppsHelper = GetApps();
   Stream<ActionNotification>? _appInstallStream;
+  final _loadCompleter = Completer();
+
+  Future get loadFuture => _loadCompleter.future;
 
   //appId -> MyAppInfo
   final _appInfos = <String, MyAppInfo>{}.obs;
@@ -38,7 +42,7 @@ class ClipboardSourceService extends GetxService {
   Future<void> _loadAll() async {
     await _loadClipboardSource();
     //这里不要await，否则会占用大量时间导致应用卡第一屏
-    _loadInstalledApps();
+    _loadInstalledApps().whenComplete(() => _loadCompleter.complete());
   }
 
   Future<void> _loadClipboardSource() async {

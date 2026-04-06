@@ -3,6 +3,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
@@ -13,7 +14,9 @@ import 'package:clipshare/app/data/models/rule/rule_exec_result.dart';
 import 'package:clipshare/app/data/repository/entity/tables/lua_lib.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
+import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
+import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -41,6 +44,7 @@ typedef LuaFunction = Int32 Function(Pointer<lua_State>);
 class RulesController extends GetxController {
   static const String tag = "RulesController";
   final appConfig = Get.find<ConfigService>();
+  final sourceService = Get.find<ClipboardSourceService>();
   final ruleDao = Get.find<DbService>().ruleDao;
   final ruleLibDao = Get.find<DbService>().ruleLibDao;
   final opRecordDao = Get.find<DbService>().opRecordDao;
@@ -447,6 +451,43 @@ class RulesController extends GetxController {
     _loadAllLuaLibs();
     _loadAllLuaUserFn();
     super.onInit();
+  }
+
+  Future<void> requestAppInfo(String devId) async {
+    Log.debug(tag, "requestAppInfo $devId");
+    for (var rule in rules) {
+      final sources = rule.sources;
+      for (var source in sources) {
+        final appInfo = sourceService.getAppInfoByAppId(source);
+        if (appInfo != null) {
+          continue;
+        }
+
+        Log.debug(tag, "requestAppInfo: $source");
+        await DataSender.sendDataByDevId(
+          devId,
+          MsgType.reqAppInfo,
+          {"appId": source},
+        );
+      }
+    }
+  }
+
+  bool isNotExistAppInfo(String appId) {
+    for (var rule in rules) {
+      final sources = rule.sources;
+      for (var source in sources) {
+        if (source != appId) {
+          continue;
+        }
+        final appInfo = sourceService.getAppInfoByAppId(source);
+        if (appInfo != null) {
+          continue;
+        }
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> saveRules() async {

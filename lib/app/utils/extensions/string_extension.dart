@@ -1,14 +1,25 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 extension StringExt on String {
+
+  int get hash64 {
+    final bytes = utf8.encode(this);
+    final digest = md5.convert(bytes).bytes;
+    final byteData = ByteData.sublistView(Uint8List.fromList(digest));
+    return byteData.getInt64(0); // 取前8字节
+  }
+
   String get upperFirst {
     if (isEmpty) return this;
     return '${this[0].toUpperCase()}${substring(1)}';

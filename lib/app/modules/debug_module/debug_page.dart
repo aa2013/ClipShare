@@ -156,7 +156,7 @@ class DebugPage extends GetView<DebugController> {
                 "content":"779"
               }),
               ClipboardSource(
-                id: "com.samsung.android.messaging",
+                id: "com.tencent.mm",
                 name: "clipshare",
                 time: DateTime.now(),
                 iconB64: "",

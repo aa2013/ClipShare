@@ -316,6 +316,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (last?.type == type.value && last?.content == content) {
       return;
     }
+    if(content.isEmpty){
+      return;
+    }
     int size = content.length;
     switch (type) {
       case HistoryContentType.image:

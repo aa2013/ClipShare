@@ -452,16 +452,6 @@ class ConfigService extends GetxService {
 
   bool get autoSyncMissingData => _autoSyncMissingData.value;
 
-  //黑名单功能
-  final _enableContentBlackList = false.obs;
-
-  bool get enableContentBlackList => _enableContentBlackList.value;
-
-  //黑名单列表
-  final _contentBlackList = <FilterRule>[].obs;
-
-  List<FilterRule> get contentBlackList => _contentBlackList.value;
-
   //启用通知记录
   final _enableRecordNotification = false.obs;
 
@@ -712,21 +702,6 @@ class ConfigService extends GetxService {
     _notifyOnDevDisconn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevDisconn, true));
     _notifyOnDevConn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevConn, true));
     _autoSyncMissingData.value = (await cfg.getConfigByKey(ConfigKey.autoSyncMissingData, true));
-    _enableContentBlackList.value = (await cfg.getConfigByKey(ConfigKey.enableContentBlackList, false));
-    _contentBlackList.value = (await cfg.getConfigByKey(
-      ConfigKey.blacklist,
-      [],
-      convert: (value) {
-        try {
-          List<Map<String, dynamic>> jsonList = (jsonDecode(value) as List<dynamic>).cast();
-          return jsonList.map((item) => FilterRule.fromJson(item)).toList();
-        } catch (err, stack) {
-          debugPrint(err.toString());
-          debugPrintStack(stackTrace: stack);
-          return [];
-        }
-      },
-    ));
     _enableRecordNotification.value = (await cfg.getConfigByKey(ConfigKey.enableRecordNotification, false));
     _enableShowMobileNotification.value = (await cfg.getConfigByKey(ConfigKey.enableShowMobileNotification, false));
     _webdavConfig.value = (await cfg.getConfigByKey(
@@ -1256,17 +1231,6 @@ class ConfigService extends GetxService {
     _autoSyncMissingData.value = enable;
   }
 
-  Future<void> setEnableContentBlackList(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.enableContentBlackList, enable.toString());
-    _enableContentBlackList.value = enable;
-  }
-
-  ///更新内容黑名单数据
-  Future<void> setContentBlacklist(List<FilterRule> rules) async {
-    await configDao.addOrUpdate(ConfigKey.blacklist, jsonEncode(rules));
-    _contentBlackList.value = rules;
-  }
-
   ///启用通知历史记录
   Future<void> setEnableRecordNotification(bool enabled) async {
     await configDao.addOrUpdate(ConfigKey.enableRecordNotification, enabled.toString());
@@ -1639,6 +1603,7 @@ class ConfigService extends GetxService {
             version: version,
             order: order++,
             regexWhiteBlackMode: WhiteBlackMode.black.name,
+            regexIsFinalRule: true,
             enabled: currentNotificationWhiteBlackMode == WhiteBlackMode.black && rule.enable,
             scriptContent: Constants.luaTemplateRule,
             scriptLanguage: RuleScriptLanguage.lua.name,
@@ -1680,6 +1645,53 @@ class ConfigService extends GetxService {
       }
     }
     //endregion
+
+    //endregion
+
+    //region 老内容规则转换
+    //是否黑名单模式
+
+    final isContentBlackMode = (await cfg.getConfigByKey(ConfigKey.enableContentBlackList, false));
+    final contentRules = (await cfg.getConfigByKey<List<FilterRule>>(
+      ConfigKey.blacklist,
+      <FilterRule>[],
+      convert: (value) {
+        try {
+          List<Map<String, dynamic>> jsonList = (jsonDecode(value) as List<dynamic>).cast();
+          return jsonList.map((item) => FilterRule.fromJson(item)).toList();
+        } catch (err, stack) {
+          debugPrint(err.toString());
+          debugPrintStack(stackTrace: stack);
+          return [];
+        }
+      },
+    ));
+    index = 1;
+    for(var rule in contentRules){
+      try {
+        rules.add(
+          Rule(
+            id: snowflake.nextId(),
+            name: "${TranslationKey.content.tr}${index++}",
+            platforms: allPlatforms,
+            trigger: RuleTrigger.onCopy.name,
+            type: RuleContentType.regex.name,
+            regexTags: "",
+            regexMain: rule.content,
+            regexAllowAddTag: false,
+            regexIsFinalRule: true,
+            version: version,
+            order: order++,
+            enabled: isContentBlackMode,
+            regexWhiteBlackMode: WhiteBlackMode.black.name,
+            scriptContent: Constants.luaTemplateRule,
+            scriptLanguage: RuleScriptLanguage.lua.name,
+          ),
+        );
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
 
     //endregion
 
