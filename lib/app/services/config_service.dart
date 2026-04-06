@@ -1150,7 +1150,6 @@ class ConfigService extends GetxService {
     if (appTheme == ThemeMode.system) {
       theme = Get.isPlatformDarkMode ? darkThemeData : lightThemeData;
     }
-    final isDarkTheme = theme == darkThemeData;
     ThemeSwitcher.of(context).changeTheme(
       theme: theme,
       isReversed: false,
@@ -1158,12 +1157,19 @@ class ConfigService extends GetxService {
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _appTheme.value = appTheme.name;
-      if (isDarkTheme) {
-        setSystemUIOverlayDarkStyle();
-      } else {
-        setSystemUIOverlayLightStyle();
-      }
+      final homeController = Get.find<HomeController>();
+      homeController.initNavBarItems();
+      updateSystemUIOverlayStyle();
     });
+  }
+
+  void updateSystemUIOverlayStyle() {
+    final isDarkTheme = appTheme == ThemeMode.dark;
+    if (isDarkTheme) {
+      setSystemUIOverlayDarkStyle();
+    } else {
+      setSystemUIOverlayLightStyle();
+    }
   }
 
   Future<void> setIgnoreUpdateVersion(String versionCode) async {
@@ -1411,7 +1417,7 @@ class ConfigService extends GetxService {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle.dark.copyWith(
-          systemNavigationBarColor: Colors.black,
+          systemNavigationBarColor: darkBackgroundColor2,
           systemNavigationBarIconBrightness: Brightness.light,
         ),
       );
@@ -1437,13 +1443,6 @@ class ConfigService extends GetxService {
     } else {
       setSystemUIOverlayLightStyle();
     }
-  }
-
-  ///修改主题模式
-  void changeThemeMode(ThemeMode theme) {
-    setAppTheme(theme, Get.context!);
-    // Get.changeThemeMode(theme);
-    // setSystemUIOverlayAutoStyle();
   }
 
   ///迁移 1.5.0 以前的规则到现版本

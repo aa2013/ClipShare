@@ -197,7 +197,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
     windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     locale = Locale(args.languageCode, args.countryCode);
   } else {
-    final appConfig=Get.find<ConfigService>();
+    final appConfig = Get.find<ConfigService>();
     isDarkMode = appConfig.appTheme == ThemeMode.dark;
   }
   runApp(

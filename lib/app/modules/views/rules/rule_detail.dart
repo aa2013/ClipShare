@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
@@ -21,6 +23,7 @@ import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -345,6 +348,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                     selectedIds: selectedSourceIds,
                     loadAppInfos: () {
                       final list = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
+                      list.addAll(sourceService.installedApps);
                       return Future<List<LocalAppInfo>>.value(list);
                     },
                     onSelectedDone: (selected) {
@@ -387,6 +391,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           TinySegmentedControl.fromStrings(
             options: RuleTrigger.values.map((e) => e.tr).toList(),
             selectedIndex: RuleTrigger.values.indexOf(selectedTrigger),
+            selectedBackgroundColor: Colors.blueGrey,
+            selectedColor: Colors.white,
+            backgroundColor: appConfig.currentIsDarkMode?const Color(0xff2e3b42):const Color(0xffdde1e3),
             onSelected: (i) {
               setState(() {
                 selectedTrigger = RuleTrigger.values[i];
@@ -609,6 +616,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
         TinySegmentedControl.fromStrings(
           options: whiteBlackModeValues.map((mode) => mode.tr).toList(),
           selectedIndex: whiteBlackModeValues.indexOf(currentMode),
+          selectedBackgroundColor: Colors.blueGrey,
+          selectedColor: Colors.white,
+          backgroundColor: appConfig.currentIsDarkMode?const Color(0xff2e3b42):const Color(0xffdde1e3),
           onSelected: (i) {
             setState(() {
               whiteBlackMode = whiteBlackModeValues[i];

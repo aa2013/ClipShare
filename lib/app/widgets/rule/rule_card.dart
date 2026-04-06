@@ -65,7 +65,7 @@ class RuleCard extends StatelessWidget {
             duration: duration,
             decoration: BoxDecoration(
               border: Border.all(
-                color: isActive ? Colors.blueGrey : Colors.white,
+                color: isActive ? Colors.blueGrey : Colors.transparent,
                 width: 2,
               ),
               borderRadius: _borderRadius,

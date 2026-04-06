@@ -99,7 +99,7 @@ class HomePage extends GetView<HomeController> {
                                           int syncedCnt = syncProgressService.syncedCnt;
                                           return LoadingDots(text: Text("${TranslationKey.homeAppBarSyncingProgressText.tr}($syncedCnt/$total)"));
                                         }
-                                        return Text(selectionMode ? selectionText : pageTitle);
+                                        return Text(selectionMode ? selectionText : pageTitle,style: const TextStyle(fontSize: 20),);
                                       },
                                     ),
                                   ],

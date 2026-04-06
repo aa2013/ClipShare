@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/widgets/base/platform_title_button.dart';
-import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';

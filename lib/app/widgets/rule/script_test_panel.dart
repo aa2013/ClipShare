@@ -7,6 +7,7 @@ import 'package:clipshare/app/widgets/log_line_highlight.dart';
 import 'package:clipshare/app/widgets/rule/rule_compile_info_highlight.dart';
 import 'package:clipshare/app/widgets/rule/rule_result_highlight.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 typedef WidgetBuilder = Widget Function(BuildContext context);
 
@@ -138,6 +139,7 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
               options: tabs,
               selectedBackgroundColor: Colors.blueGrey,
               selectedColor: Colors.white,
+              backgroundColor: Get.isDarkMode?const Color(0xff2e3b42):const Color(0xffdde1e3),
               onSelected: (index) {
                 setState(() {
                   panelIndex = index;
@@ -165,7 +167,7 @@ class _ScriptTestPanelState extends State<ScriptTestPanel> {
             ),
           ],
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         Expanded(
           child: IndexedStack(
             index: panelIndex,

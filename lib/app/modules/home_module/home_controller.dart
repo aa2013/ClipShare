@@ -342,11 +342,17 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   ///初始化导航栏
   void initNavBarItems() {
-    const color = Color(0xB3000000);
+    const lightThemeColor = Color(0xB3000000);
+    const darkThemeColor = Colors.blueGrey;
+    final isDarkTheme = appConfig.appTheme==ThemeMode.dark;
+    Color color = isDarkTheme?darkThemeColor:lightThemeColor;
+    if(appConfig.isSmallScreen && isDarkTheme){
+      color = Colors.white;
+    }
     const size = 20.0;
     final items = [
       BottomNavigationBarItem(
-        icon: const Icon(
+        icon: Icon(
           Icons.history,
           color: color,
           size: size,
@@ -354,7 +360,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         label: TranslationKey.historyRecord.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(
+        icon: Icon(
           Icons.devices_rounded,
           color: color,
           size: size,
@@ -362,7 +368,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         label: TranslationKey.myDevice.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(
+        icon: Icon(
           Icons.sync_alt_outlined,
           color: color,
           size: size,
@@ -371,7 +377,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       ),
       BottomNavigationBarItem(
         key: _searchNavItemKey,
-        icon: const Icon(
+        icon: Icon(
           Icons.search,
           color: color,
           size: size,
@@ -380,7 +386,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       ),
       BottomNavigationBarItem(
         key: _rulesNavItemKey,
-        icon: const Icon(
+        icon: Icon(
           Icons.code_outlined,
           color: color,
           size: size,
@@ -388,7 +394,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         label: TranslationKey.rulesManagement.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(
+        icon: Icon(
           Icons.settings,
           color: color,
           size: size,
@@ -398,7 +404,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     ];
     assert(() {
       items.add(
-        const BottomNavigationBarItem(
+        BottomNavigationBarItem(
           icon: Icon(
             Icons.bug_report_outlined,
             color: color,

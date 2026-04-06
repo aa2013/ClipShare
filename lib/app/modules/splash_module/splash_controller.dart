@@ -6,7 +6,6 @@ import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -137,6 +136,7 @@ class SplashController extends GetxController {
     if (PlatformExt.isDesktop) {
       await Get.putAsync(() => TrayService().init(), permanent: true);
     }
+    appConfig.updateSystemUIOverlayStyle();
     await appConfig.migrateRules();
   }
 

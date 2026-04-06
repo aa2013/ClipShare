@@ -8,11 +8,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
-const lightBackgroundColor = Color.fromARGB(255, 246, 249, 255);
-const darkBackgroundColor = Colors.black;
+const lightBackgroundColor = Color.fromARGB(255, 240, 243, 249);
 final lightThemeData = ThemeData.light().copyWith(
   colorScheme: ColorScheme.fromSeed(
     seedColor: Colors.lightBlueAccent,
+    surface: lightBackgroundColor,
     surfaceBright: Colors.white,
   ),
   cardTheme: const CardThemeData(color: Colors.white),
@@ -37,6 +37,8 @@ final lightThemeData = ThemeData.light().copyWith(
   dialogBackgroundColor: const Color(0xffdde1e3),
   canvasColor: Colors.white,
 );
+
+const darkBackgroundColor = Colors.black;
 const darkBackgroundColor2 = Color(0xff2e3b42);
 final darkThemeData = ThemeData.dark().copyWith(
   colorScheme: ColorScheme.fromSeed(
