@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
@@ -1242,6 +1241,7 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.webdav);
+                                    sktService.disableForwardServerAutoConn();
                                     await sktService.disConnectForwardServer();
                                     if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
                                       //若无配置，关闭中转
@@ -1270,6 +1270,7 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () async {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.s3);
+                                    sktService.disableForwardServerAutoConn();
                                     await sktService.disConnectForwardServer();
                                     if (!appConfig.enableForward || appConfig.s3Config == null) {
                                       //若无配置，关闭中转
@@ -1299,6 +1300,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   Future<void> setup() async {
                                     await appConfig.setEnableForward(false);
                                     await appConfig.setForwardWay(ForwardWay.none);
+                                    sktService.disableForwardServerAutoConn();
                                     await sktService.disConnectForwardServer();
                                     await storageService.stop();
                                   }
@@ -1465,34 +1467,11 @@ class SettingsPage extends GetView<SettingsController> {
                                   }
                                 } else {
                                   if (useServer) {
+                                    sktService.disableForwardServerAutoConn();
                                     sktService.disConnectForwardServer();
                                   } else {
                                     storageService.stop();
                                   }
-                                }
-                              },
-                            );
-                          },
-                        ),
-                      //中转程序心跳检测开关
-                      if (appConfig.forwardWay == ForwardWay.server)
-                        SettingCard(
-                          title: Text(
-                            TranslationKey.forwardSettingsForwardHeartbeatTitle.tr,
-                            maxLines: 1,
-                          ),
-                          description: Text(TranslationKey.forwardSettingsForwardHeartbeatDesc.tr),
-                          value: appConfig.enableForwardHeartbeat,
-                          action: (v) {
-                            return Switch(
-                              value: v,
-                              onChanged: (checked) async {
-                                HapticFeedback.mediumImpact();
-                                appConfig.setEnableForwardHeartbeat(checked);
-                                if (checked) {
-                                  sktService.enableForwardServerHeartbeat();
-                                } else {
-                                  sktService.disableForwardServerHeartbeat();
                                 }
                               },
                             );

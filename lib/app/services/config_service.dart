@@ -582,11 +582,6 @@ class ConfigService extends GetxService {
 
   Size? get fileSenderWindowSize => _fileSenderWindowSize.value;
 
-  ///中转心跳检测开关
-  final _enableForwardHeartbeat = true.obs;
-
-  bool get enableForwardHeartbeat => _enableForwardHeartbeat.value;
-
   ///设备连接和断开使用系统通知，若为true则使用托盘闪烁
   final _useTrayFlashingForConnection = false.obs;
 
@@ -827,7 +822,6 @@ class ConfigService extends GetxService {
         return null;
       },
     );
-    _enableForwardHeartbeat.value = await cfg.getConfigByKey(ConfigKey.enableForwardHeartbeat, true);
     _useTrayFlashingForConnection.value = await cfg.getConfigByKey(ConfigKey.useTrayFlashingForConnection, false);
   }
 
@@ -1482,12 +1476,6 @@ class ConfigService extends GetxService {
         return;
     }
     await configDao.addOrUpdate(key, "${size.width.toStringAsFixed(2)}x${size.height.toStringAsFixed(2)}");
-  }
-
-  ///启用/禁用中转心跳检测
-  Future<void> setEnableForwardHeartbeat(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.enableForwardHeartbeat, enable.toString());
-    _enableForwardHeartbeat.value = enable;
   }
 
   ///设备连接和断开使用系统通知，若为false则使用托盘闪烁

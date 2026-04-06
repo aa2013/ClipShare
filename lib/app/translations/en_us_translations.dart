@@ -1431,10 +1431,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Tips: Backup files and transfer files are stored in different folders within the same directory.\nIf the storage path is set to /ClipShare\nthen the temporary transfer files are stored in /ClipShare/history, \nthe backup files are stored in /ClipShare/backup.";
       case TranslationKey.uploading:
         return "Uploading";
-      case TranslationKey.forwardSettingsForwardHeartbeatTitle:
-        return "Forward Heartbeat Detection";
-      case TranslationKey.forwardSettingsForwardHeartbeatDesc:
-        return "If frequent disconnections (around 35s) of the forward server occur, you can try turning off the heartbeat detection.";
       case TranslationKey.useTrayFlashingForConnectionTitle:
         return "Flash system tray on connection or disconnection";
       case TranslationKey.useTrayFlashingForConnectionDesc:

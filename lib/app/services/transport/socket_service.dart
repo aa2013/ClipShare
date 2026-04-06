@@ -321,6 +321,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (_forwardClient != null) {
       await disConnectForwardServer();
     }
+    _autoConnForwardServer = true;
     if (appConfig.forwardWay != ForwardWay.server) {
       Log.debug(tag, "connectForwardServer forward way is ${appConfig.forwardWay.name}");
       return;
@@ -337,7 +338,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       _forwardClient = await ForwardSocketClient.connect(
         ip: forwardServerHost!,
         port: forwardServerPort!,
-        enableHeartbeat: appConfig.enableForwardHeartbeat,
         onMessage: (self, data) {
           Log.debug(tag, "forwardClient onMessage $data");
           _onForwardServerReceived(jsonDecode(data));
@@ -345,7 +345,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         onDone: (self) {
           _forwardClient = null;
           _updateForwardDisConnectedStatus();
-          Log.debug(tag, "forwardClient done");
+          Log.debug(tag, "forwardClient done $_autoConnForwardServer");
           if (_autoConnForwardServer) {
             Log.debug(tag, "尝试重连中转");
             Future.delayed(
@@ -357,7 +357,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         onError: (ex, self) {
           Log.debug(tag, "forwardClient onError $ex");
         },
-        onConnected: (self) {
+        onConnected: (self) async {
           _autoConnForwardServer = true;
           Log.debug(tag, "forwardClient onConnected");
           _updateForwardConnectedStatus();
@@ -370,7 +370,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           if (key != null) {
             connData["key"] = key;
           }
-          self.send(connData);
+          await self.send(connData);
           if (startDiscovery) {
             Future.delayed(1.s, () async {
               final list = await _forwardDiscovering();
@@ -393,28 +393,23 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     }
   }
 
-  ///启用中转心跳检测
-  void enableForwardServerHeartbeat(){
-    _forwardClient?.enableHeartbeatTest();
-  }
-
-  ///禁用中转心跳检测
-  void disableForwardServerHeartbeat(){
-    _forwardClient?.disableHeartbeatTest();
-  }
-
   ///断开中转服务器
   Future<void> disConnectForwardServer() async {
     if (_forwardClient == null) {
       return;
     }
     Log.debug(tag, "disConnectForwardServer");
-    _autoConnForwardServer = false;
-    await _forwardClient?.close();
+    final client = _forwardClient;
     _forwardClient = null;
+    await client?.close();
     _updateForwardDisConnectedStatus();
     _disconnectForwardSockets();
   }
+
+  void disableForwardServerAutoConn(){
+    _autoConnForwardServer = false;
+  }
+
 
   //region Update server status
   void _updateForwardConnectingStatus() {
@@ -1387,10 +1382,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (interval <= 0) return;
     //更新timer
     _heartbeatTimer = Timer.periodic(interval.s, (timer) {
-      if (_devSockets.isEmpty) return;
+      if (_devSockets.isNotEmpty){
+        DataSender.sendData2All(MsgType.ping, {}, false);
+      }
       Log.debug(tag, "send ping");
       // judgeDeviceHeartbeatTimeout();
-      DataSender.sendData2All(MsgType.ping, {}, false);
+      _forwardClient?.send({
+        "type": ForwardMsgType.ping.name,
+      });
     });
   }
 
@@ -1449,6 +1448,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
       Log.debug(tag, "屏幕关闭时间已到，断开所有连接和心跳测试");
       autoCloseConnTimer = null;
+      disableForwardServerAutoConn();
       disConnectAllConnections();
       stopHeartbeatTest();
     });
@@ -1752,14 +1752,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///移除中转文件发送记录
-  void removeSendFileRecordByForward(
+  Future<void> removeSendFileRecordByForward(
     FileSyncHandler fileSyncer,
     int fileId,
     String? targetDevId,
-  ) {
+  ) async {
     _forwardFiles.remove(fileId);
     if (targetDevId != null) {
-      _forwardClient?.send({
+      await _forwardClient?.send({
         "type": ForwardMsgType.cancelSendFile.name,
         "targetId": targetDevId,
       });

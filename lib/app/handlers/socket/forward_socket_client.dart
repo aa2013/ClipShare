@@ -29,10 +29,7 @@ class ForwardSocketClient {
 
   int get port => _port;
   late final Socket _socket;
-  bool _enableHeartbeat = true;
 
-  DateTime? _lastPingTime;
-  Timer? _heartbeatTimer;
   bool _listening = false;
   late final void Function(ForwardSocketClient client, String data)? _onMessage;
   void Function(Exception e, ForwardSocketClient client)? _onError;
@@ -54,7 +51,6 @@ class ForwardSocketClient {
     void Function(Exception e, ForwardSocketClient client)? onError,
     void Function(ForwardSocketClient client)? onDone,
     bool? cancelOnError,
-    bool enableHeartbeat = true,
   }) async {
     var socket = await Socket.connect(
       ip,
@@ -67,7 +63,6 @@ class ForwardSocketClient {
       onError: onError,
       onDone: onDone,
       cancelOnError: cancelOnError,
-      enableHeartbeat: enableHeartbeat,
     );
     onConnected?.call(ssc);
     return ssc;
@@ -80,7 +75,6 @@ class ForwardSocketClient {
     void Function(Exception e, ForwardSocketClient self)? onError,
     void Function(ForwardSocketClient self)? onDone,
     bool? cancelOnError,
-    bool enableHeartbeat = true,
   }) {
     var ssc = ForwardSocketClient._private(socket.remoteAddress.address);
     if (serverPort != null) {
@@ -91,11 +85,7 @@ class ForwardSocketClient {
     ssc._onError = onError;
     ssc._onDone = onDone;
     ssc._cancelOnError = cancelOnError;
-    ssc._enableHeartbeat = enableHeartbeat;
     ssc._listen();
-    if (enableHeartbeat) {
-      ssc._startJudgeForwardClientAlivePeriod();
-    }
     return ssc;
   }
 
@@ -110,13 +100,7 @@ class ForwardSocketClient {
           .transform(DataPacketSplitter())
           .listen(
             (e) {
-              var rec = utf8.decode(e);
-              if (rec == '{"type":"ping"}') {
-                _lastPingTime = DateTime.now();
-                Log.debug(tag, "forward client ping, update pingTime = ${_lastPingTime!.format()}");
-              } else {
-                _onMessage?.call(this, rec);
-              }
+              _onMessage?.call(this, utf8.decode(e));
             },
             onError: (e) {
               Log.error(tag, "error:$e");
@@ -125,7 +109,6 @@ class ForwardSocketClient {
               }
             },
             onDone: () {
-              _stopJudgeForwardClientAlive();
               // 尝试修复端口不释放的问题
               _socket.destroy();
               _onDone?.call(this);
@@ -139,7 +122,7 @@ class ForwardSocketClient {
   }
 
   ///发送数据
-  void send(Map map) {
+  Future<void> send(Map map) async {
     try {
       //向中转服务器发送基本信息
       final payload = utf8.encode(jsonEncode(map));
@@ -158,6 +141,7 @@ class ForwardSocketClient {
       packet.setAll(header.length, payload);
       //写入数据
       _socket.add(packet);
+      await _socket.flush();
     } catch (e, stack) {
       Log.debug(tag, "发送失败：$e");
       Log.debug(tag, "_onDone ${_onDone == null}");
@@ -168,63 +152,8 @@ class ForwardSocketClient {
     }
   }
 
-  ///定时判断中转服务连接存活状态
-  void _startJudgeForwardClientAlivePeriod() {
-    if (!_enableHeartbeat) {
-      return;
-    }
-    //先停止
-    if (_heartbeatTimer != null) {
-      _stopJudgeForwardClientAlive();
-    }
-    _lastPingTime = DateTime.now();
-    //更新timer
-    _heartbeatTimer = Timer.periodic(35.s, (timer) async {
-      var disconnected = false;
-      if (_lastPingTime == null) {
-        disconnected = true;
-        Log.debug(tag, "startJudgeForwardClientAlivePeriod _lastForwardServerPingTime is null");
-      } else {
-        final now = DateTime.now();
-        if (now.difference(_lastPingTime!).inSeconds >= 35) {
-          disconnected = true;
-          Log.debug(tag, "startJudgeForwardClientAlivePeriod _lastForwardServerPingTime is ${_lastPingTime!.format()}");
-        }
-      }
-      Log.debug(tag, "startJudgeForwardClientAlivePeriod disconnected: $disconnected");
-      if (!disconnected) return;
-      await close();
-    });
-  }
-
-  ///停止定时判断中转服务连接存活状态
-  void _stopJudgeForwardClientAlive() {
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
-    _lastPingTime = null;
-  }
-
-  void enableHeartbeatTest() {
-    if (_enableHeartbeat) {
-      return;
-    }
-    _enableHeartbeat = true;
-    if (_heartbeatTimer != null) {
-      _startJudgeForwardClientAlivePeriod();
-    }
-  }
-
-  void disableHeartbeatTest() {
-    if (!_enableHeartbeat) {
-      return;
-    }
-    _enableHeartbeat = false;
-    _stopJudgeForwardClientAlive();
-  }
-
   ///关闭连接
   Future close() {
-    _stopJudgeForwardClientAlive();
     return _socket.close();
   }
 

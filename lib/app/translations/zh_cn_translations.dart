@@ -1429,10 +1429,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "注意：备份文件和中转文件存储于同一目录下的不同文件夹中\n如若存储路径选择为 /ClipShare\n则中转文件则存储于 /ClipShare/history 中\n备份文件存储于 /ClipShare/backup 中";
       case TranslationKey.uploading:
         return "上传中";
-      case TranslationKey.forwardSettingsForwardHeartbeatTitle:
-        return "中转心跳检测";
-      case TranslationKey.forwardSettingsForwardHeartbeatDesc:
-        return "若出现频繁中转服务器断连（35s左右）可尝试关闭心跳检测";
       case TranslationKey.useTrayFlashingForConnectionTitle:
         return "设备连接或断开后使用托盘闪烁";
       case TranslationKey.useTrayFlashingForConnectionDesc:
