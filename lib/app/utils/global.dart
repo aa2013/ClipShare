@@ -12,6 +12,7 @@ import 'package:clipshare/app/widgets/dialog/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'constants.dart';
 
@@ -20,6 +21,7 @@ class Global {
 
   static const tag = "GlobalUtils";
   static final _displayingDialogs = <String>{};
+  static final _dialogDisplayLock = Lock(); // 创建互斥锁
 
   static void toast(String text) {
     final androidChannelService = Get.find<AndroidChannelService>();
@@ -119,7 +121,7 @@ class Global {
     return dlgCtl;
   }
 
-  static DialogController? showTipsDialog({
+  static Future<DialogController?> showTipsDialog({
     required BuildContext context,
     required String text,
     bool selectable = false,
@@ -136,9 +138,18 @@ class Global {
     void Function()? onNeutral,
     bool autoDismiss = true,
     double maxWidth = double.maxFinite,
-  }) {
-    final md5 = CryptoUtil.toMD5("$title$text");
-    if(_displayingDialogs.contains(md5)){
+  }) async {
+    var cancelDisplay = false;
+    late String md5;
+    await _dialogDisplayLock.synchronized((){
+      md5 = CryptoUtil.toMD5("$title$text");
+      if(_displayingDialogs.contains(md5)){
+        cancelDisplay = true;
+      } else {
+        _displayingDialogs.add(md5);
+      }
+    });
+    if(cancelDisplay){
       return null;
     }
     try {

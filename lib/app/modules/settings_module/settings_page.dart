@@ -2176,7 +2176,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   return;
                                 }
                                 DialogController? dialog;
-                                dialog = Global.showTipsDialog(
+                                dialog = await Global.showTipsDialog(
                                   context: context,
                                   text: TranslationKey.syncSettingsStoreImg2PicturesNoPermText.tr,
                                   showCancel: true,

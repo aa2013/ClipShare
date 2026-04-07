@@ -500,7 +500,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
               child: Icon(MdiIcons.cancel),
             ),
             _fabButtonFun(
-              onPressed: () {
+              onPressed: () async {
                 void multiDelete(bool deleteFile, [bool onlyDeleteLocal = false]) async {
                   Get.back();
                   Global.showLoadingDialog(
@@ -520,7 +520,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
                 }
                 DialogController? dialog;
                 final onlyDeleteLocal = false.obs;
-                dialog = Global.showTipsDialog(
+                dialog = await Global.showTipsDialog(
                   context: context,
                   text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
                   showCancel: true,

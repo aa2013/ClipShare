@@ -487,7 +487,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     if (!enabled) {
       final dirPath = await appConfig.getJiebaSegmentFileDirPath();
       DialogController? dialog;
-      dialog = Global.showTipsDialog(
+      dialog = await Global.showTipsDialog(
         context: context,
         text: TranslationKey.notFoundJiebaFiles.trParams({"dirPath": dirPath}),
         okText: TranslationKey.installJiebaDictFile.tr,

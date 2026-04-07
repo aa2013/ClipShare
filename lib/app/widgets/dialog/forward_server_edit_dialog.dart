@@ -112,7 +112,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
         Map<String, dynamic> json = jsonDecode(data);
         if (json.containsKey("version")) {
           setState(() {
-            serverVersion = "V${json["version"]?.toString() ?? ""}";
+            serverVersion = json["version"]?.toString() ?? "";
           });
         }
         if (!json.containsKey("result")) {
@@ -362,7 +362,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
               if (serverVersion.isNotEmpty)
                 Padding(
                   padding: 16.insetL,
-                  child: Text("${TranslationKey.version.tr}: $serverVersion"),
+                  child: Text("V${TranslationKey.version.tr}: $serverVersion"),
                 ),
             ],
           ),
