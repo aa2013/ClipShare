@@ -109,6 +109,7 @@ class ForwardSocketClient {
               }
             },
             onDone: () {
+              Log.debug(tag, "onDone");
               // 尝试修复端口不释放的问题
               _socket.destroy();
               _onDone?.call(this);
@@ -153,8 +154,13 @@ class ForwardSocketClient {
   }
 
   ///关闭连接
-  Future close() {
-    return _socket.close();
+  Future close() async {
+    try {
+      await _socket.close();
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+    } finally {
+      _socket.destroy();
+    }
   }
-
 }

@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/forward_server_config.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -39,6 +40,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
   String? keyErrText;
   bool useKey = false;
   bool detecting = false;
+  String serverVersion = '';
 
   @override
   void initState() {
@@ -86,6 +88,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
     }
     setState(() {
       detecting = true;
+      serverVersion = "";
     });
     ForwardSocketClient.connect(
       ip: hostEditor.text,
@@ -107,6 +110,11 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
       },
       onMessage: (client, data) {
         Map<String, dynamic> json = jsonDecode(data);
+        if(json.containsKey("version")){
+          setState(() {
+            serverVersion = "V${json["version"]?.toString()??""}";
+          });
+        }
         if (!json.containsKey("result")) {
           Global.showTipsDialog(
             context: context,
@@ -268,6 +276,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
         width: 350,
         child: IntrinsicHeight(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
@@ -355,6 +364,11 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                   ],
                 ),
               ),
+              if (serverVersion.isNotEmpty)
+                Padding(
+                  padding: 16.insetL,
+                  child: Text("${TranslationKey.version.tr}: $serverVersion"),
+                ),
             ],
           ),
         ),

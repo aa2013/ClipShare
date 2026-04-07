@@ -111,6 +111,9 @@ class ConfigService extends GetxService {
 
   //region 应用内配置
 
+  //中转服务版本号
+  final forwardServerVersion = ''.obs;
+
   //当前是否是深色模式
   bool get currentIsDarkMode {
     if (appTheme == ThemeMode.system) {
