@@ -117,8 +117,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (_isInit) throw Exception("已初始化");
     // 初始化，创建socket监听
     _runSocketServer();
-    //连接中转服务器
-    await connectForwardServer();
     startDiscoveryDevices();
     startHeartbeatTest();
     ScreenOpenedListener.inst.register(this);
@@ -374,26 +372,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
             connData["key"] = key;
           }
           await self.send(connData);
-          await self.send({
-            "type": ForwardMsgType.version.name,
-          });
-          Future.delayed(2.s,(){
-            final settingController = Get.find<SettingsController>();
-            if (settingController.forwardServerStatus.value == ForwardServerStatus.connected) {
-              if (ForwardSocketClient.lessThan114(appConfig.forwardServerVersion.value)) {
-                final dialog = Global.showTipsDialog(
-                  context: Get.context!,
-                  text: TranslationKey.forwardServer114VersionTip.tr,
-                );
-                if (dialog != null) {
-                  NotifyUtil.notify(
-                    content: TranslationKey.forwardServer114VersionTip.tr,
-                    key: TranslationKey.forwardServer114VersionTip.name,
-                  );
-                }
-              }
-            }
-          });
           if (startDiscovery) {
             Future.delayed(1.s, () async {
               final list = await _forwardDiscovering();
@@ -405,7 +383,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       );
     } catch (e) {
       _updateForwardDisConnectedStatus();
-      Log.debug(tag, "connect forward server failed _autoConnForwardServer = $_autoConnForwardServer, error: $e");
+      if(appConfig.currentNetWorkType.value != ConnectivityResult.none){
+        Log.debug(tag, "connect forward server failed _autoConnForwardServer = $_autoConnForwardServer, error: $e");
+      }
       if (_autoConnForwardServer) {
         Log.debug(tag, "尝试重连中转");
         Future.delayed(
@@ -494,6 +474,25 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         }
         final result = data["result"];
         if (result == "success") {
+
+          Future.delayed(2.s,() async {
+            final settingController = Get.find<SettingsController>();
+          });
+
+          final version = data["version"]?.toString();
+          appConfig.forwardServerVersion.value = version ?? "";
+          if (ForwardSocketClient.lessThan114(version)) {
+            final dialog = await Global.showTipsDialog(
+              context: Get.context!,
+              text: TranslationKey.forwardServer114VersionTip.tr,
+            );
+            if (dialog != null) {
+              NotifyUtil.notify(
+                content: TranslationKey.forwardServer114VersionTip.tr,
+                key: TranslationKey.forwardServer114VersionTip.name,
+              );
+            }
+          }
           return;
         }
         disableForwardServerAfterDelay();
@@ -859,7 +858,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
     }
     //更新设备发现控制令牌
-    _discoveryTokenSource = CancelTokenSource();
+    final cts = _discoveryTokenSource = CancelTokenSource();
 
     //重新更新广播监听
     try {
@@ -932,7 +931,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///重新发现设备
-  void restartDiscoveryDevices() async {
+  Future<void> restartDiscoveryDevices() async {
     Log.debug(tag, "重新开始发现设备");
     await stopDiscoveryDevices(true);
     startDiscoveryDevices(restart: true);
@@ -1446,9 +1445,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   @override
   void onScreenOpened() {
     screenOpened = true;
-    if (_forwardClient == null) {
-      connectForwardServer();
-    }
     startDiscoveryDevices(scan: appConfig.enableAutoSyncOnScreenOpened);
     startHeartbeatTest();
     Log.debug(tag, "屏幕打开");

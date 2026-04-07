@@ -367,12 +367,12 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         final isBlacklistMode = appConfig.currentNotificationWhiteBlackMode == WhiteBlackMode.black;
         //匹配到黑名单，结束
         if (matchResult.matched && isBlacklistMode) {
-          Log.info(tag, "match blacklist, rule = ${matchResult.rule}, content $content");
+          Log.info(tag, "match blacklist, rule = ${matchResult.rule}");
           return;
         }
         //白名单模式，但未匹配到，结束
         if (!isBlacklistMode && !matchResult.matched) {
-          Log.info(tag, "not matched whitelist, content $content");
+          Log.info(tag, "not matched whitelist");
           return;
         }
         break;

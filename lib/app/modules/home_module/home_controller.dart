@@ -41,6 +41,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:no_screenshot/no_screenshot.dart';
 import 'package:zip_flutter/zip_flutter.dart';
+import 'package:synchronized/synchronized.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -54,6 +55,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   final androidChannelService = Get.find<AndroidChannelService>();
   final Set<MultiSelectionPopScopeDisableListener> _multiSelectionPopScopeDisableListeners = {};
+  static final _networkChangedLock = Lock(); // 创建互斥锁
 
   //region 属性
   static const defaultDrawerWidth = 400.0;
@@ -99,7 +101,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   late AppInfoSyncHandler _appInfoSyncer;
   late RulesSyncHandler _rulesSyncer;
   late StreamSubscription _networkListener;
-  DateTime? _lastNetworkChangeTime;
   DateTime? pausedTime;
   final logoImg = Image.asset(
     Constants.logoPngPath,
@@ -433,33 +434,29 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   //endregion
 
+  Timer? _networkChangedTimer;
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
-    _lastNetworkChangeTime = DateTime.now();
-    Log.debug(tag, "网络变化 -> ${result.name}");
-    final lastNetwork = appConfig.currentNetWorkType.value;
-    //网络变化前的状态，非无网络状态,断开中转服务连接
-    if (lastNetwork != ConnectivityResult.none) {
-      sktService.disConnectAllConnections();
-      storageService.disconnectWs();
-    }
-    appConfig.currentNetWorkType.value = result;
-    //网络变化后的处理，重新连接/设备发现
-    if (result != ConnectivityResult.none) {
-      var delayMs = 0;
-      if (_lastNetworkChangeTime != null) {
-        var now = DateTime.now();
-        final diffMs = (now.difference(_lastNetworkChangeTime!).inMilliseconds).abs();
-        if (diffMs < 1000) {
-          Log.debug(tag, "Delay execution due to less than 1000ms(act ${diffMs}ms) since the last network change");
-          delayMs = 1000;
+    await _networkChangedLock.synchronized(() {
+      _networkChangedTimer?.cancel();
+      _networkChangedTimer = Timer(1500.ms, (){
+        Log.debug(tag, "网络变化 -> ${result.name}");
+        if(result == ConnectivityResult.none){
+          return;
         }
-      }
-      Future.delayed(delayMs.ms, () {
+        final lastNetwork = appConfig.currentNetWorkType.value;
+        //网络变化前的状态，非无网络状态,断开中转服务连接
+        if (lastNetwork != ConnectivityResult.none) {
+          sktService.disableForwardServerAutoConn();
+          sktService.disConnectAllConnections();
+          storageService.disconnectWs();
+        }
+        appConfig.currentNetWorkType.value = result;
+        //网络变化后的处理，重新连接/设备发现
+        sktService.restartDiscoveryDevices();
         storageService.reconnectWs();
         storageService.uploadSyncFailedData();
       });
-      Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
-    }
+    });
   }
 
   //region drawer 打开和关闭
