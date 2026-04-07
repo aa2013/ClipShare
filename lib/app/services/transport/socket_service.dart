@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/connection_mode.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
@@ -22,6 +23,7 @@ import 'package:clipshare/app/handlers/socket/secure_socket_server.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
@@ -374,6 +376,23 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           await self.send(connData);
           await self.send({
             "type": ForwardMsgType.version.name,
+          });
+          Future.delayed(2.s,(){
+            final settingController = Get.find<SettingsController>();
+            if (settingController.forwardServerStatus.value == ForwardServerStatus.connected) {
+              if (ForwardSocketClient.lessThan114(appConfig.forwardServerVersion.value)) {
+                final dialog = Global.showTipsDialog(
+                  context: Get.context!,
+                  text: TranslationKey.forwardServer114VersionTip.tr,
+                );
+                if (dialog != null) {
+                  NotifyUtil.notify(
+                    content: TranslationKey.forwardServer114VersionTip.tr,
+                    key: TranslationKey.forwardServer114VersionTip.name,
+                  );
+                }
+              }
+            }
           });
           if (startDiscovery) {
             Future.delayed(1.s, () async {

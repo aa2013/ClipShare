@@ -1435,6 +1435,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Flash system tray on connection or disconnection";
       case TranslationKey.useTrayFlashingForConnectionDesc:
         return "If enabled, flash the system tray; otherwise, use default system notifications";
+      case TranslationKey.forwardServer114VersionTip:
+        return "The current relay server version has concurrency security issues. It is recommended to upgrade to version 1.1.4 (this version will display the version number on the relay server's web page).";
     }
   }
 }

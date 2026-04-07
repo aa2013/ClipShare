@@ -163,4 +163,26 @@ class ForwardSocketClient {
       _socket.destroy();
     }
   }
+
+  static bool lessThan114(String? version) {
+    if (version.isNullOrEmpty) {
+      return true;
+    }
+    try {
+      final versionParts = version!.split(".").map((p) => p.toInt()).toList();
+      while (versionParts.length < 3) {
+        versionParts.add(0);
+      }
+      final version114 = <int>[1, 1, 4];
+      for (var i = 0; i < version114.length; i++) {
+        if (version114[i] > versionParts[i]) {
+          return true;
+        }
+      }
+      return false;
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+      return true;
+    }
+  }
 }

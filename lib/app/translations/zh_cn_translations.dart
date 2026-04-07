@@ -1433,6 +1433,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "设备连接或断开后使用托盘闪烁";
       case TranslationKey.useTrayFlashingForConnectionDesc:
         return "若启用则表示使用托盘闪烁的方式否则为默认的系统通知";
+      case TranslationKey.forwardServer114VersionTip:
+        return "当前中转程序版本存在并发安全问题，建议升级至 1.1.4 版本（此版本中转程序 Web页面会显示版本号）。";
     }
   }
 }

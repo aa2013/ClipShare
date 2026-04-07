@@ -110,9 +110,9 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
       },
       onMessage: (client, data) {
         Map<String, dynamic> json = jsonDecode(data);
-        if(json.containsKey("version")){
+        if (json.containsKey("version")) {
           setState(() {
-            serverVersion = "V${json["version"]?.toString()??""}";
+            serverVersion = "V${json["version"]?.toString() ?? ""}";
           });
         }
         if (!json.containsKey("result")) {
@@ -130,65 +130,60 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
               title: TranslationKey.connectFailed.tr,
             );
           } else {
+            String content = "";
             if (json.containsKey("unlimited")) {
-              Global.showTipsDialog(
-                context: context,
-                text: TranslationKey.forwardServerUnlimitedDevices.tr,
-                title: TranslationKey.connectSuccess.tr,
-              );
-              return;
-            }
-            if (!json.containsKey("deviceLimit")) {
-              String content = "${TranslationKey.publicForwardServer.tr}\n";
-              if (json.containsKey("fileSyncRate")) {
-                content += "${TranslationKey.forwardServerSyncFileRateLimit.tr}: ${json["fileSyncRate"]} KB/s";
-              } else if (json.containsKey("fileSyncNotAllowed")) {
-                content += TranslationKey.forwardServerCannotSyncFile.tr;
+              content = "${TranslationKey.forwardServerUnlimitedDevices.tr}\n";
+            } else {
+              if (!json.containsKey("deviceLimit")) {
+                content = "${TranslationKey.publicForwardServer.tr}\n";
+                if (json.containsKey("fileSyncRate")) {
+                  content += "${TranslationKey.forwardServerSyncFileRateLimit.tr}: ${json["fileSyncRate"]} KB/s\n";
+                } else if (json.containsKey("fileSyncNotAllowed")) {
+                  content += "${TranslationKey.forwardServerCannotSyncFile.tr}\n";
+                } else {
+                  content += "${TranslationKey.forwardServerNoLimits.tr}\n";
+                }
               } else {
-                content += TranslationKey.forwardServerNoLimits.tr;
+                String deviceLimit = json["deviceLimit"];
+                if (deviceLimit == "∞") {
+                  deviceLimit = TranslationKey.noLimits.tr;
+                } else {
+                  deviceLimit += " ${TranslationKey.deviceUnit.tr}";
+                }
+                String lifeSpan = json["lifeSpan"];
+                if (lifeSpan == "∞") {
+                  lifeSpan = TranslationKey.noLimits.tr;
+                } else {
+                  lifeSpan += " ${TranslationKey.day.tr}";
+                }
+                String rate = json["rate"];
+                if (rate == "∞") {
+                  rate = TranslationKey.noLimits.tr;
+                } else {
+                  rate += " KB/s";
+                }
+                String remaining = json["remaining"];
+                if (remaining == "-1") {
+                  remaining = TranslationKey.forwardServerKeyNotStarted.tr;
+                } else if (remaining != "0") {
+                  remaining = "${(remaining.toDouble() / (24 * 60 * 60)).toStringAsFixed(2)} 天";
+                } else {
+                  remaining = TranslationKey.exhausted.tr;
+                }
+                String remark = json["remark"];
+                content =
+                    ""
+                    "${TranslationKey.forwardServerDeviceConnectionLimit.tr}: $deviceLimit\n"
+                    "${TranslationKey.forwardServerLifeSpan.tr}: $lifeSpan\n"
+                    "${TranslationKey.forwardServerRemainingTime.tr}: $remaining\n"
+                    "${TranslationKey.forwardServerRateLimit.tr}: $rate\n";
+                if (remark.isNotEmpty) {
+                  content += "${TranslationKey.forwardServerRemark.tr}：\n$remark\n";
+                }
               }
-              Global.showTipsDialog(
-                context: context,
-                text: content,
-                title: TranslationKey.connectSuccess.tr,
-              );
-              return;
             }
-            String deviceLimit = json["deviceLimit"];
-            if (deviceLimit == "∞") {
-              deviceLimit = TranslationKey.noLimits.tr;
-            } else {
-              deviceLimit += " ${TranslationKey.deviceUnit.tr}";
-            }
-            String lifeSpan = json["lifeSpan"];
-            if (lifeSpan == "∞") {
-              lifeSpan = TranslationKey.noLimits.tr;
-            } else {
-              lifeSpan += " ${TranslationKey.day.tr}";
-            }
-            String rate = json["rate"];
-            if (rate == "∞") {
-              rate = TranslationKey.noLimits.tr;
-            } else {
-              rate += " KB/s";
-            }
-            String remaining = json["remaining"];
-            if (remaining == "-1") {
-              remaining = TranslationKey.forwardServerKeyNotStarted.tr;
-            } else if (remaining != "0") {
-              remaining = "${(remaining.toDouble() / (24 * 60 * 60)).toStringAsFixed(2)} 天";
-            } else {
-              remaining = TranslationKey.exhausted.tr;
-            }
-            String remark = json["remark"];
-            String content =
-                ""
-                "${TranslationKey.forwardServerDeviceConnectionLimit.tr}: $deviceLimit\n"
-                "${TranslationKey.forwardServerLifeSpan.tr}: $lifeSpan\n"
-                "${TranslationKey.forwardServerRemainingTime.tr}: $remaining\n"
-                "${TranslationKey.forwardServerRateLimit.tr}: $rate\n";
-            if (remark.isNotEmpty) {
-              content += "${TranslationKey.forwardServerRemark.tr}：\n$remark\n";
+            if (ForwardSocketClient.lessThan114(serverVersion)) {
+              content += "${TranslationKey.tips.tr}: ${TranslationKey.forwardServer114VersionTip.tr}\n";
             }
             Global.showTipsDialog(
               context: context,

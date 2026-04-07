@@ -707,7 +707,8 @@ enum TranslationKey {
   uploading,
   preferenceSettingsRecordsDialogSize,
   useTrayFlashingForConnectionTitle,
-  useTrayFlashingForConnectionDesc;
+  useTrayFlashingForConnectionDesc,
+  forwardServer114VersionTip;
 
   String get tr => name.tr;
 
