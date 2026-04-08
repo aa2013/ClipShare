@@ -54,7 +54,6 @@ class SecureSocketClient {
   bool get isForwardMode => _connectionMode == ConnectionMode.forward;
 
   late final DataPacketSplitter _dataSplitter;
-  final StreamController<String> _msgStreamController = StreamController();
 
   SecureSocketClient._private(this.ip);
 
@@ -165,11 +164,11 @@ class SecureSocketClient {
         Log.debug(tag, "forward ${type.name}");
         switch (type) {
           case ForwardMsgType.bothConnected:
-            await send({"type": ForwardMsgType.bothConnected.name});
             String sender = json["sender"];
             if (sender != _selfDevId) {
               _forwardReady = true;
             }
+            await send({"type": ForwardMsgType.bothConnected.name});
             break;
           case ForwardMsgType.forwardReady:
             _forwardReady = true;
@@ -232,14 +231,10 @@ class SecureSocketClient {
             },
             onError: (e) {
               Log.error(tag, "error:$e");
-              if (_onError != null) {
-                _onError!(e, this);
-              }
+              _onError?.call(e, this);
             },
             onDone: () async {
-              if (_keyIsExchanged) {
-                _onDone?.call(this);
-              }
+              _onDone?.call(this);
               // 尝试修复端口不释放的问题
               _socket.destroy();
             },
@@ -380,9 +375,7 @@ class SecureSocketClient {
       Log.debug(tag, "发送失败：$e");
       Log.debug(tag, "send, _onDone = ${_onDone == null}");
       Log.debug(tag, "$stack");
-      if (_onDone != null) {
-        _onDone!.call(this);
-      }
+      _onDone?.call(this);
     }
   }
 
@@ -416,7 +409,6 @@ class SecureSocketClient {
 
   ///关闭连接
   Future close() async {
-    await _msgStreamController.close();
     return _socket.close();
   }
 

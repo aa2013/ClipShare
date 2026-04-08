@@ -508,12 +508,8 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                                 );
                               }
                             } else {
-                              if (protocol == TransportProtocol.server) {
-                                sktService.manualConnectByForward(device.guid);
-                              } else if (protocol == TransportProtocol.direct) {
-                                var address = device.address;
-                                var [ip, port] = address!.split(":");
-                                sktService.manualConnect(ip, port: port.toInt());
+                              if(protocol.isSocket){
+                                sktService.reconnectOnce(device.guid);
                               } else {
                                 storageService.connectDevice(devInfo.guid);
                               }

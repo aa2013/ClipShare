@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:clipshare/app/data/enums/forward_server_status.dart';
+import 'package:synchronized/synchronized.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/connection_mode.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
@@ -315,7 +315,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       '服务端已启动，监听所有网络接口 ${_server.ip} ${_server.port}',
     );
   }
-
   ///连接中转服务器
   Future<void> connectForwardServer([bool startDiscovery = false]) async {
     if (_forwardClient != null) {
@@ -826,6 +825,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   var _discovering = false;
 
   bool get discovering => _discovering;
+  Timer? _discoveryTimer;
+  final _discoveryLock = Lock();
 
   ///发现设备
   void startDiscoveryDevices({
@@ -833,86 +834,92 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     bool scan = true,
     bool manual = false,
   }) async {
-    if (_discovering) {
-      Log.debug(tag, "正在发现设备");
-      return;
-    }
-    if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
-      Log.debug(tag, "无网络");
-      return;
-    }
-    _discovering = true;
-    for (var listener in _discoverListeners) {
-      listener.onDiscoverStart();
-    }
-    Log.debug(tag, "开始发现设备");
-    onDiscoveryStopped(){
-      //设备发现流程结束
-      appConfig.deviceDiscoveryStatus.value = null;
-      if (!_discoveryTokenSource.token.isCanceled) {
-        _discoveryTokenSource.cancel();
-      }
-      _discovering = false;
-      for (var listener in _discoverListeners) {
-        listener.onDiscoverFinished();
-      }
-    }
-    //更新设备发现控制令牌
-    final cts = _discoveryTokenSource = CancelTokenSource();
+    _discoveryLock.synchronized((){
+      _discoveryTimer?.cancel();
+      _discoveryTimer = Timer(500.ms, () async {
+        Log.debug(tag, "进入设备发现逻辑");
+        if (_discovering) {
+          Log.debug(tag, "正在发现设备");
+          return;
+        }
+        if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
+          Log.debug(tag, "无网络");
+          return;
+        }
+        _discovering = true;
+        for (var listener in _discoverListeners) {
+          listener.onDiscoverStart();
+        }
+        Log.debug(tag, "开始发现设备");
+        onDiscoveryStopped(){
+          //设备发现流程结束
+          appConfig.deviceDiscoveryStatus.value = null;
+          if (!_discoveryTokenSource.token.isCanceled) {
+            _discoveryTokenSource.cancel();
+          }
+          _discovering = false;
+          for (var listener in _discoverListeners) {
+            listener.onDiscoverFinished();
+          }
+        }
+        //更新设备发现控制令牌
+        final cts = _discoveryTokenSource = CancelTokenSource();
 
-    //重新更新广播监听
-    try {
-      if (!appConfig.onlyForwardMode) {
-        await _startListenMulticast();
-      }
-    } catch (err, stack) {
-      Log.error(tag, "error: $e, $stack");
-    }
-    //尝试连接中转服务器
-    if (_forwardClient == null) {
-      await connectForwardServer();
-    }
+        //重新更新广播监听
+        try {
+          if (!appConfig.onlyForwardMode) {
+            await _startListenMulticast();
+          }
+        } catch (err, stack) {
+          Log.error(tag, "error: $e, $stack");
+        }
+        //尝试连接中转服务器
+        if (_forwardClient == null) {
+          await connectForwardServer();
+        }
 
-    //设备发现控制令牌
-    var token = _discoveryTokenSource.token;
-    //发现已配对设备
-    if(token.isCanceled){
-      onDiscoveryStopped();
-      return;
-    }
-    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
-    final List<Future<void> Function()> pairedDiscoveryTasks = appConfig.onlyForwardMode ? [] : await _pairedDiscovering();
-    await ParallelTask(tasks: pairedDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+        //设备发现控制令牌
+        var token = _discoveryTokenSource.token;
+        //发现已配对设备
+        if(token.isCanceled){
+          onDiscoveryStopped();
+          return;
+        }
+        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
+        final List<Future<void> Function()> pairedDiscoveryTasks = appConfig.onlyForwardMode ? [] : await _pairedDiscovering();
+        await ParallelTask(tasks: pairedDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
 
-    //广播发现
-    if(token.isCanceled){
-      onDiscoveryStopped();
-      return;
-    }
-    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
-    final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile && PlatformExt.isMobile;
-    final List<Future<void> Function()> multicastDiscoveryTasks = isMobileNetwork || !scan ? [] : _multicastDiscovering();
-    await ParallelTask(tasks: multicastDiscoveryTasks, maxParallelCnt: 1, token: token).run();
+        //广播发现
+        if(token.isCanceled){
+          onDiscoveryStopped();
+          return;
+        }
+        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
+        final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile && PlatformExt.isMobile;
+        final List<Future<void> Function()> multicastDiscoveryTasks = isMobileNetwork || !scan ? [] : _multicastDiscovering();
+        await ParallelTask(tasks: multicastDiscoveryTasks, maxParallelCnt: 1, token: token).run();
 
-    //子网扫描
-    if(token.isCanceled){
-      onDiscoveryStopped();
-      return;
-    }
-    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
-    final List<Future<void> Function()> subnetDiscoveryTasks = isMobileNetwork || !scan || appConfig.onlyForwardMode ? [] : await _subNetDiscovering(manual);
-    await ParallelTask(tasks: subnetDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+        //子网扫描
+        if(token.isCanceled){
+          onDiscoveryStopped();
+          return;
+        }
+        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
+        final List<Future<void> Function()> subnetDiscoveryTasks = isMobileNetwork || !scan || appConfig.onlyForwardMode ? [] : await _subNetDiscovering(manual);
+        await ParallelTask(tasks: subnetDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
 
-    //中转发现
-    if(token.isCanceled){
-      onDiscoveryStopped();
-      return;
-    }
-    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
-    final List<Future<void> Function()> forwardDiscoveryTasks = scan ? await _forwardDiscovering() : [];
-    await ParallelTask(tasks: forwardDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
-    onDiscoveryStopped();
+        //中转发现
+        if(token.isCanceled){
+          onDiscoveryStopped();
+          return;
+        }
+        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
+        final List<Future<void> Function()> forwardDiscoveryTasks = scan ? await _forwardDiscovering() : [];
+        await ParallelTask(tasks: forwardDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+        onDiscoveryStopped();
+      });
 
+    });
   }
 
   ///停止发现设备
@@ -1346,10 +1353,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       return false;
     }
     if (backSend) {
-      dev.sendData(MsgType.disConnect, {});
+      await dev.sendData(MsgType.disConnect, {});
     }
-    _onDevDisconnected(id, autoReconnect: false);
     await _devSockets[id]?.socket.close();
+    _onDevDisconnected(id, autoReconnect: false);
     return true;
   }
 
@@ -1594,9 +1601,13 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     });
   }
 
+  Future<void> reconnectOnce(String guid) async {
+    await _attemptReconnect(guid, true);
+  }
+
   ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）
   ///会在一定时间内持续尝试重连，此处默认 3 分钟
-  void _attemptReconnect(String guid) async {
+  Future<void> _attemptReconnect(String guid,[bool once=false]) async {
     final startTime = DateTime.now();
     var endTime = DateTime.now();
     var diffMinutes = endTime.difference(startTime).inMinutes;
@@ -1672,6 +1683,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
       endTime = DateTime.now();
       diffMinutes = endTime.difference(startTime).inMinutes;
+      if(once){
+        break;
+      }
     }
     Log.debug(tag, "重连失败 ${dev.name}(${dev.guid})");
   }
