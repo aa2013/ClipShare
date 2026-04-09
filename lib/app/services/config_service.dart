@@ -19,6 +19,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -50,6 +51,7 @@ import 'package:get/get.dart';
 import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
@@ -856,7 +858,9 @@ class ConfigService extends GetxService {
         }
       }
     }
-    await Directory(documentsPath).create(recursive: true);
+    try {
+      await Directory(documentsPath).create(recursive: true);
+    } catch (_) {}
     await _initLogsDirPath();
     await _initDefaultFileStorePath();
   }

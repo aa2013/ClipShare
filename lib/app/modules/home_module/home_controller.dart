@@ -290,6 +290,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     if (appConfig.useAuthentication) {
       _noScreenshot.screenshotOff();
     }
+    try {
+      await Directory(appConfig.documentsPath).create(recursive: true);
+    } catch (err, stack) {
+      Global.showTipsDialog(context: Get.context!, text: "$err,$stack");
+    }
   }
 
   ///初始化导航栏
@@ -435,12 +440,13 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   //endregion
 
   Timer? _networkChangedTimer;
+
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
     await _networkChangedLock.synchronized(() {
       _networkChangedTimer?.cancel();
-      _networkChangedTimer = Timer(1500.ms, (){
+      _networkChangedTimer = Timer(1500.ms, () {
         Log.debug(tag, "网络变化 -> ${result.name}");
-        if(result == ConnectivityResult.none){
+        if (result == ConnectivityResult.none) {
           return;
         }
         final lastNetwork = appConfig.currentNetWorkType.value;
