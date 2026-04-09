@@ -55,6 +55,7 @@ class _PreviewPageState extends State<PreviewPage> {
   int _total = 1;
   bool _initFinished = false;
   var checkedList = <int>{};
+  bool _showInfo = true;
 
   History get _currentImage => _images.isEmpty ? widget.clip.data : _images[_current - 1];
   late PageController _pageController;
@@ -129,8 +130,9 @@ class _PreviewPageState extends State<PreviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    const height = 48.0;
     var header = SizedBox(
-      height: 48,
+      height: height,
       child: Container(
         color: Colors.black.withOpacity(0.5),
         child: Row(
@@ -195,7 +197,7 @@ class _PreviewPageState extends State<PreviewPage> {
       ),
     );
     var footer = SizedBox(
-      height: 48,
+      height: height,
       child: Container(
         color: Colors.black.withOpacity(0.5),
         child: Row(
@@ -259,7 +261,6 @@ class _PreviewPageState extends State<PreviewPage> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 0,
-        // systemOverlayStyle: SystemUiOverlayStyle.light,
         backgroundColor: Colors.black,
       ),
       body: Container(
@@ -298,6 +299,11 @@ class _PreviewPageState extends State<PreviewPage> {
                                       transformationController: _controller,
                                       child: renderImageItem(idx, ct),
                                     ),
+                                    onTap: (){
+                                      setState(() {
+                                        _showInfo = !_showInfo;
+                                      });
+                                    },
                                     onSecondaryTapDown: (details) {
                                       final imgPath = _images[idx].content;
                                       final position = details.globalPosition - const Offset(0, 70);
@@ -320,9 +326,15 @@ class _PreviewPageState extends State<PreviewPage> {
                               _toggleZoom(context.size!.center(Offset.zero));
                             },
                           ),
-                          header,
+                          AnimatedPositioned(
+                            duration: 150.ms,
+                            top: _showInfo ? 0 : -height,
+                            left: 0,
+                            right: 0,
+                            child: header,
+                          ),
                           Visibility(
-                            visible: _canPre && MediaQuery.of(context).size.width >= Constants.smallScreenWidth,
+                            visible: _showInfo && _canPre && MediaQuery.of(context).size.width >= Constants.smallScreenWidth,
                             child: Positioned(
                               left: 10,
                               top: 0,
@@ -352,7 +364,7 @@ class _PreviewPageState extends State<PreviewPage> {
                             ),
                           ),
                           Visibility(
-                            visible: _canNext && MediaQuery.of(context).size.width >= Constants.smallScreenWidth,
+                            visible: _showInfo && _canNext && MediaQuery.of(context).size.width >= Constants.smallScreenWidth,
                             child: Positioned(
                               right: 10,
                               top: 0,
@@ -381,8 +393,9 @@ class _PreviewPageState extends State<PreviewPage> {
                               ),
                             ),
                           ),
-                          Positioned(
-                            bottom: 0,
+                          AnimatedPositioned(
+                            duration: 150.ms,
+                            bottom: _showInfo ? 0 : -height,
                             left: 0,
                             right: 0,
                             child: Visibility(
