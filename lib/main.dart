@@ -75,10 +75,10 @@ Future<void> main(List<String> args) async {
       await initMultiWindowServices();
       runMain(home, title, multiWindowArgs);
     } else {
+      await ensureInitialized();
+      await initMainServices();
       runZonedGuarded(
         () async {
-          await ensureInitialized();
-          await initMainServices();
           runMain(home, title, null);
         },
         (err, stack) {
