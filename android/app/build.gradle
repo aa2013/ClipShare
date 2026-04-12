@@ -30,7 +30,7 @@ keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 android {
     namespace "top.coclyun.clipshare"
     compileSdk flutter.compileSdkVersion
-    ndkVersion '25.1.8937393'
+    ndkVersion flutter.ndkVersion
 
     compileOptions {
         coreLibraryDesugaringEnabled true
