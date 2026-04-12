@@ -112,7 +112,7 @@ void showErrorInfoOnStartFailed(dynamic err, dynamic stack){
   runApp(
     MaterialApp(
       home: Scaffold(
-        body: Padding(
+        body: SafeArea(child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +142,7 @@ void showErrorInfoOnStartFailed(dynamic err, dynamic stack){
               ),
             ],
           ),
-        ),
+        )),
       ),
     ),
   );
