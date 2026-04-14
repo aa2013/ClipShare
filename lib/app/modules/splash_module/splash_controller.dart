@@ -76,7 +76,6 @@ class SplashController extends GetxController {
           } else {
             Get.offNamed(Routes.HOME);
           }
-          _hideLinuxWindowAfterStartupIfNeeded();
         })
         .catchError((err, stack) {
           Global.showTipsDialog(
@@ -168,27 +167,7 @@ class SplashController extends GetxController {
       if (!appConfig.startMini) {
         windowManager.show();
         windowManager.focus();
-      } else if (Platform.isLinux) {
-        windowManager.show(inactive: true);
       }
-    });
-  }
-
-  void _hideLinuxWindowAfterStartupIfNeeded() {
-    if (!Platform.isLinux || !appConfig.startMini) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future<void>.delayed(const Duration(milliseconds: 1200), () async {
-        if (!appConfig.startMini) {
-          return;
-        }
-        try {
-          await windowManager.hide();
-        } catch (err, stack) {
-          Log.error(tag, err, stack);
-        }
-      });
     });
   }
 
