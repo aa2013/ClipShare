@@ -114,18 +114,14 @@ pack_appimage() {
         cp -r ${BUNDLE_DIR}/data ${APPDIR}/usr/bin/
     fi
 
-    # 复制 files 目录（如果存在）
-    if [ -d "${BUNDLE_DIR}/files" ]; then
-        echo "复制 files 目录..."
-        cp -r ${BUNDLE_DIR}/files ${APPDIR}/usr/bin/
-    fi
+    # 不复制运行时 files 目录；AppImage 挂载后是只读的，用户数据应落到应用文档目录。
 
     # 创建 AppRun 脚本
     echo "创建 AppRun 脚本..."
     if [ -f "${APPIMAGE_DIR}/AppRun" ]; then
         cp ${APPIMAGE_DIR}/AppRun ${APPDIR}/AppRun
     else
-        printf '#!/bin/bash\nSELF=$(readlink -f "$0")\nHERE=${SELF%%/*}\nexport PATH="${HERE}/usr/bin:${PATH}"\nexport LD_LIBRARY_PATH="${HERE}/usr/bin/lib:${LD_LIBRARY_PATH}"\nexec "${HERE}/usr/bin/clipshare" "$@"\n' > ${APPDIR}/AppRun
+        printf '#!/bin/bash\nSELF=$(readlink -f "$0")\nHERE=${SELF%%/AppRun}\nexport PATH="${HERE}/usr/bin:${PATH}"\nexport LD_LIBRARY_PATH="${HERE}/usr/bin/lib:${LD_LIBRARY_PATH}"\nexec "${HERE}/usr/bin/clipshare" "$@"\n' > ${APPDIR}/AppRun
     fi
     chmod +x ${APPDIR}/AppRun
 
@@ -162,7 +158,12 @@ pack_appimage() {
     OUTPUT_FILE="${APPIMAGE_OUTPUT_DIR}/ClipShare-${VERSION}.AppImage"
     ARCH=$(uname -m)
 
-    ${APPIAGETOOL} ${APPDIR} ${OUTPUT_FILE}
+    RUNTIME_FILE="${APPIMAGE_OUTPUT_DIR}/runtime-x86_64"
+    if [ -f "${RUNTIME_FILE}" ]; then
+        ${APPIAGETOOL} --runtime-file ${RUNTIME_FILE} ${APPDIR} ${OUTPUT_FILE}
+    else
+        ${APPIAGETOOL} ${APPDIR} ${OUTPUT_FILE}
+    fi
 
     if [ -f "${OUTPUT_FILE}" ]; then
         echo ""
