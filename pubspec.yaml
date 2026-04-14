@@ -40,7 +40,12 @@ dependencies:
   # sqlite3 macos 0.5.40 以上需要更高的macos版本，暂时固定在 0.5.40
   sqlite3_flutter_libs: 0.5.40
   # 托盘插件 linux上需要安裝：sudo apt-get install libayatana-appindicator3-dev
-  tray_manager: ^0.5.2
+#  tray_manager: ^0.5.2
+  tray_manager:
+    git:
+      url: https://github.com/aa2013/tray_manager
+      ref: custom-id
+      path: packages/tray_manager
   # 窗体管理
   window_manager: ^0.5.0
   # 开机启动
@@ -113,7 +118,7 @@ dependencies:
   # 月份选择
   month_picker_dialog: ^5.1.2
   # 剪贴板监听
-  clipshare_clipboard_listener: ^1.2.17
+  clipshare_clipboard_listener: ^1.2.19
 #  clipshare_clipboard_listener:
 #    path: ../clipboard_listener
   # 主题切换动画

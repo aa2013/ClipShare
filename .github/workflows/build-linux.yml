@@ -3,6 +3,7 @@ name: build-linux-packages
 # 仓库写入权限
 permissions:
   contents: write
+
 on:
   workflow_dispatch:
   workflow_call:
@@ -10,16 +11,22 @@ on:
       artifact-name:
         value: linux-package
 
+env:
+  FLUTTER_VERSION: 3.35.3
+
 jobs:
-  build-linux:
+  # ============================================================
+  # Job 1: Fastforge 打包 deb、rpm
+  # ============================================================
+  build-deb-rpm:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive
-      
+        submodules: false
+
     - name: Install Linux dependencies
       run: |
         sudo apt-get update
@@ -28,20 +35,13 @@ jobs:
         sudo apt-get install -y libayatana-appindicator3-dev
         sudo apt-get install -y libkeybinder-3.0-dev
         sudo apt-get install -y fuse libfuse-dev
-        sudo apt-get install -y wget
 
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
         channel: stable
-        flutter-version: 3.35.3
+        flutter-version: ${{ env.FLUTTER_VERSION }}
         cache: true
-
-    - name: Install AppImage tool
-      run: |
-        wget -O appimagetool https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
-        chmod +x appimagetool
-        sudo mv appimagetool /usr/local/bin/
 
     - name: Install dependencies for Fastforge
       run: |
@@ -50,20 +50,199 @@ jobs:
         fastforge --version
 
     - name: Flutter pub get
-      run: |
-        flutter pub get
+      run: flutter pub get
 
-    - name: Build & Package with Fastforge
+    - name: Build & Package with Fastforge (deb, rpm)
       run: |
-        cd scripts
-        chmod +x build_linux.sh
-        ./build_linux.sh pack
-        cd ../ && mkdir output
+        fastforge package --platform linux --targets deb,rpm
+        mkdir -p output
         find dist -name "*.deb" -exec cp {} output/ \;
-        find dist -name "*.AppImage" -exec cp {} output/ \;
         find dist -name "*.rpm" -exec cp {} output/ \;
 
-    - name: Upload artifacts
+    - name: Upload deb/rpm artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-deb-rpm
+        path: output/*
+        overwrite: true
+
+  # ============================================================
+  # Job 2: Arch Linux 容器中打包 AppImage
+  # ============================================================
+  build-appimage:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+
+    steps:
+    - name: Verify Arch environment
+      run: |
+        cat /etc/os-release
+        uname -a
+
+    - name: Install system dependencies
+      run: |
+        pacman -Syu --noconfirm
+        pacman -S --needed --noconfirm \
+          git \
+          curl \
+          unzip \
+          xz \
+          zip \
+          clang \
+          cmake \
+          ninja \
+          pkgconf \
+          gtk3 \
+          libkeybinder3 \
+          libayatana-appindicator \
+          libayatana-indicator \
+          ayatana-ido \
+          libdbusmenu-glib \
+          libdbusmenu-gtk3 \
+          libxtst \
+          wayland \
+          wayland-protocols \
+          fuse2
+        ldconfig
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: false
+
+    - name: Setup Flutter
+      run: |
+        git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git /opt/flutter
+        git config --global --add safe.directory /opt/flutter
+        echo "/opt/flutter/bin" >> "$GITHUB_PATH"
+        /opt/flutter/bin/flutter --version
+        /opt/flutter/bin/flutter config --enable-linux-desktop
+
+    - name: Flutter pub get
+      run: flutter pub get
+
+    - name: Build Linux release
+      run: flutter build linux --release
+
+    - name: Package AppImage
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        version="$(awk '/^version:/ {print $2; exit}' pubspec.yaml)"
+        arch="$(uname -m)"
+        bundle_dir="build/linux/x64/release/bundle"
+
+        if [[ ! -x "${bundle_dir}/clipshare" ]]; then
+          echo "Linux release binary not found: ${bundle_dir}/clipshare" >&2
+          exit 1
+        fi
+
+        app_name="ClipShare"
+        appimage_name="clipshare-${version}-linux.AppImage"
+        appdir="AppDir"
+
+        rm -rf output "${appdir}"
+        mkdir -p output "${appdir}"
+
+        # 拷贝 flutter bundle 到 AppDir
+        cp -a "${bundle_dir}/." "${appdir}/"
+
+        # 拷贝运行时库
+        runtime_libs=(
+          "libkeybinder-3.0.so.0"
+          "libayatana-appindicator3.so.1"
+          "libayatana-indicator3.so.7"
+          "libayatana-ido3-0.4.so.0"
+          "libdbusmenu-glib.so.4"
+          "libdbusmenu-gtk3.so.4"
+          "libXtst.so.6"
+          "libwayland-client.so.0"
+          "libwayland-cursor.so.0"
+          "libwayland-egl.so.1"
+        )
+
+        mkdir -p "${appdir}/lib"
+        for soname in "${runtime_libs[@]}"; do
+          if [[ -f "${appdir}/lib/${soname}" ]]; then
+            continue
+          fi
+          lib_path="$(ldconfig -p | awk -v name="${soname}" '$1 == name { print $NF; exit }')"
+          if [[ -n "${lib_path}" && -f "${lib_path}" ]]; then
+            cp -L "${lib_path}" "${appdir}/lib/${soname}"
+          else
+            echo "Warning: runtime library not found: ${soname}" >&2
+          fi
+        done
+
+        # 创建 AppRun 启动脚本
+        cat > "${appdir}/AppRun" << 'APPRUNEOF'
+        #!/bin/bash
+        HERE="$(dirname "$(readlink -f "$0")")"
+        export LD_LIBRARY_PATH="${HERE}/lib:${LD_LIBRARY_PATH}"
+        exec "${HERE}/clipshare" "$@"
+        APPRUNEOF
+        chmod +x "${appdir}/AppRun"
+
+        # 创建 .desktop 文件
+        cat > "${appdir}/${app_name}.desktop" << DESKTOPEOF
+        [Desktop Entry]
+        Name=${app_name}
+        Comment=Clipboard sharing tool
+        Exec=clipshare
+        Icon=clipshare
+        Type=Application
+        Categories=Utility;
+        Terminal=false
+        DESKTOPEOF
+
+        # 拷贝图标
+        if [[ -f assets/images/logo/logo.png ]]; then
+          cp assets/images/logo/logo.png "${appdir}/clipshare.png"
+        fi
+
+        # 下载并运行 appimagetool
+        curl -L -o appimagetool \
+          "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${arch}.AppImage"
+        chmod +x appimagetool
+
+        export APPIMAGE_EXTRACT_AND_RUN=1
+        ./appimagetool "${appdir}" "output/${appimage_name}"
+
+        echo "AppImage created: output/${appimage_name}"
+
+    - name: Upload AppImage artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-appimage
+        path: output/*
+        overwrite: true
+
+  # ============================================================
+  # Job 3: 合并所有 Linux 包并统一上传
+  # ============================================================
+  combine:
+    needs: [build-deb-rpm, build-appimage]
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download deb/rpm artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-deb-rpm
+        path: output
+
+    - name: Download AppImage artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-appimage
+        path: output
+
+    - name: Show output files
+      run: ls -la output/
+
+    - name: Upload unified artifact
       uses: actions/upload-artifact@v4
       with:
         name: linux-pack

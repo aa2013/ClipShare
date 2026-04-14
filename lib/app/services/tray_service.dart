@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/hot_key_handler.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
@@ -9,8 +8,10 @@ import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tray_manager/tray_manager.dart';
 
@@ -108,6 +109,8 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
   Future<void> setToolTip(String toolTip) async {
     if (!Platform.isLinux) {
       await trayManager.setToolTip(toolTip);
+    } else {
+      await trayManager.setTitle(Constants.appName);
     }
   }
 
@@ -122,7 +125,10 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
     }catch(_){
       //ignored
     }
-    await trayManager.setIcon(iconPath);
+    await trayManager.setIcon(
+        id: Platform.isLinux ? Constants.appName : null,
+        iconPath
+    );
     await setToolTip(Constants.appName);
   }
 
@@ -172,28 +178,8 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
   Future<void> updateTrayMenus([bool registerKey = true]) async {
     final showMainWindowKeys = appConfig.showMainWindowHotKeys;
     final exitAppKeys = appConfig.exitAppHotKeys;
-    if (registerKey) {
-      try {
-        if (showMainWindowKeys.isNotEmpty) {
-          await AppHotKeyHandler.registerShowMainWindow(
-            AppHotKeyHandler.toSystemHotKey(showMainWindowKeys),
-          );
-        }
-      } catch (err, stack) {
-        Log.error(tag, err, stack);
-      }
-      try {
-        if (exitAppKeys.isNotEmpty) {
-          await AppHotKeyHandler.registerExitApp(
-            AppHotKeyHandler.toSystemHotKey(exitAppKeys),
-          );
-        }
-      } catch (err, stack) {
-        Log.error(tag, err, stack);
-      }
-    }
-    var showWindowLabel = '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';
-    var exitAppLabel = '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}';
+    var showWindowLabel = _menuLabel(TranslationKey.showMainWindow.tr, _hotKeyDesc(showMainWindowKeys));
+    var exitAppLabel = _menuLabel(TranslationKey.exitApp.tr, _hotKeyDesc(exitAppKeys));
     List<MenuItem> items = [
       MenuItem(
         key: 'show_window',
@@ -206,10 +192,47 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
       ),
     ];
     await trayManager.setContextMenu(Menu(items: items));
+
+    if (registerKey) {
+      try {
+        if (showMainWindowKeys.isNotEmpty) {
+          await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
+        }
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+      try {
+        if (exitAppKeys.isNotEmpty) {
+          await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
+        }
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+  }
+
+  String _hotKeyDesc(String keyCodes) {
+    if (keyCodes.isEmpty) {
+      return "";
+    }
+    try {
+      return AppHotKeyHandler.toSystemHotKey(keyCodes).desc;
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+      return "";
+    }
+  }
+
+  String _menuLabel(String label, String hotKeyDesc) {
+    return hotKeyDesc.isEmpty ? label : '$label  $hotKeyDesc';
   }
 
   @override
   void onTrayIconRightMouseDown() async {
+    if (Platform.isLinux) {
+      await updateTrayMenus(false);
+      return;
+    }
     await trayManager.popUpContextMenu();
   }
 
