@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:clipshare/app/data/enums/hot_key_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/hot_key_handler.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:tray_manager/tray_manager.dart';
 
 import 'window_service.dart';
@@ -29,18 +28,57 @@ class TrayService extends GetxService with TrayListener {
   ///初始化托盘
   Future<void> _initTrayManager() async {
     trayManager.addListener(this);
-    if(!Platform.isLinux) {
-      trayManager.setToolTip(Constants.appName);
+    await _setTrayIcon();
+    if (Platform.isLinux) {
+      await trayManager.setTitle(Constants.appName);
+    } else {
+      await trayManager.setToolTip(Constants.appName);
     }
-    await trayManager.setIcon(
-      Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
-    );
-    updateTrayMenus();
+    await updateTrayMenus();
+  }
+
+  Future<void> _setTrayIcon() async {
+    if (!Platform.isLinux) {
+      await trayManager.setIcon(
+        Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
+      );
+      return;
+    }
+
+    final iconPath = [
+      File(Platform.resolvedExecutable).parent.path,
+      'data',
+      'flutter_assets',
+      Constants.logoPngPath,
+    ].join(Platform.pathSeparator);
+    //todo 需要测试为什么不使用插件的 setIcon
+    // await trayManager.setIcon(
+    //   Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
+    // );
+    await const MethodChannel('tray_manager').invokeMethod('setIcon', {
+      'id': Constants.appName,
+      'iconPath': iconPath,
+    });
   }
 
   Future<void> updateTrayMenus([bool registerKey = true]) async {
     final showMainWindowKeys = appConfig.showMainWindowHotKeys;
     final exitAppKeys = appConfig.exitAppHotKeys;
+    var showWindowLabel = _menuLabel(TranslationKey.showMainWindow.tr, _hotKeyDesc(showMainWindowKeys));
+    var exitAppLabel = _menuLabel(TranslationKey.exitApp.tr, _hotKeyDesc(exitAppKeys));
+    List<MenuItem> items = [
+      MenuItem(
+        key: 'show_window',
+        label: showWindowLabel,
+      ),
+      MenuItem.separator(),
+      MenuItem(
+        key: 'exit_app',
+        label: exitAppLabel,
+      ),
+    ];
+    await trayManager.setContextMenu(Menu(items: items));
+
     if (registerKey) {
       try {
         if (showMainWindowKeys.isNotEmpty) {
@@ -57,24 +95,31 @@ class TrayService extends GetxService with TrayListener {
         Log.error(tag, err, stack);
       }
     }
-    var showWindowLabel = '${TranslationKey.showMainWindow.tr}  ${HotKeyType.showMainWindows.hotKeyDesc ?? ""}';
-    var exitAppLabel = '${TranslationKey.exitApp.tr}  ${HotKeyType.exitApp.hotKeyDesc ?? ""}';
-    List<MenuItem> items = [
-      MenuItem(
-        key: 'show_window',
-        label: showWindowLabel,
-      ),
-      MenuItem.separator(),
-      MenuItem(
-        key: 'exit_app',
-        label: exitAppLabel,
-      ),
-    ];
-    await trayManager.setContextMenu(Menu(items: items));
+  }
+
+  String _hotKeyDesc(String keyCodes) {
+    if (keyCodes.isEmpty) {
+      return "";
+    }
+    try {
+      return AppHotKeyHandler.toSystemHotKey(keyCodes).desc;
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+      return "";
+    }
+  }
+
+  String _menuLabel(String label, String hotKeyDesc) {
+    return hotKeyDesc.isEmpty ? label : '$label  $hotKeyDesc';
   }
 
   @override
   void onTrayIconRightMouseDown() async {
+    if (Platform.isLinux) {
+      //todo 待测试效果
+      await updateTrayMenus(false);
+      return;
+    }
     await trayManager.popUpContextMenu();
   }
 

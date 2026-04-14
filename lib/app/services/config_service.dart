@@ -836,7 +836,11 @@ class ConfigService extends GetxService {
       updateDownloadFileDirPath = Constants.androidDownloadPath;
     } else {
       cachePath = (await getApplicationCacheDirectory()).path;
-      documentsPath = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+      if (Platform.isLinux) {
+        documentsPath = await _linuxDataDirPath();
+      } else {
+        documentsPath = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+      }
       updateDownloadFileDirPath = "$documentsPath/update";
       if (Platform.isWindows) {
         final username = Platform.environment['USERNAME'];
@@ -850,6 +854,19 @@ class ConfigService extends GetxService {
     await Directory(documentsPath).create(recursive: true);
     await _initLogsDirPath();
     await _initDefaultFileStorePath();
+  }
+
+  Future<String> _linuxDataDirPath() async {
+    final xdgDataHome = Platform.environment['XDG_DATA_HOME'];
+    if (xdgDataHome != null && xdgDataHome.isNotEmpty) {
+      return "$xdgDataHome/${Constants.appName}/".normalizePath;
+    }
+    final home = Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty) {
+      return "$home/.local/share/${Constants.appName}/".normalizePath;
+    }
+    return "${(await getApplicationSupportDirectory()).path}/${Constants.appName}/"
+        .normalizePath;
   }
 
   ///文件默认存储路径

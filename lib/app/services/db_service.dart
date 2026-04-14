@@ -114,7 +114,7 @@ class DbService extends GetxService {
     var dbPath = "clipshare.db";
     //桌面端如果当前路径可写则使用当前路径，如开发环境或者便携版本
     if (PlatformExt.isDesktop) {
-      if (Platform.isMacOS) {
+      if (Platform.isMacOS || Platform.isLinux) {
         var dirPath = appConfig.documentsPath;
         dbPath = "$dirPath/$dbPath".normalizePath;
       } else {

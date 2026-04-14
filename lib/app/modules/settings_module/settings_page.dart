@@ -218,7 +218,7 @@ class SettingsPage extends GetView<SettingsController> {
                           onChanged: (checked) async {
                             PackageInfo packageInfo = await PackageInfo.fromPlatform();
                             final appName = packageInfo.appName;
-                            final appPath = Platform.resolvedExecutable;
+                            final appPath = PlatformExt.startupExecutablePath;
                             launchAtStartup.setup(
                               appName: appName,
                               appPath: appPath,

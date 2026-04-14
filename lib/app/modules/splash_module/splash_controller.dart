@@ -95,7 +95,7 @@ class SplashController extends GetxController {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       launchAtStartup.setup(
         appName: packageInfo.appName,
-        appPath: Platform.resolvedExecutable,
+        appPath: PlatformExt.startupExecutablePath,
       );
       var isLaunchAtStartup = await launchAtStartup.isEnabled();
       final isSystem = isLaunchAtStartup;
@@ -152,10 +152,12 @@ class SplashController extends GetxController {
     );
     return windowManager.waitUntilReadyToShow(windowOptions, () async {
       if (!appConfig.startMini) {
+        //非最小化启动
         windowManager.show();
         windowManager.focus();
       } else if (Platform.isLinux) {
-        windowManager.hide();
+        //todo 待测试为什么要取消
+        // windowManager.hide();
       }
     });
   }
