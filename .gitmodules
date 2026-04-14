@@ -1,0 +1,3 @@
+[submodule "ClipboardListener"]
+	path = ClipboardListener
+	url = https://github.com/JianGangLi/ClipboardListener
