@@ -21,6 +21,10 @@ build:
     - liblzma-dev
     - libstdc++-12-dev
     - libayatana-appindicator3-dev
+    - libkeybinder-3.0-dev
+    - libx11-dev
+    - libxtst-dev
+    - libwayland-dev
     - libnotify-dev
     - libxkbcommon-dev
     - libsecret-1-dev
@@ -86,6 +90,44 @@ script:
     if [ -d "${BUNDLE_DIR}/lib" ]; then
       cp -r ${BUNDLE_DIR}/lib ${APPDIR}/usr/bin/
     fi
+
+  # 补充干净系统常缺的运行库
+  - echo "补充运行库..."
+  - |
+    copy_runtime_lib() {
+      soname="$1"
+      target="${APPDIR}/usr/bin/lib/${soname}"
+      if [ -f "$target" ]; then
+        return 0
+      fi
+
+      source_path="$(ldconfig -p 2>/dev/null | awk -v name="$soname" '$1 == name {print $NF; exit}')"
+      if [ -z "$source_path" ]; then
+        for candidate in "/usr/lib/$soname" "/usr/lib64/$soname" "/lib/$soname" "/lib64/$soname"; do
+          if [ -f "$candidate" ]; then
+            source_path="$candidate"
+            break
+          fi
+        done
+      fi
+
+      if [ -n "$source_path" ]; then
+        cp -L "$source_path" "$target"
+        echo "  + ${soname}"
+      else
+        echo "警告: 未找到运行库 ${soname}"
+      fi
+    }
+
+    mkdir -p ${APPDIR}/usr/bin/lib
+    copy_runtime_lib libkeybinder-3.0.so.0
+    copy_runtime_lib libayatana-appindicator3.so.1
+    copy_runtime_lib libayatana-indicator3.so.7
+    copy_runtime_lib libayatana-ido3-0.4.so.0
+    copy_runtime_lib libdbusmenu-glib.so.4
+    copy_runtime_lib libdbusmenu-gtk3.so.4
+    copy_runtime_lib libXtst.so.6
+    copy_runtime_lib libwayland-client.so.0
 
   # 复制 files 目录（如果存在）
   - |
