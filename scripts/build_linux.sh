@@ -13,6 +13,57 @@ BUILD_NUMBER=$(grep "version:" ${PROJECT_ROOT}/pubspec.yaml | head -1 | awk '{pr
 # 构建 Flutter Linux Release 版本
 BUILD_DIR="${PROJECT_ROOT}/build/linux/x64/release"
 BUNDLE_DIR="${BUILD_DIR}/bundle"
+APPIMAGE_RUNTIME_LIBS=(
+    "libkeybinder-3.0.so.0"
+    "libayatana-appindicator3.so.1"
+    "libayatana-indicator3.so.7"
+    "libayatana-ido3-0.4.so.0"
+    "libdbusmenu-glib.so.4"
+    "libdbusmenu-gtk3.so.4"
+    "libXtst.so.6"
+    "libwayland-client.so.0"
+)
+
+find_shared_library() {
+    local soname="$1"
+    local path=""
+
+    if command -v ldconfig &> /dev/null; then
+        path=$(ldconfig -p 2>/dev/null | awk -v name="$soname" '$1 == name {print $NF; exit}')
+    fi
+
+    if [ -z "$path" ]; then
+        for candidate in "/usr/lib/$soname" "/usr/lib64/$soname" "/lib/$soname" "/lib64/$soname"; do
+            if [ -f "$candidate" ]; then
+                path="$candidate"
+                break
+            fi
+        done
+    fi
+
+    printf '%s' "$path"
+}
+
+copy_runtime_libraries() {
+    local target_dir="$1"
+    mkdir -p "$target_dir"
+
+    for soname in "${APPIMAGE_RUNTIME_LIBS[@]}"; do
+        if [ -f "${target_dir}/${soname}" ]; then
+            continue
+        fi
+
+        local source_path
+        source_path=$(find_shared_library "$soname")
+        if [ -n "$source_path" ]; then
+            cp -L "$source_path" "${target_dir}/${soname}"
+            echo "  + ${soname}"
+        else
+            echo "警告: 未找到运行库 ${soname}，目标系统可能需要自行安装"
+        fi
+    done
+}
+
 build_flutter() {
     echo "========================================="
     echo "构建 Flutter Linux Release"
@@ -107,6 +158,9 @@ pack_appimage() {
         echo "复制库文件..."
         cp -r ${BUNDLE_DIR}/lib ${APPDIR}/usr/bin/
     fi
+
+    echo "补充干净系统常缺的运行库..."
+    copy_runtime_libraries "${APPDIR}/usr/bin/lib"
 
     # 复制数据目录（Flutter 期望数据在相对于可执行文件的 data/ 目录下）
     if [ -d "${BUNDLE_DIR}/data" ]; then

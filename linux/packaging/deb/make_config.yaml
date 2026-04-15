@@ -16,8 +16,14 @@ essential: false
 icon: assets/images/logo/logo.png
 
 dependencies:
-  - libayatana-appindicator3-dev
-  - libkeybinder-3.0-dev
+  - libgtk-3-0
+  - libayatana-appindicator3-1
+  - libkeybinder-3.0-0
+  - libx11-6
+  - libxext6
+  - libxtst6
+  - libwayland-client0
+  - libsqlite3-0
 
 keywords:
   - Clipboard

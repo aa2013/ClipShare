@@ -76,6 +76,7 @@ add_executable(${BINARY_NAME}
 # Apply the standard set of build settings. This can be removed for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
+set_property(TARGET ${BINARY_NAME} APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--disable-new-dtags")
 
 # Add dependency libraries. Add any application-specific dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
@@ -97,6 +98,18 @@ set_target_properties(${BINARY_NAME}
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+
+foreach(plugin ${FLUTTER_PLUGIN_LIST})
+  # Flutter copies plugin build outputs into the bundle as files, so their
+  # build-time RUNPATH is preserved. Make the copied plugins resolve sibling
+  # libraries from bundle/lib instead of the ephemeral build directory.
+  set_target_properties(${plugin}_plugin PROPERTIES
+    BUILD_RPATH "$ORIGIN"
+    INSTALL_RPATH "$ORIGIN"
+    BUILD_WITH_INSTALL_RPATH TRUE
+  )
+  set_property(TARGET ${plugin}_plugin APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--disable-new-dtags")
+endforeach(plugin)
 
 
 # === Installation ===
@@ -129,6 +142,38 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endforeach(bundled_library)
+
+# Extra runtime libraries used by Linux plugins that are not available on many
+# clean desktop installs. Copy them with their sonames so the bundle's RPATH can
+# resolve them from lib/ without requiring development packages on the target.
+find_library(KEYBINDER_LIBRARY NAMES libkeybinder-3.0.so.0 keybinder-3.0)
+find_library(AYATANA_APPINDICATOR_LIBRARY NAMES libayatana-appindicator3.so.1 ayatana-appindicator3)
+find_library(AYATANA_INDICATOR_LIBRARY NAMES libayatana-indicator3.so.7 ayatana-indicator3)
+find_library(AYATANA_IDO_LIBRARY NAMES libayatana-ido3-0.4.so.0 ayatana-ido3-0.4)
+find_library(DBUSMENU_GLIB_LIBRARY NAMES libdbusmenu-glib.so.4 dbusmenu-glib)
+find_library(DBUSMENU_GTK3_LIBRARY NAMES libdbusmenu-gtk3.so.4 dbusmenu-gtk3)
+find_library(XTST_LIBRARY NAMES libXtst.so.6 Xtst)
+find_library(WAYLAND_CLIENT_LIBRARY NAMES libwayland-client.so.0 wayland-client)
+
+function(INSTALL_EXTRA_RUNTIME_LIBRARY LIBRARY_VAR SONAME)
+  if(${LIBRARY_VAR})
+    install(CODE "
+      file(MAKE_DIRECTORY \"${INSTALL_BUNDLE_LIB_DIR}\")
+      execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${${LIBRARY_VAR}}\" \"${INSTALL_BUNDLE_LIB_DIR}/${SONAME}\")
+    " COMPONENT Runtime)
+  else()
+    message(WARNING "Runtime library ${SONAME} was not found; packages may still need the system dependency.")
+  endif()
+endfunction()
+
+install_extra_runtime_library(KEYBINDER_LIBRARY "libkeybinder-3.0.so.0")
+install_extra_runtime_library(AYATANA_APPINDICATOR_LIBRARY "libayatana-appindicator3.so.1")
+install_extra_runtime_library(AYATANA_INDICATOR_LIBRARY "libayatana-indicator3.so.7")
+install_extra_runtime_library(AYATANA_IDO_LIBRARY "libayatana-ido3-0.4.so.0")
+install_extra_runtime_library(DBUSMENU_GLIB_LIBRARY "libdbusmenu-glib.so.4")
+install_extra_runtime_library(DBUSMENU_GTK3_LIBRARY "libdbusmenu-gtk3.so.4")
+install_extra_runtime_library(XTST_LIBRARY "libXtst.so.6")
+install_extra_runtime_library(WAYLAND_CLIENT_LIBRARY "libwayland-client.so.0")
 
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
