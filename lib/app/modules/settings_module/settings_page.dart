@@ -92,10 +92,13 @@ class SettingsPage extends GetView<SettingsController> {
                     return EnvironmentStatusCard(
                       icon: Obx(() => controller.envStatusIcon.value),
                       backgroundColor: controller.envStatusBgColor.value,
-                      tipContent: Obx(() => controller.envStatusTipContent.value),
+                      tipContent: Obx(
+                        () => controller.envStatusTipContent.value,
+                      ),
                       tipDesc: Obx(() => controller.envStatusTipDesc.value),
                       action: Obx(() {
-                        return controller.envStatusAction.value ?? const SizedBox.shrink();
+                        return controller.envStatusAction.value ??
+                            const SizedBox.shrink();
                       }),
                       onTap: controller.onEnvironmentStatusCardClick,
                     );
@@ -103,7 +106,9 @@ class SettingsPage extends GetView<SettingsController> {
                 if (Platform.isAndroid)
                   Obx(
                     () => Visibility(
-                      visible: appConfig.workingMode == EnvironmentType.shizuku || appConfig.workingMode == EnvironmentType.root,
+                      visible:
+                          appConfig.workingMode == EnvironmentType.shizuku ||
+                          appConfig.workingMode == EnvironmentType.root,
                       child: SettingHeader(
                         icon: const Icon(
                           Icons.developer_mode,
@@ -124,7 +129,9 @@ class SettingsPage extends GetView<SettingsController> {
                             onTap: () async {
                               Global.showTipsDialog(
                                 context: context,
-                                text: TranslationKey.clipboardListeningWayTipsDetail.tr,
+                                text: TranslationKey
+                                    .clipboardListeningWayTipsDetail
+                                    .tr,
                               );
                             },
                           ),
@@ -136,31 +143,49 @@ class SettingsPage extends GetView<SettingsController> {
                 if (Platform.isAndroid)
                   Obx(
                     () => Visibility(
-                      visible: appConfig.workingMode == EnvironmentType.shizuku || appConfig.workingMode == EnvironmentType.root,
+                      visible:
+                          appConfig.workingMode == EnvironmentType.shizuku ||
+                          appConfig.workingMode == EnvironmentType.root,
                       child: Row(
                         children: [
                           Expanded(
                             child: Obx(
                               () => ClipboardListeningWaySettingCard(
-                                cardMargin: const EdgeInsets.only(left: 0, right: 3),
+                                cardMargin: const EdgeInsets.only(
+                                  left: 0,
+                                  right: 3,
+                                ),
                                 icon: Icons.visibility_off,
                                 name: ClipboardListeningWay.hiddenApi.tr,
-                                selected: appConfig.clipboardListeningWay == ClipboardListeningWay.hiddenApi,
+                                selected:
+                                    appConfig.clipboardListeningWay ==
+                                    ClipboardListeningWay.hiddenApi,
                                 onTap: () {
-                                  if (appConfig.clipboardListeningWay == ClipboardListeningWay.hiddenApi) {
+                                  if (appConfig.clipboardListeningWay ==
+                                      ClipboardListeningWay.hiddenApi) {
                                     return;
                                   }
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.clipboardListeningWayToggleConfirmContent.trParams({"way": ClipboardListeningWay.hiddenApi.tr}),
+                                    text: TranslationKey
+                                        .clipboardListeningWayToggleConfirmContent
+                                        .trParams({
+                                          "way": ClipboardListeningWay
+                                              .hiddenApi
+                                              .tr,
+                                        }),
                                     showCancel: true,
                                     onOk: () async {
-                                      appConfig.setClipboardListeningWay(ClipboardListeningWay.hiddenApi);
+                                      appConfig.setClipboardListeningWay(
+                                        ClipboardListeningWay.hiddenApi,
+                                      );
                                       await clipboardManager.stopListening();
                                       clipboardManager.startListening(
                                         env: appConfig.workingMode,
                                         way: ClipboardListeningWay.hiddenApi,
-                                        notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
+                                        notificationContentConfig:
+                                            ClipboardService
+                                                .defaultNotificationContentConfig,
                                       );
                                     },
                                   );
@@ -171,25 +196,39 @@ class SettingsPage extends GetView<SettingsController> {
                           Expanded(
                             child: Obx(
                               () => ClipboardListeningWaySettingCard(
-                                cardMargin: const EdgeInsets.only(right: 0, left: 3),
+                                cardMargin: const EdgeInsets.only(
+                                  right: 0,
+                                  left: 3,
+                                ),
                                 icon: Icons.list_alt,
                                 name: ClipboardListeningWay.logs.tr,
-                                selected: appConfig.clipboardListeningWay == ClipboardListeningWay.logs,
+                                selected:
+                                    appConfig.clipboardListeningWay ==
+                                    ClipboardListeningWay.logs,
                                 onTap: () {
-                                  if (appConfig.clipboardListeningWay == ClipboardListeningWay.logs) {
+                                  if (appConfig.clipboardListeningWay ==
+                                      ClipboardListeningWay.logs) {
                                     return;
                                   }
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.clipboardListeningWayToggleConfirmContent.trParams({"way": ClipboardListeningWay.logs.tr}),
+                                    text: TranslationKey
+                                        .clipboardListeningWayToggleConfirmContent
+                                        .trParams({
+                                          "way": ClipboardListeningWay.logs.tr,
+                                        }),
                                     showCancel: true,
                                     onOk: () async {
-                                      appConfig.setClipboardListeningWay(ClipboardListeningWay.logs);
+                                      appConfig.setClipboardListeningWay(
+                                        ClipboardListeningWay.logs,
+                                      );
                                       await clipboardManager.stopListening();
                                       clipboardManager.startListening(
                                         env: appConfig.workingMode,
                                         way: ClipboardListeningWay.logs,
-                                        notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
+                                        notificationContentConfig:
+                                            ClipboardService
+                                                .defaultNotificationContentConfig,
                                       );
                                     },
                                   );
@@ -211,14 +250,17 @@ class SettingsPage extends GetView<SettingsController> {
                     icon: const Icon(Icons.discount_outlined),
                     cardList: [
                       SettingCard(
-                        title: Text(TranslationKey.commonSettingsRunAtStartup.tr),
+                        title: Text(
+                          TranslationKey.commonSettingsRunAtStartup.tr,
+                        ),
                         value: appConfig.launchAtStartup,
                         action: (v) => Switch(
                           value: v,
                           onChanged: (checked) async {
-                            PackageInfo packageInfo = await PackageInfo.fromPlatform();
+                            PackageInfo packageInfo =
+                                await PackageInfo.fromPlatform();
                             final appName = packageInfo.appName;
-                            final appPath = Platform.resolvedExecutable;
+                            final appPath = PlatformExt.startupExecutablePath;
                             launchAtStartup.setup(
                               appName: appName,
                               appPath: appPath,
@@ -234,7 +276,9 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => PlatformExt.isDesktop,
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.commonSettingsRunMinimize.tr),
+                        title: Text(
+                          TranslationKey.commonSettingsRunMinimize.tr,
+                        ),
                         value: appConfig.startMini,
                         action: (v) => Switch(
                           value: v,
@@ -245,7 +289,11 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => PlatformExt.isDesktop,
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.commonSettingsShowHistoriesFloatWindow.tr),
+                        title: Text(
+                          TranslationKey
+                              .commonSettingsShowHistoriesFloatWindow
+                              .tr,
+                        ),
                         value: appConfig.showHistoryFloat,
                         action: (v) => Switch(
                           value: appConfig.showHistoryFloat,
@@ -263,7 +311,9 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.commonSettingsLockHistoriesFloatWindowPosition.tr,
+                          TranslationKey
+                              .commonSettingsLockHistoriesFloatWindowPosition
+                              .tr,
                         ),
                         value: appConfig.lockHistoryFloatLoc,
                         action: (v) => Switch(
@@ -276,7 +326,8 @@ class SettingsPage extends GetView<SettingsController> {
                             appConfig.setLockHistoryFloatLoc(checked);
                           },
                         ),
-                        show: (v) => Platform.isAndroid && appConfig.showHistoryFloat,
+                        show: (v) =>
+                            Platform.isAndroid && appConfig.showHistoryFloat,
                       ),
                       SettingCard<ThemeMode>(
                         title: Text(TranslationKey.commonSettingsTheme.tr),
@@ -298,7 +349,9 @@ class SettingsPage extends GetView<SettingsController> {
                               child: MouseRegion(
                                 cursor: SystemMouseCursors.click,
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 5),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 5,
+                                  ),
                                   child: Icon(icon),
                                 ),
                               ),
@@ -316,16 +369,27 @@ class SettingsPage extends GetView<SettingsController> {
                                       icon: icon,
                                       enabled: mode != v,
                                       onSelected: () async {
-                                        await appConfig.setAppTheme(mode, context, () {
-                                          final currentBg = controller.envStatusBgColor.value;
-                                          if (currentBg != null) {
-                                            controller.envStatusBgColor.value = controller.warningBgColor;
-                                          }
-                                        });
+                                        await appConfig.setAppTheme(
+                                          mode,
+                                          context,
+                                          () {
+                                            final currentBg = controller
+                                                .envStatusBgColor
+                                                .value;
+                                            if (currentBg != null) {
+                                              controller
+                                                      .envStatusBgColor
+                                                      .value =
+                                                  controller.warningBgColor;
+                                            }
+                                          },
+                                        );
                                       },
                                     );
                                   }).toList(),
-                                  position: details.globalPosition - const Offset(0, 50),
+                                  position:
+                                      details.globalPosition -
+                                      const Offset(0, 50),
                                   padding: const EdgeInsets.all(8.0),
                                   borderRadius: BorderRadius.circular(8),
                                 );
@@ -377,8 +441,12 @@ class SettingsPage extends GetView<SettingsController> {
                     icon: const Icon(Icons.admin_panel_settings),
                     cardList: [
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsNotificationTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsNotificationDesc.tr),
+                        title: Text(
+                          TranslationKey.permissionSettingsNotificationTitle.tr,
+                        ),
+                        description: Text(
+                          TranslationKey.permissionSettingsNotificationDesc.tr,
+                        ),
                         value: controller.hasNotifyPerm.value,
                         action: (val) => Icon(
                           val ? Icons.check_circle : Icons.help,
@@ -392,8 +460,12 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsFloatTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsFloatDesc.tr),
+                        title: Text(
+                          TranslationKey.permissionSettingsFloatTitle.tr,
+                        ),
+                        description: Text(
+                          TranslationKey.permissionSettingsFloatDesc.tr,
+                        ),
                         value: controller.hasFloatPerm.value,
                         action: (val) => Icon(
                           val ? Icons.check_circle : Icons.help,
@@ -407,8 +479,16 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsBatteryOptimiseTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsBatteryOptimiseDesc.tr),
+                        title: Text(
+                          TranslationKey
+                              .permissionSettingsBatteryOptimiseTitle
+                              .tr,
+                        ),
+                        description: Text(
+                          TranslationKey
+                              .permissionSettingsBatteryOptimiseDesc
+                              .tr,
+                        ),
                         value: controller.hasIgnoreBattery.value,
                         action: (val) => Icon(
                           val ? Icons.check_circle : Icons.help,
@@ -422,8 +502,12 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsSmsTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsSmsDesc.tr),
+                        title: Text(
+                          TranslationKey.permissionSettingsSmsTitle.tr,
+                        ),
+                        description: Text(
+                          TranslationKey.permissionSettingsSmsDesc.tr,
+                        ),
                         value: controller.hasSmsReadPerm.value,
                         action: (val) => Icon(
                           val ? Icons.check_circle : Icons.help,
@@ -435,9 +519,18 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsAccessibilityDesc.tr),
-                        value: !controller.hasAccessibilityPerm.value && appConfig.sourceRecord && !appConfig.ignoreAccessibility,
+                        title: Text(
+                          TranslationKey
+                              .permissionSettingsAccessibilityTitle
+                              .tr,
+                        ),
+                        description: Text(
+                          TranslationKey.permissionSettingsAccessibilityDesc.tr,
+                        ),
+                        value:
+                            !controller.hasAccessibilityPerm.value &&
+                            appConfig.sourceRecord &&
+                            !appConfig.ignoreAccessibility,
                         action: (val) => const Icon(
                           Icons.help,
                           color: Colors.orange,
@@ -448,9 +541,21 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsNotificationRecordTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsNotificationRecordDesc.tr),
-                        value: (!controller.hasNotificationRecordPerm.value && appConfig.enableRecordNotification) || (controller.hasNotificationRecordPerm.value && !appConfig.enableRecordNotification),
+                        title: Text(
+                          TranslationKey
+                              .permissionSettingsNotificationRecordTitle
+                              .tr,
+                        ),
+                        description: Text(
+                          TranslationKey
+                              .permissionSettingsNotificationRecordDesc
+                              .tr,
+                        ),
+                        value:
+                            (!controller.hasNotificationRecordPerm.value &&
+                                appConfig.enableRecordNotification) ||
+                            (controller.hasNotificationRecordPerm.value &&
+                                !appConfig.enableRecordNotification),
                         action: (val) => const Icon(
                           Icons.help,
                           color: Colors.orange,
@@ -461,8 +566,12 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.permissionSettingsClipboardTitle.tr),
-                        description: Text(TranslationKey.permissionSettingsClipboardDesc.tr),
+                        title: Text(
+                          TranslationKey.permissionSettingsClipboardTitle.tr,
+                        ),
+                        description: Text(
+                          TranslationKey.permissionSettingsClipboardDesc.tr,
+                        ),
                         value: controller.hasClipboardPerm.value,
                         action: (val) => const Icon(
                           Icons.help,
@@ -470,18 +579,38 @@ class SettingsPage extends GetView<SettingsController> {
                         ),
                         show: (v) => Platform.isAndroid && !v,
                         onTap: () async {
-                          final isValidWorkingMode = appConfig.workingMode == EnvironmentType.shizuku ||appConfig.workingMode == EnvironmentType.root;
-                          if(!isValidWorkingMode){
-                            Global.showTipsDialog(context: context, text: TranslationKey.clipboardPermissionRequestFailed.tr);
+                          final isValidWorkingMode =
+                              appConfig.workingMode ==
+                                  EnvironmentType.shizuku ||
+                              appConfig.workingMode == EnvironmentType.root;
+                          if (!isValidWorkingMode) {
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey
+                                  .clipboardPermissionRequestFailed
+                                  .tr,
+                            );
                             return;
-                          }else{
+                          } else {
                             try {
-                              await clipboardManager.requestClipboardPermission();
-                              controller.hasClipboardPerm.value = await clipboardManager.checkClipboardPermission();
-                              final tips = controller.hasClipboardPerm.value ? TranslationKey.requestSuccess.tr : TranslationKey.requestFailed.tr;
-                              Global.showSnackBarSuc(context: context, text: tips);
+                              await clipboardManager
+                                  .requestClipboardPermission();
+                              controller.hasClipboardPerm.value =
+                                  await clipboardManager
+                                      .checkClipboardPermission();
+                              final tips = controller.hasClipboardPerm.value
+                                  ? TranslationKey.requestSuccess.tr
+                                  : TranslationKey.requestFailed.tr;
+                              Global.showSnackBarSuc(
+                                context: context,
+                                text: tips,
+                              );
                             } catch (err, stack) {
-                              Global.showTipsDialog(context: context, text: "$err,$stack", title: TranslationKey.requestFailed.tr);
+                              Global.showTipsDialog(
+                                context: context,
+                                text: "$err,$stack",
+                                title: TranslationKey.requestFailed.tr,
+                              );
                             }
                           }
                         },
@@ -500,7 +629,9 @@ class SettingsPage extends GetView<SettingsController> {
                     cardList: [
                       SettingCard(
                         title: Text(
-                          TranslationKey.preferenceSettingsRememberWindowSize.tr,
+                          TranslationKey
+                              .preferenceSettingsRememberWindowSize
+                              .tr,
                         ),
                         description: Text(
                           "${appConfig.rememberWindowSize ? "${TranslationKey.preferenceSettingsWindowSizeRecordValue.tr}: ${appConfig.windowSize}，" : ""}${TranslationKey.preferenceSettingsWindowSizeDefaultValue.tr}: ${Constants.defaultWindowSize}",
@@ -518,9 +649,13 @@ class SettingsPage extends GetView<SettingsController> {
                       //弹窗记住上次位置
                       SettingCard(
                         title: Text(
-                          TranslationKey.preferenceSettingsRecordsDialogLocation.tr,
+                          TranslationKey
+                              .preferenceSettingsRecordsDialogLocation
+                              .tr,
                         ),
-                        description: Text("${TranslationKey.current.tr}: ${appConfig.recordHistoryDialogPosition ? TranslationKey.rememberLastPos.tr : TranslationKey.followMousePos.tr}"),
+                        description: Text(
+                          "${TranslationKey.current.tr}: ${appConfig.recordHistoryDialogPosition ? TranslationKey.rememberLastPos.tr : TranslationKey.followMousePos.tr}",
+                        ),
                         value: appConfig.recordHistoryDialogPosition,
                         action: (v) => Switch(
                           value: v,
@@ -551,18 +686,22 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(TranslationKey.showOnRecentTasks.tr),
-                        description: Text(TranslationKey.showOnRecentTasksDesc.tr),
+                        description: Text(
+                          TranslationKey.showOnRecentTasksDesc.tr,
+                        ),
                         value: appConfig.showOnRecentTasks,
                         action: (v) {
                           return Switch(
                             value: v,
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
-                              androidChannelService.showOnRecentTasks(checked).then((v) {
-                                if (v) {
-                                  appConfig.setShowOnRecentTasks(checked);
-                                }
-                              });
+                              androidChannelService
+                                  .showOnRecentTasks(checked)
+                                  .then((v) {
+                                    if (v) {
+                                      appConfig.setShowOnRecentTasks(checked);
+                                    }
+                                  });
                             },
                           );
                         },
@@ -570,7 +709,9 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(TranslationKey.showMoreItemsInRow.tr),
-                        description: Text(TranslationKey.showMoreItemsInRowDesc.tr),
+                        description: Text(
+                          TranslationKey.showMoreItemsInRowDesc.tr,
+                        ),
                         value: appConfig.showMoreItemsInRow,
                         action: (v) {
                           return Switch(
@@ -585,7 +726,9 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(TranslationKey.closeOnSameHotKeyTitle.tr),
-                        description: Text(TranslationKey.closeOnSameHotKeyDesc.tr),
+                        description: Text(
+                          TranslationKey.closeOnSameHotKeyDesc.tr,
+                        ),
                         value: appConfig.closeOnSameHotKey,
                         action: (v) {
                           return Switch(
@@ -617,22 +760,30 @@ class SettingsPage extends GetView<SettingsController> {
                           value: v,
                           onChanged: (checked) async {
                             HapticFeedback.mediumImpact();
-                            final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
+                            final androidNotificationListenerService =
+                                Get.find<AndroidNotificationListenerService>();
                             if (checked) {
-                              var isGranted = await NotificationListenerService.isPermissionGranted();
+                              var isGranted =
+                                  await NotificationListenerService.isPermissionGranted();
                               if (!isGranted) {
                                 await NotificationListenerService.requestPermission();
-                                isGranted = await NotificationListenerService.isPermissionGranted();
+                                isGranted =
+                                    await NotificationListenerService.isPermissionGranted();
                                 if (isGranted) {
-                                  appConfig.setEnableRecordNotification(checked);
-                                  androidNotificationListenerService.startListening();
+                                  appConfig.setEnableRecordNotification(
+                                    checked,
+                                  );
+                                  androidNotificationListenerService
+                                      .startListening();
                                 }
                                 return;
                               } else {
-                                androidNotificationListenerService.startListening();
+                                androidNotificationListenerService
+                                    .startListening();
                               }
                             } else {
-                              androidNotificationListenerService.stopListening();
+                              androidNotificationListenerService
+                                  .stopListening();
                             }
                             appConfig.setEnableRecordNotification(checked);
                           },
@@ -641,7 +792,9 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.preferenceSettingsDevConnNotification.tr,
+                          TranslationKey
+                              .preferenceSettingsDevConnNotification
+                              .tr,
                         ),
                         value: appConfig.notifyOnDevConn,
                         action: (v) => Switch(
@@ -655,7 +808,9 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.preferenceSettingsDevDisconnNotification.tr,
+                          TranslationKey
+                              .preferenceSettingsDevDisconnNotification
+                              .tr,
                         ),
                         value: appConfig.notifyOnDevDisconn,
                         action: (v) => Switch(
@@ -668,8 +823,16 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => true,
                       ),
                       SettingCard(
-                        title: Text(TranslationKey.preferenceSettingsShowMobileNotificationTitle.tr),
-                        description: Text(TranslationKey.preferenceSettingsShowMobileNotificationDesc.tr),
+                        title: Text(
+                          TranslationKey
+                              .preferenceSettingsShowMobileNotificationTitle
+                              .tr,
+                        ),
+                        description: Text(
+                          TranslationKey
+                              .preferenceSettingsShowMobileNotificationDesc
+                              .tr,
+                        ),
                         value: appConfig.enableShowMobileNotification,
                         action: (v) => Switch(
                           value: v,
@@ -694,10 +857,16 @@ class SettingsPage extends GetView<SettingsController> {
                     cardList: [
                       SettingCard(
                         title: Text(
-                          TranslationKey.stopListeningOnScreenClosedSettingTitle.tr,
+                          TranslationKey
+                              .stopListeningOnScreenClosedSettingTitle
+                              .tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.stopListeningOnScreenClosedSettingDesc.tr),
+                        description: Text(
+                          TranslationKey
+                              .stopListeningOnScreenClosedSettingDesc
+                              .tr,
+                        ),
                         value: appConfig.stopListeningOnScreenClosed,
                         show: (v) => Platform.isAndroid,
                         action: (v) {
@@ -714,14 +883,18 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Row(
                           children: [
                             Text(
-                              TranslationKey.clipboardSettingsSourceRecordTitle.tr,
+                              TranslationKey
+                                  .clipboardSettingsSourceRecordTitle
+                                  .tr,
                               maxLines: 1,
                             ),
                             if (Platform.isAndroid)
                               Container(
                                 margin: const EdgeInsets.only(left: 5),
                                 child: Tooltip(
-                                  message: TranslationKey.clipboardSettingsSourceRecordTitleTooltip.tr,
+                                  message: TranslationKey
+                                      .clipboardSettingsSourceRecordTitleTooltip
+                                      .tr,
                                   child: GestureDetector(
                                     child: const MouseRegion(
                                       cursor: SystemMouseCursors.click,
@@ -734,7 +907,9 @@ class SettingsPage extends GetView<SettingsController> {
                                     onTap: () async {
                                       Global.showTipsDialog(
                                         context: context,
-                                        text: TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent.tr,
+                                        text: TranslationKey
+                                            .clipboardSettingsSourceRecordTitleTooltipDialogContent
+                                            .tr,
                                       );
                                     },
                                   ),
@@ -744,7 +919,11 @@ class SettingsPage extends GetView<SettingsController> {
                         ),
                         description: Visibility(
                           visible: Platform.isAndroid,
-                          child: Text(TranslationKey.clipboardSettingsSourceRecordAndroidDesc.tr),
+                          child: Text(
+                            TranslationKey
+                                .clipboardSettingsSourceRecordAndroidDesc
+                                .tr,
+                          ),
                         ),
                         value: appConfig.sourceRecord,
                         action: (v) {
@@ -753,11 +932,15 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableSourceRecord(checked);
-                              if (Platform.isAndroid && checked && !controller.hasAccessibilityPerm.value && !appConfig.ignoreAccessibility) {
+                              if (Platform.isAndroid &&
+                                  checked &&
+                                  !controller.hasAccessibilityPerm.value &&
+                                  !appConfig.ignoreAccessibility) {
                                 //检查无障碍
                                 Global.showTipsDialog(
                                   context: context,
-                                  text: TranslationKey.noAccessibilityPermTips.tr,
+                                  text:
+                                      TranslationKey.noAccessibilityPermTips.tr,
                                   showCancel: true,
                                   okText: TranslationKey.goAuthorize.tr,
                                   onOk: () {
@@ -778,12 +961,16 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Row(
                           children: [
                             Text(
-                              TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle.tr,
+                              TranslationKey
+                                  .clipboardSettingsSourceRecordViaDumpsysTitle
+                                  .tr,
                               maxLines: 1,
                             ),
                             const SizedBox(width: 5),
                             Tooltip(
-                              message: TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip.tr,
+                              message: TranslationKey
+                                  .clipboardSettingsSourceRecordViaDumpsysTitleTooltip
+                                  .tr,
                               child: GestureDetector(
                                 child: const MouseRegion(
                                   cursor: SystemMouseCursors.click,
@@ -796,25 +983,34 @@ class SettingsPage extends GetView<SettingsController> {
                                 onTap: () async {
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent.tr,
+                                    text: TranslationKey
+                                        .clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent
+                                        .tr,
                                   );
                                 },
                               ),
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc.tr),
+                        description: Text(
+                          TranslationKey
+                              .clipboardSettingsSourceRecordViaDumpsysAndroidDesc
+                              .tr,
+                        ),
                         value: appConfig.sourceRecordViaDumpsys,
                         action: (v) {
                           return Switch(
                             value: v,
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
-                              appConfig.setEnableSourceRecordViaDumpsys(checked);
+                              appConfig.setEnableSourceRecordViaDumpsys(
+                                checked,
+                              );
                             },
                           );
                         },
-                        show: (v) => Platform.isAndroid && appConfig.sourceRecord,
+                        show: (v) =>
+                            Platform.isAndroid && appConfig.sourceRecord,
                       ),
                       SettingCard(
                         title: Row(
@@ -838,14 +1034,18 @@ class SettingsPage extends GetView<SettingsController> {
                                 onTap: () async {
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.sendBroadcastOnAddDataTips.tr,
+                                    text: TranslationKey
+                                        .sendBroadcastOnAddDataTips
+                                        .tr,
                                   );
                                 },
                               ),
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.sendBroadcastOnAddDataDesc.tr),
+                        description: Text(
+                          TranslationKey.sendBroadcastOnAddDataDesc.tr,
+                        ),
                         value: appConfig.sendBroadcastOnAdd,
                         action: (v) {
                           return Switch(
@@ -863,7 +1063,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.excludePrivateFormat.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.excludePrivateFormatTips.tr),
+                        description: Text(
+                          TranslationKey.excludePrivateFormatTips.tr,
+                        ),
                         value: appConfig.isExcludeFormat,
                         action: (v) {
                           return Switch(
@@ -892,7 +1094,9 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Row(
                           children: [
                             Text(
-                              TranslationKey.discoveringSettingsLocalDeviceName.tr,
+                              TranslationKey
+                                  .discoveringSettingsLocalDeviceName
+                                  .tr,
                               maxLines: 1,
                             ),
                             const SizedBox(width: 5),
@@ -906,7 +1110,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 );
                                 Global.showSnackBarSuc(
                                   context: context,
-                                  text: TranslationKey.discoveringSettingsDeviceNameCopyTip.tr,
+                                  text: TranslationKey
+                                      .discoveringSettingsDeviceNameCopyTip
+                                      .tr,
                                 );
                               },
                               tooltip: TranslationKey.copyDeviceId.tr,
@@ -929,7 +1135,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 appConfig.setLocalName(str);
                                 Global.showSnackBarSuc(
                                   context: context,
-                                  text: TranslationKey.modifyDeviceNameCompletedTooltip.tr,
+                                  text: TranslationKey
+                                      .modifyDeviceNameCompletedTooltip
+                                      .tr,
                                 );
                               },
                             ),
@@ -941,7 +1149,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.port.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.discoveringSettingsPortDesc.tr),
+                        description: Text(
+                          TranslationKey.discoveringSettingsPortDesc.tr,
+                        ),
                         value: appConfig.port,
                         action: (v) => Text(v.toString()),
                         onTap: () {
@@ -961,7 +1171,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 appConfig.setPort(str.toInt());
                                 Global.showSnackBarSuc(
                                   context: context,
-                                  text: TranslationKey.discoveringSettingsModifyPortCompletedTooltip.tr,
+                                  text: TranslationKey
+                                      .discoveringSettingsModifyPortCompletedTooltip
+                                      .tr,
                                 );
                               },
                             ),
@@ -973,7 +1185,11 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.allowDiscovering.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.discoveringSettingsAllowDiscoveringDesc.tr),
+                        description: Text(
+                          TranslationKey
+                              .discoveringSettingsAllowDiscoveringDesc
+                              .tr,
+                        ),
                         value: appConfig.allowDiscover,
                         action: (v) => Switch(
                           value: v,
@@ -986,10 +1202,16 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.discoveringSettingsOnlyForwardDiscoveringTitle.tr,
+                          TranslationKey
+                              .discoveringSettingsOnlyForwardDiscoveringTitle
+                              .tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.discoveringSettingsOnlyForwardDiscoveringDesc.tr),
+                        description: Text(
+                          TranslationKey
+                              .discoveringSettingsOnlyForwardDiscoveringDesc
+                              .tr,
+                        ),
                         value: appConfig.onlyForwardMode,
                         action: (v) => Switch(
                           value: v,
@@ -1004,14 +1226,18 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Row(
                           children: [
                             Text(
-                              TranslationKey.discoveringSettingsHeartbeatIntervalTitle.tr,
+                              TranslationKey
+                                  .discoveringSettingsHeartbeatIntervalTitle
+                                  .tr,
                               maxLines: 1,
                             ),
                             const SizedBox(
                               width: 5,
                             ),
                             Tooltip(
-                              message: TranslationKey.discoveringSettingsHeartbeatIntervalTooltip.tr,
+                              message: TranslationKey
+                                  .discoveringSettingsHeartbeatIntervalTooltip
+                                  .tr,
                               child: GestureDetector(
                                 child: const MouseRegion(
                                   cursor: SystemMouseCursors.click,
@@ -1024,29 +1250,44 @@ class SettingsPage extends GetView<SettingsController> {
                                 onTap: () async {
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.discoveringSettingsHeartbeatIntervalTooltipDialogContent.tr,
+                                    text: TranslationKey
+                                        .discoveringSettingsHeartbeatIntervalTooltipDialogContent
+                                        .tr,
                                   );
                                 },
                               ),
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.discoveringSettingsHeartbeatIntervalDesc.tr),
+                        description: Text(
+                          TranslationKey
+                              .discoveringSettingsHeartbeatIntervalDesc
+                              .tr,
+                        ),
                         value: appConfig.heartbeatInterval,
-                        action: (v) => Text(v <= 0 ? TranslationKey.dontDetect.tr : '${v}s'),
+                        action: (v) => Text(
+                          v <= 0 ? TranslationKey.dontDetect.tr : '${v}s',
+                        ),
                         onTap: () {
                           Global.showDialog(
                             context,
                             TextEditDialog(
-                              title: TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle.tr,
-                              labelText: TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel.tr,
-                              initStr: "${appConfig.heartbeatInterval <= 0 ? '' : appConfig.heartbeatInterval}",
+                              title: TranslationKey
+                                  .discoveringSettingsModifyHeartbeatDialogTitle
+                                  .tr,
+                              labelText: TranslationKey
+                                  .discoveringSettingsModifyHeartbeatDialogInputLabel
+                                  .tr,
+                              initStr:
+                                  "${appConfig.heartbeatInterval <= 0 ? '' : appConfig.heartbeatInterval}",
                               verify: (str) {
                                 var port = int.tryParse(str);
                                 if (port == null) return false;
                                 return true;
                               },
-                              errorText: TranslationKey.discoveringSettingsModifyHeartbeatDialogInputErrorText.tr,
+                              errorText: TranslationKey
+                                  .discoveringSettingsModifyHeartbeatDialogInputErrorText
+                                  .tr,
                               onOk: (str) async {
                                 await appConfig.setHeartbeatInterval(str);
                                 var enable = str.toInt() > 0;
@@ -1065,7 +1306,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.syncAutoCloseSettingTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.syncAutoCloseSettingDesc.tr),
+                        description: Text(
+                          TranslationKey.syncAutoCloseSettingDesc.tr,
+                        ),
                         value: appConfig.autoCloseConnAfterScreenOff,
                         show: (v) => Platform.isAndroid,
                         action: (v) {
@@ -1083,7 +1326,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.enableAutoSyncOnScreenOpenedTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.enableAutoSyncOnScreenOpenedDesc.tr),
+                        description: Text(
+                          TranslationKey.enableAutoSyncOnScreenOpenedDesc.tr,
+                        ),
                         value: appConfig.enableAutoSyncOnScreenOpened,
                         show: (v) => Platform.isAndroid,
                         action: (v) {
@@ -1091,17 +1336,25 @@ class SettingsPage extends GetView<SettingsController> {
                             value: v,
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
-                              appConfig.setEnableAutoSyncOnScreenOpened(checked);
+                              appConfig.setEnableAutoSyncOnScreenOpened(
+                                checked,
+                              );
                             },
                           );
                         },
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.onlyManualDiscoverySubNetSettingTitle.tr,
+                          TranslationKey
+                              .onlyManualDiscoverySubNetSettingTitle
+                              .tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.onlyManualDiscoverySubNetSettingDesc.tr),
+                        description: Text(
+                          TranslationKey
+                              .onlyManualDiscoverySubNetSettingDesc
+                              .tr,
+                        ),
                         value: appConfig.onlyManualDiscoverySubNet,
                         action: (v) {
                           return Switch(
@@ -1118,7 +1371,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.noDiscoveryIfsSettingTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.noDiscoveryIfsSettingDesc.tr),
+                        description: Text(
+                          TranslationKey.noDiscoveryIfsSettingDesc.tr,
+                        ),
                         value: appConfig.noDiscoveryIfs,
                         action: (v) {
                           return TextButton(
@@ -1127,9 +1382,18 @@ class SettingsPage extends GetView<SettingsController> {
                               final interfaces = await NetworkInterface.list();
                               final selections = interfaces.map((itf) {
                                 var showTextList = [itf.name];
-                                var ipList = itf.addresses.where((address) => address.type == InternetAddressType.IPv4).map((address) => address.address);
+                                var ipList = itf.addresses
+                                    .where(
+                                      (address) =>
+                                          address.type ==
+                                          InternetAddressType.IPv4,
+                                    )
+                                    .map((address) => address.address);
                                 showTextList.addAll(ipList);
-                                return CheckboxData(value: itf.name, text: showTextList.join('\n'));
+                                return CheckboxData(
+                                  value: itf.name,
+                                  text: showTextList.join('\n'),
+                                );
                               }).toList();
                               DialogController? dialog;
                               dialog = MultiSelectDialog.show(
@@ -1147,7 +1411,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 minSelectedCnt: 0,
                                 selections: selections,
                                 textStyle: const TextStyle(fontSize: 13),
-                                title: Text(TranslationKey.noDiscoveryIfsSettingTitle.tr),
+                                title: Text(
+                                  TranslationKey.noDiscoveryIfsSettingTitle.tr,
+                                ),
                               );
                             },
                           );
@@ -1198,9 +1464,12 @@ class SettingsPage extends GetView<SettingsController> {
                                 enabled: v != ForwardWay.server,
                                 onSelected: () async {
                                   void setup() async {
-                                    await appConfig.setForwardWay(ForwardWay.server);
+                                    await appConfig.setForwardWay(
+                                      ForwardWay.server,
+                                    );
                                     await storageService.stop();
-                                    if (!appConfig.enableForward || appConfig.forwardServer == null) {
+                                    if (!appConfig.enableForward ||
+                                        appConfig.forwardServer == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
                                       return;
@@ -1208,13 +1477,16 @@ class SettingsPage extends GetView<SettingsController> {
                                     sktService.connectForwardServer(true);
                                   }
 
-                                  if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                  if (appConfig.forwardWay == ForwardWay.none ||
+                                      !appConfig.enableForward) {
                                     setup();
                                     return;
                                   }
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    text: TranslationKey
+                                        .changeForwardWayConfirm
+                                        .tr,
                                     showCancel: true,
                                     onOk: setup,
                                   );
@@ -1226,9 +1498,12 @@ class SettingsPage extends GetView<SettingsController> {
                                 enabled: v != ForwardWay.webdav,
                                 onSelected: () {
                                   void setup() async {
-                                    await appConfig.setForwardWay(ForwardWay.webdav);
+                                    await appConfig.setForwardWay(
+                                      ForwardWay.webdav,
+                                    );
                                     await sktService.disConnectForwardServer();
-                                    if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
+                                    if (!appConfig.enableForward ||
+                                        appConfig.webDAVConfig == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
                                       return;
@@ -1236,13 +1511,16 @@ class SettingsPage extends GetView<SettingsController> {
                                     storageService.restart();
                                   }
 
-                                  if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                  if (appConfig.forwardWay == ForwardWay.none ||
+                                      !appConfig.enableForward) {
                                     setup();
                                     return;
                                   }
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    text: TranslationKey
+                                        .changeForwardWayConfirm
+                                        .tr,
                                     showCancel: true,
                                     onOk: setup,
                                   );
@@ -1254,9 +1532,12 @@ class SettingsPage extends GetView<SettingsController> {
                                 enabled: v != ForwardWay.s3,
                                 onSelected: () async {
                                   void setup() async {
-                                    await appConfig.setForwardWay(ForwardWay.s3);
+                                    await appConfig.setForwardWay(
+                                      ForwardWay.s3,
+                                    );
                                     await sktService.disConnectForwardServer();
-                                    if (!appConfig.enableForward || appConfig.s3Config == null) {
+                                    if (!appConfig.enableForward ||
+                                        appConfig.s3Config == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
                                       return;
@@ -1264,13 +1545,16 @@ class SettingsPage extends GetView<SettingsController> {
                                     storageService.restart();
                                   }
 
-                                  if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
+                                  if (appConfig.forwardWay == ForwardWay.none ||
+                                      !appConfig.enableForward) {
                                     setup();
                                     return;
                                   }
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    text: TranslationKey
+                                        .changeForwardWayConfirm
+                                        .tr,
                                     showCancel: true,
                                     onOk: setup,
                                   );
@@ -1283,7 +1567,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () async {
                                   Future<void> setup() async {
                                     await appConfig.setEnableForward(false);
-                                    await appConfig.setForwardWay(ForwardWay.none);
+                                    await appConfig.setForwardWay(
+                                      ForwardWay.none,
+                                    );
                                     await sktService.disConnectForwardServer();
                                     await storageService.stop();
                                   }
@@ -1294,7 +1580,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   }
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.changeForwardWayConfirm.tr,
+                                    text: TranslationKey
+                                        .changeForwardWayConfirm
+                                        .tr,
                                     showCancel: true,
                                     onOk: () async {
                                       setup();
@@ -1303,7 +1591,10 @@ class SettingsPage extends GetView<SettingsController> {
                                 },
                               ),
                             ],
-                            position: Offset(Get.size.width, details.globalPosition.dy - 50),
+                            position: Offset(
+                              Get.size.width,
+                              details.globalPosition.dy - 50,
+                            ),
                             padding: 8.insetAll,
                             borderRadius: BorderRadius.circular(8),
                           );
@@ -1316,7 +1607,11 @@ class SettingsPage extends GetView<SettingsController> {
                           title: Row(
                             children: [
                               Text(
-                                appConfig.forwardWay == ForwardWay.server ? TranslationKey.forwardServerStatus.tr : TranslationKey.notificationServerStatus.tr,
+                                appConfig.forwardWay == ForwardWay.server
+                                    ? TranslationKey.forwardServerStatus.tr
+                                    : TranslationKey
+                                          .notificationServerStatus
+                                          .tr,
                                 maxLines: 1,
                               ),
                               if (appConfig.forwardWay != ForwardWay.server)
@@ -1334,7 +1629,9 @@ class SettingsPage extends GetView<SettingsController> {
                                     onTap: () async {
                                       Global.showTipsDialog(
                                         context: context,
-                                        text: TranslationKey.notificationServerTips.tr,
+                                        text: TranslationKey
+                                            .notificationServerTips
+                                            .tr,
                                       );
                                     },
                                   ),
@@ -1345,7 +1642,8 @@ class SettingsPage extends GetView<SettingsController> {
                             children: [
                               Dot(
                                 radius: 6.0,
-                                color: controller.forwardServerStatus.value.color,
+                                color:
+                                    controller.forwardServerStatus.value.color,
                               ),
                               const SizedBox(width: 5),
                               Text(controller.forwardServerStatus.value.tr),
@@ -1361,14 +1659,23 @@ class SettingsPage extends GetView<SettingsController> {
                                 Global.showDialog(
                                   context,
                                   NotificationServerEditDialog(
-                                    title: TranslationKey.notificationServerConfigure.tr,
-                                    labelText: TranslationKey.notificationServerAddress.tr,
+                                    title: TranslationKey
+                                        .notificationServerConfigure
+                                        .tr,
+                                    labelText: TranslationKey
+                                        .notificationServerAddress
+                                        .tr,
                                     initStr: appConfig.notificationServer,
                                     hint: 'ws://',
-                                    verify: (s) => s.matchRegExp(Constants.wsUrlRegex),
-                                    errorText: TranslationKey.pleaseInputCorrectWsURL.tr,
+                                    verify: (s) =>
+                                        s.matchRegExp(Constants.wsUrlRegex),
+                                    errorText: TranslationKey
+                                        .pleaseInputCorrectWsURL
+                                        .tr,
                                     onOk: (result) {
-                                      appConfig.setNotificationServer(result.trimEnd('/'));
+                                      appConfig.setNotificationServer(
+                                        result.trimEnd('/'),
+                                      );
                                       if (appConfig.enableForward) {
                                         storageService.reconnectWs();
                                       }
@@ -1392,7 +1699,9 @@ class SettingsPage extends GetView<SettingsController> {
                               const SizedBox(width: 5),
                               if (appConfig.forwardWay == ForwardWay.server)
                                 Tooltip(
-                                  message: TranslationKey.forwardSettingsForwardDownloadTooltip.tr,
+                                  message: TranslationKey
+                                      .forwardSettingsForwardDownloadTooltip
+                                      .tr,
                                   child: GestureDetector(
                                     child: const MouseRegion(
                                       cursor: SystemMouseCursors.click,
@@ -1409,35 +1718,48 @@ class SettingsPage extends GetView<SettingsController> {
                                 ),
                             ],
                           ),
-                          description: Text(TranslationKey.forwardSettingsForwardDesc.tr),
+                          description: Text(
+                            TranslationKey.forwardSettingsForwardDesc.tr,
+                          ),
                           value: appConfig.enableForward,
                           action: (v) {
                             return Switch(
                               value: v,
                               onChanged: (checked) async {
                                 HapticFeedback.mediumImpact();
-                                final useServer = appConfig.forwardWay == ForwardWay.server;
+                                final useServer =
+                                    appConfig.forwardWay == ForwardWay.server;
                                 //启用中转服务器前先校验是否填写服务器地址
-                                if (useServer && appConfig.forwardServer == null) {
+                                if (useServer &&
+                                    appConfig.forwardServer == null) {
                                   Global.showSnackBarErr(
                                     context: context,
-                                    text: TranslationKey.forwardSettingsForwardEnableRequiredText.tr,
+                                    text: TranslationKey
+                                        .forwardSettingsForwardEnableRequiredText
+                                        .tr,
                                   );
                                   return;
                                 }
-                                final useWebdav = appConfig.forwardWay == ForwardWay.webdav;
-                                if (useWebdav && appConfig.webDAVConfig == null) {
+                                final useWebdav =
+                                    appConfig.forwardWay == ForwardWay.webdav;
+                                if (useWebdav &&
+                                    appConfig.webDAVConfig == null) {
                                   Global.showSnackBarErr(
                                     context: context,
-                                    text: TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr,
+                                    text: TranslationKey
+                                        .forwardSettingsForwardEnableRequiredWebDAVText
+                                        .tr,
                                   );
                                   return;
                                 }
-                                final useS3 = appConfig.forwardWay == ForwardWay.s3;
+                                final useS3 =
+                                    appConfig.forwardWay == ForwardWay.s3;
                                 if (useS3 && appConfig.s3Config == null) {
                                   Global.showSnackBarErr(
                                     context: context,
-                                    text: TranslationKey.forwardSettingsForwardEnableRequiredS3Text.tr,
+                                    text: TranslationKey
+                                        .forwardSettingsForwardEnableRequiredS3Text
+                                        .tr,
                                   );
                                   return;
                                 }
@@ -1462,10 +1784,14 @@ class SettingsPage extends GetView<SettingsController> {
                       if (appConfig.forwardWay == ForwardWay.server)
                         SettingCard(
                           title: Text(
-                            TranslationKey.forwardSettingsForwardAddressTitle.tr,
+                            TranslationKey
+                                .forwardSettingsForwardAddressTitle
+                                .tr,
                             maxLines: 1,
                           ),
-                          description: Text(TranslationKey.forwardSettingsForwardAddressDesc.tr),
+                          description: Text(
+                            TranslationKey.forwardSettingsForwardAddressDesc.tr,
+                          ),
                           value: appConfig.forwardServer,
                           action: (v) {
                             String text = TranslationKey.change.tr;
@@ -1480,12 +1806,19 @@ class SettingsPage extends GetView<SettingsController> {
                                       Global.showDialog(
                                         context,
                                         QrImageDialog(
-                                          title: Text(TranslationKey.forwardServer.tr),
-                                          data: jsonEncode(appConfig.forwardServer!),
+                                          title: Text(
+                                            TranslationKey.forwardServer.tr,
+                                          ),
+                                          data: jsonEncode(
+                                            appConfig.forwardServer!,
+                                          ),
                                         ),
                                       );
                                     },
-                                    icon: const Icon(Icons.qr_code, color: Colors.blueGrey),
+                                    icon: const Icon(
+                                      Icons.qr_code,
+                                      color: Colors.blueGrey,
+                                    ),
                                   ),
                                 TextButton(
                                   onPressed: () {
@@ -1511,7 +1844,11 @@ class SettingsPage extends GetView<SettingsController> {
                             TranslationKey.forwardSettingsWebDAVTitle.tr,
                             maxLines: 1,
                           ),
-                          description: Text(appConfig.webDAVConfig?.displayName ?? TranslationKey.noConfig.tr, maxLines: 1),
+                          description: Text(
+                            appConfig.webDAVConfig?.displayName ??
+                                TranslationKey.noConfig.tr,
+                            maxLines: 1,
+                          ),
                           value: appConfig.webDAVConfig,
                           action: (v) {
                             String text = TranslationKey.change.tr;
@@ -1527,11 +1864,16 @@ class SettingsPage extends GetView<SettingsController> {
                                         context,
                                         QrImageDialog(
                                           title: const Text("WebDAV"),
-                                          data: jsonEncode(appConfig.webDAVConfig!),
+                                          data: jsonEncode(
+                                            appConfig.webDAVConfig!,
+                                          ),
                                         ),
                                       );
                                     },
-                                    icon: const Icon(Icons.qr_code, color: Colors.blueGrey),
+                                    icon: const Icon(
+                                      Icons.qr_code,
+                                      color: Colors.blueGrey,
+                                    ),
                                   ),
                                 TextButton(
                                   onPressed: () {
@@ -1560,7 +1902,11 @@ class SettingsPage extends GetView<SettingsController> {
                             TranslationKey.forwardSettingsS3Title.tr,
                             maxLines: 1,
                           ),
-                          description: Text(appConfig.s3Config?.displayName ?? TranslationKey.noConfig.tr, maxLines: 1),
+                          description: Text(
+                            appConfig.s3Config?.displayName ??
+                                TranslationKey.noConfig.tr,
+                            maxLines: 1,
+                          ),
                           value: appConfig.s3Config,
                           action: (v) {
                             String text = TranslationKey.change.tr;
@@ -1580,7 +1926,10 @@ class SettingsPage extends GetView<SettingsController> {
                                         ),
                                       );
                                     },
-                                    icon: const Icon(Icons.qr_code, color: Colors.blueGrey),
+                                    icon: const Icon(
+                                      Icons.qr_code,
+                                      color: Colors.blueGrey,
+                                    ),
                                   ),
                                 TextButton(
                                   onPressed: () {
@@ -1620,7 +1969,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.securitySettingsEnableSecurityTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.securitySettingsEnableSecurityDesc.tr),
+                        description: Text(
+                          TranslationKey.securitySettingsEnableSecurityDesc.tr,
+                        ),
                         value: appConfig.useAuthentication,
                         action: (v) {
                           return Switch(
@@ -1630,9 +1981,13 @@ class SettingsPage extends GetView<SettingsController> {
                               if (appConfig.appPassword == null && checked) {
                                 Global.showTipsDialog(
                                   context: context,
-                                  text: TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogContent.tr,
+                                  text: TranslationKey
+                                      .securitySettingsEnableSecurityAppPwdRequiredDialogContent
+                                      .tr,
                                   onOk: controller.gotoSetPwd,
-                                  okText: TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogOkText.tr,
+                                  okText: TranslationKey
+                                      .securitySettingsEnableSecurityAppPwdRequiredDialogOkText
+                                      .tr,
                                   showCancel: true,
                                 );
                                 appConfig.setUseAuthentication(false);
@@ -1645,10 +2000,16 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.securitySettingsEnableSecurityAppPwdModifyTitle.tr,
+                          TranslationKey
+                              .securitySettingsEnableSecurityAppPwdModifyTitle
+                              .tr,
                           maxLines: 1,
                         ),
-                        description: Text(appConfig.appPassword == null ? TranslationKey.createAppPwd.tr : TranslationKey.changeAppPwd.tr),
+                        description: Text(
+                          appConfig.appPassword == null
+                              ? TranslationKey.createAppPwd.tr
+                              : TranslationKey.changeAppPwd.tr,
+                        ),
                         value: appConfig.appPassword,
                         action: (v) {
                           return TextButton(
@@ -1658,7 +2019,8 @@ class SettingsPage extends GetView<SettingsController> {
                               } else {
                                 //第一步验证
                                 appConfig.authenticating.value = true;
-                                final homeController = Get.find<HomeController>();
+                                final homeController =
+                                    Get.find<HomeController>();
                                 homeController
                                     .gotoAuthenticationPage(
                                       TranslationKey.authenticationPageTitle.tr,
@@ -1672,7 +2034,11 @@ class SettingsPage extends GetView<SettingsController> {
                                     });
                               }
                             },
-                            child: Text(appConfig.appPassword == null ? TranslationKey.create.tr : TranslationKey.change.tr),
+                            child: Text(
+                              appConfig.appPassword == null
+                                  ? TranslationKey.create.tr
+                                  : TranslationKey.change.tr,
+                            ),
                           );
                         },
                       ),
@@ -1681,7 +2047,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.securitySettingsReverificationTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.securitySettingsReverificationDesc.tr),
+                        description: Text(
+                          TranslationKey.securitySettingsReverificationDesc.tr,
+                        ),
                         value: appConfig.appRevalidateDuration,
                         onTap: () {
                           DialogController? dialog;
@@ -1697,24 +2065,38 @@ class SettingsPage extends GetView<SettingsController> {
                               );
                             },
                             selections: Constants.authBackEndTimeSelections,
-                            title: Text(TranslationKey.securitySettingsReverificationTitle.tr),
+                            title: Text(
+                              TranslationKey
+                                  .securitySettingsReverificationTitle
+                                  .tr,
+                            ),
                           );
                         },
                         action: (v) {
                           var duration = appConfig.appRevalidateDuration;
                           return Text(
-                            duration <= 0 ? TranslationKey.immediately.tr : TranslationKey.securitySettingsReverificationValue.trParams({"value": duration.toString()}),
+                            duration <= 0
+                                ? TranslationKey.immediately.tr
+                                : TranslationKey
+                                      .securitySettingsReverificationValue
+                                      .trParams({"value": duration.toString()}),
                           );
                         },
                       ),
                       SettingCard<String>(
                         title: Row(
                           children: [
-                            Text(TranslationKey.dhKeySettingName.tr, maxLines: 1),
+                            Text(
+                              TranslationKey.dhKeySettingName.tr,
+                              maxLines: 1,
+                            ),
                             const SizedBox(width: 5),
                             GestureDetector(
                               onTap: () {
-                                Global.showTipsDialog(context: context, text: TranslationKey.dhKeySettingTips.tr);
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey.dhKeySettingTips.tr,
+                                );
                               },
                               child: const Icon(
                                 Icons.info_outline,
@@ -1728,14 +2110,22 @@ class SettingsPage extends GetView<SettingsController> {
                         value: appConfig.dhEncryptKey,
                         action: (v) {
                           return TextButton(
-                            child: Text(v.isNullOrEmpty ? TranslationKey.configure.tr : TranslationKey.change.tr),
+                            child: Text(
+                              v.isNullOrEmpty
+                                  ? TranslationKey.configure.tr
+                                  : TranslationKey.change.tr,
+                            ),
                             onPressed: () {
                               if (appConfig.appPassword == null) {
                                 Global.showTipsDialog(
                                   context: context,
-                                  text: TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogContent.tr,
+                                  text: TranslationKey
+                                      .securitySettingsEnableSecurityAppPwdRequiredDialogContent
+                                      .tr,
                                   onOk: controller.gotoSetPwd,
-                                  okText: TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogOkText.tr,
+                                  okText: TranslationKey
+                                      .securitySettingsEnableSecurityAppPwdRequiredDialogOkText
+                                      .tr,
                                   showCancel: true,
                                 );
                                 return;
@@ -1751,33 +2141,62 @@ class SettingsPage extends GetView<SettingsController> {
                                   )
                                   ?.then((v) {
                                     if (v == null) {
-                                      Global.showSnackBarWarn(text: TranslationKey.authFailed.tr, context: context);
+                                      Global.showSnackBarWarn(
+                                        text: TranslationKey.authFailed.tr,
+                                        context: context,
+                                      );
                                       return;
                                     }
                                     Global.showDialog(
                                       context,
                                       TextEditDialog(
                                         title: TranslationKey.encryptKey.tr,
-                                        labelText: TranslationKey.pleaseInput.tr,
-                                        initStr: appConfig.dhEncryptKey.isEmpty ? '' : appConfig.dhEncryptKey,
+                                        labelText:
+                                            TranslationKey.pleaseInput.tr,
+                                        initStr: appConfig.dhEncryptKey.isEmpty
+                                            ? ''
+                                            : appConfig.dhEncryptKey,
                                         verify: (str) {
-                                          return (str.isEmpty && (appConfig.dhAesKey ?? '').isNotEmpty) || str.replaceAll('\\s+', '').length >= 8;
+                                          return (str.isEmpty &&
+                                                  (appConfig.dhAesKey ?? '')
+                                                      .isNotEmpty) ||
+                                              str
+                                                      .replaceAll('\\s+', '')
+                                                      .length >=
+                                                  8;
                                         },
-                                        errorText: TranslationKey.encryptKeyErrorTip.tr,
+                                        errorText: TranslationKey
+                                            .encryptKeyErrorTip
+                                            .tr,
                                         onOk: (str) async {
                                           if (str.isEmpty) {
                                             Global.showTipsDialog(
                                               context: context,
-                                              text: TranslationKey.confirmClearEncryptKey.tr,
+                                              text: TranslationKey
+                                                  .confirmClearEncryptKey
+                                                  .tr,
                                               showCancel: true,
                                               onOk: () async {
-                                                await appConfig.setDHEncryptKey(str);
-                                                Global.showSnackBarSuc(text: TranslationKey.clearSuccess.tr, context: context);
+                                                await appConfig.setDHEncryptKey(
+                                                  str,
+                                                );
+                                                Global.showSnackBarSuc(
+                                                  text: TranslationKey
+                                                      .clearSuccess
+                                                      .tr,
+                                                  context: context,
+                                                );
                                               },
                                             );
                                           } else {
-                                            await appConfig.setDHEncryptKey(str);
-                                            Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
+                                            await appConfig.setDHEncryptKey(
+                                              str,
+                                            );
+                                            Global.showSnackBarSuc(
+                                              text:
+                                                  TranslationKey.saveSuccess.tr,
+                                              context: context,
+                                            );
                                           }
                                         },
                                       ),
@@ -1804,10 +2223,14 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.hotKeySettingsHistoryTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.hotKeySettingsHistoryDesc.tr),
+                        description: Text(
+                          TranslationKey.hotKeySettingsHistoryDesc.tr,
+                        ),
                         value: appConfig.historyWindowHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.historyWindow)?.desc;
+                          final desc = AppHotKeyHandler.getByType(
+                            HotKeyType.historyWindow,
+                          )?.desc;
                           final dialog = HotKeyEditorDialog(
                             hotKeyType: HotKeyType.historyWindow,
                             initContent: desc ?? "",
@@ -1821,7 +2244,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   .catchError((err) {
                                     Global.showTipsDialog(
                                       context: context,
-                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                      text: TranslationKey
+                                          .hotKeySettingsSaveKeysFailedText
+                                          .trParams({"err": err}),
                                     );
                                   });
                             },
@@ -1832,7 +2257,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 showCancel: true,
                                 onOk: () {
                                   appConfig.setHistoryWindowHotKeys("");
-                                  AppHotKeyHandler.unRegister(HotKeyType.historyWindow);
+                                  AppHotKeyHandler.unRegister(
+                                    HotKeyType.historyWindow,
+                                  );
                                   Get.back();
                                 },
                               );
@@ -1863,10 +2290,14 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.sendFile.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.hotKeySettingsFileDesc.tr),
+                        description: Text(
+                          TranslationKey.hotKeySettingsFileDesc.tr,
+                        ),
                         value: appConfig.syncFileHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.fileSender)?.desc;
+                          final desc = AppHotKeyHandler.getByType(
+                            HotKeyType.fileSender,
+                          )?.desc;
                           final dialog = HotKeyEditorDialog(
                             hotKeyType: HotKeyType.fileSender,
                             initContent: desc ?? "",
@@ -1880,7 +2311,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   .catchError((err) {
                                     Global.showTipsDialog(
                                       context: context,
-                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                      text: TranslationKey
+                                          .hotKeySettingsSaveKeysFailedText
+                                          .trParams({"err": err}),
                                     );
                                   });
                             },
@@ -1891,7 +2324,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 showCancel: true,
                                 onOk: () {
                                   appConfig.setSyncFileHotKeys("");
-                                  AppHotKeyHandler.unRegister(HotKeyType.fileSender);
+                                  AppHotKeyHandler.unRegister(
+                                    HotKeyType.fileSender,
+                                  );
                                   Get.back();
                                 },
                               );
@@ -1921,7 +2356,9 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Text(TranslationKey.showMainWindow.tr),
                         value: appConfig.showMainWindowHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.showMainWindows)?.desc;
+                          final desc = AppHotKeyHandler.getByType(
+                            HotKeyType.showMainWindows,
+                          )?.desc;
                           final dialog = HotKeyEditorDialog(
                             hotKeyType: HotKeyType.showMainWindows,
                             initContent: desc ?? "",
@@ -1930,7 +2367,9 @@ class SettingsPage extends GetView<SettingsController> {
                               AppHotKeyHandler.registerShowMainWindow(hotKey)
                                   .then((v) {
                                     //设置为新值
-                                    appConfig.setShowMainWindowHotKeys(keyCodes);
+                                    appConfig.setShowMainWindowHotKeys(
+                                      keyCodes,
+                                    );
                                     //更新托盘菜单
                                     final trayService = Get.find<TrayService>();
                                     trayService.updateTrayMenus(false);
@@ -1938,7 +2377,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   .catchError((err) {
                                     Global.showTipsDialog(
                                       context: context,
-                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                      text: TranslationKey
+                                          .hotKeySettingsSaveKeysFailedText
+                                          .trParams({"err": err}),
                                     );
                                   });
                             },
@@ -1949,7 +2390,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 showCancel: true,
                                 onOk: () {
                                   appConfig.setShowMainWindowHotKeys("");
-                                  AppHotKeyHandler.unRegister(HotKeyType.showMainWindows);
+                                  AppHotKeyHandler.unRegister(
+                                    HotKeyType.showMainWindows,
+                                  );
                                   final trayService = Get.find<TrayService>();
                                   trayService.updateTrayMenus(false);
                                   Get.back();
@@ -1981,7 +2424,9 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Text(TranslationKey.exitApp.tr),
                         value: appConfig.exitAppHotKeys,
                         action: (v) {
-                          final desc = AppHotKeyHandler.getByType(HotKeyType.exitApp)?.desc;
+                          final desc = AppHotKeyHandler.getByType(
+                            HotKeyType.exitApp,
+                          )?.desc;
                           final dialog = HotKeyEditorDialog(
                             hotKeyType: HotKeyType.exitApp,
                             initContent: desc ?? "",
@@ -1998,7 +2443,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   .catchError((err) {
                                     Global.showTipsDialog(
                                       context: context,
-                                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                                      text: TranslationKey
+                                          .hotKeySettingsSaveKeysFailedText
+                                          .trParams({"err": err}),
                                     );
                                   });
                             },
@@ -2009,7 +2456,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 showCancel: true,
                                 onOk: () {
                                   appConfig.setExitAppHotKeys("");
-                                  AppHotKeyHandler.unRegister(HotKeyType.exitApp);
+                                  AppHotKeyHandler.unRegister(
+                                    HotKeyType.exitApp,
+                                  );
                                   final trayService = Get.find<TrayService>();
                                   trayService.updateTrayMenus(false);
                                   Get.back();
@@ -2051,10 +2500,14 @@ class SettingsPage extends GetView<SettingsController> {
                     cardList: [
                       SettingCard(
                         title: Text(
-                          TranslationKey.syncSettingsAutoSyncMissingDataTitle.tr,
+                          TranslationKey
+                              .syncSettingsAutoSyncMissingDataTitle
+                              .tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.syncSettingsAutoSyncMissingDataDesc.tr),
+                        description: Text(
+                          TranslationKey.syncSettingsAutoSyncMissingDataDesc.tr,
+                        ),
                         value: appConfig.autoSyncMissingData,
                         show: (v) => true,
                         action: (v) {
@@ -2072,7 +2525,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.recopyOnScreenUnlockedTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.recopyOnScreenUnlockedTitleDesc.tr),
+                        description: Text(
+                          TranslationKey.recopyOnScreenUnlockedTitleDesc.tr,
+                        ),
                         value: appConfig.reCopyOnScreenUnlocked,
                         show: (v) => Platform.isAndroid,
                         action: (v) {
@@ -2090,7 +2545,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.syncSettingsSmsTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.syncSettingsSmsDesc.tr),
+                        description: Text(
+                          TranslationKey.syncSettingsSmsDesc.tr,
+                        ),
                         value: appConfig.enableSmsSync,
                         show: (v) => Platform.isAndroid,
                         action: (v) {
@@ -2099,14 +2556,19 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
                               if (checked) {
-                                var isGranted = await PermissionHelper.testAndroidReadSms();
+                                var isGranted =
+                                    await PermissionHelper.testAndroidReadSms();
                                 if (isGranted) {
                                   androidChannelService.startSmsListen();
                                 } else {
                                   Global.showTipsDialog(
                                     context: context,
-                                    text: TranslationKey.syncSettingsSmsPermissionRequired.tr,
-                                    okText: TranslationKey.dialogAuthorizationButtonText.tr,
+                                    text: TranslationKey
+                                        .syncSettingsSmsPermissionRequired
+                                        .tr,
+                                    okText: TranslationKey
+                                        .dialogAuthorizationButtonText
+                                        .tr,
                                     showCancel: true,
                                     onOk: () async {
                                       await PermissionHelper.reqAndroidReadSms();
@@ -2131,7 +2593,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.syncSettingsStoreImg2PicturesTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.syncSettingsStoreImg2PicturesDesc.tr),
+                        description: Text(
+                          TranslationKey.syncSettingsStoreImg2PicturesDesc.tr,
+                        ),
                         value: appConfig.saveToPictures,
                         action: (v) {
                           return Switch(
@@ -2139,8 +2603,12 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) async {
                               HapticFeedback.mediumImpact();
                               if (checked) {
-                                var path = "${Constants.androidPicturesPath}/${Constants.appName}";
-                                var res = await PermissionHelper.testAndroidStoragePerm(path);
+                                var path =
+                                    "${Constants.androidPicturesPath}/${Constants.appName}";
+                                var res =
+                                    await PermissionHelper.testAndroidStoragePerm(
+                                      path,
+                                    );
                                 if (res) {
                                   appConfig.setSaveToPictures(true);
                                   return;
@@ -2148,23 +2616,33 @@ class SettingsPage extends GetView<SettingsController> {
                                 DialogController? dialog;
                                 dialog = Global.showTipsDialog(
                                   context: context,
-                                  text: TranslationKey.syncSettingsStoreImg2PicturesNoPermText.tr,
+                                  text: TranslationKey
+                                      .syncSettingsStoreImg2PicturesNoPermText
+                                      .tr,
                                   showCancel: true,
                                   onOk: () async {
                                     await dialog!.close();
-                                    await PermissionHelper.reqAndroidStoragePerm(path);
-                                    if (!await PermissionHelper.testAndroidStoragePerm(path)) {
+                                    await PermissionHelper.reqAndroidStoragePerm(
+                                      path,
+                                    );
+                                    if (!await PermissionHelper.testAndroidStoragePerm(
+                                      path,
+                                    )) {
                                       appConfig.setSaveToPictures(false);
                                       Global.showTipsDialog(
                                         context: context,
-                                        text: TranslationKey.syncSettingsStoreImg2PicturesCancelPerm.tr,
+                                        text: TranslationKey
+                                            .syncSettingsStoreImg2PicturesCancelPerm
+                                            .tr,
                                       );
                                     } else {
                                       //授权成功
                                       appConfig.setSaveToPictures(true);
                                     }
                                   },
-                                  okText: TranslationKey.dialogAuthorizationButtonText.tr,
+                                  okText: TranslationKey
+                                      .dialogAuthorizationButtonText
+                                      .tr,
                                 );
                               } else {
                                 appConfig.setSaveToPictures(false);
@@ -2191,10 +2669,14 @@ class SettingsPage extends GetView<SettingsController> {
                         action: (v) {
                           return TextButton(
                             onPressed: () async {
-                              String? directory = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
+                              String? directory = await FilePicker.platform
+                                  .getDirectoryPath(lockParentWindow: true);
                               if (directory != null) {
                                 if (!FileUtil.testWriteable(directory)) {
-                                  Global.showTipsDialog(context: context, text: TranslationKey.unWriteablePathTips.tr);
+                                  Global.showTipsDialog(
+                                    context: context,
+                                    text: TranslationKey.unWriteablePathTips.tr,
+                                  );
                                   return;
                                 }
                                 appConfig.setFileStorePath(directory);
@@ -2221,7 +2703,9 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.syncSettingsAutoCopyImgTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.syncSettingsAutoCopyImgDesc.tr),
+                        description: Text(
+                          TranslationKey.syncSettingsAutoCopyImgDesc.tr,
+                        ),
                         show: (v) => true,
                         value: appConfig.autoCopyImageAfterSync,
                         action: (v) {
@@ -2238,15 +2722,20 @@ class SettingsPage extends GetView<SettingsController> {
                           TranslationKey.syncSettingsAutoCopyScreenShotTitle.tr,
                           maxLines: 1,
                         ),
-                        description: Text(TranslationKey.syncSettingsAutoCopyScreenShotDesc.tr),
+                        description: Text(
+                          TranslationKey.syncSettingsAutoCopyScreenShotDesc.tr,
+                        ),
                         show: (v) => Platform.isAndroid,
                         value: appConfig.autoCopyImageAfterScreenShot,
                         action: (v) {
                           return Switch(
                             value: v,
                             onChanged: (checked) async {
-                              appConfig.setAutoCopyImageAfterScreenShot(checked);
-                              final clipboardService = Get.find<ClipboardService>();
+                              appConfig.setAutoCopyImageAfterScreenShot(
+                                checked,
+                              );
+                              final clipboardService =
+                                  Get.find<ClipboardService>();
                               if (checked) {
                                 clipboardService.startListenScreenshot();
                               } else {
@@ -2274,16 +2763,23 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard<int>(
                         title: Text(TranslationKey.syncOutDateSettingTitle.tr),
-                        description: Text(TranslationKey.syncOutDateSettingDesc.tr),
+                        description: Text(
+                          TranslationKey.syncOutDateSettingDesc.tr,
+                        ),
                         value: appConfig.syncOutdateLimitTime,
-                        action: (v) => Text(v == 0 ? TranslationKey.noLimits.tr : v.timeSpanStr),
+                        action: (v) => Text(
+                          v == 0 ? TranslationKey.noLimits.tr : v.timeSpanStr,
+                        ),
                         onTap: () {
                           Global.showDialog(
                             context,
                             OutdateTimeInputDialog(
                               initValue: appConfig.syncOutdateLimitTime,
                               onConfirm: (value) {
-                                appConfig.setNewPairedDeviceSyncOldDataLimitTime(value);
+                                appConfig
+                                    .setNewPairedDeviceSyncOldDataLimitTime(
+                                      value,
+                                    );
                               },
                             ),
                           );
@@ -2305,7 +2801,9 @@ class SettingsPage extends GetView<SettingsController> {
                         TranslationKey.ruleSettingsTagRuleTitle.tr,
                         maxLines: 1,
                       ),
-                      description: Text(TranslationKey.ruleSettingsTagRuleDesc.tr),
+                      description: Text(
+                        TranslationKey.ruleSettingsTagRuleDesc.tr,
+                      ),
                       value: false,
                       action: (v) {
                         return TextButton(
@@ -2331,7 +2829,9 @@ class SettingsPage extends GetView<SettingsController> {
                         TranslationKey.ruleSettingsSmsRuleTitle.tr,
                         maxLines: 1,
                       ),
-                      description: Text(TranslationKey.ruleSettingsSmsRuleDesc.tr),
+                      description: Text(
+                        TranslationKey.ruleSettingsSmsRuleDesc.tr,
+                      ),
                       value: false,
                       show: (v) => Platform.isAndroid,
                       action: (v) {
@@ -2411,7 +2911,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   ),
                                 ),
                                 onTap: () async {
-                                  Directory(appConfig.logsDirPath).createSync(recursive: true);
+                                  Directory(
+                                    appConfig.logsDirPath,
+                                  ).createSync(recursive: true);
                                   try {
                                     await OpenFile.open(appConfig.logsDirPath);
                                   } catch (e) {
@@ -2425,7 +2927,9 @@ class SettingsPage extends GetView<SettingsController> {
                         description: Obx(() {
                           final tmp = controller.updater;
                           final emptyStr = tmp.value != 0 ? "" : "";
-                          final size = FileUtil.getDirectorySize(appConfig.logsDirPath);
+                          final size = FileUtil.getDirectorySize(
+                            appConfig.logsDirPath,
+                          );
                           return Text(
                             "${TranslationKey.logSettingsEnableDesc.trParams({
                               "size": size.sizeStr,
@@ -2451,13 +2955,20 @@ class SettingsPage extends GetView<SettingsController> {
                         title: Row(
                           children: [
                             Text(
-                              TranslationKey.logSettingsAutoUploadCrashLogTitle.tr,
+                              TranslationKey
+                                  .logSettingsAutoUploadCrashLogTitle
+                                  .tr,
                               maxLines: 1,
                             ),
                             const SizedBox(width: 5),
                             GestureDetector(
                               onTap: () {
-                                Global.showTipsDialog(context: context, text: TranslationKey.logSettingsAutoUploadCrashLogTips.tr);
+                                Global.showTipsDialog(
+                                  context: context,
+                                  text: TranslationKey
+                                      .logSettingsAutoUploadCrashLogTips
+                                      .tr,
+                                );
                               },
                               child: const Icon(
                                 Icons.info_outline,
@@ -2467,7 +2978,9 @@ class SettingsPage extends GetView<SettingsController> {
                             ),
                           ],
                         ),
-                        description: Text(TranslationKey.logSettingsAutoUploadCrashLogDesc.tr),
+                        description: Text(
+                          TranslationKey.logSettingsAutoUploadCrashLogDesc.tr,
+                        ),
                         value: appConfig.enableAutoUploadCrashLogs,
                         action: (v) {
                           return Switch(
@@ -2475,7 +2988,9 @@ class SettingsPage extends GetView<SettingsController> {
                             onChanged: (checked) {
                               HapticFeedback.mediumImpact();
                               appConfig.setEnableAutoUploadCrashLogs(checked);
-                              androidChannelService.setAutoReportCrashes(checked);
+                              androidChannelService.setAutoReportCrashes(
+                                checked,
+                              );
                             },
                           );
                         },
@@ -2497,7 +3012,9 @@ class SettingsPage extends GetView<SettingsController> {
                         TranslationKey.statisticsSettingsTitle.tr,
                         maxLines: 1,
                       ),
-                      description: Text(TranslationKey.statisticsSettingsDesc.tr),
+                      description: Text(
+                        TranslationKey.statisticsSettingsDesc.tr,
+                      ),
                       value: null,
                       onTap: () {
                         controller.gotoStatisticPage();

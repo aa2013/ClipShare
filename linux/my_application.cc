@@ -1,6 +1,7 @@
 #include "my_application.h"
 #include <unistd.h>
 #include <flutter_linux/flutter_linux.h>
+#include <glib/gstdio.h>
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
@@ -10,7 +11,7 @@
 #include "window_manager/window_manager_plugin.h"
 #include "desktop_drop/desktop_drop_plugin.h"
 
-const char* PID_FILE_NAME = "pid.txt";
+const char* PID_FILE_NAME = "clipshare.pid";
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -20,6 +21,8 @@ G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 void write_pid_to_file(const char *filename) {
     pid_t pid = getpid();
+    g_autofree gchar* dir_name = g_path_get_dirname(filename);
+    g_mkdir_with_parents(dir_name, 0700);
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         perror("can not open file!");
@@ -81,6 +84,18 @@ gchar* get_process_name_by_pid(pid_t pid) {
     return g_strdup(buf);
 }
 
+gchar* get_pid_file_path() {
+    const char* runtime_dir = g_getenv("XDG_RUNTIME_DIR");
+    if (runtime_dir && runtime_dir[0] != '\0') {
+        return g_build_filename(runtime_dir, PID_FILE_NAME, nullptr);
+    }
+    const char* home = g_getenv("HOME");
+    if (home && home[0] != '\0') {
+        return g_build_filename(home, ".cache", PID_FILE_NAME, nullptr);
+    }
+    return g_build_filename("/tmp", PID_FILE_NAME, nullptr);
+}
+
 
 static void init_desktop_multi_window_plugin_window_created(FlPluginRegistry* registry) {
     g_autoptr(FlPluginRegistrar) window_manager_registrar = fl_plugin_registry_get_registrar_for_plugin(registry, "WindowManagerPlugin");
@@ -121,7 +136,7 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "ClipShare");
   }
   gtk_window_set_default_size(window, 1000, 650);
-  gtk_widget_show(GTK_WIDGET(window));
+  gtk_widget_realize(GTK_WIDGET(window));
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(project, self->dart_entrypoint_arguments);
@@ -176,7 +191,8 @@ static void handle_sigusr1(int sig) {
     }
 }
 MyApplication* my_application_new() {
-  pid_t pid = read_pid_from_file(PID_FILE_NAME);
+  g_autofree gchar* pid_file_path = get_pid_file_path();
+  pid_t pid = read_pid_from_file(pid_file_path);
   gchar* my_process_name = get_process_name_by_pid(getpid());
   if(pid){
       gchar* process_name = get_process_name_by_pid(pid);
@@ -189,7 +205,7 @@ MyApplication* my_application_new() {
       }
   }
   signal(SIGUSR1, handle_sigusr1);
-  write_pid_to_file(PID_FILE_NAME);
+  write_pid_to_file(pid_file_path);
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID,
                                      "flags", G_APPLICATION_NON_UNIQUE,

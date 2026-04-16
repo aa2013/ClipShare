@@ -395,7 +395,9 @@ class ConfigService extends GetxService {
   bool get autoCopyImageAfterScreenShot => _autoCopyImageAfterScreenShot.value;
 
   //中转服务器地址
-  final Rx<ForwardServerConfig?> _forwardServer = Rx<ForwardServerConfig?>(null);
+  final Rx<ForwardServerConfig?> _forwardServer = Rx<ForwardServerConfig?>(
+    null,
+  );
 
   ForwardServerConfig? get forwardServer => _forwardServer.value;
 
@@ -420,9 +422,11 @@ class ConfigService extends GetxService {
   String? get ignoreUpdateVersion => _ignoreUpdateVersion.value;
 
   //剪贴板监听方式
-  final Rx<ClipboardListeningWay?> _clipboardListeningWay = Rx<ClipboardListeningWay?>(null);
+  final Rx<ClipboardListeningWay?> _clipboardListeningWay =
+      Rx<ClipboardListeningWay?>(null);
 
-  ClipboardListeningWay get clipboardListeningWay => _clipboardListeningWay.value ?? ClipboardListeningWay.hiddenApi;
+  ClipboardListeningWay get clipboardListeningWay =>
+      _clipboardListeningWay.value ?? ClipboardListeningWay.hiddenApi;
 
   //屏幕亮起时发现设备
   final _enableAutoSyncOnScreenOpened = true.obs;
@@ -437,7 +441,8 @@ class ConfigService extends GetxService {
   //剪贴板来源记录（通过dumpsys）
   final _sourceRecordViaDumpsys = false.obs;
 
-  bool get sourceRecordViaDumpsys => _sourceRecordViaDumpsys.value && sourceRecord;
+  bool get sourceRecordViaDumpsys =>
+      _sourceRecordViaDumpsys.value && sourceRecord;
 
   //设备断开连接后通知
   final _notifyOnDevDisconn = true.obs;
@@ -472,7 +477,8 @@ class ConfigService extends GetxService {
   //通知黑白名单模式
   final _currentNotificationWhiteBlackMode = WhiteBlackMode.black.obs;
 
-  WhiteBlackMode get currentNotificationWhiteBlackMode => _currentNotificationWhiteBlackMode.value;
+  WhiteBlackMode get currentNotificationWhiteBlackMode =>
+      _currentNotificationWhiteBlackMode.value;
 
   //通知黑名单列表
   final _notificationBlackList = <FilterRule>[].obs;
@@ -513,14 +519,20 @@ class ConfigService extends GetxService {
   String get notificationServer => _notificationServer.value;
 
   //移动设备id生成方式
-  final _mobileDevIdGenerateWay = Rx<DeviceIdGenerateWay>(DeviceIdGenerateWay.unknown);
+  final _mobileDevIdGenerateWay = Rx<DeviceIdGenerateWay>(
+    DeviceIdGenerateWay.unknown,
+  );
 
-  DeviceIdGenerateWay get mobileDevIdGenerateWay => _mobileDevIdGenerateWay.value;
+  DeviceIdGenerateWay get mobileDevIdGenerateWay =>
+      _mobileDevIdGenerateWay.value;
 
   //设备状态筛选过滤器
-  final _devicePairedStatusFilter = Rx<DevicePairedStatusFilter>(DevicePairedStatusFilter.all);
+  final _devicePairedStatusFilter = Rx<DevicePairedStatusFilter>(
+    DevicePairedStatusFilter.all,
+  );
 
-  DevicePairedStatusFilter get devicePairedStatusFilter => _devicePairedStatusFilter.value;
+  DevicePairedStatusFilter get devicePairedStatusFilter =>
+      _devicePairedStatusFilter.value;
 
   //上次编辑的SQL内容
   final _lastSqlEditContent = ''.obs;
@@ -603,10 +615,22 @@ class ConfigService extends GetxService {
     _port = (await cfg.getConfigByKey(ConfigKey.port, Constants.port)).obs;
     _localName = (await cfg.getConfigByKey(ConfigKey.localName, '')).obs;
     _startMini = (await cfg.getConfigByKey(ConfigKey.startMini, false)).obs;
-    _allowDiscover = (await cfg.getConfigByKey(ConfigKey.allowDiscover, true)).obs;
-    _showHistoryFloat = (await cfg.getConfigByKey(ConfigKey.showHistoryFloat, false)).obs;
-    _firstStartup = (await cfg.getConfigByKey(ConfigKey.firstStartup, true)).obs;
-    _rememberWindowSize = (await cfg.getConfigByKey(ConfigKey.rememberWindowSize, false)).obs;
+    _allowDiscover = (await cfg.getConfigByKey(
+      ConfigKey.allowDiscover,
+      true,
+    )).obs;
+    _showHistoryFloat = (await cfg.getConfigByKey(
+      ConfigKey.showHistoryFloat,
+      false,
+    )).obs;
+    _firstStartup = (await cfg.getConfigByKey(
+      ConfigKey.firstStartup,
+      true,
+    )).obs;
+    _rememberWindowSize = (await cfg.getConfigByKey(
+      ConfigKey.rememberWindowSize,
+      false,
+    )).obs;
     _windowSize = (await cfg.getConfigByKey(
       ConfigKey.windowSize,
       Constants.defaultWindowSize,
@@ -617,29 +641,83 @@ class ConfigService extends GetxService {
         return Constants.defaultWindowSize;
       },
     )).obs;
-    _lockHistoryFloatLoc = (await cfg.getConfigByKey(ConfigKey.lockHistoryFloatLoc, true)).obs;
-    _enableLogsRecord = (await cfg.getConfigByKey(ConfigKey.enableLogsRecord, false)).obs;
-    _enableAutoUploadCrashLogs = (await cfg.getConfigByKey(ConfigKey.enableAutoUploadCrashLogs, false)).obs;
-    _tagRules.value = (await cfg.getConfigByKey<String?>(ConfigKey.tagRules, null));
-    _smsRules.value = (await cfg.getConfigByKey<String?>(ConfigKey.smsRules, null));
-    _historyWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.historyWindowHotKeys, Constants.defaultHistoryWindowKeys)).obs;
-    _syncFileHotKeys = (await cfg.getConfigByKey(ConfigKey.syncFileHotKeys, Constants.defaultSyncFileHotKeys)).obs;
-    _showMainWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.showMainWindowHotKeys, "")).obs;
-    _exitAppHotKeys = (await cfg.getConfigByKey(ConfigKey.exitAppHotKeys, "")).obs;
-    _heartbeatInterval = (await cfg.getConfigByKey(ConfigKey.heartbeatInterval, Constants.heartbeatInterval)).obs;
+    _lockHistoryFloatLoc = (await cfg.getConfigByKey(
+      ConfigKey.lockHistoryFloatLoc,
+      true,
+    )).obs;
+    _enableLogsRecord = (await cfg.getConfigByKey(
+      ConfigKey.enableLogsRecord,
+      false,
+    )).obs;
+    _enableAutoUploadCrashLogs = (await cfg.getConfigByKey(
+      ConfigKey.enableAutoUploadCrashLogs,
+      false,
+    )).obs;
+    _tagRules.value = (await cfg.getConfigByKey<String?>(
+      ConfigKey.tagRules,
+      null,
+    ));
+    _smsRules.value = (await cfg.getConfigByKey<String?>(
+      ConfigKey.smsRules,
+      null,
+    ));
+    _historyWindowHotKeys = (await cfg.getConfigByKey(
+      ConfigKey.historyWindowHotKeys,
+      Constants.defaultHistoryWindowKeys,
+    )).obs;
+    _syncFileHotKeys = (await cfg.getConfigByKey(
+      ConfigKey.syncFileHotKeys,
+      Constants.defaultSyncFileHotKeys,
+    )).obs;
+    _showMainWindowHotKeys = (await cfg.getConfigByKey(
+      ConfigKey.showMainWindowHotKeys,
+      "",
+    )).obs;
+    _exitAppHotKeys = (await cfg.getConfigByKey(
+      ConfigKey.exitAppHotKeys,
+      "",
+    )).obs;
+    _heartbeatInterval = (await cfg.getConfigByKey(
+      ConfigKey.heartbeatInterval,
+      Constants.heartbeatInterval,
+    )).obs;
     _fileStorePath = (await cfg.getConfigByKey(
       ConfigKey.fileStorePath,
       defaultFileStorePath,
       convert: (value) => Directory(fileStorePath).absolute.normalizePath,
     )).obs;
-    _saveToPictures = (await cfg.getConfigByKey(ConfigKey.saveToPictures, false)).obs;
-    _ignoreShizuku = (await cfg.getConfigByKey(ConfigKey.ignoreShizuku, false)).obs;
-    _useAuthentication = (await cfg.getConfigByKey(ConfigKey.useAuthentication, false)).obs;
-    _appRevalidateDuration = (await cfg.getConfigByKey(ConfigKey.appRevalidateDuration, 0)).obs;
-    _appPassword = (await cfg.getConfigByKey<String?>(ConfigKey.appPassword, null)).obs;
-    _enableSmsSync = (await cfg.getConfigByKey(ConfigKey.enableSmsSync, false)).obs;
-    _enableForward = (await cfg.getConfigByKey(ConfigKey.enableForward, false)).obs;
-    _notificationServer.value = await cfg.getConfigByKey<String>(ConfigKey.notificationServer, Constants.defaultNotificationServer);
+    _saveToPictures = (await cfg.getConfigByKey(
+      ConfigKey.saveToPictures,
+      false,
+    )).obs;
+    _ignoreShizuku = (await cfg.getConfigByKey(
+      ConfigKey.ignoreShizuku,
+      false,
+    )).obs;
+    _useAuthentication = (await cfg.getConfigByKey(
+      ConfigKey.useAuthentication,
+      false,
+    )).obs;
+    _appRevalidateDuration = (await cfg.getConfigByKey(
+      ConfigKey.appRevalidateDuration,
+      0,
+    )).obs;
+    _appPassword = (await cfg.getConfigByKey<String?>(
+      ConfigKey.appPassword,
+      null,
+    )).obs;
+    _enableSmsSync = (await cfg.getConfigByKey(
+      ConfigKey.enableSmsSync,
+      false,
+    )).obs;
+    _enableForward = (await cfg.getConfigByKey(
+      ConfigKey.enableForward,
+      false,
+    )).obs;
+    _notificationServer.value = await cfg.getConfigByKey<String>(
+      ConfigKey.notificationServer,
+      Constants.defaultNotificationServer,
+    );
     _forwardWay.value = await cfg.getConfigByKey<ForwardWay>(
       ConfigKey.forwardWay,
       ForwardWay.none,
@@ -685,17 +763,48 @@ class ConfigService extends GetxService {
         }
       },
     );
-    _workingMode = (await cfg.getConfigByKey<EnvironmentType?>(ConfigKey.workingMode, null, convert: EnvironmentType.parse)).obs;
-    _onlyForwardMode = (await cfg.getConfigByKey(ConfigKey.onlyForwardMode, false)).obs;
-    _appTheme = (await cfg.getConfigByKey(ConfigKey.appTheme, ThemeMode.system.name)).obs;
-    _autoCopyImageAfterSync = (await cfg.getConfigByKey(ConfigKey.autoCopyImageAfterSync, false)).obs;
-    _autoCopyImageAfterScreenShot = (await cfg.getConfigByKey(ConfigKey.autoCopyImageAfterScreenShot, true)).obs;
-    _ignoreUpdateVersion.value = (await cfg.getConfigByKey<String?>(ConfigKey.ignoreUpdateVersion, null));
+    _workingMode = (await cfg.getConfigByKey<EnvironmentType?>(
+      ConfigKey.workingMode,
+      null,
+      convert: EnvironmentType.parse,
+    )).obs;
+    _onlyForwardMode = (await cfg.getConfigByKey(
+      ConfigKey.onlyForwardMode,
+      false,
+    )).obs;
+    _appTheme = (await cfg.getConfigByKey(
+      ConfigKey.appTheme,
+      ThemeMode.system.name,
+    )).obs;
+    _autoCopyImageAfterSync = (await cfg.getConfigByKey(
+      ConfigKey.autoCopyImageAfterSync,
+      false,
+    )).obs;
+    _autoCopyImageAfterScreenShot = (await cfg.getConfigByKey(
+      ConfigKey.autoCopyImageAfterScreenShot,
+      true,
+    )).obs;
+    _ignoreUpdateVersion.value = (await cfg.getConfigByKey<String?>(
+      ConfigKey.ignoreUpdateVersion,
+      null,
+    ));
     _language.value = (await cfg.getConfigByKey(ConfigKey.appLanguage, 'auto'));
-    _recordHistoryDialogPosition.value = (await cfg.getConfigByKey(ConfigKey.recordHistoryDialogPosition, false));
-    _historyDialogPosition.value = (await cfg.getConfigByKey(ConfigKey.historyDialogPosition, ""));
-    _showOnRecentTasks.value = await cfg.getConfigByKey(ConfigKey.showOnRecentTasks, true);
-    _autoCloseConnAfterScreenOff.value = (await cfg.getConfigByKey(ConfigKey.autoCloseConnAfterScreenOff, true));
+    _recordHistoryDialogPosition.value = (await cfg.getConfigByKey(
+      ConfigKey.recordHistoryDialogPosition,
+      false,
+    ));
+    _historyDialogPosition.value = (await cfg.getConfigByKey(
+      ConfigKey.historyDialogPosition,
+      "",
+    ));
+    _showOnRecentTasks.value = await cfg.getConfigByKey(
+      ConfigKey.showOnRecentTasks,
+      true,
+    );
+    _autoCloseConnAfterScreenOff.value = (await cfg.getConfigByKey(
+      ConfigKey.autoCloseConnAfterScreenOff,
+      true,
+    ));
     _cleanDataConfig.value = (await cfg.getConfigByKey<CleanDataConfig?>(
       ConfigKey.cleanDataConfig,
       null,
@@ -709,26 +818,54 @@ class ConfigService extends GetxService {
         }
       },
     ));
-    _showMoreItemsInRow.value = (await cfg.getConfigByKey(ConfigKey.showMoreItemsInRow, true));
+    _showMoreItemsInRow.value = (await cfg.getConfigByKey(
+      ConfigKey.showMoreItemsInRow,
+      true,
+    ));
     _clipboardListeningWay.value = await cfg.getConfigByKey(
       ConfigKey.clipboardListeningWay,
       ClipboardListeningWay.logs,
       convert: ClipboardListeningWay.parse,
     );
-    _closeOnSameHotKey.value = (await cfg.getConfigByKey(ConfigKey.closeOnSameHotKey, false));
-    _enableAutoSyncOnScreenOpened.value = (await cfg.getConfigByKey(ConfigKey.enableAutoSyncOnScreenOpened, true));
-    _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, PlatformExt.isDesktop));
-    _sourceRecordViaDumpsys.value = (await cfg.getConfigByKey(ConfigKey.sourceRecordViaDumpsys, false));
-    _notifyOnDevDisconn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevDisconn, true));
-    _notifyOnDevConn.value = (await cfg.getConfigByKey(ConfigKey.notifyOnDevConn, true));
-    _autoSyncMissingData.value = (await cfg.getConfigByKey(ConfigKey.autoSyncMissingData, true));
-    _enableContentBlackList.value = (await cfg.getConfigByKey(ConfigKey.enableContentBlackList, false));
+    _closeOnSameHotKey.value = (await cfg.getConfigByKey(
+      ConfigKey.closeOnSameHotKey,
+      false,
+    ));
+    _enableAutoSyncOnScreenOpened.value = (await cfg.getConfigByKey(
+      ConfigKey.enableAutoSyncOnScreenOpened,
+      true,
+    ));
+    _sourceRecord.value = (await cfg.getConfigByKey(
+      ConfigKey.sourceRecord,
+      PlatformExt.isDesktop,
+    ));
+    _sourceRecordViaDumpsys.value = (await cfg.getConfigByKey(
+      ConfigKey.sourceRecordViaDumpsys,
+      false,
+    ));
+    _notifyOnDevDisconn.value = (await cfg.getConfigByKey(
+      ConfigKey.notifyOnDevDisconn,
+      true,
+    ));
+    _notifyOnDevConn.value = (await cfg.getConfigByKey(
+      ConfigKey.notifyOnDevConn,
+      true,
+    ));
+    _autoSyncMissingData.value = (await cfg.getConfigByKey(
+      ConfigKey.autoSyncMissingData,
+      true,
+    ));
+    _enableContentBlackList.value = (await cfg.getConfigByKey(
+      ConfigKey.enableContentBlackList,
+      false,
+    ));
     _contentBlackList.value = (await cfg.getConfigByKey(
       ConfigKey.blacklist,
       [],
       convert: (value) {
         try {
-          List<Map<String, dynamic>> jsonList = (jsonDecode(value) as List<dynamic>).cast();
+          List<Map<String, dynamic>> jsonList =
+              (jsonDecode(value) as List<dynamic>).cast();
           return jsonList.map((item) => FilterRule.fromJson(item)).toList();
         } catch (err, stack) {
           debugPrint(err.toString());
@@ -737,18 +874,34 @@ class ConfigService extends GetxService {
         }
       },
     ));
-    _enableRecordNotification.value = (await cfg.getConfigByKey(ConfigKey.enableRecordNotification, false));
-    _enableShowMobileNotification.value = (await cfg.getConfigByKey(ConfigKey.enableShowMobileNotification, false));
-    final notificationBlackWhiteList = await cfg.getConfigByKey(ConfigKey.notificationBlackWhiteList, "");
+    _enableRecordNotification.value = (await cfg.getConfigByKey(
+      ConfigKey.enableRecordNotification,
+      false,
+    ));
+    _enableShowMobileNotification.value = (await cfg.getConfigByKey(
+      ConfigKey.enableShowMobileNotification,
+      false,
+    ));
+    final notificationBlackWhiteList = await cfg.getConfigByKey(
+      ConfigKey.notificationBlackWhiteList,
+      "",
+    );
     try {
       if (notificationBlackWhiteList.isNullOrEmpty) {
         _notificationWhiteList.value = [];
         _notificationBlackList.value = [];
       } else {
-        final map = jsonDecode(notificationBlackWhiteList) as Map<String, dynamic>;
-        _currentNotificationWhiteBlackMode.value = WhiteBlackMode.values.byName(map["mode"].toString());
-        _notificationBlackList.value = (map["blacklist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
-        _notificationWhiteList.value = (map["whitelist"]! as List<dynamic>).map((item) => FilterRule.fromJson(item)).toList();
+        final map =
+            jsonDecode(notificationBlackWhiteList) as Map<String, dynamic>;
+        _currentNotificationWhiteBlackMode.value = WhiteBlackMode.values.byName(
+          map["mode"].toString(),
+        );
+        _notificationBlackList.value = (map["blacklist"]! as List<dynamic>)
+            .map((item) => FilterRule.fromJson(item))
+            .toList();
+        _notificationWhiteList.value = (map["whitelist"]! as List<dynamic>)
+            .map((item) => FilterRule.fromJson(item))
+            .toList();
       }
     } catch (err, stack) {
       debugPrint(err.toString());
@@ -774,29 +927,57 @@ class ConfigService extends GetxService {
       DevicePairedStatusFilter.all,
       convert: DevicePairedStatusFilter.parse,
     );
-    _lastSqlEditContent.value = await cfg.getConfigByKey(ConfigKey.lastSqlEditContent, '');
+    _lastSqlEditContent.value = await cfg.getConfigByKey(
+      ConfigKey.lastSqlEditContent,
+      '',
+    );
     _dhEncryptKey.value = await cfg.getConfigByKey(ConfigKey.dhEncryptKey, '');
     if (_dhEncryptKey.value.isNotNullAndEmpty) {
       _dhAesKey = await _updateDhAesKey();
     }
-    _syncOutdateLimitTime.value = await cfg.getConfigByKey(ConfigKey.syncOutdateLimitTime, 0);
+    _syncOutdateLimitTime.value = await cfg.getConfigByKey(
+      ConfigKey.syncOutdateLimitTime,
+      0,
+    );
     _noDiscoveryIfs.value = await cfg.getConfigByKey(
       ConfigKey.noDiscoveryIfs,
       [],
-      convert: (content) => content.split(',').where(((item) => item.isNotEmpty)).toList(),
+      convert: (content) =>
+          content.split(',').where(((item) => item.isNotEmpty)).toList(),
     );
-    _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
-    _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
-    _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
-    _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
-    _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
-    _rememberPopupWindowSize.value = await cfg.getConfigByKey(ConfigKey.rememberPopupWindowSize, false);
+    _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(
+      ConfigKey.onlyManualDiscoverySubNet,
+      false,
+    );
+    _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(
+      ConfigKey.stopListeningOnScreenClosed,
+      false,
+    );
+    _sendBroadcastOnAdd.value = await cfg.getConfigByKey(
+      ConfigKey.sendBroadcastOnAdd,
+      false,
+    );
+    _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(
+      ConfigKey.recopyOnScreenUnlocked,
+      false,
+    );
+    _excludeFormat.value = await cfg.getConfigByKey(
+      ConfigKey.excludeFormat,
+      true,
+    );
+    _rememberPopupWindowSize.value = await cfg.getConfigByKey(
+      ConfigKey.rememberPopupWindowSize,
+      false,
+    );
     _historyWindowSize.value = await cfg.getConfigByKey(
       ConfigKey.historyWindowSize,
       null,
       convert: (sizeStr) {
         try {
-          final [width, height] = sizeStr.split("x").map((e) => e.toDouble()).toList();
+          final [width, height] = sizeStr
+              .split("x")
+              .map((e) => e.toDouble())
+              .toList();
           return Size(width, height);
         } catch (_) {
           //ignored
@@ -809,7 +990,10 @@ class ConfigService extends GetxService {
       null,
       convert: (sizeStr) {
         try {
-          final [width, height] = sizeStr.split("x").map((e) => e.toDouble()).toList();
+          final [width, height] = sizeStr
+              .split("x")
+              .map((e) => e.toDouble())
+              .toList();
           return Size(width, height);
         } catch (_) {
           //ignored
@@ -836,14 +1020,22 @@ class ConfigService extends GetxService {
       updateDownloadFileDirPath = Constants.androidDownloadPath;
     } else {
       cachePath = (await getApplicationCacheDirectory()).path;
-      documentsPath = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+      if (Platform.isLinux) {
+        documentsPath = await _linuxDataDirPath();
+      } else {
+        documentsPath =
+            "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
+      }
       updateDownloadFileDirPath = "$documentsPath/update";
       if (Platform.isWindows) {
         final username = Platform.environment['USERNAME'];
         if (username == null) {
           windowsUserStartUpPath = null;
         } else {
-          windowsUserStartUpPath = r'C:\Users\' + username + r'\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup';
+          windowsUserStartUpPath =
+              r'C:\Users\' +
+              username +
+              r'\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup';
         }
       }
     }
@@ -852,11 +1044,26 @@ class ConfigService extends GetxService {
     await _initDefaultFileStorePath();
   }
 
+  Future<String> _linuxDataDirPath() async {
+    final xdgDataHome = Platform.environment['XDG_DATA_HOME'];
+    if (xdgDataHome != null && xdgDataHome.isNotEmpty) {
+      return "$xdgDataHome/${Constants.appName}/".normalizePath;
+    }
+    final home = Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty) {
+      return "$home/.local/share/${Constants.appName}/".normalizePath;
+    }
+    return "${(await getApplicationSupportDirectory()).path}/${Constants.appName}/"
+        .normalizePath;
+  }
+
   ///文件默认存储路径
   Future<void> _initDefaultFileStorePath() async {
     late String path;
     if (Platform.isAndroid) {
       path = "${Constants.androidDownloadPath}/${Constants.appName}";
+    } else if (Platform.isLinux) {
+      path = "$documentsPath/files".normalizePath;
     } else if (Platform.isMacOS && kReleaseMode) {
       var dir = await getApplicationDocumentsDirectory();
       path = dir.path + "/${Constants.appName}/files".normalizePath;
@@ -911,7 +1118,10 @@ class ConfigService extends GetxService {
     var type = "";
     if (Platform.isAndroid) {
       var androidInfo = await deviceInfo.androidInfo;
-      final useAndroidId = [DeviceIdGenerateWay.unknown, DeviceIdGenerateWay.androidId].contains(_mobileDevIdGenerateWay.value);
+      final useAndroidId = [
+        DeviceIdGenerateWay.unknown,
+        DeviceIdGenerateWay.androidId,
+      ].contains(_mobileDevIdGenerateWay.value);
       if (useAndroidId && !firstStartup) {
         //使用 Android id
         guid = CryptoUtil.toMD5(androidInfo.id);
@@ -922,7 +1132,9 @@ class ConfigService extends GetxService {
           await PersistentDeviceId.getDeviceId().then((id) async {
             if (id != null) {
               guid = CryptoUtil.toMD5(id);
-              await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.persistentDeviceId);
+              await setMobileDeviceIdGenerateWay(
+                DeviceIdGenerateWay.persistentDeviceId,
+              );
             } else {
               //获取失败，仍然使用Android id兜底
               guid = CryptoUtil.toMD5(androidInfo.id);
@@ -982,7 +1194,10 @@ class ConfigService extends GetxService {
 
   //region 更新存储于数据库的配置
   Future<void> setAllowDiscover(bool allowDiscover) async {
-    await configDao.addOrUpdate(ConfigKey.allowDiscover, allowDiscover.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.allowDiscover,
+      allowDiscover.toString(),
+    );
     _allowDiscover.value = allowDiscover;
   }
 
@@ -991,9 +1206,15 @@ class ConfigService extends GetxService {
     _startMini.value = startMini;
   }
 
-  Future<void> setLaunchAtStartup(bool launchAtStartup, [bool deleteWindowsShortcut = false]) async {
+  Future<void> setLaunchAtStartup(
+    bool launchAtStartup, [
+    bool deleteWindowsShortcut = false,
+  ]) async {
     _launchAtStartup.value = launchAtStartup;
-    Log.debug(tag, "launchAtStartup $launchAtStartup, deleteWindowsShortcut $deleteWindowsShortcut");
+    Log.debug(
+      tag,
+      "launchAtStartup $launchAtStartup, deleteWindowsShortcut $deleteWindowsShortcut",
+    );
     if (launchAtStartup && !deleteWindowsShortcut) return;
     if (Platform.isWindows) {
       final startupPaths = <String>[
@@ -1025,12 +1246,18 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setShowHistoryFloat(bool showHistoryFloat) async {
-    await configDao.addOrUpdate(ConfigKey.showHistoryFloat, showHistoryFloat.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.showHistoryFloat,
+      showHistoryFloat.toString(),
+    );
     _showHistoryFloat.value = showHistoryFloat;
   }
 
   Future<void> setLockHistoryFloatLoc(bool lockHistoryFloatLoc) async {
-    await configDao.addOrUpdate(ConfigKey.lockHistoryFloatLoc, lockHistoryFloatLoc.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.lockHistoryFloatLoc,
+      lockHistoryFloatLoc.toString(),
+    );
     _lockHistoryFloatLoc.value = lockHistoryFloatLoc;
   }
 
@@ -1040,7 +1267,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setRememberWindowSize(bool rememberWindowSize) async {
-    await configDao.addOrUpdate(ConfigKey.rememberWindowSize, rememberWindowSize.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.rememberWindowSize,
+      rememberWindowSize.toString(),
+    );
     Size size = await windowManager.getSize();
     _rememberWindowSize.value = rememberWindowSize;
     _windowSize.value = "${size.width.toInt()}x${size.height.toInt()}";
@@ -1055,21 +1285,32 @@ class ConfigService extends GetxService {
   Future<void> setRecordHistoryDialogPosition(
     bool recordHistoryDialogPosition,
   ) async {
-    await configDao.addOrUpdate(ConfigKey.recordHistoryDialogPosition, recordHistoryDialogPosition.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.recordHistoryDialogPosition,
+      recordHistoryDialogPosition.toString(),
+    );
     _recordHistoryDialogPosition.value = recordHistoryDialogPosition;
   }
 
   Future<void> setHistoryDialogPosition(String historyDialogPosition) async {
-    await configDao.addOrUpdate(ConfigKey.historyDialogPosition, historyDialogPosition);
+    await configDao.addOrUpdate(
+      ConfigKey.historyDialogPosition,
+      historyDialogPosition,
+    );
     _historyDialogPosition.value = historyDialogPosition;
   }
 
   Future<void> setShowOnRecentTasks(bool showOnRecentTasks) async {
-    await configDao.addOrUpdate(ConfigKey.showOnRecentTasks, showOnRecentTasks.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.showOnRecentTasks,
+      showOnRecentTasks.toString(),
+    );
     _showOnRecentTasks.value = showOnRecentTasks;
   }
 
-  Future<void> setAutoCloseConnAfterScreenOff(bool autoCloseConnAfterScreenOff) async {
+  Future<void> setAutoCloseConnAfterScreenOff(
+    bool autoCloseConnAfterScreenOff,
+  ) async {
     await configDao.addOrUpdate(
       ConfigKey.autoCloseConnAfterScreenOff,
       autoCloseConnAfterScreenOff.toString(),
@@ -1078,12 +1319,20 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setEnableLogsRecord(bool enableLogsRecord) async {
-    await configDao.addOrUpdate(ConfigKey.enableLogsRecord, enableLogsRecord.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableLogsRecord,
+      enableLogsRecord.toString(),
+    );
     _enableLogsRecord.value = enableLogsRecord;
   }
 
-  Future<void> setEnableAutoUploadCrashLogs(bool enableAutoUploadCrashLogs) async {
-    await configDao.addOrUpdate(ConfigKey.enableAutoUploadCrashLogs, enableAutoUploadCrashLogs.toString());
+  Future<void> setEnableAutoUploadCrashLogs(
+    bool enableAutoUploadCrashLogs,
+  ) async {
+    await configDao.addOrUpdate(
+      ConfigKey.enableAutoUploadCrashLogs,
+      enableAutoUploadCrashLogs.toString(),
+    );
     _enableAutoUploadCrashLogs.value = enableAutoUploadCrashLogs;
   }
 
@@ -1102,7 +1351,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setHistoryWindowHotKeys(String historyWindowHotKeys) async {
-    await configDao.addOrUpdate(ConfigKey.historyWindowHotKeys, historyWindowHotKeys);
+    await configDao.addOrUpdate(
+      ConfigKey.historyWindowHotKeys,
+      historyWindowHotKeys,
+    );
     _historyWindowHotKeys.value = historyWindowHotKeys;
   }
 
@@ -1112,7 +1364,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setShowMainWindowHotKeys(String showMainWindowHotKeys) async {
-    await configDao.addOrUpdate(ConfigKey.showMainWindowHotKeys, showMainWindowHotKeys);
+    await configDao.addOrUpdate(
+      ConfigKey.showMainWindowHotKeys,
+      showMainWindowHotKeys,
+    );
     _showMainWindowHotKeys.value = showMainWindowHotKeys;
   }
 
@@ -1132,7 +1387,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setSaveToPictures(bool saveToPictures) async {
-    await configDao.addOrUpdate(ConfigKey.saveToPictures, saveToPictures.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.saveToPictures,
+      saveToPictures.toString(),
+    );
     _saveToPictures.value = saveToPictures;
   }
 
@@ -1142,7 +1400,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setUseAuthentication(bool useAuthentication) async {
-    await configDao.addOrUpdate(ConfigKey.useAuthentication, useAuthentication.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.useAuthentication,
+      useAuthentication.toString(),
+    );
     _useAuthentication.value = useAuthentication;
     if (PlatformExt.isMobile) {
       if (useAuthentication) {
@@ -1154,7 +1415,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setAppRevalidateDuration(int appRevalidateDuration) async {
-    await configDao.addOrUpdate(ConfigKey.appRevalidateDuration, appRevalidateDuration.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.appRevalidateDuration,
+      appRevalidateDuration.toString(),
+    );
     _appRevalidateDuration.value = appRevalidateDuration;
   }
 
@@ -1165,17 +1429,26 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setEnableSmsSync(bool enableSmsSync) async {
-    await configDao.addOrUpdate(ConfigKey.enableSmsSync, enableSmsSync.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableSmsSync,
+      enableSmsSync.toString(),
+    );
     _enableSmsSync.value = enableSmsSync;
   }
 
   Future<void> setEnableForward(bool enableForward) async {
-    await configDao.addOrUpdate(ConfigKey.enableForward, enableForward.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableForward,
+      enableForward.toString(),
+    );
     _enableForward.value = enableForward;
   }
 
   Future<void> setForwardServer(ForwardServerConfig serverConfig) async {
-    await configDao.addOrUpdate(ConfigKey.forwardServer, serverConfig.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.forwardServer,
+      serverConfig.toString(),
+    );
     _forwardServer.value = serverConfig;
   }
 
@@ -1185,7 +1458,10 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setOnlyForwardMode(bool onlyForwardMode) async {
-    await configDao.addOrUpdate(ConfigKey.onlyForwardMode, onlyForwardMode.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.onlyForwardMode,
+      onlyForwardMode.toString(),
+    );
     _onlyForwardMode.value = onlyForwardMode;
     if (!onlyForwardMode) return;
     final sktService = Get.find<SocketService>();
@@ -1252,27 +1528,42 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setCleanDataConfig(CleanDataConfig cleanDataConfig) async {
-    await configDao.addOrUpdate(ConfigKey.cleanDataConfig, cleanDataConfig.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.cleanDataConfig,
+      cleanDataConfig.toString(),
+    );
     _cleanDataConfig.value = cleanDataConfig;
   }
 
   Future<void> setShowMoreItemsInRow(bool showMoreItemsInRow) async {
-    await configDao.addOrUpdate(ConfigKey.showMoreItemsInRow, showMoreItemsInRow.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.showMoreItemsInRow,
+      showMoreItemsInRow.toString(),
+    );
     _showMoreItemsInRow.value = showMoreItemsInRow;
   }
 
   Future<void> setClipboardListeningWay(ClipboardListeningWay way) async {
-    await configDao.addOrUpdate(ConfigKey.clipboardListeningWay, way.name.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.clipboardListeningWay,
+      way.name.toString(),
+    );
     _clipboardListeningWay.value = way;
   }
 
   Future<void> setCloseOnSameHotKey(bool closeOnSameHotKey) async {
-    await configDao.addOrUpdate(ConfigKey.closeOnSameHotKey, closeOnSameHotKey.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.closeOnSameHotKey,
+      closeOnSameHotKey.toString(),
+    );
     _closeOnSameHotKey.value = closeOnSameHotKey;
   }
 
   Future<void> setEnableAutoSyncOnScreenOpened(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.enableAutoSyncOnScreenOpened, enable.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableAutoSyncOnScreenOpened,
+      enable.toString(),
+    );
     _enableAutoSyncOnScreenOpened.value = enable;
   }
 
@@ -1282,12 +1573,18 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setEnableSourceRecordViaDumpsys(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.sourceRecordViaDumpsys, enable.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.sourceRecordViaDumpsys,
+      enable.toString(),
+    );
     _sourceRecordViaDumpsys.value = enable;
   }
 
   Future<void> setNotifyOnDevDisconn(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.notifyOnDevDisconn, enable.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.notifyOnDevDisconn,
+      enable.toString(),
+    );
     _notifyOnDevDisconn.value = enable;
   }
 
@@ -1297,12 +1594,18 @@ class ConfigService extends GetxService {
   }
 
   Future<void> setAutoSyncMissingData(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.autoSyncMissingData, enable.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.autoSyncMissingData,
+      enable.toString(),
+    );
     _autoSyncMissingData.value = enable;
   }
 
   Future<void> setEnableContentBlackList(bool enable) async {
-    await configDao.addOrUpdate(ConfigKey.enableContentBlackList, enable.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableContentBlackList,
+      enable.toString(),
+    );
     _enableContentBlackList.value = enable;
   }
 
@@ -1313,7 +1616,11 @@ class ConfigService extends GetxService {
   }
 
   ///更新通知黑白名单数据
-  Future<void> setNotificationBlackWhiteList(WhiteBlackMode mode, List<FilterRule> blacklist, List<FilterRule> whitelist) async {
+  Future<void> setNotificationBlackWhiteList(
+    WhiteBlackMode mode,
+    List<FilterRule> blacklist,
+    List<FilterRule> whitelist,
+  ) async {
     await configDao.addOrUpdate(
       ConfigKey.notificationBlackWhiteList,
       jsonEncode({
@@ -1329,13 +1636,19 @@ class ConfigService extends GetxService {
 
   ///启用通知历史记录
   Future<void> setEnableRecordNotification(bool enabled) async {
-    await configDao.addOrUpdate(ConfigKey.enableRecordNotification, enabled.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableRecordNotification,
+      enabled.toString(),
+    );
     _enableRecordNotification.value = enabled;
   }
 
   ///显示移动设备的通知
   Future<void> setEnableShowMobileNotification(bool enabled) async {
-    await configDao.addOrUpdate(ConfigKey.enableShowMobileNotification, enabled.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.enableShowMobileNotification,
+      enabled.toString(),
+    );
     _enableShowMobileNotification.value = enabled;
   }
 
@@ -1370,8 +1683,13 @@ class ConfigService extends GetxService {
   }
 
   ///设置设备状态筛选过滤器
-  Future<void> setDevicePairedStatusFilter(DevicePairedStatusFilter filter) async {
-    await configDao.addOrUpdate(ConfigKey.devicePairedStatusFilter, filter.name);
+  Future<void> setDevicePairedStatusFilter(
+    DevicePairedStatusFilter filter,
+  ) async {
+    await configDao.addOrUpdate(
+      ConfigKey.devicePairedStatusFilter,
+      filter.name,
+    );
     _devicePairedStatusFilter.value = filter;
   }
 
@@ -1390,7 +1708,10 @@ class ConfigService extends GetxService {
 
   ///设置 过时数据同步时间限制
   Future<void> setNewPairedDeviceSyncOldDataLimitTime(int seconds) async {
-    await configDao.addOrUpdate(ConfigKey.syncOutdateLimitTime, seconds.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.syncOutdateLimitTime,
+      seconds.toString(),
+    );
     _syncOutdateLimitTime.value = seconds;
   }
 
@@ -1401,17 +1722,27 @@ class ConfigService extends GetxService {
   }
 
   ///仅手动子网扫描发现设备
-  Future<void> setOnlyManualDiscoverySubNet(bool onlyManualDiscoverySubNet) async {
-    await configDao.addOrUpdate(ConfigKey.onlyManualDiscoverySubNet, onlyManualDiscoverySubNet.toString());
+  Future<void> setOnlyManualDiscoverySubNet(
+    bool onlyManualDiscoverySubNet,
+  ) async {
+    await configDao.addOrUpdate(
+      ConfigKey.onlyManualDiscoverySubNet,
+      onlyManualDiscoverySubNet.toString(),
+    );
     _onlyManualDiscoverySubNet.value = onlyManualDiscoverySubNet;
   }
 
   ///仅 Android，屏幕关闭后停止监听
-  Future<void> setStopListeningOnScreenClosed(bool stopListeningOnScreenClosed) async {
+  Future<void> setStopListeningOnScreenClosed(
+    bool stopListeningOnScreenClosed,
+  ) async {
     if (!Platform.isAndroid) {
       return;
     }
-    await configDao.addOrUpdate(ConfigKey.stopListeningOnScreenClosed, stopListeningOnScreenClosed.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.stopListeningOnScreenClosed,
+      stopListeningOnScreenClosed.toString(),
+    );
     _stopListeningOnScreenClosed.value = stopListeningOnScreenClosed;
   }
 
@@ -1429,7 +1760,10 @@ class ConfigService extends GetxService {
     if (!Platform.isAndroid) {
       return;
     }
-    await configDao.addOrUpdate(ConfigKey.recopyOnScreenUnlocked, value.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.recopyOnScreenUnlocked,
+      value.toString(),
+    );
     _recopyOnScreenUnlocked.value = value;
   }
 
@@ -1449,7 +1783,10 @@ class ConfigService extends GetxService {
     if (!Platform.isWindows) {
       return;
     }
-    await configDao.addOrUpdate(ConfigKey.rememberPopupWindowSize, value.toString());
+    await configDao.addOrUpdate(
+      ConfigKey.rememberPopupWindowSize,
+      value.toString(),
+    );
     _rememberPopupWindowSize.value = value;
   }
 
@@ -1469,7 +1806,10 @@ class ConfigService extends GetxService {
       default:
         return;
     }
-    await configDao.addOrUpdate(key, "${size.width.toStringAsFixed(2)}x${size.height.toStringAsFixed(2)}");
+    await configDao.addOrUpdate(
+      key,
+      "${size.width.toStringAsFixed(2)}x${size.height.toStringAsFixed(2)}",
+    );
   }
 
   //endregion
@@ -1541,7 +1881,11 @@ class ConfigService extends GetxService {
   }
 
   ///判断是否命中内容黑名单
-  FilterRuleMatchResult matchesContentBlacklist(HistoryContentType type, String content, ClipboardSource? source) {
+  FilterRuleMatchResult matchesContentBlacklist(
+    HistoryContentType type,
+    String content,
+    ClipboardSource? source,
+  ) {
     if (!enableContentBlackList) {
       return FilterRuleMatchResult.notMatched;
     }
@@ -1559,7 +1903,10 @@ class ConfigService extends GetxService {
   }
 
   ///判断是否命中通知黑白名单规则
-  FilterRuleMatchResult matchesNotificationRuleList(String content, String pkgName) {
+  FilterRuleMatchResult matchesNotificationRuleList(
+    String content,
+    String pkgName,
+  ) {
     //未启用
     if (!enableRecordNotification) {
       return FilterRuleMatchResult.notMatched;
@@ -1572,8 +1919,15 @@ class ConfigService extends GetxService {
     } catch (err, stack) {
       Log.error(tag, "matchesNotificationRuleList error: $err,$stack");
     }
-    final ruleList = currentNotificationWhiteBlackMode == WhiteBlackMode.black ? notificationBlackList : notificationWhiteList;
-    final source = ClipboardSource(id: pkgName, name: "", time: null, iconB64: "");
+    final ruleList = currentNotificationWhiteBlackMode == WhiteBlackMode.black
+        ? notificationBlackList
+        : notificationWhiteList;
+    final source = ClipboardSource(
+      id: pkgName,
+      name: "",
+      time: null,
+      iconB64: "",
+    );
     for (var rule in ruleList) {
       // 跳过未启用的规则
       if (!rule.enable) continue;
@@ -1608,7 +1962,9 @@ class ConfigService extends GetxService {
     final dirPath = await getJiebaSegmentFileDirPath();
     final dictFilePath = "$dirPath/dict.txt".normalizePath;
     final probEmitFilePath = "$dirPath/prob_emit.txt".normalizePath;
-    final result = await File(dictFilePath).exists() && await File(probEmitFilePath).exists();
+    final result =
+        await File(dictFilePath).exists() &&
+        await File(probEmitFilePath).exists();
     if (!result) return false;
     await JiebaSegmenter.init(dirPath);
     _jiebaInited = true;

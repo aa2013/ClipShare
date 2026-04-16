@@ -105,7 +105,9 @@ class DbService extends GetxService {
   Future _queue = Future.value();
 
   void execSequentially(Future Function() f) {
-    _queue = _queue.whenComplete(() => f().catchError((err) => Log.error(tag, err)));
+    _queue = _queue.whenComplete(
+      () => f().catchError((err) => Log.error(tag, err)),
+    );
   }
 
   Future<DbService> init() async {
@@ -114,7 +116,7 @@ class DbService extends GetxService {
     var dbPath = "clipshare.db";
     //桌面端如果当前路径可写则使用当前路径，如开发环境或者便携版本
     if (PlatformExt.isDesktop) {
-      if (Platform.isMacOS) {
+      if (Platform.isMacOS || Platform.isLinux) {
         var dirPath = appConfig.documentsPath;
         dbPath = "$dirPath/$dbPath".normalizePath;
       } else {
@@ -146,8 +148,14 @@ class DbService extends GetxService {
     return _db.close();
   }
 
-  static Future<bool> hasColumnInTable(sqflite.Database database, String tableName, String columnName) async {
-    final result = await database.rawQuery("SELECT COUNT(*) as cnt FROM pragma_table_info('$tableName') WHERE name='$columnName'");
+  static Future<bool> hasColumnInTable(
+    sqflite.Database database,
+    String tableName,
+    String columnName,
+  ) async {
+    final result = await database.rawQuery(
+      "SELECT COUNT(*) as cnt FROM pragma_table_info('$tableName') WHERE name='$columnName'",
+    );
     if (result.isEmpty) return false;
     if (!result.first.containsKey("cnt")) {
       return false;
@@ -161,7 +169,9 @@ class DbService extends GetxService {
   ///操作记录表新增设备id字段，用于从连接设备同步其他已配对设备数据
   final migration1to2 = Migration(1, 2, (database) async {
     if (!await hasColumnInTable(database, 'OperationRecord', 'devId')) {
-      await database.execute('ALTER TABLE OperationRecord ADD COLUMN devId TEXT');
+      await database.execute(
+        'ALTER TABLE OperationRecord ADD COLUMN devId TEXT',
+      );
     }
   });
 
@@ -193,7 +203,9 @@ class DbService extends GetxService {
   ///历史表增加更新时间字段
   final migration3to4 = Migration(3, 4, (database) async {
     if (!await hasColumnInTable(database, 'History', 'updateTime')) {
-      await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
+      await database.execute(
+        "ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;",
+      );
     }
   });
 
@@ -204,15 +216,21 @@ class DbService extends GetxService {
     if (!await hasColumnInTable(database, 'History', 'source')) {
       await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
     }
-    await database.execute("CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));");
-    await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);');
+    await database.execute(
+      "CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));",
+    );
+    await database.execute(
+      'CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);',
+    );
   });
 
   ///数据库版本 5 -> 6
   ///支持存储服务为中转方式，操作记录表新增存储同步标记字段
   final migration5to6 = Migration(5, 6, (database) async {
     if (!await hasColumnInTable(database, 'OperationRecord', 'storageSync')) {
-      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `storageSync` INTEGER;");
+      await database.execute(
+        "ALTER TABLE `OperationRecord` ADD COLUMN `storageSync` INTEGER;",
+      );
     }
     //todo 后续移除 UID 字段的时候这里需要改
     try {
@@ -235,15 +253,21 @@ class DbService extends GetxService {
   ///v1.4.0 数据库版本 6 -> 7
   ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
   final migration6to7 = Migration(6, 7, (database) async {
-    await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId` ON `History` (`devId`)');
-    await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId_source` ON `History` (`devId`, `source`)');
+    await database.execute(
+      'CREATE INDEX IF NOT EXISTS `index_History_devId` ON `History` (`devId`)',
+    );
+    await database.execute(
+      'CREATE INDEX IF NOT EXISTS `index_History_devId_source` ON `History` (`devId`, `source`)',
+    );
   });
 
   ///v1.4.3 新增字段记录内网地址 7 -> 8
   ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
   final migration7to8 = Migration(7, 8, (database) async {
     if (!await hasColumnInTable(database, 'Device', 'internalAddress')) {
-      await database.execute("ALTER TABLE `Device` ADD COLUMN `internalAddress` TEXT;");
+      await database.execute(
+        "ALTER TABLE `Device` ADD COLUMN `internalAddress` TEXT;",
+      );
     }
   });
 }

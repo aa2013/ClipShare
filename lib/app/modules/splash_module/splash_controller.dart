@@ -95,7 +95,7 @@ class SplashController extends GetxController {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
       launchAtStartup.setup(
         appName: packageInfo.appName,
-        appPath: Platform.resolvedExecutable,
+        appPath: PlatformExt.startupExecutablePath,
       );
       var isLaunchAtStartup = await launchAtStartup.isEnabled();
       final isSystem = isLaunchAtStartup;
@@ -116,8 +116,14 @@ class SplashController extends GetxController {
           isLaunchAtStartup = isLaunchAtStartup || hasShortcut;
         }
       }
-      Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
-      appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
+      Log.debug(
+        tag,
+        "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem",
+      );
+      appConfig.setLaunchAtStartup(
+        isLaunchAtStartup,
+        isLaunchAtStartup && isSystem,
+      );
       var updateDir = Directory(appConfig.updateDownloadFileDirPath);
       Log.debug(tag, "updateDir = $updateDir");
       if (await updateDir.exists()) {
@@ -125,7 +131,9 @@ class SplashController extends GetxController {
       }
     }
     if (Platform.isAndroid) {
-      androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
+      androidChannelService.setAutoReportCrashes(
+        appConfig.enableAutoUploadCrashLogs,
+      );
     }
     // 初始化channel
     initChannel();
@@ -142,10 +150,15 @@ class SplashController extends GetxController {
   }
 
   Future<void> initWindowsManager() async {
-    final [width, height] = appConfig.windowSize.split("x").map((e) => e.toDouble()).toList();
+    final [width, height] = appConfig.windowSize
+        .split("x")
+        .map((e) => e.toDouble())
+        .toList();
     WindowOptions windowOptions = WindowOptions(
       size: Size(width, height),
-      minimumSize: kReleaseMode ? const Size(Constants.showHistoryRightWidth * 1.0, 200) : null,
+      minimumSize: kReleaseMode
+          ? const Size(Constants.showHistoryRightWidth * 1.0, 200)
+          : null,
       center: true,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
@@ -154,8 +167,6 @@ class SplashController extends GetxController {
       if (!appConfig.startMini) {
         windowManager.show();
         windowManager.focus();
-      } else if (Platform.isLinux) {
-        windowManager.hide();
       }
     });
   }
@@ -164,7 +175,9 @@ class SplashController extends GetxController {
   initHotKey() async {
     await AppHotKeyHandler.unRegisterAll();
     if (appConfig.historyWindowHotKeys.isNotEmpty) {
-      var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
+      var hotKey = AppHotKeyHandler.toSystemHotKey(
+        appConfig.historyWindowHotKeys,
+      );
       AppHotKeyHandler.registerHistoryWindow(hotKey);
     }
     if (appConfig.syncFileHotKeys.isNotEmpty) {
@@ -201,7 +214,9 @@ class SplashController extends GetxController {
           return jsonEncode(res);
         case MultiWindowMethod.getAllDevices:
           //加载所有设备
-          final devices = await dbService.deviceDao.getAllDevices(appConfig.userId);
+          final devices = await dbService.deviceDao.getAllDevices(
+            appConfig.userId,
+          );
           return jsonEncode([appConfig.device, ...devices]);
         case MultiWindowMethod.getAllTagNames:
           //加载所有标签名
@@ -227,7 +242,9 @@ class SplashController extends GetxController {
           return jsonEncode(devices);
         case MultiWindowMethod.syncFiles:
           final paths = (args["files"] as List<dynamic>).cast<String>();
-          final items = paths.map((path) => DropItemFile(path)).toList(growable: false);
+          final items = paths
+              .map((path) => DropItemFile(path))
+              .toList(growable: false);
           final files = await pendingFileService.resolvePendingItems(items);
           var devices = List<Device>.empty(growable: true);
           for (var devMap in (args["devices"] as List<dynamic>)) {
@@ -257,7 +274,10 @@ class SplashController extends GetxController {
             break;
           }
           final type = WindowType.parse(args["type"]);
-          final [width, height] = (args["size"] as String).split("x").map((item) => item.toDouble()).toList();
+          final [width, height] = (args["size"] as String)
+              .split("x")
+              .map((item) => item.toDouble())
+              .toList();
           final size = Size(width, height);
           await appConfig.updatePopupWindowSize(type, size);
           break;
@@ -302,7 +322,11 @@ class SplashController extends GetxController {
           }
           var contentLst = lst
               // 过滤掉非通知数据
-              .where((e) => !e.type.containsIgnoreCase(HistoryContentType.notification.name))
+              .where(
+                (e) => !e.type.containsIgnoreCase(
+                  HistoryContentType.notification.name,
+                ),
+              )
               .map(
                 (e) => {
                   "id": e.id,
@@ -329,7 +353,11 @@ class SplashController extends GetxController {
             break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;
-            HistoryDataListener.inst.onChanged(HistoryContentType.sms, content, null);
+            HistoryDataListener.inst.onChanged(
+              HistoryContentType.sms,
+              content,
+              null,
+            );
             break;
           default:
         }
@@ -344,8 +372,13 @@ class SplashController extends GetxController {
     }
     final handler = ShareHandlerPlatform.instance;
     appConfig.shareHandlerStream?.cancel();
-    appConfig.shareHandlerStream = handler.sharedMediaStream.listen((SharedMedia media) async {
-      Log.info(tag, "ShareMedia: ${media.attachments}, content: ${media.content}");
+    appConfig.shareHandlerStream = handler.sharedMediaStream.listen((
+      SharedMedia media,
+    ) async {
+      Log.info(
+        tag,
+        "ShareMedia: ${media.attachments}, content: ${media.content}",
+      );
       if (media.attachments != null) {
         var files = media.attachments!
             .where((attachment) => attachment != null)
@@ -369,9 +402,14 @@ class SplashController extends GetxController {
         final fileName = fileInfo.fileName;
         final size = fileInfo.size;
         Log.info(tag, "ShareMedia fileName $fileName, size $size");
-        gotoOnlineDevicesPage([DropItemFileUri(media.content!, fileName, size)]);
+        gotoOnlineDevicesPage([
+          DropItemFileUri(media.content!, fileName, size),
+        ]);
       } else {
-        Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveFileNotSupportDialogText.tr);
+        Global.showTipsDialog(
+          context: Get.context!,
+          text: TranslationKey.saveFileNotSupportDialogText.tr,
+        );
         return;
       }
     });
@@ -394,7 +432,10 @@ class SplashController extends GetxController {
             );
             pendingFileService.clearPendingInfo();
             Navigator.pop(context);
-            Global.showSnackBarSuc(text: TranslationKey.startSendFileToast.tr, context: Get.context!);
+            Global.showSnackBarSuc(
+              text: TranslationKey.startSendFileToast.tr,
+              context: Get.context!,
+            );
           },
           onItemRemove: (DropItem item) {
             pendingFileService.removeDropItem(item);
