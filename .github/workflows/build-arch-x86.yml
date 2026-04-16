@@ -1,0 +1,149 @@
+name: build-linux-bin
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - fix/wayland-clipboard   # 測試完合併後可以刪掉這段
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      artifact-name:
+        description: Name of the uploaded Linux binary artifact
+        value: ${{ jobs.build.outputs.artifact_name }}
+
+env:
+  FLUTTER_VERSION: 3.35.3
+
+jobs:
+  build:
+    name: Build Linux binary in Arch
+    # GitHub-hosted runners use Ubuntu as the host. All build commands below
+    # run inside the Arch Linux container.
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    outputs:
+      artifact_name: ${{ steps.artifact.outputs.name }}
+
+    steps:
+      - name: Verify Arch environment
+        run: |
+          cat /etc/os-release
+          uname -a
+
+      - name: Install system dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --needed --noconfirm \
+            git \
+            curl \
+            unzip \
+            xz \
+            zip \
+            clang \
+            cmake \
+            ninja \
+            pkgconf \
+            gtk3 \
+            libkeybinder3 \
+            libayatana-appindicator \
+            libayatana-indicator \
+            ayatana-ido \
+            libdbusmenu-glib \
+            libdbusmenu-gtk3 \
+            libxtst \
+            wayland \
+            wayland-protocols
+          ldconfig   # ← 新增：刷新 so 快取，讓後續 ldconfig -p 能找到庫
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Checkout ClipboardListener submodule
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git submodule sync ClipboardListener
+          git submodule update --init --force --depth=1 ClipboardListener
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/ClipboardListener"
+
+      - name: Setup Flutter
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git /opt/flutter
+          git config --global --add safe.directory /opt/flutter
+          echo "/opt/flutter/bin" >> "$GITHUB_PATH"
+          /opt/flutter/bin/flutter --version
+          /opt/flutter/bin/flutter config --enable-linux-desktop
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Build Linux release
+        run: flutter build linux --release
+
+      - name: Package Linux binary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(awk '/^version:/ {print $2; exit}' pubspec.yaml | cut -d'+' -f1)"
+          arch="$(uname -m)"
+          bundle_dir="build/linux/x64/release/bundle"
+          package_name="ClipShare-${version}-linux-${arch}"
+
+          if [[ ! -x "${bundle_dir}/clipshare" ]]; then
+            echo "Linux release binary not found: ${bundle_dir}/clipshare" >&2
+            exit 1
+          fi
+
+          rm -rf output "${package_name}"
+          mkdir -p output "${package_name}"
+          cp -a "${bundle_dir}/." "${package_name}/"
+          chmod +x "${package_name}/clipshare"
+
+          runtime_libs=(
+            "libkeybinder-3.0.so.0"
+            "libayatana-appindicator3.so.1"
+            "libayatana-indicator3.so.7"
+            "libayatana-ido3-0.4.so.0"
+            "libdbusmenu-glib.so.4"
+            "libdbusmenu-gtk3.so.4"
+            "libXtst.so.6"
+            "libwayland-client.so.0"
+            "libwayland-cursor.so.0"
+            "libwayland-egl.so.1"
+          )
+          mkdir -p "${package_name}/lib"
+          for soname in "${runtime_libs[@]}"; do
+            if [[ -f "${package_name}/lib/${soname}" ]]; then
+              continue
+            fi
+            lib_path="$(ldconfig -p | awk -v name="${soname}" '$1 == name { print $NF; exit }')"
+            if [[ -n "${lib_path}" && -f "${lib_path}" ]]; then
+              cp -L "${lib_path}" "${package_name}/lib/${soname}"
+            else
+              echo "Warning: runtime library not found: ${soname}" >&2
+            fi
+          done
+
+          tar -czf "output/${package_name}.tar.gz" "${package_name}"
+          (
+            cd output
+            sha256sum "${package_name}.tar.gz" > "${package_name}.tar.gz.sha256"
+            sha256sum *.tar.gz > SHA256SUMS.txt
+          )
+
+      - name: Set artifact name
+        id: artifact
+        run: echo "name=linux-bin" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Linux binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-bin
+          path: output/*
+          overwrite: true
