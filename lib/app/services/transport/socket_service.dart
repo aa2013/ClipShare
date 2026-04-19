@@ -3,31 +3,23 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:synchronized/synchronized.dart';
-import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/connection_mode.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
+import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
-import 'package:clipshare/app/data/models/dev_socket.dart';
+import 'package:clipshare/app/data/models/end_point.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
-import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/handlers/dev_pairing_handler.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
-import 'package:clipshare/app/handlers/socket/secure_socket_server.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
-import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
-import 'package:clipshare/app/services/history_sync_progress_service.dart';
-import 'package:clipshare/app/services/tray_service.dart';
-import 'package:clipshare/app/utils/notify_util.dart';
-import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
@@ -35,7 +27,7 @@ import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/device_service.dart';
+import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
@@ -43,14 +35,15 @@ import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:collection/collection.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
+import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
+
+typedef VoidFutureFunction = Future<void> Function();
 
 class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final appConfig = Get.find<ConfigService>();
@@ -58,47 +51,40 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final dbService = Get.find<DbService>();
   static const String tag = "SocketService";
   static const maxParallelCnt = 10;
+
+  bool _isInit = false;
+
+  //socket服务端
+  late ServerSocket _server;
+
+  //设备心跳检测定时器
   Timer? _heartbeatTimer;
 
-  // devId => DevSocket
-  final Map<String, DevSocket> _devSockets = {};
-  late SecureSocketServer _server;
-  ForwardSocketClient? _forwardClient;
+  //广播 socket
+  List<RawDatagramSocket> _multicasts = [];
 
-  bool get forwardServerConnected => _forwardClient != null;
+  //标记是否正在设备发现
+  bool _discovering = false;
 
-  //临时记录连接配对自定义ip设备记录
-  final Set<String> ipSetTemp = {};
-  final Set<String> _connectingAddress = {};
-  final Map<int, FileSyncHandler> _forwardFiles = {};
-  Map<String, Future> broadcastProcessChain = {};
-  bool _pairing = false;
-  int? _pairingNotifyId;
-  static bool _isInit = false;
-  bool screenOpened = true;
-  Future? autoCloseConnTimer;
-  bool _autoConnForwardServer = true;
+  //设备发现控制令牌
   CancelTokenSource _discoveryTokenSource = CancelTokenSource();
 
-  String? get forwardServerHost {
-    if (!appConfig.enableForward || appConfig.forwardWay != ForwardWay.server) return null;
-    return appConfig.forwardServer!.host;
-  }
+  //设备待连接队列
+  var pendingConnectionQueue = StreamController<DeviceEndPoint>();
 
-  int? get forwardServerPort {
-    if (!appConfig.enableForward || appConfig.forwardWay != ForwardWay.server) return null;
-    return appConfig.forwardServer!.port.toInt();
-  }
+  // 某设备的Socket连接，devId => DevSocket
+  final Map<String, SecureSocketClient> _devSockets = {};
 
-  List<RawDatagramSocket> multicasts = [];
+  //重连中的设备id
+  final Set<String> _reconnectingDevIds = {};
 
-  //正在通知的设备，用于防抖，devId => (notifyId,isDisconnected)
-  //时常为 2s，如果 2s 内，该 map 有 key 且 id 仍然为发起通知时创建的 id 则允许通知，否则取消通知
-  final _devNotifyIdMap = <String, bool>{};
-  Timer? _devNotifyTimer;
+  //配对通知 id, devId => notifyId
+  final _pairingNotifyIds = <String, int?>{};
 
-  //通知防抖时长
-  static final _debounceTime = 1500.ms;
+  //配对中的设备id
+  final _pairingDevIds = <String>{};
+
+  ForwardSocketClient? _forwardClient;
 
   //region dev registry
   final DeviceConnectionRegistry _registry;
@@ -115,41 +101,44 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   Future<SocketService> init() async {
     if (_isInit) throw Exception("已初始化");
-    // 初始化，创建socket监听
-    _runSocketServer();
-    startDiscoveryDevices();
-    startHeartbeatTest();
     ScreenOpenedListener.inst.register(this);
+    //启动服务端监听连接，广播监听，设备发现
+    _runSocketServer();
+    _runDeviceConnectTask();
+    startHeartbeatTest();
     _isInit = true;
     return this;
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-    ScreenOpenedListener.inst.remove(this);
-  }
+  ///region 服务端消息收发解析
 
-  ///判断设备是否在线
-  bool isOnline(String devId, bool requiredPaired) {
-    var online = _devSockets.containsKey(devId);
-    var isPaired = false;
-    if (online) {
-      isPaired = _devSockets[devId]!.isPaired;
-    }
-    if (!requiredPaired) return online;
-    return online && isPaired;
+  ///运行服务端 socket 监听消息同步
+  _runSocketServer() async {
+    _server = await ServerSocket.bind('0.0.0.0', appConfig.port);
+    _server.listen(
+      (socket) async {
+        try {
+          await _connect(socket: socket, isDirect: true);
+        } catch (err, stack) {
+          final endPoint = EndPoint(socket.remoteAddress.address, socket.remotePort);
+          Log.error(tag, "error = $err, endPoint = $endPoint", stack);
+        }
+      },
+    );
   }
 
   ///监听广播
   Future<void> _startListenMulticast() async {
     //关闭原本的监听
-    for (var multicast in multicasts) {
+    for (var multicast in _multicasts) {
       multicast.close();
     }
     //重新监听
-    multicasts = await _getSockets(Constants.multicastGroup, appConfig.port);
-    for (var multicast in multicasts) {
+    _multicasts = await _getMulticastSockets(
+      Constants.multicastGroup,
+      appConfig.port,
+    );
+    for (var multicast in _multicasts) {
       multicast.listen((event) {
         final datagram = multicast.receive();
         if (datagram == null) {
@@ -163,645 +152,653 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         if (dev.guid == appConfig.devInfo.guid) {
           return;
         }
-        switch (msg.key) {
-          case MsgType.broadcastInfo:
-            var devId = dev.guid;
-            String ip = datagram.address.address;
-            var port = msg.data["port"];
-            String address = "$ip:$port";
-            Future.delayed(5.s, () {
-              broadcastProcessChain.remove(devId);
-              _connectingAddress.remove(address);
-            });
-            var inChain = broadcastProcessChain.containsKey(devId);
-            var connecting = _connectingAddress.contains(address);
-            if (!inChain && !connecting) {
-              _connectingAddress.add(address);
-              broadcastProcessChain[devId] = _onBroadcastInfoReceived(msg, datagram);
-            }
-            break;
-          default:
+        if (msg.key != MsgType.broadcastInfo) {
+          return;
+        }
+        try {
+          var ip = datagram.address.address;
+          var port = msg.data["port"].toString().toInt();
+          pendingConnectionQueue.add(DeviceEndPoint(dev, ip, port));
+        } catch (err, stack) {
+          Log.error(tag, err, stack);
         }
       });
     }
   }
 
-  ///接收广播设备信息
-  Future<void> _onBroadcastInfoReceived(
-    MessageData msg,
-    Datagram datagram,
-  ) async {
-    DevInfo dev = msg.send;
-    //设备已连接，跳过
-    if (_devSockets.keys.contains(dev.guid)) {
+  ///获取广播 socket
+  Future<List<RawDatagramSocket>> _getMulticastSockets(
+    String multicastGroup, [
+    int port = 0,
+  ]) async {
+    final interfaces = (await NetworkInterface.list()).where(
+      (itf) => !appConfig.noDiscoveryIfs.contains(itf.name),
+    );
+    final sockets = <RawDatagramSocket>[];
+    for (final interface in interfaces) {
+      final socket = await RawDatagramSocket.bind(
+        InternetAddress.anyIPv4,
+        port,
+      );
+      socket.joinMulticast(InternetAddress(multicastGroup), interface);
+      sockets.add(socket);
+    }
+    return sockets;
+  }
+
+  ///endregion
+
+  ///region 设备发现
+
+  ///开始设备发现
+  ///[manual] 是否手动点击设备发现
+  Future<void> startDiscoveryDevices({
+    bool manual = false,
+  }) async {
+    Log.debug(tag, "进入设备发现逻辑");
+    if (_discovering) {
+      Log.debug(tag, "正在发现设备");
       return;
     }
-
-    var device = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
-    var isPaired = device != null && device.isPaired;
-    //未配对且不允许被发现，结束
-    if (!appConfig.allowDiscover && !isPaired) {
+    if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
+      Log.debug(tag, "无网络，终止设备发现");
+      _discovering = false;
       return;
     }
-    //建立连接
-    String ip = datagram.address.address;
-    var port = msg.data["port"];
-    Log.debug(tag, "${dev.name} ip: $ip，port $port");
-    ipSetTemp.add("$ip:$port");
-    return _connectFromBroadcast(dev, ip, msg.data["port"]);
-  }
-
-  ///从广播，建立 socket 链接
-  Future _connectFromBroadcast(DevInfo dev, String ip, int port) {
-    //已在broadcastProcessChain中添加互斥
-    return SecureSocketClient.connect(
-      ip: ip,
-      port: port,
-      prime1: appConfig.prime1,
-      prime2: appConfig.prime2,
-      dhAesKey: appConfig.dhAesKey,
-      onConnected: (client) async {
-        Log.debug(tag, '已连接到服务器');
-        //本地是否已配对
-        var localDevice = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
-        var localIsPaired = localDevice?.isPaired ?? false;
-        var pairedStatusData = MessageData(
-          userId: appConfig.userId,
-          send: appConfig.devInfo,
-          key: MsgType.pairedStatus,
-          data: {
-            "isPaired": localIsPaired,
-            "minVersionName": appConfig.minVersion.name,
-            "minVersionCode": appConfig.minVersion.code,
-            "versionName": appConfig.version.name,
-            "versionCode": appConfig.version.code,
-          },
-        );
-        //告诉服务器配对状态
-        client.send(pairedStatusData.toJson());
-      },
-      onMessage: (client, json) {
-        var msg = MessageData.fromJson(json);
-        _onSocketReceived(client, msg);
-      },
-      onDone: (SecureSocketClient client) {
-        Log.debug(tag, "从广播连接，服务端连接关闭, localPort: ${client.localPort}");
-        _onDevDisconnected(dev.guid);
-      },
-      onError: (error, client) {
-        Log.debug(tag, '从广播连接，发生错误: $error, localPort: ${client.localPort}');
-        _onDevDisconnected(dev.guid);
-      },
-    );
-  }
-
-  ///运行服务端 socket 监听消息同步
-  void _runSocketServer() async {
-    _server = await SecureSocketServer.bind(
-      ip: '0.0.0.0',
-      port: appConfig.port,
-      onConnected: (ip, port) {
-        Log.debug(
-          tag,
-          "新连接来自 ip:$ip port:$port",
-        );
-      },
-      onMessage: (client, json) {
-        var msg = MessageData.fromJson(json);
-        _onSocketReceived(client, msg);
-      },
-      onError: (err) {
-        Log.error(tag, "服务端内客户端连接，出现错误：$err");
-      },
-      onClientError: (e, ip, port, client) {
-        //此处端口不是客户端的服务端口，是客户端的socket进程端口
-        Log.error(tag, "client 出现错误 $ip $port $e, localPort: ${client.localPort}");
-        final keys = _devSockets.keys;
-        for (var id in keys) {
-          var skt = _devSockets[id]!;
-          if (skt.socket.ip == ip) {
-            _onDevDisconnected(id);
-            break;
-          }
-        }
-      },
-      onClientDone: (ip, port, client) {
-        //此处端口不是客户端的服务端口，是客户端的socket进程端口
-        Log.error(tag, "client done $ip $port, localPort: ${client.localPort}");
-        final keys = _devSockets.keys;
-        for (var id in keys) {
-          var skt = _devSockets[id]!;
-          Log.error(
-            tag,
-            "client done skt ${skt.socket.ip} ${skt.socket.port}",
-          );
-          if (skt.socket.ip == ip) {
-            _onDevDisconnected(id);
-            break;
-          }
-        }
-      },
-      onDone: () {
-        Log.debug(tag, "服务端连接关闭");
-        final keys = _devSockets.keys;
-        for (var id in keys) {
-          _onDevDisconnected(id);
-        }
-      },
-      cancelOnError: false,
-    );
-    Log.debug(
-      tag,
-      '服务端已启动，监听所有网络接口 ${_server.ip} ${_server.port}',
-    );
-  }
-  ///连接中转服务器
-  Future<void> connectForwardServer([bool startDiscovery = false]) async {
-    if (_forwardClient != null) {
-      await disConnectForwardServer();
+    _discovering = true;
+    Log.debug(tag, "开始发现设备");
+    for (var listener in _discoverListeners) {
+      listener.onDiscoverStart();
     }
-    _autoConnForwardServer = true;
+
+    ///设备发现停止
+    onDiscoveryStopped() {
+      //设备发现流程结束
+      appConfig.deviceDiscoveryStatus.value = null;
+      if (!_discoveryTokenSource.token.isCanceled) {
+        _discoveryTokenSource.cancel();
+      }
+      _discovering = false;
+      for (var listener in _discoverListeners) {
+        listener.onDiscoverFinished();
+      }
+    }
+
+    //更新设备发现控制令牌
+    _discoveryTokenSource = CancelTokenSource();
+
+    //重新更新广播监听
+    try {
+      if (!appConfig.onlyForwardMode) {
+        await _startListenMulticast();
+      }
+    } catch (err, stack) {
+      Log.error(tag, "error: $err, $stack");
+    }
+
+    //todo 尝试连接中转服务器
+
+    final token = _discoveryTokenSource.token;
+    //发现已配对设备
+    if (token.isCanceled) {
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
+    Log.debug(tag, appConfig.deviceDiscoveryStatus.value);
+    final List<VoidFutureFunction> pairedDiscoveryTasks = appConfig.onlyForwardMode ? [] : await _pairedDiscovering();
+    await ParallelTask(tasks: pairedDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+
+    //广播发现
+    if (token.isCanceled) {
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
+    Log.debug(tag, appConfig.deviceDiscoveryStatus.value);
+    final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile && PlatformExt.isMobile;
+    final List<VoidFutureFunction> multicastDiscoveryTasks = isMobileNetwork ? [] : _multicastDiscovering();
+    await ParallelTask(tasks: multicastDiscoveryTasks, maxParallelCnt: 1, token: token).run();
+
+    //子网扫描
+    if (token.isCanceled) {
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
+    Log.debug(tag, appConfig.deviceDiscoveryStatus.value);
+    final List<VoidFutureFunction> subnetDiscoveryTasks = isMobileNetwork || appConfig.onlyForwardMode ? [] : await _subNetDiscovering(manual);
+    await ParallelTask(tasks: subnetDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+
+    //中转发现
+    if (token.isCanceled) {
+      onDiscoveryStopped();
+      return;
+    }
+    appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
+    Log.debug(tag, appConfig.deviceDiscoveryStatus.value);
+    final List<VoidFutureFunction> forwardDiscoveryTasks = await _forwardDiscovering();
+    await ParallelTask(tasks: forwardDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
+    onDiscoveryStopped();
+  }
+
+  ///停止设备发现
+  Future<void> stopDiscoveryDevices([bool restart = false]) async {
+    appConfig.deviceDiscoveryStatus.value = null;
+    final isCanceled = _discoveryTokenSource.token.isCanceled;
+    if (!isCanceled) {
+      _discoveryTokenSource.cancel();
+      Log.debug(tag, "已停止发现设备");
+    }
+    _discovering = false;
+    if (!restart) {
+      for (var listener in _discoverListeners) {
+        listener.onDiscoverFinished();
+      }
+    }
+  }
+
+  ///重新开始设备发现
+  Future<void> restartDiscoveryDevices() async {
+    await stopDiscoveryDevices(true);
+    await startDiscoveryDevices();
+  }
+
+  ///发现已连接设备
+  List<VoidFutureFunction> _pairedDiscovering() {
+    return [];
+  }
+
+  ///广播发现
+  List<VoidFutureFunction> _multicastDiscovering() {
+    List<VoidFutureFunction> tasks = [];
+    for (var ms in const [100, 500, 2000, 5000]) {
+      tasks.add(
+        () => Future.delayed(ms.ms, () {
+          // 广播本机socket信息
+          Map<String, dynamic> map = {"port": _server.port};
+          sendMulticastMsg(MsgType.broadcastInfo, map);
+        }),
+      );
+    }
+    return tasks;
+  }
+
+  ///发现子网设备
+  ///[manual] 是否是手动执行设备发现
+  Future<List<VoidFutureFunction>> _subNetDiscovering(bool manual) async {
+    List<VoidFutureFunction> tasks = [];
+    //自动设备发现但是设置了仅手动触发
+    if (!manual && appConfig.onlyManualDiscoverySubNet) {
+      return tasks;
+    }
+    var interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
+    var expendAddress = interfaces.map((itf) => itf.addresses).expand((ip) => ip);
+    var ips = expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
+    for (var ip in ips) {
+      //生成所有 ip
+      final ipList = List.generate(255, (i) => '${ip.split('.').take(3).join('.')}.$i').where((genIp) => genIp != ip).toList();
+      //对每个ip尝试连接
+      for (var genIp in ipList) {
+        tasks.add(() async {
+          try {
+            await _connect(endPoint: EndPoint(genIp, appConfig.port), isDirect: true);
+          } catch (_) {}
+        });
+      }
+    }
+    return tasks;
+  }
+
+  ///中转发现
+  Future<List<VoidFutureFunction>> _forwardDiscovering() async {
+    return [];
+  }
+
+  ///endregion
+
+  ///设备连接
+  Future<void> _runDeviceConnectTask() async {
+    await for (final endpoint in pendingConnectionQueue.stream) {
+      try {
+        final devInfo = endpoint.devInfo;
+        final devId = devInfo.guid;
+        final host = endpoint.host;
+        final port = endpoint.port;
+        final devSkt = _devSockets[devId];
+        if (devSkt != null && !devSkt.closed) {
+          //如果已经连接，进行测试连接有效性，若连接有响应则忽略
+          final isValid = await devSkt.testOnline();
+          if (isValid) {
+            continue;
+          }
+          //连接无效，先移除再关闭连接避免重复触发 onDone
+          _devSockets.remove(devId);
+          await devSkt.close();
+          //通知观察者设备连接断开
+          _notifyDeviceDisconnected(devSkt);
+        }
+        final endpointIsValid = await _testEndPointConnection(endpoint);
+        if (!endpointIsValid) {
+          continue;
+        }
+        //正式连接设备
+        final endPoint = EndPoint(host, port);
+        try {
+          await _connect(endPoint: endPoint, isDirect: true);
+        } catch (err, stack) {
+          Log.error(tag, "error = $err, endPoint = $endPoint", stack);
+          continue;
+        }
+      } catch (err, stack) {
+        Log.error(tag, "error:$err, endpoint:$endpoint", stack);
+      }
+    }
+  }
+
+  ///测试端点连通性
+  Future<bool> _testEndPointConnection(EndPoint endpoint) async {
+    Socket? socket;
+    try {
+      socket = await Socket.connect(endpoint.host, endpoint.port, timeout: 2.s);
+      await socket.close();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      socket?.destroy();
+    }
+  }
+
+  ///加密连接
+  Future<void> _connect({
+    required bool isDirect,
+    EndPoint? endPoint,
+    Socket? socket,
+    String? targetDevId,
+  }) async {
+    SecureSocketClient client;
+    if (endPoint == null && socket == null) {
+      throw ArgumentError('Either endPoint or socket must be provided, but both are null.');
+    }
+    if (endPoint != null && socket != null) {
+      throw ArgumentError('Only one of endPoint or socket can be provided, but both were given.');
+    }
+    if (endPoint != null) {
+      client = await SecureSocketClient.createFromEndPoint(
+        endPoint: endPoint,
+        onMessage: _onMessage,
+        onDone: _onDone,
+        onError: _onError,
+        onDeviceForget: _onForgetDevMessage,
+        connectionMode: isDirect ? ConnectionMode.direct : ConnectionMode.forward,
+        selfDevId: appConfig.devInfo.guid,
+        targetDevId: targetDevId,
+        timeout: 2.s,
+      );
+    } else if (socket != null) {
+      client = await SecureSocketClient.createFromSocket(
+        socket: socket,
+        onMessage: _onMessage,
+        onDone: _onDone,
+        onError: _onError,
+        onDeviceForget: _onForgetDevMessage,
+        connectionMode: isDirect ? ConnectionMode.direct : ConnectionMode.forward,
+        selfDevId: appConfig.devInfo.guid,
+        targetDevId: targetDevId,
+        timeout: 2.s,
+      );
+    } else {
+      throw '';
+    }
+    await _onClientConnected(client);
+  }
+
+  //连接中转服务器
+  Future<void> connectForwardServer() async {
+    if (!(_forwardClient?.closed ?? true)) {
+      //已经连接且未关闭，无需重连
+      return;
+    }
+    final forwardConfig = appConfig.forwardServer;
+    if (forwardConfig == null) {
+      return;
+    }
     if (appConfig.forwardWay != ForwardWay.server) {
-      Log.debug(tag, "connectForwardServer forward way is ${appConfig.forwardWay.name}");
       return;
     }
-    //屏幕关闭且 设置了自动断连 且 定时器已到期 则不连接
-    if (!screenOpened && appConfig.autoCloseConnAfterScreenOff && autoCloseConnTimer == null) {
-      return;
-    }
-    if (!appConfig.enableForward) return;
-    if (forwardServerHost == null || forwardServerPort == null) return;
-    if (_forwardClient != null) return;
-    _updateForwardConnectingStatus();
     try {
       _forwardClient = await ForwardSocketClient.connect(
-        ip: forwardServerHost!,
-        port: forwardServerPort!,
-        onMessage: (self, data) {
-          Log.debug(tag, "forwardClient onMessage $data");
-          _onForwardServerReceived(jsonDecode(data));
-        },
-        onDone: (self) {
-          _forwardClient = null;
-          _updateForwardDisConnectedStatus();
-          appConfig.forwardServerVersion.value = '';
-          Log.debug(tag, "forwardClient done $_autoConnForwardServer");
-          if (_autoConnForwardServer) {
-            Log.debug(tag, "尝试重连中转");
-            Future.delayed(
-              1000.ms,
-              () => connectForwardServer(true),
-            );
-          }
-        },
-        onError: (ex, self) {
-          Log.debug(tag, "forwardClient onError $ex");
-        },
-        onConnected: (self) async {
-          _autoConnForwardServer = true;
-          Log.debug(tag, "forwardClient onConnected");
-          _updateForwardConnectedStatus();
-          //中转服务器连接成功后发送本机信息
-          final connData = ForwardSocketClient.baseMsg
-            ..addAll({
-              "connType": ForwardConnType.base.name,
-            });
-          final key = appConfig.forwardServer?.key;
-          if (key != null) {
-            connData["key"] = key;
-          }
-          await self.send(connData);
-          if (startDiscovery) {
-            Future.delayed(1.s, () async {
-              final list = await _forwardDiscovering();
-              //发现中转设备
-              await ParallelTask(tasks: list, maxParallelCnt: maxParallelCnt).run();
-            });
-          }
-        },
+        key: appConfig.forwardServer?.key,
+        endPoint: EndPoint(forwardConfig.host, forwardConfig.port),
+        onMessage: _onForwardClientMessage,
+        onError: _onForwardClientError,
+        onDone: _onForwardClientDone,
       );
-    } catch (e) {
-      _updateForwardDisConnectedStatus();
-      if(appConfig.currentNetWorkType.value != ConnectivityResult.none){
-        Log.debug(tag, "connect forward server failed _autoConnForwardServer = $_autoConnForwardServer, error: $e");
-      }
-      if (_autoConnForwardServer) {
-        Log.debug(tag, "尝试重连中转");
-        Future.delayed(
-          1000.ms,
-          () => connectForwardServer(true),
-        );
-      }
+      final version = _forwardClient?.serverInfo?.version ?? "";
+      appConfig.forwardServerVersion.value = version;
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
     }
   }
 
-  ///断开中转服务器
-  Future<void> disConnectForwardServer() async {
-    if (_forwardClient == null) {
+  ///重连设备
+  Future<void> _reconnect(String devId) async {
+    if (_reconnectingDevIds.contains(devId)) {
+      Log.warn(tag, "Device $devId is reconnecting");
       return;
     }
-    Log.debug(tag, "disConnectForwardServer");
-    final client = _forwardClient;
-    _forwardClient = null;
-    await client?.close();
-    _updateForwardDisConnectedStatus();
-    _disconnectForwardSockets();
-  }
-
-  void disableForwardServerAutoConn(){
-    _autoConnForwardServer = false;
-  }
-
-
-  //region Update server status
-  void _updateForwardConnectingStatus() {
-    for (var listener in _forwardStatusListener) {
-      listener.onForwardServerConnecting();
+    final device = await dbService.deviceDao.getById(devId, appConfig.userId);
+    if (device == null) {
+      Log.warn(tag, "Device $devId not found in db");
+      return;
     }
-  }
+    final devInfo = DevInfo.fromDevice(device);
+    var endTime = DateTime.now().add(const Duration(minutes: 3));
+    final internalAddress = device.internalAddress;
+    //三分钟内持续尝试
+    while (DateTime.now().isBefore(endTime)) {
+      final skt = _devSockets[devId];
+      if (skt != null && !skt.closed) {
+        Log.debug(tag, "重连成功 ${device.name}(${skt.host}:${skt.port})");
+        //已经成功连接，停止重连
+        _reconnectingDevIds.remove(devId);
+        return;
+      }
+      Log.debug(tag, "尝试重连 ${device.name}");
+      try {
+        Log.debug(tag, "${device.name} internalAddress = $internalAddress");
+        var internalAvailable = false;
 
-  void _updateForwardConnectedStatus() {
-    for (var listener in _forwardStatusListener) {
-      listener.onForwardServerConnected();
-    }
-  }
+        //region 尝试内网重连
 
-  void _updateForwardDisConnectedStatus() {
-    for (var listener in _forwardStatusListener) {
-      listener.onForwardServerDisconnected();
-    }
-  }
-
-  //endregion
-
-  ///断开所有通过中转服务器的连接
-  Future<void> _disconnectForwardSockets() async {
-    final keys = _devSockets.keys.toList();
-    for (var devId in keys) {
-      var skt = _devSockets[devId];
-      if (skt == null || !skt.socket.isForwardMode) continue;
-      await skt.socket.close();
-      _onDevDisconnected(devId, autoReconnect: false);
-    }
-  }
-
-  Future<void> _onForwardServerReceived(Map<String, dynamic> data) async {
-    final type = ForwardMsgType.getValue(data["type"]);
-    switch (type) {
-      case ForwardMsgType.fileSyncNotAllowed:
-        Global.showTipsDialog(
-          context: Get.context!,
-          text: TranslationKey.forwardServerNotAllowedSendFile.tr,
-          title: TranslationKey.sendFailed.tr,
-        );
-        break;
-      case ForwardMsgType.check:
-        void disableForwardServerAfterDelay() {
-          Future.delayed(500.ms, () {
-            if (_forwardClient != null) return;
-            appConfig.setEnableForward(false);
-          });
-        }
-        if (!data.containsKey("result")) {
-          Global.showTipsDialog(
-            context: Get.context!,
-            text: "${TranslationKey.forwardServerUnknownResult.tr}:\n ${data.toString()}",
-            title: TranslationKey.forwardServerConnectFailed.tr,
-          );
-          disableForwardServerAfterDelay();
-          return;
-        }
-        final result = data["result"];
-        if (result == "success") {
-
-          Future.delayed(2.s,() async {
-            final settingController = Get.find<SettingsController>();
-          });
-
-          final version = data["version"]?.toString();
-          appConfig.forwardServerVersion.value = version ?? "";
-          if (ForwardSocketClient.lessThan114(version)) {
-            final dialog = await Global.showTipsDialog(
-              context: Get.context!,
-              text: TranslationKey.forwardServer114VersionTip.tr,
-            );
-            if (dialog != null) {
-              NotifyUtil.notify(
-                content: TranslationKey.forwardServer114VersionTip.tr,
-                key: TranslationKey.forwardServer114VersionTip.name,
-              );
-            }
+        if (internalAddress != null) {
+          final [ip, portStr] = internalAddress.split(":");
+          Socket? skt;
+          try {
+            //先尝试连接内网地址
+            final port = portStr.toInt();
+            skt = await Socket.connect(ip, port, timeout: 2.s);
+            internalAvailable = true;
+            skt.close();
+            skt.destroy();
+            //加入连接队列
+            pendingConnectionQueue.add(DeviceEndPoint(devInfo, ip, port));
+          } finally {
+            skt?.destroy();
           }
-          return;
         }
-        disableForwardServerAfterDelay();
-        Global.showTipsDialog(
-          context: Get.context!,
-          text: result,
-          title: TranslationKey.forwardServerConnectFailed.tr,
-        );
-        break;
-      case ForwardMsgType.requestConnect:
-        final targetId = data["sender"];
-        manualConnectByForward(targetId);
-        break;
-      case ForwardMsgType.version:
-        final version = data["version"]?.toString();
-        appConfig.forwardServerVersion.value = version ?? "";
-        break;
-      case ForwardMsgType.sendFile:
-        final targetId = data["sender"];
-        final size = data["size"].toString().toInt();
-        final fileName = data["fileName"];
-        final fileId = data["fileId"].toString().toInt();
-        final userId = data["userId"].toString().toInt();
-        //连接中转接收文件
-        try {
-          await FileSyncHandler.receiveFile(
-            isForward: true,
-            ip: forwardServerHost!,
-            port: forwardServerPort!,
-            size: size,
-            fileName: fileName,
-            devId: targetId,
-            userId: userId,
-            fileId: fileId,
-            context: Get.context!,
-            targetId: targetId,
-          );
-        } catch (err, stack) {
-          Log.debug(
-            tag,
-            "receive file failed from forward"
-            "$err $stack",
-          );
-        }
-        break;
-      case ForwardMsgType.fileReceiverConnected:
-        //接收方已连接，开始发送
-        final fileId = data["fileId"].toString().toInt();
-        if (_forwardFiles.containsKey(fileId)) {
-          _forwardFiles[fileId]!.onForwardReceiverConnected();
-        } else {
-          Log.warn(tag, "fileReceiverConnected but not fileId in waiting list");
-        }
-        break;
-      default:
+
+        //endregion
+
+        //region 尝试中转重连
+
+        if (!internalAvailable) {}
+
+        //todo
+
+        //endregion
+      } catch (err) {
+        Log.warn(tag, "attempt reconnect error: $err");
+      }
+
+      //延迟3s
+      await Future.delayed(3.s);
+    }
+    Log.debug(tag, "重连失败 ${device.name}(${device.guid})");
+  }
+
+  ///客户端连接成功建立
+  Future<void> _onClientConnected(SecureSocketClient client) async {
+    final dev = client.devInfo;
+    final oldClient = _devSockets[dev.guid];
+    //检查在线状态
+    final isOnline = await oldClient?.testOnline() ?? false;
+    if (isOnline) {
+      //如果旧连接仍然在线，终止当前连接
+      await client.close();
+      return;
+    }
+    //不在线则强制关闭旧连接
+    _devSockets.remove(dev.guid);
+    await oldClient?.close();
+    //将当前连接添加到本地缓存
+    _devSockets[dev.guid] = client;
+    TransportProtocol protocol = TransportProtocol.direct;
+    if (client.isForwardMode) {
+      protocol = TransportProtocol.server;
+    }
+    //添加到注册服务
+    _registry.addDevice(client.devInfo, protocol);
+    //通知观察者设备连接成功
+    _notifyDeviceConnected(client, protocol);
+  }
+
+  Future<void> _onDone(SecureSocketClient client) async {
+    final devId = client.devInfo.guid;
+    final cachedClient = _devSockets[devId];
+    if (!identical(cachedClient, client)) {
+      //当前连接与缓存的不一致则直接结束
+      Log.debug(tag, "_onDone cachedClient(${cachedClient?.hashCode}) != closed client(${client.hashCode})");
+      return;
+    }
+    _devSockets.remove(devId);
+    //再次手动关闭，否则可能在某些特殊环境下出现 TIME_WAIT 导致端口不释放
+    await client.close();
+    final isClosedByUser = client.isClosedByUser;
+    //从注册服务移除
+    _registry.removeDevice(devId);
+    //通知观察者设备连接断开
+    _notifyDeviceDisconnected(client);
+    if (!isClosedByUser) {
+      //非主动关闭，进入重试
+      _reconnect(devId);
     }
   }
 
-  ///socket 监听消息处理
-  Future<void> _onSocketReceived(
-    SecureSocketClient client,
-    MessageData msg,
+  void _onError(SecureSocketClient client, Object e, StackTrace trace) {
+    Log.error(tag, "client error: $e, devName = ${client.devInfo.name}", trace);
+  }
+
+  ///忘记设备
+  void _onForgetDevMessage(SecureSocketClient client) {
+    final dev = client.devInfo;
+    Log.debug(tag, "${dev.name} forget");
+    for (var listener in _devAliveListeners) {
+      try {
+        listener.onForget(dev, 0);
+      } catch (e, t) {
+        Log.debug(tag, "$e $t");
+      }
+    }
+  }
+
+  ///通知观察者设备配对成功
+  void _notifyDevicePaired(SecureSocketClient client, bool paired) {
+    final address = "${client.host}:${client.port}";
+    for (var listener in _devAliveListeners) {
+      try {
+        listener.onPaired(client.devInfo, 0, paired, address);
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+  }
+
+  ///通知观察者设备取消配对
+  void _notifyDeviceCancelPairing(SecureSocketClient client) {
+    for (var listener in _devAliveListeners) {
+      try {
+        listener.onCancelPairing(client.devInfo);
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+  }
+
+  ///通知观察者设备连接成功
+  void _notifyDeviceConnected(SecureSocketClient client, TransportProtocol protocol) {
+    for (var listener in _devAliveListeners) {
+      try {
+        listener.onConnected(client.devInfo, client.minVersion, client.version, protocol);
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+  }
+
+  ///通知观察者设备连接断开
+  void _notifyDeviceDisconnected(SecureSocketClient client) {
+    for (var listener in _devAliveListeners) {
+      try {
+        listener.onDisconnected(client.devInfo.guid);
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
+    }
+  }
+
+  ///region 消息接收与处理
+
+  ///region 中转连接处理
+
+  ///中转连接收到消息
+  Future<void> _onForwardClientMessage(
+    ForwardSocketClient self,
+    ForwardMsgType msgType,
+    Map<String, dynamic> data,
   ) async {
-    DevInfo dev = msg.send;
-    Log.debug(tag, "${dev.name} ${msg.key}");
-    var address = ipSetTemp.firstWhereOrNull((ip) => ip.split(":")[0] == client.ip);
-    switch (msg.key) {
-      case MsgType.ping:
-        var skt = _devSockets[dev.guid];
-        if (_devSockets.containsKey(dev.guid)) {
-          skt!.updatePingTime();
-          if (msg.data.containsKey("result")) {
-            dev.sendData(MsgType.pingResult, {}, false);
-          }
-        }
-        break;
+    return switch (msgType) {
+      ForwardMsgType.fileSyncNotAllowed => _onForwardMessageFileSyncNotAllowed(self, data),
+      ForwardMsgType.requestConnect => _onForwardMessageRequestConnect(self, data),
+      ForwardMsgType.sendFile => _onForwardMessageSendFile(self, data),
+      ForwardMsgType.fileReceiverConnected => _onForwardMessageFileReceiverConnected(self, data),
+      _ => throw UnimplementedError(),
+    };
+  }
 
-      case MsgType.pingResult:
-        var skt = _devSockets[dev.guid];
-        if (_devSockets.containsKey(dev.guid)) {
-          skt!.updatePingTime();
-        }
-        break;
+  ///region 中转连接消息处理
 
-      ///客户端连接
-      case MsgType.connect:
-        final isSocket = _registry.getProtocol(dev.guid)?.isSocket ?? true;
-        if (!isSocket) {
-          Log.warn(tag, "已通过其他协议连接: ${dev.guid}");
-          return;
-        }
-        assert(() {
-          ///忽略指定设备的连接
-          if (dev.guid == "1f480ae18e8f79af8c78b304c1c9be3d") {
-            client.close();
-          }
-          return true;
-        }());
-        var device = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
-        var isPaired = device != null && device.isPaired;
-        //未配对且不允许被发现，关闭链接
-        if (!appConfig.allowDiscover && !isPaired) {
-          await client.close();
-          return;
-        }
-        //设备是自身
-        if (dev.guid == appConfig.device.guid) {
-          await client.close();
-          return;
-        }
-        if (_devSockets.containsKey(dev.guid)) {
-          //已经链接，跳过
-          break;
-        }
-        //本地是否已配对
-        var localDevice = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
-        var localIsPaired = localDevice?.isPaired ?? false;
-        var pairedStatusData = MessageData(
-          userId: appConfig.userId,
-          send: appConfig.devInfo,
-          key: MsgType.pairedStatus,
-          data: {
-            "isPaired": localIsPaired,
-            "minVersionName": appConfig.minVersion.name,
-            "minVersionCode": appConfig.minVersion.code,
-            "versionName": appConfig.version.name,
-            "versionCode": appConfig.version.code,
-          },
-        );
-        //告诉客户端配对状态
-        client.send(pairedStatusData.toJson());
-        break;
+  ///中转不允许文件发送
+  Future<void> _onForwardMessageFileSyncNotAllowed(
+    ForwardSocketClient self,
+    Map<String, dynamic> data,
+  ) async {
+    Global.showTipsDialog(
+      context: Get.context!,
+      text: TranslationKey.forwardServerNotAllowedSendFile.tr,
+      title: TranslationKey.sendFailed.tr,
+    );
+  }
 
-      case MsgType.pairedStatus:
-        _makeSurePaired(client, dev, msg);
-        break;
+  ///中转连接检测
+  Future<void> _onForwardMessageCheck(
+    ForwardSocketClient self,
+    Map<String, dynamic> data,
+  ) async {
+    //todo
+    void disableForwardServerAfterDelay() {
+      Future.delayed(500.ms, () {
+        if (_forwardClient != null) return;
+        appConfig.setEnableForward(false);
+      });
+    }
 
-      ///主动断开连接
-      case MsgType.disConnect:
-        _onDevDisconnected(dev.guid, autoReconnect: false);
-        await client.close();
-        break;
-
-      ///忘记设备
-      case MsgType.forgetDev:
-        onDevForget(dev, appConfig.userId);
-        break;
-
-      ///单条数据同步
-      case MsgType.ackSync:
-      case MsgType.sync:
-        _onSyncMsg(msg);
-        break;
-
-      ///批量数据同步
-      case MsgType.missingData:
-        var copyMsg = MessageData.fromJson(msg.toJson());
-        var data = msg.data["data"] as Map<dynamic, dynamic>;
-        copyMsg.data = data.cast<String, dynamic>();
-        final total = msg.data["total"];
-        int seq = msg.data["seq"];
-        final syncProgressService = Get.find<HistorySyncProgressService>();
-        syncProgressService.addProgress(copyMsg.send.guid, copyMsg.data, seq, total, false);
-        _onSyncMsg(copyMsg);
-        break;
-
-      ///请求批量同步
-      case MsgType.reqMissingData:
-        var syncedAppIds = ((msg.data["appIds"] ?? []) as List<dynamic>).cast<String>();
-        MissingDataSyncHandler.sendMissingData(dev, appConfig.device.guid, syncedAppIds);
-        break;
-      case MsgType.reqAppInfo:
-        final appId = msg.data["appId"];
-        final sourceService = Get.find<ClipboardSourceService>();
-        final appInfo = sourceService.appInfos.firstWhereOrNull((item) => item.devId == appConfig.device.guid && appId == item.appId);
-        if (appInfo == null) {
-          break;
-        }
-        dev.sendData(MsgType.appInfo, appInfo.toJson());
-        break;
-      case MsgType.appInfo:
-        final appInfo = AppInfo.fromJson(msg.data);
-        final sourceService = Get.find<ClipboardSourceService>();
-        sourceService.addOrUpdate(appInfo);
-        break;
-
-      ///请求配对我方，生成四位配对码
-      case MsgType.reqPairing:
-        final random = Random();
-        int code = 100000 + random.nextInt(900000);
-        DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
-        //发送通知
-        _pairingNotifyId = await NotifyUtil.notify(
-          content: "${TranslationKey.newParingRequest.tr}: $code",
-          key: "dev-pairing-${dev.guid}",
-        );
-        if (_pairing) {
-          Get.back();
-        }
-        _pairing = true;
-        showDialog(
+    if (!data.containsKey("result")) {
+      Global.showTipsDialog(
+        context: Get.context!,
+        text: "${TranslationKey.forwardServerUnknownResult.tr}:\n ${data.toString()}",
+        title: TranslationKey.forwardServerConnectFailed.tr,
+      );
+      disableForwardServerAfterDelay();
+      return;
+    }
+    final result = data["result"];
+    if (result == "success") {
+      final version = data["version"]?.toString();
+      appConfig.forwardServerVersion.value = version ?? "";
+      if (ForwardSocketClient.lessThan114(version)) {
+        final dialog = await Global.showTipsDialog(
           context: Get.context!,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Text(TranslationKey.paringRequest.tr),
-              content: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(TranslationKey.pairingCodeDialogContent.trParams({"devName": dev.name})),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      code.toString().split("").join("  "),
-                      style: const TextStyle(fontSize: 30),
-                    ),
-                  ],
-                ),
-              ),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    cancelPairing(dev);
-                  },
-                  child: Text(TranslationKey.cancelCurrentPairing.tr),
-                ),
-              ],
-            );
-          },
+          text: TranslationKey.forwardServer114VersionTip.tr,
         );
-        break;
-
-      ///请求配对我方，验证配对码
-      case MsgType.pairing:
-        String code = msg.data["code"];
-        //验证配对码
-        var verify = DevPairingHandler.verify(dev.guid, code);
-        _onDevPaired(dev, msg.userId, verify, address);
-        //返回配对结果
-        dev.sendData(MsgType.paired, {"result": verify}, false);
-        ipSetTemp.removeWhere((v) {
-          return v == address;
-        });
-        break;
-
-      ///获取配对结果
-      case MsgType.paired:
-        bool result = msg.data["result"];
-        _onDevPaired(dev, msg.userId, result, address);
-        ipSetTemp.removeWhere((v) => v == address);
-        if (_pairing = true) {
-          Get.back();
-          _pairing = false;
-        }
-        break;
-
-      ///取消配对
-      case MsgType.cancelPairing:
-        DevPairingHandler.removeCode(dev.guid);
-        if (_pairing) {
-          Get.back();
-        }
-        _onCancelPairing(dev);
-        break;
-
-      ///文件同步
-      case MsgType.file:
-        String ip = client.ip;
-        int port = msg.data["port"];
-        int size = msg.data["size"];
-        String fileName = msg.data["fileName"];
-        int fileId = msg.data["fileId"];
-        try {
-          await FileSyncHandler.receiveFile(
-            ip: ip,
-            port: port,
-            size: size,
-            fileName: fileName,
-            devId: msg.send.guid,
-            userId: msg.userId,
-            fileId: fileId,
-            context: Get.context!,
-          );
-        } catch (err, stack) {
-          Log.debug(
-            tag,
-            "receive file failed. ip:$ip, port: $port, size: $size, fileName: $fileName. "
-            "$err $stack",
+        if (dialog != null) {
+          NotifyUtil.notify(
+            content: TranslationKey.forwardServer114VersionTip.tr,
+            key: TranslationKey.forwardServer114VersionTip.name,
           );
         }
-        break;
-      default:
+      }
+      return;
     }
+    disableForwardServerAfterDelay();
+    Global.showTipsDialog(
+      context: Get.context!,
+      text: result,
+      title: TranslationKey.forwardServerConnectFailed.tr,
+    );
   }
 
-  void cancelPairing(DevInfo dev) {
-    if (!_pairing) return;
-    DevPairingHandler.removeCode(dev.guid);
-    Get.back();
-    dev.sendData(MsgType.cancelPairing, {}, false);
-    if (_pairingNotifyId != null) {
-      NotifyUtil.cancel("dev-pairing-${dev.guid}", _pairingNotifyId!);
-    }
-    _pairing = false;
-    _pairingNotifyId = null;
+  ///中转设备请求连接
+  Future<void> _onForwardMessageRequestConnect(
+    ForwardSocketClient self,
+    Map<String, dynamic> data,
+  ) async {}
+
+  ///中转文件发送
+  Future<void> _onForwardMessageSendFile(
+    ForwardSocketClient self,
+    Map<String, dynamic> data,
+  ) async {}
+
+  ///中转文件接收者连接消息
+  Future<void> _onForwardMessageFileReceiverConnected(
+    ForwardSocketClient self,
+    Map<String, dynamic> data,
+  ) async {}
+
+  ///endregion
+
+  ///中转连接关闭
+  Future<void> _onForwardClientDone(ForwardSocketClient self) async {}
+
+  ///中转连接错误
+  Future<void> _onForwardClientError(
+    ForwardSocketClient self,
+    Object error,
+    StackTrace trace,
+  ) async {}
+
+  ///endregion
+
+  ///region 直连连接处理
+
+  ///消息接收
+  Future<void> _onMessage(SecureSocketClient client, MessageData msg) {
+    final sender = msg.send;
+    final key = msg.key;
+    final data = msg.data;
+    Log.debug(tag, "onMessage ${sender.name} $key");
+    return switch (key) {
+      MsgType.sync => _onSyncMessage(client, msg),
+      MsgType.ackSync => _onSyncMessage(client, msg),
+      MsgType.missingData => _onMissingDataMessage(client, msg),
+      MsgType.reqMissingData => _onReqMissingDataMessage(client, sender, data),
+      MsgType.reqAppInfo => _onReqAppInfoMessage(client, sender, data),
+      MsgType.appInfo => _onAppInfoMessage(client, sender, data),
+      MsgType.reqPairing => _onReqPairingMessage(client, sender, data),
+      MsgType.pairing => _onPairingMessage(client, sender, data),
+      MsgType.paired => _onPairedMessage(client, sender, data),
+      MsgType.cancelPairing => _onCancelPairingMessage(client, sender, data),
+      MsgType.file => _onFileMessage(client, sender, data),
+      _ => throw UnimplementedError(),
+    };
   }
 
-  ///数据同步处理
-  void _onSyncMsg(MessageData msg) {
+  ///region 直连消息处理
+
+  ///收到同步消息
+  Future<void> _onSyncMessage(SecureSocketClient client, MessageData msg) async {
     Module module = Module.getValue(msg.data["module"]);
     Log.debug(tag, "module ${module.moduleName}");
     //筛选某个模块的同步处理器
@@ -821,876 +818,252 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     }
   }
 
-  //是否正在设备发现
-  var _discovering = false;
-
-  bool get discovering => _discovering;
-  Timer? _discoveryTimer;
-  final _discoveryLock = Lock();
-
-  ///发现设备
-  void startDiscoveryDevices({
-    bool restart = false,
-    bool scan = true,
-    bool manual = false,
-  }) async {
-    _discoveryLock.synchronized((){
-      _discoveryTimer?.cancel();
-      _discoveryTimer = Timer(500.ms, () async {
-        Log.debug(tag, "进入设备发现逻辑");
-        if (_discovering) {
-          Log.debug(tag, "正在发现设备");
-          return;
-        }
-        if (appConfig.currentNetWorkType.value == ConnectivityResult.none) {
-          Log.debug(tag, "无网络");
-          return;
-        }
-        _discovering = true;
-        for (var listener in _discoverListeners) {
-          listener.onDiscoverStart();
-        }
-        Log.debug(tag, "开始发现设备");
-        onDiscoveryStopped(){
-          //设备发现流程结束
-          appConfig.deviceDiscoveryStatus.value = null;
-          if (!_discoveryTokenSource.token.isCanceled) {
-            _discoveryTokenSource.cancel();
-          }
-          _discovering = false;
-          for (var listener in _discoverListeners) {
-            listener.onDiscoverFinished();
-          }
-        }
-        //更新设备发现控制令牌
-        final cts = _discoveryTokenSource = CancelTokenSource();
-
-        //重新更新广播监听
-        try {
-          if (!appConfig.onlyForwardMode) {
-            await _startListenMulticast();
-          }
-        } catch (err, stack) {
-          Log.error(tag, "error: $e, $stack");
-        }
-        //尝试连接中转服务器
-        if (_forwardClient == null) {
-          await connectForwardServer();
-        }
-
-        //设备发现控制令牌
-        var token = _discoveryTokenSource.token;
-        //发现已配对设备
-        if(token.isCanceled){
-          onDiscoveryStopped();
-          return;
-        }
-        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaPaired.tr;
-        final List<Future<void> Function()> pairedDiscoveryTasks = appConfig.onlyForwardMode ? [] : await _pairedDiscovering();
-        await ParallelTask(tasks: pairedDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
-
-        //广播发现
-        if(token.isCanceled){
-          onDiscoveryStopped();
-          return;
-        }
-        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaBroadcast.tr;
-        final isMobileNetwork = appConfig.currentNetWorkType.value == ConnectivityResult.mobile && PlatformExt.isMobile;
-        final List<Future<void> Function()> multicastDiscoveryTasks = isMobileNetwork || !scan ? [] : _multicastDiscovering();
-        await ParallelTask(tasks: multicastDiscoveryTasks, maxParallelCnt: 1, token: token).run();
-
-        //子网扫描
-        if(token.isCanceled){
-          onDiscoveryStopped();
-          return;
-        }
-        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaScan.tr;
-        final List<Future<void> Function()> subnetDiscoveryTasks = isMobileNetwork || !scan || appConfig.onlyForwardMode ? [] : await _subNetDiscovering(manual);
-        await ParallelTask(tasks: subnetDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
-
-        //中转发现
-        if(token.isCanceled){
-          onDiscoveryStopped();
-          return;
-        }
-        appConfig.deviceDiscoveryStatus.value = TranslationKey.deviceDiscoveryStatusViaForward.tr;
-        final List<Future<void> Function()> forwardDiscoveryTasks = scan ? await _forwardDiscovering() : [];
-        await ParallelTask(tasks: forwardDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
-        onDiscoveryStopped();
-      });
-
-    });
-  }
-
-  ///停止发现设备
-  Future<void> stopDiscoveryDevices([bool restart = false]) async {
-    appConfig.deviceDiscoveryStatus.value = null;
-    Log.debug(tag, "停止发现设备");
-    if (!_discoveryTokenSource.token.isCanceled) {
-      _discoveryTokenSource.cancel();
-    }
-    _discovering = false;
-    if (!restart) {
-      for (var listener in _discoverListeners) {
-        listener.onDiscoverFinished();
-      }
-    }
-  }
-
-  ///重新发现设备
-  Future<void> restartDiscoveryDevices() async {
-    Log.debug(tag, "重新开始发现设备");
-    await stopDiscoveryDevices(true);
-    startDiscoveryDevices(restart: true);
-  }
-
-  ///组播发现设备
-  List<Future<void> Function()> _multicastDiscovering() {
-    List<Future<void> Function()> tasks = List.empty(growable: true);
-    for (var ms in const [100, 500, 2000, 5000]) {
-      f() {
-        return Future.delayed(ms.ms, () {
-          // 广播本机socket信息
-          Map<String, dynamic> map = {"port": _server.port};
-          sendMulticastMsg(MsgType.broadcastInfo, map);
-        });
-      }
-
-      tasks.add(() => f());
-    }
-    return tasks;
-  }
-
-  ///发现子网设备
-  Future<List<Future<void> Function()>> _subNetDiscovering(bool manual) async {
-    List<Future<void> Function()> tasks = List.empty(growable: true);
-    //自动设备发现但是设置了仅手动触发
-    if (!manual && appConfig.onlyManualDiscoverySubNet) {
-      return tasks;
-    }
-    var interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
-    var expendAddress = interfaces.map((itf) => itf.addresses).expand((ip) => ip);
-    var ips = expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
-    for (var ip in ips) {
-      //生成所有 ip
-      final ipList = List.generate(255, (i) => '${ip.split('.').take(3).join('.')}.$i').where((genIp) => genIp != ip).toList();
-      //对每个ip尝试连接
-      for (var genIp in ipList) {
-        tasks.add(() => manualConnect(genIp));
-      }
-    }
-    return tasks;
-  }
-
-  ///发现已配对设备
-  Future<List<Future<void> Function()>> _pairedDiscovering() async {
-    List<Future<void> Function()> tasks = List.empty(growable: true);
-    var devices = await dbService.deviceDao.getAllDevices(appConfig.userId);
-    //先内网地址直连，若失败则尝试中转
-    for (var dev in devices) {
-      //已经连接，跳过
-      if(_devSockets.containsKey(dev.guid)){
-        continue;
-      }
-      if(dev.internalAddress != null){
-        //内网地址不为空，尝试直连
-        var [ip, port] = dev.internalAddress!.split(":");
-        tasks.add(() async {
-          try{
-            final result = await manualConnect(ip, port: int.parse(port));
-            if(!result){
-              //直连失败，尝试中转
-              if (forwardServerHost.isNotNullAndEmpty){
-                await manualConnectByForward(dev.guid);
-              }
-            }
-          }catch(err,stack){
-            Log.error(tag, err, stack);
-            //直连过程异常，尝试中转
-            if (forwardServerHost.isNotNullAndEmpty){
-              await manualConnectByForward(dev.guid);
-            }
-
-          }
-        });
-      }else{
-        //内网地址为空，尝试中转
-        if (forwardServerHost.isNotNullAndEmpty) {
-          Log.debug(tag, "connect by forward ${dev.name}(${dev.guid})");
-          tasks.add(() => manualConnectByForward(dev.guid));
-        }
-      }
-    }
-    return tasks;
-  }
-
-  ///中转连接
-  Future<List<Future<void> Function()>> _forwardDiscovering() async {
-    List<Future<void> Function()> tasks = List.empty(growable: true);
-    if (_forwardClient == null) return tasks;
-    if (appConfig.forwardWay != ForwardWay.server) {
-      Log.debug(tag, "_forwardDiscovering forward way is ${appConfig.forwardWay.name}");
-      return tasks;
-    }
-    var lst = await dbService.deviceDao.getAllDevices(appConfig.userId);
-    var offlineList = lst.where((dev) => !_devSockets.keys.contains(dev.guid));
-    for (var dev in offlineList) {
-      if (forwardServerHost == null || forwardServerPort == null) continue;
-      tasks.add(() => manualConnectByForward(dev.guid));
-    }
-    return tasks;
-  }
-
-  ///检查是否已经掉线，如果掉线则移除
-  Future<bool> testIsOnline(String devId) async {
-    if (!_devSockets.containsKey(devId)) return false;
-    var skt = _devSockets[devId]!;
-    //发送一个ping事件，但是要求对方给回复
-    await skt.dev.sendData(MsgType.ping, {
-      "result": null,
-    }, false);
-    Log.debug(tag, "testIsOnline: send ping result");
-    //等待2000ms
-    final waitTime = 2000.ms;
-    await Future.delayed(waitTime);
-    Log.debug(tag, "testIsOnline: waitTime finished");
-    //等待过程中已经掉线
-    if (!_devSockets.containsKey(devId)) {
-      Log.debug(tag, "testIsOnline: offline in waitTime");
-      _onDevDisconnected(devId);
-      return false;
-    }
-    skt = _devSockets[devId]!;
-    //检查上次ping的时间是否在误差范围内，如果不在这个范围说明可能已经掉线
-    final online = skt.lastPingTime.isWithinRange(waitTime);
-    final now = DateTime.now();
-    final offsetMs = now.difference(skt.lastPingTime).inMilliseconds;
-    Log.debug(tag, "testIsOnline: isWithinRange online: $online, offset $offsetMs ms");
-    if (!online) {
-      _onDevDisconnected(devId);
-    }
-    return online;
-  }
-
-  ///中转连接设备
-  Future<bool> manualConnectByForward(String devId) async {
-    if (await testIsOnline(devId)) {
-      Log.debug(tag, "dev($devId) online, cancel connect by forward");
-      return false;
-    }
-    Log.debug(tag, "connecting $devId");
-    if (appConfig.forwardWay != ForwardWay.server) {
-      Log.debug(tag, "manualConnectByForward forward way is ${appConfig.forwardWay.name}");
-      return false;
-    }
-    return manualConnect(
-      forwardServerHost!,
-      port: forwardServerPort,
-      forward: true,
-      targetDevId: devId,
-      onErr: (err) {
-        Log.debug(tag, '$devId 中转连接，发生错误:$err');
-        _onDevDisconnected(devId);
-        return false;
-      },
-    );
-  }
-
-  ///手动连接 ip
-  Future<bool> manualConnect(
-    String host, {
-    int? port,
-    Function? onErr,
-    Map<String, dynamic> data = const {},
-    bool forward = false,
-    String? targetDevId,
-  }) async {
-    port = port ?? Constants.port;
-    Socket? testSkt;
-    try {
-      //测试连接是否可用
-      testSkt = await Socket.connect(host, port, timeout: 2.s);
-      testSkt.close();
-      testSkt.destroy();
-    } catch (_) {
-      //地址不可连接
-      return false;
-    }finally{
-      try{
-        testSkt?.destroy();
-      }catch(_){
-        //ignored
-      }
-    }
-    String address = "$host:$port:$targetDevId";
-    if (_connectingAddress.contains(address)) {
-      //已经在连接中，返回true
-      return true;
-    }
-    _connectingAddress.add(address);
-    Future.delayed(5.s, () {
-      _connectingAddress.remove(address);
-    });
-    return SecureSocketClient.connect(
-      ip: host,
-      port: port,
-      prime1: appConfig.prime1,
-      prime2: appConfig.prime2,
-      dhAesKey: appConfig.dhAesKey,
-      targetDevId: forward ? targetDevId : null,
-      selfDevId: forward ? appConfig.device.guid : null,
-      connectionMode: forward ? ConnectionMode.forward : ConnectionMode.direct,
-      onConnected: (SecureSocketClient client) async {
-        //外部终止连接
-        if (data.containsKey('stop') && data['stop'] == true) {
-          await client.close();
-          return;
-        }
-        ipSetTemp.add("$host:$port");
-        //发送本机信息给对方
-        MessageData msg = MessageData(
-          userId: appConfig.userId,
-          send: appConfig.devInfo,
-          key: MsgType.connect,
-          data: data,
-          recv: null,
-        );
-        client.send(msg.toJson());
-      },
-      onMessage: (client, json) {
-        var msg = MessageData.fromJson(json);
-        _onSocketReceived(client, msg);
-      },
-      onDone: (SecureSocketClient client) {
-        Log.debug(tag, "${forward ? '中转' : '内网'}连接关闭, localPort: ${client.localPort}");
-        if (forward) {
-          _onDevDisconnected(targetDevId!);
-        } else {
-          for (var devId in _devSockets.keys.toList()) {
-            var skt = _devSockets[devId]!.socket;
-            if (skt.ip == host && skt.port == port) {
-              _onDevDisconnected(devId);
-            }
-          }
-        }
-      },
-      onError: (error, client) {
-        Log.error(tag, '${forward ? '中转' : '内网'}连接发生错误: $error $host $port, localPort: ${client.localPort}');
-        if (forward) {
-          _onDevDisconnected(targetDevId!);
-        } else {
-          for (var devId in _devSockets.keys.toList()) {
-            var skt = _devSockets[devId]!.socket;
-            if (skt.ip == host && skt.port == port) {
-              _onDevDisconnected(devId);
-            }
-          }
-        }
-      },
-    ).then((v) => true).catchError((err) {
-      onErr?.call(err);
-      return false;
-    });
-  }
-
-  void _makeSurePaired(
+  ///收到请求配对消息
+  Future<void> _onReqPairingMessage(
     SecureSocketClient client,
-    DevInfo dev,
-    MessageData msg,
+    DevInfo sender,
+    Map<String, dynamic> data,
   ) async {
-    //已连接，结束
-    if (_devSockets.containsKey(dev.guid)) {
-      return;
+    final random = Random();
+    int code = 100000 + random.nextInt(900000);
+    DevPairingHandler.addCode(sender.guid, CryptoUtil.toMD5(code));
+    //发送通知
+    final notifyId = await NotifyUtil.notify(
+      content: "${TranslationKey.newParingRequest.tr}: $code",
+      key: "dev-pairing-${sender.guid}",
+    );
+    _pairingNotifyIds[sender.guid] = notifyId;
+    if (_pairingDevIds.contains(sender.guid)) {
+      Get.back();
     }
-    //本地是否存在该设备
-    var localDevice = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
-    bool paired = false;
-    if (localDevice != null) {
-      var localIsPaired = localDevice.isPaired;
-      var remoteIsPaired = msg.data["isPaired"];
-      //双方配对信息一致
-      if (remoteIsPaired && localIsPaired) {
-        paired = true;
-        Log.debug(tag, "${dev.name} has paired");
-      } else {
-        //有一方已取消配对或未配对
-        //忘记设备
-        onDevForget(dev, appConfig.userId);
-        dbService.deviceDao.updateDevice(localDevice..isPaired = false);
-        Log.debug(tag, "${dev.name} not paired");
-      }
+    _pairingDevIds.add(sender.guid);
+    final dialogWidget = AlertDialog(
+      title: Text(TranslationKey.paringRequest.tr),
+      content: IntrinsicHeight(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(TranslationKey.pairingCodeDialogContent.trParams({"devName": sender.name})),
+            const SizedBox(
+              height: 10,
+            ),
+            Text(
+              code.toString().split("").join("  "),
+              style: const TextStyle(fontSize: 30),
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            cancelPairing(sender);
+          },
+          child: Text(TranslationKey.cancelCurrentPairing.tr),
+        ),
+      ],
+    );
+    Global.showDialog(Get.context!, dialogWidget);
+  }
+
+  ///取消配对
+  void cancelPairing(DevInfo dev) {
+    final devId = dev.guid;
+    if (!_pairingDevIds.contains(devId)) return;
+    DevPairingHandler.removeCode(devId);
+    Get.back();
+    dev.sendData(MsgType.cancelPairing, {}, false);
+    final notifyId = _pairingNotifyIds[devId];
+    if (notifyId != null) {
+      NotifyUtil.cancel("dev-pairing-$devId", notifyId);
     }
-    //告诉客户端配对状态
-    var pairedStatusData = MessageData(
+    _pairingDevIds.remove(devId);
+    _pairingNotifyIds.remove(devId);
+  }
+
+  ///收到配对消息
+  Future<void> _onPairingMessage(
+    SecureSocketClient client,
+    DevInfo sender,
+    Map<String, dynamic> data,
+  ) async {
+    String code = data["code"];
+    //验证配对码
+    var verify = DevPairingHandler.verify(sender.guid, code);
+    _notifyDevicePaired(client, verify);
+    //返回配对结果
+    MessageData msg = MessageData(
       userId: appConfig.userId,
       send: appConfig.devInfo,
-      key: MsgType.pairedStatus,
-      data: {
-        "isPaired": paired,
-        "minVersionName": appConfig.minVersion.name,
-        "minVersionCode": appConfig.minVersion.code,
-        "versionName": appConfig.version.name,
-        "versionCode": appConfig.version.code,
-      },
+      key: MsgType.paired,
+      data: {"result": verify},
+      recv: null,
     );
-    client.send(pairedStatusData.toJson());
-    var minName = msg.data["minVersionName"];
-    var minCode = msg.data["minVersionCode"];
-    var versionName = msg.data["versionName"];
-    var versionCode = msg.data["versionCode"];
-    var minVersion = AppVersion(minName, minCode);
-    var version = AppVersion(versionName, versionCode);
-    Log.debug(tag, "minVersion $minVersion version $version");
-    //添加到本地
-    if (_devSockets.containsKey(dev.guid)) {
-      _devSockets[dev.guid]!.isPaired = paired;
-      _devSockets[dev.guid]!.minVersion = minVersion;
-      _devSockets[dev.guid]!.version = version;
-    } else {
-      var ds = DevSocket(
-        dev: dev,
-        socket: client,
-        isPaired: paired,
-        minVersion: minVersion,
-        version: version,
-      );
-      _devSockets[dev.guid] = ds;
-    }
-    await _onDevConnected(dev, client, minVersion, version);
-    if (paired) {
-      //已配对，请求所有缺失数据
-      reqMissingData();
-    }
+    await client.send(msg.toJson());
   }
 
-  ///判断某个设备使用使用中转
-  bool isUseForward(String guid) {
-    if (!_devSockets.containsKey(guid)) return false;
-    return _devSockets[guid]!.socket.isForwardMode;
-  }
-
-  Future<void> reqMissingData([String? devId]) async {
-    final sourceService = Get.find<ClipboardSourceService>();
-    if (devId != null) {
-      final devSkt = _devSockets[devId];
-      if (devSkt == null) {
-        return;
-      }
-      final allAppInfos = sourceService.appInfos;
-      final ownedAppIds = allAppInfos.where((item) => item.devId == devId).map((item) => item.appId).toList();
-      await devSkt.dev.sendData(MsgType.reqMissingData, {
-        "appIds": ownedAppIds,
-      });
-    } else {
-      if (!appConfig.autoSyncMissingData) {
-        return;
-      }
-      final devs = _devSockets.values.where((dev) => dev.isPaired).map(((item) => item.dev)).toList();
-      final allAppInfos = sourceService.appInfos;
-      for (var dev in devs) {
-        final ownedAppIds = allAppInfos.where((item) => item.devId == dev.guid).map((item) => item.appId).toList();
-        await dev.sendData(MsgType.reqMissingData, {
-          "appIds": ownedAppIds,
-        });
-      }
-    }
-  }
-
-  ///设备连接成功
-  Future<void> _onDevConnected(
-    DevInfo dev,
+  ///收到取消配对消息
+  Future<void> _onCancelPairingMessage(
     SecureSocketClient client,
-    AppVersion minVersion,
-    AppVersion version,
+    DevInfo sender,
+    Map<String, dynamic> data,
   ) async {
-    showDevConnectedNotification(dev.guid);
-    final ip = client.ip;
-    final port = client.isForwardMode ? forwardServerPort : client.port;
-
-    //更新连接地址
-    final address = "$ip:$port";
-    if(address.isInternalIPv4){
-      await dbService.deviceDao.updateDeviceInternalAddress(dev.guid, appConfig.userId, address);
+    DevPairingHandler.removeCode(sender.guid);
+    final pairing = _pairingDevIds.contains(sender.guid);
+    if (pairing) {
+      Get.back();
     }
-    await dbService.deviceDao.updateDeviceAddress(dev.guid, appConfig.userId, address);
-    _devSockets[dev.guid]!.updatePingTime();
-    //添加到注册服务
-    _registry.addDevice(dev, client.isForwardMode ? TransportProtocol.server : TransportProtocol.direct);
-    broadcastProcessChain.remove(dev.guid);
-    for (var listener in _devAliveListeners) {
-      try {
-        await listener.onConnected(
-          dev,
-          minVersion,
-          version,
-          client.isForwardMode ? TransportProtocol.server : TransportProtocol.direct,
-        );
-      } catch (e, t) {
-        Log.debug(tag, "$e $t");
-      }
+    Log.debug(tag, "${sender.name} cancelPairing");
+    final notifyId = _pairingNotifyIds[sender.guid];
+    if (notifyId != null) {
+      NotifyUtil.cancel("dev-pairing-${sender.guid}", notifyId);
+    }
+    _pairingDevIds.remove(sender.guid);
+    _pairingNotifyIds.remove(sender.guid);
+    _notifyDeviceCancelPairing(client);
+  }
+
+  ///收到已配对结果
+  Future<void> _onPairedMessage(
+    SecureSocketClient client,
+    DevInfo sender,
+    Map<String, dynamic> data,
+  ) async {
+    bool result = data["result"];
+    final pairing = _pairingDevIds.contains(sender.guid);
+    _pairingDevIds.remove(sender.guid);
+    _pairingNotifyIds.remove(sender.guid);
+    if (pairing) {
+      Get.back();
+    }
+    _notifyDevicePaired(client, result);
+  }
+
+  ///收到请求缺失数据消息
+  Future<void> _onReqMissingDataMessage(
+    SecureSocketClient client,
+    DevInfo sender,
+    Map<String, dynamic> data,
+  ) async {
+    var syncedAppIds = ((data["appIds"] ?? []) as List<dynamic>).cast<String>();
+    MissingDataSyncHandler.sendMissingData(sender, appConfig.device.guid, syncedAppIds);
+  }
+
+  ///收到缺失数据
+  Future<void> _onMissingDataMessage(SecureSocketClient client, MessageData msg) async {
+    var copyMsg = MessageData.fromJson(msg.toJson());
+    var data = msg.data["data"] as Map<dynamic, dynamic>;
+    copyMsg.data = data.cast<String, dynamic>();
+    final total = msg.data["total"];
+    int seq = msg.data["seq"];
+    final syncProgressService = Get.find<HistorySyncProgressService>();
+    syncProgressService.addProgress(copyMsg.send.guid, copyMsg.data, seq, total, false);
+    await _onSyncMessage(client, copyMsg);
+  }
+
+  ///收到请求app信息消息
+  Future<void> _onReqAppInfoMessage(
+    SecureSocketClient client,
+    DevInfo sender,
+    Map<String, dynamic> data,
+  ) async {
+    final appId = data["appId"];
+    final sourceService = Get.find<ClipboardSourceService>();
+    final appInfo = sourceService.appInfos.firstWhereOrNull((item) => item.devId == appConfig.device.guid && appId == item.appId);
+    if (appInfo == null) {
+      return;
+    }
+    MessageData msg = MessageData(
+      userId: appConfig.userId,
+      send: appConfig.devInfo,
+      key: MsgType.appInfo,
+      data: appInfo.toJson(),
+      recv: null,
+    );
+    await client.send(msg.toJson());
+  }
+
+  ///收到app信息
+  Future<void> _onAppInfoMessage(
+    SecureSocketClient client,
+    DevInfo sender,
+    Map<String, dynamic> data,
+  ) async {
+    final appInfo = AppInfo.fromJson(data);
+    final sourceService = Get.find<ClipboardSourceService>();
+    await sourceService.addOrUpdate(appInfo);
+  }
+
+  ///收到文件同步消息
+  Future<void> _onFileMessage(
+    SecureSocketClient client,
+    DevInfo sender,
+    Map<String, dynamic> data,
+  ) async {
+    String ip = client.host;
+    int port = data["port"];
+    int size = data["size"];
+    String fileName = data["fileName"];
+    int fileId = data["fileId"];
+    try {
+      await FileSyncHandler.receiveFile(
+        ip: ip,
+        port: port,
+        size: size,
+        fileName: fileName,
+        devId: sender.guid,
+        userId: 0,
+        fileId: fileId,
+        context: Get.context!,
+      );
+    } catch (err, stack) {
+      Log.debug(
+        tag,
+        "receive file failed. ip:$ip, port: $port, size: $size, fileName: $fileName. "
+        "$err $stack",
+      );
     }
   }
 
-  ///断开所有连接
-  void disConnectAllConnections([bool onlyNotPaired = false]) {
-    Log.debug(tag, "开始断开所有连接 仅未配对：$onlyNotPaired");
-    if (!onlyNotPaired) {
-      disConnectForwardServer();
-    }
-    var skts = _devSockets.values.toList();
-    for (var devSkt in skts) {
-      if (onlyNotPaired && devSkt.isPaired) {
-        continue;
-      }
-      disconnectDevice(devSkt.dev, true);
-    }
-  }
+  ///endregion
 
-  ///主动断开设备连接
-  Future<bool> disconnectDevice(DevInfo dev, bool backSend) async {
-    var id = dev.guid;
-    if (!_devSockets.containsKey(id)) {
-      return false;
-    }
-    if (backSend) {
-      await dev.sendData(MsgType.disConnect, {});
-    }
-    await _devSockets[id]?.socket.close();
-    _onDevDisconnected(id, autoReconnect: false);
-    return true;
-  }
+  ///endregion
 
-  ///设备配对成功
-  void _onDevPaired(DevInfo dev, int uid, bool result, String? address) {
-    Log.debug(tag, "${dev.name} paired，address：$address");
-    _devSockets[dev.guid]?.isPaired = true;
-    for (var listener in _devAliveListeners) {
-      try {
-        listener.onPaired(dev, uid, result, address);
-      } catch (e, t) {
-        Log.debug(tag, "$e $t");
-      }
-    }
-  }
+  ///endregion
 
-  ///设备取消配对
-  void _onCancelPairing(DevInfo dev) {
-    Log.debug(tag, "${dev.name} cancelPairing");
-    if (_pairingNotifyId != null) {
-      NotifyUtil.cancel("dev-pairing-${dev.guid}", _pairingNotifyId!);
-    }
-    _pairing = false;
-    _pairingNotifyId = null;
-    for (var listener in _devAliveListeners) {
-      try {
-        listener.onCancelPairing(dev);
-      } catch (e, t) {
-        Log.debug(tag, "$e $t");
-      }
-    }
-  }
-
-  ///设备配对成功
-  void onDevForget(DevInfo dev, int uid) {
-    Log.debug(tag, "${dev.name} forget");
-    _devSockets[dev.guid]?.isPaired = false;
-    for (var listener in _devAliveListeners) {
-      try {
-        listener.onForget(dev, uid);
-      } catch (e, t) {
-        Log.debug(tag, "$e $t");
-      }
-    }
-  }
-
-  //region 心跳相关
-  ///开始所有设备的心跳测试
+  ///设备发现心跳测试
   void startHeartbeatTest() {
-    //先停止
     stopHeartbeatTest();
-    //首次直接发送
-    DataSender.sendData2All(MsgType.ping, {}, false);
-    // judgeDeviceHeartbeatTimeout();
-    var interval = appConfig.heartbeatInterval;
-    if (interval <= 0) return;
-    //更新timer
-    _heartbeatTimer = Timer.periodic(interval.s, (timer) {
-      if (_devSockets.isNotEmpty){
-        DataSender.sendData2All(MsgType.ping, {}, false);
+    _heartbeatTimer = Timer.periodic(appConfig.heartbeatInterval.s, (_) async {
+      var sockets = _devSockets.values.toList();
+      for (var skt in sockets) {
+        final result = await skt.testOnline();
+        if (!result) {
+          Log.warn(tag, "dev ${skt.devInfo.name} offline");
+          await skt.close();
+        }
       }
-      Log.debug(tag, "send ping");
-      // judgeDeviceHeartbeatTimeout();
-      _forwardClient?.send({
-        "type": ForwardMsgType.ping.name,
-      });
     });
   }
 
-  ///停止所有设备的心跳测试
+  ///停止心跳测试
   void stopHeartbeatTest() {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
   }
 
-  ///判断设备心跳是否超时
-  void judgeDeviceHeartbeatTimeout() {
-    //手机在息屏后无法发送网络数据
-    var interval = appConfig.heartbeatInterval * 1.3;
-    final now = DateTime.now();
-    var skts = _devSockets.values.toList();
-    for (var ds in skts) {
-      final diff = now.difference(ds.lastPingTime);
-      if (diff.inSeconds > interval) {
-        //心跳超时
-        Log.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");
-        disconnectDevice(ds.dev, true);
-        showDevDisConnectNotification(ds.dev.guid);
-      }
-    }
-  }
-
+  ///屏幕打开
   @override
   void onScreenOpened() {
-    screenOpened = true;
-    startDiscoveryDevices(scan: appConfig.enableAutoSyncOnScreenOpened);
-    startHeartbeatTest();
     Log.debug(tag, "屏幕打开");
-    autoCloseConnTimer = null;
   }
 
+  ///屏幕关闭
   @override
   void onScreenClosed() {
-    super.onScreenClosed();
     Log.debug(tag, "屏幕关闭");
-    screenOpened = false;
-    if (!appConfig.autoCloseConnAfterScreenOff) {
-      return;
-    }
-    const minutes = 2;
-    Log.debug(tag, "屏幕关闭，开启定时器，$minutes分钟后关闭连接");
-    WakelockPlus.toggle(enable: true);
-    //开启定时器，到时间自动断开连接
-    autoCloseConnTimer = Future.delayed(minutes.min, () {
-      WakelockPlus.toggle(enable: false);
-      if (autoCloseConnTimer == null) {
-        Log.debug(tag, "延迟执行已取消");
-        return;
-      }
-      Log.debug(tag, "屏幕关闭时间已到，断开所有连接和心跳测试");
-      autoCloseConnTimer = null;
-      disableForwardServerAutoConn();
-      disConnectAllConnections();
-      stopHeartbeatTest();
-    });
-    // Log.debug(tag, "定时器激活状态: ${autoCloseConnTimer?.isActive}");
   }
 
-  //endregion
-
-  ///设备断开连接
-  void _onDevDisconnected(
-    String devId, {
-    bool autoReconnect = true,
-  }) {
-    if (!_devSockets.containsKey(devId)) {
-      return;
-    }
-    Log.debug(tag, "$devId 断开连接");
-    final ds = _devSockets[devId];
-    if (ds != null && ds.isPaired && autoReconnect) {
-      showDevDisConnectNotification(ds.dev.guid);
-    }
-    //移除socket
-    _devSockets.remove(devId);
-    //从注册服务移除设备
-    _registry.removeDevice(devId);
-    if (ds != null && ds.socket.isForwardMode) {
-      final host = appConfig.forwardServer!.host;
-      final port = appConfig.forwardServer!.port;
-      final address = "$host:$port:$devId";
-      _connectingAddress.remove(address);
-    }
-    for (var listener in _devAliveListeners) {
-      try {
-        listener.onDisconnected(devId);
-      } catch (e, t) {
-        Log.debug(tag, "$e $t");
-      }
-    }
-    if (ds != null && autoReconnect) {
-      _attemptReconnect(ds.dev.guid);
-    }
-  }
-
-  ///设备连接后发起通知
-  void showDevConnectedNotification(String devId) {
-    if (!appConfig.notifyOnDevConn) {
-      return;
-    }
-    if (!(_devSockets[devId]?.isPaired ?? false)) {
-      //未配对的不理会
-      return;
-    }
-    _devNotifyTimer?.cancel();
-    //如果短时间内断开并重连，就同时取消通知
-    if (_devNotifyIdMap[devId] == true) {
-      _devNotifyIdMap.remove(devId);
-      return;
-    }
-    _devNotifyIdMap[devId] = false;
-    _devNotifyTimer = Timer(_debounceTime, () async {
-      _devNotifyIdMap.remove(devId);
-      final devService = Get.find<DeviceService>();
-      final notifyContent = TranslationKey.devConnectedNotifyContent.trParams({
-        "devName": devService.getName(devId),
-      });
-      final key = "dev-conn-$devId";
-      int? notifyId;
-      if(!appConfig.useTrayFlashingForConnection){
-        await NotifyUtil.cancelAll(key);
-        notifyId = await NotifyUtil.notify(
-          key: key,
-          content: notifyContent,
-        );
-      }else{
-        final trayService = Get.find<TrayService>();
-        trayService.flashTrayNormal(notifyContent);
-      }
-      if (notifyId != null) {
-        Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId!);
-        });
-      }
-    });
-  }
-
-  ///设备断开后发起通知
-  void showDevDisConnectNotification(String devId) {
-    if (!appConfig.notifyOnDevDisconn) {
-      return;
-    }
-    if (!(_devSockets[devId]?.isPaired ?? false)) {
-      //未配对的不理会
-      return;
-    }
-    _devNotifyTimer?.cancel();
-    _devNotifyIdMap[devId] = true;
-    _devNotifyTimer = Timer(_debounceTime, () async {
-      _devNotifyIdMap.remove(devId);
-      final devService = Get.find<DeviceService>();
-      final notifyContent = TranslationKey.devDisconnectNotifyContent.trParams({
-        "devName": devService.getName(devId),
-      });
-      final key = "dev-disconn-$devId";
-      int? notifyId;
-      if(!appConfig.useTrayFlashingForConnection){
-        await NotifyUtil.cancelAll(key);
-        notifyId = await NotifyUtil.notify(
-          key: key,
-          content: notifyContent,
-        );
-      }else{
-        final trayService = Get.find<TrayService>();
-        trayService.flashTrayWarning(notifyContent);
-      }
-      if (notifyId != null) {
-        Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId!);
-        });
-      }
-    });
-  }
-
-  Future<void> reconnectOnce(String guid) async {
-    await _attemptReconnect(guid, true);
-  }
-
-  ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）
-  ///会在一定时间内持续尝试重连，此处默认 3 分钟
-  Future<void> _attemptReconnect(String guid,[bool once=false]) async {
-    final startTime = DateTime.now();
-    var endTime = DateTime.now();
-    var diffMinutes = endTime.difference(startTime).inMinutes;
-    final dev = await dbService.deviceDao.getById(guid, appConfig.userId);
-    if(dev == null){
-      Log.warn(tag, "Device $guid not found in db");
-      return;
-    }
-    final internalAddress = dev.internalAddress;
-    //三分钟内持续尝试
-    while (diffMinutes < 3) {
-      //延迟2s
-      await Future.delayed(2.s);
-      if (_devSockets.containsKey(guid)) {
-        final devSkt = _devSockets[guid];
-        Log.debug(tag, "重连成功 ${dev.name}(${devSkt!.socket.ip}:${devSkt.socket.port})");
-        //已经成功连接，停止重连
-        return;
-      }
-      Log.debug(tag, "尝试重连 ${dev.name}");
-      try {
-        Log.debug(tag, "${dev.name} internalAddress = $internalAddress");
-        if(internalAddress != null){
-          var available = false;
-          final [ip, portStr] = internalAddress.split(":");
-          Socket? skt;
-          try{
-            //先尝试连接内网地址
-            skt = await Socket.connect(ip, portStr.toInt(), timeout: 2.s);
-            available = true;
-            skt.close();
-            skt.destroy();
-          }catch(_){
-            available = false;
-          }finally{
-            try{
-              skt?.destroy();
-            }catch(_){
-              //ignored
-            }
-          }
-          if(available) {
-            try {
-              //内网地址可用
-              available = await manualConnect(ip, port: portStr.toInt());
-            } catch (err, stack) {
-              Log.error(tag, err, stack);
-              available = false;
-            }
-          }
-          //内网地址不可用 尝试中转
-          if(!available && _forwardClient != null){
-            try{
-              Log.debug(tag, "${dev.name} reconnect by forward");
-              await manualConnectByForward(guid);
-            } catch (err, stack) {
-              Log.error(tag, err, stack);
-            }
-          }
-        }else{
-          //无本地地址，尝试中转
-          if(_forwardClient != null){
-            try{
-              Log.debug(tag, "${dev.name} reconnect by forward");
-              await manualConnectByForward(guid);
-            } catch (err, stack) {
-              Log.error(tag, err, stack);
-            }
-          }
-        }
-      } catch (err) {
-        Log.warn(tag, "attempt reconnect error: $err");
-      }
-      endTime = DateTime.now();
-      diffMinutes = endTime.difference(startTime).inMinutes;
-      if(once){
-        break;
-      }
-    }
-    Log.debug(tag, "重连失败 ${dev.name}(${dev.guid})");
-  }
-
-  ///向兼容的设备发送消息
   @override
   Future<void> sendData(
     DevInfo? dev,
@@ -1698,26 +1071,21 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     Map<String, dynamic> data, [
     bool onlyPaired = true,
   ]) async {
-    Iterable<DevSocket> list = [];
+    Iterable<SecureSocketClient> list = [];
+    final appMinVersion = appConfig.minVersion;
     //向所有设备发送消息
     if (dev == null) {
-      list = onlyPaired ? _devSockets.values.where((dev) => dev.isPaired) : _devSockets.values;
+      list = onlyPaired ? _devSockets.values.where((client) => client.isPaired) : _devSockets.values;
       //筛选兼容版本的设备
-      list = list.where(
-        (dev) => dev.version != null && dev.version! >= appConfig.minVersion,
-      );
+      list = list.where((dev) => dev.version >= appMinVersion);
     } else {
       //向指定设备发送消息
-      DevSocket? skt = _devSockets[dev.guid];
+      SecureSocketClient? skt = _devSockets[dev.guid];
       if (skt == null) {
         Log.debug(tag, "${dev.name} 设备未连接，发送失败");
         return;
       }
-      if (skt.version == null) {
-        Log.debug(tag, "${dev.name} 设备无版本号信息，尚未准备好");
-        return;
-      }
-      if (skt.version! < appConfig.minVersion) {
+      if (skt.version < appMinVersion) {
         Log.debug(tag, "${dev.name} 与当前设备版本不兼容");
         return;
       }
@@ -1732,28 +1100,22 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         data: data,
         recv: null,
       );
-      Log.debug(tag, skt.dev.name);
-      await skt.socket.send(msg.toJson());
+      await skt.send(msg.toJson());
     }
   }
 
-  /// 发送组播消息
-  void sendMulticastMsg(
-    MsgType key,
-    Map<String, dynamic> data, [
-    DevInfo? recv,
-  ]) async {
+  /// 发送广播消息
+  void sendMulticastMsg(MsgType key, Map<String, dynamic> data) {
     MessageData msg = MessageData(
-      userId: appConfig.userId,
+      userId: 0,
       send: appConfig.devInfo,
       key: key,
       data: data,
-      recv: recv,
+      recv: null,
     );
     try {
       var b64Data = CryptoUtil.base64EncodeStr("${msg.toJsonStr()}\n");
-      var multicasts = await _getSockets(Constants.multicastGroup);
-      for (var multicast in multicasts) {
+      for (var multicast in _multicasts) {
         multicast.send(
           utf8.encode(b64Data),
           InternetAddress(Constants.multicastGroup),
@@ -1763,43 +1125,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
     } catch (e, stacktrace) {
       Log.debug(tag, "$e $stacktrace");
-    }
-  }
-
-  Future<List<RawDatagramSocket>> _getSockets(
-    String multicastGroup, [
-    int port = 0,
-  ]) async {
-    final interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
-    final sockets = <RawDatagramSocket>[];
-    for (final interface in interfaces) {
-      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port);
-      socket.joinMulticast(InternetAddress(multicastGroup), interface);
-      sockets.add(socket);
-    }
-    return sockets;
-  }
-
-  ///添加中转文件发送记录
-  void addSendFileRecordByForward(FileSyncHandler fileSyncer, int fileId) {
-    if (_forwardFiles.containsKey(fileId)) {
-      throw Exception("The file is already in the sending list: $fileId");
-    }
-    _forwardFiles[fileId] = fileSyncer;
-  }
-
-  ///移除中转文件发送记录
-  Future<void> removeSendFileRecordByForward(
-    FileSyncHandler fileSyncer,
-    int fileId,
-    String? targetDevId,
-  ) async {
-    _forwardFiles.remove(fileId);
-    if (targetDevId != null) {
-      await _forwardClient?.send({
-        "type": ForwardMsgType.cancelSendFile.name,
-        "targetId": targetDevId,
-      });
     }
   }
 }

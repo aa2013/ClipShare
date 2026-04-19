@@ -994,7 +994,8 @@ class SettingsPage extends GetView<SettingsController> {
                           onChanged: (checked) {
                             HapticFeedback.mediumImpact();
                             appConfig.setAllowDiscover(checked);
-                            sktService.disConnectAllConnections(true);
+                            //todo refactor
+                            // sktService.disConnectAllConnections(true);
                           },
                         ),
                       ),
@@ -1219,7 +1220,8 @@ class SettingsPage extends GetView<SettingsController> {
                                       await appConfig.setEnableForward(false);
                                       return;
                                     }
-                                    sktService.connectForwardServer(true);
+                                    //todo refactor
+                                    // sktService.connectForwardServer(true);
                                   }
 
                                   if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
@@ -1241,8 +1243,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.webdav);
-                                    sktService.disableForwardServerAutoConn();
-                                    await sktService.disConnectForwardServer();
+                                    //todo refactor
+                                    // sktService.disableForwardServerAutoConn();
+                                    // await sktService.disConnectForwardServer();
                                     if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
@@ -1270,8 +1273,9 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () async {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.s3);
-                                    sktService.disableForwardServerAutoConn();
-                                    await sktService.disConnectForwardServer();
+                                    //todo refactor
+                                    // sktService.disableForwardServerAutoConn();
+                                    // await sktService.disConnectForwardServer();
                                     if (!appConfig.enableForward || appConfig.s3Config == null) {
                                       //若无配置，关闭中转
                                       await appConfig.setEnableForward(false);
@@ -1300,8 +1304,9 @@ class SettingsPage extends GetView<SettingsController> {
                                   Future<void> setup() async {
                                     await appConfig.setEnableForward(false);
                                     await appConfig.setForwardWay(ForwardWay.none);
-                                    sktService.disableForwardServerAutoConn();
-                                    await sktService.disConnectForwardServer();
+                                    //todo refactor
+                                    // sktService.disableForwardServerAutoConn();
+                                    // await sktService.disConnectForwardServer();
                                     await storageService.stop();
                                   }
 
@@ -1473,14 +1478,16 @@ class SettingsPage extends GetView<SettingsController> {
                                 await appConfig.setEnableForward(checked);
                                 if (checked) {
                                   if (useServer) {
-                                    sktService.connectForwardServer(true);
+                                    //todo refactor
+                                    // sktService.connectForwardServer(true);
                                   } else {
                                     storageService.start();
                                   }
                                 } else {
                                   if (useServer) {
-                                    sktService.disableForwardServerAutoConn();
-                                    sktService.disConnectForwardServer();
+                                    //todo refactor
+                                    // sktService.disableForwardServerAutoConn();
+                                    // sktService.disConnectForwardServer();
                                   } else {
                                     storageService.stop();
                                   }

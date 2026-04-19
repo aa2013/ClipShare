@@ -49,7 +49,9 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
     for (var itf in interfaces) {
       for (var address in itf.addresses) {
         print("address $address");
-        bool success = await socketService.manualConnect(address);
+        //todo refactor
+        // bool success = await socketService.manualConnect(address);
+        bool success = false;
         if (success) {
           Get.back();
           return;
@@ -57,15 +59,16 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
       }
     }
     //本地连接失败，尝试中转连接
-    final forwardHost = socketService.forwardServerHost;
-    final forwardPort = socketService.forwardServerPort;
-    if (forwardHost != null && forwardPort != null) {
-      bool success = await socketService.manualConnectByForward(result.id);
-      if (success) {
-        Get.back();
-        return;
-      }
-    }
+    //todo refactor
+    // final forwardHost = socketService.forwardServerHost;
+    // final forwardPort = socketService.forwardServerPort;
+    // if (forwardHost != null && forwardPort != null) {
+    //   bool success = await socketService.manualConnectByForward(result.id);
+    //   if (success) {
+    //     Get.back();
+    //     return;
+    //   }
+    // }
     Get.back();
     Global.showTipsDialog(
       context: Get.context!,
@@ -212,10 +215,11 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                 value: forwardMode,
                 title: Text(TranslationKey.forwardMode.tr),
                 onChanged: (checked) {
-                  if (!sktService.forwardServerConnected) {
-                    Global.showTipsDialog(context: context, text: TranslationKey.forwardServerNotConnected.tr);
-                    return;
-                  }
+                  //todo refactor
+                  // if (!sktService.forwardServerConnected) {
+                  //   Global.showTipsDialog(context: context, text: TranslationKey.forwardServerNotConnected.tr);
+                  //   return;
+                  // }
                   setState(() {
                     forwardMode = checked ?? false;
                   });
@@ -267,10 +271,11 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                             setState(() {});
                             return;
                           }
-                          if (!sktService.forwardServerConnected) {
-                            Global.showTipsDialog(context: context, text: TranslationKey.forwardServerNotConnected.tr);
-                            return;
-                          }
+                          //todo refactor
+                          // if (!sktService.forwardServerConnected) {
+                          //   Global.showTipsDialog(context: context, text: TranslationKey.forwardServerNotConnected.tr);
+                          //   return;
+                          // }
                         } else {
                           if (!_ipEditor.text.isIPv4 && !_ipEditor.text.isIPv6) {
                             _showIpErr = true;
@@ -288,12 +293,16 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                         });
                         if (forwardMode) {
                           //尝试中转连接
-                          bool success = await sktService.manualConnectByForward(_forwardIdEditor.text);
-                          if (success) {
-                            Get.back();
-                            return;
-                          }
+                          //todo refactor
+                          // bool success = await sktService.manualConnectByForward(_forwardIdEditor.text);
+                          // if (success) {
+                          //   Get.back();
+                          //   return;
+                          // }
                         } else {
+
+                          //todo refactor
+                          /*
                           sktService
                               .manualConnect(
                                 _ipEditor.text,
@@ -314,7 +323,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                                   return;
                                 }
                                 Get.back();
-                              });
+                              });*/
                         }
                       },
                 child: _connecting

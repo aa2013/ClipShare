@@ -1202,7 +1202,8 @@ class ConfigService extends GetxService {
     _onlyForwardMode.value = onlyForwardMode;
     if (!onlyForwardMode) return;
     final sktService = Get.find<SocketService>();
-    return sktService.disConnectAllConnections();
+    //todo refactor
+    //return sktService.disConnectAllConnections();
   }
 
   Future<void> setAutoCopyImageAfterSync(bool autoCopyImageAfterSync) async {

@@ -13,8 +13,8 @@ import 'package:clipshare/app/data/models/pending_file.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
+import 'package:clipshare/app/handlers/socket/_secure_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
-import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -71,12 +71,15 @@ class FileSyncHandler {
     }
     if (useForward) {
       //检查中转设置
-      var host = sktService.forwardServerHost;
-      var port = sktService.forwardServerPort;
-      var forwardEnabled = appConfig.enableForward;
-      if (!forwardEnabled || host == null || port == null) {
-        throw Exception("Forwarding service not enabled.");
-      }
+      //todo refactor
+      var host = "";
+      var port = 111;
+      // var host = sktService.forwardServerHost;
+      // var port = sktService.forwardServerPort;
+      // var forwardEnabled = appConfig.enableForward;
+      // if (!forwardEnabled || host == null || port == null) {
+      //   throw Exception("Forwarding service not enabled.");
+      // }
       //连接中转服务器
       Socket.connect(host, port).then((skt) async {
         final fileName = isUri ? pendingFile.fileName : _file!.fileName;
@@ -113,11 +116,13 @@ class FileSyncHandler {
         skt.add(packet);
       });
       //告知 SocketService
-      sktService.addSendFileRecordByForward(this, _fileId);
+      //todo refactor
+      // sktService.addSendFileRecordByForward(this, _fileId);
       //延时检测是否有客户端连接，超时取消发送
       _delayedClientCheck(() {
         _onDone();
-        sktService.removeSendFileRecordByForward(this, _fileId, targetDevId!);
+        //todo refactor
+        // sktService.removeSendFileRecordByForward(this, _fileId, targetDevId!);
       });
     } else {
       ServerSocket.bind(InternetAddress.anyIPv4, 0).then((server) {
@@ -142,7 +147,8 @@ class FileSyncHandler {
 
   ///当文件接收方连接了中转服务器后由 SocketService 调用该方法通知发送端开始发送
   void onForwardReceiverConnected() {
-    sktService.removeSendFileRecordByForward(this, _fileId, null);
+    //todo refactor
+    // sktService.removeSendFileRecordByForward(this, _fileId, null);
     hasClient = true;
     try {
       //向 中转服务器 发送文件
@@ -342,7 +348,9 @@ class FileSyncHandler {
       });
     } else {
       final sktService = Get.find<SocketService>();
-      final useForward = sktService.isUseForward(device.guid);
+      //todo refactor
+      // final useForward = sktService.isUseForward(device.guid);
+      final useForward = false;
       FileSyncHandler._private(
         pendingFile: pendingFile,
         context: context,

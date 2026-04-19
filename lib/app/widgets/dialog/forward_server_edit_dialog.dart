@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/models/end_point.dart';
 import 'package:clipshare/app/data/models/forward_server_config.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
@@ -59,12 +60,19 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
   }
 
   bool checkHostEditor() {
-    hostErrText = !hostEditor.text.isDomain && !hostEditor.text.isIPv4 && !hostEditor.text.isIPv6 ? TranslationKey.pleaseInputValidDomainOrIpv4_6.tr : null;
+    hostErrText =
+        !hostEditor.text.isDomain &&
+            !hostEditor.text.isIPv4 &&
+            !hostEditor.text.isIPv6
+        ? TranslationKey.pleaseInputValidDomainOrIpv4_6.tr
+        : null;
     return hostErrText == null;
   }
 
   bool checkPortEditor() {
-    portErrText = !portEditor.text.isPort ? TranslationKey.pleaseInputValidPort.tr : null;
+    portErrText = !portEditor.text.isPort
+        ? TranslationKey.pleaseInputValidPort.tr
+        : null;
     return portErrText == null;
   }
 
@@ -82,7 +90,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
     return isValid;
   }
 
-  void checkConn() {
+  Future<void> checkConn() async {
     if (detecting || !checkIsValid()) {
       return;
     }
@@ -90,122 +98,48 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
       detecting = true;
       serverVersion = "";
     });
-    ForwardSocketClient.connect(
-      ip: hostEditor.text,
-      port: portEditor.text.toInt(),
-      onConnected: (client) {
-        final data = ForwardSocketClient.baseMsg
-          ..addAll({
-            "connType": ForwardConnType.check.name,
-          });
-        if (useKey) {
-          data["key"] = keyEditor.text;
-        }
-        client.send(data);
-      },
-      onDone: (client) {
-        setState(() {
-          detecting = false;
-        });
-      },
-      onMessage: (client, data) {
-        Map<String, dynamic> json = jsonDecode(data);
-        if (json.containsKey("version")) {
+    try {
+      final client = await ForwardSocketClient.connect(
+        key: useKey ? keyEditor.text : null,
+        endPoint: EndPoint(hostEditor.text, portEditor.text.toInt()),
+        onDone: (client) {
           setState(() {
-            serverVersion = json["version"]?.toString() ?? "";
+            detecting = false;
           });
-        }
-        if (!json.containsKey("result")) {
+        },
+        onMessage: (_, _, _) async {},
+        onError: (client, err, stack) {
+          Log.error(tag, "onError $err");
           Global.showTipsDialog(
             context: context,
-            text: data,
-            title: TranslationKey.forwardServerUnknownResult.tr,
+            text: err.toString(),
+            title: TranslationKey.connectFailed.tr,
           );
-        } else {
-          String result = json['result'];
-          if (result != "success") {
-            Global.showTipsDialog(
-              context: context,
-              text: result,
-              title: TranslationKey.connectFailed.tr,
-            );
-          } else {
-            String content = "";
-            if (json.containsKey("unlimited")) {
-              content = "${TranslationKey.forwardServerUnlimitedDevices.tr}\n";
-            } else {
-              if (!json.containsKey("deviceLimit")) {
-                content = "${TranslationKey.publicForwardServer.tr}\n";
-                if (json.containsKey("fileSyncRate")) {
-                  content += "${TranslationKey.forwardServerSyncFileRateLimit.tr}: ${json["fileSyncRate"]} KB/s\n";
-                } else if (json.containsKey("fileSyncNotAllowed")) {
-                  content += "${TranslationKey.forwardServerCannotSyncFile.tr}\n";
-                } else {
-                  content += "${TranslationKey.forwardServerNoLimits.tr}\n";
-                }
-              } else {
-                String deviceLimit = json["deviceLimit"];
-                if (deviceLimit == "∞") {
-                  deviceLimit = TranslationKey.noLimits.tr;
-                } else {
-                  deviceLimit += " ${TranslationKey.deviceUnit.tr}";
-                }
-                String lifeSpan = json["lifeSpan"];
-                if (lifeSpan == "∞") {
-                  lifeSpan = TranslationKey.noLimits.tr;
-                } else {
-                  lifeSpan += " ${TranslationKey.day.tr}";
-                }
-                String rate = json["rate"];
-                if (rate == "∞") {
-                  rate = TranslationKey.noLimits.tr;
-                } else {
-                  rate += " KB/s";
-                }
-                String remaining = json["remaining"];
-                if (remaining == "-1") {
-                  remaining = TranslationKey.forwardServerKeyNotStarted.tr;
-                } else if (remaining != "0") {
-                  remaining = "${(remaining.toDouble() / (24 * 60 * 60)).toStringAsFixed(2)} 天";
-                } else {
-                  remaining = TranslationKey.exhausted.tr;
-                }
-                String remark = json["remark"];
-                content =
-                    ""
-                    "${TranslationKey.forwardServerDeviceConnectionLimit.tr}: $deviceLimit\n"
-                    "${TranslationKey.forwardServerLifeSpan.tr}: $lifeSpan\n"
-                    "${TranslationKey.forwardServerRemainingTime.tr}: $remaining\n"
-                    "${TranslationKey.forwardServerRateLimit.tr}: $rate\n";
-                if (remark.isNotEmpty) {
-                  content += "${TranslationKey.forwardServerRemark.tr}：\n$remark\n";
-                }
-              }
-            }
-            if (ForwardSocketClient.lessThan114(serverVersion)) {
-              content += "${TranslationKey.tips.tr}: ${TranslationKey.forwardServer114VersionTip.tr}\n";
-            }
-            Global.showTipsDialog(
-              context: context,
-              text: content,
-              title: TranslationKey.connectSuccess.tr,
-            );
-          }
-        }
-        client.close();
-      },
-      onError: (err, client) {
-        Log.error(tag, "onError $err");
+          setState(() {
+            detecting = false;
+          });
+        },
+      );
+      final serverInfo = client.serverInfo;
+      if (serverInfo == null || serverInfo.unknown) {
         Global.showTipsDialog(
           context: context,
-          text: err.toString(),
-          title: TranslationKey.connectFailed.tr,
+          text: serverInfo?.originData ?? "",
+          title: TranslationKey.forwardServerUnknownResult.tr,
         );
-        setState(() {
-          detecting = false;
-        });
-      },
-    ).catchError((err) {
+      } else {
+        String title = TranslationKey.connectSuccess.tr;
+        if (!serverInfo.success) {
+          title = TranslationKey.connectFailed.tr;
+        }
+        Global.showTipsDialog(
+          context: context,
+          text: serverInfo.toString(),
+          title: title,
+        );
+      }
+      await client.close();
+    } catch (err, stack) {
       Global.showTipsDialog(
         context: context,
         text: (err as SocketException).message,
@@ -214,7 +148,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
       setState(() {
         detecting = false;
       });
-    });
+    }
   }
 
   @override
@@ -231,10 +165,12 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                 onPressed: detecting
                     ? null
                     : () async {
-                        var hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                        var hasPerm =
+                            await PermissionHelper.testAndroidCameraPerm();
                         if (!hasPerm) {
                           await PermissionHelper.reqAndroidCameraPerm();
-                          hasPerm = await PermissionHelper.testAndroidCameraPerm();
+                          hasPerm =
+                              await PermissionHelper.testAndroidCameraPerm();
                           if (!hasPerm) {
                             Global.showTipsDialog(
                               context: context,
@@ -243,7 +179,9 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                             return;
                           }
                         }
-                        final json = await Get.toNamed<dynamic>(Routes.QR_CODE_SCANNER);
+                        final json = await Get.toNamed<dynamic>(
+                          Routes.QR_CODE_SCANNER,
+                        );
                         try {
                           if (json != null) {
                             final result = ForwardServerConfig.fromJson(json);
@@ -251,12 +189,18 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                               reset(result);
                             });
                           } else {
-                            Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                            Global.showTipsDialog(
+                              context: context,
+                              text: TranslationKey.qrCodeScanError.tr,
+                            );
                             Log.warn(tag, "scan result is null");
                           }
                         } catch (err, stack) {
                           Log.error(tag, err, stack);
-                          Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
+                          Global.showTipsDialog(
+                            context: context,
+                            text: TranslationKey.qrCodeScanError.tr,
+                          );
                         }
                       },
                 icon: const Icon(
@@ -399,7 +343,9 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                     onPressed: detecting
                         ? null
                         : () {
-                            if (hostErrText != null || portErrText != null || keyErrText != null) {
+                            if (hostErrText != null ||
+                                portErrText != null ||
+                                keyErrText != null) {
                               return;
                             }
                             widget.onOk(

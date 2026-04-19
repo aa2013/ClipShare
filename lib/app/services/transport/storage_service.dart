@@ -663,7 +663,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return false;
     }
     final sktService = Get.find<SocketService>();
-    if (sktService.discovering) {
+    //todo refactor
+    if (/*sktService.discovering*/false) {
       //正在设备发现，不能执行
       Log.warn(tag, "SocketService discovering");
       return false;

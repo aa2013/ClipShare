@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
+import 'package:clipshare/app/handlers/socket/_secure_socket_client.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
@@ -78,7 +77,7 @@ class SecureSocketServer {
             prime2: appConfig.prime2,
             dhAesKey: appConfig.dhAesKey,
             onConnected: (SecureSocketClient ssc) {
-              _onConnected(ssc.ip, ssc.port);
+              _onConnected(ssc.host, ssc.port);
             },
             onMessage: _onMessage,
             onDone: (SecureSocketClient client) {
@@ -113,11 +112,6 @@ class SecureSocketServer {
       _listening = false;
       rethrow;
     }
-  }
-
-  ///发送数据
-  Future<void> send(SecureSocketClient client, Map map) async {
-    await client.send(map);
   }
 
   ///关闭连接

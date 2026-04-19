@@ -364,7 +364,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         if (res) {
           _addPairedDevInPage(dbDev);
           //已配对，请求所有缺失数据
-          sktService.reqMissingData();
+
+          //todo refactor
+          // sktService.reqMissingData();
           return;
         }
         Global.showSnackBarErr(context: Get.context!, text: TranslationKey.deviceAdditionFailedDialogText.tr);
@@ -379,7 +381,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         }
         _addPairedDevInPage(newDev);
         //已配对，请求所有缺失数据
-        sktService.reqMissingData();
+
+        //todo refactor
+        // sktService.reqMissingData();
       });
     }
   }
@@ -502,14 +506,17 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                               if (protocol == TransportProtocol.webdav || protocol == TransportProtocol.s3) {
                                 storageService.disconnectDevice(devInfo.guid);
                               } else {
-                                sktService.disconnectDevice(
-                                  devInfo,
-                                  true,
-                                );
+
+                                //todo refactor
+                                // sktService.disconnectDevice(
+                                //   devInfo,
+                                //   true,
+                                // );
                               }
                             } else {
                               if(protocol.isSocket){
-                                sktService.reconnectOnce(device.guid);
+                                //todo refactor
+                                // sktService.reconnectOnce(device.guid);
                               } else {
                                 storageService.connectDevice(devInfo.guid);
                               }
@@ -542,10 +549,12 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                               onOk: () {
                                 if (isConnected) {
                                   var devInfo = DevInfo.fromDevice(device);
-                                  sktService.onDevForget(
-                                    devInfo,
-                                    appConfig.userId,
-                                  );
+
+                                  //todo refactor
+                                  // sktService.onDevForget(
+                                  //   devInfo,
+                                  //   appConfig.userId,
+                                  // );
                                   devInfo.sendData(
                                     MsgType.forgetDev,
                                     {},
@@ -585,7 +594,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                             child: InkWell(
                               onTap: () {
                                 Global.showSnackBarSuc(text: TranslationKey.syncingData.tr, context: context);
-                                sktService.reqMissingData(device.guid);
+
+                                //todo refactor
+                                // sktService.reqMissingData(device.guid);
                               },
                               splashColor: Colors.black12,
                               borderRadius: BorderRadius.circular(12),

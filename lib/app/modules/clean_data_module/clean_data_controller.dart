@@ -248,7 +248,8 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
               return;
             }
             //如果设备离线并未配对则删除，否则不能删
-            if (sktService.isOnline(devId, true)) {
+            //todo refactor
+            if (/*sktService.isOnline(devId, true)*/false) {
               print("is online");
               return;
             }
