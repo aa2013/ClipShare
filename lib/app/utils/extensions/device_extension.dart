@@ -2,6 +2,7 @@ import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
+import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
@@ -55,7 +56,7 @@ extension DevInfoExt on DevInfo {
     final list = devController.onlineList.where((dev) => onlyPaired ? dev.isPaired : true).toList();
     final dev = list.firstWhereOrNull((item) => item.guid == guid);
     if (dev == null) {
-      Log.warn(tag, "device is offline or not exists");
+      Log.warn(tag, "Not found online device($name})");
       return;
     }
     if (dev.isUseForwardServer || dev.isUseDirect) {
@@ -65,5 +66,11 @@ extension DevInfoExt on DevInfo {
       final storageService = Get.find<StorageService>();
       return storageService.sendData(this, key, data, onlyPaired);
     }
+  }
+}
+
+extension SecureSocketClientExt on SecureSocketClient{
+  Future<void> sendData(MsgType key, Map<String, dynamic> data, [bool onlyPaired = true]){
+    return devInfo.sendData(key, data, onlyPaired);
   }
 }

@@ -71,14 +71,14 @@ class FileSyncHandler {
     }
     if (useForward) {
       //检查中转设置
-      var host = sktService.forwardServerHost;
-      var port = sktService.forwardServerPort;
+      var host = appConfig.forwardServer?.host;
+      var port = appConfig.forwardServer?.port;
       var forwardEnabled = appConfig.enableForward;
       if (!forwardEnabled || host == null || port == null) {
         throw Exception("Forwarding service not enabled.");
       }
       //连接中转服务器
-      Socket.connect(host, port).then((skt) async {
+      Socket.connect(host, port,timeout: 2.s).then((skt) async {
         final fileName = isUri ? pendingFile.fileName : _file!.fileName;
         final size = isUri ? pendingFile.size : await _file!.length();
         _forwardSkt = skt;
@@ -362,7 +362,7 @@ class FileSyncHandler {
   }
 
   static Future<void> receiveFile({
-    required String ip,
+    required String host,
     required int port,
     required int size,
     required String fileName,
@@ -382,7 +382,7 @@ class FileSyncHandler {
       Log.error(tag, "dev:$devId not found");
       return;
     }
-    var socket = await Socket.connect(ip, port);
+    var socket = await Socket.connect(host, port);
     String filePath = "${appConfig.fileStorePath}/$fileName";
     File file = File(filePath);
     Log.debug(tag, "receive file $filePath");

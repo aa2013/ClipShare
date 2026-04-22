@@ -17,11 +17,11 @@ abstract mixin class DevAliveListener {
   void onDisconnected(String devId) {}
 
   //配对成功
-  void onPaired(DevInfo dev, int uid, bool result, String? address) {}
+  void onPaired(DevInfo dev, bool result, String? address) {}
 
   //取消配对
   void onCancelPairing(DevInfo dev) {}
 
   //忘记设备
-  void onForget(DevInfo dev, int uid) {}
+  void onForget(DevInfo dev) {}
 }

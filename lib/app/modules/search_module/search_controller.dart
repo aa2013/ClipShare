@@ -249,7 +249,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   //region 设备变更监听
 
   @override
-  Future<void> onPaired(DevInfo dev, int uid, bool result, String? address) async {
+  Future<void> onPaired(DevInfo dev, bool result, String? address) async {
     await loadSearchCondition();
     filterController.setAllDevices(_allDevices);
     filterController.setAllTagNames(_allTagNames);
@@ -283,7 +283,7 @@ class SearchController extends GetxController with WidgetsBindingObserver implem
   }
 
   @override
-  void onForget(DevInfo dev, int uid) {
+  void onForget(DevInfo dev) {
     // ignored
   }
 

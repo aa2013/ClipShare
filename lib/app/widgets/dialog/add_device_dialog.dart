@@ -1,6 +1,9 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/models/end_point.dart';
 import 'package:clipshare/app/data/models/qr_device_connection_info.dart';
+import 'package:clipshare/app/data/repository/entity/tables/config.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -36,7 +39,6 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
   var _connectErr = false;
   final sktService = Get.find<SocketService>();
   bool forwardMode = false;
-  Map<String, dynamic> _connectData = {};
   bool forwardConnected = false;
 
   void attemptConnect(QRDeviceConnectionInfo result) async {
@@ -45,23 +47,28 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
       loadingText: TranslationKey.attemptingToConnect.tr,
     );
     final socketService = Get.find<SocketService>();
+    final appConfig = Get.find<ConfigService>();
     final interfaces = result.interfaces;
     for (var itf in interfaces) {
       for (var address in itf.addresses) {
-        print("address $address");
-        bool success = await socketService.manualConnect(address);
+        bool success = await socketService.connect(EndPoint(address, appConfig.port));
         if (success) {
+          Global.showSnackBarSuc(text: TranslationKey.connectSuccess.tr, context: context);
           Get.back();
           return;
         }
       }
     }
     //本地连接失败，尝试中转连接
-    final forwardHost = socketService.forwardServerHost;
-    final forwardPort = socketService.forwardServerPort;
+    final forwardHost = appConfig.forwardServer?.host;
+    final forwardPort = appConfig.forwardServer?.port;
     if (forwardHost != null && forwardPort != null) {
-      bool success = await socketService.manualConnectByForward(result.id);
+      bool success = await socketService.connect(EndPoint(forwardHost, forwardPort), result.id);
       if (success) {
+        Global.showSnackBarSuc(text: TranslationKey.connectSuccess.tr, context: context);
+        //关闭加载弹窗
+        Get.back();
+        //关闭设备添加弹窗
         Get.back();
         return;
       }
@@ -237,7 +244,6 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
               TextButton(
                 onPressed: () {
                   if (_connecting) {
-                    _connectData['stop'] = true;
                     _connecting = false;
                     setState(() {});
                   } else {
@@ -253,13 +259,8 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                 onPressed: _connecting
                     ? null
                     : () async {
-                        // 194512ad29c18d3bdb4f86f30b257
                         setState(() {
                           _connectErr = false;
-                          _connectData = {
-                            "stop": false,
-                            "custom": true,
-                          };
                         });
                         if (forwardMode) {
                           if (_forwardIdEditor.text == "") {
@@ -286,35 +287,30 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                         setState(() {
                           _connecting = true;
                         });
+                        late final EndPoint endPoint;
+                        String? targetDevId;
                         if (forwardMode) {
                           //尝试中转连接
-                          bool success = await sktService.manualConnectByForward(_forwardIdEditor.text);
-                          if (success) {
-                            Get.back();
-                            return;
-                          }
+                          final appConfig = Get.find<ConfigService>();
+                          final host = appConfig.forwardServer!.host;
+                          final port = appConfig.forwardServer!.port;
+                          endPoint = EndPoint(host, port);
+                          targetDevId = _forwardIdEditor.text;
                         } else {
-                          sktService
-                              .manualConnect(
-                                _ipEditor.text,
-                                port: int.parse(_portEditor.text),
-                                onErr: (err) {
-                                  Log.debug(tag, err);
-                                  if (_connecting) {
-                                    setState(() {
-                                      _connectErr = true;
-                                      _connecting = false;
-                                    });
-                                  }
-                                },
-                                data: _connectData,
-                              )
-                              .then((val) {
-                                if (_connectErr || _connectData['stop']) {
-                                  return;
-                                }
-                                Get.back();
-                              });
+                          endPoint = EndPoint(_ipEditor.text, int.parse(_portEditor.text));
+                        }
+
+                        bool success = await sktService.connect(endPoint, targetDevId);
+                        if (success) {
+                          Global.showSnackBarSuc(text: TranslationKey.connectSuccess.tr, context: context);
+                          Get.back();
+                          return;
+                        }else{
+                          Global.showSnackBarSuc(text: TranslationKey.connectFailed.tr, context: context);
+                          setState(() {
+                            _connectErr = true;
+                            _connecting = false;
+                          });
                         }
                       },
                 child: _connecting

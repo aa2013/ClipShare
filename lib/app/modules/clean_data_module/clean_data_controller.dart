@@ -248,12 +248,12 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
               return;
             }
             //如果设备离线并未配对则删除，否则不能删
-            if (sktService.isOnline(devId, true)) {
-              print("is online");
+            if (await sktService.testDeviceOnline(devId)) {
+              Log.debug(logTag, "is online");
               return;
             }
             var success = await devService.remove(devId);
-            print("delete device success $success");
+            Log.debug(logTag, "delete device success $success");
             if (success) {}
           }
         })
@@ -510,14 +510,14 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   }
 
   @override
-  void onForget(DevInfo dev, int uid) {
+  void onForget(DevInfo dev) {
     return;
   }
 
   //endregion
 
   @override
-  void onPaired(DevInfo dev, int uid, bool result, String? address) {}
+  void onPaired(DevInfo dev, bool result, String? address) {}
 
   @override
   void onRemove(String devId) {

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/modules/device_module/device_controller.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -55,7 +57,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   final androidChannelService = Get.find<AndroidChannelService>();
   final Set<MultiSelectionPopScopeDisableListener> _multiSelectionPopScopeDisableListeners = {};
-  static final _networkChangedLock = Lock(); // 创建互斥锁
 
   //region 属性
   static const defaultDrawerWidth = 400.0;
@@ -173,8 +174,12 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   @override
   Future<void> onScreenOpened() async {
-    //此处应该发送socket通知同步剪贴板到本机
-    sktService.reqMissingData();
+    //通知同步剪贴板到本机
+    final deviceController = Get.find<DeviceController>();
+    final list = deviceController.onlineAndPairedList;
+    for(var device in list) {
+      sktService.reqMissingData(device.guid);
+    }
     if (appConfig.authenticating.value || !appConfig.useAuthentication) return;
     gotoAuthenticationPage(
       TranslationKey.authenticationPageBackendTimeoutVerificationTitle.tr,
@@ -197,7 +202,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    Log.debug(tag, "AppLifecycleState $state");
     switch (state) {
       case AppLifecycleState.resumed:
         AppUpdateInfoUtil.showUpdateInfo(debounce: true);
@@ -442,26 +446,24 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   Timer? _networkChangedTimer;
 
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
-    await _networkChangedLock.synchronized(() {
-      _networkChangedTimer?.cancel();
-      _networkChangedTimer = Timer(1500.ms, () {
-        Log.debug(tag, "网络变化 -> ${result.name}");
-        if (result == ConnectivityResult.none) {
-          return;
-        }
-        final lastNetwork = appConfig.currentNetWorkType.value;
-        //网络变化前的状态，非无网络状态,断开中转服务连接
-        if (lastNetwork != ConnectivityResult.none) {
-          sktService.disableForwardServerAutoConn();
-          sktService.disConnectAllConnections();
-          storageService.disconnectWs();
-        }
-        appConfig.currentNetWorkType.value = result;
-        //网络变化后的处理，重新连接/设备发现
-        sktService.restartDiscoveryDevices();
-        storageService.reconnectWs();
-        storageService.uploadSyncFailedData();
-      });
+    _networkChangedTimer?.cancel();
+    _networkChangedTimer = Timer(1500.ms, () async {
+      Log.debug(tag, "网络变化 -> ${result.name}");
+      if (result == ConnectivityResult.none) {
+        return;
+      }
+      final lastNetwork = appConfig.currentNetWorkType.value;
+      //网络变化前的状态，非无网络状态,断开中转服务连接
+      if (lastNetwork != ConnectivityResult.none) {
+        await sktService.disConnectAllConnections();
+        await storageService.disconnectWs();
+      }
+      appConfig.currentNetWorkType.value = result;
+
+      //网络变化后的处理，重新连接/设备发现
+      sktService.restartDiscoveryDevices();
+      storageService.reconnectWs();
+      storageService.uploadSyncFailedData();
     });
   }
 

@@ -1,9 +1,13 @@
 import 'dart:convert';
 
+import 'package:clipshare/app/data/models/end_point.dart';
+
 class ForwardServerConfig {
   String host;
   int port;
   String? key;
+
+  EndPoint get endPoint => EndPoint(host, port);
 
   String get server => "$host:$port";
 
@@ -38,4 +42,5 @@ class ForwardServerConfig {
   String toString() {
     return jsonEncode(toJson());
   }
+
 }

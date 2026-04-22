@@ -3,15 +3,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
+import 'package:clipshare/app/data/models/end_point.dart';
+import 'package:clipshare/app/data/models/foward_server_check_result.dart';
 import 'package:clipshare/app/handlers/socket/data_packet_splitter.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+
+typedef OnForwardClientMessage =
+    Future<void> Function(
+      ForwardSocketClient self,
+      ForwardMsgType msgType,
+      Map<String, dynamic> data,
+    );
+typedef OnForwardClientDone = void Function(ForwardSocketClient client);
+typedef OnForwardClientError = void Function(ForwardSocketClient client, Object e, StackTrace stack);
 
 class ForwardSocketClient {
   static Map<String, dynamic> get baseMsg {
@@ -24,106 +33,154 @@ class ForwardSocketClient {
     };
   }
 
-  final String ip;
-  late final int _port;
+  static const String tag = "ForwardSocketClient";
 
-  int get port => _port;
+  late final EndPoint endPoint;
+
+  String get host => endPoint.host;
+
+  int get port => endPoint.port;
+
+  bool _closed = false;
+
+  bool get closed => _closed;
+
   late final Socket _socket;
 
   bool _listening = false;
-  late final void Function(ForwardSocketClient client, String data)? _onMessage;
-  void Function(Exception e, ForwardSocketClient client)? _onError;
-  void Function(ForwardSocketClient client)? _onDone;
-  bool? _cancelOnError;
-  late final StreamSubscription _stream;
-  static const String tag = "ForwardSocketClient";
+  bool _inited = false;
+  final _dataSplitter = DataPacketSplitter();
+  Completer<void>? _testOnlineCompleter;
 
-  ForwardSocketClient._private(this.ip);
+  ForwardServerCheckResult? _serverInfo;
 
-  static ForwardSocketClient empty = ForwardSocketClient._private("127.0.0.1");
+  ForwardServerCheckResult? get serverInfo => _serverInfo;
 
-  ///连接 socket
+  bool _isClosedByUser = false;
+
+  bool get isClosedByUser => _isClosedByUser;
+
+  bool _connected = false;
+
+  late final OnForwardClientMessage _onMessage;
+  late final OnForwardClientError _onError;
+  late final OnForwardClientDone _onDone;
+
+  final Completer<ForwardSocketClient> _connectedCompleter = Completer();
+
+  ForwardSocketClient._private(this.endPoint);
+
+  static ForwardSocketClient empty = ForwardSocketClient._private(
+    const EndPoint("127.0.0.1", 0),
+  );
+
   static Future<ForwardSocketClient> connect({
-    required String ip,
-    required int port,
-    void Function(ForwardSocketClient)? onConnected,
-    void Function(ForwardSocketClient client, String data)? onMessage,
-    void Function(Exception e, ForwardSocketClient client)? onError,
-    void Function(ForwardSocketClient client)? onDone,
-    bool? cancelOnError,
+    required EndPoint endPoint,
+    required OnForwardClientMessage onMessage,
+    required OnForwardClientError onError,
+    required OnForwardClientDone onDone,
+    String? key,
+    Duration? timeout,
+    bool checkOnly = false,
   }) async {
-    var socket = await Socket.connect(
-      ip,
-      port,
-      timeout: const Duration(seconds: 2),
+    timeout ??= const Duration(seconds: 2);
+    final socket = await Socket.connect(
+      endPoint.host,
+      endPoint.port,
+      timeout: timeout,
     );
-    var ssc = ForwardSocketClient.fromSocket(
-      socket: socket,
-      onMessage: onMessage,
-      onError: onError,
-      onDone: onDone,
-      cancelOnError: cancelOnError,
-    );
-    onConnected?.call(ssc);
-    return ssc;
+    var fsc = ForwardSocketClient._private(endPoint);
+    fsc._socket = socket;
+    fsc._onMessage = onMessage;
+    fsc._onError = onError;
+    fsc._onDone = onDone;
+    fsc._listen();
+    await fsc._sendInitData(key: key);
+    try {
+      final client = await fsc._connectedCompleter.future.timeout(timeout);
+      fsc._connected = true;
+      return client;
+    } catch (_) {
+      await fsc.close(true);
+      rethrow;
+    }
   }
 
-  factory ForwardSocketClient.fromSocket({
-    required Socket socket,
-    int? serverPort,
-    required void Function(ForwardSocketClient self, String data)? onMessage,
-    void Function(Exception e, ForwardSocketClient self)? onError,
-    void Function(ForwardSocketClient self)? onDone,
-    bool? cancelOnError,
-  }) {
-    var ssc = ForwardSocketClient._private(socket.remoteAddress.address);
-    if (serverPort != null) {
-      ssc._port = serverPort;
+  ///发送初始化数据
+  Future<void> _sendInitData({bool checkOnly = false, String? key}) async {
+    if (_inited) {
+      throw 'Already initialized';
     }
-    ssc._socket = socket;
-    ssc._onMessage = onMessage;
-    ssc._onError = onError;
-    ssc._onDone = onDone;
-    ssc._cancelOnError = cancelOnError;
-    ssc._listen();
-    return ssc;
+    _inited = true;
+    //中转服务器连接成功后发送本机信息
+    final connData = ForwardSocketClient.baseMsg
+      ..addAll({
+        "connType": checkOnly ? ForwardConnType.check.name : ForwardConnType.base.name,
+      });
+    if (key != null) {
+      connData["key"] = key;
+    }
+    await send(connData);
   }
 
   ///监听消息
-  void _listen() {
+  Future<void> _listen() async {
     if (_listening) {
       throw Exception("ForwardSocketClient has started listening");
     }
     _listening = true;
     try {
-      _stream = _socket
-          .transform(DataPacketSplitter())
-          .listen(
-            (e) {
-              _onMessage?.call(this, utf8.decode(e));
-            },
-            onError: (e) {
-              Log.error(tag, "error:$e");
-              if (_onError != null) {
-                _onError!(e, this);
-              }
-            },
-            onDone: () {
-              Log.debug(tag, "onDone");
-              // 尝试修复端口不释放的问题
-              _socket.destroy();
-              _onDone?.call(this);
-            },
-            cancelOnError: _cancelOnError,
-          );
-    } catch (e) {
+      var stream = _socket.transform(_dataSplitter);
+      await for (var packet in stream) {
+        try {
+          final msg = (jsonDecode(utf8.decode(packet)) as Map<dynamic, dynamic>).cast<String, dynamic>();
+          final msgType = ForwardMsgType.getValue(msg["type"]);
+          Log.debug(tag, "MsgType $msgType");
+          switch (msgType) {
+            case ForwardMsgType.check:
+              _onCheckMessage(msg);
+              break;
+            case ForwardMsgType.ping:
+              //废弃，旧版本使用这个然后在本地记录时间作为心跳检测依据，中转1.1.5起使用带结果的ping主动探测
+              break;
+            case ForwardMsgType.pingResult:
+              _testOnlineCompleter?.complete();
+              _testOnlineCompleter = null;
+              break;
+            default:
+              await _onMessage.call(this, msgType, msg);
+          }
+        } catch (err, stack) {
+          Log.error(tag, "error:$err", stack);
+          _onError.call(this, err, stack);
+        }
+      }
+    } catch (err, stack) {
       _listening = false;
-      rethrow;
+      Log.error(tag, "error:$err", stack);
+      _onError.call(this, err, stack);
+    } finally {
+      Log.debug(tag, "onDone");
+      // 尝试修复端口不释放的问题
+      _socket.destroy();
+      _closed = true;
+      if (_connected) {
+        _onDone.call(this);
+      }
+    }
+  }
+
+  void _onCheckMessage(Map<String, dynamic> json) {
+    try {
+      _serverInfo = ForwardServerCheckResult.fromJson(json);
+      _connectedCompleter.complete(this);
+    } catch (err, stack) {
+      _connectedCompleter.completeError(err, stack);
     }
   }
 
   ///发送数据
-  Future<void> send(Map map) async {
+  Future<void> send(Map<String, dynamic> map) async {
     try {
       //向中转服务器发送基本信息
       final payload = utf8.encode(jsonEncode(map));
@@ -144,27 +201,48 @@ class ForwardSocketClient {
       _socket.add(packet);
       await _socket.flush();
     } catch (e, stack) {
-      Log.debug(tag, "发送失败：$e");
-      Log.debug(tag, "_onDone ${_onDone == null}");
-      Log.debug(tag, "$stack");
-      if (_onDone != null) {
-        _onDone!.call(this);
-      }
+      Log.error(tag, "发送失败：$e", stack);
+      await close();
+    }
+  }
+
+  ///测试连接有效性
+  Future<bool> testOnline([Duration? timeout]) async {
+    if (_testOnlineCompleter != null) {
+      Log.warn(tag, "_testOnlineCompleter is not null");
+      return false;
+    }
+    _testOnlineCompleter = Completer<void>();
+    try {
+      timeout ??= const Duration(seconds: 2);
+      //发送一个ping事件，但是要求对方给回复
+      await send({"type": ForwardMsgType.ping.name});
+      await _testOnlineCompleter!.future.timeout(timeout);
+      return true;
+    } catch (err, stack) {
+      Log.error(tag, err, stack);
+      return false;
+    } finally {
+      _testOnlineCompleter = null;
     }
   }
 
   ///关闭连接
-  Future close() async {
+  Future close([bool manual = false]) async {
     try {
+      if (manual) {
+        _isClosedByUser = true;
+      }
       await _socket.close();
     } catch (err, stack) {
       Log.error(tag, err, stack);
     } finally {
       _socket.destroy();
+      _closed = true;
     }
   }
 
-  static bool lessThan114(String? version) {
+  static bool lessThan115(String? version) {
     if (version.isNullOrEmpty) {
       return true;
     }
@@ -173,9 +251,10 @@ class ForwardSocketClient {
       while (versionParts.length < 3) {
         versionParts.add(0);
       }
-      final version114 = <int>[1, 1, 4];
-      for (var i = 0; i < version114.length; i++) {
-        if (version114[i] > versionParts[i]) {
+      //1.1.5
+      final version115 = <int>[1, 1, 5];
+      for (var i = 0; i < version115.length; i++) {
+        if (version115[i] > versionParts[i]) {
           return true;
         }
       }

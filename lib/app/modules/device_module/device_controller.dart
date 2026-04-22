@@ -199,7 +199,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
 
   @override
-  void onConnected(
+  Future<void> onConnected(
     DevInfo info,
     AppVersion minVersion,
     AppVersion version,
@@ -219,13 +219,11 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           protocol: protocol,
         );
         _notifyOnlineDevicesWindow();
-        //是已配对的设备，请求所有缺失数据
-        // sktService.sendData(null, MsgType.reqMissingData, {});
         return;
       }
     }
     //设备非直连
-    if (dev != null && protocol != TransportProtocol.direct) {
+    if (dev != null && !protocol.isSocket) {
       pairedList.add(
         DeviceCard(
           dev: dev,
@@ -299,7 +297,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   }
 
   @override
-  void onForget(DevInfo dev, int uid) {
+  void onForget(DevInfo dev) {
     //忘记设备，从已配对列表移动到发现设备列表
     var forgetDev = pairedList.firstWhereOrNull(
       (element) => element.dev?.guid == dev.guid,
@@ -336,7 +334,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   }
 
   @override
-  void onPaired(DevInfo dev, int uid, bool result, String? address) async {
+  void onPaired(DevInfo dev, bool result, String? address) async {
     if (!result) {
       Log.debug(tag, "_pairingFailed $pairingFailed");
       pairingFailed.value = true;
@@ -350,7 +348,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     var newDev = Device(
       guid: dev.guid,
       devName: dev.name,
-      uid: uid,
+      uid: 0,
       type: dev.type,
       isPaired: true,
       internalAddress: (address?.isInternalIPv4 ?? false) ? address : null,
@@ -364,7 +362,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         if (res) {
           _addPairedDevInPage(dbDev);
           //已配对，请求所有缺失数据
-          sktService.reqMissingData();
+          sktService.reqMissingData(dev.guid);
           return;
         }
         Global.showSnackBarErr(context: Get.context!, text: TranslationKey.deviceAdditionFailedDialogText.tr);
@@ -379,7 +377,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         }
         _addPairedDevInPage(newDev);
         //已配对，请求所有缺失数据
-        sktService.reqMissingData();
+        sktService.reqMissingData(dev.guid);
       });
     }
   }
@@ -496,25 +494,22 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                       ),
                       Expanded(
                         child: InkWell(
-                          onTap: () {
+                          onTap: () async {
+                            Navigator.pop(context);
                             var devInfo = DevInfo.fromDevice(device);
                             if (isConnected) {
                               if (protocol == TransportProtocol.webdav || protocol == TransportProtocol.s3) {
                                 storageService.disconnectDevice(devInfo.guid);
                               } else {
-                                sktService.disconnectDevice(
-                                  devInfo,
-                                  true,
-                                );
+                                await sktService.disconnectDevice(devInfo.guid);
                               }
                             } else {
                               if(protocol.isSocket){
-                                sktService.reconnectOnce(device.guid);
+                                await sktService.reconnectOnce(device.guid);
                               } else {
                                 storageService.connectDevice(devInfo.guid);
                               }
                             }
-                            Navigator.pop(context);
                           },
                           splashColor: Colors.black12,
                           borderRadius: BorderRadius.circular(12),
@@ -539,27 +534,18 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                             Global.showTipsDialog(
                               context: context,
                               text: TranslationKey.devicePageUnpairedDialogAck.tr,
-                              onOk: () {
-                                if (isConnected) {
-                                  var devInfo = DevInfo.fromDevice(device);
-                                  sktService.onDevForget(
-                                    devInfo,
-                                    appConfig.userId,
-                                  );
-                                  devInfo.sendData(
-                                    MsgType.forgetDev,
-                                    {},
-                                  );
-                                }
+                              onOk: () async {
+                                var devInfo = DevInfo.fromDevice(device);
+                                //通知对向设备
+                                await devInfo.sendData(
+                                  MsgType.forgetDev,
+                                  {},
+                                );
                                 //更新配对状态为未配对
                                 device.isPaired = false;
-                                dbService.deviceDao.updateDevice(device).then((cnt) {
-                                  if (cnt <= 0) return;
-                                  onForget(
-                                    DevInfo.fromDevice(device),
-                                    appConfig.userId,
-                                  );
-                                });
+                                devService.addOrUpdate(device);
+                                //通知所有观察者
+                                sktService.notifyDeviceForget(devInfo);
                                 Navigator.pop(context);
                               },
                               showCancel: true,

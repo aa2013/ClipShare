@@ -432,7 +432,7 @@ class ConfigService extends GetxService {
   //屏幕亮起时发现设备
   final _enableAutoSyncOnScreenOpened = true.obs;
 
-  bool get enableAutoSyncOnScreenOpened => _enableAutoSyncOnScreenOpened.value;
+  bool get enableAutoScanOnScreenOpened => _enableAutoSyncOnScreenOpened.value;
 
   //剪贴板来源记录
   final _sourceRecord = false.obs;

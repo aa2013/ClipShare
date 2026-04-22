@@ -275,7 +275,6 @@ enum TranslationKey {
   cancelCurrentPairing,
   deviceDiscoveryStatusViaBroadcast,
   deviceDiscoveryStatusViaScan,
-  deviceDiscoveryStatusViaForward,
   newVersionDialogTitle,
   newVersionDialogSkipText,
   newVersionDialogOkText,
@@ -493,6 +492,7 @@ enum TranslationKey {
   enableAutoSyncOnScreenOpenedTitle,
   enableAutoSyncOnScreenOpenedDesc,
   deviceDiscoveryStatusViaPaired,
+  deviceDiscoveryStatusReady,
   modifyContent,
   unsavedTips,
   modifyContentConfirmExitAndNoSave,
@@ -708,7 +708,7 @@ enum TranslationKey {
   preferenceSettingsRecordsDialogSize,
   useTrayFlashingForConnectionTitle,
   useTrayFlashingForConnectionDesc,
-  forwardServer114VersionTip;
+  forwardServer115VersionTip;
 
   String get tr => name.tr;
 

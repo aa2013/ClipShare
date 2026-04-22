@@ -567,8 +567,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "广播发现";
       case TranslationKey.deviceDiscoveryStatusViaScan:
         return "扫描网络";
-      case TranslationKey.deviceDiscoveryStatusViaForward:
-        return "中转发现";
+      case TranslationKey.deviceDiscoveryStatusReady:
+        return "正在准备..";
       case TranslationKey.newVersionDialogTitle:
         return "新版本";
       case TranslationKey.newVersionDialogSkipText:
@@ -1127,7 +1127,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "黑名单规则";
       case TranslationKey.whitelistRules:
         return "白名单规则";
-        return "当前仅对文本内容生效";
       case TranslationKey.ignoreCase:
         return "忽略大小写";
       case TranslationKey.application:
@@ -1433,8 +1432,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "设备连接或断开后使用托盘闪烁";
       case TranslationKey.useTrayFlashingForConnectionDesc:
         return "若启用则表示使用托盘闪烁的方式否则为默认的系统通知";
-      case TranslationKey.forwardServer114VersionTip:
-        return "当前中转程序版本存在并发安全问题，建议升级至 1.1.4 版本（此版本中转程序 Web页面会显示版本号）。";
+      case TranslationKey.forwardServer115VersionTip:
+        return "当前中转程序版本存在并发安全问题\n"
+            "以及当前版本重写了连接相关功能，中转心跳逻辑修改\n"
+            "中转程序需要升级至 1.1.5 版本（此版本中转程序 Web页面会显示版本号）";
     }
   }
 }

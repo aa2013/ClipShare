@@ -1098,7 +1098,7 @@ class SettingsPage extends GetView<SettingsController> {
                           maxLines: 1,
                         ),
                         description: Text(TranslationKey.enableAutoSyncOnScreenOpenedDesc.tr),
-                        value: appConfig.enableAutoSyncOnScreenOpened,
+                        value: appConfig.enableAutoScanOnScreenOpened,
                         show: (v) => Platform.isAndroid,
                         action: (v) {
                           return Switch(
@@ -1219,7 +1219,7 @@ class SettingsPage extends GetView<SettingsController> {
                                       await appConfig.setEnableForward(false);
                                       return;
                                     }
-                                    sktService.connectForwardServer(true);
+                                    sktService.connectForwardServer(true, true);
                                   }
 
                                   if (appConfig.forwardWay == ForwardWay.none || !appConfig.enableForward) {
@@ -1241,7 +1241,6 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.webdav);
-                                    sktService.disableForwardServerAutoConn();
                                     await sktService.disConnectForwardServer();
                                     if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
                                       //若无配置，关闭中转
@@ -1270,7 +1269,6 @@ class SettingsPage extends GetView<SettingsController> {
                                 onSelected: () async {
                                   void setup() async {
                                     await appConfig.setForwardWay(ForwardWay.s3);
-                                    sktService.disableForwardServerAutoConn();
                                     await sktService.disConnectForwardServer();
                                     if (!appConfig.enableForward || appConfig.s3Config == null) {
                                       //若无配置，关闭中转
@@ -1300,7 +1298,6 @@ class SettingsPage extends GetView<SettingsController> {
                                   Future<void> setup() async {
                                     await appConfig.setEnableForward(false);
                                     await appConfig.setForwardWay(ForwardWay.none);
-                                    sktService.disableForwardServerAutoConn();
                                     await sktService.disConnectForwardServer();
                                     await storageService.stop();
                                   }
@@ -1473,14 +1470,13 @@ class SettingsPage extends GetView<SettingsController> {
                                 await appConfig.setEnableForward(checked);
                                 if (checked) {
                                   if (useServer) {
-                                    sktService.connectForwardServer(true);
+                                    sktService.connectForwardServer(true, true);
                                   } else {
                                     storageService.start();
                                   }
                                 } else {
                                   if (useServer) {
-                                    sktService.disableForwardServerAutoConn();
-                                    sktService.disConnectForwardServer();
+                                    await sktService.disConnectForwardServer();
                                   } else {
                                     storageService.stop();
                                   }
