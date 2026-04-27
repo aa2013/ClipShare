@@ -432,19 +432,23 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         final devInfo = endPoint.devInfo;
         final devId = devInfo.guid;
         final devSkt = _devSockets[devId];
-        if (devSkt != null && !devSkt.closed) {
-          //如果已经连接，进行测试连接有效性，若连接有响应则忽略
-          final isValid = await devSkt.testOnline();
-          if (isValid) {
-            completer?.complete(true);
-            continue;
-          }
-          //连接无效，先移除再关闭连接避免重复触发 onDone
-          _devSockets.remove(devId);
-          await devSkt.close(true);
-          //通知观察者设备连接断开
-          _notifyDeviceDisconnected(devSkt);
-        }
+        // if (devSkt != null && !devSkt.closed) {
+        //   //如果已经连接，进行测试连接有效性，若连接有响应则忽略
+        //   final isValid = await devSkt.testOnline();
+        //   if (isValid) {
+        //     completer?.complete(true);
+        //     continue;
+        //   }
+        //   //连接无效，先移除再关闭连接避免重复触发 onDone
+        //   _devSockets.remove(devId);
+        //   await devSkt.close(true);
+        //   //通知观察者设备连接断开
+        //   _notifyDeviceDisconnected(devSkt);
+        // }
+        //丢弃旧连接
+        _devSockets.remove(devId);
+        devSkt?.sendData(MsgType.disConnect, {});
+        await devSkt?.close(true);
         //正式连接设备
         try {
           final forwardEndPoint = appConfig.forwardServer?.endPoint;
@@ -558,7 +562,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (socket == null) {
       return;
     }
-    await socket.sendData(MsgType.disConnect, {}, false);
+    await socket.sendData(MsgType.disConnect, {});
     await socket.close(true);
     _notifyDeviceDisconnected(socket);
   }

@@ -70,7 +70,7 @@ extension DevInfoExt on DevInfo {
 }
 
 extension SecureSocketClientExt on SecureSocketClient{
-  Future<void> sendData(MsgType key, Map<String, dynamic> data, [bool onlyPaired = true]){
-    return devInfo.sendData(key, data, onlyPaired);
+  Future<void> sendData(MsgType key, Map<String, dynamic> data){
+    return devInfo.sendData(key, data, false);
   }
 }
