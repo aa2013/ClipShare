@@ -440,6 +440,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   Future<void> _runDeviceConnectTask() async {
     await for (final event in _deviceConnectionQueue.stream) {
       final completer = event.completer;
+      var success = false;
       try {
         final endPoint = event.endPoint;
         final socket = event.socket;
@@ -476,9 +477,13 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         if(identical(client, newClient)) {
           await _onClientConnected(client);
         }
+        success = true;
       } catch (err, stack) {
-        completer?.complete(false);
         Log.error(tag, "error:$err, event:$event", stack);
+      } finally {
+        if (completer != null && !completer.isCompleted) {
+          completer.complete(success);
+        }
       }
     }
   }
@@ -503,6 +508,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     final oldSkt = _devSockets[devId];
     //没旧连接，直接用
     if (oldSkt == null) {
+      Log.debug(tag, "connection selected(new): devId=$devId reason=no_old isSender=$isSender");
       _devSockets[devId] = newSkt;
       return newSkt;
     }
@@ -515,6 +521,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
     //旧连接死了，直接替换
     if (!oldValid) {
+      Log.debug(tag, "connection selected(new): devId=$devId reason=old_offline isSender=$isSender");
       await oldSkt.sendData(MsgType.disConnect, {});
       await oldSkt.close(true);
       _devSockets[devId] = newSkt;
@@ -523,6 +530,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
     //两个都活着 → 裁决
     final keepNew = _shouldKeepNew(isSender, devId);
+    Log.debug(
+      tag,
+      "connection arbitration: devId=$devId isSender=$isSender keepNew=$keepNew old=${oldSkt.hashCode} new=${newSkt.hashCode}",
+    );
 
     if (keepNew) {
       await oldSkt.sendData(MsgType.disConnect, {});
