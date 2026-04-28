@@ -447,7 +447,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         // }
         //丢弃旧连接
         _devSockets.remove(devId);
-        devSkt?.sendData(MsgType.disConnect, {});
+        await devSkt?.sendData(MsgType.disConnect, {});
         await devSkt?.close(true);
         //正式连接设备
         try {
