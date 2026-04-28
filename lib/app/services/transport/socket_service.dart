@@ -55,6 +55,27 @@ typedef VoidFutureFunction = Future<void> Function();
 ///[result] 异步结果为 true 表示无需再重连（成功或者不满足重连条件），为 false 表示还需继续重连（满足中转连接条件但是连接失败）
 typedef _ForwardReconnectData = (bool discovery, Completer<bool> result);
 
+class _ConnectionEvent {
+  final DeviceEndPoint? endPoint;
+  final Socket? socket;
+  final Completer<bool>? completer;
+
+  _ConnectionEvent({
+    this.endPoint,
+    this.socket,
+    this.completer,
+  }) {
+    final isEndPointNull = endPoint == null;
+    final isSocketNull = socket == null;
+    if (!(isEndPointNull ^ isSocketNull)) {
+      throw Exception('EndPoint and Socket must have exactly one non-null');
+    }
+  }
+  @override
+  String toString() {
+    return "endPoint = $endPoint, socket = ${socket?.hashCode}, completer ${completer != null}";
+  }
+}
 class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final appConfig = Get.find<ConfigService>();
   final connRegService = Get.find<ConnectionRegistryService>();
@@ -88,7 +109,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   CancelTokenSource _discoveryTokenSource = CancelTokenSource();
 
   //设备待连接队列
-  final _deviceConnectionQueue = StreamController<(DeviceEndPoint endPoint, Completer<bool>? complete)>();
+  final _deviceConnectionQueue = StreamController<_ConnectionEvent>();
 
   // 某设备的Socket连接，devId => DevSocket
   final Map<String, SecureSocketClient> _devSockets = {};
@@ -125,10 +146,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   //endregion
 
-  //正在通知的设备，用于防抖，devId => (notifyId,isDisconnected)
+  //正在通知的设备，用于防抖，devId => (notifyId, int) 断开连接-1，新连接+1
   //时常为 2s，如果 2s 内，该 map 有 key 且 id 仍然为发起通知时创建的 id 则允许通知，否则取消通知
-  final _devNotifyIdMap = <String, bool>{};
-  Timer? _devNotifyTimer;
+  final _devNotifyMap = <String, int>{};
+  final _devNotifyTimerMap = <String, Timer>{};
 
   //通知防抖时长
   static final _debounceTime = 1500.ms;
@@ -154,16 +175,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     _server = await ServerSocket.bind('0.0.0.0', appConfig.port);
     _server.listen(
       (socket) async {
-        try {
-          Log.debug(tag, "receive from server");
-          await _connect(socket: socket, isDirect: true);
-        } catch (err, stack) {
-          final endPoint = EndPoint(
-            socket.remoteAddress.address,
-            socket.remotePort,
-          );
-          Log.error(tag, "error = $err, endPoint = $endPoint", stack);
-        }
+        Log.debug(tag, "receive from server");
+        _deviceConnectionQueue.add(_ConnectionEvent(socket: socket));
       },
     );
   }
@@ -200,7 +213,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           var ip = datagram.address.address;
           var port = msg.data["port"].toString().toInt();
           Log.debug(tag, "receive from broadcast $ip");
-          _deviceConnectionQueue.add((DeviceEndPoint(dev, ip, port), null));
+          _deviceConnectionQueue.add(_ConnectionEvent(endPoint: DeviceEndPoint(dev, ip, port)));
         } catch (err, stack) {
           Log.error(tag, err, stack);
         }
@@ -408,10 +421,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       for (var genIp in ipList) {
         tasks.add(() async {
           try {
-            await _connect(
-              endPoint: EndPoint(genIp, appConfig.port),
-              isDirect: true,
-            );
+            final socket = await Socket.connect(genIp, appConfig.port, timeout: 2.s);
+            _deviceConnectionQueue.add(_ConnectionEvent(socket: socket));
           } catch (_) {}
         });
       }
@@ -427,57 +438,111 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   ///设备连接任务
   Future<void> _runDeviceConnectTask() async {
-    await for (final (endPoint, completer) in _deviceConnectionQueue.stream) {
+    await for (final event in _deviceConnectionQueue.stream) {
+      final completer = event.completer;
       try {
-        final devInfo = endPoint.devInfo;
-        final devId = devInfo.guid;
-        final devSkt = _devSockets[devId];
-        // if (devSkt != null && !devSkt.closed) {
-        //   //如果已经连接，进行测试连接有效性，若连接有响应则忽略
-        //   final isValid = await devSkt.testOnline();
-        //   if (isValid) {
-        //     completer?.complete(true);
-        //     continue;
-        //   }
-        //   //连接无效，先移除再关闭连接避免重复触发 onDone
-        //   _devSockets.remove(devId);
-        //   await devSkt.close(true);
-        //   //通知观察者设备连接断开
-        //   _notifyDeviceDisconnected(devSkt);
-        // }
-        //丢弃旧连接
-        _devSockets.remove(devId);
-        await devSkt?.sendData(MsgType.disConnect, {});
-        await devSkt?.close(true);
-        //正式连接设备
-        try {
+        final endPoint = event.endPoint;
+        final socket = event.socket;
+        late final SecureSocketClient newClient;
+        final isSender = endPoint != null;
+        late final String targetDevId;
+        if(endPoint != null){
+          final devInfo = endPoint.devInfo;
+          final devId = devInfo.guid;
+          targetDevId = devId;
           final forwardEndPoint = appConfig.forwardServer?.endPoint;
           final isDirect = endPoint != forwardEndPoint;
-          await _connect(
+          newClient = await _connect(
             endPoint: endPoint,
             isDirect: isDirect,
             targetDevId: isDirect ? null : devId,
           );
-          completer?.complete(true);
-        } catch (err, stack) {
-          Log.error(tag, "error = $err, endPoint = $endPoint", stack);
-          completer?.complete(false);
+        }
+        else if(socket != null){
+          newClient = await _connect(
+            socket: socket,
+            isDirect: true,
+          );
+          targetDevId = newClient.devInfo.guid;
+        }else{
+          throw 'Not Supported endPoint = null and socket = null';
+        }
+        //连接成功，进行连接裁决
+        final client = await _handleNewConnection(
+          targetDevId,
+          newClient,
+          isSender,
+        );
+        if(identical(client, newClient)) {
+          await _onClientConnected(client);
         }
       } catch (err, stack) {
-        Log.error(tag, "error:$err, endpoint:$endPoint", stack);
         completer?.complete(false);
+        Log.error(tag, "error:$err, event:$event", stack);
       }
     }
   }
 
+  ///连接裁决
+  bool _shouldKeepNew(bool isSender, String targetId) {
+    final myHash = appConfig.devInfo.guid.hash64;
+    final targetHash = targetId.hash64;
+    if (myHash > targetHash) {
+      return isSender; // 我赢 → 用主动
+    } else {
+      return !isSender; // 我输 → 用被动
+    }
+  }
+
+  ///连接裁决，返回值表示是否发起连接通知
+  Future<SecureSocketClient> _handleNewConnection(
+      String devId,
+      SecureSocketClient newSkt,
+      bool isSender,
+  ) async {
+    final oldSkt = _devSockets[devId];
+    //没旧连接，直接用
+    if (oldSkt == null) {
+      _devSockets[devId] = newSkt;
+      return newSkt;
+    }
+
+    bool oldValid = false;
+
+    if (!oldSkt.closed) {
+      oldValid = await oldSkt.testOnline();
+    }
+
+    //旧连接死了，直接替换
+    if (!oldValid) {
+      await oldSkt.sendData(MsgType.disConnect, {});
+      await oldSkt.close(true);
+      _devSockets[devId] = newSkt;
+      return newSkt;
+    }
+
+    //两个都活着 → 裁决
+    final keepNew = _shouldKeepNew(isSender, devId);
+
+    if (keepNew) {
+      await oldSkt.sendData(MsgType.disConnect, {});
+      await oldSkt.close(true);
+      _devSockets[devId] = newSkt;
+      return newSkt;
+    } else {
+      await newSkt.sendData(MsgType.disConnect, {});
+      await newSkt.close(true);
+      return oldSkt;
+    }
+  }
+
   ///加密连接
-  Future<void> _connect({
+  Future<SecureSocketClient> _connect({
     required bool isDirect,
     EndPoint? endPoint,
     Socket? socket,
     String? targetDevId,
   }) async {
-    SecureSocketClient client;
     if (endPoint == null && socket == null) {
       throw ArgumentError(
         'Either endPoint or socket must be provided, but both are null.',
@@ -489,7 +554,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       );
     }
     if (endPoint != null) {
-      client = await SecureSocketClient.createFromEndPoint(
+      return await SecureSocketClient.createFromEndPoint(
         endPoint: endPoint,
         onMessage: _onMessage,
         onDone: _onDone,
@@ -504,7 +569,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       );
     } else if (socket != null) {
       Log.debug(tag, socket.remoteAddress.address);
-      client = await SecureSocketClient.createFromSocket(
+      return await SecureSocketClient.createFromSocket(
         socket: socket,
         onMessage: _onMessage,
         onDone: _onDone,
@@ -520,7 +585,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     } else {
       throw 'not supported';
     }
-    await _onClientConnected(client);
   }
 
   ///连接设备
@@ -548,7 +612,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       await client.close(true);
       final devEndPoint = DeviceEndPoint(devInfo, endPoint.host, endPoint.port);
       final completer = Completer<bool>();
-      _deviceConnectionQueue.add((devEndPoint, completer));
+      _deviceConnectionQueue.add(_ConnectionEvent(endPoint: devEndPoint, completer: completer));
       return completer.future.timeout(3.s);
     } catch (err, stack) {
       Log.error(tag, err, stack);
@@ -635,7 +699,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
               skt.destroy();
               //加入连接队列
               final completer = Completer<bool>();
-              _deviceConnectionQueue.add((DeviceEndPoint(devInfo, ip, port), completer));
+              final devEndPoint = DeviceEndPoint(devInfo, ip, port);
+              _deviceConnectionQueue.add(_ConnectionEvent(endPoint: devEndPoint, completer: completer));
               if (await completer.future) {
                 continue;
               }
@@ -655,15 +720,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
             final forwardConfig = appConfig.forwardServer;
             if (forwardConfig != null && appConfig.enableForward) {
               final completer = Completer<bool>();
-              final item = (
-                DeviceEndPoint(
-                  devInfo,
-                  forwardConfig.host,
-                  forwardConfig.port,
-                ),
-                completer,
+              final devEndPoint = DeviceEndPoint(
+                devInfo,
+                forwardConfig.host,
+                forwardConfig.port,
               );
-              _deviceConnectionQueue.add(item);
+              _deviceConnectionQueue.add(_ConnectionEvent(endPoint: devEndPoint, completer: completer));
               if (await completer.future) {
                 continue;
               }
@@ -760,7 +822,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           for (var device in list) {
             final endPoint = DeviceEndPoint(DevInfo.fromDevice(device), forwardConfig.host, forwardConfig.port);
             final completer = Completer<bool>();
-            _deviceConnectionQueue.add((endPoint, completer));
+            _deviceConnectionQueue.add(_ConnectionEvent(endPoint: endPoint, completer: completer));
             await completer.future;
           }
         }
@@ -839,20 +901,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   ///设备连接成功建立
   Future<void> _onClientConnected(SecureSocketClient client) async {
-    final dev = client.devInfo;
-    final oldClient = _devSockets[dev.guid];
-    //检查在线状态
-    final isOnline = await oldClient?.testOnline() ?? false;
-    if (isOnline) {
-      //如果旧连接仍然在线，终止当前连接
-      await client.close();
-      return;
-    }
-    //不在线则强制关闭旧连接
-    _devSockets.remove(dev.guid);
-    await oldClient?.close();
-    //将当前连接添加到本地缓存
-    _devSockets[dev.guid] = client;
     TransportProtocol protocol = TransportProtocol.direct;
     if (client.isForwardMode) {
       protocol = TransportProtocol.server;
@@ -961,36 +1009,39 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       //未配对的不理会
       return;
     }
-    _devNotifyTimer?.cancel();
-    //如果短时间内断开并重连，就同时取消通知
-    if (_devNotifyIdMap[devId] == true) {
-      _devNotifyIdMap.remove(devId);
-      return;
-    }
-    _devNotifyIdMap[devId] = false;
-    _devNotifyTimer = Timer(_debounceTime, () async {
-      _devNotifyIdMap.remove(devId);
-      final devService = Get.find<DeviceService>();
-      final notifyContent = TranslationKey.devConnectedNotifyContent.trParams({
-        "devName": devService.getName(devId),
+    _devNotifyMap.update(devId, (old) => old + 1, ifAbsent: () => 1);
+    _devNotifyTimerMap.update(devId, (old) => old, ifAbsent: (){
+      return Timer(_debounceTime, () async {
+        try {
+          if ((_devNotifyMap[devId] ?? 0) == 0) {
+            return;
+          }
+          final devService = Get.find<DeviceService>();
+          final notifyContent = TranslationKey.devConnectedNotifyContent
+              .trParams({
+            "devName": devService.getName(devId),
+          });
+          final key = "dev-conn-$devId";
+          int? notifyId;
+          if (!appConfig.useTrayFlashingForConnection) {
+            await NotifyUtil.cancelAll(key);
+            notifyId = await NotifyUtil.notify(
+              key: key,
+              content: notifyContent,
+            );
+          } else {
+            final trayService = Get.find<TrayService>();
+            trayService.flashTrayNormal(notifyContent);
+          }
+          if (notifyId != null) {
+            Future.delayed(2.s, () {
+              NotifyUtil.cancel(key, notifyId!);
+            });
+          }
+        } finally {
+          _devNotifyTimerMap.remove(devId);
+        }
       });
-      final key = "dev-conn-$devId";
-      int? notifyId;
-      if (!appConfig.useTrayFlashingForConnection) {
-        await NotifyUtil.cancelAll(key);
-        notifyId = await NotifyUtil.notify(
-          key: key,
-          content: notifyContent,
-        );
-      } else {
-        final trayService = Get.find<TrayService>();
-        trayService.flashTrayNormal(notifyContent);
-      }
-      if (notifyId != null) {
-        Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId!);
-        });
-      }
     });
   }
 
@@ -1003,31 +1054,38 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       //未配对的不理会
       return;
     }
-    _devNotifyTimer?.cancel();
-    _devNotifyIdMap[devId] = true;
-    _devNotifyTimer = Timer(_debounceTime, () async {
-      _devNotifyIdMap.remove(devId);
-      final devService = Get.find<DeviceService>();
-      final notifyContent = TranslationKey.devDisconnectNotifyContent.trParams({
-        "devName": devService.getName(devId),
+    _devNotifyMap.update(devId, (old) => old - 1, ifAbsent: () => -1);
+    _devNotifyTimerMap.update(devId, (old) => old, ifAbsent: (){
+      return Timer(_debounceTime, () async {
+        try{
+          if ((_devNotifyMap[devId] ?? 0) == 0) {
+            return;
+          }
+          final devService = Get.find<DeviceService>();
+          final notifyContent = TranslationKey.devDisconnectNotifyContent.trParams({
+            "devName": devService.getName(devId),
+          });
+          final key = "dev-disconn-$devId";
+          int? notifyId;
+          if (!appConfig.useTrayFlashingForConnection) {
+            await NotifyUtil.cancelAll(key);
+            notifyId = await NotifyUtil.notify(
+              key: key,
+              content: notifyContent,
+            );
+          } else {
+            final trayService = Get.find<TrayService>();
+            trayService.flashTrayWarning(notifyContent);
+          }
+          if (notifyId != null) {
+            Future.delayed(2.s, () {
+              NotifyUtil.cancel(key, notifyId!);
+            });
+          }
+        } finally {
+          _devNotifyTimerMap.remove(devId);
+        }
       });
-      final key = "dev-disconn-$devId";
-      int? notifyId;
-      if (!appConfig.useTrayFlashingForConnection) {
-        await NotifyUtil.cancelAll(key);
-        notifyId = await NotifyUtil.notify(
-          key: key,
-          content: notifyContent,
-        );
-      } else {
-        final trayService = Get.find<TrayService>();
-        trayService.flashTrayWarning(notifyContent);
-      }
-      if (notifyId != null) {
-        Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId!);
-        });
-      }
     });
   }
 
@@ -1119,7 +1177,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       return;
     }
     final devInfo = DevInfo.fromDevice(device);
-    _deviceConnectionQueue.add((DeviceEndPoint(devInfo, self.host, self.port), null));
+    final devEndPoint = DeviceEndPoint(devInfo, self.host, self.port);
+    _deviceConnectionQueue.add(_ConnectionEvent(endPoint: devEndPoint));
   }
 
   ///中转文件发送
@@ -1541,6 +1600,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         if (!online) {
           Log.warn(tag, "forward client offline");
           await _forwardClient?.close();
+          if(!appConfig.enableForward){
+            _forwardClient = null;
+          }
         }
       }
     });
