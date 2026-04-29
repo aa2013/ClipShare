@@ -1229,18 +1229,30 @@ class ConfigService extends GetxService {
     VoidCallback? onAnimationFinish,
   ]) async {
     await configDao.addOrUpdate(ConfigKey.appTheme, appTheme.name);
-    var theme = appTheme == ThemeMode.dark ? darkThemeData : lightThemeData;
-    if (appTheme == ThemeMode.system) {
-      theme = Get.isPlatformDarkMode ? darkThemeData : lightThemeData;
+    updateAppTheme(context, appTheme, updateConfig: true, onAnimationFinish: onAnimationFinish,);
+  }
+
+  void updateAppTheme(
+    BuildContext context,
+    ThemeMode themeMode, {
+      bool updateConfig = false,
+      VoidCallback? onAnimationFinish,
+  }) {
+    late final bool isDarkTheme;
+    if (themeMode == ThemeMode.system) {
+      isDarkTheme = Get.isPlatformDarkMode;
+    }else{
+      isDarkTheme = themeMode == ThemeMode.dark;
     }
-    final isDarkTheme = theme == darkThemeData;
     ThemeSwitcher.of(context).changeTheme(
-      theme: theme,
+      theme: isDarkTheme ? darkThemeData : lightThemeData,
       isReversed: false,
       onAnimationFinish: onAnimationFinish,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _appTheme.value = appTheme.name;
+      if(updateConfig) {
+        _appTheme.value = themeMode.name;
+      }
       if (isDarkTheme) {
         setSystemUIOverlayDarkStyle();
       } else {

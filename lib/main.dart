@@ -30,6 +30,7 @@ import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/windows_injector.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
+import 'package:clipshare/app/widgets/base/system_theme_mode_sync.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -197,8 +198,10 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
     windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     locale = Locale(args.languageCode, args.countryCode);
   }else{
-    final appConfig=Get.find<ConfigService>();
-    isDarkMode = appConfig.appTheme == ThemeMode.dark;
+    final appConfig = Get.find<ConfigService>();
+    if(appConfig.appTheme != ThemeMode.system) {
+      isDarkMode = appConfig.appTheme == ThemeMode.dark;
+    }
   }
   runApp(
     ThemeProvider(
@@ -210,21 +213,23 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
           builder: (ctx, child) {
             return ThemeSwitchingArea(
               child: ThemeSwitcher(builder: (ctx){
-                return Scaffold(
-                  appBar: null,
-                  backgroundColor: Colors.transparent,
-                  body: CustomTitleBarLayout(
-                    children: [
-                      const SizedBox(width: 5),
-                      logoImg,
-                      const SizedBox(width: 5),
-                      Text(
-                        title,
-                        style: const TextStyle(fontSize: 12),
+                return SystemThemeModeSync(
+                    child: Scaffold(
+                      appBar: null,
+                      backgroundColor: Colors.transparent,
+                      body: CustomTitleBarLayout(
+                        children: [
+                          const SizedBox(width: 5),
+                          logoImg,
+                          const SizedBox(width: 5),
+                          Text(
+                            title,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                        child: child ?? const SizedBox.shrink(),
                       ),
-                    ],
-                    child: child ?? const SizedBox.shrink(),
-                  ),
+                    ),
                 );
               },),
             );
