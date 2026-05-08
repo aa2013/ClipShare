@@ -53,7 +53,6 @@ class SecureSocketClient {
   bool get isForwardMode => _connectionMode == ConnectionMode.forward;
 
   late final DataPacketSplitter _dataSplitter;
-  final StreamController<String> _msgStreamController = StreamController();
 
   SecureSocketClient._private(this.ip);
 
@@ -231,14 +230,10 @@ class SecureSocketClient {
             },
             onError: (e) {
               Log.error(tag, "error:$e");
-              if (_onError != null) {
-                _onError!(e, this);
-              }
+              _onError?.call(e, this);
             },
             onDone: () {
-              if (_keyIsExchanged) {
-                _onDone?.call(this);
-              }
+              _onDone?.call(this);
               Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
               _socket.close();
             },
@@ -379,9 +374,7 @@ class SecureSocketClient {
       Log.debug(tag, "发送失败：$e");
       Log.debug(tag, "send, _onDone = ${_onDone == null}");
       Log.debug(tag, "$stack");
-      if (_onDone != null) {
-        _onDone!.call(this);
-      }
+      _onDone?.call(this);
     }
   }
 
@@ -415,7 +408,6 @@ class SecureSocketClient {
 
   ///关闭连接
   Future<void> close() async {
-    _msgStreamController.close();
     try{
       return await _socket.close();
     }catch(_){

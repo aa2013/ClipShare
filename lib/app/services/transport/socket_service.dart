@@ -1599,9 +1599,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     });
   }
 
+  ///重连一次
+  Future<void> reconnectOnce(String guid) async {
+    await _attemptReconnect(guid, true);
+  }
+
   ///重连设备，由于对向设备的连接可能持续持有一小段时间（视心跳时间而定）
   ///会在一定时间内持续尝试重连，此处默认 3 分钟
-  void _attemptReconnect(String guid) async {
+  Future<void> _attemptReconnect(String guid, [bool once = false]) async {
     final startTime = DateTime.now();
     var endTime = DateTime.now();
     var diffMinutes = endTime.difference(startTime).inMinutes;
@@ -1669,6 +1674,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
       endTime = DateTime.now();
       diffMinutes = endTime.difference(startTime).inMinutes;
+      if(once){
+        break;
+      }
     }
     Log.debug(tag, "重连失败 ${dev.name}(${dev.guid})");
   }
