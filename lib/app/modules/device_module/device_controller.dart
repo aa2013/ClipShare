@@ -219,8 +219,6 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           protocol: protocol,
         );
         _notifyOnlineDevicesWindow();
-        //是已配对的设备，请求所有缺失数据
-        // sktService.sendData(null, MsgType.reqMissingData, {});
         return;
       }
     }

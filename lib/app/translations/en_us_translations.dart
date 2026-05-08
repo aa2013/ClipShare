@@ -1435,6 +1435,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Flash system tray on connection or disconnection";
       case TranslationKey.useTrayFlashingForConnectionDesc:
         return "If enabled, flash the system tray; otherwise, use default system notifications";
+      case TranslationKey.trayDevAliveTooltip:
+        return "@first\n"
+            "Connected to @pairedCnt paired devices\n"
+            "Connected to @unpairedCnt unpaired devices";
     }
   }
 }

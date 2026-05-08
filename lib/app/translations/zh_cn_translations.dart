@@ -1433,6 +1433,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "设备连接或断开后使用托盘闪烁";
       case TranslationKey.useTrayFlashingForConnectionDesc:
         return "若启用则表示使用托盘闪烁的方式否则为默认的系统通知";
+      case TranslationKey.trayDevAliveTooltip:
+        return "@first\n"
+            "已连接 @pairedCnt 个配对设备\n"
+            "已连接 @unpairedCnt 个未配对设备";
     }
   }
 }
