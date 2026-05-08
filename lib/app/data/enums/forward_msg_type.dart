@@ -19,6 +19,8 @@ enum ForwardMsgType {
   fileSyncNotAllowed,
   //ping
   ping,
+  //pingResult
+  pingResult,
   //未知key
   unknown;
 

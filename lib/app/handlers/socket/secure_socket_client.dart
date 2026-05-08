@@ -414,15 +414,13 @@ class SecureSocketClient {
   }
 
   ///关闭连接
-  Future close() {
+  Future<void> close() async {
     _msgStreamController.close();
-    return _socket.close();
-  }
-
-  ///强制关闭
-  void destroy() {
-    _msgStreamController.close();
-    return _socket.destroy();
+    try{
+      return await _socket.close();
+    }catch(_){
+      _socket.destroy();
+    }
   }
 
   static Uint8List createPacketHeader(

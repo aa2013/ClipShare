@@ -47,7 +47,7 @@ class SecureSocketServer {
     void Function(String ip, int port, SecureSocketClient client)? onClientDone,
   }) async {
     var sss = SecureSocketServer._private(ip, port);
-    sss._server = await ServerSocket.bind(ip, port);
+    sss._server = await ServerSocket.bind(ip, port, shared: true);
     sss._onMessage = onMessage;
     sss._onError = onError;
     sss._onConnected = onConnected;
@@ -116,12 +116,12 @@ class SecureSocketServer {
   }
 
   ///发送数据
-  void send(SecureSocketClient client, Map map) {
-    client.send(map);
+  Future<void> send(SecureSocketClient client, Map map) async {
+    await client.send(map);
   }
 
   ///关闭连接
-  Future close() {
+  Future<void> close() {
     return _server.close();
   }
 }
