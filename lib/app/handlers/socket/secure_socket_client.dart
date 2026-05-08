@@ -235,7 +235,7 @@ class SecureSocketClient {
             onDone: () {
               _onDone?.call(this);
               Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
-              _socket.close();
+              close();
             },
             cancelOnError: _cancelOnError,
           );

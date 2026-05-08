@@ -1132,7 +1132,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         _onSocketReceived(client, msg);
       },
       onDone: (SecureSocketClient client) {
-        Log.debug(tag, "${forward ? '中转' : '手动'}连接关闭");
+        Log.debug(tag, "${forward ? '中转' : '内网'}连接关闭");
         if (forward) {
           _onDevDisconnected(targetDevId!);
         } else {
