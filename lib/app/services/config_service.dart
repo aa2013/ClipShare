@@ -1548,6 +1548,7 @@ class ConfigService extends GetxService {
 
   ///根据当前主题设置底部导航栏样式
   void setSystemUIOverlayAutoStyle() {
+    print("isDarkMode $currentIsDarkMode");
     if (currentIsDarkMode) {
       setSystemUIOverlayDarkStyle();
     } else {

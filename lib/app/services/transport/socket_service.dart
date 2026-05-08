@@ -829,7 +829,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       listener.onDiscoverStart();
     }
     Log.debug(tag, "开始发现设备");
-    onDiscoveryStopped(){
+    onDiscoveryStopped() {
       //设备发现流程结束
       appConfig.deviceDiscoveryStatus.value = null;
       if (!_discoveryTokenSource.token.isCanceled) {
@@ -840,6 +840,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         listener.onDiscoverFinished();
       }
     }
+
     //更新设备发现控制令牌
     _discoveryTokenSource = CancelTokenSource();
 
@@ -859,7 +860,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     //设备发现控制令牌
     var token = _discoveryTokenSource.token;
     //发现已配对设备
-    if(token.isCanceled){
+    if (token.isCanceled) {
       onDiscoveryStopped();
       return;
     }
@@ -868,7 +869,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     await ParallelTask(tasks: pairedDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
 
     //广播发现
-    if(token.isCanceled){
+    if (token.isCanceled) {
       onDiscoveryStopped();
       return;
     }
@@ -878,7 +879,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     await ParallelTask(tasks: multicastDiscoveryTasks, maxParallelCnt: 1, token: token).run();
 
     //子网扫描
-    if(token.isCanceled){
+    if (token.isCanceled) {
       onDiscoveryStopped();
       return;
     }
@@ -887,7 +888,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     await ParallelTask(tasks: subnetDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
 
     //中转发现
-    if(token.isCanceled){
+    if (token.isCanceled) {
       onDiscoveryStopped();
       return;
     }
@@ -895,7 +896,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     final List<Future<void> Function()> forwardDiscoveryTasks = scan ? await _forwardDiscovering() : [];
     await ParallelTask(tasks: forwardDiscoveryTasks, maxParallelCnt: maxParallelCnt, token: token).run();
     onDiscoveryStopped();
-
   }
 
   ///停止发现设备
@@ -945,14 +945,16 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       return tasks;
     }
     var interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
-    var expendAddress = interfaces.map((itf) => itf.addresses).expand((ip) => ip);
-    var ips = expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
-    for (var ip in ips) {
+    final expendAddress = interfaces.map((itf) => itf.addresses).expand((address) => address);
+    final ipv4Address = expendAddress.where((address) => address.type == InternetAddressType.IPv4);
+    for (var address in ipv4Address) {
+      final itfIp = address.address;
       //生成所有 ip
-      final ipList = List.generate(255, (i) => '${ip.split('.').take(3).join('.')}.$i').where((genIp) => genIp != ip).toList();
+      final ipList = List.generate(255, (i) => '${itfIp.split('.').take(3).join('.')}.$i');
       //对每个ip尝试连接
       for (var genIp in ipList) {
-        tasks.add(() => manualConnect(genIp));
+        //从指定网卡出去
+        tasks.add(() => manualConnect(genIp, sourceAddress: itfIp));
       }
     }
     return tasks;
@@ -965,31 +967,30 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     //先内网地址直连，若失败则尝试中转
     for (var dev in devices) {
       //已经连接，跳过
-      if(_devSockets.containsKey(dev.guid)){
+      if (_devSockets.containsKey(dev.guid)) {
         continue;
       }
-      if(dev.internalAddress != null){
+      if (dev.internalAddress != null) {
         //内网地址不为空，尝试直连
         var [ip, port] = dev.internalAddress!.split(":");
         tasks.add(() async {
-          try{
+          try {
             final result = await manualConnect(ip, port: int.parse(port));
-            if(!result){
+            if (!result) {
               //直连失败，尝试中转
-              if (forwardServerHost.isNotNullAndEmpty){
+              if (forwardServerHost.isNotNullAndEmpty) {
                 await manualConnectByForward(dev.guid);
               }
             }
-          }catch(err,stack){
+          } catch (err, stack) {
             Log.error(tag, err, stack);
             //直连过程异常，尝试中转
-            if (forwardServerHost.isNotNullAndEmpty){
+            if (forwardServerHost.isNotNullAndEmpty) {
               await manualConnectByForward(dev.guid);
             }
-
           }
         });
-      }else{
+      } else {
         //内网地址为空，尝试中转
         if (forwardServerHost.isNotNullAndEmpty) {
           Log.debug(tag, "connect by forward ${dev.name}(${dev.guid})");
@@ -1075,6 +1076,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   ///手动连接 ip
   Future<bool> manualConnect(
     String host, {
+    String? sourceAddress,
     int? port,
     Function? onErr,
     Map<String, dynamic> data = const {},
@@ -1085,12 +1087,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     Socket? testSkt;
     try {
       //测试连接是否可用
-      testSkt = await Socket.connect(host, port, timeout: 2.s);
-      await testSkt.close();
+      testSkt = await Socket.connect(host, port, timeout: 2.s, sourceAddress: sourceAddress);
     } catch (_) {
-      testSkt?.destroy();
       //地址不可连接
       return false;
+    } finally {
+      testSkt?.destroy();
     }
     String address = "$host:$port:$targetDevId";
     if (_connectingAddress.contains(address)) {
@@ -1103,6 +1105,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     });
     return SecureSocketClient.connect(
       ip: host,
+      sourceAddress: sourceAddress,
       port: port,
       prime1: appConfig.prime1,
       prime2: appConfig.prime2,
@@ -1279,7 +1282,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
     //更新连接地址
     final address = "$ip:$port";
-    if(address.isInternalIPv4){
+    if (address.isInternalIPv4) {
       await dbService.deviceDao.updateDeviceInternalAddress(dev.guid, appConfig.userId, address);
     }
     await dbService.deviceDao.updateDeviceAddress(dev.guid, appConfig.userId, address);
@@ -1544,13 +1547,13 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       });
       final key = "dev-conn-$devId";
       int? notifyId;
-      if(!appConfig.useTrayFlashingForConnection){
+      if (!appConfig.useTrayFlashingForConnection) {
         await NotifyUtil.cancelAll(key);
         notifyId = await NotifyUtil.notify(
           key: key,
           content: notifyContent,
         );
-      }else{
+      } else {
         final trayService = Get.find<TrayService>();
         trayService.flashTrayNormal(notifyContent);
       }
@@ -1581,13 +1584,13 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       });
       final key = "dev-disconn-$devId";
       int? notifyId;
-      if(!appConfig.useTrayFlashingForConnection){
+      if (!appConfig.useTrayFlashingForConnection) {
         await NotifyUtil.cancelAll(key);
         notifyId = await NotifyUtil.notify(
           key: key,
           content: notifyContent,
         );
-      }else{
+      } else {
         final trayService = Get.find<TrayService>();
         trayService.flashTrayWarning(notifyContent);
       }
@@ -1611,7 +1614,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     var endTime = DateTime.now();
     var diffMinutes = endTime.difference(startTime).inMinutes;
     final dev = await dbService.deviceDao.getById(guid, appConfig.userId);
-    if(dev == null){
+    if (dev == null) {
       Log.warn(tag, "Device $guid not found in db");
       return;
     }
@@ -1629,18 +1632,18 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       Log.debug(tag, "尝试重连 ${dev.name}");
       try {
         Log.debug(tag, "${dev.name} internalAddress = $internalAddress");
-        if(internalAddress != null){
+        if (internalAddress != null) {
           var available = false;
           final [ip, portStr] = internalAddress.split(":");
-          try{
+          try {
             //先尝试连接内网地址
             final skt = await Socket.connect(ip, portStr.toInt(), timeout: 2.s);
             skt.close();
             available = true;
-          }catch(_){
+          } catch (_) {
             available = false;
           }
-          if(available) {
+          if (available) {
             try {
               //内网地址可用
               available = await manualConnect(ip, port: portStr.toInt());
@@ -1650,18 +1653,18 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
             }
           }
           //内网地址不可用 尝试中转
-          if(!available && _forwardClient != null){
-            try{
+          if (!available && _forwardClient != null) {
+            try {
               Log.debug(tag, "${dev.name} reconnect by forward");
               await manualConnectByForward(guid);
             } catch (err, stack) {
               Log.error(tag, err, stack);
             }
           }
-        }else{
+        } else {
           //无本地地址，尝试中转
-          if(_forwardClient != null){
-            try{
+          if (_forwardClient != null) {
+            try {
               Log.debug(tag, "${dev.name} reconnect by forward");
               await manualConnectByForward(guid);
             } catch (err, stack) {
@@ -1674,7 +1677,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
       endTime = DateTime.now();
       diffMinutes = endTime.difference(startTime).inMinutes;
-      if(once){
+      if (once) {
         break;
       }
     }

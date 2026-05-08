@@ -65,6 +65,7 @@ class SecureSocketClient {
     required BigInt prime1,
     required BigInt prime2,
     required String? dhAesKey,
+    String? sourceAddress,
     ConnectionMode connectionMode = ConnectionMode.direct,
     String? targetDevId,
     String? selfDevId,
@@ -78,6 +79,7 @@ class SecureSocketClient {
       ip,
       port,
       timeout: const Duration(seconds: 2),
+      sourceAddress: sourceAddress,
     );
     var ssc = SecureSocketClient.fromSocket(
       socket: socket,
@@ -233,7 +235,9 @@ class SecureSocketClient {
               _onError?.call(e, this);
             },
             onDone: () {
-              _onDone?.call(this);
+              if(_keyIsExchanged) {
+                _onDone?.call(this);
+              }
               Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
               close();
             },
@@ -408,9 +412,10 @@ class SecureSocketClient {
 
   ///关闭连接
   Future<void> close() async {
-    try{
+    try {
       return await _socket.close();
-    }catch(_){
+    } catch (_) {
+    } finally {
       _socket.destroy();
     }
   }

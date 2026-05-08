@@ -107,7 +107,7 @@ class ForwardSocketClient {
         onDone: () {
           Log.debug(tag, "_onDone");
           _onDone?.call(this);
-          _socket.close();
+          close();
         },
         cancelOnError: _cancelOnError,
       );
@@ -152,6 +152,7 @@ class ForwardSocketClient {
     try{
       return await _socket.close();
     }catch(_){
+    } finally {
       _socket.destroy();
     }
   }
