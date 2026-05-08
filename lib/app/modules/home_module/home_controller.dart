@@ -99,7 +99,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   late AppInfoSyncHandler _appInfoSyncer;
   late RulesSyncHandler _rulesSyncer;
   late StreamSubscription _networkListener;
-  DateTime? _lastNetworkChangeTime;
   DateTime? pausedTime;
   final logoImg = Image.asset(
     Constants.logoPngPath,
@@ -289,6 +288,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     if (appConfig.useAuthentication) {
       _noScreenshot.screenshotOff();
     }
+    try {
+      await Directory(appConfig.documentsPath).create(recursive: true);
+    } catch (err, stack) {
+      Global.showTipsDialog(context: Get.context!, text: "$err,$stack");
+    }
   }
 
   ///初始化导航栏
@@ -433,33 +437,25 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   //endregion
 
+  Timer? _networkChangedTimer;
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
-    _lastNetworkChangeTime = DateTime.now();
-    Log.debug(tag, "网络变化 -> ${result.name}");
-    final lastNetwork = appConfig.currentNetWorkType.value;
-    //网络变化前的状态，非无网络状态,断开中转服务连接
-    if (lastNetwork != ConnectivityResult.none) {
-      sktService.disConnectAllConnections();
-      storageService.disconnectWs();
-    }
-    appConfig.currentNetWorkType.value = result;
-    //网络变化后的处理，重新连接/设备发现
-    if (result != ConnectivityResult.none) {
-      var delayMs = 0;
-      if (_lastNetworkChangeTime != null) {
-        var now = DateTime.now();
-        final diffMs = (now.difference(_lastNetworkChangeTime!).inMilliseconds).abs();
-        if (diffMs < 1000) {
-          Log.debug(tag, "Delay execution due to less than 1000ms(act ${diffMs}ms) since the last network change");
-          delayMs = 1000;
-        }
+    _networkChangedTimer?.cancel();
+    _networkChangedTimer = Timer(1500.ms, (){
+      Log.debug(tag, "网络变化 -> ${result.name}");
+      final lastNetwork = appConfig.currentNetWorkType.value;
+      //网络变化前的状态，非无网络状态,断开中转服务连接
+      if (lastNetwork != ConnectivityResult.none) {
+        sktService.disConnectAllConnections();
+        storageService.disconnectWs();
       }
-      Future.delayed(delayMs.ms, () {
+      appConfig.currentNetWorkType.value = result;
+      //网络变化后的处理，重新连接/设备发现
+      if (result != ConnectivityResult.none) {
         storageService.reconnectWs();
         storageService.uploadSyncFailedData();
-      });
-      Future.delayed(delayMs.ms, sktService.restartDiscoveryDevices);
-    }
+        sktService.restartDiscoveryDevices();
+      }
+    });
   }
 
   //region drawer 打开和关闭

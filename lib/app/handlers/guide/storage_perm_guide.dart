@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/guide/base_guide.dart';
+import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/permission_guide.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class StoragePermGuide extends BaseGuide {
   bool? hasPerm;

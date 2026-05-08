@@ -62,7 +62,6 @@ class HomePage extends GetView<HomeController> {
               child: Obx(
                 () => Scaffold(
                   key: controller.homeScaffoldKey,
-                  // backgroundColor: appConfig.bgColor,
                   appBar: !controller.isBigScreen
                       ? AppBar(
                           backgroundColor: currentTheme.colorScheme.inversePrimary,
