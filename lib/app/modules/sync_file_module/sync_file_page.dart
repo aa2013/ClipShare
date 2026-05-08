@@ -182,9 +182,9 @@ class SyncFilePage extends GetView<SyncFileController> {
                               child: Tooltip(
                                 message: TranslationKey.delete.tr,
                                 child: FloatingActionButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     DialogController? tipsDialog;
-                                    tipsDialog = Global.showTipsDialog(
+                                    tipsDialog = await Global.showTipsDialog(
                                       context: context,
                                       text: TranslationKey.deleteWithFilesOnSyncFilePageAckDialogText.trParams({"length": controller.selected.length.toString()}),
                                       showCancel: true,

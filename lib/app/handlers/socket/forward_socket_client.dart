@@ -105,8 +105,8 @@ class ForwardSocketClient {
           }
         },
         onDone: () {
-          _onDone?.call(this);
           Log.debug(tag, "_onDone");
+          _onDone?.call(this);
           _socket.close();
         },
         cancelOnError: _cancelOnError,

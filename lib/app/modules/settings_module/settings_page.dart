@@ -1364,6 +1364,18 @@ class SettingsPage extends GetView<SettingsController> {
                               ),
                               const SizedBox(width: 5),
                               Text(controller.forwardServerStatus.value.tr),
+                              const SizedBox(width: 5),
+                              Obx((){
+                                final status = controller.forwardServerStatus.value;
+                                if(status != ForwardServerStatus.connected) {
+                                  return const SizedBox.shrink();
+                                }
+                                final version = appConfig.forwardServerVersion.value;
+                                if(version.isNullOrEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                return Text("V$version");
+                              }),
                             ],
                           ),
                           value: appConfig.forwardWay == ForwardWay.server,
@@ -2161,7 +2173,7 @@ class SettingsPage extends GetView<SettingsController> {
                                   return;
                                 }
                                 DialogController? dialog;
-                                dialog = Global.showTipsDialog(
+                                dialog = await Global.showTipsDialog(
                                   context: context,
                                   text: TranslationKey.syncSettingsStoreImg2PicturesNoPermText.tr,
                                   showCancel: true,

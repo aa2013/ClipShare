@@ -5,12 +5,14 @@ import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/dialog/downloading_dialog.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:synchronized/synchronized.dart';
 
 import 'constants.dart';
 
@@ -18,6 +20,8 @@ class Global {
   Global._private();
 
   static const tag = "GlobalUtils";
+  static final _displayingDialogs = <String>{};
+  static final _dialogDisplayLock = Lock(); // 创建互斥锁
 
   static void toast(String text) {
     final androidChannelService = Get.find<AndroidChannelService>();
@@ -117,7 +121,7 @@ class Global {
     return dlgCtl;
   }
 
-  static DialogController? showTipsDialog({
+  static Future<DialogController?> showTipsDialog({
     required BuildContext context,
     required String text,
     bool selectable = false,
@@ -134,7 +138,20 @@ class Global {
     void Function()? onNeutral,
     bool autoDismiss = true,
     double maxWidth = double.maxFinite,
-  }) {
+  }) async {
+    var cancelDisplay = false;
+    late String md5;
+    await _dialogDisplayLock.synchronized((){
+      md5 = CryptoUtil.toMD5("$title$text");
+      if(_displayingDialogs.contains(md5)){
+        cancelDisplay = true;
+      } else {
+        _displayingDialogs.add(md5);
+      }
+    });
+    if(cancelDisplay){
+      return null;
+    }
     try {
       final appConfig = Get.find<ConfigService>();
       if (appConfig.authenticating.value) {
@@ -236,7 +253,7 @@ class Global {
         );
       },
     );
-    dlgCtl.future = feature.then((value) => dlgCtl.close());
+    dlgCtl.future = feature.then((value) => dlgCtl.close()).whenComplete(() => _displayingDialogs.remove(md5));
     return dlgCtl;
   }
 
