@@ -130,15 +130,11 @@ class SplashController extends GetxController {
     // 初始化channel
     initChannel();
     initShareHandler();
-    initLanguage();
+    appConfig.updateLanguage();
     // 初始化托盘服务（必须在语言初始化之后，以确保菜单项使用正确的翻译）
     if (PlatformExt.isDesktop) {
       await Get.putAsync(() => TrayService().init(), permanent: true);
     }
-  }
-
-  void initLanguage() {
-    appConfig.updateLanguage();
   }
 
   Future<void> initWindowsManager() async {

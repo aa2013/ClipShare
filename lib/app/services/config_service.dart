@@ -604,6 +604,7 @@ class ConfigService extends GetxService {
     await loadConfigs();
     await initDeviceInfo();
     snowflake = Snowflake(device.guid.hashCode);
+    setSystemUIOverlayAutoStyle();
     return this;
   }
 
@@ -1552,13 +1553,6 @@ class ConfigService extends GetxService {
     } else {
       setSystemUIOverlayLightStyle();
     }
-  }
-
-  ///修改主题模式
-  void changeThemeMode(ThemeMode theme) {
-    setAppTheme(theme, Get.context!);
-    // Get.changeThemeMode(theme);
-    // setSystemUIOverlayAutoStyle();
   }
 
   ///更新语言选项
