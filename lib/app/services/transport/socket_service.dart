@@ -1764,13 +1764,27 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     String multicastGroup, [
     int port = 0,
   ]) async {
-    final interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
+    const ipv4Type = InternetAddressType.IPv4;
+    final interfaces = (await NetworkInterface.list())
+        .where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name))
+        .where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
+
     final sockets = <RawDatagramSocket>[];
+
     for (final interface in interfaces) {
-      final socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port);
-      socket.joinMulticast(InternetAddress(multicastGroup), interface);
-      sockets.add(socket);
+      try {
+        // 获取对应的IPv4地址
+        final localAddr = interface.addresses.firstWhere((addr) => addr.type == ipv4Type);
+        // 绑定到特定网卡和端口
+        final socket = await RawDatagramSocket.bind(localAddr, port);
+        // 加入多播组
+        socket.joinMulticast(InternetAddress(multicastGroup), interface);
+        sockets.add(socket);
+      } catch (e, stack) {
+        Log.error(tag, 'Failed to bind to ${interface.name}: $e', stack);
+      }
     }
+
     return sockets;
   }
 
