@@ -55,7 +55,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   bool _loadNewData = false;
   bool _loading = true;
   bool _showBackToTopButton = false;
-  final multiWindowChannelService = Get.find<MultiWindowChannelService>();
+  final multiWindowService = Get.find<MultiWindowChannelService>();
   final windowControlService = Get.find<WindowControlService>();
   Timer? _timer;
   bool filterLoading = true;
@@ -127,7 +127,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     _timer = Timer(500.ms, () {
       _timer = null;
       windowManager.getPosition().then((pos) {
-        multiWindowChannelService.storeWindowPos(0, "history", pos);
+        multiWindowService.storeWindowPos(0, "history", pos);
       });
     });
   }
@@ -136,12 +136,12 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   Future<void> onWindowResized() async {
     super.onWindowResized();
     final size = await windowManager.getSize();
-    await multiWindowChannelService.updateWindowSize(0, WindowType.history, size);
+    await multiWindowService.updateWindowSize(0, WindowType.history, size);
   }
 
   @override
   void onCloseBtnClicked(bool isHide) {
-    multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
+    multiWindowService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
   }
 
   void _scrollListener() {
@@ -190,7 +190,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       if (loadMore) {
         fromId = _list.isEmpty ? 0 : _list.last.data.data.id;
       }
-      return multiWindowChannelService
+      return multiWindowService
           .getHistories(0, fromId, historyFilterController.filter)
           .then(
             (json) {
@@ -236,17 +236,17 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     final devices = <Device>[];
     final tags = <String>[];
     final sources = <AppInfo>[];
-    await multiWindowChannelService.getAllDevices(0).then(
+    await multiWindowService.getAllDevices(0).then(
       ((json) {
         final data = (jsonDecode(json) as List<dynamic>).cast<Map<String, dynamic>>();
         devices.addAll(data.map(Device.fromJson));
       }),
     );
-    await multiWindowChannelService.getAllTagNames(0).then((json) {
+    await multiWindowService.getAllTagNames(0).then((json) {
       var lst = (jsonDecode(json) as List<dynamic>).cast<String>();
       tags.addAll(lst);
     });
-    await multiWindowChannelService.getAllSources(0).then((list) {
+    await multiWindowService.getAllSources(0).then((list) {
       sources.addAll(list);
     });
     historyFilterController.setAllDevices(devices);
@@ -292,6 +292,15 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                       return ClipDataCardCompact(
                         devName: _list[idx].devName,
                         clip: _list[idx].data,
+                        onTopChanged: (int id, bool isTop) {
+                          multiWindowService.updateHistoryTop(0, id, isTop);
+                        },
+                        onDelete: (int id) {
+                          multiWindowService.deleteHistory(0, id);
+                          setState(() {
+                            _list.removeWhere((item) => item.data.data.id == id);
+                          });
+                        },
                       );
                     },
                   ),

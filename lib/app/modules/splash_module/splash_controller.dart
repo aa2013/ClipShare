@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/my_drop_item.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -256,6 +259,35 @@ class SplashController extends GetxController {
           final [width, height] = (args["size"] as String).split("x").map((item) => item.toDouble()).toList();
           final size = Size(width, height);
           await appConfig.updatePopupWindowSize(type, size);
+          break;
+        case MultiWindowMethod.updateHistoryTop:
+          final id = args["id"] as int;
+          final isTop = args["isTop"] as bool;
+          await dbService.historyDao.setTop(id, isTop).then((v) async {
+            if (v == null || v <= 0) return;
+            final historyController = Get.find<HistoryController>();
+            historyController.refreshData();
+            var opRecord = OperationRecord.fromSimple(
+              Module.historyTop,
+              OpMethod.update,
+              id,
+            );
+            await dbService.opRecordDao.addAndNotify(opRecord);
+          });
+          break;
+        case MultiWindowMethod.deleteHistory:
+          final id = args["id"] as int;
+          await dbService.historyDao.deleteByCascade(id);
+          final historyController = Get.find<HistoryController>();
+          historyController.refreshData();
+          //添加删除记录
+          var opRecord = OperationRecord.fromSimple(
+            Module.history,
+            OpMethod.delete,
+            id,
+          );
+          //通知其他设备
+          await dbService.opRecordDao.addAndNotify(opRecord);
           break;
         default:
       }

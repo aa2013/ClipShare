@@ -178,4 +178,25 @@ class MultiWindowChannelService extends GetxService {
       }),
     );
   }
+
+  ///弹窗中更新置顶状态
+  Future<void> updateHistoryTop(int targetWindowId, int id, bool isTop) {
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.updateHistoryTop.name,
+      jsonEncode({
+        "id": id,
+        "isTop": isTop,
+      }),
+    );
+  }
+
+  ///弹窗中删除一条历史记录
+  Future<void> deleteHistory(int targetWindowId, int id) {
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.deleteHistory.name,
+      jsonEncode({"id": id}),
+    );
+  }
 }

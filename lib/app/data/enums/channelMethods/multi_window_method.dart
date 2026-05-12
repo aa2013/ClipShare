@@ -12,4 +12,6 @@ enum MultiWindowMethod {
   showWindowFromHide,
   closeWindow,
   updateWindowSize,
+  updateHistoryTop,
+  deleteHistory,
 }
