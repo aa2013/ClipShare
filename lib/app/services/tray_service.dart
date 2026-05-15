@@ -24,6 +24,20 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
   final connRegService = Get.find<ConnectionRegistryService>();
   Timer? _tooltipTimer;
 
+  String get _warningIconPath {
+    if(Platform.isWindows){
+      return Constants.logoWarnIcoPath;
+    }
+    return Constants.logoWarnPngPath;
+  }
+
+  String get _normalIconPath {
+    if(Platform.isWindows){
+      return Constants.logoIcoPath;
+    }
+    return Constants.logoPngPath;
+  }
+
   Future<TrayService> init() async {
     await _initTrayManager();
     connRegService.addDevAliveListener(this);
@@ -84,18 +98,31 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
         "unpairedCnt": unpairedCnt.toString(),
       }),
     );
+    if (pairedCnt <= 0) {
+      await trayManager.setIcon(_warningIconPath);
+    } else {
+      await trayManager.setIcon(_normalIconPath);
+    }
   }
 
   Future<void> setToolTip(String toolTip) async {
     if (!Platform.isLinux) {
-      trayManager.setToolTip(toolTip);
+      await trayManager.setToolTip(toolTip);
     }
   }
 
   Future<void> _resetIcon() async {
-    await trayManager.setIcon(
-      Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
-    );
+    String iconPath = _warningIconPath;
+    try{
+      final devController = Get.find<DeviceController>();
+      final onlineList = devController.onlineAndPairedList;
+      if(onlineList.isNotEmpty){
+        iconPath = _normalIconPath;
+      }
+    }catch(_){
+      //ignored
+    }
+    await trayManager.setIcon(iconPath);
     await setToolTip(Constants.appName);
   }
 
@@ -130,14 +157,14 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
 
   Future<void> flashTrayWarning([String? toolTip]) async {
     await flashTray(
-      Platform.isWindows ? Constants.logoWarnIcoPath : Constants.logoWarnPngPath,
+      _warningIconPath,
       toolTip: toolTip,
     );
   }
 
   Future<void> flashTrayNormal([String? toolTip]) async {
     await flashTray(
-      Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
+      _normalIconPath,
       toolTip: toolTip,
     );
   }
