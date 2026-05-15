@@ -431,6 +431,7 @@ class _PreviewPageState extends State<PreviewPage> {
               final fileName = file.fileName;
               final newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
               try {
+                await File(newPath).parent.create(recursive: true);
                 file.copySync(newPath);
                 Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
                 final androidChannelService = Get.find<AndroidChannelService>();
