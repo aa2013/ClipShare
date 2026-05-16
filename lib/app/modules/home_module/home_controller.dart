@@ -167,6 +167,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
           });
     }
     AppUpdateInfoUtil.showUpdateInfo(debounce: true);
+    appConfig.setSystemUIOverlayAutoStyle();
   }
 
   @override

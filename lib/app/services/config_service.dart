@@ -607,7 +607,6 @@ class ConfigService extends GetxService {
     await loadConfigs();
     await initDeviceInfo();
     snowflake = Snowflake(device.guid.hashCode);
-    setSystemUIOverlayAutoStyle();
     return this;
   }
 
