@@ -141,15 +141,15 @@ class Global {
   }) async {
     var cancelDisplay = false;
     late String md5;
-    await _dialogDisplayLock.synchronized((){
+    await _dialogDisplayLock.synchronized(() {
       md5 = CryptoUtil.toMD5("$title$text");
-      if(_displayingDialogs.contains(md5)){
+      if (_displayingDialogs.contains(md5)) {
         cancelDisplay = true;
       } else {
         _displayingDialogs.add(md5);
       }
     });
-    if(cancelDisplay){
+    if (cancelDisplay) {
       return null;
     }
     try {
@@ -195,7 +195,11 @@ class Global {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SingleChildScrollView(child: selectable ? SelectableText(text) : Text(text)),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      child: selectable ? SelectableText(text) : Text(text),
+                    ),
+                  ),
                   ?customWidget,
                 ],
               ),

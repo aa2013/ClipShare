@@ -111,7 +111,7 @@ class AppUpdateInfoUtil {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            margin: 8.insetB,
+            margin: 4.insetV,
             child: Text(
               TranslationKey.selectInstallerType.tr,
               style: theme.textTheme.labelMedium?.copyWith(
