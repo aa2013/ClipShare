@@ -13,22 +13,48 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+#    container:
+#      image: archlinux:base-devel
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: recursive
-      
+
     - name: Install Linux dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
-        sudo apt-get install -y locate rpm patchelf
-        sudo apt-get install -y libayatana-appindicator3-dev
-        sudo apt-get install -y libkeybinder-3.0-dev
-        sudo apt-get install -y fuse libfuse-dev
-        sudo apt-get install -y wget
+        
+        sudo apt-get install -y \
+          git \
+          curl \
+          unzip \
+          xz-utils \
+          zip \
+          wget \
+          clang \
+          cmake \
+          ninja-build \
+          pkg-config \
+          libgtk-3-dev \
+          liblzma-dev \
+          locate \
+          rpm \
+          patchelf \
+          libayatana-appindicator3-dev \
+          libayatana-indicator3-dev \
+          libayatana-ido3-dev \
+          libdbusmenu-glib-dev \
+          libdbusmenu-gtk3-dev \
+          libkeybinder-3.0-dev \
+          libxtst-dev \
+          wayland-protocols \
+          libwayland-dev \
+          fuse \
+          libfuse-dev
+        
+        sudo ldconfig
 
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
