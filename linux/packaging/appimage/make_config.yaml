@@ -41,4 +41,12 @@ include:
   - libdbusmenu-glib.so.4
   - libdbusmenu-gtk3.so.4
   - libXtst.so.6
-  - libwayland-client.so.0
+
+# 避免打包基础系统/图形栈库：这些库在不同发行版 ABI 差异较大，
+# 在 Arch 上可能导致 GTK/GL 上下文初始化失败（如 gdk_gl_context_make_current 断言）。
+exclude:
+  - libstdc++.so.6
+  - libgcc_s.so.1
+  - libSM.so.6
+  - libICE.so.6
+  - libuuid.so.1
