@@ -21,7 +21,6 @@ APPIMAGE_RUNTIME_LIBS=(
     "libdbusmenu-glib.so.4"
     "libdbusmenu-gtk3.so.4"
     "libXtst.so.6"
-    "libwayland-client.so.0"
 )
 
 find_shared_library() {

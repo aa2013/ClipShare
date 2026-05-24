@@ -34,6 +34,8 @@ keywords:
 # 以下示例展示了如何将 libcurl 库与您的应用捆绑在一起
 #
 include:
+  # Do not bundle wayland core libs (e.g. libwayland-client).
+  # They are tightly coupled with host graphics stack and may break GL context creation on Wayland.
   - libkeybinder-3.0.so.0
   - libayatana-appindicator3.so.1
   - libayatana-indicator3.so.7
@@ -41,4 +43,3 @@ include:
   - libdbusmenu-glib.so.4
   - libdbusmenu-gtk3.so.4
   - libXtst.so.6
-  - libwayland-client.so.0
