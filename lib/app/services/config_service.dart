@@ -10,6 +10,7 @@ import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
+import 'package:clipshare/app/data/models/app_path_config.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/white_black_rule.dart';
@@ -94,10 +95,12 @@ class ConfigService extends GetxService {
   final minVersion = const AppVersion("1.0.0-beta", "3");
 
   //路径
+  AppPathConfig? _customPathConfig;
   late final String androidPrivateDocumentPath;
   late final String androidPrivatePicturesPath;
   late final String cachePath;
   late final String documentsPath;
+  late final String databasePath;
   late final String updateDownloadFileDirPath;
   late final String? windowsUserStartUpPath;
   late final String defaultFileStorePath;
@@ -627,11 +630,15 @@ class ConfigService extends GetxService {
     _showMainWindowHotKeys = (await cfg.getConfigByKey(ConfigKey.showMainWindowHotKeys, "")).obs;
     _exitAppHotKeys = (await cfg.getConfigByKey(ConfigKey.exitAppHotKeys, "")).obs;
     _heartbeatInterval = (await cfg.getConfigByKey(ConfigKey.heartbeatInterval, Constants.heartbeatInterval)).obs;
-    _fileStorePath = (await cfg.getConfigByKey(
-      ConfigKey.fileStorePath,
-      defaultFileStorePath,
-      convert: (value) => Directory(fileStorePath).absolute.normalizePath,
-    )).obs;
+    if (_customPathConfig?.fileStorePath == null) {
+      _fileStorePath = (await cfg.getConfigByKey(
+        ConfigKey.fileStorePath,
+        defaultFileStorePath,
+        convert: (value) => Directory(fileStorePath).absolute.normalizePath,
+      )).obs;
+    } else {
+      _fileStorePath = defaultFileStorePath.obs;
+    }
     _saveToPictures = (await cfg.getConfigByKey(ConfigKey.saveToPictures, false)).obs;
     _ignoreShizuku = (await cfg.getConfigByKey(ConfigKey.ignoreShizuku, false)).obs;
     _useAuthentication = (await cfg.getConfigByKey(ConfigKey.useAuthentication, false)).obs;
@@ -821,6 +828,19 @@ class ConfigService extends GetxService {
 
   ///初始化路径信息
   Future<void> initPath() async {
+    final customPathConfig = await _readPathConfig();
+    _customPathConfig = customPathConfig;
+    await _initDocumentsPath();
+    await _initCachePath();
+    await _initLogsDirPath();
+    await _initFileStorePath(customPathConfig);
+    await _initDatabasePath(customPathConfig);
+    _initWindowsStartupPath();
+    _initUpdateDownloadPath();
+    await Directory(documentsPath).create(recursive: true);
+  }
+
+  Future<void> _initDocumentsPath() async {
     if (Platform.isAndroid) {
       // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/documents
       androidPrivateDocumentPath = (await getExternalStorageDirectories(
@@ -830,47 +850,90 @@ class ConfigService extends GetxService {
       androidPrivatePicturesPath = (await getExternalStorageDirectories(
         type: StorageDirectory.pictures,
       ))![0].path;
-      // /storage/emulated/0/Android/data/top.coclyun.clipshare/cache
-      cachePath = (await getExternalCacheDirectories())![0].path;
       documentsPath = "${Constants.androidDocumentsPath}/ClipShare/";
-      updateDownloadFileDirPath = Constants.androidDownloadPath;
     } else {
-      cachePath = (await getApplicationCacheDirectory()).path;
-      if (Platform.isLinux) {
-        documentsPath = await _linuxDataDirPath();
-      } else {
-        documentsPath = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
-      }
-      updateDownloadFileDirPath = "$documentsPath/update";
-      if (Platform.isWindows) {
-        final username = Platform.environment['USERNAME'];
-        if (username == null) {
-          windowsUserStartUpPath = null;
-        } else {
-          windowsUserStartUpPath = r'C:\Users\' + username + r'\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup';
-        }
-      }
+      documentsPath = "${(await getApplicationDocumentsDirectory()).path}/ClipShare/";
     }
-    await Directory(documentsPath).create(recursive: true);
-    await _initLogsDirPath();
-    await _initDefaultFileStorePath();
   }
 
-  Future<String> _linuxDataDirPath() async {
-    final xdgDataHome = Platform.environment['XDG_DATA_HOME'];
-    if (xdgDataHome != null && xdgDataHome.isNotEmpty) {
-      return "$xdgDataHome/${Constants.appName}/".normalizePath;
+  void _initUpdateDownloadPath() {
+    if (Platform.isAndroid) {
+      updateDownloadFileDirPath = Constants.androidDownloadPath;
+    } else {
+      updateDownloadFileDirPath = "$documentsPath/update";
     }
-    final home = Platform.environment['HOME'];
-    if (home != null && home.isNotEmpty) {
-      return "$home/.local/share/${Constants.appName}/".normalizePath;
+  }
+
+  Future<void> _initCachePath() async {
+    if (Platform.isAndroid) {
+      // /storage/emulated/0/Android/data/top.coclyun.clipshare/cache
+      cachePath = (await getExternalCacheDirectories())![0].path;
+    } else {
+      cachePath = (await getApplicationCacheDirectory()).path;
     }
-    return "${(await getApplicationSupportDirectory()).path}/${Constants.appName}/"
-        .normalizePath;
+  }
+
+  void _initWindowsStartupPath() {
+    if (Platform.isWindows) {
+      final username = Platform.environment['USERNAME'];
+      if (username == null) {
+        windowsUserStartUpPath = null;
+      } else {
+        windowsUserStartUpPath = r'C:\Users\' + username + r'\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup';
+      }
+    }
+  }
+
+  Future<AppPathConfig> _readPathConfig() async {
+    String? fileStorePath;
+    String? databasePath;
+    //读取本地文件的路径配置
+    try {
+      final file = File("custom_path.json");
+      if (await file.exists()) {
+        final content = await file.readAsString();
+        final config = AppPathConfig.fromJson(jsonDecode(content));
+        fileStorePath = config.fileStorePath;
+        databasePath = config.databasePath;
+      }
+    } catch (_) {
+      //ignored
+    }
+    //读取环境变量中的路径配置
+    var envFileStorePath = Platform.environment['CLIPSHARE_FILE_STORE_PATH'];
+    var envDatabasePath = Platform.environment['CLIPSHARE_DATABASE_PATH'];
+    //环境变量优先
+    if (envFileStorePath != null) {
+      fileStorePath = envFileStorePath;
+    }
+    if (envDatabasePath != null) {
+      databasePath = envDatabasePath;
+    }
+    if (fileStorePath != null) {
+      try{
+        await Directory(fileStorePath).create(recursive: true);
+      }catch(err, stack){
+        fileStorePath = null;
+        Log.error(tag, err, stack);
+      }
+    }
+    if (databasePath != null) {
+      try{
+        await Directory(databasePath).create(recursive: true);
+      }catch(err, stack){
+        databasePath = null;
+        Log.error(tag, err, stack);
+      }
+    }
+    return AppPathConfig(fileStorePath: fileStorePath, databasePath: databasePath);
   }
 
   ///文件默认存储路径
-  Future<void> _initDefaultFileStorePath() async {
+  Future<void> _initFileStorePath(AppPathConfig custom) async {
+    if(custom.fileStorePath != null){
+      defaultFileStorePath = custom.fileStorePath!;
+      return;
+    }
     late String path;
     if (Platform.isAndroid) {
       path = "${Constants.androidDownloadPath}/${Constants.appName}";
@@ -894,6 +957,29 @@ class ConfigService extends GetxService {
       Log.error(tag, err, stack);
     }
     defaultFileStorePath = Directory(path).normalizePath;
+  }
+
+  ///数据库路径
+  Future<void> _initDatabasePath(AppPathConfig custom) async {
+    if(custom.databasePath != null){
+      databasePath = custom.databasePath!;
+      return;
+    }
+    //桌面端如果当前路径可写则使用当前路径，如开发环境或者便携版本
+    if (PlatformExt.isDesktop) {
+      if (Platform.isMacOS) {
+        databasePath = documentsPath;
+      } else {
+        var dirPath = Directory(Platform.resolvedExecutable).parent.path;
+        if (FileUtil.testWriteable(dirPath)) {
+          databasePath = dirPath;
+        } else {
+          databasePath = documentsPath;
+        }
+      }
+      return;
+    }
+    databasePath = "";
   }
 
   ///初始化日志路径
