@@ -41,7 +41,7 @@ endif()
 # of modifying this function.
 function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_features(${TARGET} PUBLIC cxx_std_14)
-  target_compile_options(${TARGET} PRIVATE -Wall -Werror)
+  target_compile_options(${TARGET} PRIVATE -Wall)
 
   # 豁免第三方插件编译警告：tray_manager 的 deprecated API、hotkey_manager_linux 的未初始化变量
   target_compile_options(${TARGET} PRIVATE

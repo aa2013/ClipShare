@@ -38,27 +38,10 @@ class TrayService extends GetxService with TrayListener {
   }
 
   Future<void> _setTrayIcon() async {
-    if (!Platform.isLinux) {
-      await trayManager.setIcon(
-        Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
-      );
-      return;
-    }
-
-    final iconPath = [
-      File(Platform.resolvedExecutable).parent.path,
-      'data',
-      'flutter_assets',
-      Constants.logoPngPath,
-    ].join(Platform.pathSeparator);
-    //todo 需要测试为什么不使用插件的 setIcon
-    // await trayManager.setIcon(
-    //   Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
-    // );
-    await const MethodChannel('tray_manager').invokeMethod('setIcon', {
-      'id': Constants.appName,
-      'iconPath': iconPath,
-    });
+    await trayManager.setIcon(
+      id: Platform.isLinux ? Constants.appName : null,
+      Platform.isWindows ? Constants.logoIcoPath : Constants.logoPngPath,
+    );
   }
 
   Future<void> updateTrayMenus([bool registerKey = true]) async {
