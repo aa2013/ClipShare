@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=ClipShare
+GenericName=Cross-Platform Clipboard Sync
+Exec=LD_LIBRARY_PATH=usr/lib clipshare %u
+Icon=clipshare
+Type=Application
+StartupNotify=true
+Categories=Utility
+Keywords=Clipboard;Clipboard Manager;Copy Paste;History;Productivity;Utility;Snippet;Manager;Enhanced Clipboard;Paste History
+
