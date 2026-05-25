@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
@@ -22,8 +23,6 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/hot_key_handler.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
-import 'package:clipshare/app/modules/views/settings/sms_rules_setting_page.dart';
-import 'package:clipshare/app/modules/views/settings/tag_rules_setting_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -53,9 +52,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -70,6 +69,7 @@ class SettingsPage extends GetView<SettingsController> {
   final sktService = Get.find<SocketService>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final storageService = Get.find<StorageService>();
+  final ruleController = Get.find<RulesController>();
   final logTag = "SettingsPage";
   static const arrowForwardIcon = Icon(
     Icons.arrow_forward_rounded,
@@ -361,7 +361,7 @@ class SettingsPage extends GetView<SettingsController> {
                               return Text(lg.label);
                             }
                           }
-                          return const Text("Unknown");
+                          return Text(TranslationKey.unknown.tr);
                         },
                       ),
                     ],
@@ -470,11 +470,11 @@ class SettingsPage extends GetView<SettingsController> {
                         ),
                         show: (v) => Platform.isAndroid && !v,
                         onTap: () async {
-                          final isValidWorkingMode = appConfig.workingMode == EnvironmentType.shizuku ||appConfig.workingMode == EnvironmentType.root;
-                          if(!isValidWorkingMode){
+                          final isValidWorkingMode = appConfig.workingMode == EnvironmentType.shizuku || appConfig.workingMode == EnvironmentType.root;
+                          if (!isValidWorkingMode) {
                             Global.showTipsDialog(context: context, text: TranslationKey.clipboardPermissionRequestFailed.tr);
                             return;
-                          }else{
+                          } else {
                             try {
                               await clipboardManager.requestClipboardPermission();
                               controller.hasClipboardPerm.value = await clipboardManager.checkClipboardPermission();
@@ -705,7 +705,7 @@ class SettingsPage extends GetView<SettingsController> {
                 Obx(
                   () => SettingCardGroup(
                     groupName: TranslationKey.clipboardSettingsGroupName.tr,
-                    icon: Icon(MdiIcons.clipboardOutline),
+                    icon: const Icon(MdiIcons.clipboardOutline),
                     cardList: [
                       SettingCard(
                         title: Text(
@@ -2114,47 +2114,6 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(
-                          TranslationKey.syncSettingsSmsTitle.tr,
-                          maxLines: 1,
-                        ),
-                        description: Text(TranslationKey.syncSettingsSmsDesc.tr),
-                        value: appConfig.enableSmsSync,
-                        show: (v) => Platform.isAndroid,
-                        action: (v) {
-                          return Switch(
-                            value: v,
-                            onChanged: (checked) async {
-                              HapticFeedback.mediumImpact();
-                              if (checked) {
-                                var isGranted = await PermissionHelper.testAndroidReadSms();
-                                if (isGranted) {
-                                  androidChannelService.startSmsListen();
-                                } else {
-                                  Global.showTipsDialog(
-                                    context: context,
-                                    text: TranslationKey.syncSettingsSmsPermissionRequired.tr,
-                                    okText: TranslationKey.dialogAuthorizationButtonText.tr,
-                                    showCancel: true,
-                                    onOk: () async {
-                                      await PermissionHelper.reqAndroidReadSms();
-                                      if (await PermissionHelper.testAndroidReadSms()) {
-                                        appConfig.setEnableSmsSync(true);
-                                        androidChannelService.startSmsListen();
-                                      }
-                                    },
-                                  );
-                                  return;
-                                }
-                              } else {
-                                androidChannelService.stopSmsListen();
-                              }
-                              appConfig.setEnableSmsSync(checked);
-                            },
-                          );
-                        },
-                      ),
-                      SettingCard(
-                        title: Text(
                           TranslationKey.syncSettingsStoreImg2PicturesTitle.tr,
                           maxLines: 1,
                         ),
@@ -2329,81 +2288,20 @@ class SettingsPage extends GetView<SettingsController> {
                   cardList: [
                     SettingCard(
                       title: Text(
-                        TranslationKey.ruleSettingsTagRuleTitle.tr,
-                        maxLines: 1,
-                      ),
-                      description: Text(TranslationKey.ruleSettingsTagRuleDesc.tr),
-                      value: false,
-                      action: (v) {
-                        return TextButton(
-                          onPressed: () {
-                            var page = TagRuleSettingPage();
-                            if (appConfig.isSmallScreen) {
-                              Get.to(page);
-                            } else {
-                              Global.showDialog(
-                                context,
-                                DynamicSizeWidget(
-                                  child: page,
-                                ),
-                              );
-                            }
-                          },
-                          child: Text(TranslationKey.configure.tr),
-                        );
-                      },
-                    ),
-                    SettingCard(
-                      title: Text(
-                        TranslationKey.ruleSettingsSmsRuleTitle.tr,
-                        maxLines: 1,
-                      ),
-                      description: Text(TranslationKey.ruleSettingsSmsRuleDesc.tr),
-                      value: false,
-                      show: (v) => Platform.isAndroid,
-                      action: (v) {
-                        return TextButton(
-                          onPressed: () {
-                            var page = SmsRuleSettingPage();
-                            if (appConfig.isSmallScreen) {
-                              Get.to(page);
-                            } else {
-                              Global.showDialog(
-                                context,
-                                DynamicSizeWidget(
-                                  child: page,
-                                ),
-                              );
-                            }
-                          },
-                          child: Text(TranslationKey.configure.tr),
-                        );
-                      },
-                    ),
-                    SettingCard(
-                      title: Text(
-                        TranslationKey.blacklistRules.tr,
+                        TranslationKey.rulesManagement.tr,
                         maxLines: 1,
                       ),
                       value: false,
                       action: (v) => IconButton(
-                        onPressed: controller.gotoBlackListPage,
+                        onPressed: () {
+                          Get.toNamed(Routes.RULES);
+                        },
                         icon: arrowForwardIcon,
                       ),
-                      onTap: controller.gotoBlackListPage,
-                    ),
-                    SettingCard(
-                      title: Text(
-                        TranslationKey.notificationRules.tr,
-                        maxLines: 1,
-                      ),
-                      value: null,
-                      action: (v) => IconButton(
-                        onPressed: controller.gotoFilterRuleListPage,
-                        icon: arrowForwardIcon,
-                      ),
-                      onTap: controller.gotoFilterRuleListPage,
-                      show: (_) => Platform.isAndroid,
+                      onTap: (){
+                        Get.toNamed(Routes.RULES);
+                      },
+                      show: (v) => appConfig.isSmallScreen,
                     ),
                   ],
                 ),
@@ -2547,7 +2445,7 @@ class SettingsPage extends GetView<SettingsController> {
                 ///region 备份和恢复
                 SettingCardGroup(
                   groupName: TranslationKey.backupRestore.tr,
-                  icon: Icon(MdiIcons.backupRestore),
+                  icon: const Icon(MdiIcons.backupRestore),
                   cardList: [
                     SettingCard(
                       title: Text(TranslationKey.backup.tr),

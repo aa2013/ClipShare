@@ -7,11 +7,11 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/check_update_button.dart';
-import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:simple_icons/simple_icons.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -91,17 +91,17 @@ class AboutPage extends GetView<AboutController> {
         ),
         SettingCard(
           padding: padding,
-          title: Row(
+          title: const Row(
             children: [
               Icon(
-                MdiIcons.github,
+                SimpleIcons.github,
                 color: Colors.blueGrey,
                 size: 28,
               ),
-              const SizedBox(
+              SizedBox(
                 width: 16,
               ),
-              const Text(
+              Text(
                 "Github",
                 style: fontSize,
               ),
@@ -120,8 +120,8 @@ class AboutPage extends GetView<AboutController> {
           padding: padding,
           title: Row(
             children: [
-              Icon(
-                MdiIcons.qqchat,
+              const Icon(
+                SimpleIcons.qq,
                 color: Colors.blueGrey,
                 size: 28,
               ),
@@ -143,7 +143,7 @@ class AboutPage extends GetView<AboutController> {
           padding: padding,
           title: Row(
             children: [
-              Icon(
+              const Icon(
                 MdiIcons.web,
                 color: Colors.blueGrey,
                 size: 28,
@@ -170,7 +170,7 @@ class AboutPage extends GetView<AboutController> {
           padding: padding,
           title: Row(
             children: [
-              Icon(
+              const Icon(
                 MdiIcons.update,
                 color: Colors.blueGrey,
                 size: 28,
@@ -228,7 +228,7 @@ class AboutPage extends GetView<AboutController> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
+              const Icon(
                 MdiIcons.databaseOutline,
                 color: Colors.blueGrey,
                 size: 28,

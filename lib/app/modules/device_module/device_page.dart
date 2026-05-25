@@ -22,7 +22,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -253,7 +253,7 @@ class DevicePage extends GetView<DeviceController> {
                   },
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         MdiIcons.web,
                         size: 20,
                       ),

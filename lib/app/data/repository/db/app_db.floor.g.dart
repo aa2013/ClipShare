@@ -85,13 +85,17 @@ class _$_AppDb extends _AppDb {
 
   AppInfoDao? _appInfoDaoInstance;
 
+  RuleDao? _ruleDaoInstance;
+
+  ScriptModuleDao? _scriptModuleDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 8,
+      version: 9,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -111,7 +115,7 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `Device` (`guid` TEXT NOT NULL, `devName` TEXT NOT NULL, `uid` INTEGER NOT NULL, `customName` TEXT, `type` TEXT NOT NULL, `address` TEXT, `internalAddress` TEXT, `isPaired` INTEGER NOT NULL, PRIMARY KEY (`guid`))');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `History` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uid` INTEGER NOT NULL, `time` TEXT NOT NULL, `content` TEXT NOT NULL, `type` TEXT NOT NULL, `devId` TEXT NOT NULL, `top` INTEGER NOT NULL, `sync` INTEGER NOT NULL, `size` INTEGER NOT NULL, `updateTime` TEXT, `source` TEXT)');
+            'CREATE TABLE IF NOT EXISTS `History` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `uid` INTEGER NOT NULL, `time` TEXT NOT NULL, `content` TEXT NOT NULL, `extracted` TEXT, `type` TEXT NOT NULL, `devId` TEXT NOT NULL, `top` INTEGER NOT NULL, `sync` INTEGER NOT NULL, `size` INTEGER NOT NULL, `updateTime` TEXT, `source` TEXT)');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `User` (`id` INTEGER, `account` TEXT NOT NULL, `password` TEXT NOT NULL, `type` TEXT NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
@@ -119,9 +123,13 @@ class _$_AppDb extends _AppDb {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `HistoryTag` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tagName` TEXT NOT NULL, `hisId` INTEGER NOT NULL)');
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
+            'CREATE TABLE IF NOT EXISTS `OperationRecord` (`id` INTEGER NOT NULL, `uid` INTEGER NOT NULL, `devId` TEXT NOT NULL, `module` TEXT NOT NULL, `moduleEn` TEXT, `method` TEXT NOT NULL, `data` TEXT NOT NULL, `time` TEXT NOT NULL, `storageSync` INTEGER, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT NOT NULL, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `ScriptModule` (`moduleName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `language` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`moduleName`))');
         await database.execute(
             'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
         await database.execute(
@@ -130,6 +138,8 @@ class _$_AppDb extends _AppDb {
             'CREATE UNIQUE INDEX `index_HistoryTag_tagName_hisId` ON `HistoryTag` (`tagName`, `hisId`)');
         await database.execute(
             'CREATE INDEX `index_OperationRecord_uid_module_method` ON `OperationRecord` (`uid`, `module`, `method`)');
+        await database.execute(
+            'CREATE INDEX `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
         await database.execute(
             'CREATE UNIQUE INDEX `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`)');
         await database.execute(
@@ -181,6 +191,17 @@ class _$_AppDb extends _AppDb {
   @override
   AppInfoDao get appInfoDao {
     return _appInfoDaoInstance ??= _$AppInfoDao(database, changeListener);
+  }
+
+  @override
+  RuleDao get ruleDao {
+    return _ruleDaoInstance ??= _$RuleDao(database, changeListener);
+  }
+
+  @override
+  ScriptModuleDao get scriptModuleDao {
+    return _scriptModuleDaoInstance ??=
+        _$ScriptModuleDao(database, changeListener);
   }
 }
 
@@ -349,6 +370,7 @@ class _$HistoryDao extends HistoryDao {
                   'uid': item.uid,
                   'time': item.time,
                   'content': item.content,
+                  'extracted': item.extracted,
                   'type': item.type,
                   'devId': item.devId,
                   'top': item.top ? 1 : 0,
@@ -366,6 +388,7 @@ class _$HistoryDao extends HistoryDao {
                   'uid': item.uid,
                   'time': item.time,
                   'content': item.content,
+                  'extracted': item.extracted,
                   'type': item.type,
                   'devId': item.devId,
                   'top': item.top ? 1 : 0,
@@ -400,7 +423,8 @@ class _$HistoryDao extends HistoryDao {
             top: (row['top'] as int) != 0,
             sync: (row['sync'] as int) != 0,
             updateTime: row['updateTime'] as String?,
-            source: row['source'] as String?),
+            source: row['source'] as String?,
+            extracted: row['extracted'] as String?),
         arguments: [uid]);
   }
 
@@ -455,7 +479,8 @@ class _$HistoryDao extends HistoryDao {
             top: (row['top'] as int) != 0,
             sync: (row['sync'] as int) != 0,
             updateTime: row['updateTime'] as String?,
-            source: row['source'] as String?),
+            source: row['source'] as String?,
+            extracted: row['extracted'] as String?),
         arguments: [
           uid,
           fromId,
@@ -585,7 +610,8 @@ class _$HistoryDao extends HistoryDao {
             top: (row['top'] as int) != 0,
             sync: (row['sync'] as int) != 0,
             updateTime: row['updateTime'] as String?,
-            source: row['source'] as String?),
+            source: row['source'] as String?,
+            extracted: row['extracted'] as String?),
         arguments: [
           uid,
           startTime,
@@ -619,7 +645,7 @@ class _$HistoryDao extends HistoryDao {
   Future<List<History>> getMissingHistory(String devId) async {
     return _queryAdapter.queryList(
         'SELECT * FROM history h WHERE NOT EXISTS (SELECT 1 FROM SyncHistory sh WHERE sh.hisId = h.id AND sh.devId = ?1) and h.devId != ?1',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
+        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
         arguments: [devId]);
   }
 
@@ -627,7 +653,7 @@ class _$HistoryDao extends HistoryDao {
   Future<List<History>> getHistoriesTop100(int uid) async {
     return _queryAdapter.queryList(
         'select * from history where uid = ?1 order by top desc,id desc limit 100',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
+        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
         arguments: [uid]);
   }
 
@@ -638,7 +664,7 @@ class _$HistoryDao extends HistoryDao {
   ) async {
     return _queryAdapter.queryList(
         'select * from history where uid = ?1 and (?2 <= 0 or id < ?2) order by top desc,id desc limit 100',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
+        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
         arguments: [uid, fromId]);
   }
 
@@ -689,7 +715,8 @@ class _$HistoryDao extends HistoryDao {
             top: (row['top'] as int) != 0,
             sync: (row['sync'] as int) != 0,
             updateTime: row['updateTime'] as String?,
-            source: row['source'] as String?),
+            source: row['source'] as String?,
+            extracted: row['extracted'] as String?),
         arguments: [id]);
   }
 
@@ -697,7 +724,7 @@ class _$HistoryDao extends HistoryDao {
   Future<List<History>> getAllImages(int uid) async {
     return _queryAdapter.queryList(
         'select * from history where uid = ?1 and type = \'Image\' order by id desc',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
+        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
         arguments: [uid]);
   }
 
@@ -705,7 +732,7 @@ class _$HistoryDao extends HistoryDao {
   Future<List<History>> getFiles(int uid) async {
     return _queryAdapter.queryList(
         'select * from history where uid = ?1 and type = \'File\' order by id desc',
-        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?),
+        mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
         arguments: [uid]);
   }
 
@@ -1150,6 +1177,7 @@ class _$OperationRecordDao extends OperationRecordDao {
                   'uid': item.uid,
                   'devId': item.devId,
                   'module': _moduleTypeConverter.encode(item.module),
+                  'moduleEn': item.moduleEn,
                   'method': _opMethodTypeConverter.encode(item.method),
                   'data': item.data,
                   'time': item.time,
@@ -1176,7 +1204,7 @@ class _$OperationRecordDao extends OperationRecordDao {
   ) async {
     return _queryAdapter.queryList(
         'select * from OperationRecord record   where not exists (     select 1 from OperationSync opsync     where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id   ) and devId = ?3   and (     ?4 <= 0      or      (strftime(\'%s\', \'now\') + ?5 - strftime(\'%s\', record.time)) <= ?4   )   order by case when module=\'App信息\' then 1 else 0 end desc, id desc',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), moduleEn: row['moduleEn'] as String?, method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [
           uid,
           toDevId,
@@ -1230,7 +1258,7 @@ class _$OperationRecordDao extends OperationRecordDao {
   ) async {
     return _queryAdapter.query(
         'select * from OperationRecord where uid = ?4 and module = ?2 and method = ?3 and data = ?1 order by id desc limit 1',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), moduleEn: row['moduleEn'] as String?, method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [id, module, opMethod, uid]);
   }
 
@@ -1239,7 +1267,7 @@ class _$OperationRecordDao extends OperationRecordDao {
       String devId) async {
     return _queryAdapter.query(
         'select * from OperationRecord where devId = ?1 and storageSync = 1 order by id desc limit 1',
-        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
+        mapper: (Map<String, Object?> row) => OperationRecord(id: row['id'] as int, uid: row['uid'] as int, devId: row['devId'] as String, module: _moduleTypeConverter.decode(row['module'] as String), moduleEn: row['moduleEn'] as String?, method: _opMethodTypeConverter.decode(row['method'] as String), data: row['data'] as String, storageSync: row['storageSync'] == null ? null : (row['storageSync'] as int) != 0),
         arguments: [devId]);
   }
 
@@ -1298,6 +1326,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1325,6 +1354,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1353,6 +1383,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1369,6 +1400,7 @@ class _$OperationRecordDao extends OperationRecordDao {
             uid: row['uid'] as int,
             devId: row['devId'] as String,
             module: _moduleTypeConverter.decode(row['module'] as String),
+            moduleEn: row['moduleEn'] as String?,
             method: _opMethodTypeConverter.decode(row['method'] as String),
             data: row['data'] as String,
             storageSync: row['storageSync'] == null
@@ -1498,6 +1530,246 @@ class _$AppInfoDao extends AppInfoDao {
   }
 }
 
+class _$RuleDao extends RuleDao {
+  _$RuleDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _ruleInsertionAdapter = InsertionAdapter(
+            database,
+            'Rule',
+            (Rule item) => <String, Object?>{
+                  'id': item.id,
+                  'name': item.name,
+                  'platforms': item.platforms,
+                  'sources': item.sources,
+                  'trigger': item.trigger,
+                  'type': item.type,
+                  'regexWhiteBlackMode': item.regexWhiteBlackMode,
+                  'regexMain': item.regexMain,
+                  'regexAllowExtractData': item.regexAllowExtractData ? 1 : 0,
+                  'regexExtractedContent': item.regexExtractedContent,
+                  'regexAllowAddTag': item.regexAllowAddTag ? 1 : 0,
+                  'regexTags': item.regexTags,
+                  'regexIsSyncDisabled': item.regexIsSyncDisabled ? 1 : 0,
+                  'regexIsFinalRule': item.regexIsFinalRule ? 1 : 0,
+                  'scriptLanguage': item.scriptLanguage,
+                  'scriptContent': item.scriptContent,
+                  'version': item.version,
+                  'enabled': item.enabled ? 1 : 0,
+                  'order': item.order
+                }),
+        _ruleUpdateAdapter = UpdateAdapter(
+            database,
+            'Rule',
+            ['id'],
+            (Rule item) => <String, Object?>{
+                  'id': item.id,
+                  'name': item.name,
+                  'platforms': item.platforms,
+                  'sources': item.sources,
+                  'trigger': item.trigger,
+                  'type': item.type,
+                  'regexWhiteBlackMode': item.regexWhiteBlackMode,
+                  'regexMain': item.regexMain,
+                  'regexAllowExtractData': item.regexAllowExtractData ? 1 : 0,
+                  'regexExtractedContent': item.regexExtractedContent,
+                  'regexAllowAddTag': item.regexAllowAddTag ? 1 : 0,
+                  'regexTags': item.regexTags,
+                  'regexIsSyncDisabled': item.regexIsSyncDisabled ? 1 : 0,
+                  'regexIsFinalRule': item.regexIsFinalRule ? 1 : 0,
+                  'scriptLanguage': item.scriptLanguage,
+                  'scriptContent': item.scriptContent,
+                  'version': item.version,
+                  'enabled': item.enabled ? 1 : 0,
+                  'order': item.order
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<Rule> _ruleInsertionAdapter;
+
+  final UpdateAdapter<Rule> _ruleUpdateAdapter;
+
+  @override
+  Future<int?> remove(int id) async {
+    return _queryAdapter.query('delete from rule where id = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [id]);
+  }
+
+  @override
+  Future<Rule?> getById(int id) async {
+    return _queryAdapter.query('select * from rule where id = ?1',
+        mapper: (Map<String, Object?> row) => Rule(
+            id: row['id'] as int,
+            name: row['name'] as String,
+            platforms: row['platforms'] as String,
+            sources: row['sources'] as String,
+            trigger: row['trigger'] as String,
+            type: row['type'] as String,
+            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String,
+            regexMain: row['regexMain'] as String,
+            regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
+            regexExtractedContent: row['regexExtractedContent'] as String,
+            regexAllowAddTag: (row['regexAllowAddTag'] as int) != 0,
+            regexTags: row['regexTags'] as String,
+            regexIsSyncDisabled: (row['regexIsSyncDisabled'] as int) != 0,
+            regexIsFinalRule: (row['regexIsFinalRule'] as int) != 0,
+            scriptLanguage: row['scriptLanguage'] as String,
+            scriptContent: row['scriptContent'] as String,
+            version: row['version'] as int,
+            enabled: (row['enabled'] as int) != 0,
+            order: row['order'] as int),
+        arguments: [id]);
+  }
+
+  @override
+  Future<List<Rule>> getAllRules() async {
+    return _queryAdapter.queryList('select * from rule order by `order`',
+        mapper: (Map<String, Object?> row) => Rule(
+            id: row['id'] as int,
+            name: row['name'] as String,
+            platforms: row['platforms'] as String,
+            sources: row['sources'] as String,
+            trigger: row['trigger'] as String,
+            type: row['type'] as String,
+            regexWhiteBlackMode: row['regexWhiteBlackMode'] as String,
+            regexMain: row['regexMain'] as String,
+            regexAllowExtractData: (row['regexAllowExtractData'] as int) != 0,
+            regexExtractedContent: row['regexExtractedContent'] as String,
+            regexAllowAddTag: (row['regexAllowAddTag'] as int) != 0,
+            regexTags: row['regexTags'] as String,
+            regexIsSyncDisabled: (row['regexIsSyncDisabled'] as int) != 0,
+            regexIsFinalRule: (row['regexIsFinalRule'] as int) != 0,
+            scriptLanguage: row['scriptLanguage'] as String,
+            scriptContent: row['scriptContent'] as String,
+            version: row['version'] as int,
+            enabled: (row['enabled'] as int) != 0,
+            order: row['order'] as int));
+  }
+
+  @override
+  Future<int?> count() async {
+    return _queryAdapter.query('select count(*) from rule',
+        mapper: (Map<String, Object?> row) => row.values.first as int);
+  }
+
+  @override
+  Future<int> addRule(Rule rule) {
+    return _ruleInsertionAdapter.insertAndReturnId(
+        rule, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<List<int>> addRules(List<Rule> rule) {
+    return _ruleInsertionAdapter.insertListAndReturnIds(
+        rule, OnConflictStrategy.replace);
+  }
+
+  @override
+  Future<int> updateRule(Rule rule) {
+    return _ruleUpdateAdapter.updateAndReturnChangedRows(
+        rule, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateRules(List<Rule> rules) {
+    return _ruleUpdateAdapter.updateListAndReturnChangedRows(
+        rules, OnConflictStrategy.abort);
+  }
+}
+
+class _$ScriptModuleDao extends ScriptModuleDao {
+  _$ScriptModuleDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _scriptModuleInsertionAdapter = InsertionAdapter(
+            database,
+            'ScriptModule',
+            (ScriptModule item) => <String, Object?>{
+                  'moduleName': item.moduleName,
+                  'displayName': item.displayName,
+                  'language':
+                      _ruleScriptLanguageConverter.encode(item.language),
+                  'source': item.source,
+                  'version': item.version
+                }),
+        _scriptModuleUpdateAdapter = UpdateAdapter(
+            database,
+            'ScriptModule',
+            ['moduleName'],
+            (ScriptModule item) => <String, Object?>{
+                  'moduleName': item.moduleName,
+                  'displayName': item.displayName,
+                  'language':
+                      _ruleScriptLanguageConverter.encode(item.language),
+                  'source': item.source,
+                  'version': item.version
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<ScriptModule> _scriptModuleInsertionAdapter;
+
+  final UpdateAdapter<ScriptModule> _scriptModuleUpdateAdapter;
+
+  @override
+  Future<int?> remove(String name) async {
+    return _queryAdapter.query('delete from ScriptModule where moduleName = ?1',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [name]);
+  }
+
+  @override
+  Future<ScriptModule?> getByName(String name) async {
+    return _queryAdapter.query(
+        'select * from ScriptModule where moduleName = ?1',
+        mapper: (Map<String, Object?> row) => ScriptModule(
+            moduleName: row['moduleName'] as String,
+            displayName: row['displayName'] as String,
+            language:
+                _ruleScriptLanguageConverter.decode(row['language'] as String),
+            source: row['source'] as String,
+            version: row['version'] as int),
+        arguments: [name]);
+  }
+
+  @override
+  Future<List<ScriptModule>> getAllModules() async {
+    return _queryAdapter.queryList('select * from ScriptModule',
+        mapper: (Map<String, Object?> row) => ScriptModule(
+            moduleName: row['moduleName'] as String,
+            displayName: row['displayName'] as String,
+            language:
+                _ruleScriptLanguageConverter.decode(row['language'] as String),
+            source: row['source'] as String,
+            version: row['version'] as int));
+  }
+
+  @override
+  Future<int> addModule(ScriptModule module) {
+    return _scriptModuleInsertionAdapter.insertAndReturnId(
+        module, OnConflictStrategy.abort);
+  }
+
+  @override
+  Future<int> updateModule(ScriptModule module) {
+    return _scriptModuleUpdateAdapter.updateAndReturnChangedRows(
+        module, OnConflictStrategy.abort);
+  }
+}
+
 // ignore_for_file: unused_element
 final _moduleTypeConverter = ModuleTypeConverter();
 final _opMethodTypeConverter = OpMethodTypeConverter();
+final _ruleScriptLanguageConverter = RuleScriptLanguageConverter();

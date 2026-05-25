@@ -9,7 +9,6 @@ import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -52,6 +51,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:uri_file_reader/uri_file_reader.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:path/path.dart' as p;
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -129,6 +129,7 @@ class SplashController extends GetxController {
     }
     if (Platform.isAndroid) {
       androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
+      await copyAssets();
     }
     // 初始化channel
     initChannel();
@@ -137,6 +138,24 @@ class SplashController extends GetxController {
     // 初始化托盘服务（必须在语言初始化之后，以确保菜单项使用正确的翻译）
     if (PlatformExt.isDesktop) {
       await Get.putAsync(() => TrayService().init(), permanent: true);
+    }
+    await appConfig.migrateRules();
+  }
+
+  Future<void> copyAssets() async {
+    final luaFiles = ['dkjson.lua', 'task.lua'];
+    for (var fileName in luaFiles) {
+      try {
+        final newLuaPath = File(p.join(appConfig.luaLibDirPath, fileName));
+        await newLuaPath.parent.create(recursive: true);
+        final bytes = await rootBundle.load('assets/lua/$fileName');
+        await newLuaPath.writeAsBytes(
+          bytes.buffer.asUint8List(),
+          flush: true,
+        );
+      } catch (err, stack) {
+        Log.error(tag, err, stack);
+      }
     }
   }
 

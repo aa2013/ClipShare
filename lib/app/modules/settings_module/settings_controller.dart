@@ -16,9 +16,9 @@ import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/log_module/log_controller.dart';
 import 'package:clipshare/app/modules/log_module/log_page.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/modules/statistics_module/statistics_controller.dart';
 import 'package:clipshare/app/modules/statistics_module/statistics_page.dart';
-import 'package:clipshare/app/modules/views/white_black_list_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -68,6 +68,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final sourceService = Get.find<ClipboardSourceService>();
   final tagService = Get.find<TagService>();
   final devService = Get.find<DeviceService>();
+  final ruleController = Get.find<RulesController>();
 
   //region 属性
   final tag = "SettingsController";
@@ -263,67 +264,6 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoFilterRuleListPage() {
-    final isSmallScreen = appConfig.isSmallScreen;
-    final homeController = Get.find<HomeController>();
-    final currentMode = appConfig.currentNotificationWhiteBlackMode.obs;
-    final page = Obx(
-      () => WhiteBlackListPage(
-        title: TranslationKey.notificationRules.tr,
-        showMode: WhiteBlackMode.all,
-        currentMode: currentMode.value,
-        showTypesFilter: false,
-        blacklist: List.from(appConfig.notificationBlackList),
-        whitelist: List.from(appConfig.notificationWhiteList),
-        onModeChanged: (mode, enabled) {
-          currentMode.value = mode;
-        },
-        onDone: (WhiteBlackMode mode, Map<WhiteBlackMode, List<FilterRule>> data) {
-          final blacklist = data[WhiteBlackMode.black]!;
-          final whitelist = data[WhiteBlackMode.white]!;
-          appConfig.setNotificationBlackWhiteList(mode, blacklist, whitelist);
-          if (!isSmallScreen) {
-            homeController.popDrawer();
-          }
-        },
-      ),
-    );
-    if (isSmallScreen) {
-      Get.to(page);
-    } else {
-      homeController.pushDrawer(widget: page);
-    }
-  }
-
-  void gotoBlackListPage() {
-    final isSmallScreen = appConfig.isSmallScreen;
-    final homeController = Get.find<HomeController>();
-    final enabled = appConfig.enableContentBlackList.obs;
-    final page = Obx(
-      () => WhiteBlackListPage(
-        title: TranslationKey.blacklistRules.tr,
-        showMode: WhiteBlackMode.black,
-        enabled: enabled.value,
-        blacklist: List.from(appConfig.contentBlackList),
-        onModeChanged: (mode, e) {
-          enabled.value = e;
-        },
-        onDone: (_, Map<WhiteBlackMode, List<FilterRule>> data) {
-          appConfig.setEnableContentBlackList(enabled.value);
-          appConfig.setContentBlacklist(data[WhiteBlackMode.black]!);
-          if (!isSmallScreen) {
-            homeController.popDrawer();
-          }
-        },
-      ),
-    );
-    if (isSmallScreen) {
-      Get.to(page);
-    } else {
-      homeController.pushDrawer(widget: page);
-    }
-  }
-
   void gotoAboutPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.ABOUT);
@@ -410,7 +350,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     });
     PermissionHelper.testAndroidReadSms().then((granted) {
       //有权限或者不需要读取短信则视为有权限
-      hasSmsReadPerm.value = granted || !appConfig.enableSmsSync;
+      hasSmsReadPerm.value = granted || !ruleController.enableSmsSync;
     });
     PermissionHelper.testAndroidAccessibilityPerm().then((granted) {
       hasAccessibilityPerm.value = granted;
@@ -759,32 +699,37 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         }
       } else {
         //文件备份完毕，若为存储服务，上传，显示上传进度弹窗
-        if(backupSource == BackupSource.local || storageClient == null){
-          return;
+        var text = TranslationKey.exportSuccess.tr;
+        if (storageClient != null) {
+          final loadingController = LoadingProgressController(total: 100);
+          final dialog = Global.showLoadingDialog(
+            context: context,
+            dismissible: false,
+            loadingText: TranslationKey.uploading.tr,
+            controller: loadingController,
+          );
+          final backupFileName = File(result.localPath!).fileName;
+          final uploadSuccess = await storageClient.uploadFile(
+            "backup/$backupFileName",
+            result.localPath!,
+            onProgress: (count, total) {
+              int percentage = (count * 100 / total).toInt();
+              loadingController.update(percentage);
+            },
+          );
+          await dialog.close();
+          if(uploadSuccess){
+            File(result.localPath!).delete();
+          }
+          else {
+            text = TranslationKey.exportFailedAndViewLogs.tr;
+          }
         }
-        final loadingController = LoadingProgressController(total: 100);
-        final dialog = Global.showLoadingDialog(
-          context: context,
-          dismissible: false,
-          loadingText: TranslationKey.uploading.tr,
-          controller: loadingController,
-        );
-        final backupFileName = File(result.localPath!).fileName;
-        final uploadSuccess = await storageClient!.uploadFile(
-          "backup/$backupFileName",
-          result.localPath!,
-          onProgress: (count, total) {
-            int percentage = (count * 100 / total).toInt();
-            loadingController.update(percentage);
-          },
-        );
-        await dialog.close();
-        final text = uploadSuccess ? TranslationKey.exportSuccess.tr : TranslationKey.exportFailedAndViewLogs.tr;
         Global.showTipsDialog(text: text, context: context);
-        File(result.localPath!).delete();
       }
     } catch (err, stack) {
       Log.error(tag, "$err,$stack");
+      Global.showTipsDialog(text: TranslationKey.exportFailedAndViewLogs.tr, context: context);
     } finally {
       dialog.close();
       //恢复截图复制
@@ -931,7 +876,6 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         Global.showTipsDialog(context: context, title: TranslationKey.importSuccess.tr, text: TranslationKey.restoreRestartPrompt.tr);
         final historyController = Get.find<HistoryController>();
         final searchController = Get.find<search_module.SearchController>();
-        sourceService.init();
         devService.init();
         tagService.init();
         searchController.refreshData();

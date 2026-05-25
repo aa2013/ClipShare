@@ -8,14 +8,20 @@ class LargeText extends StatefulWidget {
   final String text;
   final bool readonly;
   final bool showLineNumber;
-  final bool showSperator;
+  final bool showSeparator;
+  final bool findMode;
+  final ValueChanged<bool>? onFindModeChanged;
+  final CodeHighlightTheme? codeTheme;
 
   const LargeText({
     super.key,
     required this.text,
     required this.readonly,
     this.showLineNumber = false,
-    this.showSperator = false,
+    this.showSeparator = false,
+    this.findMode = false,
+    this.codeTheme,
+    this.onFindModeChanged,
   });
 
   @override
@@ -24,11 +30,31 @@ class LargeText extends StatefulWidget {
 
 class _LargeTextState extends State<LargeText> {
   final CodeLineEditingController _controller = CodeLineEditingController();
+  late final CodeFindController _findController;
 
   @override
   void initState() {
     _controller.text = widget.text;
+    _findController = CodeFindController(_controller);
+    if(widget.findMode){
+      _findController.findMode();
+    }
+    _findController.addListener(() {
+      widget.onFindModeChanged?.call(_findController.value != null);
+    });
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant LargeText oldWidget) {
+    if(oldWidget.findMode != widget.findMode){
+      if(widget.findMode) {
+        _findController.findMode();
+      }else{
+        _findController.value = null;
+      }
+    }
+    super.didUpdateWidget(oldWidget);
   }
 
   @override
@@ -36,9 +62,12 @@ class _LargeTextState extends State<LargeText> {
     return CodeEditor(
       readOnly: widget.readonly,
       controller: _controller,
+      findController: _findController,
       wordWrap: true,
-      indicatorBuilder:
-          (context, editingController, chunkController, notifier) {
+      style: CodeEditorStyle(
+        codeTheme: widget.codeTheme,
+      ),
+      indicatorBuilder: (context, editingController, chunkController, notifier) {
         return Row(
           children: [
             Visibility(
@@ -56,11 +85,10 @@ class _LargeTextState extends State<LargeText> {
           ],
         );
       },
-      findBuilder: (context, controller, readOnly) =>
-          CodeFindPanelView(controller: controller, readOnly: readOnly),
+      findBuilder: (context, controller, readOnly) => CodeFindPanelView(controller: controller, readOnly: readOnly),
       toolbarController: const ContextMenuControllerImpl(),
       sperator: Visibility(
-        visible: widget.showSperator,
+        visible: widget.showSeparator,
         child: Container(width: 1, color: const Color(0xADADAFB6)),
       ),
     );

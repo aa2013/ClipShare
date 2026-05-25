@@ -51,6 +51,7 @@ class AppInfoGroupsView extends StatelessWidget {
                     child: RoundedChip(
                       onPressed: () => onPress?.call(app),
                       selected: true,
+                      showCheckmark: false,
                       label: Text(app.name),
                       avatar: Image.memory(app.iconBytes),
                     ),

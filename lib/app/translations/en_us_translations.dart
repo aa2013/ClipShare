@@ -390,10 +390,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Sync selected files to other devices (invalid on desktop)";
       case TranslationKey.syncSettingsGroupName:
         return "Sync";
-      case TranslationKey.syncSettingsSmsTitle:
-        return "SMS Sync";
-      case TranslationKey.syncSettingsSmsDesc:
-        return "SMS that match the rules will be automatically synced";
       case TranslationKey.syncSettingsSmsPermissionRequired:
         return "Please grant SMS read permission first";
       case TranslationKey.syncSettingsStoreImg2PicturesTitle:
@@ -414,14 +410,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "If enabled, images copied on other devices will be automatically copied on this device";
       case TranslationKey.ruleSettingsGroupName:
         return "Rules";
-      case TranslationKey.ruleSettingsTagRuleTitle:
-        return "Tag Rules";
-      case TranslationKey.ruleSettingsTagRuleDesc:
-        return "Records that match the rules will be automatically tagged";
-      case TranslationKey.ruleSettingsSmsRuleTitle:
-        return "SMS Rules";
-      case TranslationKey.ruleSettingsSmsRuleDesc:
-        return "SMS that match the rules will be synced, if not configured, all will be synced";
       case TranslationKey.logSettingsGroupName:
         return "Logs";
       case TranslationKey.logSettingsEnableTitle:
@@ -452,6 +440,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "This file cannot be read directly\n\nSave to [File Storage Path] first?";
       case TranslationKey.save:
         return "Save";
+      case TranslationKey.saved:
+        return "Saved";
       case TranslationKey.saveFileNotSupportDialogText:
         return "Unsupported Type";
       case TranslationKey.pieDataStatisticsLocalItemLabel:
@@ -578,16 +568,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Select All";
       case TranslationKey.cancelSelectAll:
         return "Cancel Select All";
-      case TranslationKey.smsRuleSettingPageAppBarTitle:
-        return "SMS Rule Configuration";
       case TranslationKey.inputCompletedErrorText:
         return "Please complete the input!";
-      case TranslationKey.ruleSettingAddDialogLabel:
-        return "Rule Name";
-      case TranslationKey.ruleSettingAddDialogHint:
-        return "Please enter the rule name";
-      case TranslationKey.tagRuleSettingPageAppBarTitle:
-        return "Tag Rule Configuration";
       case TranslationKey.onlineDevicesPageSelectDeviceToSend:
         return "Select devices";
       case TranslationKey.send:
@@ -1114,10 +1096,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Content cannot be empty";
       case TranslationKey.contentAndSourceCannotEmpty:
         return "Both content, source, types cannot be empty";
-      case TranslationKey.blacklistRules:
-        return "Blacklist Rules";
-      case TranslationKey.whitelistRules:
-        return "Currently only applies to Text";
       case TranslationKey.ignoreCase:
         return "Case insensitive";
       case TranslationKey.application:
@@ -1128,16 +1106,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Content";
       case TranslationKey.title:
         return "Title";
-      case TranslationKey.addWhitelistRule:
-        return "Add Whitelist";
-      case TranslationKey.addBlacklistRule:
-        return "Add Blacklist";
       case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
         return "Receive Mobile Device Notifications";
       case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
         return "Notifications from connected mobile devices will display on this device (requires enabling notification logging on source device)";
-      case TranslationKey.notificationRules:
-        return "Notification History Rules";
       case TranslationKey.permissionSettingsNotificationRecordTitle:
         return "Notification History";
       case TranslationKey.permissionSettingsNotificationRecordDesc:
@@ -1407,6 +1379,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Recopy latest data after unlock";
       case TranslationKey.recopyOnScreenUnlockedTitleDesc:
         return "Some systems cannot auto-copy in locked screen state. When enabled, this feature will retry copying the latest synced data after screen unlock";
+      case TranslationKey.rulesManagement:
+        return "Rules";
       case TranslationKey.excludePrivateFormat:
         return "Exclude Private Formats";
       case TranslationKey.excludePrivateFormatTips:
@@ -1439,6 +1413,457 @@ class EnUSTranslation extends AbstractTranslations {
         return "@first\n"
             "Connected to @pairedCnt paired devices\n"
             "Connected to @unpairedCnt unpaired devices";
+      case TranslationKey.displayExtractedContent:
+        return "Display Extracted Content";
+      case TranslationKey.displayOriginContent:
+        return "Display Origin Content";
+
+      //region lua code prompt
+      case TranslationKey.codePromptParamsContentIsSyncDisabled:
+        return "Whether to prevent sync";
+      case TranslationKey.codePromptParamsContentTags:
+        return "Tags";
+      case TranslationKey.codePromptParamsContentExtracted:
+        return "Extracted content";
+      case TranslationKey.codePromptParamsContentDetail:
+        return "Content";
+      case TranslationKey.codePromptParamsContentNotificationTitle:
+        return "Notification title (available only when type is notification)";
+      case TranslationKey.codePromptParamsContentSouce:
+        return "Content source, either a local path or an App package name";
+      case TranslationKey.codePromptParamsContentTpye:
+        return "Content type";
+      case TranslationKey.codePromptNotificationTpye:
+        return "Notification";
+      case TranslationKey.codePromptImageType:
+        return "Image";
+      case TranslationKey.codePromptTextType:
+        return "Text";
+      case TranslationKey.codePromptSmsType:
+        return "SMS";
+      case TranslationKey.codePromptJsonDecode:
+        return "JSON decode";
+      case TranslationKey.codePromptLogError:
+        return "Output error-level log information";
+      case TranslationKey.codePromptLogWarn:
+        return "Output warning-level log information";
+      case TranslationKey.codePromptLogDebug:
+        return "Output debug-level log information";
+      case TranslationKey.codePromptLogInfo:
+        return "Output info-level log information";
+      case TranslationKey.codePromptContentType:
+        return "Content type";
+      case TranslationKey.codePromptJson:
+        return "JSON Module";
+      case TranslationKey.codePromptLog:
+        return "Log Module";
+      case TranslationKey.codePromptPrint:
+        return "Print output, equivalent to log.debug()";
+      case TranslationKey.codePromptMath:
+        return 'Math Module';
+      case TranslationKey.codePromptString:
+        return 'String Module';
+      case TranslationKey.codePromptTable:
+        return 'Table manipulation Module';
+      case TranslationKey.codePromptUtf8:
+        return 'UTF-8 Module';
+      case TranslationKey.codePromptOs:
+        return 'OS Module (safe subset)';
+      case TranslationKey.codePromptBasic:
+        return 'Basic functions';
+      case TranslationKey.codePromptType:
+        return 'Get value type';
+      case TranslationKey.codePromptToString:
+        return 'Convert to string';
+      case TranslationKey.codePromptToNumber:
+        return 'Convert to number';
+      case TranslationKey.codePromptPairs:
+        return 'Iterate table (key-value pairs)';
+      case TranslationKey.codePromptIpairs:
+        return 'Iterate array (numeric index)';
+      case TranslationKey.codePromptNext:
+        return 'Get next element';
+      case TranslationKey.codePromptPcall:
+        return 'Protected function call';
+      case TranslationKey.codePromptXpcall:
+        return 'Protected call with error handler';
+      case TranslationKey.codePromptSelect:
+        return 'Access variadic arguments';
+      case TranslationKey.codePromptAssert:
+        return 'Assertion check';
+      case TranslationKey.codePromptError:
+        return 'Raise an error';
+      case TranslationKey.codePromptMathAbs:
+        return 'Absolute value';
+      case TranslationKey.codePromptMathAcos:
+        return 'Arc cosine';
+      case TranslationKey.codePromptMathAsin:
+        return 'Arc sine';
+      case TranslationKey.codePromptMathAtan:
+        return 'Arc tangent';
+      case TranslationKey.codePromptMathCeil:
+        return 'Round up';
+      case TranslationKey.codePromptMathCos:
+        return 'Cosine';
+      case TranslationKey.codePromptMathDeg:
+        return 'Radians to degrees';
+      case TranslationKey.codePromptMathExp:
+        return 'Exponential';
+      case TranslationKey.codePromptMathFloor:
+        return 'Round down';
+      case TranslationKey.codePromptMathFmod:
+        return 'Remainder';
+      case TranslationKey.codePromptMathHuge:
+        return 'Largest float value';
+      case TranslationKey.codePromptMathLog:
+        return 'Logarithm';
+      case TranslationKey.codePromptMathMax:
+        return 'Maximum value';
+      case TranslationKey.codePromptMathMaxInteger:
+        return 'Maximum integer';
+      case TranslationKey.codePromptMathMin:
+        return 'Minimum value';
+      case TranslationKey.codePromptMathMinInteger:
+        return 'Minimum integer';
+      case TranslationKey.codePromptMathModf:
+        return 'Integer and fractional parts';
+      case TranslationKey.codePromptMathPi:
+        return 'Pi constant';
+      case TranslationKey.codePromptMathRad:
+        return 'Degrees to radians';
+      case TranslationKey.codePromptMathRandom:
+        return 'Random number';
+      case TranslationKey.codePromptMathRandomSeed:
+        return 'Set random seed';
+      case TranslationKey.codePromptMathSin:
+        return 'Sine';
+      case TranslationKey.codePromptMathSqrt:
+        return 'Square root';
+      case TranslationKey.codePromptMathTan:
+        return 'Tangent';
+      case TranslationKey.codePromptMathToInteger:
+        return 'Convert to integer';
+      case TranslationKey.codePromptMathType:
+        return 'Number subtype';
+      case TranslationKey.codePromptMathUlt:
+        return 'Unsigned integer comparison';
+      case TranslationKey.codePromptStringByte:
+        return 'Character code';
+      case TranslationKey.codePromptStringChar:
+        return 'Create string from character codes';
+      case TranslationKey.codePromptStringDump:
+        return 'Dump function bytecode';
+      case TranslationKey.codePromptStringLen:
+        return 'String length';
+      case TranslationKey.codePromptStringSub:
+        return 'Substring';
+      case TranslationKey.codePromptStringFind:
+        return 'Find substring';
+      case TranslationKey.codePromptStringFormat:
+        return 'Format string';
+      case TranslationKey.codePromptStringGMatch:
+        return 'Iterate matches';
+      case TranslationKey.codePromptStringGSub:
+        return 'Replace matches';
+      case TranslationKey.codePromptStringLower:
+        return 'Convert to lowercase';
+      case TranslationKey.codePromptStringMatch:
+        return 'Match pattern';
+      case TranslationKey.codePromptStringPack:
+        return 'Pack values into binary string';
+      case TranslationKey.codePromptStringPackSize:
+        return 'Packed size';
+      case TranslationKey.codePromptStringRep:
+        return 'Repeat string';
+      case TranslationKey.codePromptStringReverse:
+        return 'Reverse string';
+      case TranslationKey.codePromptStringUnpack:
+        return 'Unpack binary string';
+      case TranslationKey.codePromptStringUpper:
+        return 'Convert to uppercase';
+      case TranslationKey.codePromptTableInsert:
+        return 'Insert element';
+      case TranslationKey.codePromptTableMove:
+        return 'Move elements between tables';
+      case TranslationKey.codePromptTableRemove:
+        return 'Remove element';
+      case TranslationKey.codePromptTableSort:
+        return 'Sort table';
+      case TranslationKey.codePromptTableConcat:
+        return 'Concatenate strings';
+      case TranslationKey.codePromptUtf8Len:
+        return 'UTF-8 string length';
+      case TranslationKey.codePromptUtf8Char:
+        return 'Create UTF-8 character';
+      case TranslationKey.codePromptUtf8CharPattern:
+        return 'UTF-8 character pattern';
+      case TranslationKey.codePromptUtf8Codes:
+        return 'Iterate UTF-8 code points';
+      case TranslationKey.codePromptUtf8CodePoint:
+        return 'Get UTF-8 code points';
+      case TranslationKey.codePromptUtf8Offset:
+        return 'Get UTF-8 offset';
+      case TranslationKey.codePromptOsClock:
+        return 'CPU time used';
+      case TranslationKey.codePromptOsDate:
+        return 'Get current date';
+      case TranslationKey.codePromptOsTime:
+        return 'Get timestamp';
+      case TranslationKey.codePromptOsDiffTime:
+        return 'Time difference';
+      case TranslationKey.codePromptLuaVersion:
+        return 'Current Lua version';
+      case TranslationKey.codePromptTablePack:
+        return 'Pack arguments into a table';
+      case TranslationKey.codePromptTableUnpack:
+        return 'Unpack a table into multiple return values';
+      case TranslationKey.codePromptScriptParams:
+        return 'Script parameters, including content, type, source, and other information';
+      case TranslationKey.codePromptIfSnippet:
+        return 'If condition snippet';
+      case TranslationKey.codePromptElseSnippet:
+        return 'Else snippet';
+      case TranslationKey.codePromptElseIfSnippet:
+        return 'Else-if snippet';
+      case TranslationKey.codePromptWhileSnippet:
+        return 'While loop snippet';
+      case TranslationKey.codePromptRepeatSnippet:
+        return 'Repeat-until loop snippet';
+      case TranslationKey.codePromptForSnippet:
+        return 'For numeric loop snippet';
+      case TranslationKey.codePromptForStepSnippet:
+        return 'For loop with step snippet';
+      case TranslationKey.codePromptIPairsSnippet:
+        return 'Ipairs iteration snippet';
+      case TranslationKey.codePromptPairsSnippet:
+        return 'Pairs table iteration snippet';
+      case TranslationKey.codePromptFunctionSnippet:
+        return 'Function definition snippet';
+      case TranslationKey.codePromptLocalFunctionSnippet:
+        return 'Local function definition snippet';
+      case TranslationKey.codePromptPlatformAndroid:
+        return 'Android platform';
+      case TranslationKey.codePromptNotify:
+        return 'Notification';
+      case TranslationKey.codePromptAndroidToast:
+        return 'Android toast message';
+      case TranslationKey.codePromptAndroidSendHistoryChangedBroadcast:
+        return 'Android send history changed broadcast';
+      case TranslationKey.codePromptPlatform:
+        return 'Platform';
+      case TranslationKey.codePromptPlatformIsAndroid:
+        return 'Check if platform is Android';
+      case TranslationKey.codePromptPlatformIsIOS:
+        return 'Check if platform is iOS';
+      case TranslationKey.codePromptPlatformIsWindows:
+        return 'Check if platform is Windows';
+      case TranslationKey.codePromptPlatformIsMacOS:
+        return 'Check if platform is macOS';
+      case TranslationKey.codePromptPlatformIsLinux:
+        return 'Check if platform is Linux';
+      case TranslationKey.codePromptApp:
+        return 'App';
+      case TranslationKey.codePromptAppVersionName:
+        return 'App version name';
+      case TranslationKey.codePromptAppVersionNumber:
+        return 'App version number';
+      case TranslationKey.codePromptDeviceSelf:
+        return 'Current device';
+      case TranslationKey.codePromptDeviceSelfName:
+        return 'Current device name';
+      case TranslationKey.codePromptDeviceSelfId:
+        return 'Current device ID';
+      case TranslationKey.codePromptCrypto:
+        return 'Cryptography';
+      case TranslationKey.codePromptCryptoMD5:
+        return 'Compute MD5 hash';
+      case TranslationKey.codePromptCryptoSHA256:
+        return 'Compute SHA-256 hash';
+      case TranslationKey.codePromptCryptoSHA1:
+        return 'Compute SHA-1 hash';
+      case TranslationKey.codePromptBase64:
+        return 'Base64';
+      case TranslationKey.codePromptBase64Encode:
+        return 'Encode Base64';
+      case TranslationKey.codePromptBase64Decode:
+        return 'Decode Base64';
+      case TranslationKey.codePromptRegex:
+        return 'Regular expression';
+      case TranslationKey.codePromptRegexMatch:
+        return 'Match all full matches and return as a list';
+      case TranslationKey.codePromptRegexMatchGroups:
+        return 'Match all capture groups and return as a nested list';
+      case TranslationKey.codePromptHttp:
+        return 'HTTP request Module';
+      case TranslationKey.codePromptTask:
+        return 'Async task Module';
+      case TranslationKey.codePromptAsync:
+        return 'Wraps a function as async, allowing await inside';
+      case TranslationKey.codePromptAwait:
+        return 'Waits for an awaiter to complete and returns its result; can only be used inside an async function';
+      case TranslationKey.codePromptHttpGet:
+        return 'GET request method (async)';
+      case TranslationKey.codePromptHttpPost:
+        return 'POST request method (async)';
+      case TranslationKey.codePromptPut:
+        return 'PUT request method (async)';
+      case TranslationKey.codePromptDelete:
+        return 'DELETE request method (async)';
+      case TranslationKey.codePromptTaskCreate:
+        return 'Creates a task (awaiter)';
+      //endregion
+      case TranslationKey.rulesPageUnsavedChangesConfirm:
+        return 'There are unsaved changes. Continue anyway?';
+      case TranslationKey.ruleItemContentRequired:
+        return 'Rule content cannot be empty';
+      case TranslationKey.ruleItemExtractRuleRequired:
+        return 'Extraction rule cannot be empty';
+      case TranslationKey.ruleItemScriptContentRequired:
+        return 'Script content cannot be empty';
+      case TranslationKey.ruleItemUnsupportedOperation:
+        return 'Unsupported operation';
+      case TranslationKey.ruleTriggerOnCopyText:
+        return 'After copy';
+      case TranslationKey.ruleTriggerOnNotificationText:
+        return 'New notification';
+      case TranslationKey.ruleTriggerOnSmsText:
+        return 'New SMS';
+      case TranslationKey.ruleDetailRegexHint:
+        return 'Enter a regular expression';
+      case TranslationKey.ruleDetailNameLabel:
+        return 'Rule name: ';
+      case TranslationKey.ruleDetailNameHint:
+        return 'Enter rule name';
+      case TranslationKey.ruleDetailPlatformLabel:
+        return 'Platform';
+      case TranslationKey.ruleDetailTriggerLabel:
+        return 'Trigger';
+      case TranslationKey.ruleDetailRuleLabel:
+        return 'Rule';
+      case TranslationKey.ruleDetailRegexTab:
+        return 'Regex';
+      case TranslationKey.ruleDetailScriptTab:
+        return 'Script';
+      case TranslationKey.ruleDetailAutoWrapTooltip:
+        return 'Auto wrap';
+      case TranslationKey.ruleDetailFullScreenTooltip:
+        return 'Enter full-screen editor';
+      case TranslationKey.ruleDetailModeDefault:
+        return 'Default';
+      case TranslationKey.ruleDetailModeBlacklist:
+        return 'Blacklist';
+      case TranslationKey.ruleDetailModeWhitelist:
+        return 'Whitelist';
+      case TranslationKey.ruleDetailRegexLabel:
+        return 'Rule:';
+      case TranslationKey.ruleDetailExtractContent:
+        return 'Extract content';
+      case TranslationKey.ruleDetailModeLabel:
+        return 'Rule mode';
+      case TranslationKey.ruleDetailActionLabel:
+        return 'Actions';
+      case TranslationKey.ruleDetailAddTagLabel:
+        return 'Add tags:';
+      case TranslationKey.ruleDetailAddTagDialogTitle:
+        return 'Add tag';
+      case TranslationKey.ruleDetailFinalRule:
+        return 'Stop following rules';
+      case TranslationKey.ruleDetailRunTestTooltip:
+        return 'Run test';
+      case TranslationKey.ruleDetailPageTitle:
+        return 'Rule details';
+      case TranslationKey.ruleModulesDetailSyntaxError:
+        return 'Contains syntax errors. Please fix them';
+      case TranslationKey.scriptModulesDetailDisplayNameRequired:
+        return 'Display name cannot be empty';
+      case TranslationKey.scriptModulesDetailModuleNameRequired:
+        return 'Module name cannot be empty';
+      case TranslationKey.scriptModulesDetailModuleNameDuplicated:
+        return 'Module name must be unique';
+      case TranslationKey.scriptModuleDetailContentRequired:
+        return 'Content cannot be empty';
+      case TranslationKey.scriptModuleDetailDisplayNameLabel:
+        return 'Display name: ';
+      case TranslationKey.scriptModuleDetailDisplayNameHint:
+        return 'Enter display name';
+      case TranslationKey.scriptModuleDetailModuleNameLabel:
+        return 'Module name';
+      case TranslationKey.scriptModuleDetailModuleNameImmutableTooltip:
+        return 'Module name cannot be changed after saving';
+      case TranslationKey.scriptModuleDetailModuleNameHint:
+        return 'Module name';
+      case TranslationKey.scriptModuleDetailNameInvalid:
+        return 'Only letters, numbers, and underscores are allowed, and it cannot start with a number';
+      case TranslationKey.scriptModuleDetailPageTitle:
+        return 'Module details';
+      case TranslationKey.ruleListDeleteModuleConfirm:
+        return 'Delete it? If other scripts use it, they will stop working.';
+      case TranslationKey.ruleListExitSelectionModeTooltip:
+        return 'Exit selection mode';
+      case TranslationKey.ruleCardDragDisabledTooltip:
+        return 'Save data or clear the search input before reordering';
+      case TranslationKey.ruleCardDragTooltip:
+        return 'Reorder';
+      case TranslationKey.scriptEditTestViewPanelTooltip:
+        return 'Run panel';
+      case TranslationKey.scriptEditTestViewRunTooltip:
+        return 'Run';
+      case TranslationKey.scriptEditTestViewExitFullScreenTooltip:
+        return 'Exit full-screen editor';
+      case TranslationKey.scriptTestPanelParamsTab:
+        return 'Params';
+      case TranslationKey.scriptTestPanelCompileInfoTab:
+        return 'Compile info';
+      case TranslationKey.scriptTestPanelOutputTab:
+        return 'Output';
+      case TranslationKey.scriptTestPanelRunResultTab:
+        return 'Run result';
+      case TranslationKey.scriptTestPanelCollapseTooltip:
+        return 'Collapse';
+      case TranslationKey.ruleCompileCodeNotFound:
+        return 'Code not found';
+      case TranslationKey.ruleCompileCodeEmpty:
+        return 'Code is empty';
+      case TranslationKey.ruleCompileSuccess:
+        return 'Compile succeeded.';
+      case TranslationKey.ruleCompileFailedPrefix:
+        return 'Compile failed:\n@message';
+      case TranslationKey.scriptModuleCompileReturnTableRequired:
+        return 'The Module return value must be a table.';
+
+      case TranslationKey.success:
+        return 'Success';
+      case TranslationKey.error:
+        return 'Error';
+      case TranslationKey.extracted:
+        return 'Extracted';
+      case TranslationKey.tags:
+        return 'Tags';
+      case TranslationKey.flags:
+        return 'Flags';
+      case TranslationKey.finalRule:
+        return 'Final';
+      case TranslationKey.dropped:
+        return 'Dropped';
+      case TranslationKey.syncDisabled:
+        return 'Prevent Sync';
+      case TranslationKey.rules:
+        return 'Rules';
+      case TranslationKey.scriptModules:
+        return 'Script Modules';
+      case TranslationKey.modules:
+        return 'Modules';
+      case TranslationKey.unknown:
+        return 'Unknown';
+      case TranslationKey.triggerOnCopy:
+        return 'Trigger: Copy';
+      case TranslationKey.triggerOnNotification:
+        return 'Trigger: Notification';
+      case TranslationKey.triggerOnSms:
+        return 'Trigger: SMS';
+      case TranslationKey.modulesTip:
+        return 'You can import pure Lua libraries, or encapsulate some frequently used methods for scripts to call. The return value must be a table.\n'
+            'The sandbox environment is the same as in the script.';
     }
   }
 }

@@ -1,0 +1,130 @@
+import 'package:re_highlight/re_highlight.dart';
+
+final _customModules = ['log'];
+final _customGlobals = ['params'];
+final langLuaHighlight = Mode(
+  name: "Lua",
+
+  // =========================
+  // 🔁 可复用规则（注释等）
+  // =========================
+  refs: {
+    // ---------- 单行注释 ----------
+    '~comment_line': Mode(
+      scope: 'comment',
+      begin: r"--(?!\[=*?\[)", // -- 开头但不是多行注释
+      end: r"$",
+      contains: [
+        Mode(
+          scope: 'doctag',
+          begin: r"[ ]*(?=(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):)",
+          end: r"(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):",
+          excludeBegin: true,
+        ),
+      ],
+    ),
+
+    // ---------- 多行注释 ----------
+    '~comment_block': Mode(
+      scope: 'comment',
+      begin: r"--\[*=*?\[",
+      end: r"\]=*?\]",
+      contains: [
+        Mode(self: true), // 支持嵌套
+      ],
+    ),
+  },
+
+  // =========================
+  // 🔤 关键字（Lua 5.4）
+  // =========================
+  keywords: {
+    r"$pattern": r"[a-zA-Z_]\w*",
+
+    // 字面量
+    "literal": "true false nil",
+
+    // Lua 5.4 关键字
+    "keyword": "and break do else elseif end for goto if in local not or repeat return then until while function",
+  },
+
+  // =========================
+  // 🧠 语法解析规则
+  // =========================
+  contains: [
+    // ===== 注释 =====
+    Mode(ref: '~comment_line'),
+    Mode(ref: '~comment_block'),
+
+    // ===== 函数定义 =====
+    Mode(
+      className: 'function',
+      beginKeywords: "function",
+      end: r"\)",
+
+      contains: [
+        // 函数名（支持 obj.method / obj:method）
+        Mode(
+          scope: 'title',
+          begin: r"([_a-zA-Z]\w*\.)*([_a-zA-Z]\w*:)?[_a-zA-Z]\w*",
+        ),
+
+        // 参数
+        Mode(
+          className: 'params',
+          begin: r"\(",
+          endsWithParent: true,
+          contains: [
+            Mode(ref: '~comment_line'),
+            Mode(ref: '~comment_block'),
+          ],
+        ),
+      ],
+    ),
+
+    // ===== 冒号调用（Lua 特有✨）=====
+    Mode(
+      className: 'title.function.method',
+      begin: r"(?<=[.:])[a-zA-Z_]\w*(?=\()",
+    ),
+
+    // ===== 函数调用（新增✨）=====
+    Mode(
+      className: 'title.function.invoke',
+      begin: r"\b[a-zA-Z_]\w*(?=\()",
+    ),
+
+    // ===== namespace =====
+    Mode(
+      className: 'variable.namespace',
+      begin: r"\b(" + _customModules.join('|') + r")(?=[.:])",
+    ),
+
+    // ===== 全局变量 =====
+    Mode(
+      className: 'variable.global',
+      begin: r"\b(" + _customGlobals.join('|') + r")",
+      relevance: 0, // 不影响关键字高亮
+    ),
+
+    // ===== table.key（新增✨）=====
+    Mode(
+      className: 'attr',
+      begin: r"(?<=\.)[a-zA-Z_]\w*",
+    ),
+
+    // ===== 数字 =====
+    C_NUMBER_MODE,
+
+    // ===== 字符串 =====
+    APOS_STRING_MODE, // 'abc'
+    QUOTE_STRING_MODE, // "abc"
+    // ===== Lua 长字符串 =====
+    Mode(
+      className: 'string',
+      begin: r"\[=*?\[",
+      end: r"\]=*?\]",
+      contains: [Mode(self: true)],
+    ),
+  ],
+);

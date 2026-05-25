@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:clipshare/app/handlers/sync/script_module_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/rule_sync_handler.dart';
+import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
+import 'package:clipshare/app/modules/rules_module/rules_page.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
+import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -13,7 +18,6 @@ import 'package:clipshare/app/handlers/permission_handler.dart';
 import 'package:clipshare/app/handlers/sync/app_info_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_source_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/history_top_sync_handler.dart';
-import 'package:clipshare/app/handlers/sync/rules_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/tag_sync_handler.dart';
 import 'package:clipshare/app/listeners/multi_selection_pop_scope_disable_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
@@ -48,12 +52,26 @@ import 'package:zip_flutter/zip_flutter.dart';
 final _noScreenshot = NoScreenshot.instance;
 
 class HomeController extends GetxController with WidgetsBindingObserver, ScreenOpenedObserver {
+  String get tag => "HomeController";
   final appConfig = Get.find<ConfigService>();
+  final sktService = Get.find<SocketService>();
+  final ruleController = Get.find<RulesController>();
   final settingsController = Get.find<SettingsController>();
   final storageService = Get.find<StorageService>();
-
   final androidChannelService = Get.find<AndroidChannelService>();
+
+  //多选监听
   final Set<MultiSelectionPopScopeDisableListener> _multiSelectionPopScopeDisableListeners = {};
+
+  //region 在小屏下首页中排除的导航栏和页面
+  static const _searchNavItemKey = Key('search');
+  static const _rulesNavItemKey = Key('rules');
+  static const _searchPageKey = Key('search');
+  static const _rulesPageKey = Key('rules');
+  static const _notShowNavItemKeys = [_searchNavItemKey, _rulesNavItemKey];
+  static const _notShowPageKeys = [_searchPageKey, _rulesPageKey];
+
+  //endregion
 
   //region 属性
   static const defaultDrawerWidth = 400.0;
@@ -66,65 +84,93 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   set index(value) => _index.value = value;
 
-  int get index => _index.value;
+  int get index {
+    var i = _index.value;
+    if (i >= pages.length) {
+      i = _index.value = pages.length - 1;
+    }
+    return i;
+  }
 
+  final _screenWidth = Get.width.obs;
+
+  set screenWidth(value) {
+    _screenWidth.value = value;
+  }
+
+  double get screenWidth => _screenWidth.value;
+
+  bool get isBigScreen => screenWidth >= Constants.smallScreenWidth;
   final _pages = List<GetView>.from([
     HistoryPage(),
     DevicePage(),
     SyncFilePage(),
+    SearchPage(key: _searchPageKey),
+    RulesPage(key: _rulesPageKey),
     SettingsPage(),
   ]).obs;
 
+  List<GetView> get pages => isBigScreen ? _leftBarPages : _bottomNavPages;
+
   GetxController get currentPageController => pages[index].controller;
 
-  RxList<GetView> get pages => _pages;
-
+  //所有的导航栏
   final _navBarItems = <BottomNavigationBarItem>[].obs;
 
-  RxList<BottomNavigationBarItem> get navBarItems => _navBarItems;
+  //小屏下底部导航菜单
+  List<GetView> get _bottomNavPages => _pages.where((item) => !_notShowPageKeys.contains(item.key)).toList();
 
-  List<NavigationRailDestination> get leftBarItems => _navBarItems
+  List<BottomNavigationBarItem> get bottomNavBarItems => _navBarItems.where((item) => !_notShowNavItemKeys.contains(item.key)).toList();
+
+  //大屏下侧边导航菜单
+  List<GetView> get _leftBarPages => _pages.value;
+
+  List<MyNavigationItem> get leftBarItems => _navBarItems
       .map(
-        (item) => NavigationRailDestination(
+        (item) => MyNavigationItem(
           icon: item.icon,
           label: Text(item.label ?? ""),
+          tooltip: item.label!,
         ),
       )
       .toList();
 
   var leftMenuExtend = true.obs;
+
+  //region 同步处理器
   late TagSyncHandler _tagSyncer;
   late HistoryTopSyncHandler _historyTopSyncer;
   late HistorySourceSyncHandler _historySourceSyncer;
   late AppInfoSyncHandler _appInfoSyncer;
-  late RulesSyncHandler _rulesSyncer;
+  late RuleSyncHandler _ruleSyncer;
+  late ScriptModuleSyncHandler _scriptModuleSyncer;
+
+  //endregion
+
+  //网络监听器
   late StreamSubscription _networkListener;
   DateTime? pausedTime;
+
+  //软件logo
   final logoImg = Image.asset(
     Constants.logoPngPath,
     width: 24,
     height: 24,
   );
 
-  String get tag => "HomeController";
-
-  final _screenWidth = Get.width.obs;
-
-  set screenWidth(value) {
-    _screenWidth.value = value;
-    _initSearchPageShow();
-  }
-
-  double get screenWidth => _screenWidth.value;
-
-  bool get isBigScreen => screenWidth >= Constants.smallScreenWidth;
-
-  final sktService = Get.find<SocketService>();
+  //是否拖拽中
   final dragging = false.obs;
+
+  //展示待发送文件的遮罩页面
   final showPendingItemsDetail = false.obs;
+
+  //是否分词中，用于控制是否展示分词遮罩
   final isSegmenting = false.obs;
+
+  //需要分词的文本
   final segmentText = ''.obs;
 
+  //是否是文件同步页面
   bool get isSyncFilePage => _pages[index] is SyncFilePage;
 
   final drawer = MultiDrawerController();
@@ -152,7 +198,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     if (Platform.isAndroid) {
       _initAndroid();
     }
-    _initSearchPageShow();
     if (PlatformExt.isDesktop) {
       clipboardManager.startListening();
     } else {
@@ -187,7 +232,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     _historyTopSyncer.dispose();
     _historySourceSyncer.dispose();
     _appInfoSyncer.dispose();
-    _rulesSyncer.dispose();
+    _ruleSyncer.dispose();
+    _scriptModuleSyncer.dispose();
     _networkListener.cancel();
     drawer.dispose();
     super.onClose();
@@ -248,7 +294,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     _historyTopSyncer = HistoryTopSyncHandler();
     _historySourceSyncer = HistorySourceSyncHandler();
     _appInfoSyncer = AppInfoSyncHandler();
-    _rulesSyncer = RulesSyncHandler();
+    _ruleSyncer = RuleSyncHandler();
+    _scriptModuleSyncer = ScriptModuleSyncHandler();
     //进入主页面后标记为不是第一次进入
     if (appConfig.firstStartup) {
       appConfig.setNotFirstStartup();
@@ -282,7 +329,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       });
     }
     //如果开启短信同步且有短信权限则启动短信监听
-    if (appConfig.enableSmsSync && await PermissionHelper.testAndroidReadSms()) {
+    if (ruleController.enableSmsSync && await PermissionHelper.testAndroidReadSms()) {
       androidChannelService.startSmsListen();
     }
     androidChannelService.showOnRecentTasks(appConfig.showOnRecentTasks);
@@ -298,70 +345,80 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   ///初始化导航栏
   void initNavBarItems() {
+    const lightThemeColor = Color(0xB3000000);
+    const darkThemeColor = Colors.blueGrey;
+    final isDarkTheme = appConfig.appTheme==ThemeMode.dark;
+    Color color = isDarkTheme?darkThemeColor:lightThemeColor;
+    if(appConfig.isSmallScreen && isDarkTheme){
+      color = Colors.white;
+    }
+    const size = 20.0;
     final items = [
       BottomNavigationBarItem(
-        icon: const Icon(Icons.history),
+        icon: Icon(
+          Icons.history,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.historyRecord.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.devices_rounded),
+        icon: Icon(
+          Icons.devices_rounded,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.myDevice.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.sync_alt_outlined),
+        icon: Icon(
+          Icons.sync_alt_outlined,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.fileTransfer.tr,
       ),
       BottomNavigationBarItem(
-        icon: const Icon(Icons.settings),
+        key: _searchNavItemKey,
+        icon: Icon(
+          Icons.search,
+          color: color,
+          size: size,
+        ),
+        label: TranslationKey.bottomNavigationSearchHistoryBarItemLabel.tr,
+      ),
+      BottomNavigationBarItem(
+        key: _rulesNavItemKey,
+        icon: Icon(
+          Icons.code_outlined,
+          color: color,
+          size: size,
+        ),
+        label: TranslationKey.rulesManagement.tr,
+      ),
+      BottomNavigationBarItem(
+        icon: Icon(
+          Icons.settings,
+          color: color,
+          size: size,
+        ),
         label: TranslationKey.appSettings.tr,
       ),
     ];
     assert(() {
       items.add(
-        const BottomNavigationBarItem(
-          icon: Icon(Icons.bug_report_outlined),
+        BottomNavigationBarItem(
+          icon: Icon(
+            Icons.bug_report_outlined,
+            color: color,
+            size: size,
+          ),
           label: "Debug",
         ),
       );
       return true;
     }());
     _navBarItems.value = items;
-  }
-
-  void _initSearchPageShow() {
-    var searchNavBarIdx = _navBarItems.indexWhere((element) => (element.icon as Icon).icon == Icons.search);
-    final searchPageIdx = _pages.indexWhere((p) => p is SearchPage);
-    var settingNavBarIdx = _navBarItems.indexWhere((e) => (e.icon as Icon).icon == Icons.settings);
-    var hasSearchPage = searchPageIdx != -1;
-    var hasSearchNavBar = searchNavBarIdx != -1;
-    if (isBigScreen) {
-      //大屏幕
-      //如果没有搜索页则加入
-      if (!hasSearchPage) {
-        _pages.insert(
-          settingNavBarIdx,
-          SearchPage(),
-        );
-      }
-      if (!hasSearchNavBar) {
-        _navBarItems.insert(
-          settingNavBarIdx,
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.search),
-            label: TranslationKey.bottomNavigationSearchHistoryBarItemLabel.tr,
-          ),
-        );
-      }
-    } else {
-      //如果有搜索页则移除
-      if (hasSearchPage) {
-        _pages.removeAt(searchPageIdx);
-      }
-      //如果有搜索导航栏且则移除
-      if (hasSearchNavBar) {
-        _navBarItems.removeAt(searchNavBarIdx);
-      }
-    }
   }
 
   //endregion

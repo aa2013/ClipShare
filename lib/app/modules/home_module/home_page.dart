@@ -16,6 +16,7 @@ import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
+import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/drag_file_mask.dart';
@@ -41,7 +42,10 @@ class HomePage extends GetView<HomeController> {
 
   @override
   Widget build(BuildContext context) {
-    controller.screenWidth = MediaQuery.of(context).size.width;
+    var screenWidth = MediaQuery.of(context).size.width;
+    if (controller.screenWidth != screenWidth) {
+      controller.screenWidth = screenWidth;
+    }
     final currentTheme = Theme.of(context);
     return PopScope(
       canPop: false,
@@ -75,7 +79,7 @@ class HomePage extends GetView<HomeController> {
                                       () => ConditionWidget(
                                         //todo 是否会有问题？
                                         visible: appConfig.isMultiSelectionMode(currentPageController),
-                                        replacement: controller.navBarItems[controller.index].icon,
+                                        replacement: controller.bottomNavBarItems[controller.index].icon,
                                         child: const Icon(Icons.checklist),
                                       ),
                                     ),
@@ -84,17 +88,17 @@ class HomePage extends GetView<HomeController> {
                                       () {
                                         final syncProgressService = Get.find<HistorySyncProgressService>();
                                         final selectionMode = appConfig.isMultiSelectionMode(currentPageController);
-                                        final pageTitle = controller.navBarItems[controller.index].label!;
+                                        final pageTitle = controller.bottomNavBarItems[controller.index].label!;
                                         final selectionText = TranslationKey.multipleChoiceOperationAppBarTitle.tr;
                                         bool isSyncing = syncProgressService.syncing;
-                                        final icon = controller.navBarItems[controller.index].icon;
+                                        final icon = controller.bottomNavBarItems[controller.index].icon;
                                         bool isHistoryPage = icon is Icon && icon.icon == Icons.history;
                                         if (!selectionMode && isSyncing && isHistoryPage) {
                                           int total = syncProgressService.total;
                                           int syncedCnt = syncProgressService.syncedCnt;
                                           return LoadingDots(text: Text("${TranslationKey.homeAppBarSyncingProgressText.tr}($syncedCnt/$total)"));
                                         }
-                                        return Text(selectionMode ? selectionText : pageTitle);
+                                        return Text(selectionMode ? selectionText : pageTitle,style: const TextStyle(fontSize: 20),);
                                       },
                                     ),
                                   ],
@@ -122,50 +126,42 @@ class HomePage extends GetView<HomeController> {
                       : null,
                   body: Row(
                     children: [
-                      controller.isBigScreen
-                          ? Obx(
-                              () => NavigationRail(
-                                leading: Container(
-                                  margin: Platform.isMacOS ? const EdgeInsets.only(top: 20) : null,
-                                  child: controller.leftMenuExtend.value
-                                      ? Row(
-                                          children: [
-                                            controller.logoImg,
-                                            const SizedBox(
-                                              width: 10,
-                                            ),
-                                            const Text(Constants.appName),
-                                          ],
-                                        )
-                                      : controller.logoImg,
-                                ),
-                                extended: controller.leftMenuExtend.value,
-                                onDestinationSelected: (i) {
-                                  controller.index = i;
-                                },
-                                minExtendedWidth: 200,
-                                destinations: controller.leftBarItems,
-                                selectedIndex: controller.index,
-                                trailing: Expanded(
-                                  child: Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(bottom: 10),
-                                      child: IconButton(
-                                        icon: Icon(
-                                          controller.leftMenuExtend.value ? Icons.keyboard_double_arrow_left_outlined : Icons.keyboard_double_arrow_right_outlined,
-                                          color: Colors.blueGrey,
-                                        ),
-                                        onPressed: () {
-                                          controller.leftMenuExtend.value = !controller.leftMenuExtend.value;
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : const SizedBox.shrink(),
+                      if(controller.isBigScreen || PlatformExt.isMobile)
+                        Obx((){
+                         final widget = MyNavigationRail(
+                           extended: controller.leftMenuExtend.value,
+                           onSelected: (i) {
+                             controller.index = i;
+                           },
+                           minExtendedWidth: 200,
+                           items: controller.leftBarItems,
+                           selectedIndex: controller.index,
+                           trailing: Expanded(
+                             child: Align(
+                               alignment: Alignment.bottomCenter,
+                               child: Padding(
+                                 padding: const EdgeInsets.only(bottom: 10),
+                                 child: IconButton(
+                                   icon: Icon(
+                                     controller.leftMenuExtend.value ? Icons.keyboard_double_arrow_left_outlined : Icons.keyboard_double_arrow_right_outlined,
+                                     color: Colors.blueGrey,
+                                   ),
+                                   onPressed: () {
+                                     controller.leftMenuExtend.value = !controller.leftMenuExtend.value;
+                                   },
+                                 ),
+                               ),
+                             ),
+                           ),
+                         );
+                         if(Platform.isMacOS){
+                           return Padding(
+                             padding: 24.insetT,
+                             child: widget,
+                           );
+                         }
+                         return widget;
+                        }),
                       Expanded(
                         child: Obx(
                           () => IndexedStack(
@@ -183,7 +179,7 @@ class HomePage extends GetView<HomeController> {
                             backgroundColor: currentTheme.colorScheme.surface,
                             currentIndex: controller.index,
                             onTap: (i) => controller.index = i,
-                            items: controller.navBarItems,
+                            items: controller.bottomNavBarItems,
                           ),
                         )
                       : null,
@@ -220,7 +216,7 @@ class HomePage extends GetView<HomeController> {
             Obx(
               () => Visibility(
                 visible: controller.showPendingItemsDetail.value,
-                child: Positioned.fill(
+                child: ClipRRect(
                   child: BlurBackground(
                     child: DragAndSendFilePage(
                       onItemRemove: (item) {

@@ -1,5 +1,9 @@
 import 'dart:math';
 
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_prompt.dart';
+import 'package:clipshare/app/data/models/re-editor/function_prompt.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/re_editor_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:re_editor/re_editor.dart';
@@ -7,14 +11,18 @@ import 'package:re_editor/re_editor.dart';
 import 'auto_scroll_listview.dart';
 
 class DefaultCodeAutocompleteListView extends StatefulWidget implements PreferredSizeWidget {
-  static const double kItemHeight = 26;
+  static const double kItemHeight = 40;
+  static const TextStyle kCommentStyle = TextStyle(color: Colors.brown, fontSize: 12);
 
   final ValueNotifier<CodeAutocompleteEditingValue> notifier;
   final ValueChanged<CodeAutocompleteResult> onSelected;
+  final CodeLineEditingController? editor;
 
   const DefaultCodeAutocompleteListView({
+    super.key,
     required this.notifier,
     required this.onSelected,
+    this.editor,
   });
 
   @override
@@ -29,6 +37,8 @@ class DefaultCodeAutocompleteListView extends StatefulWidget implements Preferre
 }
 
 class _DefaultCodeAutocompleteListViewState extends State<DefaultCodeAutocompleteListView> {
+  final controller = ScrollController();
+
   @override
   void initState() {
     widget.notifier.addListener(_onValueChanged);
@@ -44,7 +54,7 @@ class _DefaultCodeAutocompleteListViewState extends State<DefaultCodeAutocomplet
   @override
   Widget build(BuildContext context) {
     final scrollerView = AutoScrollListView(
-      controller: ScrollController(),
+      controller: controller,
       initialIndex: widget.notifier.value.index,
       scrollDirection: Axis.vertical,
       itemCount: widget.notifier.value.prompts.length,
@@ -56,6 +66,10 @@ class _DefaultCodeAutocompleteListViewState extends State<DefaultCodeAutocomplet
           bottomLeft: index == widget.notifier.value.prompts.length - 1 ? const Radius.circular(5) : Radius.zero,
           bottomRight: index == widget.notifier.value.prompts.length - 1 ? const Radius.circular(5) : Radius.zero,
         );
+        TranslationKey? desc;
+        if (prompt is CaseInsensitiveKeywordPrompt) {
+          desc = prompt.desc;
+        }
         return InkWell(
           borderRadius: radius,
           onTap: () {
@@ -63,14 +77,35 @@ class _DefaultCodeAutocompleteListViewState extends State<DefaultCodeAutocomplet
           },
           child: Container(
             width: double.infinity,
-            height: DefaultCodeAutocompleteListView.kItemHeight,
             padding: const EdgeInsets.only(left: 5, right: 5),
             alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(color: index == widget.notifier.value.index ? Color(0xffd4e2ff) : null, borderRadius: radius),
-            child: RichText(
-              text: prompt.createSpan(context, widget.notifier.value.input),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+            constraints: const BoxConstraints(
+              minHeight: DefaultCodeAutocompleteListView.kItemHeight,
+              maxHeight: double.infinity,
+            ),
+            decoration: BoxDecoration(
+              color: index == widget.notifier.value.index ? const Color(0xffd4e2ff) : null,
+              borderRadius: radius,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: prompt.createSpan(context, widget.notifier.value.input),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                if (desc != null)
+                  Padding(
+                    padding: 2.insetV,
+                    child: RichText(
+                      text: TextSpan(
+                        text: desc.tr,
+                        style: DefaultCodeAutocompleteListView.kCommentStyle,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -80,8 +115,8 @@ class _DefaultCodeAutocompleteListViewState extends State<DefaultCodeAutocomplet
     return Container(
       constraints: BoxConstraints.loose(widget.preferredSize),
       decoration: BoxDecoration(
-        color: Color(0xfff7f8fa),
-        borderRadius: BorderRadius.circular(10),
+        color: const Color(0xfff7f8fa),
+        borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),

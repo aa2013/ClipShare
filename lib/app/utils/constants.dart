@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_log.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_lua.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_sqlite.dart';
+import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/radio_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:re_editor/re_editor.dart';
+import 'package:simple_icons/simple_icons.dart';
 
 class Constants {
   Constants._private();
@@ -34,36 +38,43 @@ class Constants {
   static const heartbeatInterval = 30;
 
   //中转程序下载地址
-  static const forwardDownloadUrl = "https://clipshare.coclyun.top/usages/forward.html";
+  static const forwardDownloadUrl =
+      "https://clipshare.coclyun.top/usages/forward.html";
 
   //更新信息地址
-  static const appUpdateInfoUrl = "https://clipshare.coclyun.top/version-info.json";
+  static const appUpdateInfoUrl =
+      "https://clipshare.coclyun.top/version-info.json";
 
   //常见问题地址
   static const faqUrl = "https://clipshare.coclyun.top/faq.html";
 
   //数据广播Action
-  static const kOnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED";
+  static const kOnHistoryChangedBroadcastAction =
+      "$appPkg.ACTION_ON_HISTORY_CHANGED";
+
+  //默认卡片边框颜色
+  static const defaultCardBorderColor = Color.fromARGB(255, 236, 237, 243);
+
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
-    {
-      "version": 1,
-      "data": [
         {
-          "name": TranslationKey.defaultLinkTagName.tr,
-          "rule": r"[a-zA-z]+://[^\s]*",
+          "version": 1,
+          "data": [
+            {
+              "name": TranslationKey.defaultLinkTagName.tr,
+              "rule": r"[a-zA-z]+://[^\s]*",
+            },
+          ],
         },
-      ],
-    },
-  );
+      );
 
   //默认短信规则
   static String get defaultSmsRules => jsonEncode(
-    {
-      "version": 0,
-      "data": [],
-    },
-  );
+        {
+          "version": 0,
+          "data": [],
+        },
+      );
 
   //使用说明网页
   static const usageWeb = "https://clipshare.coclyun.top/usages/android.html";
@@ -72,36 +83,43 @@ class Constants {
   static const githubRepo = "https://github.com/aa2013/ClipShare";
 
   //QQ group
-  static const qqGroup = "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=HQGbGZ-eYPNGLiawtVRuTk21RJyh87vp&authKey=mm0grlVTMpUJriGac5qBe8X50wShxlKILoeF9K6F2%2FmOpMPv60cBxZBZKs%2BSYmFI&noverify=0&group_code=622786394";
+  static const qqGroup =
+      "http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=HQGbGZ-eYPNGLiawtVRuTk21RJyh87vp&authKey=mm0grlVTMpUJriGac5qBe8X50wShxlKILoeF9K6F2%2FmOpMPv60cBxZBZKs%2BSYmFI&noverify=0&group_code=622786394";
 
   //ClipShare 官网
   static const clipshareSite = "https://clipshare.coclyun.top";
 
   //默认历史弹窗快捷键（Ctrl + Alt + H）
-  static final defaultHistoryWindowKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
+  static final defaultHistoryWindowKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
 
   //文件同步快捷键（Ctrl + Shift + C）
-  static final defaultSyncFileHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
+  static final defaultSyncFileHotKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
 
   //显示主窗体快捷键（Ctrl + Shift + S）
-  static final defaultShowMainWindowHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
+  static final defaultShowMainWindowHotKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyS.usbHidUsage}";
 
   //退出程序快捷键（Ctrl + Shift + Q）
-  static final defaultExitAppHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
+  static final defaultExitAppHotKeys =
+      "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
 
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";
   static const androidDocumentsPath = "$androidRootStoragePath/Documents";
   static const androidDataPath = "/storage/emulated/0/Android/data";
-  static const windowsStartUpPath = r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
+  static const windowsStartUpPath =
+      r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup';
 
   //配对时限（秒）
   static const pairingLimit = 60;
-  static const channelCommon = "top.coclyun.clipshare/common";
-  static const channelClip = "top.coclyun.clipshare/clip";
-  static const channelAndroid = "top.coclyun.clipshare/android";
-  static const androidReadFileEventChannel = "top.coclyun.clipshare/read_file";
+  static const appPkg = "top.coclyun.clipshare";
+  static const channelCommon = "$appPkg/common";
+  static const channelClip = "$appPkg/clip";
+  static const channelAndroid = "$appPkg/android";
+  static const androidReadFileEventChannel = "$appPkg/read_file";
 
   static const smallScreenWidth = 640.0;
   static const showHistoryRightWidth = 840.0;
@@ -117,19 +135,19 @@ class Constants {
   );
 
   static List<RadioData<int>> get authBackEndTimeSelections => [
-    RadioData(value: 0, label: TranslationKey.immediately.tr),
-    RadioData(value: 1, label: "1 ${TranslationKey.minute.tr}"),
-    RadioData(value: 2, label: "2 ${TranslationKey.minute.tr}"),
-    RadioData(value: 5, label: "5 ${TranslationKey.minute.tr}"),
-    RadioData(value: 10, label: "10 ${TranslationKey.minute.tr}"),
-    RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
-  ];
+        RadioData(value: 0, label: TranslationKey.immediately.tr),
+        RadioData(value: 1, label: "1 ${TranslationKey.minute.tr}"),
+        RadioData(value: 2, label: "2 ${TranslationKey.minute.tr}"),
+        RadioData(value: 5, label: "5 ${TranslationKey.minute.tr}"),
+        RadioData(value: 10, label: "10 ${TranslationKey.minute.tr}"),
+        RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
+      ];
 
   static List<RadioData> get languageSelections {
     return [
-        RadioData(value: 'zh_CN', label: "简体中文"),
-        RadioData(value: 'en_US', label: "English"),
-      ]
+      RadioData(value: 'zh_CN', label: "简体中文"),
+      RadioData(value: 'en_US', label: "English"),
+    ]
       ..sort((a, b) => a.label.compareTo(b.label))
       ..insert(0, RadioData(value: 'auto', label: TranslationKey.auto.tr));
   }
@@ -153,7 +171,7 @@ class Constants {
       size: 48,
     ),
     'Android': const Icon(
-      Icons.android_outlined,
+      SimpleIcons.android,
       color: Colors.grey,
       size: 48,
     ),
@@ -162,8 +180,8 @@ class Constants {
       color: Colors.grey,
       size: 48,
     ),
-    'Linux': Icon(
-      MdiIcons.linux,
+    'Linux': const Icon(
+      SimpleIcons.linux,
       color: Colors.grey,
       size: 48,
     ),
@@ -231,13 +249,365 @@ class Constants {
   static const httpUrlRegex = r'^(http|https)://[^\s]+$';
   static const wsUrlRegex = r'^(ws|wss)://[^\s]+$';
 
-  static String get dirSeparate => Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
+  static String get dirSeparate =>
+      Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
 
   static const defaultNotificationServer = "ws://notify.clipshare.coclyun.top";
 
   static const defaultWsPingIntervalTime = 30;
 
-  static const jiebaDownloadUrl = 'https://download.clipshare.coclyun.top/others/jieba.zip';
+  static const jiebaDownloadUrl =
+      'https://download.clipshare.coclyun.top/others/jieba.zip';
 
-  static const jiebaGithubUrl = 'https://github.com/w568w/jieba_flutter/tree/master/assets';
+  static const jiebaGithubUrl =
+      'https://github.com/w568w/jieba_flutter/tree/master/assets';
+  static const appIconSize = 17.0;
+  static final emptyContent = EmptyContent();
+  static final codeSQLTheme = CodeHighlightThemeMode(mode: langSqliteHighlight);
+  static final codeLuaTheme = CodeHighlightThemeMode(mode: langLuaHighlight);
+  static final codeLogTheme = CodeHighlightThemeMode(mode: langLogHighlight);
+
+  //region lua code
+
+  static const String luaCustomModules = """
+    __customModules = {
+      json = table_readonly({
+        encode = function(...)
+          return json.encode(...)
+        end,
+        decode = function(...)
+          return json.decode(...)
+        end,
+      }),
+      http = table_readonly({
+        getAsync = async(function(url, options)
+          local t = task.create()
+          options = options or {}
+          options.method = 'get'
+          __httpRequest(url, json.encode(options), nil, function(result)
+            local ok, value = pcall(json.decode, result)
+            if ok then
+              t.result = value
+            else
+              t.error = value
+            end
+            t:done()
+          end)
+          return await(t)
+        end),
+        postAsync = async(function(url, options, body)
+          local t = task.create()
+          options = options or {}
+          options.method = 'post'
+          local data = nil
+          if body then
+            -- todo pcall
+            data = json.encode(body)
+          end
+          __httpRequest(url, json.encode(options), data, function(result)
+            local ok, value = pcall(json.decode, result)
+            if ok then
+              t.result = value
+            else
+              t.error = value
+            end
+            t:done()
+          end)
+          return t
+        end),
+        putAsync = async(function(url, options, body)
+          local t = task.create()
+          options = options or {}
+          options.method = 'put'
+          local data = nil
+          if body then
+            data = json.encode(body)
+          end
+          __httpRequest(url, json.encode(options), data, function(result)
+            local ok, value = pcall(json.decode, result)
+            if ok then
+              t.result = value
+            else
+              t.error = value
+            end
+            t:done()
+          end)
+          return t
+        end),
+        deleteAsync = async(function(url, options, body)
+          local t = task.create()
+          options = options or {}
+          options.method = 'delete'
+          local data = nil
+          if body then
+            data = json.encode(body)
+          end
+          __httpRequest(url, json.encode(options), data, function(result)
+            local ok, value = pcall(json.decode, result)
+            if ok then
+              t.result = value
+            else
+              t.error = value
+            end
+            t:done()
+          end)
+          return t
+        end)
+      }),
+      notify = __notify,
+      ContentType = table_readonly({
+        sms = 'sms',
+        text = 'text',
+        image = 'image',
+        notification = 'notification',
+      }),
+      self = table_readonly({
+        devId = __devId,
+        devName = __devName,
+      }),
+      app = table_readonly({
+        versionName = __versionName,
+        versionNumber = __versionNumber,
+      }),
+      Platform = table_readonly({
+        isAndroid = __platformIsAndroid,
+        isIOS = __platformIsIOS,
+        isWindows = __platformIsWindows,
+        isMacOS = __platformIsMacOS,
+        isLinux = __platformIsLinux,
+      }),
+      android = table_readonly({
+        toast = __androidToast,
+        sendHistoryChangedBroadcast = __androidSendHistoryChangedBroadcast,
+      }),
+      crypto = table_readonly({
+        calcMD5 = __calcMD5,
+        calcSHA1 = __calcSHA1,
+        calcSHA256 = __calcSHA256,
+      }),
+      base64 = table_readonly({
+        encode = __base64Encode,
+        decode = __base64Decode,
+      }),
+      regex = table_readonly({
+         match = __regexMatch,
+         matchGroups = __regexMatchGroups,
+      }),
+      async = async,
+      await = await,
+      task = table_readonly({
+        async = async,
+        await = await,
+        create = task.create,
+      })
+    }
+  """;
+
+  static const String luaGlobalFun = """
+    -- 沙箱全局访问异常
+    function sandboxGlobalAccessError(_, k)
+      error("global '" .. k .. "' is readonly, try use 'local " .. k .. "' instead", 2)
+    end
+    -- 将 table 转为只读
+    function table_readonly(t)
+      return setmetatable({}, {
+              __index = t,
+              __newindex = sandboxGlobalAccessError,
+              __metatable = false
+          })
+    end
+    
+    -- 将表结构转为string形式
+    function table_struct_to_string(tb)
+        local result = {}
+        for k, v in pairs(tb) do
+            local t = type(v)
+            if t == "function" then
+                result[k] = "[function]"
+            elseif t == "table" then
+                local innerTable = table_struct_to_string(v)
+                result[k] = innerTable
+            else
+                result[k] = t
+            end
+        end
+        return result
+    end
+    -- 用户脚本池
+    __userscripts_map = {}
+    -- 自定义模块
+    $luaCustomModules
+    -- 全局变量
+    __devId = '{{devId}}'
+    __devName = '{{devName}}'
+    __versionNumber = {{versionNumber}}
+    __versionName = '{{versionName}}'
+    __platformIsAndroid = {{platformIsAndroid}}
+    __platformIsLinux = {{platformIsLinux}}
+    __platformIsWindows = {{platformIsWindows}}
+    __platformIsMacOS = {{platformIsMacOS}}
+    __platformIsIOS = {{platformIsIOS}}
+    
+    function remove_user_sandbox_method(script_hash)
+      __userscripts_map[script_hash] = nil
+    end
+    function _run_user_sandbox_method(taskId, script_hash, paramsJson)
+      if not script_hash then
+        script_hash = ''
+      end
+      local script = __userscripts_map[script_hash]
+      if not script then
+        error('ERR: not found user script: ' .. script_hash, 0)
+      end
+      local scriptResult = script(json.decode(paramsJson))
+      local returnResult = ''
+      if type(scriptResult) == "table" then
+        returnResult = json.encode(scriptResult)
+      else
+        returnResult = tostring(scriptResult)
+      end
+      __onLuaAsyncResult(taskId, returnResult)
+    end 
+    function run_user_sandbox_method(taskId, script_hash, paramsJson)
+      local awaiter = async(_run_user_sandbox_method)(taskId, script_hash, paramsJson)
+      awaiter:onCompleted(function()
+        if awaiter.error ~= nil then
+          __onLuaAsyncResult(taskId, tostring(awaiter.error))
+        end
+      end)
+      return awaiter
+    end
+    print('success')
+  """;
+
+  static const String luaTemplateRule = """
+  -- 内容
+  local content = params.content
+  -- 返回结果
+  return {
+    -- 通知的标题(仅当类型为通知时有效)
+    title = params.title,
+    -- 内容/通知的内容
+    content = content,
+    -- 提取出的内容
+    extractedContent = params.extractedContent,
+    -- 标签
+    tags = params.tags or {},
+    -- 是否阻止同步
+    isSyncDisabled = params.isSyncDisabled or false,
+    -- 是否丢弃
+    isDropped = false,
+    -- 是否最终规则
+    isFinalRule = false,
+  }
+  """;
+
+  static const String luaSandboxEnv = """
+          local function to_string(...)
+            local result = {}
+            for _, v in ipairs({...}) do
+              result[#result + 1] = tostring(v)
+            end
+            return table.concat(result, ", ")
+          end
+          local log = {
+            debug = function(...) __log({{isTest}}, 'debug', '{{funcName}}', to_string(...)) end,
+            warn = function(...) __log({{isTest}}, 'warn', '{{funcName}}', to_string(...)) end,
+            info = function(...) __log({{isTest}}, 'info', '{{funcName}}', to_string(...)) end,
+            error = function(...) __log({{isTest}}, 'error', '{{funcName}}', to_string(...)) end,
+          }
+          local scope = {
+            assert = assert,
+            error = error,
+            pcall = pcall,
+            xpcall = xpcall,
+            tonumber = tonumber,
+            tostring = tostring,
+            type = type,
+            ipairs = ipairs,
+            pairs = pairs,
+            next = next,
+            select = select,
+            math = math,
+            table = table,
+            string = string,
+            coroutine = coroutine, 
+            unpack = table.unpack or unpack,
+            utf8 = utf8,
+            os = {
+              clock = os.clock,
+              date = os.date,
+              time = os.time,
+              difftime = os.difftime,
+            },
+            _VERSION = _VERSION,
+            log = log,
+            print = log.debug,
+            warn = log.warn,
+          }
+          for name, module in pairs(__customModules) do
+            scope[name] = module
+          end
+  """;
+
+  static const String luaSandboxWrapper = """
+        local wrapper = function() 
+          $luaSandboxEnv      
+          local env = setmetatable({}, {
+              __index = scope,
+              __newindex = sandboxGlobalAccessError
+          })
+          local func, err = load([[return function(params) {{code}} end]], "sandbox", "t", env)
+          if not func then
+              return err
+          end
+      
+          __userscripts_map['{{funcHash}}'] = func()
+          log.debug('loaded fun: ' .. '{{funcName}}: {{funcHash}}')
+          return 'OK'
+        end
+        print(wrapper())
+    """;
+
+  static const String luaModuleSandboxWrapper = """
+        local wrapper = function() 
+          $luaSandboxEnv
+          local env = setmetatable({}, {
+              __index = scope,
+              __newindex = sandboxGlobalAccessError
+          })
+          local chunk, err = load([[{{code}}]], "sandbox", "t", env)
+          if not chunk then
+              return err
+          end
+      
+          __customModules['{{moduleName}}'] = table_readonly(chunk())
+          log.debug('loaded module: ' .. '{{moduleName}}')
+          return 'OK'
+        end
+        print(wrapper())
+  """;
+
+  static const String luaModuleCompileWrapper = """
+     $luaSandboxEnv
+     local env = setmetatable({}, {
+         __index = scope,
+         __newindex = sandboxGlobalAccessError
+     })
+     local chunk, err = load([[{{code}}]], "sandbox", "t", env)
+     if not chunk then
+         return err
+     end
+     local ok,result = pcall(chunk)
+     if not ok then
+       return result
+     end
+     if type(result) ~= "table" then
+       return '{{ReturnValueTypeErrorMsg}}'
+     end
+     local struct = table_struct_to_string(result)
+     return 'table:' .. json.encode(struct)
+  """;
+
+  //endregion
 }

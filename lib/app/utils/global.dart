@@ -137,7 +137,7 @@ class Global {
     void Function()? onCancel,
     void Function()? onNeutral,
     bool autoDismiss = true,
-    double maxWidth = double.maxFinite,
+    double maxWidth = 400,
   }) async {
     var cancelDisplay = false;
     late String md5;

@@ -9,7 +9,7 @@ extension ClipboardListeningWayExt on ClipboardListeningWay {
       case ClipboardListeningWay.hiddenApi:
         return TranslationKey.clipboardListeningWithSystemHiddenApi.tr;
       default:
-        return "Unknown";
+        return TranslationKey.unknown.tr;
     }
   }
 }

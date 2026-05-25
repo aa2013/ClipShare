@@ -1,5 +1,5 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/my_code_keyword_prompt.dart';
+import 'package:clipshare/app/data/models/re-editor/case_insensitive_keyword_prompt.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -11,7 +11,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:re_editor/re_editor.dart';
-import 'package:re_highlight/languages/sql.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -21,9 +20,8 @@ class DbEditorController extends GetxController {
   final dbService = Get.find<DbService>();
   final appConfig = Get.find<ConfigService>();
   final keywordPrompts = [
-    ...tables.map((t) => MyCodeKeywordPrompt(word: t.toString())),
-    ...views.map((t) => MyCodeKeywordPrompt(word: t.toString())),
-    MyCodeKeywordPrompt(word: 'limit'),
+    ...tables.map((t) => CaseInsensitiveKeywordPrompt(word: t.toString())),
+    ...views.map((t) => CaseInsensitiveKeywordPrompt(word: t.toString())),
   ].toList(growable: false);
   final tableInsets = const EdgeInsets.only(right: 2, bottom: 2);
   final CodeLineEditingController editor = CodeLineEditingController();
@@ -42,7 +40,6 @@ class DbEditorController extends GetxController {
   void onInit() {
     super.onInit();
     editor.text = appConfig.lastSqlEditContent;
-    langSql.keywords["keyword"].add("limit");
   }
 
   Future<void> exec() async {

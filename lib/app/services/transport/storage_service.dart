@@ -826,7 +826,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           sync: true,
         );
         final historyController = Get.find<HistoryController>();
-        historyController.addData(history, false).whenComplete(() => syncingFile!.close(true));
+        historyController.addData(history, null, false).whenComplete(() => syncingFile!.close(true));
         if (!await _client!.deleteFile(fileInfoStoragePath)) {
           Log.warn(tag, "delete storage file info failed! path = $fileInfoStoragePath");
         }
@@ -1076,7 +1076,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
               return;
             }
             //本地写入记录
-            historyController.addData(history, false);
+            historyController.addData(history, null, false);
             //ws send
             _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
             syncingFile.setState(SyncingFileState.done);
@@ -1101,7 +1101,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           return;
         }
         //本地写入记录
-        historyController.addData(history, false);
+        historyController.addData(history, null, false);
         //ws send
         _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
         syncingFile.setState(SyncingFileState.done);

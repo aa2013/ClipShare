@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/data/models/rule.dart';
+import 'package:clipshare/app/data/models/old_rule.dart';
 import 'package:clipshare/app/modules/views/settings/rule_item.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/file_util.dart';
@@ -20,16 +20,16 @@ import 'package:http/http.dart' as http;
 import 'package:timer_snackbar/timer_snackbar.dart';
 
 class RuleSettingPage extends StatefulWidget {
-  final bool Function(Rule submit) onAdd;
+  final bool Function(OldRule submit) onAdd;
   final Widget Function(
-    Rule? initData,
-    Function(Rule) onChange,
+    OldRule? initData,
+    Function(OldRule) onChange,
   )
   editDialogLayout;
-  final void Function(List<Rule> result) confirm;
-  final List<Rule> initData;
+  final void Function(List<OldRule> result) confirm;
+  final List<OldRule> initData;
   final String title;
-  final Widget Function(int i, Rule rule, void Function(int i, Rule rule) remove) action;
+  final Widget Function(int i, OldRule rule, void Function(int i, OldRule rule) remove) action;
 
   const RuleSettingPage({
     super.key,
@@ -48,11 +48,11 @@ class RuleSettingPage extends StatefulWidget {
 }
 
 class _RuleSettingPageState extends State<RuleSettingPage> {
-  final List<Rule> _list = List.empty(growable: true);
-  Rule? _addData;
-  Rule? _editData;
+  final List<OldRule> _list = List.empty(growable: true);
+  OldRule? _addData;
+  OldRule? _editData;
   bool selectionMode = false;
-  final Set<Rule> selectedList = {};
+  final Set<OldRule> selectedList = {};
   static String tag = "RuleSettingPage";
 
   @override
@@ -61,7 +61,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
     _list.addAll(widget.initData);
   }
 
-  void remove(int i, Rule rule) {
+  void remove(int i, OldRule rule) {
     _list.removeWhere((item) => item.name == rule.name);
     setState(() {});
     timerSnackbar(
@@ -80,7 +80,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
 
   bool get isSmallScreen => MediaQuery.of(Get.context!).size.width <= Constants.smallScreenWidth;
 
-  void showImportPreviewDialog(List<Rule> rules) {
+  void showImportPreviewDialog(List<OldRule> rules) {
     Global.showDialog(
       context,
       AlertDialog(
@@ -104,7 +104,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
             Get.back();
           },
           onConfirm: (selected) {
-            final Set<Rule> importData = {};
+            final Set<OldRule> importData = {};
             importData.addAll(selected);
             for (var item in _list) {
               importData.remove(item);
@@ -161,7 +161,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
                 title: TranslationKey.failedToLoad.tr,
               );
             } else {
-              final rules = Rule.fromJson(
+              final rules = OldRule.fromJson(
                 (jsonDecode(utf8.decode(resp.bodyBytes)) as List<dynamic>).cast<Map<String, dynamic>>(),
               );
               showImportPreviewDialog(rules);
@@ -207,7 +207,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
         .readAsBytes()
         .then((bytes) {
           final content = utf8.decode(bytes);
-          final rules = Rule.fromJson(
+          final rules = OldRule.fromJson(
             (jsonDecode(content) as List<dynamic>).cast<Map<String, dynamic>>(),
           );
           showImportPreviewDialog(rules);
@@ -221,7 +221,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
         });
   }
 
-  void showEditDialog(int? idx, Rule? initData) {
+  void showEditDialog(int? idx, OldRule? initData) {
     if (initData != null) {
       _editData = initData;
     }

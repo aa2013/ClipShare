@@ -6,20 +6,23 @@ import 'package:clipshare/app/data/repository/dao/config_dao.dart';
 import 'package:clipshare/app/data/repository/dao/device_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_tag_dao.dart';
+import 'package:clipshare/app/data/repository/dao/script_module_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
+import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
 import 'package:clipshare/app/data/repository/dao/user_dao.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/config.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
+import 'package:clipshare/app/data/repository/entity/tables/script_module.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/data/repository/entity/tables/user.dart';
+import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
@@ -28,7 +31,6 @@ import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
 part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
@@ -42,20 +44,22 @@ const tables = [
   HistoryTag,
   OperationRecord,
   AppInfo,
+  Rule,
+  ScriptModule,
 ];
 const views = [VHistoryTagHold];
 
-/// 添加实体类到 @Database 注解中，app_db、db_util 中添加 get 方法
+/// 添加实体类到 @Database 注解中，app_db 中添加 get 方法
 /// 生成方法（二选一）
 ///
 /// 1. 执行命令 flutter pub run build_runner build --delete-conflicting-outputs
 ///    生成的文件位于 .dart_tool/build/generated/项目名称/lib/db
-///    下面这行放在 app_db.floor.g.dart 文件里，使其变成 app_database.dart 文件的一部分
+///    下面这行放在 app_db.floor.g.dart 文件里，使其变成 app_database.dart 文件的一部分：
 ///    part of 'app_db.dart';
 ///
-/// 2. 直接执行 /scripts/db_gen.bat 一键完成
+/// 2. 直接执行 scripts/db_gen.bat 一键完成
 @Database(
-  version: 8,
+  version: 9,
   entities: tables,
   views: views,
 )
@@ -75,6 +79,10 @@ abstract class _AppDb extends FloorDatabase {
   OperationRecordDao get operationRecordDao;
 
   AppInfoDao get appInfoDao;
+
+  RuleDao get ruleDao;
+
+  ScriptModuleDao get scriptModuleDao;
 }
 
 class DbService extends GetxService {
@@ -96,6 +104,10 @@ class DbService extends GetxService {
   OperationRecordDao get opRecordDao => _db.operationRecordDao;
 
   AppInfoDao get appInfoDao => _db.appInfoDao;
+
+  RuleDao get ruleDao => _db.ruleDao;
+
+  ScriptModuleDao get scriptModuleDao => _db.scriptModuleDao;
 
   final tag = "DbService";
 
@@ -123,6 +135,7 @@ class DbService extends GetxService {
       migration5to6,
       migration6to7,
       migration7to8,
+      migration8to9,
     ]).build();
     version = await _db.database.database.getVersion();
     return this;
@@ -228,10 +241,59 @@ class DbService extends GetxService {
   });
 
   ///v1.4.3 新增字段记录内网地址 7 -> 8
-  ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
+  ///增加内网地址记录字段
   final migration7to8 = Migration(7, 8, (database) async {
     if (!await hasColumnInTable(database, 'Device', 'internalAddress')) {
       await database.execute("ALTER TABLE `Device` ADD COLUMN `internalAddress` TEXT;");
     }
+  });
+
+  ///v1.5.0 数据库版本 8 -> 9
+  ///为历史表增加提取字段，可通过规则/脚本提取内容，该字段不为空时同步后将复制该内容
+  ///增加规则表和规则库表
+  final migration8to9 = Migration(8, 9, (database) async {
+    if (!await hasColumnInTable(database, 'History', 'extracted')) {
+      await database.execute("ALTER TABLE `History` ADD COLUMN `extracted` TEXT;");
+    }
+    if (!await hasColumnInTable(database, 'OperationRecord', 'moduleEn')) {
+      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `moduleEn` TEXT;");
+    }
+    await database.execute('CREATE INDEX IF NOT EXISTS `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
+    //规则表
+    await database.execute("""
+        CREATE TABLE IF NOT EXISTS `Rule` (
+        `id`                      INTEGER NOT NULL,
+        `name`                    TEXT NOT NULL,
+        `platforms`               TEXT NOT NULL,
+        `sources`                 TEXT NOT NULL,
+        `trigger`                 TEXT NOT NULL,
+        `type`                    TEXT NOT NULL,
+        `regexWhiteBlackMode`     TEXT,
+        `regexMain`               TEXT NOT NULL,
+        `regexAllowExtractData`   INTEGER NOT NULL,
+        `regexExtractedContent`   TEXT NOT NULL,
+        `regexAllowAddTag`        INTEGER NOT NULL,
+        `regexTags`               TEXT NOT NULL,
+        `regexIsSyncDisabled`     INTEGER NOT NULL,
+        `regexIsFinalRule`        INTEGER NOT NULL,
+        `scriptLanguage`          TEXT NOT NULL,
+        `scriptContent`           TEXT NOT NULL,
+        `version`                 INTEGER NOT NULL,
+        `enabled`                 INTEGER NOT NULL,
+        `order`                   INTEGER NOT NULL,
+        PRIMARY KEY (`id`)
+    )
+    """);
+    //规则库
+    await database.execute("""
+    CREATE TABLE IF NOT EXISTS `ScriptModule` (
+        `moduleName`     TEXT NOT NULL,
+        `displayName`    TEXT NOT NULL,
+        `language`       TEXT NOT NULL,
+        `source`         TEXT NOT NULL,
+        `version`        INTEGER NOT NULL,
+        PRIMARY KEY (`moduleName`)
+    )
+    """);
   });
 }

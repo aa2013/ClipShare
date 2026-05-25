@@ -9,6 +9,8 @@ enum BackupType {
   historyTag("historyTag.bin"),
   operationRecord("operationRecord.bin"),
   operationSync("operationSync.bin"),
+  rule("rule.bin"),
+  scriptModule("scriptModule.bin"),
   version("version.json");
   final String filename;
   const BackupType(this.filename);
@@ -30,6 +32,10 @@ enum BackupType {
         return TranslationKey.backupTypeOperationRecord.tr;
       case BackupType.operationSync:
         return TranslationKey.backupTypeOperationSync.tr;
+      case BackupType.rule:
+        return TranslationKey.rules.tr;
+      case BackupType.scriptModule:
+        return TranslationKey.scriptModules.tr;
       case BackupType.version:
         return TranslationKey.version.tr;
     }

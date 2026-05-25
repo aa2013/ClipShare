@@ -1,16 +1,33 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/crypto.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 extension StringExt on String {
+
+  int get hash64 {
+    final bytes = utf8.encode(this);
+    final digest = md5.convert(bytes).bytes;
+    final byteData = ByteData.sublistView(Uint8List.fromList(digest));
+    return byteData.getInt64(0); // 取前8字节
+  }
+
   String get upperFirst {
     if (isEmpty) return this;
     return '${this[0].toUpperCase()}${substring(1)}';
+  }
+
+  String get lowerFirst {
+    if (isEmpty) return this;
+    return '${this[0].toLowerCase()}${substring(1)}';
   }
 
   String get normalizePath {
@@ -60,12 +77,36 @@ extension StringExt on String {
     return substring(start, min(end, length));
   }
 
-  bool matchRegExp(String regExp, [bool caseSensitive = false]) {
+  bool matchRegExp(
+    String regExp, {
+    bool caseSensitive = false,
+    bool multiLines = false,
+    bool dotAll = false,
+  }) {
     var reg = RegExp(
       regExp,
       caseSensitive: caseSensitive,
+      multiLine: multiLines,
+      dotAll: dotAll,
     );
     return reg.hasMatch(this);
+  }
+
+  String? firstRegMatch(
+    String regExp, {
+    bool caseSensitive = false,
+    bool multiLines = false,
+    bool dotAll = false,
+  }) {
+    var reg = RegExp(
+      regExp,
+      caseSensitive: caseSensitive,
+      multiLine: multiLines,
+      dotAll: dotAll,
+    );
+
+    final match = reg.firstMatch(this);
+    return match?.group(0);
   }
 
   bool get isPort {
@@ -162,7 +203,14 @@ extension StringExt on String {
     return toLowerCase().contains(input.toLowerCase());
   }
 
+  bool startsWithIgnoreCase(String input) {
+    return toLowerCase().startsWith(input.toLowerCase());
+  }
+
   bool get isValidVariablePart {
+    if(codeUnits.isEmpty){
+      return false;
+    }
     final int char = codeUnits.first;
     return (char >= 65 && char <= 90) || (char >= 97 && char <= 122) || char == 95;
   }
@@ -201,6 +249,10 @@ extension StringExt on String {
       result = result.substring(0, result.length - substring.length);
     }
     return result;
+  }
+
+  String toMd5() {
+    return CryptoUtil.toMD5(this);
   }
 }
 

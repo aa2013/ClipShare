@@ -14,7 +14,7 @@ import 'package:clipshare/app/widgets/rounded_scaffold.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:sliver_sticky_collapsable_panel/utils/sliver_sticky_collapsable_panel_controller.dart';
 import 'package:sliver_sticky_collapsable_panel/widgets/sliver_sticky_collapsable_panel.dart';
 
@@ -291,7 +291,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
           ),
         ],
       ),
-      icon: Icon(MdiIcons.listBoxOutline),
+      icon: const Icon(MdiIcons.listBoxOutline),
       child: Visibility(
         visible: !loading,
         replacement: const Loading(

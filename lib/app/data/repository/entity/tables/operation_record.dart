@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 @Entity(
   indices: [
     Index(value: ['uid', "module", "method"]),
+    Index(value: ["moduleEn", "method"]),
   ],
 )
 class OperationRecord {
@@ -27,6 +28,9 @@ class OperationRecord {
   ///操作模块
   @TypeConverters([ModuleTypeConverter])
   late Module module;
+
+  ///操作模块(枚举名称)
+  String? moduleEn;
 
   /// 操作方法
   @TypeConverters([OpMethodTypeConverter])
@@ -49,6 +53,7 @@ class OperationRecord {
     required this.uid,
     required this.devId,
     required this.module,
+    required this.moduleEn,
     required this.method,
     required this.data,
     this.storageSync,
@@ -59,6 +64,7 @@ class OperationRecord {
     id = appConfig.snowflake.nextId();
     uid = appConfig.userId;
     devId = appConfig.device.guid;
+    moduleEn = module.name;
     this.data = data.toString();
   }
 
@@ -76,6 +82,7 @@ class OperationRecord {
       uid: uid,
       devId: devId,
       module: module,
+      moduleEn: module.name,
       method: method,
       data: data,
       storageSync: storageSync,
@@ -90,6 +97,7 @@ class OperationRecord {
       "uid": uid,
       "devId": devId,
       "module": module.moduleName,
+      "moduleEn": module.name,
       "method": method.name,
       "data": data,
       "time": time,
@@ -111,6 +119,7 @@ class OperationRecord {
       uid: uid ?? this.uid,
       devId: devId ?? this.devId,
       module: module ?? this.module,
+      moduleEn: (module ?? this.module).name,
       method: method ?? this.method,
       data: data ?? this.data,
       storageSync: storageSync ?? this.storageSync,

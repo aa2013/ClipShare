@@ -16,6 +16,8 @@ import 'package:clipshare/app/handlers/backup/handlers/history_backup_handlere.d
 import 'package:clipshare/app/handlers/backup/handlers/history_tag_backup_handlere.dart';
 import 'package:clipshare/app/handlers/backup/handlers/operation_record_backup_handlere.dart';
 import 'package:clipshare/app/handlers/backup/handlers/operation_sync_backup_handlere.dart';
+import 'package:clipshare/app/handlers/backup/handlers/rule_backup_handler.dart';
+import 'package:clipshare/app/handlers/backup/handlers/script_module_backup_handler.dart';
 import 'package:clipshare/app/handlers/backup/handlers/verison_backup_handler.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -53,6 +55,8 @@ class BackupHandler {
     HistoryTagBackupHandler(),
     OperationRecordBackupHandler(),
     OperationSyncBackupHandler(),
+    RuleBackupHandler(),
+    ScriptModuleBackupHandler(),
   ];
 
   final dbService = Get.find<DbService>();

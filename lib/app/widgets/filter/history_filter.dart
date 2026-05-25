@@ -5,14 +5,13 @@ import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/extensions/platform_extension.dart';
-import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
+import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
-import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class HistoryFilterController {
   final allDevices = <Device>[].obs;
@@ -104,7 +103,7 @@ class HistoryFilterController {
   }
 
   String getDevNameById(devId) {
-    return allDevices.firstWhereOrNull((item) => item.guid == devId)?.name ?? "Unknown";
+    return allDevices.firstWhereOrNull((item) => item.guid == devId)?.name ?? TranslationKey.unknown.tr;
   }
 }
 
@@ -132,39 +131,22 @@ class HistoryFilter extends StatelessWidget {
                     focusNode: controller.focusNode,
                     autofocus: true,
                     textAlignVertical: TextAlignVertical.center,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      contentPadding: const EdgeInsets.only(
-                        left: 8,
-                        right: 8,
-                      ),
+                    decoration: noneBorderInputDecoration.copyWith(
                       hintText: TranslationKey.search.tr,
-                      border: controller.isBigScreen || PlatformExt.isDesktop
-                          ? OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(4), // 边框圆角
-                              borderSide: const BorderSide(
-                                color: Colors.blue,
-                                width: 1.0,
-                              ), // 边框样式
-                            )
-                          : InputBorder.none,
-                      suffixIcon: InkWell(
-                        onTap: () {
-                          controller.content.value = controller.textController.text;
-                          controller.onSearchBtnClicked();
-                          controller.focusNode.requestFocus();
-                        },
-                        splashColor: Colors.black12,
-                        highlightColor: Colors.black12,
-                        borderRadius: BorderRadius.circular(50),
-                        child: Tooltip(
-                          message: TranslationKey.search.tr,
-                          child: const Icon(
+                      suffixIcon: Tooltip(
+                        message: TranslationKey.search.tr,
+                        child: IconButton(
+                          onPressed: () {
+                            controller.content.value = controller.textController.text;
+                            controller.onSearchBtnClicked();
+                            controller.focusNode.requestFocus();
+                          },
+                          icon: const Icon(
                             Icons.search_rounded,
                             size: 25,
                           ),
                         ),
-                      ),
+                      )
                     ),
                     onSubmitted: (value) {
                       controller.content.value = value;
@@ -213,7 +195,7 @@ class HistoryFilter extends StatelessWidget {
                   child: IconButton(
                     onPressed: controller.onExportBtnClicked,
                     tooltip: TranslationKey.export2Excel.tr,
-                    icon: Icon(
+                    icon: const Icon(
                       MdiIcons.export,
                       size: 20,
                     ),

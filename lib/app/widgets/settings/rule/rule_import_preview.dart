@@ -1,11 +1,11 @@
-import 'package:clipshare/app/data/models/rule.dart';
+import 'package:clipshare/app/data/models/old_rule.dart';
 import 'package:clipshare/app/modules/views/settings/rule_item.dart';
 import 'package:flutter/material.dart';
 
 class RuleImportPreview extends StatefulWidget {
   final void Function() onCancel;
-  final void Function(List<Rule> rules) onConfirm;
-  final List<Rule> data;
+  final void Function(List<OldRule> rules) onConfirm;
+  final List<OldRule> data;
 
   const RuleImportPreview({
     super.key,
@@ -19,7 +19,7 @@ class RuleImportPreview extends StatefulWidget {
 }
 
 class _RuleImportPreview extends State<RuleImportPreview> {
-  final Set<Rule> selectedList = {};
+  final Set<OldRule> selectedList = {};
 
   @override
   void initState() {

@@ -6,6 +6,23 @@ extension DateTimeExt on DateTime {
     return intl.DateFormat(format).format(this);
   }
 
+  int get yyyyMMddHHmmss {
+    final year = this.year;
+    final month = this.month;
+    final day = this.day;
+    final hour = this.hour;
+    final minute = this.minute;
+    final second = this.second;
+    final s =
+        '${year.toString().padLeft(4, '0')}'
+        '${month.toString().padLeft(2, '0')}'
+        '${day.toString().padLeft(2, '0')}'
+        '${hour.toString().padLeft(2, '0')}'
+        '${minute.toString().padLeft(2, '0')}'
+        '${second.toString().padLeft(2, '0')}';
+    return int.parse(s);
+  }
+
   String get simpleStr {
     String time = "";
     DateTime now = DateTime.now();

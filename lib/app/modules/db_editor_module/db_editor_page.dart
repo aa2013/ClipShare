@@ -2,8 +2,11 @@ import 'dart:ui';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/re-editor/code_autocomplete_prompts_builder.dart';
-import 'package:clipshare/app/handlers/re-editor/default_code_autocomplete_listview.dart';
+import 'package:clipshare/app/widgets/re-editor/default_code_autocomplete_listview.dart';
+import 'package:clipshare/app/modules/views/code_edit_view.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/theme/re-editor/highlight_sqlite.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/largeText/find.dart';
@@ -14,7 +17,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:clipshare/app/modules/db_editor_module/db_editor_controller.dart';
 import 'package:re_editor/re_editor.dart';
-import 'package:re_highlight/languages/sql.dart';
 import 'package:re_highlight/styles/atom-one-light.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
@@ -30,7 +32,7 @@ class DbEditorPage extends GetView<DbEditorController> {
         );
       },
       promptsBuilder: MyCodeAutocompletePromptsBuilder(
-        language: langSql,
+        language: langSqliteHighlight,
         keywordPrompts: controller.keywordPrompts,
       ),
       child: CodeEditor(
@@ -60,7 +62,7 @@ class DbEditorPage extends GetView<DbEditorController> {
           fontSize: 18,
           hintTextColor: Colors.grey,
           codeTheme: CodeHighlightTheme(
-            languages: {'sql': CodeHighlightThemeMode(mode: langSql)},
+            languages: {'sql': CodeHighlightThemeMode(mode: langSqliteHighlight)},
             theme: atomOneLightTheme,
           ),
         ),
@@ -172,9 +174,13 @@ class DbEditorPage extends GetView<DbEditorController> {
                 ],
               ),
               const SizedBox(height: 5),
-              SizedBox(
+              CodeEditView(
+                controller: controller.editor,
+                language: langSqliteHighlight,
+                codeTheme: Constants.codeSQLTheme,
+                hintText: TranslationKey.enterSQLHere.tr,
+                keywordPrompts: controller.keywordPrompts,
                 height: 150,
-                child: renderCodeEditor(context),
               ),
               const SizedBox(height: 5),
               Text("${TranslationKey.result.tr}: "),

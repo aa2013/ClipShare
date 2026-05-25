@@ -23,7 +23,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -196,7 +196,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               MdiIcons.listBoxOutline,
                               color: Colors.blueGrey,
                               size: 16,

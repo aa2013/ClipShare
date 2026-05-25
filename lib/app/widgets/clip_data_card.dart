@@ -69,7 +69,7 @@ class ClipDataCard extends StatefulWidget {
   }
 }
 
-class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMixin{
+class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMixin {
   static const _borderWidth = 2.0;
   static const _borderRadius = 12.0;
   bool _selected = false;
@@ -82,6 +82,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
   late final DoubleTapWrapper leftTapWrapper;
   late final DoubleTapWrapper rightTapWrapper;
   late final SlidableController slidController = SlidableController(this);
+  bool showOriginData = false;
 
   @override
   void initState() {
@@ -109,18 +110,19 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
     );
     rightTapWrapper = DoubleTapWrapper(
       doubleTapInterval: 200.ms,
-      onTap: (details){
+      onTap: (details) {
         showMenu(details!.globalPosition - const Offset(0, 70));
       },
       onDoubleTap: (details) async {
         var type = ClipboardContentType.parse(widget.clip.data.type);
-        final result = await clipboardManager.copy(type, widget.clip.data.content);
-        if(result){
-          Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr,context: context);
-        }else{
-          Global.showSnackBarErr(text: TranslationKey.copySuccess.tr,context: context);
+        final content = widget.clip.data.extracted ?? widget.clip.data.content;
+        final result = await clipboardManager.copy(type, content);
+        if (result) {
+          Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+        } else {
+          Global.showSnackBarErr(text: TranslationKey.copySuccess.tr, context: context);
         }
-      }
+      },
     );
   }
 
@@ -143,9 +145,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
         },
         borderRadius: BorderRadius.circular(_borderRadius),
         child: Container(
-          margin: widget.selectMode && _selected
-              ? null
-              : const EdgeInsets.all(_borderWidth),
+          margin: widget.selectMode && _selected ? null : const EdgeInsets.all(_borderWidth),
           decoration: widget.selectMode && _selected
               ? BoxDecoration(
                   border: Border.all(
@@ -163,6 +163,12 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
                 ClipSimpleDataHeader(
                   clip: widget.clip,
                   routeToSearchOnClickChip: widget.routeToSearchOnClickChip,
+                  showOriginData: showOriginData,
+                  onShowOriginButtonClicked: () {
+                    setState(() {
+                      showOriginData = !showOriginData;
+                    });
+                  },
                 ),
                 widget.imageMode
                     ? IntrinsicHeight(
@@ -194,6 +200,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
                           alignment: Alignment.centerLeft,
                           child: ClipSimpleDataContent(
                             clip: widget.clip,
+                            showOriginData: showOriginData,
                           ),
                         ),
                       ),
@@ -205,43 +212,47 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
       ),
     );
     return GestureDetector(
-      child: ClipRRect(child: Slidable(
-        controller: slidController,
-        key: ValueKey(widget.clip.data.id),
-        startActionPane: ActionPane(
-          motion: const SizedBox.shrink(),
-          extentRatio: 0.01,
-          dismissible: DismissiblePane(
-            onDismissed: () {},
-            dismissThreshold: 0.1,
-            confirmDismiss: () {
-              slidController.close();
-              widget.onToggleSelected?.call();
-              return Future.value(false);
-            },
-          ),
-          children: const [],
-        ),
-        endActionPane: widget.selectMode ? null : ActionPane(
-          extentRatio: 0.3,
-          motion: const ScrollMotion(),
-          children: [
-            SlidableAction(
-              onPressed: (context) {
-                widget.onMoreActionsTap?.call();
+      child: ClipRRect(
+        child: Slidable(
+          controller: slidController,
+          key: ValueKey(widget.clip.data.id),
+          startActionPane: ActionPane(
+            motion: const SizedBox.shrink(),
+            extentRatio: 0.01,
+            dismissible: DismissiblePane(
+              onDismissed: () {},
+              dismissThreshold: 0.1,
+              confirmDismiss: () {
+                slidController.close();
+                widget.onToggleSelected?.call();
+                return Future.value(false);
               },
-              autoClose: true,
-              backgroundColor: Colors.blueGrey,
-              foregroundColor: Colors.white,
-              icon: Icons.menu,
-              borderRadius: BorderRadius.circular(_borderRadius),
-              label: TranslationKey.moreActions.tr,
             ),
-          ],
+            children: const [],
+          ),
+          endActionPane: widget.selectMode
+              ? null
+              : ActionPane(
+                  extentRatio: 0.3,
+                  motion: const ScrollMotion(),
+                  children: [
+                    SlidableAction(
+                      onPressed: (context) {
+                        widget.onMoreActionsTap?.call();
+                      },
+                      autoClose: true,
+                      backgroundColor: Colors.blueGrey,
+                      foregroundColor: Colors.white,
+                      icon: Icons.menu,
+                      borderRadius: BorderRadius.circular(_borderRadius),
+                      label: TranslationKey.moreActions.tr,
+                    ),
+                  ],
+                ),
+          child: content,
         ),
-        child: content,
-      ),),
-      onSecondaryTapDown: (details){
+      ),
+      onSecondaryTapDown: (details) {
         rightTapWrapper.call(details);
       },
     );
@@ -252,9 +263,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
     final menu = ContextMenu(
       entries: [
         MenuItem(
-          label: widget.clip.data.top
-              ? TranslationKey.cancelTopUp.tr
-              : TranslationKey.topUp.tr,
+          label: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
           icon: widget.clip.data.top ? Icons.push_pin : Icons.push_pin_outlined,
           onSelected: () {
             var id = widget.clip.data.id;
@@ -287,20 +296,20 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
           MenuItem(
             label: TranslationKey.copyContent.tr,
             icon: Icons.copy,
-            onSelected: () {
-              var type = ClipboardContentType.parse(widget.clip.data.type);
-              clipboardManager.copy(type, widget.clip.data.content);
-              Global.showSnackBarSuc(
-                text: TranslationKey.copySuccess.tr,
-                context: context,
-              );
+            onSelected: () async {
+              final type = ClipboardContentType.parse(widget.clip.data.type);
+              final content = widget.clip.data.extracted ?? widget.clip.data.content;
+              final result = await clipboardManager.copy(type, content);
+              if (result) {
+                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
+              } else {
+                Global.showSnackBarErr(text: TranslationKey.copySuccess.tr, context: context);
+              }
             },
           ),
         if (!widget.clip.isFile)
           MenuItem(
-            label: widget.clip.data.sync
-                ? TranslationKey.resyncRecord.tr
-                : TranslationKey.syncRecord.tr,
+            label: widget.clip.data.sync ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
             icon: Icons.sync,
             onSelected: () {
               dbService.opRecordDao.resyncData(widget.clip.data.id);

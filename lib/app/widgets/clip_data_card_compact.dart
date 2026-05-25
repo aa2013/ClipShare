@@ -146,6 +146,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 2),
                 Expanded(
                   child: ClipSimpleDataContent(
                     clip: clip,
@@ -153,6 +154,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
                     imgSingleView: true,
                   ),
                 ),
+                const SizedBox(height: 1),
                 ClipSimpleDataFooter(clip: clip),
               ],
             ),

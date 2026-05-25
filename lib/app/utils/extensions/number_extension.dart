@@ -69,6 +69,11 @@ extension NumberExt on num {
         () => EdgeInsets.only(top: toDouble()),
   );
 
+  EdgeInsets get insetLT => _insetsMap.putIfAbsent(
+    'insetLT_$this',
+        () => EdgeInsets.only(top: toDouble(), left: toDouble()),
+  );
+
   EdgeInsets get insetR => _insetsMap.putIfAbsent(
     'insetR_$this',
         () => EdgeInsets.only(right: toDouble()),
