@@ -921,7 +921,11 @@ enum TranslationKey {
   triggerOnCopy,
   triggerOnNotification,
   triggerOnSms,
-  modulesTip;
+  modulesTip,
+  recordMaxLength,
+  recordMaxLengthTips,
+  length,
+  mustGreaterThanZero;
 
   String get tr => name.tr;
 

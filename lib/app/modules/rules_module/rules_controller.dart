@@ -310,10 +310,15 @@ class RulesController extends GetxController {
     RuleExecParams params;
     if (type == HistoryContentType.notification) {
       final map = jsonDecode(content);
+      var nTitle = map['title'];
+      var nContent = map['content']?.toString() ?? "";
+      if (nContent.isEmpty) {
+        return RuleExecResult.dropped();
+      }
       params = RuleExecParams(
         type: type,
-        title: map['title'],
-        content: map['content'] ?? "",
+        title: nTitle,
+        content: nContent,
         source: source,
       );
     } else {

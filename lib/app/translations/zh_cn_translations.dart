@@ -1859,6 +1859,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return '触发模式：短信';
       case TranslationKey.modulesTip:
         return '可导入纯 lua 库，或者 封装一些经常使用到的方法以供脚本调用，返回值必须是 table。\n沙箱环境与脚本中一致';
+      case TranslationKey.recordMaxLength:
+        return '最大内容长度';
+      case TranslationKey.recordMaxLengthTips:
+        return '在部分设备中如果大小超过2MB值将会导致查询异常（但可入库）';
+      case TranslationKey.length:
+        return '长度';
+      case TranslationKey.mustGreaterThanZero:
+        return '必须 >= 0';
     }
   }
 }

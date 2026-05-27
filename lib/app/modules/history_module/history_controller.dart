@@ -302,6 +302,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   @override
   Future<void> onChanged(HistoryContentType type, String content, ClipboardSource? source) async {
+    if (content.isEmpty) {
+      return;
+    }
     _onChangeLock.synchronized(
       () => _onChanged(type, content, source).catchError(
         (err, stack) {
@@ -316,11 +319,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (last?.type == type.value && last?.content == content) {
       return;
     }
-    if(content.isEmpty){
+    if (content.isEmpty) {
       return;
     }
     int size = content.length;
     switch (type) {
+      case HistoryContentType.text:
+        if (_checkExceedMaxLength(size)) {
+          return;
+        }
+        break;
       case HistoryContentType.image:
         //如果上次也是复制的图片/文件，判断其md5与本次比较，若相同则跳过
         if (last?.type == HistoryContentType.image.value) {
@@ -394,6 +402,17 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       history.source = null;
     }
     await addData(history, applyResult.result, true);
+  }
+
+  ///检查是否超出最大长度
+  bool _checkExceedMaxLength(int n) {
+    final maxLength = appConfig.recordMaxLength;
+    //超出设定大小则忽略
+    if (maxLength > 0 && n > maxLength) {
+      Log.warn(tag, "Record length $n > RecordMaxLength($maxLength)");
+      return true;
+    }
+    return false;
   }
 
   ///抽取历史数据的map，因为有可能是 map，后续需要反序列化为操作记录
@@ -506,15 +525,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   Future<int> _process2Db(History history, OpMethod method, bool loadingMissingData, bool notify) async {
     var cnt = 0;
+    final type = ClipboardContentType.parse(history.type);
     switch (method) {
       case OpMethod.add:
+        if (type == ClipboardContentType.text && _checkExceedMaxLength(history.size)) {
+          //超出设定大小则忽略
+          return 0;
+        }
         cnt = await addData(history, null, false, notify);
         //不是缺失数据的同步时放入本地剪贴板，如果是缺失数据但是需要豁免的也放行
         if (!loadingMissingData || _missingDataCopyMsg == history.id) {
           var clip = ClipData(history);
           var copy = false;
           if (clip.isText || clip.isImage) {
-            final type = ClipboardContentType.parse(history.type);
             if (clip.isText) {
               copy = true;
               clipboardManager.copy(type, history.content);
@@ -725,7 +748,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     //endregion
     final tags = <String>{};
-    tags.addAll(applyResult?.tags??{});
+    tags.addAll(applyResult?.tags ?? {});
     switch (contentType) {
       case HistoryContentType.sms:
         tags.add(TranslationKey.sms.tr);
@@ -735,8 +758,8 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         break;
       default:
     }
-    if(tags.isNotEmpty){
-      for(var tag in tags){
+    if (tags.isNotEmpty) {
+      for (var tag in tags) {
         tagService.add(HistoryTag(tag, history.id));
       }
     }

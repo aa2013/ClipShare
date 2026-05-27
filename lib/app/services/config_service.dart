@@ -572,6 +572,11 @@ class ConfigService extends GetxService {
 
   bool get useTrayFlashingForConnection => _useTrayFlashingForConnection.value;
 
+  ///记录的最大长度
+  final _recordMaxLength = 0.obs;
+
+  int get recordMaxLength => _recordMaxLength.value;
+
   //endregion
 
   //endregion
@@ -777,6 +782,7 @@ class ConfigService extends GetxService {
       },
     );
     _useTrayFlashingForConnection.value = await cfg.getConfigByKey(ConfigKey.useTrayFlashingForConnection, false);
+    _recordMaxLength.value = await cfg.getConfigByKey(ConfigKey.recordMaxLength, 200_000);
   }
 
   ///初始化路径信息
@@ -1526,6 +1532,12 @@ class ConfigService extends GetxService {
   Future<void> setUseTrayFlashingForConnection(bool enable) async {
     await configDao.addOrUpdate(ConfigKey.useTrayFlashingForConnection, enable.toString());
     _useTrayFlashingForConnection.value = enable;
+  }
+
+  ///记录最大长度
+  Future<void> setRecordMaxLength(int recordMaxLength) async {
+    await configDao.addOrUpdate(ConfigKey.recordMaxLength, recordMaxLength.toString());
+    _recordMaxLength.value = recordMaxLength;
   }
 
   //endregion

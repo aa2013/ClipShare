@@ -39,6 +39,19 @@ class RuleExecResult {
     );
   }
 
+  factory RuleExecResult.dropped() {
+    return RuleExecResult._private(
+      success: false,
+      result: const RuleApplyResult(
+        tags: {},
+        isSyncDisabled: false,
+        isFinalRule: false,
+        content: '',
+        isDropped: true,
+      ),
+    );
+  }
+
   factory RuleExecResult.error(String error) {
     return RuleExecResult._private(success: false, errorMsg: error);
   }

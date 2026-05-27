@@ -891,6 +891,40 @@ class SettingsPage extends GetView<SettingsController> {
                         },
                         show: (v) => Platform.isWindows,
                       ),
+                      SettingCard(
+                        title: Text(
+                          TranslationKey.recordMaxLength.tr,
+                          maxLines: 1,
+                        ),
+                        description: Text(TranslationKey.recordMaxLengthTips.tr),
+                        value: appConfig.recordMaxLength,
+                        action: (v) {
+                          if(v <= 0){
+                            return Text(TranslationKey.noLimits.tr);
+                          }
+                          return Text("$v ${TranslationKey.unitWord.tr}");
+                        },
+                        onTap: (){
+                          Global.showDialog(
+                            context,
+                            TextEditDialog(
+                              title: TranslationKey.recordMaxLength.tr,
+                              labelText: TranslationKey.length.tr,
+                              initStr: "${appConfig.recordMaxLength <= 0 ? '' : appConfig.recordMaxLength}",
+                              verify: (str) {
+                                var n = int.tryParse(str);
+                                if (n == null || n < 0) return false;
+                                return true;
+                              },
+                              errorText: TranslationKey.mustGreaterThanZero.tr,
+                              onOk: (str) async {
+                                var n = str.toInt();
+                                await appConfig.setRecordMaxLength(n);
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

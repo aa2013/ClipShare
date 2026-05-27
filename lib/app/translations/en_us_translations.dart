@@ -1864,6 +1864,14 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.modulesTip:
         return 'You can import pure Lua libraries, or encapsulate some frequently used methods for scripts to call. The return value must be a table.\n'
             'The sandbox environment is the same as in the script.';
+      case TranslationKey.recordMaxLength:
+        return 'Maximum content length';
+      case TranslationKey.recordMaxLengthTips:
+        return 'On some devices, exceeding the specified size(2MB) may cause query errors (but data can still be stored)';
+      case TranslationKey.length:
+        return 'Length';
+      case TranslationKey.mustGreaterThanZero:
+        return 'Must >= 0';
     }
   }
 }

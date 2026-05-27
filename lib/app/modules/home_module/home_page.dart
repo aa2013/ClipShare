@@ -10,11 +10,9 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
-import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
 import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
@@ -126,7 +124,7 @@ class HomePage extends GetView<HomeController> {
                       : null,
                   body: Row(
                     children: [
-                      if(controller.isBigScreen || PlatformExt.isMobile)
+                      if(controller.isBigScreen)
                         Obx((){
                          final widget = MyNavigationRail(
                            extended: controller.leftMenuExtend.value,
