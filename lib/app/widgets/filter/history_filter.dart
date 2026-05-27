@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
@@ -6,6 +8,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
 import 'package:flutter/material.dart';
@@ -110,6 +113,7 @@ class HistoryFilterController {
 class HistoryFilter extends StatelessWidget {
   final HistoryFilterController controller;
   final void Function(HistoryContentType type)? onFilterTypeChanged;
+
   const HistoryFilter({
     super.key,
     required this.controller,
@@ -132,6 +136,7 @@ class HistoryFilter extends StatelessWidget {
                     autofocus: true,
                     textAlignVertical: TextAlignVertical.center,
                     decoration: noneBorderInputDecoration.copyWith(
+                      fillColor: PlatformExt.isMobile || !controller.isBigScreen ? Colors.transparent : null,
                       hintText: TranslationKey.search.tr,
                       suffixIcon: Tooltip(
                         message: TranslationKey.search.tr,
@@ -146,7 +151,7 @@ class HistoryFilter extends StatelessWidget {
                             size: 25,
                           ),
                         ),
-                      )
+                      ),
                     ),
                     onSubmitted: (value) {
                       controller.content.value = value;
@@ -206,14 +211,16 @@ class HistoryFilter extends StatelessWidget {
           if (controller.showContentTypeFilter)
             Container(
               margin: const EdgeInsets.only(top: 5, left: 5),
-              child: FilterTypeSegmented(onSelected: (type) {
-                if (controller.selectedType.value.label == type.label) {
-                  return;
-                }
-                onFilterTypeChanged?.call(type);
-                controller.selectedType.value = type;
-                Future.delayed(300.ms, () => controller.onChanged(controller.filter));
-              }),
+              child: FilterTypeSegmented(
+                onSelected: (type) {
+                  if (controller.selectedType.value.label == type.label) {
+                    return;
+                  }
+                  onFilterTypeChanged?.call(type);
+                  controller.selectedType.value = type;
+                  Future.delayed(300.ms, () => controller.onChanged(controller.filter));
+                },
+              ),
             ),
         ],
       ),

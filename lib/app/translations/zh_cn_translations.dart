@@ -1862,7 +1862,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.recordMaxLength:
         return '最大内容长度';
       case TranslationKey.recordMaxLengthTips:
-        return '在部分设备中如果大小超过2MB值将会导致查询异常（但可入库）';
+        return '在部分设备中如果内容大小超过2MB，将会导致查询异常（但可入库）';
       case TranslationKey.length:
         return '长度';
       case TranslationKey.mustGreaterThanZero:

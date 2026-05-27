@@ -853,6 +853,7 @@ class SettingsPage extends GetView<SettingsController> {
                                 onTap: () async {
                                   Global.showTipsDialog(
                                     context: context,
+                                    selectable: true,
                                     text: TranslationKey.sendBroadcastOnAddDataTips.tr,
                                   );
                                 },
