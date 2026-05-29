@@ -342,6 +342,12 @@ class MyApplication : Application() {
                     val intent = Intent(lockHistoryFloatLocation)
                     intent.putExtra("lock", lockLoc)
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                    if (isServiceRunning(this, HistoryFloatService::class.java)) {
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            action = lockHistoryFloatLocation
+                            putExtra("lock", lockLoc)
+                        })
+                    }
                 }
                 //关闭历史浮窗
                 "closeHistoryFloatWindow" -> {
