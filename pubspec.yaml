@@ -96,7 +96,7 @@ dependencies:
       url: https://github.com/aa2013/flutter_file_picker
       ref: modify-android-saf-intent
   # 权限请求
-  permission_handler: ^11.3.1
+  permission_handler: ^12.0.1
   # 瀑布流布局
   flutter_staggered_grid_view: ^0.7.0
   # material 图标库
