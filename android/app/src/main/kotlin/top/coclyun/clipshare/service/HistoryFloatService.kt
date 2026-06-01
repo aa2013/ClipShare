@@ -6,10 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.res.Configuration
-import android.content.res.Configuration.ORIENTATION_LANDSCAPE
 import android.graphics.PixelFormat
+import android.graphics.Rect
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
@@ -53,6 +55,16 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var lockLoc = false
     private var positionY = 0
     private var viewAdded = false
+    private var hiddenForFullscreen = false
+    private var hiddenForDrag = false
+    private val visibleDisplayFrame = Rect()
+    private val fullscreenCheckHandler = Handler(Looper.getMainLooper())
+    private val fullscreenCheckRunnable = object : Runnable {
+        override fun run() {
+            updateFullscreenVisibility()
+            fullscreenCheckHandler.postDelayed(this, FULLSCREEN_CHECK_INTERVAL_MS)
+        }
+    }
 
     private val tag = "HistoryFloatService"
 
@@ -76,6 +88,13 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setViewTreeLifecycleOwner(this@HistoryFloatService)
             setViewTreeSavedStateRegistryOwner(this@HistoryFloatService)
+            setOnApplyWindowInsetsListener { _, insets ->
+                updateFullscreenVisibility()
+                insets
+            }
+            setOnSystemUiVisibilityChangeListener {
+                updateFullscreenVisibility()
+            }
             setContent {
                 HistoryFloatContent(
                     histories = histories,
@@ -106,6 +125,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     override fun onDestroy() {
+        fullscreenCheckHandler.removeCallbacks(fullscreenCheckRunnable)
         if (viewAdded) {
             windowManager.removeView(composeView)
             viewAdded = false
@@ -117,8 +137,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        val isLandScape = newConfig.orientation == ORIENTATION_LANDSCAPE
-        composeView.visibility = if (isLandScape) View.GONE else View.VISIBLE
+        updateFullscreenVisibility()
     }
 
     private fun setupLocalBroadcastReceiver() {
@@ -192,11 +211,14 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         mainParams.format = PixelFormat.RGBA_8888
         mainParams.width = LayoutParams.WRAP_CONTENT
         mainParams.height = LayoutParams.WRAP_CONTENT
-        mainParams.flags = LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_NOT_TOUCH_MODAL
+        mainParams.flags = BASE_WINDOW_FLAGS
         mainParams.gravity = Gravity.END or Gravity.CENTER_VERTICAL
         setPos1P3()
         windowManager.addView(composeView, mainParams)
         viewAdded = true
+        updateFullscreenVisibility()
+        fullscreenCheckHandler.removeCallbacks(fullscreenCheckRunnable)
+        fullscreenCheckHandler.post(fullscreenCheckRunnable)
     }
 
     private fun setPos1P3() {
@@ -260,7 +282,8 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         if (!viewAdded) {
             return
         }
-        composeView.visibility = View.INVISIBLE
+        hiddenForDrag = true
+        applyFloatVisibility()
         mainParams.width = LayoutParams.WRAP_CONTENT
         mainParams.height = LayoutParams.WRAP_CONTENT
         mainParams.x = 0
@@ -279,7 +302,10 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             mainParams.height = LayoutParams.WRAP_CONTENT
         }
         windowManager.updateViewLayout(composeView, mainParams)
-        composeView.post { composeView.visibility = View.VISIBLE }
+        composeView.post {
+            hiddenForDrag = false
+            applyFloatVisibility()
+        }
     }
 
     private fun refreshData(more: Boolean = false) {
@@ -289,5 +315,62 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         intent.putExtra("more", more)
         intent.putExtra("minHistoryId", if (more) minHistoryId else 0L)
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+    }
+
+    private fun updateFullscreenVisibility() {
+        if (!viewAdded) {
+            return
+        }
+        val isFullscreen = isSystemFullscreen()
+        if (hiddenForFullscreen == isFullscreen) {
+            return
+        }
+        hiddenForFullscreen = isFullscreen
+        applyFloatVisibility()
+    }
+
+    private fun applyFloatVisibility() {
+        val expectedFlags = if (hiddenForFullscreen) {
+            BASE_WINDOW_FLAGS or LayoutParams.FLAG_NOT_TOUCHABLE
+        } else {
+            BASE_WINDOW_FLAGS
+        }
+        if (viewAdded && mainParams.flags != expectedFlags) {
+            mainParams.flags = expectedFlags
+            windowManager.updateViewLayout(composeView, mainParams)
+        }
+        if (hiddenForFullscreen) {
+            composeView.visibility = View.VISIBLE
+            composeView.alpha = 0f
+            return
+        }
+
+        composeView.alpha = 1f
+        composeView.visibility = if (hiddenForDrag) View.INVISIBLE else View.VISIBLE
+    }
+
+    private fun isSystemFullscreen(): Boolean {
+        composeView.getWindowVisibleDisplayFrame(visibleDisplayFrame)
+        val statusBarHeight = getStatusBarHeight()
+        if (statusBarHeight <= 0) {
+            return false
+        }
+
+        return visibleDisplayFrame.top <= statusBarHeight / 2
+    }
+
+    private fun getStatusBarHeight(): Int {
+        val resourceId = resources.getIdentifier("status_bar_height", "dimen", "android")
+        return if (resourceId > 0) {
+            resources.getDimensionPixelSize(resourceId)
+        } else {
+            0
+        }
+    }
+
+    companion object {
+        private const val BASE_WINDOW_FLAGS =
+            LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_NOT_TOUCH_MODAL
+        private const val FULLSCREEN_CHECK_INTERVAL_MS = 500L
     }
 }
