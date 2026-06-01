@@ -14,6 +14,7 @@ import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/loading.dart';
@@ -249,19 +250,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (last != null && history.id < last!.id) {
       return;
     }
-    var type = ClipboardContentType.parse(history.type);
-    if (type != ClipboardContentType.text && type != ClipboardContentType.image) {
+    var type = history.getCopyType();
+    if (!history.canCopy || type == null) {
       //不可复制，跳过
       return;
     }
     if (fromStorage) {
       var copy = false;
-      if (type != ClipboardContentType.image) {
+      if(type != ClipboardContentType.image || appConfig.autoCopyImageAfterSync){
+        history.copyContent();
         copy = true;
-        clipboardManager.copy(type, history.content);
-      } else if (appConfig.autoCopyImageAfterSync) {
-        copy = true;
-        clipboardManager.copy(type, history.content);
       }
       if (_screenUnlocked == false && copy) {
         _syncDataOnScreenOff = history;
@@ -535,24 +533,22 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         cnt = await addData(history, null, false, notify);
         //不是缺失数据的同步时放入本地剪贴板，如果是缺失数据但是需要豁免的也放行
         if (!loadingMissingData || _missingDataCopyMsg == history.id) {
-          var clip = ClipData(history);
-          var copy = false;
-          if (clip.isText || clip.isImage) {
-            if (clip.isText) {
-              copy = true;
-              clipboardManager.copy(type, history.content);
-            } else if (clip.isImage && appConfig.autoCopyImageAfterSync) {
-              copy = true;
-              clipboardManager.copy(type, history.content);
-            }
-            if (_screenUnlocked == false && copy) {
-              _syncDataOnScreenOff = history;
-            }
-            if (_missingDataCopyMsg == history.id) {
-              _missingDataCopyMsg = null;
-            }
-          } else {
+          var type = history.getCopyType();
+          if (!history.canCopy || type == null) {
+            //不可复制，跳过
             break;
+          }
+
+          var copy = false;
+          if(type != ClipboardContentType.image || appConfig.autoCopyImageAfterSync){
+            history.copyContent();
+            copy = true;
+          }
+          if (_screenUnlocked == false && copy) {
+            _syncDataOnScreenOff = history;
+          }
+          if (_missingDataCopyMsg == history.id) {
+            _missingDataCopyMsg = null;
           }
         }
         break;
@@ -777,9 +773,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       //已启用复制熄屏时的最新数据
       if (appConfig.reCopyOnScreenUnlocked) {
         //复制熄屏时的数据
-        var type = ClipboardContentType.parse(_syncDataOnScreenOff!.type);
-        var content = _syncDataOnScreenOff!.content;
-        clipboardManager.copy(type, content);
+        _syncDataOnScreenOff?.copyContent();
       }
       _syncDataOnScreenOff = null;
     }

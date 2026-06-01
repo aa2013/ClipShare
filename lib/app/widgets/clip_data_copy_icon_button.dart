@@ -1,9 +1,7 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
-import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 
 class ClipDataCopyIconButton extends StatelessWidget {
@@ -20,15 +18,8 @@ class ClipDataCopyIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return CopyIconButton(
       tooltip: tooltip,
-      onClick: () async {
-        final type = ClipboardContentType.parse(clip.data.type);
-        final content = clip.data.extracted ?? clip.data.content;
-        final result = await clipboardManager.copy(type, content);
-        if (result) {
-          Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-        } else {
-          Global.showSnackBarErr(text: TranslationKey.copySuccess.tr, context: context);
-        }
+      onClick: () {
+        clip.data.copyContent(context: context,showFeedback: true);
       },
     );
   }

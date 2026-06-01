@@ -26,11 +26,11 @@ class ClipSimpleDataContent extends StatelessWidget {
 
   Widget _renderText() {
     String content = "";
-    if (clip.isNotification) {
-      content = clip.notificationContent!;
+    if (clip.data.extracted != null && !showOriginData) {
+      content = clip.data.extracted!;
     } else {
-      if (clip.data.extracted != null && !showOriginData) {
-        content = clip.data.extracted!;
+      if (clip.isNotification) {
+        content = clip.notificationContent!;
       } else {
         content = clip.data.content;
       }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/double_tap_wrapper.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -113,15 +114,8 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
       onTap: (details) {
         showMenu(details!.globalPosition - const Offset(0, 70));
       },
-      onDoubleTap: (details) async {
-        var type = ClipboardContentType.parse(widget.clip.data.type);
-        final content = widget.clip.data.extracted ?? widget.clip.data.content;
-        final result = await clipboardManager.copy(type, content);
-        if (result) {
-          Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-        } else {
-          Global.showSnackBarErr(text: TranslationKey.copySuccess.tr, context: context);
-        }
+      onDoubleTap: (details) {
+        widget.clip.data.copyContent(context: context, showFeedback: true);
       },
     );
   }
@@ -292,19 +286,12 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
               home.showSegmentWordsView(context, widget.clip.data.content);
             },
           ),
-        if (widget.clip.isImage || widget.clip.isText)
+        if (widget.clip.isImage || widget.clip.isText || widget.clip.hasExtracted)
           MenuItem(
             label: TranslationKey.copyContent.tr,
             icon: Icons.copy,
-            onSelected: () async {
-              final type = ClipboardContentType.parse(widget.clip.data.type);
-              final content = widget.clip.data.extracted ?? widget.clip.data.content;
-              final result = await clipboardManager.copy(type, content);
-              if (result) {
-                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-              } else {
-                Global.showSnackBarErr(text: TranslationKey.copySuccess.tr, context: context);
-              }
+            onSelected: () {
+              widget.clip.data.copyContent(context: context,showFeedback: true);
             },
           ),
         if (!widget.clip.isFile)

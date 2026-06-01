@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:flutter/widgets.dart';
 
@@ -74,6 +75,8 @@ class ClipData {
     }
     return size.sizeStr;
   }
+
+  bool get hasExtracted => _data.extracted.isNotNullAndEmpty;
 
   String getTimeStr() {
     return DateTime.parse(data.time).simpleStr;

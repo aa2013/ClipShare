@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -235,8 +236,7 @@ class SplashController extends GetxController {
           dbService.historyDao.getById(id).then(
             (history) async {
               if (history == null) return;
-              var type = ClipboardContentType.parse(history.type);
-              await clipboardManager.copy(type, history.content);
+              await history.copyContent();
               clipboardManager.pasteToPreviousWindow();
             },
           );

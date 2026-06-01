@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -379,13 +380,7 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
           return;
         }
         History history = widget.list[i].data;
-        var type = ClipboardContentType.parse(history.type);
-        final res = await clipboardManager.copy(type, history.content);
-        if (res) {
-          Global.showSnackBarSuc(context: context, text: TranslationKey.copySuccess.tr);
-        } else {
-          Global.showSnackBarErr(context: context, text: TranslationKey.copyFailed.tr);
-        }
+        history.copyContent(context: context, showFeedback: true);
       },
       onUpdate: widget.onUpdate,
       onRemoveClicked: onRemoveClicked,
