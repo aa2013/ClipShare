@@ -8,7 +8,6 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
-import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
 import 'package:flutter/material.dart';
@@ -112,11 +111,13 @@ class HistoryFilterController {
 
 class HistoryFilter extends StatelessWidget {
   final HistoryFilterController controller;
+  final bool showFillColor;
   final void Function(HistoryContentType type)? onFilterTypeChanged;
 
   const HistoryFilter({
     super.key,
     required this.controller,
+    required this.showFillColor,
     this.onFilterTypeChanged,
   });
 
@@ -136,7 +137,7 @@ class HistoryFilter extends StatelessWidget {
                     autofocus: true,
                     textAlignVertical: TextAlignVertical.center,
                     decoration: noneBorderInputDecoration.copyWith(
-                      fillColor: PlatformExt.isMobile || !controller.isBigScreen ? Colors.transparent : null,
+                      fillColor: showFillColor ? null: Colors.transparent,
                       hintText: TranslationKey.search.tr,
                       suffixIcon: Tooltip(
                         message: TranslationKey.search.tr,

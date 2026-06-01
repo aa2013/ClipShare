@@ -4,6 +4,7 @@ import 'package:clipshare/app/modules/search_module/search_controller.dart' as s
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip_list_view.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -36,7 +37,10 @@ class SearchPage extends GetView<search_module.SearchController> {
               if (controller.filterLoading.value) {
                 return const SizedBox.shrink();
               }
-              return HistoryFilter(controller: controller.filterController);
+              return HistoryFilter(
+                  controller: controller.filterController,
+                  showFillColor: PlatformExt.isDesktop && controller.isBigScreen,
+              );
             },
           ),
         ),
