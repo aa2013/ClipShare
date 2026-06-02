@@ -16,6 +16,26 @@ extension ListExt<T> on List<T> {
   Map<K, List<T>> groupBy<K>(K Function(T) keySelector) {
     return collection.groupBy(this, keySelector);
   }
+
+  /// 去重
+  /// - 不传参数：使用 `==` 进行比较去重
+  /// - 传递 function：使用自定义比较逻辑去重（保留首次出现的元素）
+  List<T> distinct([Object? Function(T)? keySelector]) {
+    if (keySelector == null) {
+      // 使用 == 进行比较
+      return toSet().toList();
+    }
+    final seen = <Object?>{};
+    final result = <T>[];
+    for (var item in this) {
+      final key = keySelector(item);
+      if (seen.add(key)) {
+        result.add(item);
+      }
+    }
+    return result;
+  }
+
 }
 
 extension ListEquals<T> on List<T> {

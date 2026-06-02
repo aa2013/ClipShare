@@ -484,15 +484,18 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               try {
                 final json = jsonDecode(history.content);
                 final pkgName = json["pkg"];
-                final appInfo = sourceService.getAppInfoByAppId(pkgName);
+                final appInfo = await _getNotificationAppInfo(history, pkgName, sender);
                 Uri? iconUri;
                 if (appInfo != null) {
                   final documentsPath = appConfig.documentsPath;
                   final file = File(p.join(documentsPath, "appIcons", "${appInfo.appId}.png"));
-                  await file.parent.create(recursive: true);
-                  await file.writeAsBytes(appInfo.iconBytes);
+                  if(!await file.exists()){
+                    await file.parent.create(recursive: true);
+                    await file.writeAsBytes(appInfo.iconBytes);
+                  }
                   iconUri = file.uri;
                 }
+                print(appInfo);
                 final notificationTitle = json["title"] ?? "";
                 final notificationContent = json["content"] ?? "";
                 const notifyKey = "showMobileNotify";
@@ -519,6 +522,36 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           break;
       }
     }
+  }
+
+  Future<AppInfo?> _getNotificationAppInfo(History history, String? pkgName, DevInfo sender) async {
+    final appId = (history.source ?? pkgName)?.toString();
+    if (appId == null || appId.isEmpty) {
+      return null;
+    }
+    var appInfo = sourceService.getAppInfoByAppId(appId);
+    if (appInfo != null) {
+      return appInfo;
+    }
+    try {
+      await DataSender.sendDataByDevId(
+        sender.guid,
+        MsgType.reqAppInfo,
+        {"appId": appId},
+      );
+    } catch (err, stack) {
+      Log.warn(tag, "request notification app info failed: $err, $stack");
+      return null;
+    }
+    const maxWaitTimes = 10;
+    for (var i = 0; i < maxWaitTimes; i++) {
+      await Future.delayed(200.ms);
+      appInfo = sourceService.getAppInfoByAppId(appId);
+      if (appInfo != null) {
+        return appInfo;
+      }
+    }
+    return null;
   }
 
   Future<int> _process2Db(History history, OpMethod method, bool loadingMissingData, bool notify) async {

@@ -348,7 +348,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                   loadAppInfos: () {
                     final list = sourceService.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
                     list.addAll(sourceService.installedApps);
-                    return Future<List<LocalAppInfo>>.value(list);
+                    return Future<List<LocalAppInfo>>.value(list.distinct((item) => item.devId + item.appId));
                   },
                   onSelectedDone: (selected) {
                     setState(() {

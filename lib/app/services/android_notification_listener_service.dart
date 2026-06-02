@@ -27,7 +27,6 @@ class AndroidNotificationListenerService extends GetxService {
     _listen = NotificationListenerService.notificationsStream.listen((event) async {
       try {
         if (event.hasRemoved == true) {
-          Log.debug(tag, "notification removed ${event.content}");
           return;
         }
         var map = <String, String?>{};
@@ -46,14 +45,11 @@ class AndroidNotificationListenerService extends GetxService {
           }
         }
         final pkgName = event.packageName!;
-        var appInfo = _sourceService.getAppInfoByAppId(pkgName);
-        final missing = appInfo == null;
-        appInfo = _sourceService.getAppInfoByAppId(pkgName);
+        await _sourceService.loadFuture;
+        final appInfo = _sourceService.getAppInfoByAppId(pkgName);
         ClipboardSource? source;
-        if (missing && appInfo != null) {
-          _sourceService.addOrUpdate(appInfo, true);
-        }
         if (appInfo != null) {
+          _sourceService.addOrUpdate(appInfo, true);
           source = ClipboardSource(
             id: pkgName,
             name: appInfo.name,

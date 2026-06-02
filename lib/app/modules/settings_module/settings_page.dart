@@ -636,7 +636,11 @@ class SettingsPage extends GetView<SettingsController> {
                             if (checked) {
                               var isGranted = await NotificationListenerService.isPermissionGranted();
                               if (!isGranted) {
-                                await NotificationListenerService.requestPermission();
+                                try {
+                                  await NotificationListenerService.requestPermission();
+                                } catch (_) {
+                                  //ignored
+                                }
                                 isGranted = await NotificationListenerService.isPermissionGranted();
                                 if (isGranted) {
                                   appConfig.setEnableRecordNotification(checked);
