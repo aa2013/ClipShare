@@ -24,6 +24,9 @@ class AndroidChannelService extends GetxService {
       if (appConfig.showHistoryFloat) {
         showHistoryFloatWindow();
       }
+      if (appConfig.enhanceBackgroundKeepAlive) {
+        showKeepAliveFloatWindow();
+      }
       lockHistoryFloatLoc(
         {"loc": appConfig.lockHistoryFloatLoc},
       );
@@ -64,6 +67,34 @@ class AndroidChannelService extends GetxService {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
       AndroidChannelMethod.closeHistoryFloatWindow.name,
+    );
+  }
+
+  Future<bool> checkAlertWindowPermission() async {
+    if (!Platform.isAndroid) return false;
+    return await androidChannel
+        .invokeMethod<bool?>(AndroidChannelMethod.checkAlertWindowPermission.name)
+        .then((v) => v ?? false);
+  }
+
+  Future<void> grantAlertWindowPermission() {
+    if (!Platform.isAndroid) return Future.value();
+    return androidChannel.invokeMethod(
+      AndroidChannelMethod.grantAlertWindowPermission.name,
+    );
+  }
+
+  void showKeepAliveFloatWindow() {
+    if (!Platform.isAndroid) return;
+    androidChannel.invokeMethod(
+      AndroidChannelMethod.showKeepAliveFloatWindow.name,
+    );
+  }
+
+  void closeKeepAliveFloatWindow() {
+    if (!Platform.isAndroid) return;
+    androidChannel.invokeMethod(
+      AndroidChannelMethod.closeKeepAliveFloatWindow.name,
     );
   }
 

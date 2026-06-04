@@ -39,6 +39,7 @@ import top.coclyun.clipshare.broadcast.ScreenReceiver
 import top.coclyun.clipshare.clipboard_listener.ClipshareClipboardListenerPlugin
 import top.coclyun.clipshare.observer.SmsObserver
 import top.coclyun.clipshare.service.HistoryFloatService
+import top.coclyun.clipshare.service.KeepAliveFloatService
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -297,6 +298,7 @@ class MyApplication : Application() {
                         ACTION_MANAGE_OVERLAY_PERMISSION, "package:$packageName".toUri()
                     )
                     mainActivity?.startActivityForResult(intent, requestOverlayResultCode);
+                    result.success(true)
                 }
                 //检查通知权限
                 "checkNotification" -> {
@@ -335,6 +337,14 @@ class MyApplication : Application() {
                     if (!isServiceRunning(this, HistoryFloatService::class.java)) {
                         startService(Intent(this, HistoryFloatService::class.java))
                     }
+                }
+                "showKeepAliveFloatWindow" -> {
+                    if (Settings.canDrawOverlays(this) && !isServiceRunning(this, KeepAliveFloatService::class.java)) {
+                        startService(Intent(this, KeepAliveFloatService::class.java))
+                    }
+                }
+                "closeKeepAliveFloatWindow" -> {
+                    stopService(Intent(this, KeepAliveFloatService::class.java))
                 }
                 //锁定悬浮窗位置
                 "lockHistoryFloatLoc" -> {

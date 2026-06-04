@@ -263,6 +263,30 @@ class SettingsPage extends GetView<SettingsController> {
                         show: (v) => Platform.isAndroid,
                       ),
                       SettingCard(
+                        title: Text(TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle.tr),
+                        description: Text(TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc.tr),
+                        value: appConfig.enhanceBackgroundKeepAlive,
+                        action: (v) => Switch(
+                          value: appConfig.enhanceBackgroundKeepAlive,
+                          onChanged: (checked) async {
+                            HapticFeedback.mediumImpact();
+                            if (checked) {
+                              final hasPermission = await androidChannelService.checkAlertWindowPermission();
+                              controller.hasFloatPerm.value = hasPermission;
+                              if (!hasPermission) {
+                                await androidChannelService.grantAlertWindowPermission();
+                                return;
+                              }
+                              androidChannelService.showKeepAliveFloatWindow();
+                            } else {
+                              androidChannelService.closeKeepAliveFloatWindow();
+                            }
+                            appConfig.setEnhanceBackgroundKeepAlive(checked);
+                          },
+                        ),
+                        show: (v) => Platform.isAndroid,
+                      ),
+                      SettingCard(
                         title: Text(
                           TranslationKey.commonSettingsLockHistoriesFloatWindowPosition.tr,
                         ),

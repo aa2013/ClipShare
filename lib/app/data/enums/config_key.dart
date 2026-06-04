@@ -5,6 +5,7 @@ enum ConfigKey {
   startMini,
   allowDiscover,
   showHistoryFloat,
+  enhanceBackgroundKeepAlive,
   firstStartup,
   windowSize,
   rememberWindowSize,

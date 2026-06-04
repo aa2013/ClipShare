@@ -239,6 +239,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Minimize Window on Startup";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "Show History Floating Window";
+      case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
+        return "Enhance Background Keep Alive";
+      case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:
+        return "Show a 1-pixel floating window to try to improve background keep-alive on some devices";
       case TranslationKey.commonSettingsLockHistoriesFloatWindowPosition:
         return "Lock Floating Window Position";
       case TranslationKey.preferenceSettingsRememberWindowSize:

@@ -238,6 +238,10 @@ class ConfigService extends GetxService {
 
   bool get showHistoryFloat => _showHistoryFloat.value;
 
+  late final RxBool _enhanceBackgroundKeepAlive;
+
+  bool get enhanceBackgroundKeepAlive => _enhanceBackgroundKeepAlive.value;
+
   //锁定悬浮窗位置
   late final RxBool _lockHistoryFloatLoc;
 
@@ -605,6 +609,7 @@ class ConfigService extends GetxService {
     _startMini = (await cfg.getConfigByKey(ConfigKey.startMini, false)).obs;
     _allowDiscover = (await cfg.getConfigByKey(ConfigKey.allowDiscover, true)).obs;
     _showHistoryFloat = (await cfg.getConfigByKey(ConfigKey.showHistoryFloat, false)).obs;
+    _enhanceBackgroundKeepAlive = (await cfg.getConfigByKey(ConfigKey.enhanceBackgroundKeepAlive, false)).obs;
     _firstStartup = (await cfg.getConfigByKey(ConfigKey.firstStartup, true)).obs;
     _rememberWindowSize = (await cfg.getConfigByKey(ConfigKey.rememberWindowSize, false)).obs;
     _windowSize = (await cfg.getConfigByKey(
@@ -1127,6 +1132,11 @@ class ConfigService extends GetxService {
   Future<void> setShowHistoryFloat(bool showHistoryFloat) async {
     await configDao.addOrUpdate(ConfigKey.showHistoryFloat, showHistoryFloat.toString());
     _showHistoryFloat.value = showHistoryFloat;
+  }
+
+  Future<void> setEnhanceBackgroundKeepAlive(bool value) async {
+    await configDao.addOrUpdate(ConfigKey.enhanceBackgroundKeepAlive, value.toString());
+    _enhanceBackgroundKeepAlive.value = value;
   }
 
   Future<void> setLockHistoryFloatLoc(bool lockHistoryFloatLoc) async {

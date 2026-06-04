@@ -87,6 +87,8 @@ enum TranslationKey {
   commonSettingsRunAtStartup,
   commonSettingsRunMinimize,
   commonSettingsShowHistoriesFloatWindow,
+  commonSettingsEnhanceBackgroundKeepAliveTitle,
+  commonSettingsEnhanceBackgroundKeepAliveDesc,
   commonSettingsLockHistoriesFloatWindowPosition,
   preferenceSettingsRememberWindowSize,
   preferenceSettingsWindowSizeRecordValue,
