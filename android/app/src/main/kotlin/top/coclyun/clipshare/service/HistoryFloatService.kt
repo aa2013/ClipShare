@@ -19,6 +19,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.WindowManager.LayoutParams
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -37,6 +38,7 @@ import top.coclyun.clipshare.adapter.History
 import top.coclyun.clipshare.loadHistories
 import top.coclyun.clipshare.lockHistoryFloatLocation
 import top.coclyun.clipshare.sendHistories
+import top.coclyun.clipshare.setHistoryFloatHandleWidth
 import java.io.File
 
 class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
@@ -51,6 +53,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var loading by mutableStateOf(false)
     private var closing by mutableStateOf(false)
     private var handleVisible by mutableStateOf(true)
+    private var handleWidth by mutableIntStateOf(32)
     private var minHistoryId = 0L
     private var lockLoc = false
     private var positionY = 0
@@ -102,6 +105,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     loading = loading,
                     closing = closing,
                     handleVisible = handleVisible,
+                    handleWidth = handleWidth,
                     onExpand = { unfoldView() },
                     onCollapse = { requestHideContainer() },
                     onCollapseFinished = { hideContainer() },
@@ -120,6 +124,11 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             lockLoc = intent.getBooleanExtra("lock", false)
             return START_STICKY
         }
+        if (intent?.action == setHistoryFloatHandleWidth) {
+            handleWidth = intent.getIntExtra("width", 32)
+            return START_STICKY
+        }
+        handleWidth = intent?.getIntExtra("width", handleWidth) ?: handleWidth
         showFloatWindow()
         return START_STICKY
     }
@@ -146,6 +155,10 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                 when (intent.action) {
                     lockHistoryFloatLocation -> {
                         lockLoc = intent.getBooleanExtra("lock", false)
+                    }
+
+                    setHistoryFloatHandleWidth -> {
+                        handleWidth = intent.getIntExtra("width", 32)
                     }
 
                     sendHistories -> {
@@ -189,6 +202,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
         val filter = IntentFilter().apply {
             addAction(lockHistoryFloatLocation)
+            addAction(setHistoryFloatHandleWidth)
             addAction(sendHistories)
         }
 

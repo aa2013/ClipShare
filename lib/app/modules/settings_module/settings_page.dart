@@ -247,6 +247,40 @@ class SettingsPage extends GetView<SettingsController> {
                       ),
                       SettingCard(
                         title: Text(TranslationKey.commonSettingsShowHistoriesFloatWindow.tr),
+                        description: Row(
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 30,
+                                child: Slider(
+                                  min: 24,
+                                  max: 50,
+                                  divisions: 26,
+                                  padding: EdgeInsets.zero,
+                                  value: appConfig.historyFloatHandleWidth.toDouble(),
+                                  label: TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue.trParams({
+                                    "width": appConfig.historyFloatHandleWidth.toString(),
+                                  }),
+                                  onChanged: appConfig.showHistoryFloat
+                                      ? (value) {
+                                          HapticFeedback.mediumImpact();
+                                          final width = value.round();
+                                          androidChannelService.setHistoryFloatHandleWidth(width);
+                                          appConfig.setHistoryFloatHandleWidth(width);
+                                        }
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 24,
+                              child: Text(
+                                appConfig.historyFloatHandleWidth.toString(),
+                                textAlign: TextAlign.right,
+                              ),
+                            ),
+                          ],
+                        ),
                         value: appConfig.showHistoryFloat,
                         action: (v) => Switch(
                           value: appConfig.showHistoryFloat,
@@ -521,7 +555,7 @@ class SettingsPage extends GetView<SettingsController> {
                           val ? Icons.check_circle : Icons.help,
                           color: val ? Colors.green : Colors.orange,
                         ),
-                        show: (v) => Platform.isAndroid && !v,
+                        show: (v) => Platform.isIOS && !v,
                         onTap: () {
                           if (!controller.hasIOSPhotosPerm.value) {
                             controller.iosPhotosHandler.request();

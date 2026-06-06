@@ -5,6 +5,7 @@ enum AndroidChannelMethod {
   notifyMediaScan,
   showHistoryFloatWindow,
   closeHistoryFloatWindow,
+  setHistoryFloatHandleWidth,
   lockHistoryFloatLoc,
   showKeepAliveFloatWindow,
   closeKeepAliveFloatWindow,

@@ -239,6 +239,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Minimize Window on Startup";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "Show History Floating Window";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
+        return "Floating Window Handle Width: @width";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "Enhance Background Keep Alive";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:

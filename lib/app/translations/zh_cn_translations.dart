@@ -185,6 +185,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "启动时最小化窗口";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "显示历史记录悬浮窗";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
+        return "悬浮窗把手宽度：@width";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "增强后台保活";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:

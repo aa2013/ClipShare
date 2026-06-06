@@ -98,6 +98,7 @@ fun HistoryFloatContent(
     loading: Boolean,
     closing: Boolean,
     handleVisible: Boolean,
+    handleWidth: Int,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
     onCollapseFinished: () -> Unit,
@@ -122,28 +123,30 @@ fun HistoryFloatContent(
             HistoryHandle(
                 onExpand = onExpand,
                 onMoveHandle = onMoveHandle,
+                handleWidth = handleWidth,
             )
         }
     }
 }
 
+
 @Composable
 private fun HistoryHandle(
     onExpand: () -> Unit,
     onMoveHandle: (Float) -> Unit,
+    handleWidth: Int = 32,
 ) {
     var active by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
-    val handleWidth by animateDpAsState(targetValue = if (active) 42.dp else 36.dp, label = "handleWidth")
+    val handleWidth by animateDpAsState(targetValue = if (active) (handleWidth + 16).dp else handleWidth.dp, label = "handleWidth")
     val handleHeight by animateDpAsState(targetValue = if (active) 108.dp else 96.dp, label = "handleHeight")
     val handleAlpha by animateFloatAsState(targetValue = if (active) 0.22f else 0.09f, label = "handleAlpha")
-    val handleOffset by animateDpAsState(targetValue = if (active) 0.dp else 18.dp, label = "handleOffset")
 
     Box(
         modifier = Modifier
-            .width(44.dp)
-            .height(132.dp)
+            .width(handleWidth)
+            .height(handleHeight)
             .pointerInput(Unit) {
                 var totalX = 0f
                 detectDragGestures(
@@ -152,11 +155,11 @@ private fun HistoryHandle(
                         active = true
                     },
                     onDragEnd = {
-                        if (totalX < -28f) {
+                        if (totalX < -20f) {
                             onExpand()
                         }
                         scope.launch {
-                            delay(900)
+                            delay(500)
                             active = false
                         }
                     },
@@ -173,7 +176,7 @@ private fun HistoryHandle(
                 onDoubleClick = {
                     active = true
                     scope.launch {
-                        delay(900)
+                        delay(500)
                         active = false
                     }
                     onExpand()
@@ -184,8 +187,7 @@ private fun HistoryHandle(
         Surface(
             modifier = Modifier
                 .width(handleWidth)
-                .height(handleHeight)
-                .offset(x = handleOffset),
+                .height(handleHeight),
             shape = RoundedCornerShape(topStart = 22.dp, bottomStart = 22.dp),
             color = Color.White.copy(alpha = handleAlpha),
             tonalElevation = 0.dp,
@@ -355,7 +357,7 @@ private fun HistoryItem(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
                 .combinedClickable(
-                    onClick = { copyToClipboard(context, item) },
+                    onClick = {},
                     onLongClick = {
                         startHistoryDrag(context, view, item, onDragStart, onDragEnd)
                     },

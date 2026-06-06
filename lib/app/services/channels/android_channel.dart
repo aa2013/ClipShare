@@ -24,6 +24,7 @@ class AndroidChannelService extends GetxService {
       if (appConfig.showHistoryFloat) {
         showHistoryFloatWindow();
       }
+      setHistoryFloatHandleWidth(appConfig.historyFloatHandleWidth);
       if (appConfig.enhanceBackgroundKeepAlive) {
         showKeepAliveFloatWindow();
       }
@@ -59,6 +60,7 @@ class AndroidChannelService extends GetxService {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
       AndroidChannelMethod.showHistoryFloatWindow.name,
+      {"width": appConfig.historyFloatHandleWidth},
     );
   }
 
@@ -67,6 +69,14 @@ class AndroidChannelService extends GetxService {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
       AndroidChannelMethod.closeHistoryFloatWindow.name,
+    );
+  }
+
+  void setHistoryFloatHandleWidth(int width) {
+    if (!Platform.isAndroid) return;
+    androidChannel.invokeMethod(
+      AndroidChannelMethod.setHistoryFloatHandleWidth.name,
+      {"width": width},
     );
   }
 

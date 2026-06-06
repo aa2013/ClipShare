@@ -46,6 +46,7 @@ import java.io.OutputStream
 import java.net.URLDecoder
 
 const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
+const val setHistoryFloatHandleWidth = "SET_HISTORY_FLOAT_HANDLE_WIDTH"
 const val loadHistories = "LOAD_HISTORIES"
 const val sendHistories = "SEND_HISTORIES"
 const val OnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED"
@@ -334,13 +335,28 @@ class MyApplication : Application() {
                 }
                 //显示历史浮窗
                 "showHistoryFloatWindow" -> {
+                    val width = args["width"] as? Int ?: 32
                     if (!isServiceRunning(this, HistoryFloatService::class.java)) {
-                        startService(Intent(this, HistoryFloatService::class.java))
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            putExtra("width", width)
+                        })
                     }
                 }
                 "showKeepAliveFloatWindow" -> {
                     if (Settings.canDrawOverlays(this) && !isServiceRunning(this, KeepAliveFloatService::class.java)) {
                         startService(Intent(this, KeepAliveFloatService::class.java))
+                    }
+                }
+                "setHistoryFloatHandleWidth" -> {
+                    val width = args["width"] as Int
+                    val intent = Intent(setHistoryFloatHandleWidth)
+                    intent.putExtra("width", width)
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                    if (isServiceRunning(this, HistoryFloatService::class.java)) {
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            action = setHistoryFloatHandleWidth
+                            putExtra("width", width)
+                        })
                     }
                 }
                 "closeKeepAliveFloatWindow" -> {
