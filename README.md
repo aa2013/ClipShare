@@ -150,7 +150,7 @@ lib/app/
 
 ## 开发环境要求
 
-- Flutter `3.35.x`（CI 使用 `3.35.3`）
+- Flutter `3.41.9`
 - Dart SDK `>=3.8.0 <4.0.0`
 - Android 构建需要 JDK 17
 - Linux 桌面构建需安装 GTK 等依赖（见 `.github/workflows/build-linux.yml`）

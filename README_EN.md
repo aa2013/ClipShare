@@ -150,7 +150,7 @@ This ensures a consistent key space across all languages, making missing-key che
 
 ## Development Environment Requirements
 
-- Flutter `3.35.x` (CI uses `3.35.3`)
+- Flutter `3.41.9`
 - Dart SDK `>=3.8.0 <4.0.0`
 - JDK 17 is required for Android builds
 - Linux desktop builds require GTK and related dependencies (see `.github/workflows/build-linux.yml`)
