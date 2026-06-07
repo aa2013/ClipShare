@@ -14,6 +14,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -64,8 +65,7 @@ class RuleListView extends StatefulWidget {
   State<StatefulWidget> createState() => _RuleListViewState();
 }
 
-class _RuleListViewState extends State<RuleListView>
-    with SingleTickerProviderStateMixin {
+class _RuleListViewState extends State<RuleListView> with SingleTickerProviderStateMixin {
   final TextEditingController searchEditor = TextEditingController();
   late final TabController tabController;
   final rulesController = ScrollController();
@@ -110,22 +110,17 @@ class _RuleListViewState extends State<RuleListView>
     super.didUpdateWidget(oldWidget);
   }
 
-  void updateActiveItem(){
+  void updateActiveItem() {
     activeRuleItem = widget.activeRuleItem;
     activeScriptModuleItem = widget.activeLuaModuleItem;
   }
 
   void updateSearchResult() {
     final search = searchEditor.text;
-    searchRules = widget.rules
-        .where((e) => search.isNullOrEmpty || e.name.containsIgnoreCase(search))
-        .toList();
+    searchRules = widget.rules.where((e) => search.isNullOrEmpty || e.name.containsIgnoreCase(search)).toList();
     searchScriptModules = widget.scriptModules
         .where(
-          (e) =>
-              search.isNullOrEmpty ||
-              e.moduleName.containsIgnoreCase(search) ||
-              e.displayName.containsIgnoreCase(search),
+          (e) => search.isNullOrEmpty || e.moduleName.containsIgnoreCase(search) || e.displayName.containsIgnoreCase(search),
         )
         .toList();
   }
@@ -178,8 +173,8 @@ class _RuleListViewState extends State<RuleListView>
       isActive: !isSmallScreen && rule.id == activeRuleItem?.id && currentTab == TranslationKey.rules,
       selected: selectedRules.contains(rule.id),
       selectMode: multiSelectMode,
-      disabledDrag:
-          widget.disableRulesDrag || searchRules.length != widget.rules.length,
+      showDragTooltip: PlatformExt.isDesktop,
+      disabledDrag: widget.disableRulesDrag || searchRules.length != widget.rules.length,
       onEnabledChanged: (enabled) {
         final validateResult = rule.validate();
         if (validateResult != null) {
@@ -242,19 +237,23 @@ class _RuleListViewState extends State<RuleListView>
                   children: [
                     Text(tab.tr),
                     Visibility(
-                        visible: tab == TranslationKey.modules,
-                        child: Container(
-                          margin: 3.insetL,
-                          child: Tooltip(
-                            message: TranslationKey.tips.tr,
-                            child: GestureDetector(onTap: (){
+                      visible: tab == TranslationKey.modules,
+                      child: Container(
+                        margin: 3.insetL,
+                        child: Tooltip(
+                          message: TranslationKey.tips.tr,
+                          child: GestureDetector(
+                            onTap: () {
                               Global.showTipsDialog(context: context, text: TranslationKey.modulesTip.tr);
-                            },child: const Icon(
+                            },
+                            child: const Icon(
                               Icons.info_outline,
                               size: 15,
                               color: Colors.blueGrey,
-                            ),),),
+                            ),
+                          ),
                         ),
+                      ),
                     ),
                   ],
                 ),
@@ -364,182 +363,186 @@ class _RuleListViewState extends State<RuleListView>
 
   @override
   Widget build(BuildContext context) {
-    final fabSize = appConfig.isSmallScreen
-        ? ExpandableFabSize.regular
-        : ExpandableFabSize.small;
-    final fabButtonFun = appConfig.isSmallScreen
-        ? _regularFab
-        : FloatingActionButton.small;
+    final fabSize = appConfig.isSmallScreen ? ExpandableFabSize.regular : ExpandableFabSize.small;
+    final fabButtonFun = appConfig.isSmallScreen ? _regularFab : FloatingActionButton.small;
     double distance = appConfig.isSmallScreen && multiSelectMode ? 145 : 100;
-    return Scaffold(
-      body: Padding(
-        padding: 5.insetAll,
-        child: Column(
+    return PopScope(
+      canPop: !multiSelectMode,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !multiSelectMode) {
+          return;
+        }
+        setState(() {
+          multiSelectMode = false;
+          selectedRules.clear();
+        });
+      },
+      child: Scaffold(
+        body: Padding(
+          padding: 5.insetAll,
+          child: Column(
+            children: [
+              buildSearchField(),
+              const SizedBox(height: 5),
+              Expanded(child: buildListView()),
+            ],
+          ),
+        ),
+        floatingActionButtonLocation: ExpandableFab.location,
+        floatingActionButton: ExpandableFab(
+          distance: distance,
+          type: ExpandableFabType.fan,
+          overlayStyle: const ExpandableFabOverlayStyle(blur: 8),
+          openButtonBuilder: RotateFloatingActionButtonBuilder(
+            fabSize: fabSize,
+            child: Tooltip(
+              message: TranslationKey.moreFilter.tr,
+              child: const Icon(Icons.menu),
+            ),
+          ),
+          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+            fabSize: fabSize,
+            child: Tooltip(
+              message: TranslationKey.close.tr,
+              child: const Icon(Icons.close),
+            ),
+          ),
           children: [
-            buildSearchField(),
-            const SizedBox(height: 5),
-            Expanded(child: buildListView()),
+            if (isRulesTab)
+              fabButtonFun(
+                heroTag: "$tag.multi-select",
+                onPressed: widget.rules.isEmpty
+                    ? null
+                    : () {
+                        if (selectedRules.length >= widget.rules.length) {
+                          setState(() {
+                            selectedRules.clear();
+                            multiSelectMode = false;
+                          });
+                          return;
+                        }
+                        selectedRules.addAll(widget.rules.map((item) => item.id));
+                        if (selectedRules.isNotEmpty) {
+                          setState(() {
+                            multiSelectMode = true;
+                          });
+                        }
+                      },
+                tooltip: selectedRules.length >= widget.rules.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
+                child: Icon(
+                  selectedRules.length >= widget.rules.length ? Icons.deselect : Icons.select_all,
+                  color: widget.rules.isEmpty ? Colors.grey : null,
+                ),
+              ),
+            // if (!multiSelectMode)
+            //   fabButtonFun(
+            //     heroTag: "$tag.import",
+            //     onPressed: () {},
+            //     tooltip: TranslationKey.import.tr,
+            //     child: const Icon(MdiIcons.import),
+            //   ),
+            // if (multiSelectMode)
+            //   fabButtonFun(
+            //     heroTag: "$tag.output",
+            //     onPressed: () {},
+            //     tooltip: TranslationKey.output.tr,
+            //     child: const Icon(MdiIcons.export),
+            //   ),
+            if (multiSelectMode)
+              fabButtonFun(
+                heroTag: "$tag.remove",
+                onPressed: () {
+                  widget.onRuleItemRemove(selectedRules);
+                  setState(() {
+                    multiSelectMode = false;
+                    selectedRules.clear();
+                  });
+                },
+                tooltip: TranslationKey.delete.tr,
+                child: const Icon(Icons.delete),
+              ),
+            if (!multiSelectMode)
+              fabButtonFun(
+                heroTag: "$tag.add",
+                onPressed: () {
+                  final controller = controllers[tabController.index];
+                  if (isRulesTab) {
+                    var newRule = RuleItem(
+                      id: appConfig.snowflake.nextId(),
+                      version: DateTime.now().yyyyMMddHHmmss,
+                      name: "Rule${widget.rules.length + 1}",
+                      platforms: SupportPlatForm.values.toSet(),
+                      sources: {},
+                      trigger: RuleTrigger.onCopy,
+                      type: RuleContentType.regex,
+                      regex: RuleRegexContent(
+                        mainRegex: '',
+                        allowExtractData: false,
+                        extractRegex: '',
+                        allowAddTag: false,
+                        tags: {},
+                        preventSync: false,
+                        isFinal: false,
+                        mode: WhiteBlackMode.defaultMode,
+                      ),
+                      script: RuleScriptContent(
+                        language: RuleScriptLanguage.lua,
+                        content: '',
+                      ),
+                      enabled: false,
+                      order: widget.rules.length + 1,
+                      isNewData: true,
+                    );
+                    widget.onRuleItemAdd(newRule);
+                  } else {
+                    //ScriptModule
+                    var newScriptModule = ScriptModule(
+                      moduleName: 'Module${widget.scriptModules.length + 1}',
+                      displayName: 'Module${widget.scriptModules.length + 1}',
+                      language: RuleScriptLanguage.lua,
+                      source: '',
+                      version: 0,
+                      isNewData: true,
+                    );
+                    widget.onScriptModuleItemAdd(newScriptModule);
+                  }
+                  //controller 只会attach到当前的tab
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!controller.hasClients) {
+                      Log.debug(
+                        tag,
+                        "$currentTab scroller controller not clients",
+                      );
+                      return;
+                    }
+                    try {
+                      controller.animateTo(
+                        controller.position.maxScrollExtent,
+                        duration: 200.ms,
+                        curve: Curves.easeOut,
+                      );
+                    } catch (err, stack) {
+                      Log.error(tag, err, stack);
+                    }
+                  });
+                },
+                tooltip: TranslationKey.add.tr,
+                child: const Icon(Icons.add),
+              ),
+            if (multiSelectMode)
+              fabButtonFun(
+                heroTag: "$tag.exit-select-mode",
+                onPressed: () {
+                  setState(() {
+                    multiSelectMode = false;
+                    selectedRules.clear();
+                  });
+                },
+                tooltip: TranslationKey.ruleListExitSelectionModeTooltip.tr,
+                child: const Icon(MdiIcons.cancel),
+              ),
           ],
         ),
-      ),
-      floatingActionButtonLocation: ExpandableFab.location,
-      floatingActionButton: ExpandableFab(
-        distance: distance,
-        type: ExpandableFabType.fan,
-        overlayStyle: const ExpandableFabOverlayStyle(blur: 8),
-        openButtonBuilder: RotateFloatingActionButtonBuilder(
-          fabSize: fabSize,
-          child: Tooltip(
-            message: TranslationKey.moreFilter.tr,
-            child: const Icon(Icons.menu),
-          ),
-        ),
-        closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-          fabSize: fabSize,
-          child: Tooltip(
-            message: TranslationKey.close.tr,
-            child: const Icon(Icons.close),
-          ),
-        ),
-        children: [
-          if (isRulesTab)
-            fabButtonFun(
-              heroTag: "$tag.multi-select",
-              onPressed: widget.rules.isEmpty
-                  ? null
-                  : () {
-                      if (selectedRules.length >= widget.rules.length) {
-                        setState(() {
-                          selectedRules.clear();
-                          multiSelectMode = false;
-                        });
-                        return;
-                      }
-                      selectedRules.addAll(widget.rules.map((item) => item.id));
-                      if (selectedRules.isNotEmpty) {
-                        setState(() {
-                          multiSelectMode = true;
-                        });
-                      }
-                    },
-              tooltip: selectedRules.length >= widget.rules.length
-                  ? TranslationKey.cancelSelectAll.tr
-                  : TranslationKey.selectAll.tr,
-              child: Icon(
-                selectedRules.length >= widget.rules.length
-                    ? Icons.deselect
-                    : Icons.select_all,
-                color: widget.rules.isEmpty ? Colors.grey : null,
-              ),
-            ),
-          // if (!multiSelectMode)
-          //   fabButtonFun(
-          //     heroTag: "$tag.import",
-          //     onPressed: () {},
-          //     tooltip: TranslationKey.import.tr,
-          //     child: const Icon(MdiIcons.import),
-          //   ),
-          // if (multiSelectMode)
-          //   fabButtonFun(
-          //     heroTag: "$tag.output",
-          //     onPressed: () {},
-          //     tooltip: TranslationKey.output.tr,
-          //     child: const Icon(MdiIcons.export),
-          //   ),
-          if (multiSelectMode)
-            fabButtonFun(
-              heroTag: "$tag.remove",
-              onPressed: () {
-                widget.onRuleItemRemove(selectedRules);
-                setState(() {
-                  multiSelectMode = false;
-                  selectedRules.clear();
-                });
-              },
-              tooltip: TranslationKey.delete.tr,
-              child: const Icon(Icons.delete),
-            ),
-          if (!multiSelectMode)
-            fabButtonFun(
-              heroTag: "$tag.add",
-              onPressed: () {
-                final controller = controllers[tabController.index];
-                if (isRulesTab) {
-                  var newRule = RuleItem(
-                    id: appConfig.snowflake.nextId(),
-                    version: DateTime.now().yyyyMMddHHmmss,
-                    name: "Rule${widget.rules.length + 1}",
-                    platforms: SupportPlatForm.values.toSet(),
-                    sources: {},
-                    trigger: RuleTrigger.onCopy,
-                    type: RuleContentType.regex,
-                    regex: RuleRegexContent(
-                      mainRegex: '',
-                      allowExtractData: false,
-                      extractRegex: '',
-                      allowAddTag: false,
-                      tags: {},
-                      preventSync: false,
-                      isFinal: false,
-                      mode: WhiteBlackMode.defaultMode,
-                    ),
-                    script: RuleScriptContent(
-                      language: RuleScriptLanguage.lua,
-                      content: '',
-                    ),
-                    enabled: false,
-                    order: widget.rules.length + 1,
-                    isNewData: true,
-                  );
-                  widget.onRuleItemAdd(newRule);
-                } else {
-                  //ScriptModule
-                  var newScriptModule = ScriptModule(
-                    moduleName: 'Module${widget.scriptModules.length + 1}',
-                    displayName: 'Module${widget.scriptModules.length + 1}',
-                    language: RuleScriptLanguage.lua,
-                    source: '',
-                    version: 0,
-                    isNewData: true,
-                  );
-                  widget.onScriptModuleItemAdd(newScriptModule);
-                }
-                //controller 只会attach到当前的tab
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (!controller.hasClients) {
-                    Log.debug(
-                      tag,
-                      "$currentTab scroller controller not clients",
-                    );
-                    return;
-                  }
-                  try {
-                    controller.animateTo(
-                      controller.position.maxScrollExtent,
-                      duration: 200.ms,
-                      curve: Curves.easeOut,
-                    );
-                  } catch (err, stack) {
-                    Log.error(tag, err, stack);
-                  }
-                });
-              },
-              tooltip: TranslationKey.add.tr,
-              child: const Icon(Icons.add),
-            ),
-          if (multiSelectMode)
-            fabButtonFun(
-              heroTag: "$tag.exit-select-mode",
-              onPressed: () {
-                setState(() {
-                  multiSelectMode = false;
-                  selectedRules.clear();
-                });
-              },
-              tooltip: TranslationKey.ruleListExitSelectionModeTooltip.tr,
-              child: const Icon(MdiIcons.cancel),
-            ),
-        ],
       ),
     );
   }

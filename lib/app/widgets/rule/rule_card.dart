@@ -17,6 +17,7 @@ class RuleCard extends StatelessWidget {
   final bool disabledDrag;
   final bool selected;
   final bool isActive;
+  final bool showDragTooltip;
   static final _borderRadius = BorderRadius.circular(12.0);
 
   const RuleCard({
@@ -31,6 +32,7 @@ class RuleCard extends StatelessWidget {
     this.orderedIndex,
     this.isActive = false,
     this.disabledDrag = false,
+    this.showDragTooltip = true,
   });
 
   @override
@@ -155,7 +157,9 @@ class RuleCard extends StatelessWidget {
                             replacement: IconButton(
                               mouseCursor: disabledDrag ? SystemMouseCursors.forbidden : SystemMouseCursors.click,
                               onPressed: disabledDrag ? null : () {},
-                              tooltip: disabledDrag ? TranslationKey.ruleCardDragDisabledTooltip.tr : TranslationKey.ruleCardDragTooltip.tr,
+                              tooltip: showDragTooltip
+                                  ? (disabledDrag ? TranslationKey.ruleCardDragDisabledTooltip.tr : TranslationKey.ruleCardDragTooltip.tr)
+                                  : null,
                               icon: const Icon(Icons.drag_indicator),
                               padding: EdgeInsets.zero,
                             ),
