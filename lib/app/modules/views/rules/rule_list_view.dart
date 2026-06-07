@@ -18,7 +18,6 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/rule/script_module_card.dart';
 import 'package:clipshare/app/widgets/rule/rule_card.dart';
 import 'package:flutter/material.dart';
@@ -298,8 +297,11 @@ class _RuleListViewState extends State<RuleListView>
           newIndexRule.version = DateTime.now().yyyyMMddHHmmss;
           oldIndexRule.dirty = true;
           newIndexRule.dirty = true;
-          final item = widget.rules.removeAt(oldIndex);
-          widget.rules.insert(newIndex, item);
+          setState(() {
+            final item = widget.rules.removeAt(oldIndex);
+            widget.rules.insert(newIndex, item);
+            updateSearchResult();
+          });
           widget.onRuleDragged();
         },
       ),

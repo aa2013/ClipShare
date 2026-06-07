@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
-import 'package:clipshare/app/data/enums/rule_type.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
@@ -66,8 +63,6 @@ class RuleSyncHandler implements SyncListener {
     final opRecord = OperationRecord.fromJson(map);
     final rule = Rule.fromJson(ruleMap.cast());
     bool success = false;
-    //删除所有操作记录
-    await dbService.opRecordDao.deleteByDataWithCascade(rule.id.toString());
     switch (opRecord.method) {
       case OpMethod.add:
       case OpMethod.update:
@@ -77,7 +72,11 @@ class RuleSyncHandler implements SyncListener {
           if (dbData.version >= rule.version) {
             break;
           }
+          //确认远端数据更新后，再清理本地该规则的旧同步记录
+          await dbService.opRecordDao.deleteByDataWithCascade(rule.id.toString());
           await dbService.ruleDao.remove(rule.id);
+        } else {
+          await dbService.opRecordDao.deleteByDataWithCascade(rule.id.toString());
         }
         success = (await dbService.ruleDao.addRule(rule)) > 0;
         if (success) {
@@ -88,6 +87,7 @@ class RuleSyncHandler implements SyncListener {
       case OpMethod.delete:
         success = (await dbService.ruleDao.remove(rule.id) ?? 0) > 0;
         if (success) {
+          await dbService.opRecordDao.deleteByDataWithCascade(rule.id.toString());
           ruleController.rules.removeWhere((e) => e.id == rule.id);
         }
         break;

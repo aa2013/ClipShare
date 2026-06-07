@@ -244,13 +244,14 @@ class RulesController extends GetxController {
     final List<RuleItem> updateList = [];
     final List<RuleItem> saveList = [];
     var order = 1;
+    final newVersion = DateTime.now().yyyyMMddHHmmss;
     for (var rule in rules) {
       if (rule.isNewData) {
         //未达到保存条件的忽略
         continue;
       }
       final oldOrder = rule.order;
-      final newOrder = order;
+      final newOrder = order++;
       if (oldOrder == newOrder) {
         //顺序无变化但是需要保存数据
         if (rule.dirty) {
@@ -260,16 +261,17 @@ class RulesController extends GetxController {
         continue;
       }
       //顺序变化需要保存
+      final isSavedData = rule.version > 0;
       rule.dirty = false;
       rule.order = newOrder;
-      if (rule.version > 0) {
+      rule.version = rule.version >= newVersion ? rule.version + 1 : newVersion;
+      if (isSavedData) {
         //新数据，直接插入
         saveList.add(rule);
       } else {
         //老数据，仅更新
         updateList.add(rule);
       }
-      order++;
     }
     await ruleDao.updateRules(updateList.map((e) => e.toRule()).toList());
     await ruleDao.addRules(saveList.map((e) => e.toRule()).toList());
@@ -460,13 +462,14 @@ class RulesController extends GetxController {
       if (rules[i].id == rule.id) {
         rules[i] = ruleItem;
         exists = true;
-        update();
         break;
       }
     }
     if (!exists) {
       rules.add(ruleItem);
     }
+    rules.sort();
+    update();
     loadLuaUserFunc(
       ruleItem.name,
       ruleItem.script.content,
