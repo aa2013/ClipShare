@@ -517,9 +517,6 @@ class SettingsPage extends GetView<SettingsController> {
                           color: val ? Colors.green : Colors.orange,
                         ),
                         show: (v) => Platform.isAndroid && !v,
-                        onTap: () {
-                          PermissionHelper.reqAndroidReadSms();
-                        },
                       ),
                       SettingCard(
                         title: Text(TranslationKey.permissionSettingsAccessibilityTitle.tr),

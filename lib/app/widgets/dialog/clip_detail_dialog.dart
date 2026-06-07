@@ -26,6 +26,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
@@ -132,7 +133,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                       tooltip: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
                     ),
                     Visibility(
-                      visible: widget.clip.isImage || widget.clip.isText,
+                      visible: widget.clip.data.canCopy,
                       child: ClipDataCopyIconButton(clip: widget.clip),
                     ),
                     Visibility(

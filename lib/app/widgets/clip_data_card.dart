@@ -286,7 +286,7 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
               home.showSegmentWordsView(context, widget.clip.data.content);
             },
           ),
-        if (widget.clip.isImage || widget.clip.isText || widget.clip.hasExtracted)
+        if (widget.clip.data.canCopy)
           MenuItem(
             label: TranslationKey.copyContent.tr,
             icon: Icons.copy,

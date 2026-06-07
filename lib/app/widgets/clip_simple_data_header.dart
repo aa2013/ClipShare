@@ -8,6 +8,7 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
+import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/widgets/app_icon.dart';
 import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
 import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
@@ -91,7 +92,7 @@ class ClipSimpleDataHeader extends StatelessWidget {
           ),
         ),
         Visibility(
-          visible: clip.isImage || clip.isText,
+          visible: clip.data.canCopy,
           child: ClipDataCopyIconButton(clip: clip),
         ),
       ],

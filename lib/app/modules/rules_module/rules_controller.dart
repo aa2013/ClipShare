@@ -26,13 +26,16 @@ import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/target_platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
 import 'package:dio/dio.dart';
 import 'package:ffi/ffi.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_embed_lua/lua_bindings.dart';
 import 'package:flutter_embed_lua/lua_runtime.dart';
 import 'package:get/get.dart' hide Response;
@@ -44,10 +47,11 @@ part 'lua_global_function.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class RulesController extends GetxController {
+class RulesController extends GetxController with WidgetsBindingObserver {
   static const String tag = "RulesController";
   final appConfig = Get.find<ConfigService>();
   final sourceService = Get.find<ClipboardSourceService>();
+  final androidChannelService = Get.find<AndroidChannelService>();
   final ruleDao = Get.find<DbService>().ruleDao;
   final scriptModuleDao = Get.find<DbService>().scriptModuleDao;
   final opRecordDao = Get.find<DbService>().opRecordDao;
@@ -60,6 +64,7 @@ class RulesController extends GetxController {
   final _loadedLuaFun = <String, int>{};
   final activeItemChanged = false.obs;
   static final List<String> _testOutputs = [];
+  bool _requestingSmsPermission = false;
 
   bool get enableSmsSync {
     final smsRules =
@@ -194,13 +199,120 @@ class RulesController extends GetxController {
 
   @override
   Future<void> onInit() async {
+    WidgetsBinding.instance.addObserver(this);
     _initLuaFunc();
     final list = await ruleDao.getAllRules();
     rules.value = list.map((e) => RuleItem.fromRule(e)).toList();
     scriptModules.value = await scriptModuleDao.getAllModules();
     _loadAllScriptModules();
     _loadAllLuaUserFn();
+    ensureSmsSyncReady(showDialog: true);
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      ensureSmsSyncReady(showDialog: true);
+    }
+  }
+
+  Future<bool> ensureSmsSyncReady({
+    bool requestPermission = false,
+    bool showDialog = false,
+  }) async {
+    if (!Platform.isAndroid) {
+      return false;
+    }
+    if (!enableSmsSync) {
+      await androidChannelService.stopSmsListen();
+      return false;
+    }
+    if (await PermissionHelper.testAndroidReadSms()) {
+      await androidChannelService.startSmsListen();
+      return true;
+    }
+    if (requestPermission || showDialog) {
+      return requestAndroidSmsPermission(showDialog: showDialog);
+    }
+    return false;
+  }
+
+  Future<bool> requestAndroidSmsPermission({
+    bool showDialog = true,
+    String? promptText,
+  }) async {
+    if (!Platform.isAndroid) {
+      return false;
+    }
+    if (await PermissionHelper.testAndroidReadSms()) {
+      await ensureSmsSyncReady();
+      return true;
+    }
+    if (_requestingSmsPermission) {
+      return false;
+    }
+    _requestingSmsPermission = true;
+    try {
+      if (showDialog && Get.context == null) {
+        return false;
+      }
+      if (showDialog) {
+        final completer = Completer<bool>();
+        void completeRequest(bool value) {
+          if (!completer.isCompleted) {
+            completer.complete(value);
+          }
+        }
+        final dialog = await Global.showTipsDialog(
+          context: Get.context!,
+          text: promptText ?? TranslationKey.permissionSettingsSmsDesc.tr,
+          showCancel: true,
+          okText: TranslationKey.goAuthorize.tr,
+          cancelText: TranslationKey.notNow.tr,
+          onOk: () => completeRequest(true),
+          onCancel: () => completeRequest(false),
+        );
+        if (dialog == null) {
+          return false;
+        }
+        await dialog.future;
+        if (!completer.isCompleted) {
+          completeRequest(false);
+        }
+        if (!await completer.future) {
+          return false;
+        }
+      }
+      await PermissionHelper.reqAndroidReadSms();
+      final granted = await PermissionHelper.testAndroidReadSms();
+      if (granted) {
+        await ensureSmsSyncReady();
+      }
+      return granted;
+    } finally {
+      _requestingSmsPermission = false;
+    }
+  }
+
+  Future<bool> requestSmsPermissionIfNeeded({String? promptText}) async {
+    if (!Platform.isAndroid) {
+      return false;
+    }
+    if (await PermissionHelper.testAndroidReadSms()) {
+      return true;
+    }
+    return requestAndroidSmsPermission(
+      showDialog: true,
+      promptText: promptText,
+    );
   }
 
   Future<void> requestAppInfo(String devId) async {
@@ -286,6 +398,7 @@ class RulesController extends GetxController {
     }
     //保存成功
     update();
+    ensureSmsSyncReady(showDialog: true);
   }
 
   String loadLuaModules(ScriptModule lib, {bool reloadAllUserFn = false}) {
@@ -475,6 +588,7 @@ class RulesController extends GetxController {
       ruleItem.script.content,
       hash: ruleItem.id.toString(),
     );
+    ensureSmsSyncReady(showDialog: true);
   }
 
   void addOrUpdateRuleLib(ScriptModule lib) {

@@ -394,9 +394,15 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
           selectedColor: Colors.white,
           backgroundColor: appConfig.currentIsDarkMode?const Color(0xff2e3b42):const Color(0xffdde1e3),
           onSelected: (i) {
+            final trigger = RuleTrigger.values[i];
             setState(() {
-              selectedTrigger = RuleTrigger.values[i];
+              selectedTrigger = trigger;
             });
+            if (trigger == RuleTrigger.onSms) {
+              ruleController.requestSmsPermissionIfNeeded(
+                promptText: TranslationKey.syncSettingsSmsPermissionRequired.tr,
+              );
+            }
           },
         ),
 

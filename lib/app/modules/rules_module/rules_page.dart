@@ -276,6 +276,7 @@ class RulesPage extends GetView<RulesController> {
                       //同步数据
                       await opRecordDao.deleteByDataWithCascade(newRule.id.toString());
                       await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.add, newRule.id));
+                      controller.ensureSmsSyncReady(showDialog: true);
                     }
                   })
                   .catchError((err, stack) {

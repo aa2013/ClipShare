@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:clipshare/app/handlers/sync/script_module_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/rule_sync_handler.dart';
-import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/modules/rules_module/rules_page.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -39,7 +38,6 @@ import 'package:clipshare/app/utils/app_update_info_util.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -55,7 +53,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   String get tag => "HomeController";
   final appConfig = Get.find<ConfigService>();
   final sktService = Get.find<SocketService>();
-  final ruleController = Get.find<RulesController>();
   final settingsController = Get.find<SettingsController>();
   final storageService = Get.find<StorageService>();
   final androidChannelService = Get.find<AndroidChannelService>();
@@ -327,10 +324,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
           handler.request();
         }
       });
-    }
-    //如果开启短信同步且有短信权限则启动短信监听
-    if (ruleController.enableSmsSync && await PermissionHelper.testAndroidReadSms()) {
-      androidChannelService.startSmsListen();
     }
     androidChannelService.showOnRecentTasks(appConfig.showOnRecentTasks);
     if (appConfig.useAuthentication) {
