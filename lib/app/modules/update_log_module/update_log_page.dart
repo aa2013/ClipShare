@@ -15,7 +15,6 @@ import 'package:get/get.dart';
 class UpdateLogPage extends GetView<UpdateLogController> {
   @override
   Widget build(BuildContext context) {
-    final currentTheme = Theme.of(context);
     final appConfig = Get.find<ConfigService>();
     final showAppBar = appConfig.isSmallScreen;
     final content = FutureBuilder(
@@ -38,7 +37,6 @@ class UpdateLogPage extends GetView<UpdateLogController> {
         appBar: showAppBar
             ? AppBar(
                 title: Text(TranslationKey.updateLogPageAppBarTitle.tr),
-                backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,
         body: SafeArea(child: content),

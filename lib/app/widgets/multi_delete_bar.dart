@@ -74,7 +74,6 @@ class MultiDeleteBarState extends State<MultiDeleteBar> {
   Widget build(BuildContext context) {
     return _total > 0
         ? AppBar(
-            backgroundColor: Theme.of(context).colorScheme.inversePrimary,
             automaticallyImplyLeading: widget.automaticallyImplyLeading,
             title: Text(
               TranslationKey.multiChoiceModeSelectedText

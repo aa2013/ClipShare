@@ -24,8 +24,9 @@ class EnvironmentStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
-      color: backgroundColor,
+      color: backgroundColor ?? theme.cardTheme.color,
       elevation: 0,
       margin: EdgeInsets.symmetric(vertical: edgeInset),
       child: InkWell(

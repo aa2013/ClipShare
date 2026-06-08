@@ -64,7 +64,6 @@ class _FileSenderPageState extends State<FileSenderPage> {
     return Scaffold(
       appBar: PlatformExt.isMobile
           ? AppBar(
-              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
               title: Text(TranslationKey.sendFile.tr),
             )
           : null,

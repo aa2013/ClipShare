@@ -343,19 +343,11 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   ///初始化导航栏
   void initNavBarItems() {
-    const lightThemeColor = Color(0xB3000000);
-    const darkThemeColor = Colors.blueGrey;
-    final isDarkTheme = appConfig.appTheme==ThemeMode.dark;
-    Color color = isDarkTheme?darkThemeColor:lightThemeColor;
-    if(appConfig.isSmallScreen && isDarkTheme){
-      color = Colors.white;
-    }
     const size = 20.0;
     final items = [
       BottomNavigationBarItem(
         icon: Icon(
           Icons.history,
-          color: color,
           size: size,
         ),
         label: TranslationKey.historyRecord.tr,
@@ -363,7 +355,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       BottomNavigationBarItem(
         icon: Icon(
           Icons.devices_rounded,
-          color: color,
           size: size,
         ),
         label: TranslationKey.myDevice.tr,
@@ -371,7 +362,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       BottomNavigationBarItem(
         icon: Icon(
           Icons.sync_alt_outlined,
-          color: color,
           size: size,
         ),
         label: TranslationKey.fileTransfer.tr,
@@ -380,7 +370,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         key: _rulesNavItemKey,
         icon: Icon(
           Icons.code_outlined,
-          color: color,
           size: size,
         ),
         label: TranslationKey.rulesManagement.tr,
@@ -388,7 +377,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       BottomNavigationBarItem(
         icon: Icon(
           Icons.settings,
-          color: color,
           size: size,
         ),
         label: TranslationKey.appSettings.tr,
@@ -399,7 +387,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         BottomNavigationBarItem(
           icon: Icon(
             Icons.bug_report_outlined,
-            color: color,
             size: size,
           ),
           label: "Debug",

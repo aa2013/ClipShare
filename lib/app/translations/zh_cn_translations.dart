@@ -177,12 +177,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return "无需特殊权限";
       case TranslationKey.switchWorkingMode:
         return "切换工作模式";
-      case TranslationKey.commonSettingsGroupName:
-        return "常规";
       case TranslationKey.commonSettingsRunAtStartup:
         return "开机启动";
       case TranslationKey.commonSettingsRunMinimize:
         return "启动时最小化窗口";
+      case TranslationKey.floatWindow:
+        return "悬浮窗";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "显示历史记录悬浮窗";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
@@ -1885,6 +1885,44 @@ class ZhCNTranslation extends AbstractTranslations {
         return '长度';
       case TranslationKey.mustGreaterThanZero:
         return '必须 >= 0';
+      case TranslationKey.settingsSectionLanguageSubtitle:
+        return '显示语言';
+      case TranslationKey.settingsSectionPreferenceSubtitle:
+        return '界面与交互';
+      case TranslationKey.settingsSectionNotificationSubtitle:
+        return '通知提醒';
+      case TranslationKey.settingsSectionClipboardSubtitle:
+        return '剪贴板记录与采集';
+      case TranslationKey.settingsSectionPermissionSubtitle:
+        return '悬浮窗、通知等权限授权';
+      case TranslationKey.settingsSectionFloatWindowSubtitle:
+        return '悬浮与保活';
+      case TranslationKey.settingsSectionDiscoverySubtitle:
+        return '设备与连接';
+      case TranslationKey.settingsSectionForwardSubtitle:
+        return '中转与存储';
+      case TranslationKey.settingsSectionSecuritySubtitle:
+        return '验证与加密';
+      case TranslationKey.settingsSectionHotKeySubtitle:
+        return '自定义弹窗、窗体快捷键';
+      case TranslationKey.settingsSectionSyncSubtitle:
+        return '同步与保存';
+      case TranslationKey.settingsSectionRulesSubtitle:
+        return '规则与脚本';
+      case TranslationKey.settingsSectionBackupSubtitle:
+        return '数据备份';
+      case TranslationKey.settingsSectionAboutLogSubtitle:
+        return '应用信息';
+      case TranslationKey.settingsSectionLogSubtitle:
+        return '';
+      case TranslationKey.settingsSectionStatisticsSubtitle:
+        return '数据统计';
+      case TranslationKey.settingsOverviewPermissionNormal:
+        return '权限正常';
+      case TranslationKey.settingsOverviewPermissionIssueCount:
+        return '@count 项待处理';
+      case TranslationKey.settingsOverviewForwardClosed:
+        return '未启用';
     }
   }
 }

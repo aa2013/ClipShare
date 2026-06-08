@@ -4,8 +4,6 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/backup_source.dart';
 import 'package:clipshare/app/data/enums/backup_type.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
-import 'package:clipshare/app/data/enums/white_black_mode.dart';
-import 'package:clipshare/app/data/models/white_black_rule.dart';
 import 'package:clipshare/app/exceptions/user_cancel_backup.dart';
 import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/handlers/storage/storage_client.dart';
@@ -55,7 +53,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
-import 'package:uuid/uuid.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
  * */
@@ -101,6 +98,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final forwardServerStatus = ForwardServerStatus.disconnected.obs;
   final updater = 0.obs;
   Timer? _screenEventTimer;
+  int _envStatusCheckSeq = 0;
 
   //region environment status widgets
   final Rx<Widget> envStatusIcon = Rx<Widget>(envLoadingIcon);
@@ -119,11 +117,27 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     size: 40,
   );
 
-  Color get warningBgColor => Theme.of(Get.context!).colorScheme.surface;
+  Color get warningBgColor {
+    final theme = Theme.of(Get.context!);
+    final baseColor = theme.cardTheme.color ?? theme.colorScheme.surface;
+    final overlay = theme.colorScheme.error.withValues(alpha: theme.brightness == Brightness.dark ? 0.16 : 0.08);
+    return Color.alphaBlend(overlay, baseColor);
+  }
+
+  Color get ignoredBgColor {
+    final theme = Theme.of(Get.context!);
+    final baseColor = theme.cardTheme.color ?? theme.colorScheme.surface;
+    return Color.alphaBlend(Colors.blueGrey.withValues(alpha: theme.brightness == Brightness.dark ? 0.16 : 0.08), baseColor);
+  }
   static const normalIcon = Icon(
     Icons.check_circle_outline_outlined,
     size: 40,
     color: Colors.blue,
+  );
+  static const ignoredIcon = Icon(
+    Icons.block_outlined,
+    size: 40,
+    color: Colors.blueGrey,
   );
 
   //region Shizuku
@@ -232,10 +246,13 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   @override
   void onClose() {
-    super.onClose();
+    WidgetsBinding.instance.removeObserver(this);
+    connRegService.removeForwardStatusListener(this);
+    _screenEventTimer?.cancel();
     if (Platform.isAndroid) {
       ScreenOpenedListener.inst.remove(this);
     }
+    super.onClose();
   }
 
   @override
@@ -406,25 +423,48 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     if (!Platform.isAndroid) {
       return;
     }
+    final checkSeq = ++_envStatusCheckSeq;
+    _showAndroidEnvStatusLoading();
     final mode = appConfig.workingMode;
+    if (restart) {
+      await clipboardManager.stopListening();
+      await clipboardManager.startListening(
+        env: mode,
+        way: appConfig.clipboardListeningWay,
+        notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
+      );
+    }
     bool hasPermission = true;
     bool listening = await clipboardManager.checkIsRunning();
+    var ignoreWorkingMode = false;
     if (!listening) {
       await Future.delayed(2.s, () async {
         listening = await clipboardManager.checkIsRunning();
       });
     }
+    if (checkSeq != _envStatusCheckSeq) {
+      return;
+    }
     switch (mode) {
       case EnvironmentType.shizuku:
         hasPermission = await clipboardManager.checkPermission(mode!);
+        if (checkSeq != _envStatusCheckSeq) {
+          return;
+        }
         envStatusTipContent.value = hasPermission ? shizukuEnvNormalTipContent : shizukuEnvErrorTipContent;
         envStatusTipDesc.value = hasPermission && listening ? shizukuEnvNormalTipDesc : shizukuEnvErrorTipDesc;
         if (hasPermission && shizukuVersion.value == null) {
           shizukuVersion.value = await clipboardManager.getShizukuVersion();
+          if (checkSeq != _envStatusCheckSeq) {
+            return;
+          }
         }
         break;
       case EnvironmentType.root:
         hasPermission = await clipboardManager.checkPermission(mode!);
+        if (checkSeq != _envStatusCheckSeq) {
+          return;
+        }
         envStatusTipContent.value = hasPermission && listening ? rootEnvNormalTipContent : rootEnvErrorTipContent;
         envStatusTipDesc.value = hasPermission && listening ? rootEnvNormalTipDesc : rootEnvErrorTipDesc;
         break;
@@ -434,12 +474,13 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         envStatusTipDesc.value = androidPre10EnvNormalTipDesc;
         break;
       default:
+        ignoreWorkingMode = true;
         hasPermission = true;
         envStatusTipContent.value = ignoreTipContent;
         envStatusTipDesc.value = ignoreTipDesc;
     }
-    envStatusIcon.value = hasPermission && listening ? normalIcon : warningIcon;
-    envStatusBgColor.value = hasPermission && listening ? null : warningBgColor;
+    envStatusIcon.value = ignoreWorkingMode ? ignoredIcon : (hasPermission && listening ? normalIcon : warningIcon);
+    envStatusBgColor.value = ignoreWorkingMode ? ignoredBgColor : (hasPermission && listening ? null : warningBgColor);
     hasWorkingModePerm.value = hasPermission;
     //有Shizuku/root权限后检查剪贴板权限状态
     if(hasPermission){
@@ -447,15 +488,17 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         hasClipboardPerm.value = v;
       });
     }
-    if (restart) {
-      await clipboardManager.stopListening();
-      await clipboardManager.startListening(
-        env: mode,
-        way: appConfig.clipboardListeningWay,
-        notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
-      );
-      checkAndroidEnvPermission();
-    }
+  }
+
+  /// Shows a transient checking state before Android environment status is refreshed.
+  void _showAndroidEnvStatusLoading() {
+    envStatusIcon.value = envLoadingIcon;
+    envStatusTipContent.value = Text(
+      TranslationKey.envStatusLoadingText.tr,
+      style: const TextStyle(fontSize: 16),
+    );
+    envStatusTipDesc.value = const SizedBox.shrink();
+    envStatusBgColor.value = null;
   }
 
   ///跳转密码设置页面

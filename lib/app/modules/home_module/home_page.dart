@@ -68,7 +68,6 @@ class HomePage extends GetView<HomeController> {
                   key: controller.homeScaffoldKey,
                   appBar: !controller.isBigScreen
                       ? AppBar(
-                          backgroundColor: currentTheme.colorScheme.inversePrimary,
                           title: Obx(() {
                             if (controller.showingHistorySearch.value && controller.isHistoryPage) {
                               return _buildHistorySearchAppBar();
@@ -167,7 +166,9 @@ class HomePage extends GetView<HomeController> {
                       ? Obx(
                           () => BottomNavigationBar(
                             type: BottomNavigationBarType.fixed,
-                            backgroundColor: currentTheme.colorScheme.surface,
+                            backgroundColor: currentTheme.bottomNavigationBarTheme.backgroundColor ?? currentTheme.colorScheme.surface,
+                            selectedItemColor: currentTheme.bottomNavigationBarTheme.selectedItemColor,
+                            unselectedItemColor: currentTheme.bottomNavigationBarTheme.unselectedItemColor,
                             currentIndex: controller.index,
                             onTap: (i) => controller.index = i,
                             items: controller.bottomNavBarItems,

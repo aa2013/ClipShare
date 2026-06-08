@@ -1,7 +1,6 @@
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class FilterTypeSegmented extends StatelessWidget {
   static final _filterTypes = List<HistoryContentType>.unmodifiable([
@@ -23,7 +22,11 @@ class FilterTypeSegmented extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isDarkMode = Get.theme.brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final selectedBackgroundColor = isDarkMode ? theme.colorScheme.primary.withValues(alpha: 0.42) : const Color(0xFFDCEAF5);
+    final selectedColor = isDarkMode ? theme.colorScheme.onSurface : const Color(0xFF2F5F7D);
+    final unselectedColor = theme.colorScheme.onSurface.withValues(alpha: isDarkMode ? 0.72 : 0.64);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: TinySegmentedControl(
@@ -36,8 +39,9 @@ class FilterTypeSegmented extends StatelessWidget {
             )
             .toList(),
         backgroundColor: Colors.transparent,
-        selectedBackgroundColor: isDarkMode ? Colors.blueGrey : const Color(0xff62baf8),
-        selectedColor: Colors.white,
+        selectedBackgroundColor: selectedBackgroundColor,
+        selectedColor: selectedColor,
+        unselectedColor: unselectedColor,
         contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         selectedIndex: _filterTypes.indexOf(selectedType),
         onSelected: (int index) {

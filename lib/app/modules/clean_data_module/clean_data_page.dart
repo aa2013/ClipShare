@@ -35,7 +35,6 @@ class CleanDataPage extends GetView<CleanDataController> {
 
   @override
   Widget build(BuildContext context) {
-    final currentTheme = Theme.of(context);
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
     final showAppBar = appConfig.isSmallScreen;
@@ -867,7 +866,6 @@ class CleanDataPage extends GetView<CleanDataController> {
         appBar: showAppBar
             ? AppBar(
                 title: Text(TranslationKey.cleanData.tr),
-                backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,
         body: SafeArea(child: content),

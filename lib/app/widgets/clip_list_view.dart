@@ -54,6 +54,7 @@ class ClipListView extends StatefulWidget {
   final void Function(int id) onRemove;
   final bool imageMasonryGridViewLayout;
   final GetxController parentController;
+  final EdgeInsetsGeometry? padding;
 
   const ClipListView({
     super.key,
@@ -66,6 +67,7 @@ class ClipListView extends StatefulWidget {
     required this.onRemove,
     this.imageMasonryGridViewLayout = false,
     required this.parentController,
+    this.padding,
   });
 
   @override

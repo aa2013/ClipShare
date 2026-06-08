@@ -204,10 +204,27 @@ class RulesController extends GetxController with WidgetsBindingObserver {
     final list = await ruleDao.getAllRules();
     rules.value = list.map((e) => RuleItem.fromRule(e)).toList();
     scriptModules.value = await scriptModuleDao.getAllModules();
+    _selectDefaultDesktopItem();
     _loadAllScriptModules();
     _loadAllLuaUserFn();
     ensureSmsSyncReady(showDialog: true);
     super.onInit();
+  }
+
+  void _selectDefaultDesktopItem() {
+    if (appConfig.isSmallScreen || selectedRuleItem.value != null || selectedLuaModuleItem.value != null) {
+      return;
+    }
+    // Desktop uses a split view; selecting the first item keeps the detail pane useful on entry.
+    if (rules.isNotEmpty) {
+      selectedRuleItem.value = rules.first.copy();
+      selectedLuaModuleItem.value = null;
+      return;
+    }
+    if (scriptModules.isNotEmpty) {
+      selectedLuaModuleItem.value = scriptModules.first.copy();
+      selectedRuleItem.value = null;
+    }
   }
 
   @override

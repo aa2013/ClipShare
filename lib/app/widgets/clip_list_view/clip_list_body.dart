@@ -24,6 +24,7 @@ extension _ClipListBody on ClipListViewState {
               child: MasonryGridView.count(
                 crossAxisCount: count,
                 mainAxisSpacing: 4,
+                padding: widget.padding,
                 shrinkWrap: true,
                 itemCount: widget.list.length,
                 controller: _scrollController,

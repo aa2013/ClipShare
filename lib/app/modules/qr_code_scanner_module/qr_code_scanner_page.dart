@@ -15,7 +15,6 @@ class QRCodeScannerPage extends GetView<QRCodeScannerController> {
     return Scaffold(
       appBar: AppBar(
         title: Text(TranslationKey.qrCodeScannerPageTitle.tr),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SafeArea(
         child: QRView(

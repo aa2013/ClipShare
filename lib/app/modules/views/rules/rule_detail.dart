@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
@@ -24,7 +22,6 @@ import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -225,6 +222,8 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
   }
 
   Widget buildRuleInfo(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -277,6 +276,9 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
                 margin: 5.insetLT,
                 child: RoundedChip(
                   showCheckmark: false,
+                  backgroundColor: isDark ? theme.cardTheme.color ?? theme.colorScheme.surfaceBright : null,
+                  selectedColor: isDark ? theme.colorScheme.primary.withValues(alpha: 0.22) : null,
+                  labelStyle: isDark ? TextStyle(color: selectedPlatforms.contains(pf) ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withValues(alpha: 0.72)) : null,
                   shape: const RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -920,7 +922,6 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     if (appConfig.isSmallScreen) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Text(TranslationKey.ruleDetailPageTitle.tr),
         ),
         body: PopScope(

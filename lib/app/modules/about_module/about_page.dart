@@ -32,7 +32,6 @@ class AboutPage extends GetView<AboutController> {
 
   @override
   Widget build(BuildContext context) {
-    final currentTheme = Theme.of(context);
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
     final showAppBar = appConfig.isSmallScreen;
@@ -274,7 +273,6 @@ class AboutPage extends GetView<AboutController> {
         appBar: showAppBar
             ? AppBar(
                 title: Text(TranslationKey.about.tr),
-                backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,
         body: SafeArea(child: content),

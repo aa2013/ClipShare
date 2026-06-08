@@ -369,7 +369,6 @@ class RulesPage extends GetView<RulesController> {
     if (appConfig.isSmallScreen) {
       return Scaffold(
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Row(
             children: [
               Text(TranslationKey.rulesManagement.tr),

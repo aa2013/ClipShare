@@ -52,7 +52,6 @@ class _ModifyHistoryContentPageState extends State<ModifyHistoryContentPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
           title: Row(
             children: [
               Expanded(child: Text(TranslationKey.modifyContent.tr)),

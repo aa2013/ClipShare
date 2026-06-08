@@ -33,7 +33,6 @@ class _LogDetailState extends State<LogDetailPage>{
   @override
   Widget build(BuildContext context) {
     final file = widget.file;
-    final currentTheme = Theme.of(context);
     final appConfig = Get.find<ConfigService>();
     final showAppBar = appConfig.isSmallScreen;
     final fileName = file.fileName;
@@ -91,7 +90,6 @@ class _LogDetailState extends State<LogDetailPage>{
         appBar: showAppBar
             ? AppBar(
                 title: header,
-                backgroundColor: currentTheme.colorScheme.inversePrimary,
               )
             : null,
         body: SafeArea(child: content),

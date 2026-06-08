@@ -19,14 +19,15 @@ class HistoryPage extends GetView<HistoryController> {
         if (controller.filterLoading.value) {
           return const Loading();
         }
+        final isSmallScreen = controller.appConfig.isSmallScreen;
         return Padding(
-          padding: 6.insetAll,
+          padding: isSmallScreen ? const EdgeInsets.fromLTRB(6, 6, 6, 0) : 6.insetAll,
           child: Column(
             children: [
               HistoryFilter(
                 controller: controller.filterController,
-                showFillColor: PlatformExt.isDesktop || !controller.appConfig.isSmallScreen,
-                showSearchRow: !controller.appConfig.isSmallScreen,
+                showFillColor: PlatformExt.isDesktop || !isSmallScreen,
+                showSearchRow: !isSmallScreen,
               ),
               const SizedBox(height: 5),
               Expanded(
@@ -38,6 +39,7 @@ class HistoryPage extends GetView<HistoryController> {
                         ClipListView(
                           list: controller.list,
                           parentController: controller,
+                          padding: isSmallScreen ? EdgeInsets.zero : null,
                           onRefreshData: controller.refreshData,
                           enableRouteSearch: true,
                           onLoadMoreData: controller.loadData,

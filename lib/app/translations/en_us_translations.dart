@@ -231,12 +231,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "No Special Permission Required";
       case TranslationKey.switchWorkingMode:
         return "Switch Working Mode";
-      case TranslationKey.commonSettingsGroupName:
-        return "General";
       case TranslationKey.commonSettingsRunAtStartup:
         return "Run at Startup";
       case TranslationKey.commonSettingsRunMinimize:
         return "Minimize Window on Startup";
+      case TranslationKey.floatWindow:
+        return "Floating Window";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "Show History Floating Window";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
@@ -1890,6 +1890,44 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Length';
       case TranslationKey.mustGreaterThanZero:
         return 'Must >= 0';
+      case TranslationKey.settingsSectionLanguageSubtitle:
+        return 'Display language';
+      case TranslationKey.settingsSectionPreferenceSubtitle:
+        return 'Interface and interaction';
+      case TranslationKey.settingsSectionNotificationSubtitle:
+        return 'Notifications and alerts';
+      case TranslationKey.settingsSectionClipboardSubtitle:
+        return 'Clipboard records and capture';
+      case TranslationKey.settingsSectionPermissionSubtitle:
+        return 'Floating window, notifications, and permissions';
+      case TranslationKey.settingsSectionFloatWindowSubtitle:
+        return 'Floating window and keep-alive';
+      case TranslationKey.settingsSectionDiscoverySubtitle:
+        return 'Devices and connections';
+      case TranslationKey.settingsSectionForwardSubtitle:
+        return 'Relay and storage';
+      case TranslationKey.settingsSectionSecuritySubtitle:
+        return 'Verification and encryption';
+      case TranslationKey.settingsSectionHotKeySubtitle:
+        return 'Custom popup and window shortcuts';
+      case TranslationKey.settingsSectionSyncSubtitle:
+        return 'Sync and saving';
+      case TranslationKey.settingsSectionRulesSubtitle:
+        return 'Rules and scripts';
+      case TranslationKey.settingsSectionBackupSubtitle:
+        return 'Data backup';
+      case TranslationKey.settingsSectionAboutLogSubtitle:
+        return 'App information';
+      case TranslationKey.settingsSectionLogSubtitle:
+        return '';
+      case TranslationKey.settingsSectionStatisticsSubtitle:
+        return 'Data statistics';
+      case TranslationKey.settingsOverviewPermissionNormal:
+        return 'All granted';
+      case TranslationKey.settingsOverviewPermissionIssueCount:
+        return '@count pending';
+      case TranslationKey.settingsOverviewForwardClosed:
+        return 'Off';
     }
   }
 }

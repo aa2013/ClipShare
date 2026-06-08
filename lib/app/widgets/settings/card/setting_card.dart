@@ -1,22 +1,40 @@
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class SettingCard<T> extends StatefulWidget {
+abstract interface class SettingEntry {
+  bool get visible;
+  String get searchId;
+  List<TranslationKey> get searchKeys;
+  List<String> get searchAliases;
+
+  Widget buildWithLayout({
+    required BorderRadius borderRadius,
+    required bool separate,
+  });
+}
+
+class SettingCard<T> extends StatefulWidget implements SettingEntry {
   final T value;
   final Widget title;
   final Widget? description;
   final Widget Function(T val)? action;
-  bool separate;
+  final bool separate;
   final bool showValueInSub;
-  late BorderRadius borderRadius;
+  final BorderRadius borderRadius;
   final bool Function(T)? show;
-  void Function()? onTap;
-  void Function(TapDownDetails details)? onTapDown;
-  void Function()? onDoubleTap;
-  late final EdgeInsetsGeometry padding;
+  final void Function()? onTap;
+  final void Function(TapDownDetails details)? onTapDown;
+  final void Function()? onDoubleTap;
+  final EdgeInsetsGeometry padding;
+  @override
+  final List<TranslationKey> searchKeys;
+  @override
+  final List<String> searchAliases;
+  final String? explicitSearchId;
 
-  SettingCard({
+  const SettingCard({
     super.key,
     required this.title,
     required this.value,
@@ -30,7 +48,50 @@ class SettingCard<T> extends StatefulWidget {
     this.borderRadius = BorderRadius.zero,
     this.show,
     this.padding = const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-  });
+    this.searchKeys = const [],
+    this.searchAliases = const [],
+    String? searchId,
+  }) : explicitSearchId = searchId;
+
+  @override
+  bool get visible => show?.call(value) != false;
+
+  @override
+  String get searchId {
+    if (explicitSearchId != null && explicitSearchId!.isNotEmpty) {
+      return explicitSearchId!;
+    }
+    final parts = [
+      ...searchKeys.map((key) => key.name),
+      ...searchAliases,
+    ];
+    return parts.join('|');
+  }
+
+  @override
+  Widget buildWithLayout({
+    required BorderRadius borderRadius,
+    required bool separate,
+  }) {
+    return SettingCard<T>(
+      key: key,
+      title: title,
+      value: value,
+      description: description,
+      action: action,
+      separate: separate,
+      showValueInSub: showValueInSub,
+      onTap: onTap,
+      onTapDown: onTapDown,
+      onDoubleTap: onDoubleTap,
+      borderRadius: borderRadius,
+      show: show,
+      padding: padding,
+      searchKeys: searchKeys,
+      searchAliases: searchAliases,
+      searchId: explicitSearchId,
+    );
+  }
 
   @override
   State<StatefulWidget> createState() {
@@ -38,14 +99,38 @@ class SettingCard<T> extends StatefulWidget {
   }
 }
 
-class _SettingCardState<T> extends State<SettingCard<T>> {
+class _SettingCardState<T> extends State<SettingCard<T>> with SingleTickerProviderStateMixin {
   bool _readyDoubleClick = false;
   bool _doubleClickWait = false;
+  String? _lastHighlightedSearchId;
+  late final AnimationController _highlightController;
+  late final Animation<double> _highlightOpacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1300),
+    );
+    _highlightOpacity = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: 1), weight: 18),
+      TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 22),
+      TweenSequenceItem(tween: Tween(begin: 0, end: 1), weight: 18),
+      TweenSequenceItem(tween: Tween(begin: 1, end: 0), weight: 42),
+    ]).animate(CurvedAnimation(parent: _highlightController, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _highlightController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     //不显示内容
-    if (widget.show != null && !widget.show!.call(widget.value)) {
+    if (!widget.visible) {
       return const SizedBox.shrink();
     }
     Widget? sub = widget.description;
@@ -53,10 +138,28 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
       sub = Text(widget.value.toString());
     }
     final currentTheme = Theme.of(context);
+    final textTheme = currentTheme.textTheme;
+    final subtleTextColor =
+        currentTheme.colorScheme.onSurface.withValues(alpha: 0.56);
+    final dividerColor = currentTheme.colorScheme.onSurface
+        .withValues(alpha: Get.isDarkMode ? 0.12 : 0.08);
+    final highlightedSearchId = SettingSearchHighlightScope.maybeOf(context)?.searchId;
+    final shouldHighlight = highlightedSearchId != null && highlightedSearchId.isNotEmpty && widget.searchId == highlightedSearchId;
+    _startHighlightIfNeeded(shouldHighlight, highlightedSearchId);
     return ClipRRect(
       borderRadius: widget.borderRadius,
-      child: Material(
-        color: currentTheme.cardTheme.color ?? currentTheme.colorScheme.surface,
+      child: AnimatedBuilder(
+        animation: _highlightOpacity,
+        builder: (context, child) {
+          final baseColor = currentTheme.cardTheme.color ?? currentTheme.colorScheme.surface;
+          final highlightColor = currentTheme.colorScheme.primary.withValues(
+            alpha: (Get.isDarkMode ? 0.22 : 0.14) * _highlightOpacity.value,
+          );
+          return Material(
+            color: Color.alphaBlend(highlightColor, baseColor),
+            child: child,
+          );
+        },
         child: InkWell(
           onTap: () {
             if (widget.onDoubleTap == null) {
@@ -103,7 +206,7 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
           child: Column(
             children: [
               ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 50),
+                constraints: const BoxConstraints(minHeight: 54),
                 child: Padding(
                   padding: widget.padding,
                   child: IntrinsicHeight(
@@ -112,7 +215,9 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: sub == null ? MainAxisAlignment.center : MainAxisAlignment.start,
+                            mainAxisAlignment: sub == null
+                                ? MainAxisAlignment.center
+                                : MainAxisAlignment.start,
                             children: [
                               Expanded(
                                 // flex: widget.titleFlex,
@@ -120,10 +225,13 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                                   scrollDirection: Axis.horizontal,
                                   child: Center(
                                     child: DefaultTextStyle(
-                                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                                        fontWeight: FontWeight.normal,
-                                        fontSize: 17,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium!
+                                          .copyWith(
+                                            fontWeight: FontWeight.normal,
+                                            fontSize: 16,
+                                          ),
                                       child: widget.title,
                                     ),
                                   ),
@@ -133,8 +241,9 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                                 Wrap(
                                   children: [
                                     DefaultTextStyle(
-                                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                                        color: Colors.grey,
+                                      style: textTheme.bodyMedium!.copyWith(
+                                        color: subtleTextColor,
+                                        height: 1.25,
                                       ),
                                       child: sub,
                                     ),
@@ -144,7 +253,9 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                           ),
                         ),
                         IntrinsicWidth(
-                          child: widget.action == null ? const SizedBox.shrink() : widget.action!.call(widget.value),
+                          child: widget.action == null
+                              ? const SizedBox.shrink()
+                              : widget.action!.call(widget.value),
                         ),
                       ],
                     ),
@@ -152,10 +263,13 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
                 ),
               ),
               widget.separate
-                  ? Divider(
-                      thickness: 1,
-                      height: 1,
-                      color: Get.isDarkMode ? null : const Color.fromRGBO(232, 228, 228, 1.0),
+                  ? Padding(
+                      padding: const EdgeInsets.only(left: 18),
+                      child: Divider(
+                        thickness: 1,
+                        height: 1,
+                        color: dividerColor,
+                      ),
                     )
                   : const SizedBox.shrink(),
             ],
@@ -163,5 +277,43 @@ class _SettingCardState<T> extends State<SettingCard<T>> {
         ),
       ),
     );
+  }
+
+  void _startHighlightIfNeeded(bool shouldHighlight, String? highlightedSearchId) {
+    if (!shouldHighlight || highlightedSearchId == _lastHighlightedSearchId) {
+      return;
+    }
+    _lastHighlightedSearchId = highlightedSearchId;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.24,
+      );
+      _highlightController.forward(from: 0);
+    });
+  }
+}
+
+class SettingSearchHighlightScope extends InheritedWidget {
+  final String? searchId;
+
+  const SettingSearchHighlightScope({
+    super.key,
+    required this.searchId,
+    required super.child,
+  });
+
+  static SettingSearchHighlightScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<SettingSearchHighlightScope>();
+  }
+
+  @override
+  bool updateShouldNotify(SettingSearchHighlightScope oldWidget) {
+    return searchId != oldWidget.searchId;
   }
 }

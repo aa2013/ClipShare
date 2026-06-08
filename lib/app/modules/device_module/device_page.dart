@@ -33,6 +33,8 @@ class DevicePage extends GetView<DeviceController> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return ListView(
       children: [
         Column(
@@ -83,10 +85,13 @@ class DevicePage extends GetView<DeviceController> {
                                     final filter = DevicePairedStatusFilter.values[index];
                                     appConfig.setDevicePairedStatusFilter(filter);
                                   },
-                                  contentPadding: const EdgeInsets.symmetric(vertical: 4,horizontal: 0),
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 0),
                                   segmentSpacing: 2,
                                   padding: EdgeInsets.zero,
-                                  selectedColor: Colors.blue,
+                                  backgroundColor: isDark ? theme.cardTheme.color ?? theme.colorScheme.surfaceBright : null,
+                                  selectedBackgroundColor: isDark ? theme.colorScheme.primary.withValues(alpha: 0.20) : null,
+                                  selectedColor: isDark ? theme.colorScheme.onSurface : Colors.blue,
+                                  unselectedColor: theme.colorScheme.onSurface.withValues(alpha: isDark ? 0.62 : 0.70),
                                 ),
                               ],
                             ),

@@ -22,7 +22,6 @@ class RoundedScaffold extends StatelessWidget {
     final scaffold = Scaffold(
       appBar: isSmallScreen
           ? AppBar(
-              backgroundColor: Theme.of(context).colorScheme.inversePrimary,
               title: title,
             )
           : null,
@@ -37,7 +36,7 @@ class RoundedScaffold extends StatelessWidget {
                     topLeft: Radius.circular(20),
                     topRight: Radius.circular(20),
                   ),
-                  color: Theme.of(context).colorScheme.inversePrimary,
+                  color: Theme.of(context).appBarTheme.backgroundColor,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(5, 10, 5, 10),

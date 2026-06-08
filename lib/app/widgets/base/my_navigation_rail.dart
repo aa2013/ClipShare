@@ -150,14 +150,20 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
   }
 
   Widget buildNavItem(int index) {
+    final theme = Theme.of(context);
     final item = widget.items[index];
-    final showBackground = widget.selectedIndex == index || hoveredIndex == index;
+    final selected = widget.selectedIndex == index;
+    final hovered = hoveredIndex == index;
+    final showBackground = selected || hovered;
+    final selectedColor = theme.bottomNavigationBarTheme.selectedItemColor ?? theme.colorScheme.primary;
+    final unselectedColor = theme.bottomNavigationBarTheme.unselectedItemColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.68);
+    final foregroundColor = selected ? selectedColor : unselectedColor;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 100),
       margin: const EdgeInsets.symmetric(vertical: itemMarginTop),
       decoration: BoxDecoration(
-        color: showBackground ? Colors.grey.withOpacity(0.1) : null,
+        color: showBackground ? foregroundColor.withValues(alpha: selected ? 0.12 : 0.08) : null,
         borderRadius: BorderRadius.circular(8),
       ),
       child: GestureDetector(
@@ -171,19 +177,28 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
           onExit: (_) => setState(() => hoveredIndex = null),
           child: Padding(
             padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10),
-            child: Row(
-              children: [
-                Visibility(
-                  visible: widget.extended,
-                  replacement: Tooltip(
-                    message: item.tooltip,
-                    child: item.icon,
-                  ),
-                  child: item.icon,
+            child: IconTheme(
+              data: IconThemeData(color: foregroundColor),
+              child: DefaultTextStyle.merge(
+                style: TextStyle(
+                  color: foregroundColor,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                 ),
-                if (widget.extended) const SizedBox(width: 12),
-                if (widget.extended) item.label,
-              ],
+                child: Row(
+                  children: [
+                    Visibility(
+                      visible: widget.extended,
+                      replacement: Tooltip(
+                        message: item.tooltip,
+                        child: item.icon,
+                      ),
+                      child: item.icon,
+                    ),
+                    if (widget.extended) const SizedBox(width: 12),
+                    if (widget.extended) item.label,
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -193,6 +208,8 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selectedColor = theme.bottomNavigationBarTheme.selectedItemColor ?? theme.colorScheme.primary;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       width: widget.extended ? widget.minExtendedWidth : 68,
@@ -204,7 +221,7 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeInOut,
               top: barTopPos,
-              left: 0,
+              left: 4,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeInOut,
@@ -212,7 +229,7 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
                 height: barHeightAnimated,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(50),
-                  color: const Color(0xff048ae4),
+                  color: selectedColor,
                 ),
               ),
             ),

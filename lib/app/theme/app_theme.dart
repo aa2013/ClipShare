@@ -1,16 +1,18 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:clipshare/app/utils/constants.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
 const lightBackgroundColor = Color.fromARGB(255, 240, 243, 249);
+const lightNavigationSurfaceColor = Color(0xFFEAF0F7);
+const lightSelectedNavigationColor = Color(0xFF1769AA);
+const lightUnselectedNavigationColor = Color(0xFF64727D);
+final _lightColorScheme = ColorScheme.fromSeed(
+  seedColor: Colors.lightBlueAccent,
+  surface: lightBackgroundColor,
+  surfaceBright: Colors.white,
+);
 final _baseNoneBorderInputDecoration = InputDecoration(
   isDense: true,
   filled: true,
@@ -32,13 +34,29 @@ final _lightNoneBorderInputDecoration = _baseNoneBorderInputDecoration.copyWith(
   fillColor: const Color(0xFFE5E8EF),
 );
 final lightThemeData = ThemeData.light().copyWith(
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: Colors.lightBlueAccent,
-    surface: lightBackgroundColor,
-    surfaceBright: Colors.white,
+  colorScheme: _lightColorScheme,
+  appBarTheme: AppBarTheme(
+    backgroundColor: _lightColorScheme.inversePrimary,
+    foregroundColor: const Color(0xFF1B252C),
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    shadowColor: Colors.transparent,
+    surfaceTintColor: Colors.transparent,
+    iconTheme: const IconThemeData(color: Color(0xFF1B252C)),
+    actionsIconTheme: const IconThemeData(color: Color(0xFF1B252C)),
+  ),
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: lightNavigationSurfaceColor,
+    elevation: 8,
+    selectedItemColor: lightSelectedNavigationColor,
+    unselectedItemColor: lightUnselectedNavigationColor,
+    selectedIconTheme: IconThemeData(color: lightSelectedNavigationColor),
+    unselectedIconTheme: IconThemeData(color: lightUnselectedNavigationColor),
+    type: BottomNavigationBarType.fixed,
   ),
   cardTheme: const CardThemeData(color: Colors.white),
   scaffoldBackgroundColor: lightBackgroundColor,
+  iconTheme: const IconThemeData(color: Color(0xFF1B252C)),
   textTheme: Platform.isWindows ? ThemeData.light().textTheme.apply(fontFamily: 'Microsoft YaHei') : null,
   chipTheme: ChipThemeData(
     backgroundColor: const Color(0xffdde1e3),
@@ -60,18 +78,45 @@ final lightThemeData = ThemeData.light().copyWith(
   canvasColor: Colors.white,
 );
 
-const darkBackgroundColor = Colors.black;
-const darkBackgroundColor2 = Color(0xff2e3b42);
+const darkBackgroundColor = Color(0xFF101417);
+const darkBackgroundColor2 = Color(0xFF1A242A);
+const darkNavigationSurfaceColor = Color(0xFF182128);
+const darkNoneBorderInputColor = Color(0xFF182128);
+const darkSelectedNavigationColor = Color(0xFF8FC7F3);
+const darkUnselectedNavigationColor = Color(0xFF92A2AC);
 final _darkNoneBorderInputDecoration = _baseNoneBorderInputDecoration.copyWith(
-  fillColor: const Color(0xff1a1e20),
+  fillColor: darkNoneBorderInputColor,
 );
 final darkThemeData = ThemeData.dark().copyWith(
   colorScheme: ColorScheme.fromSeed(
     seedColor: Colors.lightBlueAccent,
     brightness: Brightness.dark,
+    surface: darkBackgroundColor,
+    surfaceBright: darkBackgroundColor2,
   ),
-  // cardTheme: const CardTheme(color: Colors.blueGrey),
+  appBarTheme: const AppBarTheme(
+    backgroundColor: darkNavigationSurfaceColor,
+    foregroundColor: Color(0xFFE5EEF4),
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    shadowColor: Colors.transparent,
+    surfaceTintColor: Colors.transparent,
+    iconTheme: IconThemeData(color: Color(0xFFE5EEF4)),
+    actionsIconTheme: IconThemeData(color: Color(0xFFE5EEF4)),
+  ),
+  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    backgroundColor: darkNavigationSurfaceColor,
+    elevation: 8,
+    selectedItemColor: darkSelectedNavigationColor,
+    unselectedItemColor: darkUnselectedNavigationColor,
+    selectedIconTheme: IconThemeData(color: darkSelectedNavigationColor),
+    unselectedIconTheme: IconThemeData(color: darkUnselectedNavigationColor),
+    type: BottomNavigationBarType.fixed,
+  ),
+  cardTheme: const CardThemeData(color: darkBackgroundColor2),
   scaffoldBackgroundColor: darkBackgroundColor,
+  canvasColor: darkBackgroundColor2,
+  iconTheme: const IconThemeData(color: Color(0xFFE5EEF4)),
   textTheme: Platform.isWindows ? ThemeData.dark().textTheme.apply(fontFamily: 'Microsoft YaHei') : null,
   chipTheme: ChipThemeData(
     backgroundColor: darkBackgroundColor2,

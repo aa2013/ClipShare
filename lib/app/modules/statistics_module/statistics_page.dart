@@ -102,7 +102,6 @@ class StatisticsPage extends GetView<StatisticsController> {
       return Scaffold(
         appBar: showAppBar
             ? AppBar(
-                backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 title: Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [

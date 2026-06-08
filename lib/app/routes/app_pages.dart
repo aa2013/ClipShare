@@ -34,7 +34,6 @@ import '../../app/modules/history_module/history_page.dart';
 import '../../app/modules/home_module/home_bindings.dart';
 import '../../app/modules/log_module/log_bindings.dart';
 import '../../app/modules/log_module/log_page.dart';
-import '../../app/modules/settings_module/settings_bindings.dart';
 import '../../app/modules/settings_module/settings_page.dart';
 import '../../app/modules/splash_module/splash_bindings.dart';
 import '../../app/modules/splash_module/splash_page.dart';
@@ -73,7 +72,6 @@ abstract class AppPages {
     GetPage(
       name: Routes.SETTINGS,
       page: () => SettingsPage(),
-      binding: SettingsBinding(),
     ),
     GetPage(
       name: Routes.AUTHENTICATION,
