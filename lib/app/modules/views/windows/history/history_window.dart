@@ -16,7 +16,7 @@ import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/widgets/clip_data_card_compact.dart';
+import 'package:clipshare/app/widgets/clip/clip_data_card_compact.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';

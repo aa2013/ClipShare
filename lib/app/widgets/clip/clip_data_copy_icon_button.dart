@@ -19,7 +19,7 @@ class ClipDataCopyIconButton extends StatelessWidget {
     return CopyIconButton(
       tooltip: tooltip,
       onClick: () {
-        clip.data.copyContent(context: context,showFeedback: true);
+        clip.data.copyContent(context: context, showFeedback: true);
       },
     );
   }

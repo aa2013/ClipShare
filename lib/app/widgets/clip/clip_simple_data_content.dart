@@ -56,7 +56,8 @@ class ClipSimpleDataContent extends StatelessWidget {
       image = Image.file(File(content));
     }
     return MouseRegion(
-      cursor: PlatformExt.isMobile ? SystemMouseCursors.click : MouseCursor.defer,
+      cursor:
+          PlatformExt.isMobile ? SystemMouseCursors.click : MouseCursor.defer,
       child: InkWell(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(4),

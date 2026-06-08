@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
+import 'package:clipshare/app/widgets/clip/clip_data_copy_icon_button.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';

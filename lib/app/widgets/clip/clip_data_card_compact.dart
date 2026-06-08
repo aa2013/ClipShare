@@ -4,9 +4,9 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/app_icon.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
+import 'package:clipshare/app/widgets/clip/app_icon.dart';
+import 'package:clipshare/app/widgets/clip/clip_simple_data_content.dart';
+import 'package:clipshare/app/widgets/clip/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
@@ -49,7 +49,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
             var id = clip.data.id;
             //置顶取反
             var isTop = !clip.data.top;
-            widget.onTopChanged.call(id, isTop);  // 修改这里
+            widget.onTopChanged.call(id, isTop); // 修改这里
             setState(() {
               clip.data.top = isTop;
             });
@@ -63,14 +63,12 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
               OpenFile.open(clip.data.content);
               return;
             }
-            multiWindowService
-                .copy(0, clip.data.id)
-                .then(
+            multiWindowService.copy(0, clip.data.id).then(
                   (args) => Global.showSnackBarSuc(
-                context: context,
-                text: TranslationKey.copySuccess.tr,
-              ),
-            );
+                    context: context,
+                    text: TranslationKey.copySuccess.tr,
+                  ),
+                );
           },
         ),
         MenuItem(
@@ -104,9 +102,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
                 await OpenFile.open(clip.data.content);
                 return;
               }
-              multiWindowService
-                  .copy(0, clip.data.id)
-                  .then(
+              multiWindowService.copy(0, clip.data.id).then(
                     (args) => Global.showSnackBarSuc(
                       context: context,
                       text: TranslationKey.copySuccess.tr,

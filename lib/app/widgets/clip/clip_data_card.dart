@@ -25,9 +25,9 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_footer.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_header.dart';
+import 'package:clipshare/app/widgets/clip/clip_simple_data_content.dart';
+import 'package:clipshare/app/widgets/clip/clip_simple_data_footer.dart';
+import 'package:clipshare/app/widgets/clip/clip_simple_data_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -70,7 +70,8 @@ class ClipDataCard extends StatefulWidget {
   }
 }
 
-class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMixin {
+class _ClipDataCardState extends State<ClipDataCard>
+    with TickerProviderStateMixin {
   static const _borderWidth = 2.0;
   static const _borderRadius = 12.0;
   bool _selected = false;
@@ -107,7 +108,9 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
         }
         widget.onTap?.call();
       },
-      onDoubleTap: PlatformExt.isDesktop ? null : (details) => widget.onDoubleTap?.call(),
+      onDoubleTap: PlatformExt.isDesktop
+          ? null
+          : (details) => widget.onDoubleTap?.call(),
     );
     rightTapWrapper = DoubleTapWrapper(
       doubleTapInterval: 200.ms,
@@ -139,7 +142,9 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
         },
         borderRadius: BorderRadius.circular(_borderRadius),
         child: Container(
-          margin: widget.selectMode && _selected ? null : const EdgeInsets.all(_borderWidth),
+          margin: widget.selectMode && _selected
+              ? null
+              : const EdgeInsets.all(_borderWidth),
           decoration: widget.selectMode && _selected
               ? BoxDecoration(
                   border: Border.all(
@@ -257,7 +262,9 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
     final menu = ContextMenu(
       entries: [
         MenuItem(
-          label: widget.clip.data.top ? TranslationKey.cancelTopUp.tr : TranslationKey.topUp.tr,
+          label: widget.clip.data.top
+              ? TranslationKey.cancelTopUp.tr
+              : TranslationKey.topUp.tr,
           icon: widget.clip.data.top ? Icons.push_pin : Icons.push_pin_outlined,
           onSelected: () {
             var id = widget.clip.data.id;
@@ -291,12 +298,15 @@ class _ClipDataCardState extends State<ClipDataCard> with TickerProviderStateMix
             label: TranslationKey.copyContent.tr,
             icon: Icons.copy,
             onSelected: () {
-              widget.clip.data.copyContent(context: context,showFeedback: true);
+              widget.clip.data
+                  .copyContent(context: context, showFeedback: true);
             },
           ),
         if (!widget.clip.isFile)
           MenuItem(
-            label: widget.clip.data.sync ? TranslationKey.resyncRecord.tr : TranslationKey.syncRecord.tr,
+            label: widget.clip.data.sync
+                ? TranslationKey.resyncRecord.tr
+                : TranslationKey.syncRecord.tr,
             icon: Icons.sync,
             onSelected: () {
               dbService.opRecordDao.resyncData(widget.clip.data.id);

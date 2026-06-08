@@ -9,9 +9,9 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
-import 'package:clipshare/app/widgets/app_icon.dart';
-import 'package:clipshare/app/widgets/clip_tag_row_view.dart';
-import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
+import 'package:clipshare/app/widgets/clip/app_icon.dart';
+import 'package:clipshare/app/widgets/clip/clip_tag_row_view.dart';
+import 'package:clipshare/app/widgets/clip/clip_data_copy_icon_button.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
@@ -88,7 +88,9 @@ class ClipSimpleDataHeader extends StatelessWidget {
               color: Colors.blueGrey,
             ),
             visualDensity: VisualDensity.compact,
-            tooltip: showOriginData ? TranslationKey.displayExtractedContent.tr : TranslationKey.displayOriginContent.tr,
+            tooltip: showOriginData
+                ? TranslationKey.displayExtractedContent.tr
+                : TranslationKey.displayOriginContent.tr,
           ),
         ),
         Visibility(

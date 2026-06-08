@@ -9,7 +9,7 @@ import 'package:clipshare/app/services/android_notification_listener_service.dar
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
-import 'package:clipshare/app/widgets/clip_data_copy_icon_button.dart';
+import 'package:clipshare/app/widgets/clip/clip_data_copy_icon_button.dart';
 import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/multi_select_dialog.dart';
 import 'package:clipshare/app/widgets/dialog/notification_server_edit_dialog.dart';
@@ -39,7 +39,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
-import 'package:clipshare/app/widgets/environment_status_card.dart';
+import 'package:clipshare/app/widgets/environment/environment_status_card.dart';
 import 'package:clipshare/app/widgets/settings/card/clipboard_listening_way_setting_card.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';

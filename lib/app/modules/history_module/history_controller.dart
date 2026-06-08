@@ -90,7 +90,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   bool get cancelExporting => _cancelExporting;
 
   ///不要直接操作这个list，请操作 _tempList 并执行 debounceUpdate() 方法以进行防抖更新
-  final list = List<ClipData>.empty(growable: true).obs;
+  final List<ClipData> list = List.empty(growable: true);
 
   ///需要更新并复制的最新的数据 id
   int? _missingDataCopyMsg;
@@ -199,6 +199,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     sktService.connRegService.removeDevAliveListener(this);
     devService.removeDevRemoveListener(this);
     tagService.removeListener(this);
+    if (!filterLoading.value) {
+      filterController.dispose();
+    }
     super.dispose();
   }
 
@@ -341,13 +344,16 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       if (contentType != null && contentType != HistoryContentType.image) {
         _listContentType.value = contentType;
       }
-      list.assignAll(lst);
+      list
+        ..clear()
+        ..addAll(lst);
       if (contentType == HistoryContentType.image) {
         _listContentType.value = HistoryContentType.image;
       }
       if (loading) {
         _loading.value = false;
       }
+      update();
     });
   }
 

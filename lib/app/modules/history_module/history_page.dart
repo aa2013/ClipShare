@@ -26,31 +26,34 @@ class HistoryPage extends GetView<HistoryController> {
               HistoryFilter(
                 controller: controller.filterController,
                 showFillColor: PlatformExt.isDesktop || !controller.appConfig.isSmallScreen,
+                showSearchRow: !controller.appConfig.isSmallScreen,
               ),
               const SizedBox(height: 5),
               Expanded(
-                child: Obx(
-                  () => IndexedStack(
-                    index: controller.loading ? 1 : 0,
-                    children: [
-                      ClipListView(
-                        list: controller.list,
-                        parentController: controller,
-                        onRefreshData: controller.refreshData,
-                        enableRouteSearch: true,
-                        onLoadMoreData: controller.loadData,
-                        imageMasonryGridViewLayout: controller.listContentType == HistoryContentType.image,
-                        onUpdate: () {
-                          controller.debounceUpdate();
-                          controller.notifyHistoryWindow();
-                        },
-                        onRemove: (id) {
-                          controller.removeById(id);
-                          controller.updateLatestLocalClip();
-                        },
-                      ),
-                      const Loading(),
-                    ],
+                child: GetBuilder<HistoryController>(
+                  builder: (controller) => Obx(
+                    () => IndexedStack(
+                      index: controller.loading ? 1 : 0,
+                      children: [
+                        ClipListView(
+                          list: controller.list,
+                          parentController: controller,
+                          onRefreshData: controller.refreshData,
+                          enableRouteSearch: true,
+                          onLoadMoreData: controller.loadData,
+                          imageMasonryGridViewLayout: controller.listContentType == HistoryContentType.image,
+                          onUpdate: () {
+                            controller.debounceUpdate();
+                            controller.notifyHistoryWindow();
+                          },
+                          onRemove: (id) {
+                            controller.removeById(id);
+                            controller.updateLatestLocalClip();
+                          },
+                        ),
+                        const Loading(),
+                      ],
+                    ),
                   ),
                 ),
               ),

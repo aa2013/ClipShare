@@ -1,6 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
-import 'package:clipshare/app/widgets/device_card_simple.dart';
+import 'package:clipshare/app/widgets/device/device_card_simple.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show Icons;

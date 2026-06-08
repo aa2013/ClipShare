@@ -13,7 +13,7 @@ import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/app_icon.dart';
+import 'package:clipshare/app/widgets/clip/app_icon.dart';
 import 'package:clipshare/app/widgets/app_info_groups_view.dart';
 import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';

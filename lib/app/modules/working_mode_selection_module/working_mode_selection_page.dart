@@ -1,6 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/working_mode_selection_module/working_mode_selection_controller.dart';
-import 'package:clipshare/app/widgets/environment_selections.dart';
+import 'package:clipshare/app/widgets/environment/environment_selections.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 /**

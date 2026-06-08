@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/modules/sync_file_module/sync_file_controller.dart';
 import 'package:clipshare/app/modules/views/drag_and_send_file_page.dart';
@@ -18,6 +19,7 @@ import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/drag_file_mask.dart';
+import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';
 import 'package:clipshare/app/widgets/segment_text_view.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -67,7 +69,11 @@ class HomePage extends GetView<HomeController> {
                   appBar: !controller.isBigScreen
                       ? AppBar(
                           backgroundColor: currentTheme.colorScheme.inversePrimary,
-                          title: Row(
+                          title: Obx(() {
+                            if (controller.showingHistorySearch.value && controller.isHistoryPage) {
+                              return _buildHistorySearchAppBar();
+                            }
+                            return Row(
                             children: [
                               Expanded(
                                 child: Row(
@@ -103,7 +109,9 @@ class HomePage extends GetView<HomeController> {
                                 ),
                               ),
                             ],
-                          ),
+                            );
+                          }),
+                          actions: _buildSmallScreenAppBarActions(),
                           automaticallyImplyLeading: false,
                         )
                       : null,
@@ -279,6 +287,100 @@ class HomePage extends GetView<HomeController> {
           ],
         ),
       ),
+    );
+  }
+
+  List<Widget> _buildSmallScreenAppBarActions() {
+    return [
+      Obx(
+        () {
+          if (!controller.isHistoryPage || controller.showingHistorySearch.value) {
+            return const SizedBox.shrink();
+          }
+          final historyController = Get.find<HistoryController>();
+          if (historyController.filterLoading.value) {
+            return const SizedBox.shrink();
+          }
+          return IconButton(
+            tooltip: TranslationKey.search.tr,
+            onPressed: _showHistorySearch,
+            icon: const Icon(Icons.search_rounded),
+          );
+        },
+      ),
+    ];
+  }
+
+  Widget _buildHistorySearchAppBar() {
+    final historyController = Get.find<HistoryController>();
+    final filterController = historyController.filterController;
+    return _HistorySearchAppBar(
+      controller: filterController,
+      onFocusLost: () {
+        controller.showingHistorySearch.value = false;
+      },
+    );
+  }
+
+  void _showHistorySearch() {
+    final historyController = Get.find<HistoryController>();
+    if (historyController.filterLoading.value) {
+      return;
+    }
+    controller.showingHistorySearch.value = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      historyController.filterController.focusNode.requestFocus();
+    });
+  }
+}
+
+class _HistorySearchAppBar extends StatefulWidget {
+  final HistoryFilterController controller;
+  final VoidCallback onFocusLost;
+
+  const _HistorySearchAppBar({
+    required this.controller,
+    required this.onFocusLost,
+  });
+
+  @override
+  State<_HistorySearchAppBar> createState() => _HistorySearchAppBarState();
+}
+
+class _HistorySearchAppBarState extends State<_HistorySearchAppBar> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _HistorySearchAppBar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) {
+      return;
+    }
+    oldWidget.controller.focusNode.removeListener(_onFocusChanged);
+    widget.controller.focusNode.addListener(_onFocusChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.focusNode.removeListener(_onFocusChanged);
+    super.dispose();
+  }
+
+  void _onFocusChanged() {
+    if (!widget.controller.focusNode.hasFocus) {
+      widget.onFocusLost();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return HistoryFilterSearchRow(
+      controller: widget.controller,
+      showFillColor: false,
     );
   }
 }

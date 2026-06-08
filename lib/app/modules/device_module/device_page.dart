@@ -13,7 +13,7 @@ import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/dialog/add_device_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
-import 'package:clipshare/app/widgets/device_card.dart';
+import 'package:clipshare/app/widgets/device/device_card.dart';
 import 'package:clipshare/app/widgets/dot.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';

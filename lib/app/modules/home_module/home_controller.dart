@@ -76,7 +76,12 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   final homeScaffoldKey = GlobalKey<ScaffoldState>();
   final _index = 0.obs;
 
-  set index(value) => _index.value = value;
+  set index(value) {
+    if (_index.value != value) {
+      showingHistorySearch.value = false;
+    }
+    _index.value = value;
+  }
 
   int get index {
     var i = _index.value;
@@ -107,6 +112,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   GetxController get currentPageController => pages[index].controller;
 
+  bool get isHistoryPage => pages[index] is HistoryPage;
+
   //所有的导航栏
   final _navBarItems = <BottomNavigationBarItem>[].obs;
 
@@ -116,7 +123,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   List<BottomNavigationBarItem> get bottomNavBarItems => _navBarItems.where((item) => !_notShowNavItemKeys.contains(item.key)).toList();
 
   //大屏下侧边导航菜单
-  List<GetView> get _leftBarPages => _pages.value;
+  List<GetView> get _leftBarPages => _pages.toList();
 
   List<MyNavigationItem> get leftBarItems => _navBarItems
       .map(
@@ -165,6 +172,8 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   //是否是文件同步页面
   bool get isSyncFilePage => _pages[index] is SyncFilePage;
+
+  final showingHistorySearch = false.obs;
 
   final drawer = MultiDrawerController();
 

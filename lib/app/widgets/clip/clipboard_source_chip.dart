@@ -10,7 +10,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/widgets/app_icon.dart';
+import 'package:clipshare/app/widgets/clip/app_icon.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/cupertino.dart';
@@ -43,23 +43,29 @@ class ClipboardSourceChip extends StatelessWidget {
             limit: 1,
             loadDeviceName: devService.getName,
             loadAppInfos: () {
-              final list = sourceService.appInfos.where((item) => item.devId == appConfig.device.guid).map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
+              final list = sourceService.appInfos
+                  .where((item) => item.devId == appConfig.device.guid)
+                  .map((item) => LocalAppInfo.fromAppInfo(item, false))
+                  .toList();
               return Future<List<LocalAppInfo>>.value(list);
             },
             onSelectedDone: (selected) async {
               final appInfo = selected[0];
               final id = clip.data.id;
-              final success = await dbService.historyDao.updateHistorySourceAndNotify(id, appInfo.appId);
+              final success = await dbService.historyDao
+                  .updateHistorySourceAndNotify(id, appInfo.appId);
               if (success) {
                 historyController.updateData(
                   (history) => history.id == id,
                   (history) => history.source = appInfo.appId,
                   false,
                 );
-                Global.showSnackBarSuc(context: context, text: TranslationKey.updateSuccess.tr);
+                Global.showSnackBarSuc(
+                    context: context, text: TranslationKey.updateSuccess.tr);
                 onAdded(appInfo);
               } else {
-                Global.showSnackBarErr(context: context, text: TranslationKey.updateFailed.tr);
+                Global.showSnackBarErr(
+                    context: context, text: TranslationKey.updateFailed.tr);
               }
             },
           );
@@ -84,7 +90,8 @@ class ClipboardSourceChip extends StatelessWidget {
           text: TranslationKey.clearSourceConfirmText.tr,
           onOk: () async {
             final id = clip.data.id;
-            final success = await dbService.historyDao.clearHistorySourceAndNotify(id);
+            final success =
+                await dbService.historyDao.clearHistorySourceAndNotify(id);
             if (success) {
               historyController.updateData(
                 (history) => history.id == id,
@@ -93,10 +100,12 @@ class ClipboardSourceChip extends StatelessWidget {
               );
               //移除未使用的剪贴板来源信息
               await sourceService.removeNotUsed();
-              Global.showSnackBarSuc(context: context, text: TranslationKey.clearSuccess.tr);
+              Global.showSnackBarSuc(
+                  context: context, text: TranslationKey.clearSuccess.tr);
               onDeleted();
             } else {
-              Global.showSnackBarErr(context: context, text: TranslationKey.clearFailed.tr);
+              Global.showSnackBarErr(
+                  context: context, text: TranslationKey.clearFailed.tr);
             }
           },
           showCancel: true,

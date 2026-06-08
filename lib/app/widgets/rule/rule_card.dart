@@ -3,7 +3,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/widgets/app_icon.dart';
+import 'package:clipshare/app/widgets/clip/app_icon.dart';
 import 'package:flutter/material.dart';
 
 class RuleCard extends StatelessWidget {

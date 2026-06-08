@@ -5,7 +5,7 @@ import 'package:clipshare/app/modules/views/preview_page.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare/app/widgets/clip_simple_data_content.dart';
+import 'package:clipshare/app/widgets/clip/clip_simple_data_content.dart';
 import 'package:clipshare/app/widgets/largeText/large_text.dart';
 import 'package:clipshare/app/widgets/menu/my_menu.dart';
 import 'package:flutter/material.dart';
@@ -13,8 +13,8 @@ import 'package:flutter_context_menu/flutter_context_menu.dart';
 import 'package:flutter_context_menu/src/widgets/menu_entry_widget.dart';
 import 'package:flutter_linkify/flutter_linkify.dart';
 
-import '../data/enums/translation_key.dart';
-import 'menu/my_menu_item.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/widgets/menu/my_menu_item.dart';
 
 class ClipContentView extends StatefulWidget {
   final ClipData clipData;
@@ -86,7 +86,8 @@ class _ClipContentViewState extends State<ClipContentView> {
           link.url.openUrl();
         }
       },
-      onSelectionChanged: (TextSelection selection, SelectionChangedCause? cause) {
+      onSelectionChanged:
+          (TextSelection selection, SelectionChangedCause? cause) {
         hasSelection = selection.extentOffset != selection.baseOffset;
       },
       contextMenuBuilder: (context, editableTextState) {
@@ -112,7 +113,9 @@ class _ClipContentViewState extends State<ClipContentView> {
               },
             ),
           ];
-          return MyMenu(menus: menus, position: editableTextState.contextMenuAnchors.primaryAnchor);
+          return MyMenu(
+              menus: menus,
+              position: editableTextState.contextMenuAnchors.primaryAnchor);
         }
         return AdaptiveTextSelectionToolbar.buttonItems(
           anchors: editableTextState.contextMenuAnchors,
@@ -216,7 +219,10 @@ class _ClipContentViewState extends State<ClipContentView> {
               type: MaterialType.transparency,
               child: IntrinsicWidth(
                 child: Column(
-                  children: [for (final item in state.entries) MenuEntryWidget(entry: item)],
+                  children: [
+                    for (final item in state.entries)
+                      MenuEntryWidget(entry: item)
+                  ],
                 ),
               ),
             ),

@@ -77,6 +77,11 @@ class HistoryFilterController {
     resetFilter(filter: filter);
   }
 
+  void dispose() {
+    focusNode.dispose();
+    textController.dispose();
+  }
+
   void setAllDevices(List<Device> devices) {
     allDevices.value = devices;
   }
@@ -109,12 +114,14 @@ class HistoryFilterController {
 class HistoryFilter extends StatelessWidget {
   final HistoryFilterController controller;
   final bool showFillColor;
+  final bool showSearchRow;
   final void Function(HistoryContentType type)? onFilterTypeChanged;
 
   const HistoryFilter({
     super.key,
     required this.controller,
     required this.showFillColor,
+    this.showSearchRow = true,
     this.onFilterTypeChanged,
   });
 
@@ -123,105 +130,149 @@ class HistoryFilter extends StatelessWidget {
     return IntrinsicHeight(
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: TextField(
-                    controller: controller.textController,
-                    focusNode: controller.focusNode,
-                    autofocus: false,
-                    textAlignVertical: TextAlignVertical.center,
-                    decoration: noneBorderInputDecoration.copyWith(
-                      fillColor: showFillColor ? null: Colors.transparent,
-                      hintText: TranslationKey.search.tr,
-                      suffixIcon: Tooltip(
-                        message: TranslationKey.search.tr,
-                        child: IconButton(
-                          onPressed: () {
-                            controller.content.value = controller.textController.text;
-                            controller.onSearchBtnClicked();
-                            controller.focusNode.requestFocus();
-                          },
-                          icon: const Icon(
-                            Icons.search_rounded,
-                            size: 25,
-                          ),
-                        ),
+          if (showSearchRow)
+            HistoryFilterSearchRow(
+              controller: controller,
+              showFillColor: showFillColor,
+            ),
+          if (controller.showContentTypeFilter)
+            HistoryFilterTypeRow(
+              controller: controller,
+              onFilterTypeChanged: onFilterTypeChanged,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class HistoryFilterSearchRow extends StatelessWidget {
+  final HistoryFilterController controller;
+  final bool showFillColor;
+
+  const HistoryFilterSearchRow({
+    super.key,
+    required this.controller,
+    required this.showFillColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFieldTapRegion(
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 5),
+              child: TextField(
+                controller: controller.textController,
+                focusNode: controller.focusNode,
+                autofocus: false,
+                textAlignVertical: TextAlignVertical.center,
+                decoration: noneBorderInputDecoration.copyWith(
+                  fillColor: showFillColor ? null : Colors.transparent,
+                  hintText: TranslationKey.search.tr,
+                  suffixIcon: Tooltip(
+                    message: TranslationKey.search.tr,
+                    child: IconButton(
+                      onPressed: () {
+                        controller.content.value = controller.textController.text;
+                        controller.onSearchBtnClicked();
+                        controller.focusNode.requestFocus();
+                      },
+                      icon: const Icon(
+                        Icons.search_rounded,
+                        size: 25,
                       ),
                     ),
-                    onSubmitted: (value) {
-                      controller.content.value = value;
-                      controller.focusNode.requestFocus();
-                      controller.onSearchBtnClicked();
-                    },
                   ),
                 ),
-              ),
-              Container(
-                margin: const EdgeInsets.only(left: 5, right: 5),
-                child: IconButton(
-                  onPressed: () async {
-                    await controller.loadSearchCondition();
-                    final filterDetail = FilterDetail(
-                      controller: controller,
-                      onConfirm: (filter) {
-                        controller.onChanged(filter);
-                        Get.back();
-                      },
-                    );
-                    if (controller.isBigScreen) {
-                      final homeController = Get.find<HomeController>();
-                      homeController.pushDrawer(widget: filterDetail);
-                    } else {
-                      showModalBottomSheet(
-                        isScrollControlled: true,
-                        clipBehavior: Clip.antiAlias,
-                        context: context,
-                        builder: (context) => filterDetail,
-                      );
-                    }
-                  },
-                  tooltip: TranslationKey.moreFilter.tr,
-                  icon: Obx(
-                    () => Icon(
-                      controller.hasMoreCondition ? Icons.playlist_add_check_outlined : Icons.menu_rounded,
-                      color: controller.hasMoreCondition ? Colors.blueAccent : null,
-                    ),
-                  ),
-                ),
-              ),
-              if (controller.onExportBtnClicked != null)
-                Container(
-                  margin: const EdgeInsets.only(left: 5, right: 5),
-                  child: IconButton(
-                    onPressed: controller.onExportBtnClicked,
-                    tooltip: TranslationKey.export2Excel.tr,
-                    icon: const Icon(
-                      MdiIcons.export,
-                      size: 20,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          if (controller.showContentTypeFilter)
-            Container(
-              margin: const EdgeInsets.only(top: 5, left: 5),
-              child: FilterTypeSegmented(
-                selectedType: controller.selectedType.value,
-                onSelected: (type) {
-                  if (controller.selectedType.value.label == type.label) {
-                    return;
-                  }
-                  onFilterTypeChanged?.call(type);
-                  controller.selectedType.value = type;
-                  controller.onChanged(controller.filter);
+                onTapOutside: (_) => controller.focusNode.unfocus(),
+                onSubmitted: (value) {
+                  controller.content.value = value;
+                  controller.focusNode.requestFocus();
+                  controller.onSearchBtnClicked();
                 },
               ),
             ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(left: 5, right: 5),
+            child: IconButton(
+              onPressed: () async {
+                await controller.loadSearchCondition();
+                final filterDetail = FilterDetail(
+                  controller: controller,
+                  onConfirm: (filter) {
+                    controller.onChanged(filter);
+                    Get.back();
+                  },
+                );
+                if (controller.isBigScreen) {
+                  final homeController = Get.find<HomeController>();
+                  homeController.pushDrawer(widget: filterDetail);
+                } else {
+                  showModalBottomSheet(
+                    isScrollControlled: true,
+                    clipBehavior: Clip.antiAlias,
+                    context: context,
+                    builder: (context) => filterDetail,
+                  );
+                }
+              },
+              tooltip: TranslationKey.moreFilter.tr,
+              icon: Obx(
+                () => Icon(
+                  controller.hasMoreCondition ? Icons.playlist_add_check_outlined : Icons.menu_rounded,
+                  color: controller.hasMoreCondition ? Colors.blueAccent : null,
+                ),
+              ),
+            ),
+          ),
+          if (controller.onExportBtnClicked != null)
+            Container(
+              margin: const EdgeInsets.only(left: 5, right: 5),
+              child: IconButton(
+                onPressed: controller.onExportBtnClicked,
+                tooltip: TranslationKey.export2Excel.tr,
+                icon: const Icon(
+                  MdiIcons.export,
+                  size: 20,
+                ),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class HistoryFilterTypeRow extends StatelessWidget {
+  final HistoryFilterController controller;
+  final void Function(HistoryContentType type)? onFilterTypeChanged;
+
+  const HistoryFilterTypeRow({
+    super.key,
+    required this.controller,
+    this.onFilterTypeChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 5, left: 5),
+      child: Obx(
+        () => FilterTypeSegmented(
+          selectedType: controller.selectedType.value,
+          onSelected: (type) {
+            if (controller.selectedType.value.label == type.label) {
+              return;
+            }
+            onFilterTypeChanged?.call(type);
+            controller.selectedType.value = type;
+            controller.onChanged(controller.filter);
+          },
+        ),
       ),
     );
   }

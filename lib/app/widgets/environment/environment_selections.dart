@@ -6,7 +6,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/widgets/environment_selection_card.dart';
+import 'package:clipshare/app/widgets/environment/environment_selection_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 

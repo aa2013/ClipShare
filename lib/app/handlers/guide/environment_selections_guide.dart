@@ -3,7 +3,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/guide/base_guide.dart';
 import 'package:clipshare/app/modules/user_guide_module/user_guide_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/widgets/environment_selections.dart';
+import 'package:clipshare/app/widgets/environment/environment_selections.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
