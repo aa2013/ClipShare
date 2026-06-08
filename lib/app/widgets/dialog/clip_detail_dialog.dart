@@ -17,7 +17,6 @@ import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
-import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 import 'package:clipshare/app/modules/views/modify_history_content_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
@@ -64,7 +63,6 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
   final sktService = Get.find<SocketService>();
   final dbService = Get.find<DbService>();
   final historyController = Get.find<HistoryController>();
-  final searchController = Get.find<search_module.SearchController>();
   final androidChannelService = Get.find<AndroidChannelService>();
   final clipChannelService = Get.find<ClipChannelService>();
 
@@ -190,7 +188,6 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                                     whereFunc(History item) => item.id == widget.clip.data.id;
                                     callbackFunc(History item) => item.content = newData;
                                     historyController.updateData(whereFunc, callbackFunc);
-                                    searchController.updateData(whereFunc, callbackFunc);
                                   } else {
                                     Global.showSnackBarSuc(text: TranslationKey.updateFailed.tr, context: Get.context!);
                                   }

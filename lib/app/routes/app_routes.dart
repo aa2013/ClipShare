@@ -8,7 +8,6 @@ abstract class Routes {
   static const WELCOME = '/welcome';
   static const HOME = '/home';
   static const HISTORY = '/history'; // History page
-  static const SEARCH = '/search'; // Search page
   static const DEVICE = '/device'; // Device page
   static const SETTINGS = '/settings'; // Settings page
   static const AUTHENTICATION = '/authentication'; // Authentication page

@@ -54,8 +54,8 @@ class ClipSimpleDataHeader extends StatelessWidget {
           avatar: const Icon(Icons.devices_rounded),
           onPressed: () {
             if (routeToSearchOnClickChip) {
-              //导航至搜索页面
-              homeController.gotoSearchPage(
+              //显示历史页面并按设备过滤
+              homeController.showHistoryWithFilter(
                 clip.data.devId,
                 null,
               );

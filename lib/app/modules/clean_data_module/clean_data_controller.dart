@@ -15,7 +15,6 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
-import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -453,9 +452,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
   ///刷新历史页面
   void refreshHistoryPage() {
     final historyController = Get.find<HistoryController>();
-    final searchController = Get.find<search_module.SearchController>();
     historyController.refreshData();
-    searchController.refreshData();
   }
 
   ///初始化自动清理定时器

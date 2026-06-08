@@ -23,9 +23,8 @@ import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/clean_data_module/clean_data_controller.dart';
 import 'package:clipshare/app/modules/debug_module/debug_page.dart';
 import 'package:clipshare/app/modules/device_module/device_page.dart';
+import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/history_module/history_page.dart';
-import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
-import 'package:clipshare/app/modules/search_module/search_page.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/modules/settings_module/settings_page.dart';
 import 'package:clipshare/app/modules/sync_file_module/sync_file_page.dart';
@@ -61,12 +60,10 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   final Set<MultiSelectionPopScopeDisableListener> _multiSelectionPopScopeDisableListeners = {};
 
   //region 在小屏下首页中排除的导航栏和页面
-  static const _searchNavItemKey = Key('search');
   static const _rulesNavItemKey = Key('rules');
-  static const _searchPageKey = Key('search');
   static const _rulesPageKey = Key('rules');
-  static const _notShowNavItemKeys = [_searchNavItemKey, _rulesNavItemKey];
-  static const _notShowPageKeys = [_searchPageKey, _rulesPageKey];
+  static const _notShowNavItemKeys = [_rulesNavItemKey];
+  static const _notShowPageKeys = [_rulesPageKey];
 
   //endregion
 
@@ -102,7 +99,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     HistoryPage(),
     DevicePage(),
     SyncFilePage(),
-    SearchPage(key: _searchPageKey),
     RulesPage(key: _rulesPageKey),
     SettingsPage(),
   ]).obs;
@@ -372,15 +368,6 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         label: TranslationKey.fileTransfer.tr,
       ),
       BottomNavigationBarItem(
-        key: _searchNavItemKey,
-        icon: Icon(
-          Icons.search,
-          color: color,
-          size: size,
-        ),
-        label: TranslationKey.bottomNavigationSearchHistoryBarItemLabel.tr,
-      ),
-      BottomNavigationBarItem(
         key: _rulesNavItemKey,
         icon: Icon(
           Icons.code_outlined,
@@ -438,17 +425,13 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     );
   }
 
-  ///导航至搜索页面
-  void gotoSearchPage(String? devId, String? tagName) {
-    final searchController = Get.find<search_module.SearchController>();
-    searchController.loadFromExternalParams(devId, tagName);
-    searchController.refreshData();
-    if (isBigScreen) {
-      var i = _navBarItems.indexWhere((element) => (element.icon as Icon).icon == Icons.search);
+  ///显示历史页面并应用过滤条件
+  void showHistoryWithFilter(String? devId, String? tagName) {
+    final historyController = Get.find<HistoryController>();
+    historyController.loadFromExternalParams(devId, tagName);
+    final i = _navBarItems.indexWhere((element) => (element.icon as Icon).icon == Icons.history);
+    if (i >= 0) {
       _index.value = i;
-      pages[i] = SearchPage();
-    } else {
-      Get.toNamed(Routes.SEARCH);
     }
   }
 

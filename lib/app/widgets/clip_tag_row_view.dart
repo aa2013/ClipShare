@@ -39,8 +39,8 @@ class ClipTagRowView extends StatelessWidget {
                   child: RoundedChip(
                     onPressed: () {
                       if (routeToSearchOnClickChip == true) {
-                        //导航至搜索页面
-                        homeController.gotoSearchPage(null, tag);
+                        //显示历史页面并按标签过滤
+                        homeController.showHistoryWithFilter(null, tag);
                       }
                     },
                     avatar: const CircleAvatar(

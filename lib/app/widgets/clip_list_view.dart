@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:math';
 
-import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
@@ -40,6 +39,10 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:open_file_plus/open_file_plus.dart';
 
 import 'empty_content.dart';
+
+part 'clip_list_view/clip_list_body.dart';
+part 'clip_list_view/clip_list_fab.dart';
+part 'clip_list_view/clip_list_item_renderer.dart';
 
 class ClipListView extends StatefulWidget {
   final RxList<ClipData> list;
@@ -99,18 +102,15 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     if (widget.list.isNotEmpty) {
       _minId = widget.list.last.data.id;
     }
-    //监听生命周期
     WidgetsBinding.instance.addObserver(this);
     final homeController = Get.find<HomeController>();
     homeController.registerMultiSelectionPopScopeDisableListener(this);
-    // 监听滚动事件
     _scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // 释放资源
     _scrollController.dispose();
     final homeController = Get.find<HomeController>();
     homeController.removeMultiSelectionPopScopeDisableListener(this);
@@ -125,7 +125,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     }
   }
 
-  ///加载更多数据
   void _loadMoreData() {
     if (_loadingNewData || _minId == null) {
       return;
@@ -150,7 +149,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     });
   }
 
-  ///移除重复项
   void removeDuplicates() {
     Map<int, ClipData> map = {};
     for (var clip in widget.list) {
@@ -159,7 +157,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     widget.list.value = map.values.toList(growable: true);
   }
 
-  ///滚动监听
   void _scrollListener() {
     if (_scrollController.offset == 0) {
       Future.delayed(100.ms, () {
@@ -171,7 +168,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
         setState(() {});
       });
     }
-    // 判断是否快要滑动到底部
     if (_scrollController.position.extentAfter <= 200 && !_loadingNewData) {
       _loadMoreData();
     }
@@ -190,33 +186,27 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     }
   }
 
-  ///排序 list
   void _sortList() {
     widget.list.sort((a, b) => b.data.compareTo(a.data));
     setState(() {});
   }
 
-  ///删除项目
   Future<void> deleteItem(ClipData item, {bool deleteFile = false, bool onlyDeleteLocal = false}) async {
     await dbService.historyDao.deleteByCascade(item.data.id);
     widget.onRemove(item.data.id);
     final historyController = Get.find<HistoryController>();
-    //通知子窗体
     historyController.notifyHistoryWindow();
     if(!onlyDeleteLocal) {
-      //添加删除记录
       var opRecord = OperationRecord.fromSimple(
         Module.history,
         OpMethod.delete,
         item.data.id,
       );
-      //通知其他设备
       dbService.opRecordDao.addAndNotify(opRecord);
     }
     if (!item.isImage && !item.isFile) {
       return;
     }
-    //如果是图片，删除并更新媒体库
     final path = item.data.content;
     var file = File(path);
     if (!file.existsSync()) return;
@@ -226,7 +216,6 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     }
   }
 
-  ///进入选中状态
   void _enableSelectMode(){
     if(_selectMode){
       return;
@@ -250,401 +239,19 @@ class ClipListViewState extends State<ClipListView> with WidgetsBindingObserver 
     setState(() {});
   }
 
-  ///渲染列表项
-  Widget renderItem(int i) {
-    var item = widget.list[i];
-    onRemoveClicked(ClipData item) {
-      final onlyDeleteLocal = false.obs;
-      Global.showTipsDialog(
-        context: context,
-        text: TranslationKey.deleteRecordAck.tr,
-        title: TranslationKey.deleteTips.tr,
-        customWidget: Container(
-          margin: 10.insetT,
-          child: Obx(() {
-            return CheckboxListTile(
-                title: Text(TranslationKey.onlyLocal.tr),
-                value: onlyDeleteLocal.value,
-                onChanged: (selected) {
-                  onlyDeleteLocal.value = selected ?? false;
-                });
-          }),
-        ),
-        showCancel: true,
-        showNeutral: item.isFile || item.isImage,
-        neutralText: TranslationKey.deleteWithFiles.tr,
-        onOk: () => deleteItem(item, onlyDeleteLocal: onlyDeleteLocal.value),
-        onNeutral: () => deleteItem(item, deleteFile: true, onlyDeleteLocal: onlyDeleteLocal.value),
-      );
-    }
-    showClipBottomSheet(ClipData data){
-      showModalBottomSheet(
-        isScrollControlled: true,
-        clipBehavior: Clip.antiAlias,
-        context: context,
-        elevation: 100,
-        builder: (BuildContext context) {
-          return SafeArea(
-            child: ClipDetailDialog(
-              dlgContext: context,
-              clip: data,
-              onUpdate: widget.onUpdate,
-              onRemoveClicked: onRemoveClicked,
-            ),
-          );
-        },
-      );
-    }
-
-    return ClipDataCard(
-      clip: widget.list[i],
-      imageMode: widget.imageMasonryGridViewLayout,
-      routeToSearchOnClickChip: widget.enableRouteSearch,
-      selectMode: _selectMode,
-      selected: _selectedItems.contains(item),
-      onTap: () {
-        if (_selectMode) {
-          _toggleSelectState(item);
-        } else {
-          var data = widget.list[i];
-          if (isBigScreen) {
-            homeCtrl.pushDrawer(
-              widget: ClipboardDetailDrawer(clipData: data),
-              beforeClosed: () {
-                homeCtrl.resetDrawerWidth();
-                return true;
-              },
-            );
-          } else {
-            showClipBottomSheet(data);
-          }
-        }
-      },
-      onToggleSelected: (){
-        if (!_selectMode) {
-          _enableSelectMode();
-        }
-        HapticFeedback.mediumImpact();
-        //如果为空或已经选中，直接切换选择状态
-        if (_selectedItems.isEmpty || _selectedItems.contains(item)) {
-          _toggleSelectState(item);
-          return;
-        }
-        //不为空，区间选择确定区间元素
-        var reverse = false;
-        var list = List.from(widget.list);
-        var start = -1;
-        var end = -1;
-        for (var i = 0; i < list.length; i++) {
-          //判断正序还是逆序区间
-          if (!reverse && list[i] == item && start == -1) {
-            //逆序区间
-            reverse = true;
-          }
-          if (reverse) {
-            //逆序区间
-            if (list[i] == item) {
-              start = i;
-            } else if (_selectedItems.contains(list[i])) {
-              end = i;
-            }
-          } else {
-            //正序区间
-            if (_selectedItems.contains(list[i]) && start == -1) {
-              start = i;
-            }
-            if (list[i] == item && start != -1) {
-              end = i;
-              break;
-            }
-          }
-        }
-        for (var i = start; i <= end; i++) {
-          _selectedItems.add(list[i]);
-        }
-        setState(() {
-
-        });
-      },
-      onMoreActionsTap: (){
-        showClipBottomSheet(widget.list[i]);
-      },
-      onLongPress: () {
-        _enableSelectMode();
-        _selectedItems.add(item);
-        HapticFeedback.mediumImpact();
-      },
-      onDoubleTap: () async {
-        if (widget.list[i].isFile) {
-          await OpenFile.open(widget.list[i].data.content);
-          return;
-        }
-        History history = widget.list[i].data;
-        history.copyContent(context: context, showFeedback: true);
-      },
-      onUpdate: widget.onUpdate,
-      onRemoveClicked: onRemoveClicked,
-    );
-  }
-
-  FloatingActionButton _fabButtonFun({
-    required VoidCallback? onPressed,
-    String? tooltip,
-    Widget? child,
-  }) {
-    final bgColor = onPressed == null ? Colors.grey[400]: null;
-    if (appConfig.isSmallScreen || true){
-      return FloatingActionButton(
-        onPressed: onPressed,
-        tooltip: tooltip,
-        child: child,
-        backgroundColor: bgColor,
-      );
-    }else{
-      return FloatingActionButton.small(
-        onPressed: onPressed,
-        tooltip: tooltip,
-        child: child,
-        backgroundColor: bgColor,
-      );
-    }
+  void _refreshState() {
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    const fabSize = ExpandableFabSize.regular;
-    const distance = 145.0;
-    final multiSelected = _selectMode && _selectedItems.length > 1;
-    final fab = <Widget>[
-      Visibility(
-        visible: _selectMode,
-        child: Positioned(
-          right: 85,
-          bottom: 15,
-          child: Container(
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xffc3e8ff),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child:
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Text(
-                  "${_selectedItems.length} / ${widget.list.length}",
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: appConfig.currentIsDarkMode
-                        ? Colors.white
-                        : Colors.black87,
-                  ),
-                ),
-            ),),
-          ),),
-      ),
-      Visibility(
-        visible: _showBackToTopButton,
-        child: AnimatedPositioned(
-          right: 15,
-          bottom: _selectMode ? 85 : 15,
-          duration: 300.ms,
-          child: Tooltip(
-            message: TranslationKey.backToTop.tr,
-            child: FloatingActionButton(
-              onPressed: () {
-                Future.delayed(100.ms, () {
-                  _scrollController.animateTo(
-                    0,
-                    duration: 500.ms,
-                    curve: Curves.easeInOut,
-                  );
-                });
-              },
-              child: const Icon(Icons.arrow_upward), // 可以选择其他图标
-            ),
-          ),),
-      ),
-      Visibility(
-        visible: _selectMode,
-        child: ExpandableFab(
-          distance: distance,
-          type: ExpandableFabType.fan,
-          overlayStyle: const ExpandableFabOverlayStyle(blur: 8),
-          openButtonBuilder: RotateFloatingActionButtonBuilder(
-            fabSize: fabSize,
-            child: Tooltip(
-              message: TranslationKey.moreActions.tr,
-              child: const Icon(Icons.menu),
-            ),
-          ),
-          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-            fabSize: fabSize,
-            child: Tooltip(
-              message: TranslationKey.close.tr,
-              child: const Icon(Icons.close),
-            ),
-          ),
-          children: [
-            _fabButtonFun(
-              onPressed: () {
-                _cancelSelectionMode();
-                appConfig.disableMultiSelectionMode(true);
-                setState(() {});
-              },
-              tooltip: TranslationKey.deselect.tr,
-              child: const Icon(MdiIcons.cancel),
-            ),
-            _fabButtonFun(
-              onPressed: () async {
-                void multiDelete(bool deleteFile, [bool onlyDeleteLocal = false]) async {
-                  Get.back();
-                  Global.showLoadingDialog(
-                    context: context,
-                    loadingText: TranslationKey.deleting.tr,
-                  );
-                  for (var item in _selectedItems) {
-                    await deleteItem(item, deleteFile: true, onlyDeleteLocal: onlyDeleteLocal);
-                  }
-                  Get.back();
-                  Global.showSnackBarSuc(
-                    context: context,
-                    text: TranslationKey.deleteCompleted.tr,
-                  );
-                  appConfig.disableMultiSelectionMode(true);
-                  _cancelSelectionMode();
-                }
-                DialogController? dialog;
-                final onlyDeleteLocal = false.obs;
-                dialog = await Global.showTipsDialog(
-                  context: context,
-                  text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
-                  showCancel: true,
-                  autoDismiss: false,
-                  customWidget: Container(
-                    margin: 10.insetT,
-                    child: Obx(() {
-                      return CheckboxListTile(
-                          title: Text(TranslationKey.onlyLocal.tr),
-                          value: onlyDeleteLocal.value,
-                          onChanged: (selected) {
-                            onlyDeleteLocal.value = selected ?? false;
-                          });
-                    }),
-                  ),
-                  showNeutral: _selectedItems.any((item) => item.isFile),
-                  neutralText: TranslationKey.deleteWithFiles.tr,
-                  onCancel: () {
-                    dialog!.close();
-                  },
-                  onNeutral: () => multiDelete(true, onlyDeleteLocal.value),
-                  onOk: () => multiDelete(false, onlyDeleteLocal.value),
-                );
-              },
-              tooltip: TranslationKey.delete.tr,
-              child: const Icon(Icons.delete_forever),
-            ),
-            _fabButtonFun(
-              onPressed: multiSelected ? () async {
-                var list = _selectedItems.toList()..sort((a, b) => a.data.id.compareTo(b.data.id));
-                var content = list.map((item) => item.data.content).join('\n');
-                await clipboardManager.copy(ClipboardContentType.text, content);
-                Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
-                _cancelSelectionMode();
-              } : null,
-              tooltip: TranslationKey.copyMergedContent.tr,
-              child: const Icon(Icons.content_copy_rounded),
-            ),
-            _fabButtonFun(
-              onPressed: multiSelected ? () {
-                final historyController = Get.find<HistoryController>();
-                var loaded = false;
-                historyController.export((_) {
-                  if (loaded) {
-                    return [];
-                  }
-                  loaded = true;
-                  return _selectedItems.where((item) => !item.isFile)
-                      .map((item) => item.data)
-                      .toList();
-                }).whenComplete(() => _cancelSelectionMode());
-              } : null,
-              tooltip: TranslationKey.output.tr,
-              child: const Icon(MdiIcons.export),
-            ),
-          ],
-        ),
-      ),
-    ];
     return Scaffold(
-      body: RefreshIndicator(
-        onRefresh: () async {
-          return Future.delayed(
-            500.ms,
-            widget.onRefreshData,
-          );
-        },
-        child: Obx(() => ConditionWidget(
-                visible: widget.list.isEmpty,
-                replacement: LayoutBuilder(
-                  builder: (ctx, constraints) {
-                    return Obx(() {
-                      final isImageMode = widget.imageMasonryGridViewLayout;
-                      final maxWidth = isImageMode ? 200.0 : 395;
-                      final showMore = (appConfig.showMoreItemsInRow && !appConfig.isSmallScreen) || isImageMode;
-                      final count = showMore ? max(2, constraints.maxWidth ~/ maxWidth) : 1;
-                      return Listener(
-                        child: MasonryGridView.count(
-                          crossAxisCount: count,
-                          mainAxisSpacing: 4,
-                          shrinkWrap: true,
-                          itemCount: widget.list.length,
-                          controller: _scrollController,
-                          physics: _scrollPhysics,
-                          itemBuilder: (context, index) {
-                            if (isImageMode) {
-                              return renderItem(index);
-                            } else {
-                              return Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 2,
-                                ),
-                                constraints: const BoxConstraints(
-                                  maxHeight: 150,
-                                  minHeight: 80,
-                                ),
-                                child: renderItem(index),
-                              );
-                            }
-                          },
-                        ),
-                        onPointerSignal: (e) {
-                          if (e is PointerScrollEvent) {
-                            // 已经滚动到底部，仍然尝试滚动
-                            if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-                              Log.debug(tag, "Try loading more data at the bottom");
-                              _loadMoreData();
-                            }
-                          }
-                        },
-                      );
-                    });
-                  },
-                ),
-                child: Stack(
-                  children: [
-                    ListView(),
-                    EmptyContent(),
-                  ],
-                ),
-              ),
-      ),),
+      body: _buildBody(),
       floatingActionButtonLocation: ExpandableFab.location,
-      floatingActionButton: SizedBox.expand(child: Stack(children: fab),),
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
-  ///取消选择模式
   void _cancelSelectionMode() {
     _selectedItems.clear();
     _selectMode = false;

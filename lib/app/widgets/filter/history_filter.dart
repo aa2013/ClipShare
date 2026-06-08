@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
@@ -33,9 +30,9 @@ class HistoryFilterController {
     content: content.value,
     startDate: startDate.value,
     endDate: endDate.value,
-    tags: selectedTags.value,
-    devIds: selectedDevIds.value,
-    appIds: selectedAppIds.value,
+    tags: Set.of(selectedTags),
+    devIds: Set.of(selectedDevIds),
+    appIds: Set.of(selectedAppIds),
     onlyNoSync: onlyNoSync.value,
     type: selectedType.value,
   );
@@ -134,7 +131,7 @@ class HistoryFilter extends StatelessWidget {
                   child: TextField(
                     controller: controller.textController,
                     focusNode: controller.focusNode,
-                    autofocus: true,
+                    autofocus: false,
                     textAlignVertical: TextAlignVertical.center,
                     decoration: noneBorderInputDecoration.copyWith(
                       fillColor: showFillColor ? null: Colors.transparent,
@@ -213,13 +210,14 @@ class HistoryFilter extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(top: 5, left: 5),
               child: FilterTypeSegmented(
+                selectedType: controller.selectedType.value,
                 onSelected: (type) {
                   if (controller.selectedType.value.label == type.label) {
                     return;
                   }
                   onFilterTypeChanged?.call(type);
                   controller.selectedType.value = type;
-                  Future.delayed(300.ms, () => controller.onChanged(controller.filter));
+                  controller.onChanged(controller.filter);
                 },
               ),
             ),

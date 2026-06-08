@@ -55,7 +55,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
-import 'package:clipshare/app/modules/search_module/search_controller.dart' as search_module;
 import 'package:uuid/uuid.dart';
 /**
  * GetX Template Generator - fb.com/htngu.99
@@ -616,7 +615,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(item.tr),
-                    ?desc,
+                    if (desc != null) desc,
                   ],
                 ),
               ),
@@ -887,10 +886,8 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       } else {
         Global.showTipsDialog(context: context, title: TranslationKey.importSuccess.tr, text: TranslationKey.restoreRestartPrompt.tr);
         final historyController = Get.find<HistoryController>();
-        final searchController = Get.find<search_module.SearchController>();
         devService.init();
         tagService.init();
-        searchController.refreshData();
         historyController.refreshData();
       }
     } catch (err, stack) {

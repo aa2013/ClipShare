@@ -34,8 +34,6 @@ import '../../app/modules/history_module/history_page.dart';
 import '../../app/modules/home_module/home_bindings.dart';
 import '../../app/modules/log_module/log_bindings.dart';
 import '../../app/modules/log_module/log_page.dart';
-import '../../app/modules/search_module/search_bindings.dart';
-import '../../app/modules/search_module/search_page.dart';
 import '../../app/modules/settings_module/settings_bindings.dart';
 import '../../app/modules/settings_module/settings_page.dart';
 import '../../app/modules/splash_module/splash_bindings.dart';
@@ -66,11 +64,6 @@ abstract class AppPages {
       name: Routes.HISTORY,
       page: () => HistoryPage(),
       binding: HistoryBinding(),
-    ),
-    GetPage(
-      name: Routes.SEARCH,
-      page: () => SearchPage(),
-      binding: SearchBinding(),
     ),
     GetPage(
       name: Routes.DEVICE,

@@ -102,21 +102,6 @@ class HomePage extends GetView<HomeController> {
                                   ],
                                 ),
                               ),
-                              Obx(
-                                () => Visibility(
-                                  visible: !appConfig.isMultiSelectionMode(currentPageController),
-                                  child: IconButton(
-                                    onPressed: () {
-                                      //导航至搜索页面
-                                      controller.gotoSearchPage(null, null);
-                                    },
-                                    tooltip: TranslationKey.search.tr,
-                                    icon: const Icon(
-                                      Icons.search_rounded,
-                                    ),
-                                  ),
-                                ),
-                              ),
                             ],
                           ),
                           automaticallyImplyLeading: false,

@@ -13,10 +13,12 @@ class FilterTypeSegmented extends StatelessWidget {
     HistoryContentType.notification,
   ]);
   final ValueChanged<HistoryContentType> onSelected;
+  final HistoryContentType selectedType;
 
   const FilterTypeSegmented({
     super.key,
     required this.onSelected,
+    this.selectedType = HistoryContentType.all,
   });
 
   @override
@@ -25,11 +27,19 @@ class FilterTypeSegmented extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: TinySegmentedControl(
-        options: _filterTypes.map((e) => Text(e.label)).toList(),
+        options: _filterTypes
+            .map(
+              (e) => MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Text(e.label),
+              ),
+            )
+            .toList(),
         backgroundColor: Colors.transparent,
-        selectedBackgroundColor: isDarkMode ? Colors.blueGrey : Color(0xff62baf8),
+        selectedBackgroundColor: isDarkMode ? Colors.blueGrey : const Color(0xff62baf8),
         selectedColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+        selectedIndex: _filterTypes.indexOf(selectedType),
         onSelected: (int index) {
           final type = _filterTypes[index];
           onSelected(type);

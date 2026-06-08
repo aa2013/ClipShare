@@ -4,21 +4,26 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
+import 'package:clipshare/app/data/models/search_filter.dart';
+import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/listeners/dev_alive_listener.dart';
+import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
+import 'package:clipshare/app/listeners/tag_changed_listener.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
 import 'package:path/path.dart' as p;
 import 'package:clipshare/app/utils/notify_util.dart';
@@ -49,7 +54,6 @@ import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -62,7 +66,7 @@ import 'package:synchronized/synchronized.dart';
  * GetX Template Generator - fb.com/htngu.99
  * */
 
-class HistoryController extends GetxController with WidgetsBindingObserver implements HistoryDataObserver, SyncListener, ScreenOpenedObserver {
+class HistoryController extends GetxController with WidgetsBindingObserver implements HistoryDataObserver, SyncListener, ScreenOpenedObserver, DeviceRemoveListener, DevAliveListener, TagChangedListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final sktService = Get.find<SocketService>();
@@ -127,6 +131,33 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   //防止短时间内频繁刷新ui的临时缓冲列表
   final List<ClipData> _tempList = List.empty(growable: true);
+  final _allDevices = <Device>[].obs;
+  final _allTagNames = <String>[].obs;
+  late final HistoryFilterController filterController;
+  final filterLoading = true.obs;
+  final _listContentType = HistoryContentType.all.obs;
+
+  Set<String> get selectedTags => Set.of(filterController.selectedTags);
+
+  Set<String> get selectedDevIds => Set.of(filterController.selectedDevIds);
+
+  Set<String> get selectedAppIds => Set.of(filterController.selectedAppIds);
+
+  String get searchStartDate => filterController.startDate.value;
+
+  String get searchEndDate => filterController.endDate.value;
+
+  bool get searchOnlyNoSync => filterController.onlyNoSync.value;
+
+  HistoryContentType get searchType => filterController.selectedType.value;
+
+  HistoryContentType get listContentType => _listContentType.value;
+
+  String get typeValue => HistoryContentType.typeMap.keys.contains(searchType.label) ? HistoryContentType.typeMap[searchType.label]! : "";
+
+  SearchFilter get searchFilter => filterController.filter;
+
+  bool get hasActiveFilter => searchFilter.toString() != SearchFilter().toString();
 
   //endregion
 
@@ -137,12 +168,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
     ScreenOpenedListener.inst.register(this);
+    sktService.connRegService.addDevAliveListener(this);
+    devService.addDevRemoveListener(this);
+    tagService.addListener(this);
     //更新上次复制的记录
     updateLatestLocalClip().then((his) {
       //添加同步监听
       DataSender.addSyncListener(Module.history, this);
       //刷新列表
-      refreshData();
+      initFilterController();
       //剪贴板监听注册
       HistoryDataListener.inst.register(this);
     });
@@ -162,6 +196,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     WidgetsBinding.instance.removeObserver(this);
     ScreenOpenedListener.inst.remove(this);
     DataSender.removeSyncListener(Module.history, this);
+    sktService.connRegService.removeDevAliveListener(this);
+    devService.removeDevRemoveListener(this);
+    tagService.removeListener(this);
     super.dispose();
   }
 
@@ -199,10 +236,93 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   ///重新加载列表
   Future<void> refreshData() {
-    return dbService.historyDao.getHistoriesTop100(appConfig.userId).then((lst) {
+    final nextContentType = searchType;
+    _loading.value = true;
+    if (nextContentType != HistoryContentType.image && _listContentType.value == HistoryContentType.image) {
+      _listContentType.value = nextContentType;
+    }
+    final future = filterLoading.value || !hasActiveFilter
+        ? dbService.historyDao.getHistoriesTop100(appConfig.userId)
+        : dbService.historyDao.getHistoriesPageByFilter(appConfig.userId, searchFilter, false);
+    return future.then((lst) {
       _tempList.assignAll(ClipData.fromList(lst));
-      debounceUpdate();
+      debounceUpdate(nextContentType);
     });
+  }
+
+  Future<List<ClipData>> loadData(int? minId) {
+    final future = filterLoading.value || !hasActiveFilter
+        ? dbService.historyDao.getHistoriesPage(appConfig.userId, minId ?? 0)
+        : dbService.historyDao.getHistoriesPageByWhere(
+            appConfig.userId,
+            minId ?? 0,
+            filterController.content.value,
+            typeValue,
+            selectedTags.toList(),
+            selectedDevIds.toList(),
+            selectedAppIds.toList(),
+            searchStartDate,
+            searchEndDate,
+            searchOnlyNoSync,
+            true,
+          );
+    return future.then((list) => ClipData.fromList(list));
+  }
+
+  Future<void> initFilterController() async {
+    await loadSearchCondition();
+    filterController = HistoryFilterController(
+      allDevices: _allDevices,
+      allTagNames: _allTagNames,
+      allSources: sourceService.appInfos,
+      isBigScreen: !appConfig.isSmallScreen,
+      loadSearchCondition: loadSearchCondition,
+      showContentTypeFilter: true,
+      onChanged: (filter) {
+        refreshData();
+      },
+      onSearchBtnClicked: refreshData,
+      filter: SearchFilter(),
+      onExportBtnClicked: () => export((lastId) => dbService.historyDao.getHistoriesPageByFilter(
+            appConfig.userId,
+            searchFilter,
+            true,
+            lastId,
+          )),
+    );
+    filterLoading.value = false;
+    refreshData();
+  }
+
+  Future<void> loadSearchCondition() async {
+    await dbService.historyTagDao.getAllTagNames().then((lst) {
+      _allTagNames.value = lst;
+    });
+    await dbService.deviceDao.getAllDevices(appConfig.userId).then((lst) {
+      var tmpLst = List<Device>.empty(growable: true);
+      tmpLst.add(appConfig.device);
+      tmpLst.addAll(lst);
+      _allDevices.value = tmpLst;
+    });
+  }
+
+  void loadFromExternalParams(String? devId, String? tagName) {
+    if (filterLoading.value) {
+      return;
+    }
+    if (devId != null) {
+      selectedDevIds.assignAll({devId});
+      if (tagName == null) {
+        selectedTags.clear();
+      }
+    }
+    if (tagName != null) {
+      selectedTags.assignAll({tagName});
+      if (devId == null) {
+        selectedDevIds.clear();
+      }
+    }
+    refreshData();
   }
 
   ///更新上次复制的内容
@@ -211,14 +331,20 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   }
 
   ///防抖更新页面
-  void debounceUpdate() {
+  void debounceUpdate([HistoryContentType? contentType]) {
     // 如果已有计时器，则取消它
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     // 重新设置计时器，延迟 200 毫秒执行
     _debounce = Timer(200.ms, () {
       final lst = [..._tempList];
       lst.sort((a, b) => b.data.compareTo(a.data));
+      if (contentType != null && contentType != HistoryContentType.image) {
+        _listContentType.value = contentType;
+      }
       list.assignAll(lst);
+      if (contentType == HistoryContentType.image) {
+        _listContentType.value = HistoryContentType.image;
+      }
       if (loading) {
         _loading.value = false;
       }
@@ -827,6 +953,51 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   @override
   void onScreenClosed() {
     _screenUnlocked = false;
+  }
+
+  @override
+  Future<void> onPaired(DevInfo dev, int uid, bool result, String? address) async {
+    await loadSearchCondition();
+    filterController.setAllDevices(_allDevices);
+    filterController.setAllTagNames(_allTagNames);
+    filterController.setAllSources(sourceService.appInfos);
+    notifyHistoryWindow();
+  }
+
+  @override
+  void onRemove(String devId) {
+    filterController.setAllDevices(_allDevices);
+    filterController.setAllTagNames(_allTagNames);
+    filterController.setAllSources(sourceService.appInfos);
+    notifyHistoryWindow();
+  }
+
+  @override
+  void onCancelPairing(DevInfo dev) {}
+
+  @override
+  void onConnected(DevInfo info, AppVersion minVersion, AppVersion version, TransportProtocol protocol) {}
+
+  @override
+  void onDisconnected(String devId) {}
+
+  @override
+  void onForget(DevInfo dev, int uid) {}
+
+  @override
+  Future<void> onDistinctAdd(String tagName) async {
+    await loadSearchCondition();
+    filterController.setAllTagNames(_allTagNames);
+    filterController.setAllSources(sourceService.appInfos);
+    notifyHistoryWindow();
+  }
+
+  @override
+  Future<void> onDistinctRemove(String tagName) async {
+    await loadSearchCondition();
+    filterController.setAllTagNames(_allTagNames);
+    filterController.setAllSources(sourceService.appInfos);
+    notifyHistoryWindow();
   }
 
   //endregion
