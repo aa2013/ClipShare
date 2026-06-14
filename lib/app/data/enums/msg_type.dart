@@ -47,7 +47,7 @@ enum MsgType {
   static MsgType getValue(String name) => MsgType.values.firstWhere(
     (e) => e.name == name,
     orElse: () {
-      Log.debug("MsgKey", "key '$name' unknown");
+      logger.debug("MsgKey", "key '$name' unknown");
       return MsgType.unknown;
     },
   );

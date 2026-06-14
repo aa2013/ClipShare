@@ -509,7 +509,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                   //controller 只会attach到当前的tab
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!controller.hasClients) {
-                      Log.debug(
+                      logger.debug(
                         tag,
                         "$currentTab scroller controller not clients",
                       );
@@ -522,7 +522,7 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                         curve: Curves.easeOut,
                       );
                     } catch (err, stack) {
-                      Log.error(tag, err, stack);
+                      logger.error(tag, err, stack);
                     }
                   });
                 },

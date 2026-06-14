@@ -8,7 +8,7 @@ enum RuleType {
   static RuleType getValue(String name) => RuleType.values.firstWhere(
         (e) => e.name == name,
         orElse: () {
-          Log.debug("Rule", "key '$name' unknown");
+          logger.debug("Rule", "key '$name' unknown");
           return RuleType.unknown;
         },
       );

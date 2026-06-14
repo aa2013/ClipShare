@@ -50,7 +50,7 @@ extension _ClipListBody on ClipListViewState {
                 if (e is PointerScrollEvent) {
                   if (_scrollController.position.pixels ==
                       _scrollController.position.maxScrollExtent) {
-                    Log.debug(tag, "Try loading more data at the bottom");
+                    logger.debug(tag, "Try loading more data at the bottom");
                     _loadMoreData();
                   }
                 }

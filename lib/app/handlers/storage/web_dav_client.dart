@@ -84,7 +84,7 @@ class WebDAVClient implements StorageClient {
       final file = await _client.readProps(dirPath);
       return file.isDir == true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -96,7 +96,7 @@ class WebDAVClient implements StorageClient {
       await _client.mkdirAll(dirPath);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -111,7 +111,7 @@ class WebDAVClient implements StorageClient {
       await _client.remove(path);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -131,7 +131,7 @@ class WebDAVClient implements StorageClient {
         return !file.isDir!;
       }
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -156,7 +156,7 @@ class WebDAVClient implements StorageClient {
       await _client.write(filePath, bytes, onProgress: onProgress);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -175,7 +175,7 @@ class WebDAVClient implements StorageClient {
       await _client.writeFromFile(localFilePath, filePath, onProgress: onProgress);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -206,7 +206,7 @@ class WebDAVClient implements StorageClient {
       await _client.read2File(filePath, localPath, onProgress: onProgress);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -223,7 +223,7 @@ class WebDAVClient implements StorageClient {
       }
       return await _client.read(filePath, onProgress: onProgress);
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return null;
     }
   }
@@ -239,7 +239,7 @@ class WebDAVClient implements StorageClient {
       await _client.remove(filePath);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }

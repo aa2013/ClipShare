@@ -199,14 +199,14 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
           await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
         }
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
       try {
         if (exitAppKeys.isNotEmpty) {
           await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
         }
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
   }
@@ -218,7 +218,7 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
     try {
       return AppHotKeyHandler.toSystemHotKey(keyCodes).desc;
     } catch (err, stack) {
-      Log.error(tag, err, stack);
+      logger.error(tag, err, stack);
       return "";
     }
   }
@@ -253,7 +253,7 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
 
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
-    Log.debug(tag, '你选择了${menuItem.label}');
+    logger.debug(tag, '你选择了${menuItem.label}');
     switch (menuItem.key) {
       case 'show_window':
         clickShowWindowItem();

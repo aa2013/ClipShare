@@ -79,7 +79,7 @@ class SettingsLogPage extends SettingsSectionView {
                   try {
                     await OpenFile.open(appConfig.logsDirPath);
                   } catch (e) {
-                    Log.error(logTag, e);
+                    logger.error(logTag, e);
                   }
                 },
               ),

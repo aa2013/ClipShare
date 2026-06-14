@@ -284,13 +284,13 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   void onDiscoverStart() {
     _rotationController.repeat();
     discovering.value = true;
-    Log.debug(tag, "onDiscoverStart");
+    logger.debug(tag, "onDiscoverStart");
   }
 
   @override
   void onDiscoverFinished() {
     discovering.value = false;
-    Log.debug(tag, "onDiscoverFinished");
+    logger.debug(tag, "onDiscoverFinished");
     rotationReverse.value = false;
     setRotationAnimation();
     _rotationController.stop();
@@ -336,7 +336,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   @override
   void onPaired(DevInfo dev, int uid, bool result, String? address) async {
     if (!result) {
-      Log.debug(tag, "_pairingFailed $pairingFailed");
+      logger.debug(tag, "_pairingFailed $pairingFailed");
       pairingFailed.value = true;
       pairing.value = false;
       pairingState(() {});
@@ -371,7 +371,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
       //新设备
       devService.addOrUpdate(newDev).then((res) {
         if (!res) {
-          Log.debug(tag, "Device information addition failed");
+          logger.debug(tag, "Device information addition failed");
           Global.showSnackBarErr(context: Get.context!, text: TranslationKey.deviceAdditionFailedDialogText.tr);
           return;
         }

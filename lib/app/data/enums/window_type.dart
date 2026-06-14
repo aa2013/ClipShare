@@ -9,7 +9,7 @@ enum WindowType {
     return WindowType.values.firstWhere(
       (e) => e.name.toLowerCase() == value.toLowerCase(),
       orElse: () {
-        Log.debug("WindowType", "key '$value' unknown");
+        logger.debug("WindowType", "key '$value' unknown");
         throw Exception("Unknown WindowType value: $value");
       },
     );

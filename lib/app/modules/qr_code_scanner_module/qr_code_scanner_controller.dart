@@ -36,10 +36,10 @@ class QRCodeScannerController extends GetxController {
       try {
         HapticFeedback.mediumImpact();
         final json = jsonDecode(scanData.code!);
-        Log.debug(logTag, scanData.code);
+        logger.debug(logTag, scanData.code);
         Get.back(result: json);
       } catch (err, stack) {
-        Log.warn(logTag, "$err $stack");
+        logger.warn(logTag, "$err $stack");
         Global.showTipsDialog(
           context: Get.context!,
           autoDismiss: false,

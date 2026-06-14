@@ -55,7 +55,7 @@ extension DevInfoExt on DevInfo {
     final list = devController.onlineList.where((dev) => onlyPaired ? dev.isPaired : true).toList();
     final dev = list.firstWhereOrNull((item) => item.guid == guid);
     if (dev == null) {
-      Log.warn(tag, "device is offline or not exists");
+      logger.warn(tag, "device is offline or not exists");
       return;
     }
     if (dev.isUseForwardServer || dev.isUseDirect) {

@@ -88,7 +88,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
                         cancel = true;
                         dio.close(force: true);
                       } catch (err, stack) {
-                        Log.error(tag, "error: $error. $stack");
+                        logger.error(tag, "error: $error. $stack");
                       }
                       widget.onCancel?.call();
                     },

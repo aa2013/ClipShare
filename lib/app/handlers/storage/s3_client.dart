@@ -65,7 +65,7 @@ class S3Client implements StorageClient {
       await _client.putObject(_config.bucketName, dirPath, Stream<Uint8List>.value(_empty));
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -78,7 +78,7 @@ class S3Client implements StorageClient {
       await _client.putObject(_config.bucketName, filePath, Stream<Uint8List>.value(bytes));
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -93,7 +93,7 @@ class S3Client implements StorageClient {
       await _client.removeObject(_config.bucketName, dirPath);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -106,7 +106,7 @@ class S3Client implements StorageClient {
       await _client.removeObject(_config.bucketName, filePath);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -140,7 +140,7 @@ class S3Client implements StorageClient {
       await writer.addStream(stream);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -156,7 +156,7 @@ class S3Client implements StorageClient {
       final result = await _client.statObject(_config.bucketName, dirPath);
       return result.size == 0;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -170,7 +170,7 @@ class S3Client implements StorageClient {
       final result = await _client.statObject(_config.bucketName, filePath);
       return (result.size ?? 0) > 0;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -216,7 +216,7 @@ class S3Client implements StorageClient {
       result.sort();
       return result;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return [];
     }
   }
@@ -227,7 +227,7 @@ class S3Client implements StorageClient {
       final result = await _client.listAllObjectsV2(_config.bucketName);
       return result.prefixes;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return [];
     }
   }
@@ -244,7 +244,7 @@ class S3Client implements StorageClient {
       }
       return result;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return null;
     }
   }
@@ -260,7 +260,7 @@ class S3Client implements StorageClient {
       await _client.putObject(_config.bucketName, filePath, reader, size: totalSize, onProgress: (count) => onProgress?.call(count, totalSize));
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }

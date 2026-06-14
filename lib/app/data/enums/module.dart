@@ -21,7 +21,7 @@ enum Module {
   static Module getValue(String name) => Module.values.firstWhere(
         (e) => e.moduleName == name || e.name.equalsIgnoreCase(name),
         orElse: () {
-          Log.debug("Module", "key '$name' unknown");
+          logger.debug("Module", "key '$name' unknown");
           return Module.unknown;
         },
       );

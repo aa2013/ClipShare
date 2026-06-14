@@ -54,7 +54,7 @@ enum HistoryContentType {
   static HistoryContentType parse(String value) => HistoryContentType.values.firstWhere(
         (e) => e.value.toUpperCase() == value.toUpperCase(),
         orElse: () {
-          Log.debug("HistoryContentType", "key '$value' unknown");
+          logger.debug("HistoryContentType", "key '$value' unknown");
           return HistoryContentType.unknown;
         },
       );

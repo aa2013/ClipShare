@@ -71,7 +71,7 @@ class AliyunOssClient implements StorageClient {
       final resp = await _client.putObjectFromBytes(_empty, dirPath);
       return _responseIsOk(resp);
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -84,7 +84,7 @@ class AliyunOssClient implements StorageClient {
       final resp = await _client.putObjectFromBytes(bytes, filePath, params: OSSRequestParams(onSendProgress: onProgress));
       return _responseIsOk(resp);
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -99,7 +99,7 @@ class AliyunOssClient implements StorageClient {
       final resp = await _client.deleteObject(dirPath);
       return _responseIsOk(resp);
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -112,7 +112,7 @@ class AliyunOssClient implements StorageClient {
       final resp = await _client.deleteObject(filePath);
       return _responseIsOk(resp);
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -128,7 +128,7 @@ class AliyunOssClient implements StorageClient {
       await writer.addStream(resp.data!);
       return true;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -144,7 +144,7 @@ class AliyunOssClient implements StorageClient {
       final result = await _client.getObjectMeta(dirPath);
       return result != null && !result.isFile;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -157,7 +157,7 @@ class AliyunOssClient implements StorageClient {
       final result = await _client.getObjectMeta(dirPath);
       return result?.isFile ?? false;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }
@@ -211,7 +211,7 @@ class AliyunOssClient implements StorageClient {
       items.sort();
       return items;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return [];
     }
   }
@@ -236,7 +236,7 @@ class AliyunOssClient implements StorageClient {
       }
       return list;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return [];
     }
   }
@@ -249,7 +249,7 @@ class AliyunOssClient implements StorageClient {
       final resp = (await _client.getObject(filePath, params: OSSRequestParams(onReceiveProgress: onProgress)));
       return resp.data;
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return null;
     }
   }
@@ -262,7 +262,7 @@ class AliyunOssClient implements StorageClient {
       final resp = await _client.putObject(File(localFilePath), filePath, params: OSSRequestParams(onSendProgress: onProgress));
       return _responseIsOk(resp);
     } catch (err, stack) {
-      Log.error(tag, _config.toString() + err.toString(), stack);
+      logger.error(tag, _config.toString() + err.toString(), stack);
       return false;
     }
   }

@@ -121,8 +121,8 @@ class _TagEditPageState extends State<TagEditPage> {
               setState(() {
                 saving = false;
               });
-              Log.debug(tag, e);
-              Log.debug(tag, t);
+              logger.debug(tag, e);
+              logger.debug(tag, t);
             }
           },
           child: saving

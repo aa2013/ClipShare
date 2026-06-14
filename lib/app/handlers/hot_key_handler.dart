@@ -209,7 +209,7 @@ class AppHotKeyHandler {
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
-        Log.debug(tag, "ShowMainWindow HotKey Down");
+        logger.debug(tag, "ShowMainWindow HotKey Down");
         final trayService = Get.find<TrayService>();
         trayService.clickShowWindowItem();
         //临时让其置顶显示然后再恢复，否则可能被其他应用盖住
@@ -226,7 +226,7 @@ class AppHotKeyHandler {
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
-        Log.debug(tag, "ExitApp HotKey Down");
+        logger.debug(tag, "ExitApp HotKey Down");
         const notifyKey = "appExit";
         final notifyId = await NotifyUtil.notify(content: TranslationKey.exitAppViaHotKey.tr, key: notifyKey);
         if (notifyId != null) {

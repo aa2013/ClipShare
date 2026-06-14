@@ -83,7 +83,7 @@ Future<void> main(List<String> args) async {
           runMain(home, title, null);
         },
         (err, stack) {
-          Log.error("globalError", err, stack);
+          logger.error("globalError", err, stack);
         },
       );
     }

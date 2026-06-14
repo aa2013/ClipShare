@@ -71,7 +71,7 @@ abstract class ConfigDao {
         return await updateConfig(cfg) > 0;
       }
     } catch (err, stack) {
-      Log.error(tag, err, stack);
+      logger.error(tag, err, stack);
       return false;
     }
   }

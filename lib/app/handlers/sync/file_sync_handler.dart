@@ -129,7 +129,7 @@ class FileSyncHandler {
             //向客户端发送文件
             sendFile2Socket(client);
           } catch (err, stack) {
-            Log.error(tag, "$err,$stack");
+            logger.error(tag, "$err,$stack");
             hasClient = false;
             client.close();
             _server?.close();
@@ -148,7 +148,7 @@ class FileSyncHandler {
       //向 中转服务器 发送文件
       sendFile2Socket(_forwardSkt!);
     } catch (err, stack) {
-      Log.error(tag, "$err,$stack");
+      logger.error(tag, "$err,$stack");
     }
   }
 
@@ -225,10 +225,10 @@ class FileSyncHandler {
         })
         .catchError((err, stack) {
           syncingFile.setState(SyncingFileState.error);
-          Log.error(tag, "send file failed: $filePath. $err $stack");
+          logger.error(tag, "send file failed: $filePath. $err $stack");
         })
         .whenComplete(() {
-          Log.info(tag, "send file($fileName) completed");
+          logger.info(tag, "send file($fileName) completed");
           client.close();
           _server?.close();
           _onDone();
@@ -239,7 +239,7 @@ class FileSyncHandler {
   void _delayedClientCheck(void Function() onDone) {
     Future.delayed(5.s, () {
       if (hasClient) return;
-      Log.info(tag, "No client connection for more than 5 seconds");
+      logger.info(tag, "No client connection for more than 5 seconds");
       _server?.close();
       _forwardSkt?.close();
       onDone();
@@ -379,13 +379,13 @@ class FileSyncHandler {
     final appConfig = Get.find<ConfigService>();
     Device? dev = await dbService.deviceDao.getById(devId, appConfig.userId);
     if (dev == null) {
-      Log.error(tag, "dev:$devId not found");
+      logger.error(tag, "dev:$devId not found");
       return;
     }
     var socket = await Socket.connect(ip, port);
     String filePath = "${appConfig.fileStorePath}/$fileName";
     File file = File(filePath);
-    Log.debug(tag, "receive file $filePath");
+    logger.debug(tag, "receive file $filePath");
     final dir = file.parent;
     //如果父级文件夹不存在则创建
     if (!await dir.exists()) {
@@ -448,7 +448,7 @@ class FileSyncHandler {
         syncingFile.addBytes(bytes);
       },
       onError: (err, stack) {
-        Log.error(tag, "receive file failed. $err $stack");
+        logger.error(tag, "receive file failed. $err $stack");
         file.delete();
         syncingFile.close(false);
       },
@@ -457,7 +457,7 @@ class FileSyncHandler {
         var end = DateTime.now();
         int offset = max(end.difference(start).inSeconds, 1);
         int speed = size ~/ offset;
-        Log.info(
+        logger.info(
           tag,
           "onDone $offset seconds, size: ${size.sizeStr}, speed: ${speed.sizeStr}/s",
         );

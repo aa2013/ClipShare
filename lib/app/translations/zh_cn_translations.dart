@@ -1472,7 +1472,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.codePromptLog:
         return "日志库";
       case TranslationKey.codePromptPrint:
-        return "打印输出，等同于 log.debug() ";
+        return "打印输出，等同于 logger.debug() ";
       case TranslationKey.codePromptMath:
         return '数学库';
       case TranslationKey.codePromptString:

@@ -45,8 +45,8 @@ class ScreenOpenedListener {
           default:
         }
       } catch (e, stacktrace) {
-        Log.debug(tag, e);
-        Log.debug(tag, stacktrace);
+        logger.debug(tag, e);
+        logger.debug(tag, stacktrace);
       }
     }
   }

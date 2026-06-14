@@ -121,7 +121,7 @@ class AuthenticationController extends GetxController {
         localizedReason: localizedReason ?? TranslationKey.authenticationPageTitle.tr,
       );
       authenticating = false;
-      Log.debug(tag, "authenticated $authenticated");
+      logger.debug(tag, "authenticated $authenticated");
       return authenticated;
     }
     return false;

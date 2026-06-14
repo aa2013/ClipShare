@@ -97,7 +97,7 @@ class BackupHandler {
         _testCancel();
         final file = File("${tempDir.path}/$filename".normalizePath);
         final writer = file.openWrite();
-        Log.info(tag, "Start backup $filename...");
+        logger.info(tag, "Start backup $filename...");
         await for (var bytes in handler.loadData(tempDir)) {
           try {
             _testCancel();
@@ -114,7 +114,7 @@ class BackupHandler {
           writer.add(bytes);
         }
         await writer.close();
-        Log.info(tag, "backup $filename finished");
+        logger.info(tag, "backup $filename finished");
       }
       final backupFileName = "backup-${appConfig.localName}-${DateTime.now().format("yyyyMMdd")}.zip";
       final zipPath = '${storeDir.path}/$backupFileName';
@@ -129,12 +129,12 @@ class BackupHandler {
         zip.addFileFromBytes(relativePath, data);
       }
       zip.close();
-      Log.info(tag, "backup all finished!!!");
+      logger.info(tag, "backup all finished!!!");
       return BackupResult(success: true, localPath: zipPath, exception: null);
     } catch (err, stack) {
       catchErr = err;
       stackTrace = stack;
-      Log.debug(tag, "backup failed! Error: $err,$stack");
+      logger.debug(tag, "backup failed! Error: $err,$stack");
       final ex = ExceptionInfo(err: catchErr, stackTrace: stackTrace);
       return BackupResult(success: false, localPath: null, exception: ex);
     } finally {
@@ -165,7 +165,7 @@ class BackupHandler {
       final versionContent = await File("${tempDir.path}/${versionHandler.backupType.filename}".normalizePath).readAsBytes();
       final versionMap = jsonDecode(utf8.decode(versionContent)) as Map<dynamic, dynamic>;
       final backupVersion = BackupVersionInfo.fromJson(versionMap.cast());
-      Log.debug(tag, "backupVersion $backupVersion");
+      logger.debug(tag, "backupVersion $backupVersion");
       var totalRestoreCnt = 0;
       for (var handler in _handlers.sublist(1)) {
         //不在恢复的范围内的跳过
@@ -176,7 +176,7 @@ class BackupHandler {
         _testCancel();
         final binFile = File("${tempDir.path}/$filename");
         if (!await binFile.exists()) {
-          Log.warn(tag, "file not found: $filename");
+          logger.warn(tag, "file not found: $filename");
           continue;
         }
         final fileStream = binFile.openRead().transform(BackupDataPacketSplitter(endian: _endian, headerLen: _headerLen));
@@ -189,14 +189,14 @@ class BackupHandler {
               loadingController.total = ++totalRestoreCnt;
             }
           } catch (err, stack) {
-            Log.error(tag, "${handler.runtimeType} backup restore failed! data: $bytes, $err", stack);
+            logger.error(tag, "${handler.runtimeType} backup restore failed! data: $bytes, $err", stack);
           }
         }
       }
     } catch (err, stack) {
       catchErr = err;
       stackTrace = stack;
-      Log.debug(tag, "backup restore failed! $err,$stack");
+      logger.debug(tag, "backup restore failed! $err,$stack");
     } finally {
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);

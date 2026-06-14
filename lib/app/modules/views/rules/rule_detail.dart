@@ -755,7 +755,7 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     if (newRule != null) {
       saveData(newRule);
     } else {
-      Log.warn(tag, "newRule is null");
+      logger.warn(tag, "newRule is null");
     }
   }
 

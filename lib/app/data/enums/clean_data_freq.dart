@@ -10,7 +10,7 @@ enum CleanDataFreq {
     return CleanDataFreq.values.firstWhere(
       (e) => e.name.toUpperCase() == value.toUpperCase(),
       orElse: () {
-        Log.debug("CleanDataFreq", "key '$value' unknown");
+        logger.debug("CleanDataFreq", "key '$value' unknown");
         return CleanDataFreq.unknown;
       },
     );

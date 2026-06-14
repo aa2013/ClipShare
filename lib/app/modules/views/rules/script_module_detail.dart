@@ -128,7 +128,7 @@ class _ScriptModuleDetailState extends State<ScriptModuleDetail> {
       return;
     }
     final result = widget.controller.compileModule(code);
-    Log.debug(tag, "lua lib compile result: $result");
+    logger.debug(tag, "lua lib compile result: $result");
     if (result.isNullOrEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         setState(() {

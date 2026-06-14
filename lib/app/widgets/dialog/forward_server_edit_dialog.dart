@@ -193,7 +193,7 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
         client.close();
       },
       onError: (err, client) {
-        Log.error(tag, "onError $err");
+        logger.error(tag, "onError $err");
         Global.showTipsDialog(
           context: context,
           text: err.toString(),
@@ -251,10 +251,10 @@ class _ForwardServerEditDialogState extends State<ForwardServerEditDialog> {
                             });
                           } else {
                             Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                            Log.warn(tag, "scan result is null");
+                            logger.warn(tag, "scan result is null");
                           }
                         } catch (err, stack) {
-                          Log.error(tag, err, stack);
+                          logger.error(tag, err, stack);
                           Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
                         }
                       },

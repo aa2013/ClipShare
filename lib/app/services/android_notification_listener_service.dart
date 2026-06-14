@@ -41,7 +41,7 @@ class AndroidNotificationListenerService extends GetxService {
           try {
             map["img"] = base64Encode(event.extrasPicture!);
           } catch (err, stack) {
-            Log.debug(tag, "$err, $stack");
+            logger.debug(tag, "$err, $stack");
           }
         }
         final pkgName = event.packageName!;
@@ -59,7 +59,7 @@ class AndroidNotificationListenerService extends GetxService {
         }
         HistoryDataListener.inst.onChanged(HistoryContentType.notification, jsonEncode(map), source);
       } catch (err, stack) {
-        Log.error(tag, "error: $err, stack:$stack");
+        logger.error(tag, "error: $err, stack:$stack");
       }
     });
     _listening = true;

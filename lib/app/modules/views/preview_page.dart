@@ -438,7 +438,7 @@ class _PreviewPageState extends State<PreviewPage> {
                   final androidChannelService = Get.find<AndroidChannelService>();
                   androidChannelService.notifyMediaScan(newPath);
                 } catch (err, stack) {
-                  Log.error(tag, "$err $stack");
+                  logger.error(tag, "$err $stack");
                   Global.showSnackBarWarn(text: TranslationKey.saveFailed.tr, context: context);
                 }
               } else {

@@ -102,7 +102,7 @@ abstract class OperationRecordDao {
         //删除云端的
         storageService.deleteOpRecords(list);
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
     //删除同步记录
@@ -131,7 +131,7 @@ abstract class OperationRecordDao {
   Future<void> resyncData(int historyId) async {
     final history = await dbService.historyDao.getById(historyId);
     if (history == null) {
-      Log.warn(tag, "History is null: $historyId");
+      logger.warn(tag, "History is null: $historyId");
       return;
     }
     //历史记录
@@ -159,7 +159,7 @@ abstract class OperationRecordDao {
       final sourceService = Get.find<ClipboardSourceService>();
       final appInfo = sourceService.appInfos.where((item) => item.devId == devId && history.source == item.appId).firstOrNull;
       if (appInfo == null) {
-        Log.warn(tag, "AppInfo is null source = ${history.source}");
+        logger.warn(tag, "AppInfo is null source = ${history.source}");
         return;
       }
       opRecord = OperationRecord.fromSimple(

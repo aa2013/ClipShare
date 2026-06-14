@@ -162,7 +162,7 @@ class SecureSocketClient {
         //中转未准备好
         var json = jsonDecode(utf8.decode(bytes));
         var type = ForwardMsgType.getValue(json["type"]);
-        Log.debug(tag, "forward ${type.name}");
+        logger.debug(tag, "forward ${type.name}");
         switch (type) {
           case ForwardMsgType.bothConnected:
             send({"type": ForwardMsgType.bothConnected.name});
@@ -212,7 +212,7 @@ class SecureSocketClient {
       }
     } catch (ex, stack) {
       //解析出错
-      Log.error(tag, "解析出错：$ex\n$stack");
+      logger.error(tag, "解析出错：$ex\n$stack");
     }
   }
 
@@ -231,14 +231,14 @@ class SecureSocketClient {
               _recDataLock.synchronized(() => _onDataReceive(bytes));
             },
             onError: (e) {
-              Log.error(tag, "error:$e");
+              logger.error(tag, "error:$e");
               _onError?.call(e, this);
             },
             onDone: () {
               if(_keyIsExchanged) {
                 _onDone?.call(this);
               }
-              Log.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
+              logger.debug(tag, "_onDone _keyIsExchanged $_keyIsExchanged");
               close();
             },
             cancelOnError: _cancelOnError,
@@ -375,9 +375,9 @@ class SecureSocketClient {
         }
       });
     } catch (e, stack) {
-      Log.debug(tag, "发送失败：$e");
-      Log.debug(tag, "send, _onDone = ${_onDone == null}");
-      Log.debug(tag, "$stack");
+      logger.debug(tag, "发送失败：$e");
+      logger.debug(tag, "send, _onDone = ${_onDone == null}");
+      logger.debug(tag, "$stack");
       _onDone?.call(this);
     }
   }

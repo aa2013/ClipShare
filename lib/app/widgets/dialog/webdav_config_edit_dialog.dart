@@ -219,11 +219,11 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
                               });
                             } else {
                               Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                              Log.warn(tag, "scan result is null");
+                              logger.warn(tag, "scan result is null");
                             }
                           } catch (err, stack) {
                             Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                            Log.error(tag, err, stack);
+                            logger.error(tag, err, stack);
                           }
                         },
                   icon: const Icon(

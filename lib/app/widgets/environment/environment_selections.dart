@@ -41,7 +41,7 @@ class _EnvironmentSelectionsState extends State<EnvironmentSelections> with Auto
 
   @override
   Future<void> onPermissionStatusChanged(EnvironmentType environment, bool isGranted) async {
-    Log.debug(
+    logger.debug(
       "EnvironmentSelections",
       "onPermissionStatusChanged $environment $isGranted",
     );

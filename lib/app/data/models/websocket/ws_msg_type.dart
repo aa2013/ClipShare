@@ -12,7 +12,7 @@ enum WsMsgType {
   static WsMsgType getValue(String name) => WsMsgType.values.firstWhere(
     (e) => e.name == name,
     orElse: () {
-      Log.debug("WsMsgType", "key '$name' unknown");
+      logger.debug("WsMsgType", "key '$name' unknown");
       return WsMsgType.unknown;
     },
   );

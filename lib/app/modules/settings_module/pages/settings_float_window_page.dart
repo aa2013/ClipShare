@@ -141,10 +141,10 @@ class SettingsFloatWindowPage extends SettingsSectionView {
               if (checked) {
                 final tempPath = await FileUtil.copyAssetToTemp(Constants.iosPIPDefaultVideoPath);
                 final result = await clipboardManager.startPIP(tempPath);
-                Log.debug(logTag, "start pip $result");
+                logger.debug(logTag, "start pip $result");
               } else {
                 final result = await clipboardManager.stopPIP();
-                Log.debug(logTag, "stop pip $result");
+                logger.debug(logTag, "stop pip $result");
               }
             },
           );

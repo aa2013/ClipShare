@@ -77,7 +77,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
   void _initLuaFunc() {
     _mainState = _lua.L;
     final luaLibPath = p.join(appConfig.luaLibDirPath, "?.lua").replaceAll("\\", "/");
-    Log.debug(tag, "LuaLibPath: $luaLibPath");
+    logger.debug(tag, "LuaLibPath: $luaLibPath");
     var result = _lua.run('''
       package.path = package.path..';'..'$luaLibPath'
       json = require('dkjson')
@@ -87,9 +87,9 @@ class RulesController extends GetxController with WidgetsBindingObserver {
       print('success')
       ''');
     if (result.containsIgnoreCase("error")) {
-      Log.error(tag, "init global lib: $result");
+      logger.error(tag, "init global lib: $result");
     } else {
-      Log.debug(tag, "init global lib: $result");
+      logger.debug(tag, "init global lib: $result");
     }
     final global = Constants.luaGlobalFun
         .replaceAll("{{devId}}", appConfig.devInfo.guid)
@@ -143,7 +143,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
     _lua.registerFunction("__httpRequest", httpRequestPtr);
 
     result = _lua.run(global);
-    Log.debug(tag, "init global lua fun: $result");
+    logger.debug(tag, "init global lua fun: $result");
   }
 
   (bool success, String hash, String? error) loadLuaUserFunc(
@@ -166,7 +166,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
   void _loadAllScriptModules() {
     for (var lib in scriptModules) {
       final msg = loadLuaModules(lib);
-      Log.debug(tag, "load lib(${lib.moduleName}): $msg");
+      logger.debug(tag, "load lib(${lib.moduleName}): $msg");
     }
   }
 
@@ -183,7 +183,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
       if (result) {
         _loadedLuaFun[hash] = rule.id;
       } else {
-        Log.warn(
+        logger.warn(
           tag,
           'load user lua function failed! name = ${rule.name}, script = ${rule.script.content}',
         );
@@ -333,7 +333,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
   }
 
   Future<void> requestAppInfo(String devId) async {
-    Log.debug(tag, "requestAppInfo $devId");
+    logger.debug(tag, "requestAppInfo $devId");
     for (var rule in rules) {
       final sources = rule.sources;
       for (var source in sources) {
@@ -342,7 +342,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
           continue;
         }
 
-        Log.debug(tag, "requestAppInfo: $source");
+        logger.debug(tag, "requestAppInfo: $source");
         await DataSender.sendDataByDevId(
           devId,
           MsgType.reqAppInfo,
@@ -491,7 +491,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
       }
       execResult ??= await _apply(rule, params);
       if (!execResult.success) {
-        Log.warn(
+        logger.warn(
           tag,
           "apply rule failed! content = $content, rule = ${rule.name}",
         );
@@ -527,7 +527,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
       final result = _lua.run(
         "return run_user_sandbox_method('$taskId', '$hash','$paramsJson')",
       );
-      Log.debug(tag, 'run log result: $result');
+      logger.debug(tag, 'run log result: $result');
       if (result.containsIgnoreCase("error") && !completer.isCompleted) {
         _luaCallbacks.remove(taskId);
         completer.complete(result);
@@ -539,13 +539,13 @@ class RulesController extends GetxController with WidgetsBindingObserver {
           return 'Lua script execution timed out';
         },
       );
-      Log.debug(tag, 'run result: $scriptResult');
+      logger.debug(tag, 'run result: $scriptResult');
       try {
         final result = jsonDecode(scriptResult);
         return RuleExecResult.success(RuleApplyResult.fromJson(result));
       } catch (err, stack) {
         final msg = "$err\n$stack";
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
         return RuleExecResult.error(msg);
       }
     } else {
@@ -572,7 +572,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
         return result;
       } else {
         final msg = 'compile failed: $errorMsg';
-        Log.error(tag, msg);
+        logger.error(tag, msg);
         return RuleExecResult.error(msg);
       }
     } else {
@@ -622,7 +622,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
       scriptModules.add(lib);
     }
     final result = loadLuaModules(lib);
-    Log.debug(tag, "load lib(${lib.moduleName}): $result");
+    logger.debug(tag, "load lib(${lib.moduleName}): $result");
   }
 
   String compileModule(String code) {

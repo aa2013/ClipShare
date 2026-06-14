@@ -99,7 +99,7 @@ class DbEditorController extends GetxController {
         title: TranslationKey.execFailed.tr,
         text: "$err\n$stack",
       );
-      Log.error(logTag, err, stack);
+      logger.error(logTag, err, stack);
     } finally {
       _loading.value = false;
     }

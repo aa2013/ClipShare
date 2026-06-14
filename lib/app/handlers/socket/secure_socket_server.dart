@@ -82,7 +82,7 @@ class SecureSocketServer {
             },
             onMessage: _onMessage,
             onDone: (SecureSocketClient client) {
-              Log.debug(tag, "_onClientDone");
+              logger.debug(tag, "_onClientDone");
               if (_onClientDone != null) {
                 _onClientDone!.call(ip, port, client);
               }
@@ -91,7 +91,7 @@ class SecureSocketServer {
               }
             },
             onError: (e, SecureSocketClient client) {
-              Log.error(tag, "_onClientError error:$e");
+              logger.error(tag, "_onClientError error:$e");
               if (_onClientError != null) {
                 _onClientError!(e, ip, port, client);
               }
@@ -101,7 +101,7 @@ class SecureSocketServer {
           _sktList.add(ssc);
         },
         onError: (e, stack) {
-          Log.error("SecureSocketServer", "error:$e");
+          logger.error("SecureSocketServer", "error:$e");
           if (_onError != null) {
             _onError!(e);
           }

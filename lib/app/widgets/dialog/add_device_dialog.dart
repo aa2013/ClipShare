@@ -105,10 +105,10 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                     attemptConnect(result);
                   } else {
                     Global.showTipsDialog(context: context, text: TranslationKey.qrCodeScanError.tr);
-                    Log.warn(tag, "scan result is null");
+                    logger.warn(tag, "scan result is null");
                   }
                 } catch (err, stack) {
-                  Log.error(tag, err, stack);
+                  logger.error(tag, err, stack);
                   Global.showTipsDialog(context: context, text: "$err, $stack");
                 }
               },
@@ -301,7 +301,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
                                 _ipEditor.text,
                                 port: int.parse(_portEditor.text),
                                 onErr: (err) {
-                                  Log.debug(tag, err);
+                                  logger.debug(tag, err);
                                   if (_connecting) {
                                     setState(() {
                                       _connectErr = true;

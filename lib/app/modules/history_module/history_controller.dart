@@ -365,7 +365,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       if (err.toString().contains("target window not found")) {
         appConfig.historyWindow = null;
       } else {
-        Log.error(tag, err);
+        logger.error(tag, err);
       }
     });
   }
@@ -441,7 +441,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     _onChangeLock.synchronized(
       () => _onChanged(type, content, source).catchError(
         (err, stack) {
-          Log.warn(tag, "onChanged $err, $stack");
+          logger.warn(tag, "onChanged $err, $stack");
         },
       ),
     );
@@ -482,7 +482,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         break;
       case HistoryContentType.notification:
         if (!appConfig.enableRecordNotification) {
-          Log.warn(tag, "Not allow to record notification");
+          logger.warn(tag, "Not allow to record notification");
           return;
         }
         break;
@@ -492,7 +492,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     var applyResult = await ruleController.apply(type, content, source);
     if (applyResult.result?.isDropped ?? false) {
       //丢弃
-      Log.info(tag, "content: $content，dropped");
+      logger.info(tag, "content: $content，dropped");
       return;
     }
     switch (type) {
@@ -542,7 +542,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     final maxLength = appConfig.recordMaxLength;
     //超出设定大小则忽略
     if (maxLength > 0 && n > maxLength) {
-      Log.warn(tag, "Record length $n > RecordMaxLength($maxLength)");
+      logger.warn(tag, "Record length $n > RecordMaxLength($maxLength)");
       return true;
     }
     return false;
@@ -592,7 +592,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             } else {
               path = "${appConfig.androidPrivatePicturesPath}/$fileName";
             }
-            Log.debug(tag, "newPath $path");
+            logger.debug(tag, "newPath $path");
             //如果没有权限则请求
             if (!(await PermissionHelper.testAndroidStoragePerm())) {
               await PermissionHelper.reqAndroidStoragePerm();
@@ -622,7 +622,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             final now = DateTime.now();
             final hisTime = DateTime.parse(history.time);
             final offsetMs = now.difference(hisTime).inMilliseconds.abs();
-            Log.info(tag, "show mobile notification, time offset ${offsetMs}ms");
+            logger.info(tag, "show mobile notification, time offset ${offsetMs}ms");
             const maxTimeoutMs = 10000;
             if (offsetMs <= maxTimeoutMs) {
               try {
@@ -655,10 +655,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
                   });
                 }
               } catch (err, stack) {
-                Log.error(tag, "show mobile notification error: $err, $stack");
+                logger.error(tag, "show mobile notification error: $err, $stack");
               }
             } else {
-              Log.debug(tag, "The sync notification is outdated (${offsetMs}ms exceeds ${maxTimeoutMs}ms), skipping.");
+              logger.debug(tag, "The sync notification is outdated (${offsetMs}ms exceeds ${maxTimeoutMs}ms), skipping.");
             }
           }
           break;
@@ -684,7 +684,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         {"appId": appId},
       );
     } catch (err, stack) {
-      Log.warn(tag, "request notification app info failed: $err, $stack");
+      logger.warn(tag, "request notification app info failed: $err, $stack");
       return null;
     }
     const maxWaitTimes = 10;
@@ -886,13 +886,13 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (Platform.isAndroid && shouldSync && appConfig.sourceRecordViaDumpsys) {
       var start = DateTime.now();
       clipboardManager.getLatestWriteClipboardSource().then((source) async {
-        Log.debug(tag, "source $source");
+        logger.debug(tag, "source $source");
         if (source == null) return;
         //一般获取时间不会超过2s，超过该时间视为无效
         final isTimeout = source.isTimeout(2000);
-        Log.debug(tag, "source time: ${source.time?.toString()}, timeout: $isTimeout");
+        logger.debug(tag, "source time: ${source.time?.toString()}, timeout: $isTimeout");
         var end = DateTime.now();
-        Log.debug(tag, "source: ${source.name}, offset: ${end.difference(start).inMilliseconds}");
+        logger.debug(tag, "source: ${source.name}, offset: ${end.difference(start).inMilliseconds}");
         if (isTimeout) {
           return;
         }
@@ -900,7 +900,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         final historyCreateTime = DateTime.parse(history.time);
         //如果获取的最新的剪贴板时间不在指定的误差时间，则跳过 todo 考虑提供设置项自行设置
         if (!(source.time?.isWithinRange(offset, historyCreateTime) ?? false)) {
-          Log.debug(tag, "latest write clipboard source not in range(${offset.inMilliseconds}ms) time: ${source.time}, id: ${source.id}");
+          logger.debug(tag, "latest write clipboard source not in range(${offset.inMilliseconds}ms) time: ${source.time}, id: ${source.id}");
           return;
         }
 
@@ -944,7 +944,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   @override
   void onScreenUnlocked() {
-    Log.debug(tag, "屏幕解锁");
+    logger.debug(tag, "屏幕解锁");
     _screenUnlocked = true;
     if (_syncDataOnScreenOff != null) {
       //已启用复制熄屏时的最新数据
@@ -1119,9 +1119,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       }
     }
     loadingController.update(histories.length);
-    Log.debug(tag, "add2ExcelSheet finished");
+    logger.debug(tag, "add2ExcelSheet finished");
     final List<int> bytes = workbook.saveAsStream();
-    Log.debug(tag, "workbook bytes: ${bytes.length}(${bytes.length.sizeStr})");
+    logger.debug(tag, "workbook bytes: ${bytes.length}(${bytes.length.sizeStr})");
     await FileUtil.exportFileBytes(
       TranslationKey.export2Excel.tr,
       TranslationKey.export2ExcelFileName.tr,

@@ -22,7 +22,7 @@ class DevPairingHandler {
     var duration = Constants.pairingLimit.s;
     //配对超时
     if (DateTime.now().isAfter(pairCode.time.add(duration))) {
-      Log.debug(tag, "$devId pairing timeout");
+      logger.debug(tag, "$devId pairing timeout");
       _pairingCodes.removeWhere((k, v) => k == devId);
       return false;
     }

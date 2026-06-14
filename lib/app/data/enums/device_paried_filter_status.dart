@@ -33,7 +33,7 @@ enum DevicePairedStatusFilter {
   static DevicePairedStatusFilter parse(String value) => DevicePairedStatusFilter.values.firstWhere(
     (e) => e.name.toUpperCase() == value.toUpperCase(),
     orElse: () {
-      Log.debug("DevicePairedStatusFilter", "key '$value' unknown");
+      logger.debug("DevicePairedStatusFilter", "key '$value' unknown");
       return DevicePairedStatusFilter.all;
     },
   );

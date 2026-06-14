@@ -99,13 +99,13 @@ class ForwardSocketClient {
           _onMessage?.call(this, rec);
         },
         onError: (e) {
-          Log.error(tag, "error:$e");
+          logger.error(tag, "error:$e");
           if (_onError != null) {
             _onError!(e, this);
           }
         },
         onDone: () {
-          Log.debug(tag, "_onDone");
+          logger.debug(tag, "_onDone");
           _onDone?.call(this);
           close();
         },
@@ -138,9 +138,9 @@ class ForwardSocketClient {
       //写入数据
       _socket.add(packet);
     } catch (e, stack) {
-      Log.debug(tag, "发送失败：$e");
-      Log.debug(tag, "_onDone ${_onDone == null}");
-      Log.debug(tag, "$stack");
+      logger.debug(tag, "发送失败：$e");
+      logger.debug(tag, "_onDone ${_onDone == null}");
+      logger.debug(tag, "$stack");
       if (_onDone != null) {
         _onDone!.call(this);
       }

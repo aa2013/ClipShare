@@ -10,7 +10,7 @@ enum RuleScriptLanguage {
       RuleScriptLanguage.values.firstWhere(
         (e) => e.name == name,
         orElse: () {
-          Log.debug("RuleScriptLanguage", "key '$name' unknown");
+          logger.debug("RuleScriptLanguage", "key '$name' unknown");
           return RuleScriptLanguage.unknown;
         },
       );

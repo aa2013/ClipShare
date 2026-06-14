@@ -782,7 +782,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         Global.showTipsDialog(text: text, context: context);
       }
     } catch (err, stack) {
-      Log.error(tag, "$err,$stack");
+      logger.error(tag, "$err,$stack");
       Global.showTipsDialog(text: TranslationKey.exportFailedAndViewLogs.tr, context: context);
     } finally {
       dialog.close();
@@ -934,7 +934,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         historyController.refreshData();
       }
     } catch (err, stack) {
-      Log.error(tag, "$err,$stack");
+      logger.error(tag, "$err,$stack");
     } finally {
       dialog.close();
       //恢复截图复制
@@ -961,7 +961,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       if (!appConfig.stopListeningOnScreenClosed) {
         return;
       }
-      Log.debug(tag, "start listening on screen opened over 2 seconds");
+      logger.debug(tag, "start listening on screen opened over 2 seconds");
       clipboardManager.startListening(
         env: appConfig.workingMode,
         way: appConfig.clipboardListeningWay,
@@ -981,7 +981,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       if (!appConfig.stopListeningOnScreenClosed) {
         return;
       }
-      Log.debug(tag, "stopping listening on screen closed over 1 minutes");
+      logger.debug(tag, "stopping listening on screen closed over 1 minutes");
       clipboardManager.stopListening();
     });
   }

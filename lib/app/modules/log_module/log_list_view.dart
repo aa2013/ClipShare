@@ -50,7 +50,7 @@ class LogListView extends StatelessWidget {
                   onPressed: () async {
                     var dialog = Global.showLoadingDialog(context: context, loadingText: TranslationKey.pleaseWait.tr);
                     await Future.delayed(500.ms);
-                    Log.writeAndroidLogToday().whenComplete(() {
+                    logger.writeAndroidLogToday().whenComplete(() {
                       dialog.close();
                       controller.loadLogFileList();
                       Global.showSnackBarSuc(text: TranslationKey.done.tr, context: context);

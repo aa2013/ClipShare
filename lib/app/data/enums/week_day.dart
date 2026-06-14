@@ -58,7 +58,7 @@ enum WeekDay {
     return WeekDay.values.firstWhere(
       (e) => e.value == value,
       orElse: () {
-        Log.debug("WeekDay", "key '$value' unknown");
+        logger.debug("WeekDay", "key '$value' unknown");
         throw Exception("Unknown WeekDay value: $value");
       },
     );

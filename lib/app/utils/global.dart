@@ -155,7 +155,7 @@ class Global {
     try {
       final appConfig = Get.find<ConfigService>();
       if (appConfig.authenticating.value) {
-        Log.warn(tag, "cancel show tips dialog because of authenticating");
+        logger.warn(tag, "cancel show tips dialog because of authenticating");
         return null;
       }
     } catch (_) {}
@@ -405,11 +405,11 @@ class DialogController {
     }
     try {
       if (dialog.key.currentContext == null) {
-        Log.debug(tag, "dialog($id) currentContext = null, wait 100ms");
+        logger.debug(tag, "dialog($id) currentContext = null, wait 100ms");
         await Future.delayed(100.ms);
       }
       if (dialog.key.currentContext == null) {
-        Log.debug(tag, "dialog.key.currentContext is null");
+        logger.debug(tag, "dialog.key.currentContext is null");
         _dialogKeyMap.remove(id);
         return false;
       }
@@ -423,7 +423,7 @@ class DialogController {
       }
       return true;
     } catch (err, stack) {
-      Log.error(tag, "$err,$stack");
+      logger.error(tag, "$err,$stack");
       return false;
     }
   }

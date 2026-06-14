@@ -63,7 +63,7 @@ class AppUpdateInfoUtil {
       return updateLogs;
     } catch (e) {
       final errorMsg = "检查update log的过程中出现异常\n错误: $e";
-      Log.error(tag, errorMsg);
+      logger.error(tag, errorMsg);
       throw FetchUpdateLogsException(errorMsg);
     }
   }
@@ -233,7 +233,7 @@ class AppUpdateInfoUtil {
             },
           );
         } catch (err, stack) {
-          Log.error(tag, "error: $err. $stack");
+          logger.error(tag, "error: $err. $stack");
           downloadUrl.askOpenUrl();
         }
       },
@@ -272,14 +272,14 @@ class AppUpdateInfoUtil {
   }
 
   static Future<void> _updateWindowsFromZip(File updateFile) async {
-    Log.debug(tag, "update zip file downloaded");
+    logger.debug(tag, "update zip file downloaded");
     final downDirPath = updateFile.parent.absolute.path;
     final updateFileExtractDirPath = p.join(downDirPath, "temp").normalizePath;
     await Directory(updateFileExtractDirPath).create(recursive: true);
-    Log.debug(tag, "zip file extracting");
+    logger.debug(tag, "zip file extracting");
     //解压zip
     await ZipFile.openAndExtractAsync(updateFile.absolute.path, updateFileExtractDirPath);
-    Log.debug(tag, "zip file extracted");
+    logger.debug(tag, "zip file extracted");
     final execDirPath = File(Platform.resolvedExecutable).parent.absolute.path;
     final batFilePath = p.join(execDirPath, "data", "flutter_assets", "assets", "scripts", "update_windows.bat").normalizePath;
     final process = await Process.start(
@@ -289,9 +289,9 @@ class AppUpdateInfoUtil {
       mode: ProcessStartMode.detached,
       workingDirectory: execDirPath,
     );
-    Log.debug(tag, 'Update process started (PID: ${process.pid})');
+    logger.debug(tag, 'Update process started (PID: ${process.pid})');
     await Future.delayed(1.s);
-    Log.debug(tag, 'Exiting application, waiting for batch update...');
+    logger.debug(tag, 'Exiting application, waiting for batch update...');
     exit(0);
   }
 }

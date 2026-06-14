@@ -163,7 +163,7 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
   }
 
   Future deleteRecord(bool withFile) {
-    Log.debug(tag, "withFile $withFile");
+    logger.debug(tag, "withFile $withFile");
     final context = Get.context!;
     final loadingDialog = Global.showLoadingDialog(
       context: context,
@@ -181,7 +181,7 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
             final files = selected.values;
             for (var syncFile in files) {
               final filePath = syncFile.syncingFile.filePath;
-              Log.debug(
+              logger.debug(
                 tag,
                 "will delete file $filePath, isSender ${syncFile.syncingFile.isSender}",
               );
@@ -192,7 +192,7 @@ class SyncFileController extends GetxController with GetTickerProviderStateMixin
                   file.deleteSync();
                 }
               } catch (e, stack) {
-                Log.error(
+                logger.error(
                   logTag,
                   "删除文件 $filePath 失败: $e $stack",
                 );

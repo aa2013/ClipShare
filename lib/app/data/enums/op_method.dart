@@ -9,7 +9,7 @@ enum OpMethod {
   static OpMethod getValue(String name) => OpMethod.values.firstWhere(
         (e) => e.name == name,
         orElse: () {
-          Log.debug("OpMethod", "key '$name' unknown");
+          logger.debug("OpMethod", "key '$name' unknown");
           return OpMethod.unknown;
         },
       );

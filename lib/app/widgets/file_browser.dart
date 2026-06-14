@@ -66,7 +66,7 @@ class _FileBrowserState extends State<FileBrowser> {
       final files = await widget.onLoadFiles(_currentPath);
       setState(() => _files = files);
     } catch (e, stack) {
-      Log.error(tag, 'Error loading files: $e', stack);
+      logger.error(tag, 'Error loading files: $e', stack);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -154,7 +154,7 @@ class _FileBrowserState extends State<FileBrowser> {
                             await _loadFiles();
                           }
                         } catch (err, stack) {
-                          Log.error(tag, err, stack);
+                          logger.error(tag, err, stack);
                         } finally {
                           setState(() {
                             _isLoading = false;

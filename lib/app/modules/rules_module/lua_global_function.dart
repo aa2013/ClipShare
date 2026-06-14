@@ -67,7 +67,7 @@ void _callLuaCallbackRef(int callbackRef, List<LuaValue> args) {
     final error = errorPtr.address == 0
         ? 'unknown lua error'
         : errorPtr.cast<Utf8>().toDartString();
-    Log.error(_luaGlobalTag, 'Lua callback error: $error');
+    logger.error(_luaGlobalTag, 'Lua callback error: $error');
     lua.lua_settop(L, -2);
   }
   // 清理引用
@@ -80,7 +80,7 @@ int _raiseLuaCallbackError(
   Object error, [
   StackTrace? stack,
 ]) {
-  Log.error(_luaGlobalTag, 'Lua native callback error: $error', stack);
+  logger.error(_luaGlobalTag, 'Lua native callback error: $error', stack);
   final errorPtr = error.toString().toNativeUtf8();
   LuaRuntime.lua.lua_pushstring(L, errorPtr.cast());
   calloc.free(errorPtr);
@@ -179,7 +179,7 @@ int _onLuaAsyncResult(Pointer<lua_State> L) {
     final result = _readLuaString(L, 2);
     final completer = _luaCallbacks[callbackId];
     if (completer == null) {
-      Log.warn(_luaGlobalTag, "not found Lua callbackId");
+      logger.warn(_luaGlobalTag, "not found Lua callbackId");
     } else {
       completer.complete(result);
       _luaCallbacks.remove(callbackId);
@@ -215,13 +215,13 @@ int _log(Pointer<lua_State> L) {
     final tagName = tagNamePtr.cast<Utf8>().toDartString();
     final msgPtr = bindings.lua_tolstring(L, 4, nullptr);
     final msg = msgPtr.cast<Utf8>().toDartString();
-    var logFunc = Log.debug;
+    var logFunc = logger.debug;
     if (level == "info") {
-      logFunc = Log.info;
+      logFunc = logger.info;
     } else if (level == "warn") {
-      logFunc = Log.warn;
+      logFunc = logger.warn;
     } else if (level == "error") {
-      logFunc = Log.error;
+      logFunc = logger.error;
     }
     if (isTest) {
       RulesController._testOutputs.add(
@@ -554,7 +554,7 @@ int _luaHttpRequest(Pointer<lua_State> L) {
         jsonEncode(_response2Map(response)),
       ]);
     }).catchError((error) {
-      Log.error(_luaGlobalTag, error);
+      logger.error(_luaGlobalTag, error);
       _callLuaCallbackRef.call(callbackRef, [
         jsonEncode(_error2Map(error)),
       ]);

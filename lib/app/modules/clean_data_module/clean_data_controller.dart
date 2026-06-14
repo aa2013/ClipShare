@@ -257,7 +257,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
           }
         })
         .catchError((err, stack) {
-          Log.error(logTag, "$err: $stack");
+          logger.error(logTag, "$err: $stack");
           if (!mute) {
             //关闭加载弹窗
             Get.back();
@@ -286,7 +286,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
           }
         })
         .catchError((err, stack) {
-          Log.error(logTag, "$err: $stack");
+          logger.error(logTag, "$err: $stack");
           //关闭加载弹窗
           Get.back();
           Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
@@ -313,7 +313,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
           }
         })
         .catchError((err, stack) {
-          Log.error(logTag, "$err: $stack");
+          logger.error(logTag, "$err: $stack");
           //关闭加载弹窗
           Get.back();
           Global.showSnackBarWarn(context: Get.context!, text: TranslationKey.deletionFailed.tr);
@@ -460,7 +460,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
     cleanDataTimer?.cancel();
     var cfg = appConfig.cleanDataConfig;
     if (cfg == null || !cfg.autoClean) {
-      Log.debug(logTag, "clean data config not found or disable auto clean");
+      logger.debug(logTag, "clean data config not found or disable auto clean");
       return;
     }
     final nextTime = cfg.nextCleanTime!;
@@ -469,7 +469,7 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
     if (now.isAfter(nextTime)) {
       await cleanData(true)
           .then((_) {
-            Log.debug(logTag, "auto clean data success.");
+            logger.debug(logTag, "auto clean data success.");
             final newNextTime = CronUtil.getNextTime(cfg.cron!);
             appConfig.setCleanDataConfig(
               cfg.copyWith(
@@ -479,12 +479,12 @@ class CleanDataController extends GetxController implements DeviceRemoveListener
             );
           })
           .catchError((err, stack) {
-            Log.debug(logTag, "auto clean data failed. $err $stack");
+            logger.debug(logTag, "auto clean data failed. $err $stack");
           });
     }
     //设置定时器
     final newNextTime = CronUtil.getNextTime(cfg.cron!)!;
-    Log.debug(logTag, "set clean data timer, next execute time: $newNextTime");
+    logger.debug(logTag, "set clean data timer, next execute time: $newNextTime");
     final diff = now.difference(newNextTime);
     cleanDataTimer = Timer(Duration(seconds: diff.inSeconds.abs() + 1), initAutoClean);
   }

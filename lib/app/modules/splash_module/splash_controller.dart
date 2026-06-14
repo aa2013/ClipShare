@@ -122,10 +122,10 @@ class SplashController extends GetxController {
           isLaunchAtStartup = isLaunchAtStartup || hasShortcut;
         }
       }
-      Log.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
+      logger.debug(tag, "isLaunchAtStartup  $isLaunchAtStartup, isSystem $isSystem");
       appConfig.setLaunchAtStartup(isLaunchAtStartup, isLaunchAtStartup && isSystem);
       var updateDir = Directory(appConfig.updateDownloadFileDirPath);
-      Log.debug(tag, "updateDir = $updateDir");
+      logger.debug(tag, "updateDir = $updateDir");
       if (await updateDir.exists()) {
         updateDir.delete(recursive: true);
       }
@@ -138,7 +138,7 @@ class SplashController extends GetxController {
       if(appConfig.enablePIP){
         final tempPath = await FileUtil.copyAssetToTemp(Constants.iosPIPDefaultVideoPath);
         final result = await clipboardManager.startPIP(tempPath);
-        Log.debug(tag, "start pip $result");
+        logger.debug(tag, "start pip $result");
       }
     }
     // 初始化channel
@@ -164,7 +164,7 @@ class SplashController extends GetxController {
           flush: true,
         );
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
   }
@@ -252,7 +252,7 @@ class SplashController extends GetxController {
           break;
         case MultiWindowMethod.getCompatibleOnlineDevices:
           var devices = devController.compatibleOnlineDevices;
-          Log.info(tag, "devices $devices");
+          logger.info(tag, "devices $devices");
           return jsonEncode(devices);
         case MultiWindowMethod.syncFiles:
           final paths = (args["files"] as List<dynamic>).cast<String>();
@@ -262,8 +262,8 @@ class SplashController extends GetxController {
           for (var devMap in (args["devices"] as List<dynamic>)) {
             devices.add(Device.fromJson(devMap));
           }
-          Log.info(tag, "files $paths");
-          Log.info(tag, "devIds $devices");
+          logger.info(tag, "files $paths");
+          logger.info(tag, "devIds $devices");
           FileSyncHandler.sendFiles(
             devices: devices,
             files: files,
@@ -403,7 +403,7 @@ class SplashController extends GetxController {
     final handler = ShareHandlerPlatform.instance;
     appConfig.shareHandlerStream?.cancel();
     appConfig.shareHandlerStream = handler.sharedMediaStream.listen((SharedMedia media) async {
-      Log.info(tag, "ShareMedia: ${media.attachments}, content: ${media.content}");
+      logger.info(tag, "ShareMedia: ${media.attachments}, content: ${media.content}");
       if (media.attachments != null) {
         var files = media.attachments!
             .where((attachment) => attachment != null)
@@ -412,7 +412,7 @@ class SplashController extends GetxController {
               (f) => DropItemFile(f),
             )
             .toList();
-        Log.debug(tag, files);
+        logger.debug(tag, files);
         if (files.isEmpty) {
           return;
         }
@@ -421,12 +421,12 @@ class SplashController extends GetxController {
         final fileInfo = await uriFileReader.getFileInfoFromUri(media.content!);
         if (fileInfo == null) {
           Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
-          Log.debug(tag, "未从uri中获取到文件名称和大小：uri = ${media.content}");
+          logger.debug(tag, "未从uri中获取到文件名称和大小：uri = ${media.content}");
           return;
         }
         final fileName = fileInfo.fileName;
         final size = fileInfo.size;
-        Log.info(tag, "ShareMedia fileName $fileName, size $size");
+        logger.info(tag, "ShareMedia fileName $fileName, size $size");
         gotoOnlineDevicesPage([DropItemFileUri(media.content!, fileName, size)]);
       } else {
         Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveFileNotSupportDialogText.tr);

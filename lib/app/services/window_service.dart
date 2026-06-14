@@ -50,7 +50,7 @@ class WindowService extends GetxService with WindowListener {
     if(Platform.isMacOS){
       windowManager.setSkipTaskbar(true);
     }
-    Log.debug(tag, "onClose");
+    logger.debug(tag, "onClose");
   }
 
   @override

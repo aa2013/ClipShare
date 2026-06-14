@@ -915,7 +915,7 @@ class ConfigService extends GetxService {
         await Directory(fileStorePath).create(recursive: true);
       }catch(err, stack){
         fileStorePath = null;
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
     if (databasePath != null) {
@@ -923,7 +923,7 @@ class ConfigService extends GetxService {
         await Directory(databasePath).create(recursive: true);
       }catch(err, stack){
         databasePath = null;
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
     return AppPathConfig(fileStorePath: fileStorePath, databasePath: databasePath);
@@ -955,7 +955,7 @@ class ConfigService extends GetxService {
         dir.createSync(recursive: true);
       }
     } catch (err, stack) {
-      Log.error(tag, err, stack);
+      logger.error(tag, err, stack);
     }
     defaultFileStorePath = Directory(path).normalizePath;
   }
@@ -1103,7 +1103,7 @@ class ConfigService extends GetxService {
 
   Future<void> setLaunchAtStartup(bool launchAtStartup, [bool deleteWindowsShortcut = false]) async {
     _launchAtStartup.value = launchAtStartup;
-    Log.debug(tag, "launchAtStartup $launchAtStartup, deleteWindowsShortcut $deleteWindowsShortcut");
+    logger.debug(tag, "launchAtStartup $launchAtStartup, deleteWindowsShortcut $deleteWindowsShortcut");
     if (launchAtStartup && !deleteWindowsShortcut) return;
     if (Platform.isWindows) {
       final startupPaths = <String>[
@@ -1678,11 +1678,11 @@ class ConfigService extends GetxService {
             ),
           );
         } catch (err, stack) {
-          Log.error(tag, err, stack);
+          logger.error(tag, err, stack);
         }
       }
     } catch (err, stack) {
-      Log.error(tag, err, stack);
+      logger.error(tag, err, stack);
     }
     //endregion
 
@@ -1712,7 +1712,7 @@ class ConfigService extends GetxService {
             ),
           );
         } catch (err, stack) {
-          Log.error(tag, err, stack);
+          logger.error(tag, err, stack);
         }
       }
       if (allSmsRules.isEmpty && enableSmsSync) {
@@ -1735,11 +1735,11 @@ class ConfigService extends GetxService {
             ),
           );
         } catch (err, stack) {
-          Log.error(tag, err, stack);
+          logger.error(tag, err, stack);
         }
       }
     } catch (err, stack) {
-      Log.error(tag, err, stack);
+      logger.error(tag, err, stack);
     }
     //endregion
 
@@ -1797,7 +1797,7 @@ class ConfigService extends GetxService {
           ),
         );
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
     //endregion
@@ -1828,7 +1828,7 @@ class ConfigService extends GetxService {
           ),
         );
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
     //endregion
@@ -1876,7 +1876,7 @@ class ConfigService extends GetxService {
           ),
         );
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
 

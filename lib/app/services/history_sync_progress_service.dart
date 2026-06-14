@@ -91,7 +91,7 @@ class HistorySyncProgressService extends GetxService with DevAliveListener {
           historyController.setMissingDataCopyMsg(syncData, fromStorage);
         }
       } catch (err, stack) {
-        Log.error(tag, err, stack);
+        logger.error(tag, err, stack);
       }
     }
     _lastSyncTime = DateTime.now();

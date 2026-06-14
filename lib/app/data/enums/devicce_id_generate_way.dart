@@ -9,7 +9,7 @@ enum DeviceIdGenerateWay{
     return DeviceIdGenerateWay.values.firstWhere(
           (e) => e.name.toUpperCase() == value.toUpperCase(),
       orElse: () {
-        Log.debug("DeviceIdGenerateWay", "key '$value' unknown");
+        logger.debug("DeviceIdGenerateWay", "key '$value' unknown");
         return DeviceIdGenerateWay.unknown;
       },
     );

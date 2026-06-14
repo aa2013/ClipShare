@@ -159,7 +159,7 @@ class SyncFileStatus extends StatelessWidget {
                                     onPressed: () async {
                                       final path = File(syncingFile.filePath).parent.normalizePath;
                                       var result = await OpenFile.open(path);
-                                      Log.debug(
+                                      logger.debug(
                                         tag,
                                         "type: ${result.type}, msg: ${result.message}",
                                       );

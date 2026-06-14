@@ -244,7 +244,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    Log.debug(tag, "AppLifecycleState $state");
+    logger.debug(tag, "AppLifecycleState $state");
     switch (state) {
       case AppLifecycleState.resumed:
         AppUpdateInfoUtil.showUpdateInfo(debounce: true);
@@ -255,7 +255,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
         var now = DateTime.now();
         // 计算秒数差异
         int offsetMinutes = now.difference(pausedTime!).inMinutes;
-        Log.debug(
+        logger.debug(
           tag,
           "offsetMinutes $offsetMinutes,authDurationSeconds $authDurationSeconds",
         );
@@ -269,7 +269,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
         if (pausedTime != null) {
-          Log.debug(tag, "$state skip!!");
+          logger.debug(tag, "$state skip!!");
           break;
         }
         if (appConfig.authenticating.value) {
@@ -471,7 +471,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
     _networkChangedTimer?.cancel();
     _networkChangedTimer = Timer(1500.ms, (){
-      Log.debug(tag, "网络变化 -> ${result.name}");
+      logger.debug(tag, "网络变化 -> ${result.name}");
       final lastNetwork = appConfig.currentNetWorkType.value;
       //网络变化前的状态，非无网络状态,断开中转服务连接
       if (lastNetwork != ConnectivityResult.none) {

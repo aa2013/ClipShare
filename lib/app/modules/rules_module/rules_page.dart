@@ -280,7 +280,7 @@ class RulesPage extends GetView<RulesController> {
                     }
                   })
                   .catchError((err, stack) {
-                    Log.error(logTag, err, stack);
+                    logger.error(logTag, err, stack);
                     Global.showSnackBarErr(
                       text: TranslationKey.saveFailed.tr,
                       context: Get.context!,
@@ -339,14 +339,14 @@ class RulesPage extends GetView<RulesController> {
                         controller.selectedLuaModuleItem.value = newValue;
                         //加载到全局函数
                         final result = controller.loadLuaModules(newValue);
-                        Log.debug(logTag, "load module(${module.moduleName}): $result");
+                        logger.debug(logTag, "load module(${module.moduleName}): $result");
                         //同步数据
                         await opRecordDao.deleteByDataWithCascade(module.moduleName);
                         await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.scriptModule, OpMethod.add, module.moduleName));
                       }
                     })
                     .catchError((err, stack) {
-                      Log.error(logTag, err, stack);
+                      logger.error(logTag, err, stack);
                       Global.showSnackBarErr(
                         text: TranslationKey.saveFailed.tr,
                         context: Get.context!,

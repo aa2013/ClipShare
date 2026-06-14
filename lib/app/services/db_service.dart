@@ -117,7 +117,7 @@ class DbService extends GetxService {
   Future _queue = Future.value();
 
   void execSequentially(Future Function() f) {
-    _queue = _queue.whenComplete(() => f().catchError((err) => Log.error(tag, err)));
+    _queue = _queue.whenComplete(() => f().catchError((err) => logger.error(tag, err)));
   }
 
   Future<DbService> init() async {

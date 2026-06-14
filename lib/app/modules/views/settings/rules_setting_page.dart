@@ -213,7 +213,7 @@ class _RuleSettingPageState extends State<RuleSettingPage> {
           showImportPreviewDialog(rules);
         })
         .catchError((err) {
-          Log.error(tag, err);
+          logger.error(tag, err);
           Global.showSnackBarWarn(
             text: TranslationKey.failedToReadFile.tr,
             scaffoldMessengerState: mainScaffoldMessengerKey.currentState!,

@@ -44,7 +44,7 @@ class PermissionHelper {
     dirPath = dirPath ?? appConfig.rootStorePath;
     if (!dirPath.startsWith(Constants.androidDownloadPath)) {
       var status = await Permission.manageExternalStorage.request();
-      Log.info(tag, "request manageExternalStoragePermission: $status");
+      logger.info(tag, "request manageExternalStoragePermission: $status");
     }
     late final PermissionStatus status;
     if (appConfig.osVersion >= 13) {
@@ -52,7 +52,7 @@ class PermissionHelper {
     } else {
       status = await Permission.storage.request();
     }
-    Log.info(tag, "request storagePermission: $status");
+    logger.info(tag, "request storagePermission: $status");
   }
 
   ///测试文件操作
@@ -88,7 +88,7 @@ class PermissionHelper {
   static Future<void> reqAndroidReadSms() async {
     if (!Platform.isAndroid) return;
     var status = await Permission.sms.request();
-    Log.info(tag, "request AndroidReadSms: $status");
+    logger.info(tag, "request AndroidReadSms: $status");
   }
 
   ///测试相机权限
@@ -101,7 +101,7 @@ class PermissionHelper {
   static Future<void> reqCameraPerm() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     var status = await Permission.camera.request();
-    Log.info(tag, "request camera: $status");
+    logger.info(tag, "request camera: $status");
   }
 
   ///检查IOS相册权限

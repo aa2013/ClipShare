@@ -1476,7 +1476,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.codePromptLog:
         return "Log Module";
       case TranslationKey.codePromptPrint:
-        return "Print output, equivalent to log.debug()";
+        return "Print output, equivalent to logger.debug()";
       case TranslationKey.codePromptMath:
         return 'Math Module';
       case TranslationKey.codePromptString:
