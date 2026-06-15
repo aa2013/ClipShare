@@ -150,22 +150,22 @@ class DevicePage extends GetView<DeviceController> {
                       ),
                     ),
                   ),
-                  Tooltip(
-                    message: TranslationKey.devicePageRediscoverTooltip.tr,
-                    child: Obx(
-                      () => RotationTransition(
-                        turns: controller.animation.value,
-                        child: IconButton(
-                          onPressed: () {
-                            if (controller.discovering.value) {
-                              controller.rotationReverse.value = !controller.rotationReverse.value;
-                              controller.setRotationAnimation();
-                              sktService.restartDiscoveryDevices();
-                            } else {
-                              sktService.startDiscoveryDevices(manual: true);
-                            }
-                          },
-                          icon: const Icon(
+                  IconButton(
+                    tooltip: TranslationKey.devicePageRediscoverTooltip.tr,
+                    onPressed: () {
+                      if (controller.discovering.value) {
+                        controller.rotationReverse.value = !controller.rotationReverse.value;
+                        controller.setRotationAnimation();
+                        sktService.restartDiscoveryDevices();
+                      } else {
+                        sktService.startDiscoveryDevices(manual: true);
+                      }
+                    },
+                    icon: Obx(
+                      () => ExcludeSemantics(
+                        child: RotationTransition(
+                          turns: controller.animation.value,
+                          child: const Icon(
                             Icons.sync,
                             size: 20,
                           ),

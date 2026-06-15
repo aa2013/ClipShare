@@ -3,6 +3,9 @@ import 'dart:ffi';
 import 'dart:io';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/obj_storage_type.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
+import 'package:clipshare/app/data/models/version.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/listeners/history_data_listener.dart';
@@ -19,6 +22,7 @@ import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
+import 'package:clipshare/app/widgets/device/device_card.dart';
 import 'package:clipshare/app/widgets/file_browser.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -42,6 +46,7 @@ class DebugPage extends GetView<DebugController> {
       children: [
         Text(Abi.current().toString()),
         Badge(backgroundColor: Colors.transparent, child: Text("666"),),
+        _buildDeviceCardPreview(),
         TextButton(
           onPressed: () async {
             for (var value in List.generate(100, (i) => i)) {
@@ -178,6 +183,72 @@ class DebugPage extends GetView<DebugController> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildDeviceCardPreview() {
+    const version = AppVersion("1.0.0", "1");
+    return SizedBox(
+      height: 108,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          SizedBox(
+            width: 330,
+            child: DeviceCard(
+              dev: Device(
+                guid: "debug-local-android",
+                devName: "GM1900",
+                uid: 0,
+                type: "Android",
+                isPaired: true,
+              ),
+              isPaired: true,
+              isConnected: true,
+              isSelf: false,
+              minVersion: version,
+              version: version,
+              protocol: TransportProtocol.direct,
+            ),
+          ),
+          SizedBox(
+            width: 330,
+            child: DeviceCard(
+              dev: Device(
+                guid: "debug-relay-mac",
+                devName: "MacBook Pro",
+                uid: 0,
+                type: "Mac",
+                isPaired: true,
+              ),
+              isPaired: true,
+              isConnected: true,
+              isSelf: false,
+              minVersion: version,
+              version: version,
+              protocol: TransportProtocol.server,
+            ),
+          ),
+          SizedBox(
+            width: 330,
+            child: DeviceCard(
+              dev: Device(
+                guid: "debug-offline-webdav",
+                devName: "NAS-Storage",
+                uid: 0,
+                type: "Linux",
+                isPaired: true,
+              ),
+              isPaired: true,
+              isConnected: false,
+              isSelf: false,
+              minVersion: null,
+              version: null,
+              protocol: TransportProtocol.webdav,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

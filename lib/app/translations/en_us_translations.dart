@@ -1415,6 +1415,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "On some Android systems, the default is 'allow only while using the app,' which prevents the app from accessing the clipboard in the background. Requesting this permission resolves the issue.";
       case TranslationKey.local:
         return "Local";
+      case TranslationKey.directConnect:
+        return "Direct";
       case TranslationKey.selectBackupSource:
         return "Backup Source";
       case TranslationKey.notConfigured:

@@ -12,10 +12,7 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/dot.dart';
-import 'package:clipshare/app/widgets/rounded_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -47,9 +44,7 @@ class DeviceCard extends StatefulWidget {
   bool get isVersionCompatible => minVersion == null || version == null ? true : minVersion! <= appConfig.version && version! >= appConfig.minVersion;
 
   @override
-  State<StatefulWidget> createState() {
-    return _DeviceCardState();
-  }
+  State<StatefulWidget> createState() => _DeviceCardState();
 
   DeviceCard copyWith({
     Device? dev,
@@ -62,23 +57,22 @@ class DeviceCard extends StatefulWidget {
     AppVersion? version,
     TransportProtocol? protocol,
   }) {
-    isConnected = isConnected ?? this.isConnected;
+    final connected = isConnected ?? this.isConnected;
     return DeviceCard(
       dev: dev ?? this.dev,
       isPaired: isPaired ?? this.isPaired,
-      isConnected: isConnected,
+      isConnected: connected,
       isSelf: isSelf ?? this.isSelf,
       onTap: onTap ?? this.onTap,
       onLongPress: onLongPress ?? this.onLongPress,
-      minVersion: !isConnected ? null : minVersion ?? this.minVersion,
-      version: !isConnected ? null : version ?? this.version,
+      minVersion: !connected ? null : minVersion ?? this.minVersion,
+      version: !connected ? null : version ?? this.version,
       protocol: protocol ?? this.protocol,
     );
   }
 }
 
 class _DeviceCardState extends State<DeviceCard> {
-  final Color _connColor = Colors.green;
   bool _empty = true;
   Icon _emptyIcon = const Icon(
     Icons.laptop_windows_outlined,
@@ -86,17 +80,246 @@ class _DeviceCardState extends State<DeviceCard> {
     size: 48,
   );
   int _emptyIconIdx = 0;
-  Timer? timer;
+  Timer? _timer;
 
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final devService = Get.find<DeviceService>();
 
-  Icon get _currIcon => Constants.devTypeIcons[widget.dev!.type]!;
+  IconData get _currIconData => (Constants.devTypeIcons[widget.dev!.type] ?? const Icon(Icons.devices_other_outlined)).icon!;
+
+  bool get _showConnectedAccent => !_empty && widget.isPaired && widget.isConnected;
+
+  Color _deviceAccentColor(BuildContext context) {
+    if (!_showConnectedAccent) {
+      return Theme.of(context).colorScheme.onSurfaceVariant;
+    }
+    return Colors.green;
+  }
+
+  IconData _statusIconData() {
+    if (_empty || !widget.isConnected) {
+      return Icons.cloud_off_outlined;
+    }
+    switch (widget.protocol) {
+      case TransportProtocol.server:
+        return Icons.flash_on_rounded;
+      case TransportProtocol.webdav:
+        return Icons.cloud_queue_rounded;
+      case TransportProtocol.s3:
+        return Icons.cloud_done_outlined;
+      case TransportProtocol.direct:
+        return Icons.router_outlined;
+    }
+  }
+
+  String _statusLabel() {
+    if (_empty || !widget.isConnected) {
+      return TranslationKey.disconnected.tr;
+    }
+    switch (widget.protocol) {
+      case TransportProtocol.server:
+        return TranslationKey.forward.tr;
+      case TransportProtocol.webdav:
+        return TransportProtocol.webdav.name.toUpperCase();
+      case TransportProtocol.s3:
+        return TransportProtocol.s3.name.toUpperCase();
+      case TransportProtocol.direct:
+        return TranslationKey.directConnect.tr;
+    }
+  }
+
+  Color _deviceIconBackgroundColor(BuildContext context, ColorScheme colorScheme) {
+    if (!_showConnectedAccent) {
+      return colorScheme.surfaceContainerHighest.withValues(alpha: 0.64);
+    }
+    return Colors.green.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.14);
+  }
+
+  Widget _buildDeviceIcon(BuildContext context, Color accentColor, ColorScheme colorScheme) {
+    return Container(
+      width: 38,
+      height: 38,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: _deviceIconBackgroundColor(context, colorScheme),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Icon(
+        _empty ? _emptyIcon.icon ?? Icons.devices_other_outlined : _currIconData,
+        color: accentColor,
+        size: 21,
+      ),
+    );
+  }
+
+  Widget _buildStatusMark(BuildContext context, ColorScheme colorScheme) {
+    if (_empty) {
+      return const SizedBox.shrink();
+    }
+    final accentColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Icon(
+          _statusIconData(),
+          color: accentColor,
+          size: 22,
+        ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            _statusLabel(),
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.68),
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTagChip(String text, ColorScheme colorScheme) {
+    final empty = _empty && text.trim().isEmpty;
+    if (empty) {
+      return Container(
+        width: 34,
+        height: 18,
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(9),
+        ),
+      );
+    }
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.64),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 11,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildTagChips(ColorScheme colorScheme) {
+    return [
+      _buildTagChip(_empty ? "    " : widget.dev!.type, colorScheme),
+      if (widget.isSelf) _buildTagChip(TranslationKey.selfDeviceName.tr, colorScheme),
+      if (!widget.isVersionCompatible)
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            InkWell(
+              onTap: () {
+                Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.notCompatibleDialogText.trParams({
+                    "minName": minVersion.name,
+                    "minCode": minVersion.code,
+                    "selfName": appConfig.version.name,
+                    "selfCode": appConfig.version.code,
+                  }),
+                );
+              },
+              child: const Icon(
+                Icons.info_outline,
+                color: Colors.orange,
+                size: 18,
+              ),
+            ),
+            Text(
+              TranslationKey.notCompatible.tr,
+              style: const TextStyle(
+                color: Colors.orange,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+    ];
+  }
+
+  Widget _buildNameRow() {
+    if (_empty) {
+      return Container(
+        width: 132,
+        height: 24,
+        decoration: BoxDecoration(
+          color: Colors.grey.withValues(alpha: 0.16),
+          borderRadius: BorderRadius.circular(12),
+        ),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: Text(
+            widget.dev!.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              fontSize: 18,
+            ),
+          ),
+        ),
+        const SizedBox(width: 5),
+        widget.isPaired
+            ? IconButton(
+                onPressed: () {
+                  _showRenameDialog();
+                },
+                icon: const Icon(
+                  Icons.edit_note,
+                  size: 18,
+                ),
+                tooltip: TranslationKey.rename.tr,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(
+                  minWidth: 28,
+                  minHeight: 28,
+                ),
+                padding: EdgeInsets.zero,
+              )
+            : const SizedBox.shrink(),
+      ],
+    );
+  }
+
+  Widget _buildDeviceInfo(ColorScheme colorScheme) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildNameRow(),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 5,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: _buildTagChips(colorScheme),
+        ),
+      ],
+    );
+  }
 
   void _setTimer() {
-    timer = Timer.periodic(1200.ms, (timer) {
-      String key = Constants.devTypeIcons.keys.elementAt(_emptyIconIdx % Constants.devTypeIcons.length);
+    _timer = Timer.periodic(1200.ms, (timer) {
+      final key = Constants.devTypeIcons.keys.elementAt(_emptyIconIdx % Constants.devTypeIcons.length);
       _emptyIcon = Constants.devTypeIcons[key]!;
       _emptyIconIdx++;
       setState(() {});
@@ -114,15 +337,14 @@ class _DeviceCardState extends State<DeviceCard> {
 
   @override
   void dispose() {
-    timer?.cancel();
+    _timer?.cancel();
     super.dispose();
   }
 
   ///重命名弹窗
   void _showRenameDialog() {
-    var dev = widget.dev!;
-    var textController = TextEditingController();
-    textController.text = dev.customName ?? "";
+    final dev = widget.dev!;
+    final textController = TextEditingController(text: dev.customName ?? "");
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -147,21 +369,25 @@ class _DeviceCardState extends State<DeviceCard> {
               child: Text(TranslationKey.dialogCancelText.tr),
             ),
             TextButton(
-              onPressed: () {
-                var name = textController.text;
-                devService.addOrUpdate(dev..customName = name).then((res) {
-                  if (res) {
-                    widget.dev!.customName = name;
-                    var opRecord = OperationRecord.fromSimple(
-                      Module.device,
-                      OpMethod.update,
-                      dev.guid,
-                    );
-                    dbService.opRecordDao.addAndNotify(opRecord);
-                    Navigator.pop(context);
-                    setState(() {});
-                  }
-                });
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                final name = textController.text;
+                final res = await devService.addOrUpdate(dev..customName = name);
+                if (!res) {
+                  return;
+                }
+                widget.dev!.customName = name;
+                final opRecord = OperationRecord.fromSimple(
+                  Module.device,
+                  OpMethod.update,
+                  dev.guid,
+                );
+                dbService.opRecordDao.addAndNotify(opRecord);
+                if (!mounted) {
+                  return;
+                }
+                navigator.pop();
+                setState(() {});
               },
               child: Text(TranslationKey.save.tr),
             ),
@@ -175,10 +401,17 @@ class _DeviceCardState extends State<DeviceCard> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final accentColor = _deviceAccentColor(context);
+    final cardColor = theme.cardTheme.color ?? colorScheme.surface;
     return Card(
-      color: Theme.of(context).cardTheme.color,
+      color: cardColor,
       elevation: 0,
       margin: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
       child: InkWell(
         mouseCursor: SystemMouseCursors.basic,
         onTap: () {
@@ -193,143 +426,37 @@ class _DeviceCardState extends State<DeviceCard> {
           }
           widget.onLongPress?.call(widget.dev!, widget.isConnected, _showRenameDialog);
         },
-        borderRadius: BorderRadius.circular(12.0),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                _empty ? _emptyIcon : _currIcon,
-                Padding(
-                  padding: const EdgeInsets.only(left: 15),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        borderRadius: BorderRadius.circular(18),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 360;
+            return Padding(
+              padding: EdgeInsets.fromLTRB(compact ? 14 : 16, 14, compact ? 14 : 16, 14),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 64),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _empty
-                          ? const RoundedChip(
-                              label: Text("                  "),
-                            )
-                          : Row(
-                              children: [
-                                Text(
-                                  widget.dev!.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 22,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 5,
-                                ),
-                                widget.isPaired
-                                    ? IconButton(
-                                        onPressed: () {
-                                          _showRenameDialog();
-                                        },
-                                        icon: const Icon(
-                                          Icons.edit_note,
-                                        ),
-                                        tooltip: TranslationKey.rename.tr,
-                                        visualDensity: VisualDensity.compact,
-                                      )
-                                    : const SizedBox.shrink(),
-                              ],
-                            ),
-                      const SizedBox(
-                        height: 8,
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: _buildDeviceIcon(context, accentColor, colorScheme),
                       ),
-                      Row(
-                        children: [
-                          Visibility(
-                            visible: !_empty && widget.isPaired,
-                            child: Container(
-                              margin: const EdgeInsets.only(right: 10),
-                              child: Dot(
-                                radius: 6.0,
-                                color: widget.isConnected ? _connColor : Colors.grey,
-                              ),
-                            ),
-                          ),
-                          RoundedChip(
-                            label: Text(_empty ? "    " : widget.dev!.type),
-                          ),
-                          Visibility(
-                            visible: widget.isSelf,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 5),
-                              child: RoundedChip(
-                                label: Text(TranslationKey.selfDeviceName.tr),
-                              ),
-                            ),
-                          ),
-                          Visibility(
-                            visible: widget.protocol == TransportProtocol.server,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 5),
-                              child: RoundedChip(
-                                label: Text(TranslationKey.forward.tr),
-                              ),
-                            ),
-                          ),
-                          Visibility(
-                            visible: widget.protocol == TransportProtocol.webdav,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 5),
-                              child: RoundedChip(
-                                label: Text(TransportProtocol.webdav.name.upperFirst),
-                              ),
-                            ),
-                          ),
-                          Visibility(
-                            visible: widget.protocol == TransportProtocol.s3,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 5),
-                              child: RoundedChip(
-                                label: Text(TransportProtocol.s3.name.upperFirst),
-                              ),
-                            ),
-                          ),
-                          Visibility(
-                            visible: !widget.isVersionCompatible,
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 5),
-                              child: Row(
-                                children: <Widget>[
-                                  IconButton(
-                                    onPressed: () => {
-                                      Global.showTipsDialog(
-                                        context: context,
-                                        text: TranslationKey.notCompatibleDialogText.trParams({
-                                          "minName": minVersion.name,
-                                          "minCode": minVersion.code,
-                                          "selfName": appConfig.version.name,
-                                          "selfCode": appConfig.version.code,
-                                        }),
-                                      ),
-                                    },
-                                    icon: const Icon(
-                                      Icons.info_outline,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                  Text(
-                                    TranslationKey.notCompatible.tr,
-                                    style: const TextStyle(
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                      SizedBox(width: compact ? 10 : 14),
+                      Expanded(
+                        child: _buildDeviceInfo(colorScheme),
+                      ),
+                      SizedBox(width: compact ? 10 : 14),
+                      SizedBox(
+                        width: compact ? 46 : 52,
+                        child: _buildStatusMark(context, colorScheme),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

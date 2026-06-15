@@ -1409,6 +1409,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "开启后接收到的视频文件可直接使用画中画打开，也可增强剪贴板获取";
       case TranslationKey.local:
         return "本地";
+      case TranslationKey.directConnect:
+        return "直连";
       case TranslationKey.selectBackupSource:
         return "备份文件存储位置";
       case TranslationKey.notConfigured:

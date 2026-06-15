@@ -692,6 +692,7 @@ enum TranslationKey {
   openPathAfterDownload,
   updateFromZipTips,
   local,
+  directConnect,
   selectBackupSource,
   notConfigured,
   storagePathTips,

@@ -732,8 +732,10 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                     ? const SizedBox(
                         width: 24,
                         height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.0,
+                        child: ExcludeSemantics(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                          ),
                         ),
                       )
                     : TextButton(
