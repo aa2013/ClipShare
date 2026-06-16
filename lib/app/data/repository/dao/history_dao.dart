@@ -171,14 +171,23 @@ abstract class HistoryDao {
   Future<List<History>> getMissingHistory(String devId);
 
   ///获取前100条历史记录
-  @Query("select * from history where uid = :uid order by top desc,id desc limit 100")
-  Future<List<History>> getHistoriesTop100(int uid);
+  @Query("""
+    select * from history
+     where uid = :uid 
+      and (length(null in (:types)) = 1 or type in (:types))
+     order by top desc,id desc limit 100
+  """)
+  Future<List<History>> getHistoriesTop100(int uid, List<String> types);
 
   ///分页获取100条历史记录
-  @Query(
-    "select * from history where uid = :uid and (:fromId <= 0 or id < :fromId) order by top desc,id desc limit 100",
-  )
-  Future<List<History>> getHistoriesPage(int uid, int fromId);
+  @Query("""
+    select * from history 
+    where uid = :uid 
+      and (:fromId <= 0 or id < :fromId) 
+      and (length(null in (:types)) = 1 or type in (:types))
+    order by top desc,id desc limit 100
+    """)
+  Future<List<History>> getHistoriesPage(int uid, int fromId, List<String> types);
 
   ///置顶/取消置顶某记录
   @Query("update history set top = :top where id = :id ")
@@ -233,7 +242,7 @@ abstract class HistoryDao {
     final success = ((await dbService.historyTagDao.removeAllByHisId(id)) ?? 0) > 0;
     if (success && tags.isNotEmpty) {
       final tagIds = tags.map((item) => item.id).toList();
-      for(var tagId in tagIds) {
+      for (var tagId in tagIds) {
         await dbService.opRecordDao.deleteByDataWithCascade(tagId.toString());
       }
     }

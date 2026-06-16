@@ -29,7 +29,7 @@ class HistoryBackupHandler with BaseBackupHandler {
   Stream<Uint8List> loadData(Directory tempDir) async* {
     var lastId = 0;
     while (true) {
-      var list = await historyDao.getHistoriesPage(appConfig.userId, lastId);
+      var list = await historyDao.getHistoriesPage(appConfig.userId, lastId, []);
       if (list.isEmpty) {
         break;
       }

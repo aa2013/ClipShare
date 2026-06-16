@@ -236,8 +236,8 @@ private fun ExpandedHistoryPanel(
         }
     }
 
-    LaunchedEffect(shouldLoadMore) {
-        if (shouldLoadMore) {
+    LaunchedEffect(shouldLoadMore, histories.size, loading) {
+        if (shouldLoadMore && !loading) {
             onLoadMore()
         }
     }

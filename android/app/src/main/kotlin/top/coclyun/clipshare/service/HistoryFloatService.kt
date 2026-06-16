@@ -55,6 +55,8 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var handleVisible by mutableStateOf(true)
     private var handleWidth by mutableIntStateOf(32)
     private var minHistoryId = 0L
+    private var reachedHistoryEnd = false
+    private var currentLoadVisibleCount = 0
     private var lockLoc = false
     private var positionY = 0
     private var viewAdded = false
@@ -179,22 +181,41 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                                 top = map["top"] as Boolean,
                                 type = map["type"] as String
                             )
-                        }.filter {
-                            when (it.type.lowercase()) {
-                                "file" -> false
-                                "image" -> File(it.content).exists()
-                                else -> true
-                            }
                         }
 
-                        if (list.isNotEmpty()) {
-                            minHistoryId = list.last().id
-                            if (!more) {
-                                histories.clear()
-                            }
-                            histories.addAll(list)
+                        if (!more) {
+                            histories.clear()
+                            minHistoryId = 0L
+                            reachedHistoryEnd = false
                         }
-                        loading = false
+
+                        if (list.isEmpty()) {
+                            reachedHistoryEnd = true
+                            loading = false
+                            return
+                        }
+
+                        minHistoryId = list.last().id
+                        if (list.size < HISTORY_PAGE_SIZE) {
+                            reachedHistoryEnd = true
+                        }
+
+                        val itemsToAdd = if (more) {
+                            val existingIds = histories.mapTo(mutableSetOf()) { it.id }
+                            list.filter { existingIds.add(it.id) }
+                        } else {
+                            list.distinctBy { it.id }
+                        }
+
+                        if (itemsToAdd.isNotEmpty()) {
+                            histories.addAll(itemsToAdd)
+                        }
+                        currentLoadVisibleCount += itemsToAdd.size
+                        if (!reachedHistoryEnd && currentLoadVisibleCount < HISTORY_PAGE_SIZE) {
+                            requestHistories(true)
+                        } else {
+                            loading = false
+                        }
                     }
                 }
             }
@@ -323,8 +344,13 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     private fun refreshData(more: Boolean = false) {
-        if (loading) return
+        if (loading || (more && reachedHistoryEnd)) return
+        currentLoadVisibleCount = 0
         loading = true
+        requestHistories(more)
+    }
+
+    private fun requestHistories(more: Boolean) {
         val intent = Intent(loadHistories)
         intent.putExtra("more", more)
         intent.putExtra("minHistoryId", if (more) minHistoryId else 0L)
@@ -386,5 +412,6 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         private const val BASE_WINDOW_FLAGS =
             LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_NOT_TOUCH_MODAL
         private const val FULLSCREEN_CHECK_INTERVAL_MS = 500L
+        private const val HISTORY_PAGE_SIZE = 100
     }
 }

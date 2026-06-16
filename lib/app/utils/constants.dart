@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_log.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_lua.dart';
@@ -30,6 +31,8 @@ class Constants {
 
   //默认窗体大小
   static const String defaultWindowSize = "1000x650";
+
+  static final historyFloatTypes = [HistoryContentType.text.value, HistoryContentType.image.value];
 
   //组播地址
   static const String multicastGroup = '224.0.0.128';
@@ -392,7 +395,8 @@ class Constants {
     }
   """;
 
-  static const String luaGlobalFun = """
+  static const String luaGlobalFun =
+      """
     -- 沙箱全局访问异常
     function sandboxGlobalAccessError(_, k)
       error("global '" .. k .. "' is readonly, try use 'local " .. k .. "' instead", 2)
@@ -539,7 +543,8 @@ class Constants {
           end
   """;
 
-  static const String luaSandboxWrapper = """
+  static const String luaSandboxWrapper =
+      """
         local wrapper = function() 
           $luaSandboxEnv      
           local env = setmetatable({}, {
@@ -558,7 +563,8 @@ class Constants {
         print(wrapper())
     """;
 
-  static const String luaModuleSandboxWrapper = """
+  static const String luaModuleSandboxWrapper =
+      """
         local wrapper = function() 
           $luaSandboxEnv
           local env = setmetatable({}, {
@@ -577,7 +583,8 @@ class Constants {
         print(wrapper())
   """;
 
-  static const String luaModuleCompileWrapper = """
+  static const String luaModuleCompileWrapper =
+      """
      $luaSandboxEnv
      local env = setmetatable({}, {
          __index = scope,

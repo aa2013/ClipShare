@@ -152,7 +152,7 @@ class ClipListViewState extends State<ClipListView>
     Future<List<ClipData>> f;
     if (widget.onLoadMoreData == null) {
       f = dbService.historyDao
-          .getHistoriesPage(appConfig.userId, _minId!)
+          .getHistoriesPage(appConfig.userId, _minId!, [])
           .then((lst) => ClipData.fromList(lst));
     } else {
       f = widget.onLoadMoreData!.call(_minId!);

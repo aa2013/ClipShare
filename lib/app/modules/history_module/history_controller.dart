@@ -245,7 +245,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       _listContentType.value = nextContentType;
     }
     final future = filterLoading.value || !hasActiveFilter
-        ? dbService.historyDao.getHistoriesTop100(appConfig.userId)
+        ? dbService.historyDao.getHistoriesTop100(appConfig.userId, [])
         : dbService.historyDao.getHistoriesPageByFilter(appConfig.userId, searchFilter, false);
     return future.then((lst) {
       _tempList.assignAll(ClipData.fromList(lst));
@@ -255,7 +255,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   Future<List<ClipData>> loadData(int? minId) {
     final future = filterLoading.value || !hasActiveFilter
-        ? dbService.historyDao.getHistoriesPage(appConfig.userId, minId ?? 0)
+        ? dbService.historyDao.getHistoriesPage(appConfig.userId, minId ?? 0, [])
         : dbService.historyDao.getHistoriesPageByWhere(
             appConfig.userId,
             minId ?? 0,

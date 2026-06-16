@@ -650,22 +650,42 @@ class _$HistoryDao extends HistoryDao {
   }
 
   @override
-  Future<List<History>> getHistoriesTop100(int uid) async {
+  Future<List<History>> getHistoriesTop100(
+    int uid,
+    List<String> types,
+  ) async {
+    const offset = 2;
+    final _sqliteVariablesForTypes =
+        Iterable<String>.generate(types.length, (i) => '?${i + offset}')
+            .join(',');
     return _queryAdapter.queryList(
-        'select * from history where uid = ?1 order by top desc,id desc limit 100',
+        'select * from history      where uid = ?1        and (length(null in (' +
+            _sqliteVariablesForTypes +
+            ')) = 1 or type in (' +
+            _sqliteVariablesForTypes +
+            '))      order by top desc,id desc limit 100',
         mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
-        arguments: [uid]);
+        arguments: [uid, ...types]);
   }
 
   @override
   Future<List<History>> getHistoriesPage(
     int uid,
     int fromId,
+    List<String> types,
   ) async {
+    const offset = 3;
+    final _sqliteVariablesForTypes =
+        Iterable<String>.generate(types.length, (i) => '?${i + offset}')
+            .join(',');
     return _queryAdapter.queryList(
-        'select * from history where uid = ?1 and (?2 <= 0 or id < ?2) order by top desc,id desc limit 100',
+        'select * from history      where uid = ?1        and (?2 <= 0 or id < ?2)        and (length(null in (' +
+            _sqliteVariablesForTypes +
+            ')) = 1 or type in (' +
+            _sqliteVariablesForTypes +
+            '))     order by top desc,id desc limit 100',
         mapper: (Map<String, Object?> row) => History(id: row['id'] as int, uid: row['uid'] as int, time: row['time'] as String, content: row['content'] as String, type: row['type'] as String, devId: row['devId'] as String, size: row['size'] as int, top: (row['top'] as int) != 0, sync: (row['sync'] as int) != 0, updateTime: row['updateTime'] as String?, source: row['source'] as String?, extracted: row['extracted'] as String?),
-        arguments: [uid, fromId]);
+        arguments: [uid, fromId, ...types]);
   }
 
   @override
