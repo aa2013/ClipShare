@@ -40,7 +40,9 @@ class HistoryPage extends GetView<HistoryController> {
                           list: controller.list,
                           parentController: controller,
                           padding: isSmallScreen ? EdgeInsets.zero : null,
-                          onRefreshData: controller.refreshData,
+                          onRefreshData: () {
+                            controller.refreshData(showLoading: false);
+                          },
                           enableRouteSearch: true,
                           onLoadMoreData: controller.loadData,
                           imageMasonryGridViewLayout: controller.listContentType == HistoryContentType.image,

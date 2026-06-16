@@ -238,9 +238,11 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   }
 
   ///重新加载列表
-  Future<void> refreshData() {
+  Future<void> refreshData({bool showLoading = true}) {
     final nextContentType = searchType;
-    _loading.value = true;
+    if (showLoading) {
+      _loading.value = true;
+    }
     if (nextContentType != HistoryContentType.image && _listContentType.value == HistoryContentType.image) {
       _listContentType.value = nextContentType;
     }
@@ -286,12 +288,14 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       },
       onSearchBtnClicked: refreshData,
       filter: SearchFilter(),
-      onExportBtnClicked: () => export((lastId) => dbService.historyDao.getHistoriesPageByFilter(
-            appConfig.userId,
-            searchFilter,
-            true,
-            lastId,
-          )),
+      onExportBtnClicked: () => export(
+        (lastId) => dbService.historyDao.getHistoriesPageByFilter(
+          appConfig.userId,
+          searchFilter,
+          true,
+          lastId,
+        ),
+      ),
     );
     filterLoading.value = false;
     refreshData();
