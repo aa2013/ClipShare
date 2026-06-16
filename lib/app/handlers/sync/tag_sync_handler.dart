@@ -7,6 +7,7 @@ import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -14,7 +15,6 @@ import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
-/// 标签同步处理器
 class TagSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
@@ -37,7 +37,6 @@ class TagSyncHandler implements SyncListener {
       devId: send.guid,
       uid: appConfig.userId,
     );
-    //记录同步记录
     return dbService.opSyncDao.add(opSync);
   }
 
@@ -46,26 +45,27 @@ class TagSyncHandler implements SyncListener {
     var sender = msg.send;
     final map = msg.data;
     final opRecord = await _syncData(map);
-    //发送同步确认
     sender.sendData(
       MsgType.ackSync,
       {"id": opRecord.id, "module": Module.tag.moduleName},
     );
   }
 
-  Future<OperationRecord> _syncData(Map<String, dynamic> map) async {
+  Future<OperationRecord> _syncData(
+    Map<String, dynamic> map, {
+    bool fromStorage = false,
+  }) async {
     final tagMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    var opRecord = OperationRecord.fromJson(map);
-    HistoryTag tag = HistoryTag.fromJson(tagMap.cast());
-    bool success = false;
+    final opRecord = OperationRecord.fromJson(map);
+    final tag = HistoryTag.fromJson(tagMap.cast());
+    var success = false;
     switch (opRecord.method) {
       case OpMethod.add:
         success = await dbService.historyTagDao.add(tag) > 0;
         tagService.add(tag, false);
         break;
       case OpMethod.delete:
-        //delete后仅有id，无hisId，需要本地查一次
         final dbTag = await dbService.historyTagDao.getById(tag.id);
         success = await dbService.historyTagDao.removeById(tag.id).then((cnt) => cnt ?? 0) > 0;
         if (dbTag != null) {
@@ -75,14 +75,22 @@ class TagSyncHandler implements SyncListener {
       default:
     }
     if (success) {
-      await dbService.opRecordDao.add(opRecord.copyWith(data: tag.id.toString()));
+      // 标签在存储模式下落库后也要记录为已同步，否则删除/新增标签会被本地重复补传。
+      final localOpRecord = fromStorage
+          ? StorageSyncRecordHelper.copyWithStorageData(opRecord, tag.id.toString())
+          : opRecord.copyWith(data: tag.id.toString());
+      await dbService.opRecordDao.add(localOpRecord);
     }
     return opRecord;
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
-    //todo 存储中转实现
-    await _syncData(map);
+  Future<void> onStorageSync(
+    Map<String, dynamic> map,
+    Device sender,
+    bool loadingMissingData,
+  ) async {
+    // 复用直连分支的增删逻辑，只在本地 opRecord 上补 storageSync 标记。
+    await _syncData(map, fromStorage: true);
   }
 }

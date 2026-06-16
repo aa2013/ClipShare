@@ -206,7 +206,7 @@ class FileSyncHandler {
           var path = filePath;
           try {
             path = Uri.decodeComponent(filePath);
-          } catch (err, stack) {
+          } catch (err) {
             //ignored
           }
           var history = History(
@@ -333,13 +333,15 @@ class FileSyncHandler {
     if (device.isUseStorage) {
       final storageService = Get.find<StorageService>();
       final appConfig = Get.find<ConfigService>();
-      storageService.sendData(DevInfo.fromDevice(device), MsgType.file, {
+      // 存储中转也必须等待发送结束后再推进队列，否则多文件发送会卡在当前设备。
+      await storageService.sendData(DevInfo.fromDevice(device), MsgType.file, {
         "fileId": appConfig.snowflake.nextId(),
         "filePath": pendingFile.filePath,
         "fileName": fileName,
         "isUri": pendingFile.isUri,
         "size": totalSize,
       });
+      onDone();
     } else {
       final sktService = Get.find<SocketService>();
       final useForward = sktService.isUseForward(device.guid);

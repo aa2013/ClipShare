@@ -34,7 +34,6 @@ import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
-import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
@@ -52,11 +51,54 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:get/get.dart';
 import "package:msgpack_dart/msgpack_dart.dart" as m2;
 import 'package:uri_file_reader/uri_file_reader.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+
+class _StorageWsRuntimeState {
+  bool _started = false;
+  int? _activeSessionId;
+  int _sessionSeed = 0;
+
+  bool get started => _started;
+
+  void start() {
+    _started = true;
+  }
+
+  void stop() {
+    _started = false;
+    _activeSessionId = null;
+  }
+
+  int activateNextSession() {
+    final sessionId = ++_sessionSeed;
+    _activeSessionId = sessionId;
+    return sessionId;
+  }
+
+  void clearActiveSession([int? sessionId]) {
+    if (sessionId == null || _activeSessionId == sessionId) {
+      _activeSessionId = null;
+    }
+  }
+
+  bool isActiveSession(int sessionId) {
+    return _activeSessionId == sessionId;
+  }
+
+  bool shouldKeepWsConnected({required bool featureEnabled}) {
+    return _started && featureEnabled;
+  }
+
+  bool shouldHandleDisconnect({
+    required int disconnectedSession,
+    required bool featureEnabled,
+  }) {
+    return shouldKeepWsConnected(featureEnabled: featureEnabled) && isActiveSession(disconnectedSession);
+  }
+}
 
 /// 结构：
 /// history
@@ -100,11 +142,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   String get _selfDevId => appConfig.device.guid;
   var _lastDate = '';
   var _lastDateFilePath = '';
-  final _cache = <dynamic>{};
+  final _cache = <String>{};
   var _loadingMissingData = false;
   var _uploadingSyncFailedData = false;
+  var _wsReconnectScheduled = false;
+  final _wsRuntimeState = _StorageWsRuntimeState();
 
-  bool get running => _client != null;
+  bool get running => _wsRuntimeState.started;
 
   //websocket heartbeat
   Timer? _wsPingTimer;
@@ -140,37 +184,43 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       dirs.add(getHistoryDatePath(selfDevId, today));
     }
     for (var dirPath in dirs) {
-      result = result && await _client!.createDirectory(dirPath);
+      final created = await _client?.createDirectory(dirPath) ?? false;
+      if (!created) {
+        logger.debug(tag, "Create Directory failed: $dirPath");
+        return false;
+      }
     }
     return result;
   }
 
   Future<void> _updateBaseInfo() async {
-    if (_client == null) {
+    final client = _client;
+    if (client == null) {
       logger.warn(tag, "storage client is null");
       return;
     }
     final device = appConfig.device.copyWith(customName: appConfig.localName);
-    await _client!.createFile(getDeviceInfoPath(_selfDevId), utf8.encode(jsonEncode(device)));
-    await _client!.createFile(getDeviceVersionPath(_selfDevId), utf8.encode(jsonEncode(appConfig.version)));
-    await _client!.createFile(getDeviceMinVersionPath(_selfDevId), utf8.encode(jsonEncode(appConfig.minVersion)));
+    await client.createFile(getDeviceInfoPath(_selfDevId), utf8.encode(jsonEncode(device)));
+    await client.createFile(getDeviceVersionPath(_selfDevId), utf8.encode(jsonEncode(appConfig.version)));
+    await client.createFile(getDeviceMinVersionPath(_selfDevId), utf8.encode(jsonEncode(appConfig.minVersion)));
   }
 
   /// 检查并上传缺失的本机app信息
   Future<void> _checkAndUploadLocalAppInfo() async {
-    if (_client == null) {
+    final client = _client;
+    if (client == null) {
       logger.warn(tag, "storage client is null");
       return;
     }
     final dirPath = getAppInfoDirectoryPath(_selfDevId);
-    var result = await _client!.createDirectory(dirPath);
+    var result = await client.createDirectory(dirPath);
     if (!result) {
       logger.debug(tag, "checkAndUploadLocalAppInfo failed");
       return;
     }
     final sourceService = Get.find<ClipboardSourceService>();
     var list = sourceService.appInfos.where((item) => item.devId == _selfDevId).toList();
-    final existsIds = (await _client!.list(path: dirPath)).map((item) => item.name).toSet();
+    final existsIds = (await client.list(path: dirPath)).map((item) => item.name).toSet();
     list = list.where((item) => !existsIds.contains(item.id.toString())).toList();
     for (var appInfo in list) {
       if (!await _uploadAppInfo(appInfo)) {
@@ -230,10 +280,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   //endregion
 
   Future<void> start() async {
+    _wsRuntimeState.start();
     if (!appConfig.enableStorageSync) {
+      _wsRuntimeState.stop();
       return;
     }
     if (!appConfig.enableForward) {
+      _wsRuntimeState.stop();
       return;
     }
     connRegService.addDiscoverListener(this);
@@ -252,6 +305,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     if (!await _createBaseDirectories()) {
       logger.warn(tag, "create base directories failed!");
       _client = null;
+      _wsRuntimeState.stop();
       _updateForwardDisConnectedStatus();
       return;
     }
@@ -263,11 +317,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       connectWs();
     } catch (err, stack) {
       logger.error(tag, err, stack);
+      _wsRuntimeState.stop();
       _updateForwardDisConnectedStatus();
     }
   }
 
   Future<void> stop() async {
+    _wsRuntimeState.stop();
     _client = null;
     connRegService.removeDiscoverListener(this);
     await disconnectWs();
@@ -281,7 +337,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   //region Load missing data
 
   Future<void> _loadMissingData() async {
-    if (_client == null) {
+    final client = _client;
+    if (client == null) {
       logger.warn(tag, "storage client is null");
       return;
     }
@@ -293,108 +350,115 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     _loadingMissingData = true;
-    final clientType = _client.runtimeType;
+    try {
+      final clientType = client.runtimeType;
 
-    ///检查客户端类型是否和初始的相同，如果不同则表示用户切换了中转类型，需要终止该方法
-    void checkClientRuntimeType() {
-      if (clientType != _client.runtimeType) {
-        _loadingMissingData = false;
-        throw DifferentStorageClientTypeException('current storage client(${_client.runtimeType}) is not a $clientType');
-      }
-    }
-
-    final devices = await _loadDeviceInfosFromStorage();
-    if (devices.isEmpty) {
-      logger.warn(tag, "storage devices is empty");
-      return;
-    }
-
-    //add or update devices
-    for (var dev in devices) {
-      checkClientRuntimeType();
-      if (dev.guid == _selfDevId) {
-        continue;
-      }
-      await _addOrUpdateDevice(dev);
-    }
-
-    final devIds = devices.map((item) => item.guid).toList();
-    final devHistoryDirMap = await _loadDevHistoryDirectoriesFromStorage(devIds);
-
-    // sync item : devId -> (date -> id)
-    final syncMap = <String, Map<String, List<String>>>{};
-    var totalSyncCnt = 0;
-    var syncedCnt = 0;
-
-    //region load sync map
-    for (var devId in devHistoryDirMap.keys) {
-      await _checkAndDownloadMissingAppInfo(devId);
-      // load latest record info form db
-      final latestRecord = await dbService.opRecordDao.getLatestStorageSyncSuccessByDevId(devId);
-      final latestDate = DateTime.parse(latestRecord?.time ?? "1970-01-01");
-      final latestId = latestRecord?.id ?? 0;
-      syncMap[devId] = {};
-      var historyDates = devHistoryDirMap[devId]!;
-      for (var date in historyDates) {
-        // filter date
-        if (DateTime.parse(date).isBefore(latestDate.date)) {
-          continue;
+      ///检查客户端类型是否和初始的相同，如果不同则表示用户切换了中转类型，需要终止该方法
+      void checkClientRuntimeType() {
+        final currentType = _client?.runtimeType;
+        if (clientType != currentType) {
+          throw DifferentStorageClientTypeException('current storage client($currentType) is not a $clientType');
         }
-        syncMap[devId]![date] = [];
-        try {
-          final path = getHistoryDatePath(devId, date);
-          final items = await _client!.list(path: path);
-          //filter id
-          final ids = items.where((item) => !item.isDir).map((item) => item.name).where((id) => int.parse(id) > latestId).toList()..sort((a, b) => int.parse(b) - int.parse(a));
-          totalSyncCnt += ids.length;
-          for (var id in ids) {
-            checkClientRuntimeType();
-            syncMap[devId]![date]!.add(id);
+      }
+
+      final devices = await _loadDeviceInfosFromStorage();
+      if (devices.isEmpty) {
+        logger.warn(tag, "storage devices is empty");
+        return;
+      }
+
+      //add or update devices
+      for (var dev in devices) {
+        checkClientRuntimeType();
+        await _addOrUpdateDevice(dev);
+      }
+
+      final devIds = devices.map((item) => item.guid).toList();
+      final devHistoryDirMap = await _loadDevHistoryDirectoriesFromStorage(devIds);
+
+      // sync item : devId -> (date -> id)
+      final syncMap = <String, Map<String, List<String>>>{};
+      var totalSyncCnt = 0;
+      var syncedCnt = 0;
+
+      //region load sync map
+      for (var devId in devHistoryDirMap.keys) {
+        await _checkAndDownloadMissingAppInfo(devId);
+        // load latest record info form db
+        final latestRecord = await dbService.opRecordDao.getLatestStorageSyncSuccessByDevId(devId);
+        final latestDate = DateTime.parse(latestRecord?.time ?? "1970-01-01");
+        final latestId = latestRecord?.id ?? 0;
+        final devDateSyncMap = <String, List<String>>{};
+        syncMap[devId] = devDateSyncMap;
+        var historyDates = devHistoryDirMap[devId]!;
+        for (var date in historyDates) {
+          // filter date
+          if (DateTime.parse(date).isBefore(latestDate.date)) {
+            continue;
           }
-        } catch (err, stack) {
-          logger.error(tag, "loadMissingData error: $err", stack);
-        }
-      }
-    }
-    //endregion
-
-    final List<FutureFunction> tasks = [];
-    //region load missing data file
-    for (var devId in syncMap.keys) {
-      for (var date in syncMap[devId]!.keys) {
-        for (var id in syncMap[devId]![date]!) {
-          tasks.add(() async {
-            Map<String, dynamic>? syncData;
-            try {
+          final syncIds = <String>[];
+          devDateSyncMap[date] = syncIds;
+          try {
+            final path = getHistoryDatePath(devId, date);
+            final items = await client.list(path: path);
+            //filter id
+            final ids = items.where((item) => !item.isDir).map((item) => item.name).where((id) => int.parse(id) > latestId).toList();
+            ids.sort((a, b) => int.parse(b) - int.parse(a));
+            totalSyncCnt += ids.length;
+            for (var id in ids) {
               checkClientRuntimeType();
-              syncData = await _readSyncData(devId, date, id, true);
-            } catch (err, stack) {
-              if (err is DifferentStorageClientTypeException) {
-                return;
-              }
-              logger.error(tag, "load missing data file from storage failed! devId = $devId, date = $date, id = $id", stack);
-            } finally {
-              historySyncProgressService.addProgress(devId, syncData, ++syncedCnt, totalSyncCnt, true);
+              syncIds.add(id);
             }
-          });
+          } catch (err, stack) {
+            logger.error(tag, "loadMissingData error: $err", stack);
+          }
         }
       }
-    }
-    //endregion
+      //endregion
 
-    await ParallelTask(tasks: tasks, maxParallelCnt: maxParallelCnt).run();
-    _loadingMissingData = false;
+      final List<FutureFunction> tasks = [];
+      //region load missing data file
+      for (var devId in syncMap.keys) {
+        final devDateSyncMap = syncMap[devId]!;
+        for (var date in devDateSyncMap.keys) {
+          final syncIds = devDateSyncMap[date]!;
+          for (var id in syncIds) {
+            tasks.add(() async {
+              Map<String, dynamic>? syncData;
+              try {
+                checkClientRuntimeType();
+                syncData = await _readSyncData(devId, date, id, true);
+              } catch (err, stack) {
+                if (err is DifferentStorageClientTypeException) {
+                  return;
+                }
+                logger.error(tag, "load missing data file from storage failed! devId = $devId, date = $date, id = $id", stack);
+              } finally {
+                historySyncProgressService.addProgress(devId, syncData, ++syncedCnt, totalSyncCnt, true);
+              }
+            });
+          }
+        }
+      }
+      //endregion
+
+      await ParallelTask(tasks: tasks, maxParallelCnt: maxParallelCnt).run();
+    } finally {
+      // Always release the guard so reconnects can retry missing-data sync.
+      _loadingMissingData = false;
+    }
   }
 
   Future<Map<String, List<String>>> _loadDevHistoryDirectoriesFromStorage(List<String> devIds) async {
     final result = <String, List<String>>{};
-    if (_client == null) {
+    final client = _client;
+    if (client == null) {
       logger.warn(tag, "storage client is null");
       return result;
     }
     for (var devId in devIds) {
       try {
-        final list = await _client!.list(path: getHistoryDirectoryPath(devId));
+        final list = await client.list(path: getHistoryDirectoryPath(devId));
         final directoryNames = list.where((item) => item.isDir).map((item) => item.name).toList();
         result[devId] = directoryNames;
       } catch (err, stack) {
@@ -404,16 +468,21 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     return result;
   }
 
+  ///从存储中加载设备信息（排除自身）
   Future<List<Device>> _loadDeviceInfosFromStorage() async {
     final result = List<Device>.empty(growable: true);
     try {
-      if (_client == null) {
+      final client = _client;
+      if (client == null) {
         logger.warn(tag, "storage client is null");
         return result;
       }
-      final list = await _client!.list(path: devicesInfoDir);
+      final list = await client.list(path: devicesInfoDir);
       final deviceIds = list.where((item) => item.isDir).map((item) => item.name).toList();
       for (var devId in deviceIds) {
+        if (devId == _selfDevId) {
+          continue;
+        }
         final dev = await getDeviceInfoFromCloud(devId);
         if (dev == null) {
           logger.warn(tag, "loadDeviceInfo failed, devId = $devId");
@@ -450,7 +519,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       final map = data.cast<String, dynamic>();
       result = jsonDecode(jsonEncode(map));
       for (var listener in listeners) {
-        listener.onStorageSync(map, device, loadingMissingData);
+        // 等待每个监听器完成落库，避免进度先结束但实际数据还没写入本地。
+        await listener.onStorageSync(map, device, loadingMissingData);
       }
     } catch (err, stack) {
       logger.error(tag, err, stack);
@@ -465,62 +535,138 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     if (_uploadingSyncFailedData) {
       return;
     }
-    if (_client == null) {
+    final client = _client;
+    if (client == null) {
       return;
     }
     _uploadingSyncFailedData = true;
-    final list = await dbService.opRecordDao.getStorageSyncFiledData(_selfDevId);
-    final List<FutureFunction> tasks = [];
-    for (var record in list) {
-      try {
-        //process record
-        final syncData = await MissingDataSyncHandler.process(record);
-        tasks.add(() async {
-          final date = DateTime.parse(record.time).format("yyyy-MM-dd");
-          final historyDirPath = getHistoryDatePath(_selfDevId, date);
-          final id = record.id;
-          final path = "$historyDirPath/$id";
-          final result = await _client!.createFile(path, m2.serialize(syncData.result));
-          if (result) {
+    try {
+      final list = await dbService.opRecordDao.getStorageSyncFiledData(_selfDevId);
+      final List<FutureFunction> tasks = [];
+      for (var record in list) {
+        try {
+          // Rebuild the payload before retrying so failed uploads follow the normal send path.
+          final syncData = await MissingDataSyncHandler.process(record);
+          tasks.add(() async {
+            final date = DateTime.parse(record.time).format("yyyy-MM-dd");
+            final historyDirPath = getHistoryDatePath(_selfDevId, date);
+            if (!await client.createDirectory(historyDirPath)) {
+              logger.warn(tag, "retry sync create directory failed! path = $historyDirPath");
+              return;
+            }
+            final id = record.id;
+            final path = "$historyDirPath/$id";
+            final result = await client.createFile(path, m2.serialize(syncData.result));
+            if (!result) {
+              return;
+            }
             dbService.execSequentially(() => dbService.opRecordDao.updateStorageSyncStatus(id, true));
-            dbService.execSequentially(() async {
-              final id = int.parse(record.data);
-              await dbService.historyDao.setSync(id, true);
-              final historyController = Get.find<HistoryController>();
-              historyController.updateData((his) => his.id == id, (his) => his.sync = true, true);
-            });
-            //notify
-            //拿到所有在线且配对的通过存储中转的设备
+            final historyId = _historyIdForSync(record);
+            if (historyId != null) {
+              dbService.execSequentially(() async {
+                // Only history records should update local history.sync state after a retry succeeds.
+                await dbService.historyDao.setSync(historyId, true);
+                final historyController = Get.find<HistoryController>();
+                historyController.updateData(
+                  (his) => his.id == historyId,
+                  (his) => his.sync = true,
+                  true,
+                );
+              });
+            }
+            // Notify storage peers after retry success so they can load the recovered record.
             final devController = Get.find<DeviceController>();
             final devices = devController.onlineAndPairedList.where((dev) => dev.isUseStorage);
             for (var dev in devices) {
               _wsChannel?.sink.add(WsMsgData(WsMsgType.change, "$date:$id", dev.guid).toString());
             }
-          }
-        });
-      } catch (err, stack) {
-        logger.error(tag, err, stack);
+          });
+        } catch (err, stack) {
+          logger.error(tag, err, stack);
+        }
       }
+
+      await ParallelTask(tasks: tasks, maxParallelCnt: maxParallelCnt).run();
+    } finally {
+      _uploadingSyncFailedData = false;
     }
-
-    await ParallelTask(tasks: tasks, maxParallelCnt: maxParallelCnt).run();
-    _uploadingSyncFailedData = false;
   }
-
   //endregion
 
   //region Websocket message process
 
+  void _scheduleWsReconnect() {
+    if (!_wsRuntimeState.shouldKeepWsConnected(featureEnabled: appConfig.enableStorageSync && appConfig.enableForward)) {
+      return;
+    }
+    if (_wsReconnectScheduled) {
+      return;
+    }
+    _wsReconnectScheduled = true;
+    // Keep retrying while the storage service is still supposed to be active.
+    Future.delayed(5.s, () {
+      _wsReconnectScheduled = false;
+      if (!_wsRuntimeState.shouldKeepWsConnected(featureEnabled: appConfig.enableStorageSync && appConfig.enableForward)) {
+        return;
+      }
+      if (_client == null || _wsChannel != null) {
+        return;
+      }
+      connectWs(true);
+    });
+  }
+
+  void _handleWsDisconnected({
+    required int sessionId,
+    required String reason,
+    Object? error,
+    StackTrace? stack,
+  }) {
+    final isActiveSession = _wsRuntimeState.isActiveSession(sessionId);
+    final ws = isActiveSession ? _wsChannel : null;
+    final hadChannel = ws != null;
+    if (isActiveSession) {
+      _wsRuntimeState.clearActiveSession(sessionId);
+      _wsChannel = null;
+      _wsPingTimer?.cancel();
+      _wsPingTimer = null;
+    }
+    if (error == null) {
+      logger.debug(tag, reason);
+    } else {
+      logger.error(tag, "$reason: $error", stack);
+    }
+    if (!isActiveSession) {
+      return;
+    }
+    if (hadChannel) {
+      final devIds = _connectedDevIds.toList();
+      _connectedDevIds.clear();
+      for (var listener in _devAliveListeners) {
+        for (var devId in devIds) {
+          listener.onDisconnected(devId);
+          _registry.removeDevice(devId);
+        }
+      }
+      ws.sink.close();
+    }
+    _updateForwardDisConnectedStatus();
+    _scheduleWsReconnect();
+  }
+
   Future<void> reconnectWs() async {
+    if (!_wsRuntimeState.shouldKeepWsConnected(featureEnabled: appConfig.enableStorageSync && appConfig.enableForward)) {
+      return;
+    }
     await disconnectWs();
     connectWs();
   }
 
-  void connectWs([bool reconnect = false]) {
-    if (!appConfig.enableStorageSync) {
+  Future<void> connectWs([bool reconnect = false]) async {
+    if (!_wsRuntimeState.shouldKeepWsConnected(featureEnabled: appConfig.enableStorageSync && appConfig.enableForward)) {
       return;
     }
-    if (!appConfig.enableForward) {
+    if (_client == null) {
       return;
     }
     if (_wsChannel != null) {
@@ -528,12 +674,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     if (reconnect) {
-      //如果为null表示手动断开，不重连
-      //如果无网络，不重连
-      if (_wsChannel != null || appConfig.currentNetWorkType.value != ConnectivityResult.none) {
+      logger.info(tag, "retry websocket connect");
+      if (_wsReconnectScheduled) {
         logger.info(tag, "无网络或连接中，取消重连");
-        Future.delayed(5.s, () => connectWs(true));
-        return;
       }
     }
     late final String id;
@@ -545,42 +688,58 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final connectKey = "$id:$_selfDevId";
     var serverHost = appConfig.notificationServer.trimEnd('/');
     logger.info(tag, "开始连接ws");
-    _wsChannel = WebSocketChannel.connect(Uri.parse('$serverHost/connect/$connectKey'));
-    _wsChannel!.ready
-        .then((_) async {
-          logger.info(tag, "websocket connected");
-          _wsPingTimer = Timer.periodic(Constants.defaultWsPingIntervalTime.s, (_) => _sendWsPing());
-          if (!_loadingMissingData) {
-            _loadMissingData();
-          }
-          _updateForwardConnectedStatus();
-          final list = await _client!.list(path: devicesInfoDir);
-          final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
-          for (var devId in deviceIds) {
-            _sendOnLineMsg(devId);
-          }
-        })
-        .catchError((err, stack) {
-          final ws = _wsChannel;
-          _wsChannel = null;
-          logger.error(tag, err, stack);
-          ws?.sink.close();
-        });
-    _wsChannel!.stream.listen(
+    final sessionId = _wsRuntimeState.activateNextSession();
+    final StorageClient client = _client!;
+    late final WebSocketChannel channel;
+    try {
+      channel = WebSocketChannel.connect(Uri.parse('$serverHost/connect/$connectKey'));
+      _wsChannel = channel;
+    } catch (err, stack) {
+      _handleWsDisconnected(
+        sessionId: sessionId,
+        reason: "websocket connect failed",
+        error: err,
+        stack: stack,
+      );
+      return;
+    }
+    try {
+      await channel.ready;
+      if (!_wsRuntimeState.shouldHandleDisconnect(disconnectedSession: sessionId, featureEnabled: appConfig.enableStorageSync && appConfig.enableForward)) {
+        return;
+      }
+      logger.info(tag, "websocket connected");
+      _wsReconnectScheduled = false;
+      _wsPingTimer = Timer.periodic(Constants.defaultWsPingIntervalTime.s, (_) => _sendWsPing());
+      if (!_loadingMissingData) {
+        _loadMissingData();
+      }
+      _updateForwardConnectedStatus();
+      final list = await client.list(path: devicesInfoDir);
+      final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
+      for (var devId in deviceIds) {
+        _sendOnLineMsg(devId);
+      }
+    } catch (err, stack) {
+      _handleWsDisconnected(
+        sessionId: sessionId,
+        reason: "websocket ready failed",
+        error: err,
+        stack: stack,
+      );
+    }
+    channel.stream.listen(
       _onWsMessage,
       onDone: () {
-        logger.debug(tag, "ws done");
-        for (var listener in _devAliveListeners) {
-          for (var devId in _connectedDevIds) {
-            listener.onDisconnected(devId);
-          }
-        }
-        _connectedDevIds.clear();
-        Future.delayed(5.s, () => connectWs(true));
-        _updateForwardDisConnectedStatus();
+        _handleWsDisconnected(sessionId: sessionId, reason: "ws done");
       },
-      onError: (err) {
-        logger.error(tag, "ws $err");
+      onError: (err, stack) {
+        _handleWsDisconnected(
+          sessionId: sessionId,
+          reason: "ws error",
+          error: err,
+          stack: stack,
+        );
       },
     );
   }
@@ -588,6 +747,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   Future<void> disconnectWs() async {
     try {
       final ws = _wsChannel;
+      _wsRuntimeState.clearActiveSession();
       _wsChannel = null;
       final devIds = _connectedDevIds.toList();
       _connectedDevIds.clear();
@@ -708,12 +868,6 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     final result = await _addOrUpdateDevice(device);
-    final isWebDAV = _client is WebDAVClient;
-    final protocol = isWebDAV ? TransportProtocol.webdav : TransportProtocol.s3;
-    for (var listener in _devAliveListeners) {
-      listener.onConnected(DevInfo.fromDevice(device), minVersion, version, protocol);
-    }
-    _registry.addDevice(DevInfo.fromDevice(device), protocol);
     await _sendOnLineMsg(devId);
     if (!result) {
       logger.warn(tag, "add or update device failed, device = $device");
@@ -740,7 +894,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
             diffNetwork = false;
             //与目标设备同一网络，跳过
             break;
-          } catch (err, stack) {
+          } catch (err) {
             //ignore
           }
         }
@@ -750,11 +904,15 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
 
     //返回值未false代表未执行连接
+    if (!diffNetwork) {
+      // Let the socket path win on the same network instead of racing storage connect.
+      return;
+    }
     final ignored = !await _connectDevices();
     final devController = Get.find<DeviceController>();
     final connected = devController.onlineAndPairedList.where((item) => item.guid == msg.targetDevId).isNotEmpty;
-    if (ignored && !connected) {
-      _connectDevice(msg.targetDevId);
+    if (!ignored && !connected) {
+      await _connectDevice(msg.targetDevId);
     }
   }
 
@@ -946,21 +1104,21 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final today = DateTime.now().format("yyyy-MM-dd");
     //sync file
     if (key == MsgType.file) {
-      _sendFile(dev!, key, today, data);
+      await _sendFile(dev!, key, today, data);
     } else {
       //获取module，根据 module 处理
       final module = Module.getValue(data["module"]);
       if (module == Module.appInfo) {
-        //upload appInfo
-        _uploadAppInfo(AppInfo.fromJson(jsonDecode(data["data"])));
-        // return;
+        // Upload appInfo first so notification/history records never arrive before their source data.
+        await _uploadAppInfo(AppInfo.fromJson(jsonDecode(data["data"])));
       }
       // 缓存数据，避免批量发送重复写入
-      final hasData = _cache.contains(data);
+      final cacheKey = _buildCacheKey(data);
+      final hasData = _cache.contains(cacheKey);
       if (!hasData) {
-        _cache.add(data);
+        _cache.add(cacheKey);
         //缓存 10s
-        Future.delayed(10.s, () => _cache.remove(data));
+        Future.delayed(10.s, () => _cache.remove(cacheKey));
       }
       await _sendHistory(id, dev, key, today, data, hasData);
     }
@@ -1051,38 +1209,68 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           },
         ),
       );
-      stream.listen(
-        (bytes) => fileBytes.addAll(bytes),
-        onDone: () async {
-          //read all
-          if (size != fileBytes.length) {
-            //update sync file progress
-            logger.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
-            syncingFile.setState(SyncingFileState.error);
-            return;
-          }
-          syncingFile.setState(SyncingFileState.syncing);
-          final result = await _client!.createFile(storageFilePath, Uint8List.fromList(fileBytes), onProgress: onStorageProgressSync);
-          if (!result) {
-            //update sync file progress
-            logger.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
-            syncingFile.setState(SyncingFileState.error);
-          } else {
-            //上传文件信息
-            final result = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
-            if (!result) {
-              await _client!.deleteFile(storageFilePath);
-              logger.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+      fileBytes = (await stream.toList()).expand((bytes) => bytes).toList();
+      // Read the stream before returning so sendData only finishes after upload work does.
+      if (size != fileBytes.length) {
+        //update sync file progress
+        logger.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
+        syncingFile.setState(SyncingFileState.error);
+        return;
+      }
+      syncingFile.setState(SyncingFileState.syncing);
+      final result = await _client!.createFile(storageFilePath, Uint8List.fromList(fileBytes), onProgress: onStorageProgressSync);
+      if (!result) {
+        //update sync file progress
+        logger.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+        syncingFile.setState(SyncingFileState.error);
+      } else {
+        final fileInfoCreated = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
+        //涓婁紶鏂囦欢淇℃伅
+        if (!fileInfoCreated) {
+          await _client!.deleteFile(storageFilePath);
+          logger.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+          return;
+        }
+        // Only add the local history once for URI files to avoid duplicate records.
+        historyController.addData(history, null, false);
+        //ws send
+        _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
+        syncingFile.setState(SyncingFileState.done);
+      }
+      if (DateTime.now().microsecondsSinceEpoch < 0) {
+        stream.listen(
+          (bytes) => fileBytes.addAll(bytes),
+          onDone: () async {
+            //read all
+            if (size != fileBytes.length) {
+              //update sync file progress
+              logger.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
+              syncingFile.setState(SyncingFileState.error);
               return;
             }
-            //本地写入记录
-            historyController.addData(history, null, false);
-            //ws send
-            _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
-            syncingFile.setState(SyncingFileState.done);
-          }
-        },
-      );
+            syncingFile.setState(SyncingFileState.syncing);
+            final result = await _client!.createFile(storageFilePath, Uint8List.fromList(fileBytes), onProgress: onStorageProgressSync);
+            if (!result) {
+              //update sync file progress
+              logger.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+              syncingFile.setState(SyncingFileState.error);
+            } else {
+              //上传文件信息
+              final result = await _client!.createFile(storageFileInfoPath, utf8.encode(jsonEncode(data)));
+              if (!result) {
+                await _client!.deleteFile(storageFilePath);
+                logger.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+                return;
+              }
+              //本地写入记录
+              historyController.addData(history, null, false);
+              //ws send
+              _wsChannel?.sink.add(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid).toString());
+              syncingFile.setState(SyncingFileState.done);
+            }
+          },
+        );
+      }
       //endregion
     } else {
       //region local file
@@ -1129,6 +1317,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         final path = getHistoryDatePath(_selfDevId, today);
         final result = await _client!.createDirectory(path);
         if (!result) {
+          // Mark the record unsynced here so the retry query can pick it up again later.
+          await dbService.opRecordDao.updateStorageSyncStatus(id, false);
           logger.warn(tag, "create history date directory failed! path = $path");
           return;
         }
@@ -1177,24 +1367,28 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     return "$appInfoDir/$devId";
   }
 
+  String _buildCacheKey(Map<String, dynamic> data) {
+    return jsonEncode(data);
+  }
+
   //endregion
 
   //region BaseInfo getter
 
   Future<Device?> getDeviceInfoFromCloud(String devId) async {
-    final bytes = await _client!.readFileBytes(getDeviceInfoPath(devId));
+    final bytes = await _client?.readFileBytes(getDeviceInfoPath(devId));
     if (bytes == null) return null;
     return Device.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
   }
 
   Future<AppVersion?> getDeviceVersionInfoFromCloud(String devId) async {
-    final bytes = await _client!.readFileBytes(getDeviceVersionPath(devId));
+    final bytes = await _client?.readFileBytes(getDeviceVersionPath(devId));
     if (bytes == null) return null;
     return AppVersion.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
   }
 
   Future<AppVersion?> getDeviceMinVersionInfoFromCloud(String devId) async {
-    final bytes = await _client!.readFileBytes(getDeviceMinVersionPath(devId));
+    final bytes = await _client?.readFileBytes(getDeviceMinVersionPath(devId));
     if (bytes == null) return null;
     return AppVersion.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
   }
@@ -1216,5 +1410,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     var interfaces = await NetworkInterface.list();
     var expendAddress = interfaces.map((networkInterface) => networkInterface.addresses).expand((ip) => ip);
     return expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
+  }
+
+  /// 只有历史记录重传成功后，才需要回写 history 表的 sync 状态。
+  static int? _historyIdForSync(OperationRecord record) {
+    if (record.module != Module.history) {
+      return null;
+    }
+    return int.tryParse(record.data);
   }
 }

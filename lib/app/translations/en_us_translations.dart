@@ -239,6 +239,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Floating Window";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "Show History Floating Window";
+      case TranslationKey.commonSettingsShowHistoriesFloatWindowTips:
+        return "Double-tap or drag the handle left to open the history floating panel.";
       case TranslationKey.historyFloatTitle:
         return "Clipboard History";
       case TranslationKey.historyFloatCountTemplate:

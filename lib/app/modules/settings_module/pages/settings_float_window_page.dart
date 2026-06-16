@@ -23,43 +23,66 @@ class SettingsFloatWindowPage extends SettingsSectionView {
       SettingCard(
         searchKeys: const [
           TranslationKey.commonSettingsShowHistoriesFloatWindow,
+          TranslationKey.commonSettingsShowHistoriesFloatWindowTips,
           TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue,
         ],
-        title: Text(TranslationKey.commonSettingsShowHistoriesFloatWindow.tr),
-        description: Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 30,
-                      child: Slider(
-                        min: 24,
-                        max: 50,
-                        divisions: 26,
-                        padding: EdgeInsets.zero,
-                        value: appConfig.historyFloatHandleWidth.toDouble(),
-                        label: TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue.trParams({
-                          "width": appConfig.historyFloatHandleWidth.toString(),
-                        }),
-                        onChanged: appConfig.showHistoryFloat
-                            ? (value) {
-                                HapticFeedback.mediumImpact();
-                                final width = value.round();
-                                androidChannelService.setHistoryFloatHandleWidth(width);
-                                appConfig.setHistoryFloatHandleWidth(width);
-                              }
-                            : null,
-                      ),
-                    ),
-                  ),
-                  SizedBox(
-                    width: 24,
-                    child: Text(
-                      appConfig.historyFloatHandleWidth.toString(),
-                      textAlign: TextAlign.right,
-                    ),
-                  ),
-                ],
+        title: Row(
+          children: [
+            Text(
+              TranslationKey.commonSettingsShowHistoriesFloatWindow.tr,
+              maxLines: 1,
+            ),
+            const SizedBox(width: 5),
+            GestureDetector(
+              onTap: () {
+                // Reuse the standard tips dialog so this setting matches other annotated settings.
+                Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.commonSettingsShowHistoriesFloatWindowTips.tr,
+                );
+              },
+              child: const Icon(
+                Icons.info_outline,
+                color: Colors.blueGrey,
+                size: 15,
               ),
+            ),
+          ],
+        ),
+        description: Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                height: 30,
+                child: Slider(
+                  min: 24,
+                  max: 50,
+                  divisions: 26,
+                  padding: EdgeInsets.zero,
+                  value: appConfig.historyFloatHandleWidth.toDouble(),
+                  label: TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue.trParams({
+                    "width": appConfig.historyFloatHandleWidth.toString(),
+                  }),
+                  onChanged: appConfig.showHistoryFloat
+                      ? (value) {
+                          HapticFeedback.mediumImpact();
+                          final width = value.round();
+                          androidChannelService.setHistoryFloatHandleWidth(width);
+                          appConfig.setHistoryFloatHandleWidth(width);
+                        }
+                      : null,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 24,
+              child: Text(
+                appConfig.historyFloatHandleWidth.toString(),
+                textAlign: TextAlign.right,
+              ),
+            ),
+          ],
+        ),
         value: appConfig.showHistoryFloat,
         action: (v) => Switch(
           value: appConfig.showHistoryFloat,

@@ -7,6 +7,7 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_record.dar
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
@@ -14,7 +15,6 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
-///规则同步器
 class RuleSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
@@ -38,7 +38,6 @@ class RuleSyncHandler implements SyncListener {
       devId: send.guid,
       uid: appConfig.userId,
     );
-    //记录同步记录
     return dbService.opSyncDao.add(opSync);
   }
 
@@ -50,29 +49,30 @@ class RuleSyncHandler implements SyncListener {
     if (opRecord == null) {
       return;
     }
-    //发送同步确认
     sender.sendData(
       MsgType.ackSync,
       {"id": opRecord.id, "module": module.name},
     );
   }
 
-  Future<OperationRecord?> _syncData(String senderDevId, Map<String, dynamic> map) async {
+  Future<OperationRecord?> _syncData(
+    String senderDevId,
+    Map<String, dynamic> map, {
+    bool fromStorage = false,
+  }) async {
     final ruleMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
     final opRecord = OperationRecord.fromJson(map);
     final rule = Rule.fromJson(ruleMap.cast());
-    bool success = false;
+    var success = false;
     switch (opRecord.method) {
       case OpMethod.add:
       case OpMethod.update:
         final dbData = await dbService.ruleDao.getById(rule.id);
         if (dbData != null) {
-          //版本比自己老，忽略
           if (dbData.version >= rule.version) {
             break;
           }
-          //确认远端数据更新后，再清理本地该规则的旧同步记录
           await dbService.opRecordDao.deleteByDataWithCascade(rule.id.toString());
           await dbService.ruleDao.remove(rule.id);
         } else {
@@ -93,20 +93,27 @@ class RuleSyncHandler implements SyncListener {
         break;
       default:
     }
-    if (success) {
-      //增加本机操作记录
-      await dbService.opRecordDao.add(opRecord);
-      //将发送方写入同步几乎防止重复同步
-      await dbService.opSyncDao.add(OperationSync(opId: opRecord.id, devId: senderDevId, uid: appConfig.userId));
-    } else {
+    if (!success) {
       return null;
     }
-    return opRecord;
+    // 规则来自存储回放时，要保留 storageSync 标记，避免版本合并后再次回灌到云端。
+    final localOpRecord = fromStorage
+        ? StorageSyncRecordHelper.copyWithStorageData(opRecord, opRecord.data)
+        : opRecord;
+    await dbService.opRecordDao.add(localOpRecord);
+    await dbService.opSyncDao.add(
+      OperationSync(opId: localOpRecord.id, devId: senderDevId, uid: appConfig.userId),
+    );
+    return localOpRecord;
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
-    //todo 存储中转实现
-    await _syncData(sender.guid, map);
+  Future<void> onStorageSync(
+    Map<String, dynamic> map,
+    Device sender,
+    bool loadingMissingData,
+  ) async {
+    // sender.guid 仍然要写入 opSync，避免后续缺失数据同步再次把同一条规则推回来。
+    await _syncData(sender.guid, map, fromStorage: true);
   }
 }

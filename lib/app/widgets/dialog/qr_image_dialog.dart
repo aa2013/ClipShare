@@ -23,7 +23,14 @@ class QrImageDialog extends StatelessWidget {
           child: SizedBox(
             width: width,
             height: width,
-            child: QrImageView(data: data),
+            child: QrImageView(
+              data: data,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Colors.blueGrey,
+              ),
+              dataModuleStyle: const QrDataModuleStyle(color: Colors.blueGrey),
+            ),
           ),
         ),
       ),

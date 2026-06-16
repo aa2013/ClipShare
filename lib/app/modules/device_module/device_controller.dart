@@ -12,6 +12,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
@@ -196,7 +197,43 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {}
+  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
+    var data = <dynamic, dynamic>{};
+    if (map["data"] is Map) {
+      // 设备对象本身放在 data 里，opRecord 反序列化前要先把它从 map 中拆出来。
+      data = map["data"];
+      map["data"] = "";
+    }
+    final opRecord = StorageSyncRecordHelper.fromStorageMap(map);
+    final json = data.cast<String, dynamic>();
+    final dev = Device.fromJson(json);
+    if (dev.guid == appConfig.devInfo.guid) {
+      // 存储目录里也会看到自己的设备元数据，直接跳过避免把自己当成远端设备写回。
+      return;
+    }
+
+    var success = false;
+    switch (opRecord.method) {
+      case OpMethod.add:
+        success = await dbService.deviceDao.add(dev) > 0;
+        break;
+      case OpMethod.delete:
+        success = await devService.remove(dev.guid);
+        break;
+      case OpMethod.update:
+        success = await dbService.deviceDao.updateDevice(dev) > 0;
+        break;
+      default:
+        return;
+    }
+    if (!success) {
+      return;
+    }
+    await dbService.opRecordDao.add(
+      // 设备记录是由存储回放写入的，本地 opRecord 也必须保持 storageSync=true。
+      StorageSyncRecordHelper.copyWithStorageData(opRecord, dev.guid),
+    );
+  }
 
   @override
   void onConnected(

@@ -185,6 +185,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "悬浮窗";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "显示历史记录悬浮窗";
+      case TranslationKey.commonSettingsShowHistoriesFloatWindowTips:
+        return "双击或者向左拖拉把手调出历史记录悬浮面板";
       case TranslationKey.historyFloatTitle:
         return "剪贴历史";
       case TranslationKey.historyFloatCountTemplate:

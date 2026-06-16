@@ -7,16 +7,15 @@ import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
-/// 剪贴板来源操作同步处理器
 class HistorySourceSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
@@ -40,7 +39,6 @@ class HistorySourceSyncHandler implements SyncListener {
       devId: send.guid,
       uid: appConfig.userId,
     );
-    //记录同步记录
     return dbService.opSyncDao.add(opSync);
   }
 
@@ -49,22 +47,24 @@ class HistorySourceSyncHandler implements SyncListener {
     var sender = msg.send;
     final map = msg.data;
     final opRecord = await _syncData(map);
-    //发送同步确认
     sender.sendData(
       MsgType.ackSync,
       {"id": opRecord.id, "module": Module.historySource.moduleName},
     );
   }
 
-  Future<OperationRecord> _syncData(Map<String, dynamic> map) async {
+  Future<OperationRecord> _syncData(
+    Map<String, dynamic> map, {
+    bool fromStorage = false,
+  }) async {
     final historyMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    var opRecord = OperationRecord.fromJson(map);
-    var history = History.fromJson(historyMap.cast());
-    bool success = false;
+    final opRecord = OperationRecord.fromJson(map);
+    final history = History.fromJson(historyMap.cast());
+    var success = false;
     switch (opRecord.method) {
       case OpMethod.update:
-        var source = history.source;
+        final source = history.source;
         var cnt = 0;
         if (source != null) {
           cnt = await dbService.historyDao.updateHistorySource(history.id, source) ?? 0;
@@ -73,20 +73,24 @@ class HistorySourceSyncHandler implements SyncListener {
         }
         success = cnt > 0;
         if (success) {
-          //移除未使用的剪贴板来源信息
           await sourceService.removeNotUsed();
         }
         break;
       case OpMethod.delete:
-        var id = history.id;
+        final id = history.id;
         await dbService.historyDao.clearHistorySource(id);
         await sourceService.removeNotUsed();
       default:
     }
     if (success) {
-      //同步成功后在本地也记录一次，先删除本地的该记录的其他剪贴板来源操作记录
-      await dbService.opRecordDao.deleteHistorySourceRecords(history.id, Module.historySource.moduleName);
-      var originOpRecord = opRecord.copyWith(data: history.id.toString());
+      await dbService.opRecordDao.deleteHistorySourceRecords(
+        history.id,
+        Module.historySource.moduleName,
+      );
+      // 删除旧来源记录后再补写一条本地 opRecord，避免缺失数据链路留下重复来源操作。
+      final originOpRecord = fromStorage
+          ? StorageSyncRecordHelper.copyWithStorageData(opRecord, history.id.toString())
+          : opRecord.copyWith(data: history.id.toString());
       await dbService.opRecordDao.add(originOpRecord);
     }
     historyController.updateData(
@@ -97,8 +101,12 @@ class HistorySourceSyncHandler implements SyncListener {
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
-    //todo 存储中转实现
-    await _syncData(map);
+  Future<void> onStorageSync(
+    Map<String, dynamic> map,
+    Device sender,
+    bool loadingMissingData,
+  ) async {
+    // 存储同步只需要沿用既有更新逻辑，并在落本地 opRecord 时标记已完成存储同步。
+    await _syncData(map, fromStorage: true);
   }
 }

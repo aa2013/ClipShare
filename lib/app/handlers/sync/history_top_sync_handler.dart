@@ -7,15 +7,14 @@ import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
-/// 记录置顶操作同步处理器
 class HistoryTopSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
@@ -38,7 +37,6 @@ class HistoryTopSyncHandler implements SyncListener {
       devId: send.guid,
       uid: appConfig.userId,
     );
-    //记录同步记录
     return dbService.opSyncDao.add(opSync);
   }
 
@@ -47,19 +45,21 @@ class HistoryTopSyncHandler implements SyncListener {
     var sender = msg.send;
     final map = msg.data;
     final opRecord = await _syncData(map);
-    //发送同步确认
     sender.sendData(
       MsgType.ackSync,
       {"id": opRecord.id, "module": Module.historyTop.moduleName},
     );
   }
 
-  Future<OperationRecord> _syncData(Map<String, dynamic> map) async {
+  Future<OperationRecord> _syncData(
+    Map<String, dynamic> map, {
+    bool fromStorage = false,
+  }) async {
     final historyMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    var opRecord = OperationRecord.fromJson(map);
-    History history = History.fromJson(historyMap.cast());
-    bool success = false;
+    final opRecord = OperationRecord.fromJson(map);
+    final history = History.fromJson(historyMap.cast());
+    var success = false;
     switch (opRecord.method) {
       case OpMethod.update:
         success = await dbService.historyDao.setTop(history.id, history.top).then((cnt) => cnt ?? 0) > 0;
@@ -67,8 +67,10 @@ class HistoryTopSyncHandler implements SyncListener {
       default:
     }
     if (success) {
-      //同步成功后在本地也记录一次
-      var originOpRecord = opRecord.copyWith(data: history.id.toString());
+      // 存储回放后的置顶记录要标记为已同步，避免被本机重新写回存储形成回环。
+      final originOpRecord = fromStorage
+          ? StorageSyncRecordHelper.copyWithStorageData(opRecord, history.id.toString())
+          : opRecord.copyWith(data: history.id.toString());
       await dbService.opRecordDao.add(originOpRecord);
     }
     historyController.updateData(
@@ -79,8 +81,12 @@ class HistoryTopSyncHandler implements SyncListener {
   }
 
   @override
-  Future<void> onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
-    //todo 存储中转实现
-    await _syncData(map);
+  Future<void> onStorageSync(
+    Map<String, dynamic> map,
+    Device sender,
+    bool loadingMissingData,
+  ) async {
+    // 直连和存储共用置顶更新逻辑，区别只在本地操作记录的 storageSync 状态。
+    await _syncData(map, fromStorage: true);
   }
 }

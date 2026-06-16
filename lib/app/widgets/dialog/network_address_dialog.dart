@@ -50,8 +50,6 @@ class NetworkAddressDialog extends StatelessWidget {
                 height: 200,
                 child: QrImageView(
                   data: jsonEncode(qrContent),
-                  version: QrVersions.auto,
-                  gapless: false,
                   eyeStyle: const QrEyeStyle(
                     eyeShape: QrEyeShape.square,
                     color: Colors.blueGrey,

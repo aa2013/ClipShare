@@ -557,7 +557,7 @@ class Constants {
           end
       
           __userscripts_map['{{funcHash}}'] = func()
-          logger.debug('loaded fun: ' .. '{{funcName}}: {{funcHash}}')
+          log.debug('loaded fun: ' .. '{{funcName}}: {{funcHash}}')
           return 'OK'
         end
         print(wrapper())
@@ -577,7 +577,7 @@ class Constants {
           end
       
           __customModules['{{moduleName}}'] = table_readonly(chunk())
-          logger.debug('loaded module: ' .. '{{moduleName}}')
+          log.debug('loaded module: ' .. '{{moduleName}}')
           return 'OK'
         end
         print(wrapper())

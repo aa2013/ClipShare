@@ -22,53 +22,63 @@ class AndroidNotificationListenerService extends GetxService {
   AndroidNotificationListenerService();
 
   void startListening() {
+    logger.info(tag, "start listening");
     _listen?.cancel();
     _listening = false;
-    _listen = NotificationListenerService.notificationsStream.listen((event) async {
-      try {
-        if (event.hasRemoved == true) {
-          return;
-        }
-        var map = <String, String?>{};
-        final hasImg = event.haveExtraPicture ?? false;
-        map["pkg"] = event.packageName;
-        map["title"] = event.title;
-        map["content"] = event.content;
-        if (event.content?.isNullOrEmpty ?? true) {
-          return;
-        }
-        if (hasImg) {
-          try {
-            map["img"] = base64Encode(event.extrasPicture!);
-          } catch (err, stack) {
-            logger.debug(tag, "$err, $stack");
-          }
-        }
-        final pkgName = event.packageName!;
-        await _sourceService.loadFuture;
-        final appInfo = _sourceService.getAppInfoByAppId(pkgName);
-        ClipboardSource? source;
-        if (appInfo != null) {
-          _sourceService.addOrUpdate(appInfo, true);
-          source = ClipboardSource(
-            id: pkgName,
-            name: appInfo.name,
-            time: null,
-            iconB64: appInfo.iconB64,
-          );
-        }
-        HistoryDataListener.inst.onChanged(HistoryContentType.notification, jsonEncode(map), source);
-      } catch (err, stack) {
-        logger.error(tag, "error: $err, stack:$stack");
-      }
+    _listen = NotificationListenerService.notificationsStream.listen(_onNotifyEvent);
+    _listen?.onDone(() {
+      logger.info(tag, "on done");
+      _listening = false;
     });
     _listening = true;
   }
 
   void stopListening() {
+    logger.info(tag, "stop listening");
     _listen?.cancel();
     _listen = null;
     _listening = false;
+  }
+
+  Future<void> _onNotifyEvent(ServiceNotificationEvent event) async {
+    try {
+      if (event.hasRemoved == true) {
+        return;
+      }
+      var map = <String, String?>{};
+      final hasImg = event.haveExtraPicture ?? false;
+      map["pkg"] = event.packageName;
+      map["title"] = event.title;
+      map["content"] = event.content;
+      if (event.content?.isNullOrEmpty ?? true) {
+        return;
+      }
+      if (hasImg) {
+        try {
+          map["img"] = base64Encode(event.extrasPicture!);
+        } catch (err, stack) {
+          logger.debug(tag, "$err, $stack");
+        }
+      }
+      final pkgName = event.packageName!;
+      await _sourceService.loadFuture;
+      final appInfo = _sourceService.getAppInfoByAppId(pkgName);
+      ClipboardSource? source;
+      if (appInfo != null) {
+        _sourceService.addOrUpdate(appInfo, true);
+        source = ClipboardSource(
+          id: pkgName,
+          name: appInfo.name,
+          time: null,
+          iconB64: appInfo.iconB64,
+        );
+      } else {
+        logger.warn(tag, "not found notification source info");
+      }
+      HistoryDataListener.inst.onChanged(HistoryContentType.notification, jsonEncode(map), source);
+    } catch (err, stack) {
+      logger.error(tag, "error: $err, stack:$stack");
+    }
   }
 
   @override

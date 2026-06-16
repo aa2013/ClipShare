@@ -87,6 +87,7 @@ enum TranslationKey {
   commonSettingsRunMinimize,
   floatWindow,
   commonSettingsShowHistoriesFloatWindow,
+  commonSettingsShowHistoriesFloatWindowTips,
   historyFloatTitle,
   historyFloatCountTemplate,
   historyFloatImageUnavailable,

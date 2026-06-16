@@ -2056,3 +2056,5 @@ app.*.map.json
 /.dart_tool_home/.dartServer/.analysis-driver/ffee6b284885297fe6e6c0918ca99be8.unlinked2-temp-32696
 /.dart_tool_home/.dartServer/.instrumentation/uuid.txt
 /pubspec.lock
+.codegraph/
+.codegraph-*/
