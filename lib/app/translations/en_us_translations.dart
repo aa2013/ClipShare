@@ -207,6 +207,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Go to Today";
       case TranslationKey.clear:
         return "Clear";
+      case TranslationKey.settingsSearchHint:
+        return "Search settings...";
       case TranslationKey.filterByDevice:
         return "Filter by Device";
       case TranslationKey.filterByTag:
@@ -249,6 +251,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Image unavailable";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
         return "Floating Window Handle Width: @width";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleColor:
+        return "Floating Window Handle Color";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips:
+        return "Pick a color with transparency. Changes are applied to the native handle in real time.";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "Enhance Background Keep Alive";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:
@@ -638,6 +644,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Confirm";
       case TranslationKey.dialogNeutralText:
         return "Neutral Button";
+      case TranslationKey.dialogRestoreDefaultText:
+        return "Restore Default";
       case TranslationKey.open:
         return "Open";
       case TranslationKey.openLink:

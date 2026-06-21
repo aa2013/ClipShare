@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "flutter_colorpicker",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/flutter_colorpicker",
+    },
+    {
       "name": "simple_icons",
       "license": "unknown",
       "url": "https://pub.dev/packages/simple_icons",

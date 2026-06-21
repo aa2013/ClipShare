@@ -47,6 +47,7 @@ class AndroidChannelService extends GetxService {
       AndroidChannelMethod.showHistoryFloatWindow.name,
       {
         "width": appConfig.historyFloatHandleWidth,
+        "color": appConfig.historyFloatHandleColor,
         "i18n": {
           "title": TranslationKey.historyFloatTitle.tr,
           "countTemplate": TranslationKey.historyFloatCountTemplate.tr,
@@ -72,6 +73,14 @@ class AndroidChannelService extends GetxService {
     androidChannel.invokeMethod(
       AndroidChannelMethod.setHistoryFloatHandleWidth.name,
       {"width": width},
+    );
+  }
+
+  void setHistoryFloatHandleColor(int color) {
+    if (!Platform.isAndroid) return;
+    androidChannel.invokeMethod(
+      AndroidChannelMethod.setHistoryFloatHandleColor.name,
+      {"color": color},
     );
   }
 

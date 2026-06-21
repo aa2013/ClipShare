@@ -47,9 +47,12 @@ import java.net.URLDecoder
 
 const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
 const val setHistoryFloatHandleWidth = "SET_HISTORY_FLOAT_HANDLE_WIDTH"
+const val setHistoryFloatHandleColor = "SET_HISTORY_FLOAT_HANDLE_COLOR"
 const val loadHistories = "LOAD_HISTORIES"
 const val sendHistories = "SEND_HISTORIES"
 const val OnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED"
+// Match the original translucent white default until the user picks a custom handle color.
+val defaultHistoryFloatHandleColor = 0x17FFFFFF.toInt()
 
 class MyApplication : Application() {
 
@@ -335,36 +338,39 @@ class MyApplication : Application() {
                 }
                 //显示历史浮窗
                 "showHistoryFloatWindow" -> {
-                    val width = args["width"] as? Int ?: 32
+                    val width = (args["width"] as? Number)?.toInt() ?: 32
+                    val color = (args["color"] as? Number)?.toInt() ?: defaultHistoryFloatHandleColor
                     val i18n = args["i18n"] as? Map<*, *>
-                    startService(Intent(this, HistoryFloatService::class.java).apply {
-                        putExtra("width", width)
-                        // 每次调用都把最新文案下发给服务，语言切换后可直接刷新悬浮窗内容。
-                        putExtra(
-                            HistoryFloatService.EXTRA_FLOAT_TITLE,
-                            i18n?.get("title") as? String
-                        )
-                        putExtra(
-                            HistoryFloatService.EXTRA_FLOAT_COUNT_TEMPLATE,
-                            i18n?.get("countTemplate") as? String
-                        )
-                        putExtra(
-                            HistoryFloatService.EXTRA_FLOAT_IMAGE_UNAVAILABLE,
-                            i18n?.get("imageUnavailable") as? String
-                        )
-                        putExtra(
-                            HistoryFloatService.EXTRA_FLOAT_TEXT_TYPE,
-                            i18n?.get("textType") as? String
-                        )
-                        putExtra(
-                            HistoryFloatService.EXTRA_FLOAT_IMAGE_TYPE,
-                            i18n?.get("imageType") as? String
-                        )
-                        putExtra(
-                            HistoryFloatService.EXTRA_FLOAT_FILE_TYPE,
-                            i18n?.get("fileType") as? String
-                        )
-                    })
+                    if (!isServiceRunning(this, HistoryFloatService::class.java)) {
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            putExtra("width", width)
+                            putExtra("color", color)
+                            putExtra(
+                                HistoryFloatService.EXTRA_FLOAT_TITLE,
+                                i18n?.get("title") as? String
+                            )
+                            putExtra(
+                                HistoryFloatService.EXTRA_FLOAT_COUNT_TEMPLATE,
+                                i18n?.get("countTemplate") as? String
+                            )
+                            putExtra(
+                                HistoryFloatService.EXTRA_FLOAT_IMAGE_UNAVAILABLE,
+                                i18n?.get("imageUnavailable") as? String
+                            )
+                            putExtra(
+                                HistoryFloatService.EXTRA_FLOAT_TEXT_TYPE,
+                                i18n?.get("textType") as? String
+                            )
+                            putExtra(
+                                HistoryFloatService.EXTRA_FLOAT_IMAGE_TYPE,
+                                i18n?.get("imageType") as? String
+                            )
+                            putExtra(
+                                HistoryFloatService.EXTRA_FLOAT_FILE_TYPE,
+                                i18n?.get("fileType") as? String
+                            )
+                        })
+                    }
                 }
                 "showKeepAliveFloatWindow" -> {
                     if (Settings.canDrawOverlays(this) && !isServiceRunning(this, KeepAliveFloatService::class.java)) {
@@ -372,7 +378,7 @@ class MyApplication : Application() {
                     }
                 }
                 "setHistoryFloatHandleWidth" -> {
-                    val width = args["width"] as Int
+                    val width = (args["width"] as? Number)?.toInt() ?: 32
                     val intent = Intent(setHistoryFloatHandleWidth)
                     intent.putExtra("width", width)
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
@@ -380,6 +386,18 @@ class MyApplication : Application() {
                         startService(Intent(this, HistoryFloatService::class.java).apply {
                             action = setHistoryFloatHandleWidth
                             putExtra("width", width)
+                        })
+                    }
+                }
+                "setHistoryFloatHandleColor" -> {
+                    val color = (args["color"] as? Number)?.toInt() ?: defaultHistoryFloatHandleColor
+                    val intent = Intent(setHistoryFloatHandleColor)
+                    intent.putExtra("color", color)
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                    if (isServiceRunning(this, HistoryFloatService::class.java)) {
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            action = setHistoryFloatHandleColor
+                            putExtra("color", color)
                         })
                     }
                 }

@@ -197,6 +197,8 @@ dependencies:
       url: https://github.com/aa2013/flutter_embed_lua
   # 可拖拉的切分视图
   multi_split_view: ^3.6.1
+  # Color picker
+  flutter_colorpicker: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

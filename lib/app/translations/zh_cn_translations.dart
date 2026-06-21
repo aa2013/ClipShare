@@ -151,6 +151,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "定位到今天";
       case TranslationKey.clear:
         return "清除";
+      case TranslationKey.settingsSearchHint:
+        return "搜索设置...";
       case TranslationKey.filterByDevice:
         return "筛选设备";
       case TranslationKey.filterByTag:
@@ -195,6 +197,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "图片已不可用";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
         return "悬浮窗把手宽度：@width";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleColor:
+        return "悬浮窗把手颜色";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips:
+        return "选择带透明度的颜色，修改后会实时同步到原生把手。";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "增强后台保活";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:
@@ -594,6 +600,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "确定";
       case TranslationKey.dialogNeutralText:
         return "中立按钮";
+      case TranslationKey.dialogRestoreDefaultText:
+        return "恢复默认值";
       case TranslationKey.open:
         return "打开";
       case TranslationKey.openLink:

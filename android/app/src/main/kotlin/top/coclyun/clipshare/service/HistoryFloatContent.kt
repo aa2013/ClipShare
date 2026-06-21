@@ -79,6 +79,7 @@ import kotlinx.coroutines.launch
 import top.coclyun.clipshare.MyApplication
 import top.coclyun.clipshare.R
 import top.coclyun.clipshare.adapter.History
+import top.coclyun.clipshare.defaultHistoryFloatHandleColor
 import java.io.File
 import kotlin.math.min
 
@@ -98,6 +99,7 @@ fun HistoryFloatContent(
     closing: Boolean,
     handleVisible: Boolean,
     handleWidth: Int,
+    handleColor: Int,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
     onCollapseFinished: () -> Unit,
@@ -124,6 +126,7 @@ fun HistoryFloatContent(
                 onExpand = onExpand,
                 onMoveHandle = onMoveHandle,
                 handleWidth = handleWidth,
+                handleColor = Color(handleColor),
             )
         }
     }
@@ -135,14 +138,15 @@ private fun HistoryHandle(
     onExpand: () -> Unit,
     onMoveHandle: (Float) -> Unit,
     handleWidth: Int = 32,
+    handleColor: Color = Color(defaultHistoryFloatHandleColor),
 ) {
     var active by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
     val handleWidth by animateDpAsState(targetValue = if (active) (handleWidth + 16).dp else handleWidth.dp, label = "handleWidth")
     val handleHeight by animateDpAsState(targetValue = if (active) 108.dp else 96.dp, label = "handleHeight")
-    val handleAlpha by animateFloatAsState(targetValue = if (active) 0.22f else 0.09f, label = "handleAlpha")
-
+    val borderAlpha by animateFloatAsState(targetValue = if (active) 0.24f else 0.10f, label = "handleBorderAlpha")
+    val gripAlpha by animateFloatAsState(targetValue = if (active) 0.42f else 0.22f, label = "handleGripAlpha")
     Box(
         modifier = Modifier
             .width(handleWidth)
@@ -189,10 +193,11 @@ private fun HistoryHandle(
                 .width(handleWidth)
                 .height(handleHeight),
             shape = RoundedCornerShape(topStart = 22.dp, bottomStart = 22.dp),
-            color = Color.White.copy(alpha = handleAlpha),
+            color = handleColor,
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
-            border = BorderStroke(1.dp, Color.White.copy(alpha = if (active) 0.24f else 0.10f)),
+            // Preserve the original white stroke so the translucent shell still reads clearly.
+            border = BorderStroke(1.dp, Color.White.copy(alpha = borderAlpha)),
         ) {
             Box(
                 modifier = Modifier
@@ -205,7 +210,8 @@ private fun HistoryHandle(
                         .padding(start = 8.dp)
                         .size(width = 4.dp, height = 24.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color.White.copy(alpha = if (active) 0.42f else 0.22f))
+                        // Keep the grip on the original white alpha ramp so it stays readable on any chosen shell color.
+                        .background(Color.White.copy(alpha = gripAlpha))
                 )
             }
         }

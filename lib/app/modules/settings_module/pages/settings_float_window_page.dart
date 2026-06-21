@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'settings_section_view_base.dart';
 
 class SettingsFloatWindowPage extends SettingsSectionView {
   SettingsFloatWindowPage({super.key, super.embedded}) : super(section: SettingsSection.floatWindow);
+
+  static const _colorSyncDebounce = Duration(milliseconds: 32);
+  static const _defaultHandleColor = Color(ConfigService.defaultHistoryFloatHandleColor);
 
   @override
   List<Widget> buildCards(BuildContext context) {
@@ -20,6 +25,34 @@ class SettingsFloatWindowPage extends SettingsSectionView {
   @override
   List<SettingEntry> buildSettingEntries(BuildContext context) {
     return [
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle,
+          TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc,
+        ],
+        title: Text(TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle.tr),
+        description: Text(TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc.tr),
+        value: appConfig.enhanceBackgroundKeepAlive,
+        action: (v) => Switch(
+          value: appConfig.enhanceBackgroundKeepAlive,
+          onChanged: (checked) async {
+            HapticFeedback.mediumImpact();
+            if (checked) {
+              final hasPermission = await androidChannelService.checkAlertWindowPermission();
+              controller.hasFloatPerm.value = hasPermission;
+              if (!hasPermission) {
+                await androidChannelService.grantAlertWindowPermission();
+                return;
+              }
+              androidChannelService.showKeepAliveFloatWindow();
+            } else {
+              androidChannelService.closeKeepAliveFloatWindow();
+            }
+            appConfig.setEnhanceBackgroundKeepAlive(checked);
+          },
+        ),
+        show: (v) => Platform.isAndroid,
+      ),
       SettingCard(
         searchKeys: const [
           TranslationKey.commonSettingsShowHistoriesFloatWindow,
@@ -100,31 +133,21 @@ class SettingsFloatWindowPage extends SettingsSectionView {
       ),
       SettingCard(
         searchKeys: const [
-          TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle,
-          TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc,
+          TranslationKey.commonSettingsHistoriesFloatWindowHandleColor,
+          TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips,
         ],
-        title: Text(TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle.tr),
-        description: Text(TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc.tr),
-        value: appConfig.enhanceBackgroundKeepAlive,
-        action: (v) => Switch(
-          value: appConfig.enhanceBackgroundKeepAlive,
-          onChanged: (checked) async {
-            HapticFeedback.mediumImpact();
-            if (checked) {
-              final hasPermission = await androidChannelService.checkAlertWindowPermission();
-              controller.hasFloatPerm.value = hasPermission;
-              if (!hasPermission) {
-                await androidChannelService.grantAlertWindowPermission();
-                return;
-              }
-              androidChannelService.showKeepAliveFloatWindow();
-            } else {
-              androidChannelService.closeKeepAliveFloatWindow();
-            }
-            appConfig.setEnhanceBackgroundKeepAlive(checked);
-          },
+        title: Text(TranslationKey.commonSettingsHistoriesFloatWindowHandleColor.tr),
+        description: Text(TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips.tr),
+        value: appConfig.historyFloatHandleColor,
+        onTap: () => _showHandleColorDialog(context),
+        action: (_) => Row(
+          children: [
+            _HandleColorPreview(color: Color(appConfig.historyFloatHandleColor)),
+            const SizedBox(width: 6),
+            const Icon(Icons.chevron_right_rounded, color: Colors.blueGrey),
+          ],
         ),
-        show: (v) => Platform.isAndroid,
+        show: (v) => Platform.isAndroid && appConfig.showHistoryFloat,
       ),
       SettingCard(
         searchKeys: const [
@@ -175,5 +198,114 @@ class SettingsFloatWindowPage extends SettingsSectionView {
         show: (v) => Platform.isIOS,
       ),
     ];
+  }
+
+  void _showHandleColorDialog(BuildContext context) {
+    final initialColor = Color(appConfig.historyFloatHandleColor);
+    var pickerColor = initialColor;
+    var finalColorValue = initialColor.toARGB32();
+    DialogController? dialogController;
+    Timer? syncTimer;
+
+    void syncNativeColor(Color color) {
+      syncTimer?.cancel();
+      syncTimer = Timer(_colorSyncDebounce, () {
+        // Sync the Android overlay while the user drags the RGBA picker.
+        androidChannelService.setHistoryFloatHandleColor(color.toARGB32());
+      });
+    }
+
+    void applyFinalColor() {
+      syncTimer?.cancel();
+      // Always restore the persisted value after the dialog disappears.
+      androidChannelService.setHistoryFloatHandleColor(finalColorValue);
+    }
+
+    dialogController = Global.showDialog(
+      context,
+      SafeArea(
+        child: StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(TranslationKey.commonSettingsHistoriesFloatWindowHandleColor.tr),
+              content: SingleChildScrollView(
+                child: ColorPicker(
+                  pickerColor: pickerColor,
+                  enableAlpha: true,
+                  labelTypes: const [],
+                  portraitOnly: true,
+                  hexInputBar: true,
+                  onColorChanged: (color) {
+                    // Avoid rebuilding the picker on every drag, otherwise pure
+                    // white loses its HSV hue and the hue slider appears stuck.
+                    pickerColor = color;
+                    syncNativeColor(color);
+                  },
+                ),
+              ),
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              actions: [
+                SizedBox(
+                  width: double.maxFinite,
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            // Restore the shared default preview without persisting until confirm.
+                            pickerColor = _defaultHandleColor;
+                          });
+                          syncNativeColor(_defaultHandleColor);
+                        },
+                        child: Text(TranslationKey.dialogRestoreDefaultText.tr),
+                      ),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: () {
+                          dialogController?.close();
+                        },
+                        child: Text(TranslationKey.dialogCancelText.tr),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          finalColorValue = pickerColor.toARGB32();
+                          await appConfig.setHistoryFloatHandleColor(finalColorValue);
+                          dialogController?.close();
+                        },
+                        child: Text(TranslationKey.dialogConfirmText.tr),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+    dialogController.future.whenComplete(applyFinalColor);
+  }
+}
+
+class _HandleColorPreview extends StatelessWidget {
+  final Color color;
+
+  const _HandleColorPreview({
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: const Color(0x29000000),
+        ),
+      ),
+    );
   }
 }

@@ -35,9 +35,11 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import top.coclyun.clipshare.adapter.History
+import top.coclyun.clipshare.defaultHistoryFloatHandleColor
 import top.coclyun.clipshare.loadHistories
 import top.coclyun.clipshare.lockHistoryFloatLocation
 import top.coclyun.clipshare.sendHistories
+import top.coclyun.clipshare.setHistoryFloatHandleColor
 import top.coclyun.clipshare.setHistoryFloatHandleWidth
 import java.io.File
 
@@ -76,6 +78,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var closing by mutableStateOf(false)
     private var handleVisible by mutableStateOf(true)
     private var handleWidth by mutableIntStateOf(32)
+    private var handleColor by mutableIntStateOf(defaultHistoryFloatHandleColor)
     private var floatStrings by mutableStateOf(HistoryFloatStrings())
     private var minHistoryId = 0L
     private var reachedHistoryEnd = false
@@ -132,6 +135,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     closing = closing,
                     handleVisible = handleVisible,
                     handleWidth = handleWidth,
+                    handleColor = handleColor,
                     onExpand = { unfoldView() },
                     onCollapse = { requestHideContainer() },
                     onCollapseFinished = { hideContainer() },
@@ -155,7 +159,12 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             handleWidth = intent.getIntExtra("width", 32)
             return START_STICKY
         }
+        if (intent?.action == setHistoryFloatHandleColor) {
+            handleColor = intent.getIntExtra("color", handleColor)
+            return START_STICKY
+        }
         handleWidth = intent?.getIntExtra("width", handleWidth) ?: handleWidth
+        handleColor = intent?.getIntExtra("color", handleColor) ?: handleColor
         showFloatWindow()
         return START_STICKY
     }
@@ -186,6 +195,10 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
                     setHistoryFloatHandleWidth -> {
                         handleWidth = intent.getIntExtra("width", 32)
+                    }
+
+                    setHistoryFloatHandleColor -> {
+                        handleColor = intent.getIntExtra("color", handleColor)
                     }
 
                     sendHistories -> {
@@ -249,6 +262,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         val filter = IntentFilter().apply {
             addAction(lockHistoryFloatLocation)
             addAction(setHistoryFloatHandleWidth)
+            addAction(setHistoryFloatHandleColor)
             addAction(sendHistories)
         }
 

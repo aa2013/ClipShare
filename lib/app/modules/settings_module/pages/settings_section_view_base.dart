@@ -53,6 +53,7 @@ export 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
 export 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 export 'package:clipshare_clipboard_listener/enums.dart';
 export 'package:file_picker/file_picker.dart';
+export 'package:flutter_colorpicker/flutter_colorpicker.dart';
 export 'package:flutter/foundation.dart';
 export 'package:flutter/material.dart';
 export 'package:flutter/services.dart';

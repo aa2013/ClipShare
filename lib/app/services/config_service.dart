@@ -72,6 +72,8 @@ import 'package:path/path.dart' as p;
 final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
+  static const int defaultHistoryFloatHandleColor = 0x17FFFFFF;
+
   ConfigDao get configDao => Get.find<DbService>().configDao;
 
   RuleDao get ruleDao => Get.find<DbService>().ruleDao;
@@ -241,6 +243,10 @@ class ConfigService extends GetxService {
   late final RxInt _historyFloatHandleWidth;
 
   int get historyFloatHandleWidth => _historyFloatHandleWidth.value;
+
+  late final RxInt _historyFloatHandleColor;
+
+  int get historyFloatHandleColor => _historyFloatHandleColor.value;
 
   late final RxBool _enhanceBackgroundKeepAlive;
 
@@ -614,6 +620,10 @@ class ConfigService extends GetxService {
     _allowDiscover = (await cfg.getConfigByKey(ConfigKey.allowDiscover, true)).obs;
     _showHistoryFloat = (await cfg.getConfigByKey(ConfigKey.showHistoryFloat, false)).obs;
     _historyFloatHandleWidth = (await cfg.getConfigByKey(ConfigKey.historyFloatHandleWidth, 32)).obs;
+    _historyFloatHandleColor = (await cfg.getConfigByKey(
+      ConfigKey.historyFloatHandleColor,
+      defaultHistoryFloatHandleColor,
+    )).obs;
     _enhanceBackgroundKeepAlive = (await cfg.getConfigByKey(ConfigKey.enhanceBackgroundKeepAlive, false)).obs;
     _firstStartup = (await cfg.getConfigByKey(ConfigKey.firstStartup, true)).obs;
     _rememberWindowSize = (await cfg.getConfigByKey(ConfigKey.rememberWindowSize, false)).obs;
@@ -1142,6 +1152,11 @@ class ConfigService extends GetxService {
   Future<void> setHistoryFloatHandleWidth(int width) async {
     await configDao.addOrUpdate(ConfigKey.historyFloatHandleWidth, width.toString());
     _historyFloatHandleWidth.value = width;
+  }
+
+  Future<void> setHistoryFloatHandleColor(int color) async {
+    await configDao.addOrUpdate(ConfigKey.historyFloatHandleColor, color.toString());
+    _historyFloatHandleColor.value = color;
   }
 
   Future<void> setEnhanceBackgroundKeepAlive(bool value) async {

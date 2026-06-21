@@ -6,6 +6,7 @@ enum ConfigKey {
   allowDiscover,
   showHistoryFloat,
   historyFloatHandleWidth,
+  historyFloatHandleColor,
   enhanceBackgroundKeepAlive,
   firstStartup,
   windowSize,

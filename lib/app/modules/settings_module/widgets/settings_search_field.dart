@@ -16,7 +16,7 @@ class SettingsSearchField extends StatelessWidget {
       controller: controller,
       autofocus: false,
       decoration: noneBorderInputDecoration.copyWith(
-        hintText: '搜索设置...',
+        hintText: TranslationKey.settingsSearchHint.tr,
         prefixIcon: const Icon(Icons.search_rounded),
         suffixIcon: controller.text.isEmpty
             ? null
