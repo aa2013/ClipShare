@@ -18,7 +18,6 @@ abstract class Routes {
   static const DEBUG_PAGE = '/debug_page'; // DebugPage page
   static const DEBUG = '/debug'; // Debug page
   static const SYNC_FILE = '/sync_file'; // SyncFile page
-  static const ABOUT = '/about'; // About page
   static const UPDATE_LOG = '/update_log'; // UpdateLog page
   static const LICENSES = '/licenses'; // Licenses page
   static const QR_CODE_SCANNER = '/qr_code_scanner'; // qrCodeScanner page

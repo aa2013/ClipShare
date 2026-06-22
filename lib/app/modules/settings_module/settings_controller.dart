@@ -9,14 +9,16 @@ import 'package:clipshare/app/handlers/backup/backup_handler.dart';
 import 'package:clipshare/app/handlers/storage/storage_client.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/listeners/screen_opened_listener.dart';
-import 'package:clipshare/app/modules/about_module/about_controller.dart';
-import 'package:clipshare/app/modules/about_module/about_page.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
+import 'package:clipshare/app/modules/licenses_module/licenses_controller.dart';
+import 'package:clipshare/app/modules/licenses_module/licenses_page.dart';
 import 'package:clipshare/app/modules/log_module/log_controller.dart';
 import 'package:clipshare/app/modules/log_module/log_page.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/modules/statistics_module/statistics_controller.dart';
 import 'package:clipshare/app/modules/statistics_module/statistics_page.dart';
+import 'package:clipshare/app/modules/update_log_module/update_log_controller.dart';
+import 'package:clipshare/app/modules/update_log_module/update_log_page.dart';
 import 'package:clipshare/app/services/android_notification_listener_service.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
@@ -53,9 +55,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
+/// GetX Template Generator - fb.com/htngu.99
 
 class SettingsController extends GetxController with WidgetsBindingObserver implements ForwardStatusListener, ScreenOpenedObserver {
   final appConfig = Get.find<ConfigService>();
@@ -285,22 +285,6 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
-  void gotoAboutPage() {
-    if (appConfig.isSmallScreen) {
-      Get.toNamed(Routes.ABOUT);
-    } else {
-      final homeController = Get.find<HomeController>();
-      Get.put(AboutController());
-      homeController.pushDrawer(
-        widget: AboutPage(),
-        beforeClosed: () {
-          Get.delete<AboutController>();
-          return true;
-        },
-      );
-    }
-  }
-
   void gotoStatisticPage() {
     if (appConfig.isSmallScreen) {
       Get.toNamed(Routes.STATISTICS);
@@ -329,6 +313,38 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         widget: LogPage(),
         beforeClosed: () {
           Get.delete<LogController>();
+          return true;
+        },
+      );
+    }
+  }
+
+  void gotoLicensesPage() {
+    if (appConfig.isSmallScreen) {
+      Get.toNamed(Routes.LICENSES);
+    } else {
+      final homeController = Get.find<HomeController>();
+      Get.put(LicensesController());
+      homeController.pushDrawer(
+        widget: LicensesPage(),
+        beforeClosed: () {
+          Get.delete<LicensesController>();
+          return true;
+        },
+      );
+    }
+  }
+
+  void gotoUpdateLogsPage() {
+    if (appConfig.isSmallScreen) {
+      Get.toNamed(Routes.UPDATE_LOG);
+    } else {
+      final homeController = Get.find<HomeController>();
+      Get.put(UpdateLogController());
+      homeController.pushDrawer(
+        widget: UpdateLogPage(),
+        beforeClosed: () {
+          Get.delete<UpdateLogController>();
           return true;
         },
       );

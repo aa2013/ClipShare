@@ -114,10 +114,13 @@ class SettingsSearchItem {
   });
 
   String get title {
-    if (searchKeys.isEmpty) {
-      return section.title;
+    if (searchKeys.isNotEmpty) {
+      return searchKeys.first.tr;
     }
-    return searchKeys.first.tr;
+    if (searchAliases.isNotEmpty) {
+      return searchAliases.first;
+    }
+    return section.title;
   }
 
   String get subtitle => section.title;

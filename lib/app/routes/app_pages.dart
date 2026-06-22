@@ -11,8 +11,6 @@ import '../../app/modules/licenses_module/licenses_page.dart';
 import '../../app/modules/licenses_module/licenses_bindings.dart';
 import '../../app/modules/update_log_module/update_log_page.dart';
 import '../../app/modules/update_log_module/update_log_bindings.dart';
-import '../../app/modules/about_module/about_page.dart';
-import '../../app/modules/about_module/about_bindings.dart';
 import '../../app/modules/debug_module/debug_page.dart';
 import '../../app/modules/debug_module/debug_bindings.dart';
 import '../../app/modules/working_mode_selection_module/working_mode_selection_page.dart';
@@ -107,11 +105,6 @@ abstract class AppPages {
       name: Routes.DEBUG,
       page: () => DebugPage(),
       binding: DebugBinding(),
-    ),
-    GetPage(
-      name: Routes.ABOUT,
-      page: () => AboutPage(),
-      binding: AboutBinding(),
     ),
     GetPage(
       name: Routes.UPDATE_LOG,

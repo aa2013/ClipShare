@@ -1,4 +1,4 @@
-import 'package:clipshare/app/modules/settings_module/pages/settings_about_log_page.dart';
+import 'package:clipshare/app/modules/settings_module/pages/settings_about_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_backup_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_clipboard_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_connectivity_page.dart';
@@ -47,7 +47,7 @@ SettingsSectionView? buildSettingsSectionView(
     case SettingsSection.backup:
       return SettingsBackupPage(embedded: embedded);
     case SettingsSection.aboutLog:
-      return SettingsAboutLogPage(embedded: embedded);
+      return SettingsAboutPage(embedded: embedded);
     case SettingsSection.log:
       return SettingsLogPage(embedded: embedded);
     case SettingsSection.statistics:
