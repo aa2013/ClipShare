@@ -542,7 +542,7 @@ class ConfigService extends GetxService {
   List<String> get noDiscoveryIfs => _noDiscoveryIfs.value;
 
   ///仅手动子网扫描发现设备
-  final _onlyManualDiscoverySubNet = false.obs;
+  final _onlyManualDiscoverySubNet = true.obs;
 
   bool get onlyManualDiscoverySubNet => _onlyManualDiscoverySubNet.value;
 
@@ -774,7 +774,7 @@ class ConfigService extends GetxService {
       [],
       convert: (content) => content.split(',').where(((item) => item.isNotEmpty)).toList(),
     );
-    _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, false);
+    _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, true);
     _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
     _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
