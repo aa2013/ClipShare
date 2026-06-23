@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:clipshare/app/data/repository/dao/app_info_dao.dart';
 import 'package:clipshare/app/data/repository/dao/config_dao.dart';
 import 'package:clipshare/app/data/repository/dao/device_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_tag_dao.dart';
+import 'package:clipshare/app/data/repository/dao/pending_storage_ack_dao.dart';
 import 'package:clipshare/app/data/repository/dao/script_module_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
@@ -16,6 +16,7 @@ import 'package:clipshare/app/data/repository/entity/tables/config.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
+import 'package:clipshare/app/data/repository/entity/tables/pending_storage_ack.dart';
 import 'package:clipshare/app/data/repository/entity/tables/script_module.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
@@ -23,9 +24,7 @@ import 'package:clipshare/app/data/repository/entity/tables/user.dart';
 import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
@@ -46,6 +45,7 @@ const tables = [
   AppInfo,
   Rule,
   ScriptModule,
+  PendingStorageAck,
 ];
 const views = [VHistoryTagHold];
 
@@ -59,7 +59,7 @@ const views = [VHistoryTagHold];
 ///
 /// 2. 直接执行 scripts/db_gen.bat 一键完成
 @Database(
-  version: 9,
+  version: 10,
   entities: tables,
   views: views,
 )
@@ -83,6 +83,8 @@ abstract class _AppDb extends FloorDatabase {
   RuleDao get ruleDao;
 
   ScriptModuleDao get scriptModuleDao;
+
+  PendingStorageAckDao get pendingStorageAckDao;
 }
 
 class DbService extends GetxService {
@@ -108,6 +110,8 @@ class DbService extends GetxService {
   RuleDao get ruleDao => _db.ruleDao;
 
   ScriptModuleDao get scriptModuleDao => _db.scriptModuleDao;
+
+  PendingStorageAckDao get pendingStorageAckDao => _db.pendingStorageAckDao;
 
   final tag = "DbService";
 
@@ -136,6 +140,7 @@ class DbService extends GetxService {
       migration6to7,
       migration7to8,
       migration8to9,
+      migration9to10,
     ]).build();
     version = await _db.database.database.getVersion();
     return this;
@@ -295,5 +300,17 @@ class DbService extends GetxService {
         PRIMARY KEY (`moduleName`)
     )
     """);
+  });
+
+  ///数据库版本 9 -> 10
+  ///新增存储中转 ACK 待发送队列表，避免 storage ACK 发送失败后丢失确认。
+  final migration9to10 = Migration(9, 10, (database) async {
+    await database.execute('''
+      CREATE TABLE IF NOT EXISTS `PendingStorageAck` (
+        `opId` INTEGER NOT NULL,
+        `targetDevId` TEXT NOT NULL,
+        PRIMARY KEY (`opId`, `targetDevId`)
+      )
+    ''');
   });
 }

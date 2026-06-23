@@ -7,16 +7,20 @@ import 'package:clipshare/app/handlers/storage/storage_client.dart';
 import 'package:clipshare/app/handlers/storage/web_dav_client.dart';
 
 extension S3ConfigExt on S3Config {
+  /// 将配置转换为带完整运行时选项的存储客户端。
   StorageClient toClient() {
+    final StorageClient client;
     if (type == ObjStorageType.aliyunOss) {
-      return AliyunOssClient(this);
+      client = AliyunOssClient(this);
     } else {
-      return S3Client(this);
+      client = S3Client(this);
     }
+    return client;
   }
 }
 
 extension WebDAVConfigExt on WebDAVConfig {
+  /// 将配置转换为带完整运行时选项的存储客户端。
   StorageClient toClient() {
     return WebDAVClient(this);
   }

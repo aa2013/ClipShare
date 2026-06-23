@@ -55,6 +55,8 @@ Color forwardOverviewTone({
     return Colors.blueGrey;
   }
   switch (status) {
+    case ForwardServerStatus.initializing:
+      return Colors.amber;
     case ForwardServerStatus.connected:
       return Colors.green;
     case ForwardServerStatus.connecting:

@@ -1,13 +1,13 @@
 import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/module.dart';
-import 'package:clipshare/app/data/enums/msg_type.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
@@ -15,7 +15,6 @@ import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:get/get.dart';
 
 class AppInfoSyncHandler implements SyncListener {
@@ -50,8 +49,9 @@ class AppInfoSyncHandler implements SyncListener {
     var sender = msg.send;
     final map = msg.data;
     final opRecord = await _syncData(map);
-    sender.sendData(
-      MsgType.ackSync,
+    await AckSyncSender.send(
+      sender,
+      opRecord.id,
       {"id": opRecord.id, "module": Module.appInfo.moduleName},
     );
   }

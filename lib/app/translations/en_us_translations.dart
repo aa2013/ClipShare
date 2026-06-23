@@ -910,6 +910,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Connected";
       case TranslationKey.disconnected:
         return "Disconnected";
+      case TranslationKey.initializing:
+        return "Initializing";
       case TranslationKey.connecting:
         return "Connecting";
       case TranslationKey.forwardMode:

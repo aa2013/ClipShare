@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/connection_mode.dart';
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
@@ -336,7 +337,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (!appConfig.enableForward) return;
     if (forwardServerHost == null || forwardServerPort == null) return;
     if (_forwardClient != null) return;
-    _updateForwardConnectingStatus();
+    _updateForwardStatus(ForwardServerStatus.connecting);
     try {
       _forwardClient = await ForwardSocketClient.connect(
         ip: forwardServerHost!,
@@ -348,7 +349,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         onDone: (self) {
           _forwardClient = null;
           appConfig.forwardServerVersion.value = '';
-          _updateForwardDisConnectedStatus();
+          _updateForwardStatus(ForwardServerStatus.disconnected);
           _stopJudgeForwardClientAlive();
           logger.debug(tag, "forwardClient done");
           if (_autoConnForwardServer) {
@@ -365,7 +366,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         onConnected: (self) {
           _autoConnForwardServer = true;
           logger.debug(tag, "forwardClient onConnected");
-          _updateForwardConnectedStatus();
+          _updateForwardStatus(ForwardServerStatus.connected);
           _startJudgeForwardClientAlivePeriod();
           //中转服务器连接成功后发送本机信息
           final connData = ForwardSocketClient.baseMsg
@@ -390,7 +391,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         },
       );
     } catch (e) {
-      _updateForwardDisConnectedStatus();
+      _updateForwardStatus(ForwardServerStatus.disconnected);
       logger.debug(tag, "connect forward server failed _autoConnForwardServer = $_autoConnForwardServer, error: $e");
       if (_autoConnForwardServer) {
         logger.debug(tag, "尝试重连中转");
@@ -411,26 +412,15 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     _autoConnForwardServer = false;
     await _forwardClient?.close();
     _forwardClient = null;
-    _updateForwardDisConnectedStatus();
+    _updateForwardStatus(ForwardServerStatus.disconnected);
     await _disconnectForwardSockets();
   }
 
   //region Update server status
-  void _updateForwardConnectingStatus() {
+  /// server 中转继续只发三态，但和存储中转共用同一套状态通知入口。
+  void _updateForwardStatus(ForwardServerStatus status) {
     for (var listener in _forwardStatusListener) {
-      listener.onForwardServerConnecting();
-    }
-  }
-
-  void _updateForwardConnectedStatus() {
-    for (var listener in _forwardStatusListener) {
-      listener.onForwardServerConnected();
-    }
-  }
-
-  void _updateForwardDisConnectedStatus() {
-    for (var listener in _forwardStatusListener) {
-      listener.onForwardServerDisconnected();
+      listener.onForwardServerStatusChanged(status);
     }
   }
 

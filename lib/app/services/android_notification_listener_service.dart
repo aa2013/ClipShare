@@ -17,7 +17,7 @@ class AndroidNotificationListenerService extends GetxService {
   StreamSubscription<ServiceNotificationEvent>? _listen;
   final _sourceService = Get.find<ClipboardSourceService>();
   var _listening = false;
-  final _notifyHashSet = <String>{};
+  static final _notifyHashSet = <String>{};
 
   bool get listening => _listening;
 

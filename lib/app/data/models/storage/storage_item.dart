@@ -4,7 +4,7 @@ class StorageItem implements Comparable<StorageItem> {
   final bool isDir;
   final List<StorageItem> children;
 
-  StorageItem({
+  const StorageItem({
     required this.path,
     required this.name,
     required this.isDir,
@@ -13,12 +13,12 @@ class StorageItem implements Comparable<StorageItem> {
 
   @override
   int compareTo(StorageItem other) {
-    if (this.isDir && !other.isDir) {
+    if (isDir && !other.isDir) {
       return -1;
-    } else if (!this.isDir && other.isDir) {
+    } else if (!isDir && other.isDir) {
       return 1;
     } else {
-      return this.name.toLowerCase().compareTo(other.name.toLowerCase());
+      return name.toLowerCase().compareTo(other.name.toLowerCase());
     }
   }
 }

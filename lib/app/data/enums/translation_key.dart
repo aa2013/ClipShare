@@ -415,6 +415,7 @@ enum TranslationKey {
   attemptingToConnect,
   connected,
   disconnected,
+  initializing,
   forwardServerNotConnected,
   cleanData,
   syncSettingsAutoCopyScreenShotTitle,

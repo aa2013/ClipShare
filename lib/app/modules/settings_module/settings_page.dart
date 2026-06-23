@@ -344,7 +344,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
               value: appConfig.launchAtStartup,
               onChanged: _toggleLaunchAtStartup,
             ),
-            onTap: () => _toggleLaunchAtStartup(!appConfig.launchAtStartup),
+            onTap: () => {},
             visible: PlatformExt.isDesktop,
           ),
           SettingsOverviewTile(
@@ -356,7 +356,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
               value: appConfig.startMini,
               onChanged: appConfig.setStartMini,
             ),
-            onTap: () => appConfig.setStartMini(!appConfig.startMini),
+            onTap: () => {},
             visible: PlatformExt.isDesktop,
           ),
           SettingsOverviewTile(

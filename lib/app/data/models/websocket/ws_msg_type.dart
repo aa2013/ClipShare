@@ -7,6 +7,7 @@ enum WsMsgType {
   syncFile,
   ping,
   appInfo,
+  ack,
   unknown;
 
   static WsMsgType getValue(String name) => WsMsgType.values.firstWhere(

@@ -13,7 +13,7 @@ class S3Config {
   final String baseDir;
   final bool pathStyle;
 
-  S3Config({
+  const S3Config({
     required this.endPoint,
     required this.accessKey,
     required this.secretKey,
@@ -56,7 +56,10 @@ class S3Config {
   @override
   String toString() {
     final map = toJson();
-    map["secretKey"] = "***";
+    map.remove("endPoint");
+    map.remove("accessKey");
+    map.remove("secretKey");
+    map.remove("bucketName");
     return jsonEncode(map);
   }
 

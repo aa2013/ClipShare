@@ -7,7 +7,7 @@ class WebDAVConfig {
   final String baseDir;
   final String displayName;
 
-  WebDAVConfig({
+  const WebDAVConfig({
     required this.server,
     required this.username,
     required this.password,
@@ -55,7 +55,9 @@ class WebDAVConfig {
   @override
   String toString() {
     final map = toJson();
-    map["password"] = "***";
+    map.remove("server");
+    map.remove("username");
+    map.remove("password");
     return jsonEncode(map);
   }
 }

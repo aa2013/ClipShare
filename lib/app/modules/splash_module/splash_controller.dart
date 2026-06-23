@@ -138,7 +138,6 @@ class SplashController extends GetxController {
       if (appConfig.showHistoryFloat) {
         androidChannelService.showHistoryFloatWindow();
       }
-      androidChannelService.setHistoryFloatHandleWidth(appConfig.historyFloatHandleWidth);
       if (appConfig.enhanceBackgroundKeepAlive) {
         androidChannelService.showKeepAliveFloatWindow();
       }

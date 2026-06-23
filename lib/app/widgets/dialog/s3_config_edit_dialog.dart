@@ -1,13 +1,12 @@
 import 'package:clipshare/app/data/enums/obj_storage_type.dart';
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
-import 'package:clipshare/app/handlers/storage/aliyun_oss_client.dart';
-import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/handlers/storage/storage_client.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/extensions/storage_config_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -213,12 +212,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
       });
       late final ExceptionInfo? exception;
       try {
-        late final StorageClient s3Client;
-        if (config.type == ObjStorageType.aliyunOss) {
-          s3Client = AliyunOssClient(config);
-        } else {
-          s3Client = S3Client(config);
-        }
+        final StorageClient s3Client = config.toClient();
         if (!testingConnection) {
           return;
         }
@@ -520,14 +514,14 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                                           onLoadFiles: (String path) async {
                                             selectedPath = path.unixPath;
                                             final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                            final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                            final s3client = tempConfig.toClient();
                                             final list = await s3client.list(path: path);
                                             final dirs = list.where((item) => item.isDir);
                                             return dirs.map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
                                           },
                                           onCreateDirectory: (current, name) {
                                             final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                            final s3client = objectStorageType == ObjStorageType.aliyunOss ? AliyunOssClient(tempConfig) : S3Client(tempConfig);
+                                            final s3client = tempConfig.toClient();
                                             return s3client.createDirectory("$current/$name/");
                                           },
                                           shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,

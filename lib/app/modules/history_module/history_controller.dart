@@ -10,6 +10,7 @@ import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
+import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
@@ -18,7 +19,6 @@ import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/listeners/tag_changed_listener.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/device_service.dart';
-import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -774,11 +774,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     history.sync = true;
     if (opRecord.module == Module.historyTop) {
       //发送同步确认
-      sender.sendData(MsgType.ackSync, {
-        "id": opRecord.id,
-        "hisId": history.id,
-        "module": Module.historyTop.moduleName,
-      });
+      await AckSyncSender.send(
+        sender,
+        opRecord.id,
+        {
+          "id": opRecord.id,
+          "hisId": history.id,
+          "module": Module.historyTop.moduleName,
+        },
+      );
       //更新数据库
       return _updateHistoryTop(history);
     }
@@ -790,11 +794,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     //将同步过来的数据添加到本地操作记录
     dbService.opRecordDao.add(opRecord.copyWith(data: history.id.toString()));
     //发送同步确认
-    await sender.sendData(MsgType.ackSync, {
-      "id": opRecord.id,
-      "hisId": history.id,
-      "module": Module.history.moduleName,
-    });
+    await AckSyncSender.send(
+      sender,
+      opRecord.id,
+      {
+        "id": opRecord.id,
+        "hisId": history.id,
+        "module": Module.history.moduleName,
+      },
+    );
   }
 
   @override

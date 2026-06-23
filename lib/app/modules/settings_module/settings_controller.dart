@@ -536,18 +536,8 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   }
 
   @override
-  void onForwardServerConnected() {
-    forwardServerStatus.value = ForwardServerStatus.connected;
-  }
-
-  @override
-  void onForwardServerConnecting() {
-    forwardServerStatus.value = ForwardServerStatus.connecting;
-  }
-
-  @override
-  void onForwardServerDisconnected() {
-    forwardServerStatus.value = ForwardServerStatus.disconnected;
+  void onForwardServerStatusChanged(ForwardServerStatus status) {
+    forwardServerStatus.value = status;
   }
 
   //region 备份与恢复

@@ -11,6 +11,7 @@ import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
@@ -189,8 +190,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     }
     //发送同步确认
     return f.then(
-      (v) => sender.sendData(
-        MsgType.ackSync,
+      (v) => AckSyncSender.send(
+        sender,
+        opRecord.id,
         {"id": opRecord.id, "module": Module.device.moduleName},
       ),
     );
@@ -356,18 +358,8 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   }
 
   @override
-  void onForwardServerConnected() {
-    forwardStatus.value = ForwardServerStatus.connected;
-  }
-
-  @override
-  void onForwardServerConnecting() {
-    forwardStatus.value = ForwardServerStatus.connecting;
-  }
-
-  @override
-  void onForwardServerDisconnected() {
-    forwardStatus.value = ForwardServerStatus.disconnected;
+  void onForwardServerStatusChanged(ForwardServerStatus status) {
+    forwardStatus.value = status;
   }
 
   @override

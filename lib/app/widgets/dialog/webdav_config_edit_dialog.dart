@@ -1,10 +1,8 @@
-import 'dart:io';
-
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
-import 'package:clipshare/app/handlers/storage/web_dav_client.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/extensions/storage_config_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -162,7 +160,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
       setState(() {
         testingConnection = true;
       });
-      final exception = await WebDAVClient(config).testConnect();
+      final exception = await config.toClient().testConnect();
       if (!testingConnection) {
         return;
       }
@@ -342,12 +340,12 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
                                         onLoadFiles: (String path) async {
                                           selectedPath = path.unixPath;
                                           final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                          final list = await WebDAVClient(tempConfig).list(path: path);
+                                          final list = await tempConfig.toClient().list(path: path);
                                           return list.where((item) => item.isDir).map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
                                         },
                                         onCreateDirectory: (current, name) {
                                           final tempConfig = config.copyWith(baseDir: Constants.unixDirSeparate);
-                                          final client = WebDAVClient(tempConfig);
+                                          final client = tempConfig.toClient();
                                           return client.createDirectory("$current/$name/");
                                         },
                                         shouldShowUpLevel: (path) => path != Constants.unixDirSeparate || path.isNullOrEmpty,

@@ -51,9 +51,9 @@ class LicensesController extends GetxController {
       "url": "https://github.com/aa2013/ali_yun_oss.git",
     },
     {
-      "name": "webdav_client",
-      "license": "BSD-3-Clause",
-      "url": "https://github.com/aa2013/webdav_client.git",
+      "name": "webdav_plus",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/webdav_plus",
     },
     {
       "name": "zip_flutter",

@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/data/models/storage/storage_item.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 /// 存储操作进度回调函数类型
 /// [count] 表示当前已处理的量（已传输的字节数）
@@ -9,7 +10,10 @@ import 'package:clipshare/app/data/models/storage/storage_item.dart';
 typedef StorageProgressFunc = void Function(int count, int total);
 
 /// 存储客户端抽象基类，定义了对不同存储后端（如 WebDAV, 对象存储）进行操作的通用接口
+///
+/// 具体实现只需要提供单级目录创建能力，逐级建目录策略由基类统一处理，
 abstract class StorageClient {
+
   /// 测试连接
   Future<ExceptionInfo?> testConnect();
 
@@ -26,7 +30,22 @@ abstract class StorageClient {
   Future<bool> isDirectory(String path);
 
   /// 创建目录
+  ///
+  /// 会根据当前配置决定是直接创建目标目录，还是按层级逐级创建父目录。
   Future<bool> createDirectory(String path);
+
+  /// 统一拼装存储错误日志的关键上下文，避免各个客户端重复手写格式。
+  String formatStorageErrorDetails(String op, Map<String, Object?> details) {
+    final parts = <String>['op=$op'];
+    for (final entry in details.entries) {
+      final value = entry.value;
+      if (value == null) {
+        continue;
+      }
+      parts.add('${entry.key}=$value');
+    }
+    return parts.join(', ');
+  }
 
   /// 删除目录
   Future<bool> deleteDirectory(String path);
@@ -82,4 +101,5 @@ abstract class StorageClient {
 
   /// 删除文件
   Future<bool> deleteFile(String path);
+
 }

@@ -862,6 +862,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "已连接";
       case TranslationKey.disconnected:
         return "已断开";
+      case TranslationKey.initializing:
+        return "初始化中";
       case TranslationKey.connecting:
         return "连接中";
       case TranslationKey.forwardMode:

@@ -89,13 +89,15 @@ class _$_AppDb extends _AppDb {
 
   ScriptModuleDao? _scriptModuleDaoInstance;
 
+  PendingStorageAckDao? _pendingStorageAckDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 9,
+      version: 10,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -130,6 +132,8 @@ class _$_AppDb extends _AppDb {
             'CREATE TABLE IF NOT EXISTS `Rule` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `platforms` TEXT NOT NULL, `sources` TEXT NOT NULL, `trigger` TEXT NOT NULL, `type` TEXT NOT NULL, `regexWhiteBlackMode` TEXT NOT NULL, `regexMain` TEXT NOT NULL, `regexAllowExtractData` INTEGER NOT NULL, `regexExtractedContent` TEXT NOT NULL, `regexAllowAddTag` INTEGER NOT NULL, `regexTags` TEXT NOT NULL, `regexIsSyncDisabled` INTEGER NOT NULL, `regexIsFinalRule` INTEGER NOT NULL, `scriptLanguage` TEXT NOT NULL, `scriptContent` TEXT NOT NULL, `version` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, `order` INTEGER NOT NULL, PRIMARY KEY (`id`))');
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `ScriptModule` (`moduleName` TEXT NOT NULL, `displayName` TEXT NOT NULL, `language` TEXT NOT NULL, `source` TEXT NOT NULL, `version` INTEGER NOT NULL, PRIMARY KEY (`moduleName`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `PendingStorageAck` (`opId` INTEGER NOT NULL, `targetDevId` TEXT NOT NULL, PRIMARY KEY (`opId`))');
         await database.execute(
             'CREATE INDEX `index_History_devId` ON `History` (`devId`)');
         await database.execute(
@@ -202,6 +206,12 @@ class _$_AppDb extends _AppDb {
   ScriptModuleDao get scriptModuleDao {
     return _scriptModuleDaoInstance ??=
         _$ScriptModuleDao(database, changeListener);
+  }
+
+  @override
+  PendingStorageAckDao get pendingStorageAckDao {
+    return _pendingStorageAckDaoInstance ??=
+        _$PendingStorageAckDao(database, changeListener);
   }
 }
 
@@ -1786,6 +1796,70 @@ class _$ScriptModuleDao extends ScriptModuleDao {
   Future<int> updateModule(ScriptModule module) {
     return _scriptModuleUpdateAdapter.updateAndReturnChangedRows(
         module, OnConflictStrategy.abort);
+  }
+}
+
+class _$PendingStorageAckDao extends PendingStorageAckDao {
+  _$PendingStorageAckDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _pendingStorageAckInsertionAdapter = InsertionAdapter(
+            database,
+            'PendingStorageAck',
+            (PendingStorageAck item) => <String, Object?>{
+                  'opId': item.opId,
+                  'targetDevId': item.targetDevId
+                }),
+        _pendingStorageAckDeletionAdapter = DeletionAdapter(
+            database,
+            'PendingStorageAck',
+            ['opId'],
+            (PendingStorageAck item) => <String, Object?>{
+                  'opId': item.opId,
+                  'targetDevId': item.targetDevId
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<PendingStorageAck> _pendingStorageAckInsertionAdapter;
+
+  final DeletionAdapter<PendingStorageAck> _pendingStorageAckDeletionAdapter;
+
+  @override
+  Future<List<PendingStorageAck>> getByTargetDevId(String targetDevId) async {
+    return _queryAdapter.queryList(
+        'select * from PendingStorageAck where targetDevId = ?1',
+        mapper: (Map<String, Object?> row) => PendingStorageAck(
+            opId: row['opId'] as int,
+            targetDevId: row['targetDevId'] as String),
+        arguments: [targetDevId]);
+  }
+
+  @override
+  Future<int?> removeByKey(
+    int opId,
+    String targetDevId,
+  ) async {
+    return _queryAdapter.query(
+        'delete from PendingStorageAck where opId = ?1 and targetDevId = ?2',
+        mapper: (Map<String, Object?> row) => row.values.first as int,
+        arguments: [opId, targetDevId]);
+  }
+
+  @override
+  Future<int> add(PendingStorageAck item) {
+    return _pendingStorageAckInsertionAdapter.insertAndReturnId(
+        item, OnConflictStrategy.ignore);
+  }
+
+  @override
+  Future<int> remove(PendingStorageAck item) {
+    return _pendingStorageAckDeletionAdapter.deleteAndReturnChangedRows(item);
   }
 }
 
