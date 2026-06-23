@@ -678,6 +678,8 @@ enum TranslationKey {
   onlyManualDiscoverySubNetSettingDesc,
   stopListeningOnScreenClosedSettingTitle,
   stopListeningOnScreenClosedSettingDesc,
+  keepConnectionsOnNetworkSwitchTitle,
+  keepConnectionsOnNetworkSwitchDesc,
   faq,
   sendBroadcastOnAddData,
   sendBroadcastOnAddDataDesc,

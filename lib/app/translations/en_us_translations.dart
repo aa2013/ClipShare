@@ -1393,6 +1393,10 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Stop listening on screen closed (Experimental)';
       case TranslationKey.stopListeningOnScreenClosedSettingDesc:
         return 'Stop listening to clipboard one minute after the screen turns off. This may help save battery on some devices.';
+      case TranslationKey.keepConnectionsOnNetworkSwitchTitle:
+        return 'Keep connections on network switch';
+      case TranslationKey.keepConnectionsOnNetworkSwitchDesc:
+        return 'When enabled, only WiFi/mobile switches and offline/online switches will actively disconnect and reconnect. Other network changes keep the current connections.';
       case TranslationKey.notNow:
         return 'Not now';
       case TranslationKey.faq:

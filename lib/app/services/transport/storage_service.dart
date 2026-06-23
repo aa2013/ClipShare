@@ -50,7 +50,7 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:clipshare/app/utils/network_interface_filter_util.dart';
+import 'package:clipshare/app/utils/network_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:get/get.dart';
 import "package:msgpack_dart/msgpack_dart.dart" as m2;
@@ -1408,7 +1408,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   ///获取所有网卡 ip
   Future<List<String>> _getInterfaceIpList() async {
-    final interfaces = await NetworkInterfaceFilterUtil.listInterfaces();
+    final interfaces = await NetworkUtil.listInterfaces();
     var expendAddress = interfaces.map((networkInterface) => networkInterface.addresses).expand((ip) => ip);
     return expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
   }

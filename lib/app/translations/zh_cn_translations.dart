@@ -1393,6 +1393,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '熄屏后停止监听（实验性）';
       case TranslationKey.stopListeningOnScreenClosedSettingDesc:
         return '熄屏一分钟后停止监听剪贴板，在某些设备上可能能节省电量';
+      case TranslationKey.keepConnectionsOnNetworkSwitchTitle:
+        return '切网时保持连接';
+      case TranslationKey.keepConnectionsOnNetworkSwitchDesc:
+        return '开启后，仅在 WiFi 与移动网络互切或无网络与有网络切换时主动断开重连，其余网络变化保持现有连接';
       case TranslationKey.notNow:
         return '本次忽略';
       case TranslationKey.faq:

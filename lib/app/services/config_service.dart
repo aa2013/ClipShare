@@ -551,6 +551,11 @@ class ConfigService extends GetxService {
 
   bool get stopListeningOnScreenClosed => _stopListeningOnScreenClosed.value;
 
+  ///网络切换时尽量保留现有连接，避免在无需重连的场景主动断开。
+  final _keepConnectionsOnNetworkSwitch = false.obs;
+
+  bool get keepConnectionsOnNetworkSwitch => _keepConnectionsOnNetworkSwitch.value;
+
   ///当有新数据时发送广播通知
   final _sendBroadcastOnAdd = false.obs;
 
@@ -776,6 +781,7 @@ class ConfigService extends GetxService {
     );
     _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, true);
     _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
+    _keepConnectionsOnNetworkSwitch.value = await cfg.getConfigByKey(ConfigKey.keepConnectionsOnNetworkSwitch, false);
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
     _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
     _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
@@ -1516,6 +1522,12 @@ class ConfigService extends GetxService {
     }
     await configDao.addOrUpdate(ConfigKey.stopListeningOnScreenClosed, stopListeningOnScreenClosed.toString());
     _stopListeningOnScreenClosed.value = stopListeningOnScreenClosed;
+  }
+
+  ///网络切换时按配置决定是否保留当前连接
+  Future<void> setKeepConnectionsOnNetworkSwitch(bool keepConnectionsOnNetworkSwitch) async {
+    await configDao.addOrUpdate(ConfigKey.keepConnectionsOnNetworkSwitch, keepConnectionsOnNetworkSwitch.toString());
+    _keepConnectionsOnNetworkSwitch.value = keepConnectionsOnNetworkSwitch;
   }
 
   ///当有新数据时发送广播通知

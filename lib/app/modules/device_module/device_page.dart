@@ -9,7 +9,7 @@ import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/utils/network_interface_filter_util.dart';
+import 'package:clipshare/app/utils/network_util.dart';
 import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/dialog/add_device_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -242,7 +242,7 @@ class DevicePage extends GetView<DeviceController> {
               children: [
                 TextButton(
                   onPressed: () async {
-                    final interfaces = await NetworkInterfaceFilterUtil.listInterfaces();
+                    final interfaces = await NetworkUtil.listInterfaces();
                     for (var itf in interfaces) {
                       // itf.addresses[0].type
                       print("${itf.name} ${itf.addresses.join(',')}");

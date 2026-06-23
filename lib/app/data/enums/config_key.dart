@@ -68,6 +68,7 @@ enum ConfigKey {
   noDiscoveryIfs,
   onlyManualDiscoverySubNet,
   stopListeningOnScreenClosed,
+  keepConnectionsOnNetworkSwitch,
   sendBroadcastOnAdd,
   recopyOnScreenUnlocked,
   excludeFormat,

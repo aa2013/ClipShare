@@ -1,4 +1,4 @@
-import 'package:clipshare/app/utils/network_interface_filter_util.dart';
+import 'package:clipshare/app/utils/network_util.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 
 import 'settings_section_view_base.dart';
@@ -264,6 +264,27 @@ class SettingsConnectivityPage extends SettingsSectionView {
             ),
             SettingCard(
               searchKeys: const [
+                TranslationKey.keepConnectionsOnNetworkSwitchTitle,
+                TranslationKey.keepConnectionsOnNetworkSwitchDesc,
+              ],
+              title: Text(
+                TranslationKey.keepConnectionsOnNetworkSwitchTitle.tr,
+                maxLines: 1,
+              ),
+              description: Text(TranslationKey.keepConnectionsOnNetworkSwitchDesc.tr),
+              value: appConfig.keepConnectionsOnNetworkSwitch,
+              action: (v) {
+                return Switch(
+                  value: v,
+                  onChanged: (checked) {
+                    HapticFeedback.mediumImpact();
+                    appConfig.setKeepConnectionsOnNetworkSwitch(checked);
+                  },
+                );
+              },
+            ),
+            SettingCard(
+              searchKeys: const [
                 TranslationKey.onlyManualDiscoverySubNetSettingTitle,
                 TranslationKey.onlyManualDiscoverySubNetSettingDesc,
               ],
@@ -298,7 +319,7 @@ class SettingsConnectivityPage extends SettingsSectionView {
                 return TextButton(
                   child: Text(TranslationKey.configure.tr),
                   onPressed: () async {
-                    final interfaces = await NetworkInterfaceFilterUtil.listInterfaces();
+                    final interfaces = await NetworkUtil.listInterfaces();
                     if (!context.mounted) {
                       return;
                     }

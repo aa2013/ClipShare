@@ -35,6 +35,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/app_update_info_util.dart';
 import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/network_util.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -470,9 +471,19 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
   Timer? _networkChangedTimer;
   Future<void> _onNetworkChanged(ConnectivityResult result) async {
     _networkChangedTimer?.cancel();
-    _networkChangedTimer = Timer(1500.ms, (){
+    _networkChangedTimer = Timer(1500.ms, () {
       logger.debug(tag, "网络变化 -> ${result.name}");
       final lastNetwork = appConfig.currentNetWorkType.value;
+      final keepConnections = NetworkUtil.shouldKeepConnections(
+        keepConnectionsOnNetworkSwitch: appConfig.keepConnectionsOnNetworkSwitch,
+        previous: lastNetwork,
+        current: result,
+      );
+      // 仅在无需处理 WiFi/移动互切和断网恢复时保留现有连接，避免无意义的主动断开重连。
+      if (keepConnections) {
+        appConfig.currentNetWorkType.value = result;
+        return;
+      }
       //网络变化前的状态，非无网络状态,断开中转服务连接
       if (lastNetwork != ConnectivityResult.none) {
         sktService.disConnectAllConnections();
