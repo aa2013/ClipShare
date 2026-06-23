@@ -1,3 +1,6 @@
+import 'package:clipshare/app/utils/network_interface_filter_util.dart';
+import 'package:clipshare/app/widgets/empty_content.dart';
+
 import 'settings_section_view_base.dart';
 
 class SettingsConnectivityPage extends SettingsSectionView {
@@ -295,7 +298,34 @@ class SettingsConnectivityPage extends SettingsSectionView {
                 return TextButton(
                   child: Text(TranslationKey.configure.tr),
                   onPressed: () async {
-                    final interfaces = await NetworkInterface.list();
+                    final interfaces = await NetworkInterfaceFilterUtil.listInterfaces();
+                    if (!context.mounted) {
+                      return;
+                    }
+                    if (interfaces.isEmpty) {
+                      Global.showDialog(
+                        context,
+                        AlertDialog(
+                          title: Text(TranslationKey.noDiscoveryIfsSettingTitle.tr),
+                          content: SizedBox(
+                            width: 280,
+                            height: 180,
+                            child: Center(
+                              child: EmptyContent(size: 80),
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Get.back();
+                              },
+                              child: Text(TranslationKey.dialogConfirmText.tr),
+                            ),
+                          ],
+                        ),
+                      );
+                      return;
+                    }
                     final selections = interfaces.map((itf) {
                       var showTextList = [itf.name];
                       var ipList = itf.addresses.where((address) => address.type == InternetAddressType.IPv4).map((address) => address.address);

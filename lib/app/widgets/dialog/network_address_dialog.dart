@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/widgets/clip/clip_data_copy_icon_button.dart';
+import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
@@ -22,13 +23,46 @@ class NetworkAddressDialog extends StatelessWidget {
     final appConfig = Get.find<ConfigService>();
     final theme = Theme.of(context);
     final dialogBackground = theme.brightness == Brightness.dark ? theme.dialogTheme.backgroundColor ?? theme.cardTheme.color ?? theme.colorScheme.surface : null;
+    final displayInterfaces = interfaces
+        .where(
+          (interfaceItem) => interfaceItem.addresses.any(
+            (address) => address.type == InternetAddressType.IPv4,
+          ),
+        )
+        .toList();
+    if (displayInterfaces.isEmpty) {
+      return AlertDialog(
+        backgroundColor: dialogBackground,
+        title: Text(TranslationKey.localIpAddress.tr),
+        content: SizedBox(
+          width: 280,
+          height: 180,
+          child: Center(
+            child: EmptyContent(size: 80),
+          ),
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  Get.back();
+                },
+                child: Text(TranslationKey.dialogConfirmText.tr),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
     final qrInterfaces = <DeviceInterfaceInfo>[];
     final qrContent = QRDeviceConnectionInfo(
       id: appConfig.device.guid,
       interfaces: qrInterfaces,
     );
     final widgets = List<Widget>.empty(growable: true);
-    for (var interface in interfaces) {
+    for (var interface in displayInterfaces) {
       final addresses = interface.addresses.where((itf) => itf.type == InternetAddressType.IPv4);
       qrInterfaces.add(
         DeviceInterfaceInfo(

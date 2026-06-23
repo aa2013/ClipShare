@@ -45,6 +45,7 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/network_interface_filter_util.dart';
 import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -959,7 +960,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (!manual && appConfig.onlyManualDiscoverySubNet) {
       return tasks;
     }
-    var interfaces = (await NetworkInterface.list()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
+    final interfaces = (await NetworkInterfaceFilterUtil.listInterfaces())
+        .where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
     final expendAddress = interfaces.map((itf) => itf.addresses).expand((address) => address);
     final ipv4Address = expendAddress.where((address) => address.type == InternetAddressType.IPv4);
     for (var address in ipv4Address) {
@@ -1783,7 +1785,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     int port = 0,
   ]) async {
     const ipv4Type = InternetAddressType.IPv4;
-    final interfaces = (await NetworkInterface.list())
+    final interfaces = (await NetworkInterfaceFilterUtil.listInterfaces())
         .where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name))
         .where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
 
