@@ -336,11 +336,35 @@ class MyApplication : Application() {
                 //显示历史浮窗
                 "showHistoryFloatWindow" -> {
                     val width = args["width"] as? Int ?: 32
-                    if (!isServiceRunning(this, HistoryFloatService::class.java)) {
-                        startService(Intent(this, HistoryFloatService::class.java).apply {
-                            putExtra("width", width)
-                        })
-                    }
+                    val i18n = args["i18n"] as? Map<*, *>
+                    startService(Intent(this, HistoryFloatService::class.java).apply {
+                        putExtra("width", width)
+                        // 每次调用都把最新文案下发给服务，语言切换后可直接刷新悬浮窗内容。
+                        putExtra(
+                            HistoryFloatService.EXTRA_FLOAT_TITLE,
+                            i18n?.get("title") as? String
+                        )
+                        putExtra(
+                            HistoryFloatService.EXTRA_FLOAT_COUNT_TEMPLATE,
+                            i18n?.get("countTemplate") as? String
+                        )
+                        putExtra(
+                            HistoryFloatService.EXTRA_FLOAT_IMAGE_UNAVAILABLE,
+                            i18n?.get("imageUnavailable") as? String
+                        )
+                        putExtra(
+                            HistoryFloatService.EXTRA_FLOAT_TEXT_TYPE,
+                            i18n?.get("textType") as? String
+                        )
+                        putExtra(
+                            HistoryFloatService.EXTRA_FLOAT_IMAGE_TYPE,
+                            i18n?.get("imageType") as? String
+                        )
+                        putExtra(
+                            HistoryFloatService.EXTRA_FLOAT_FILE_TYPE,
+                            i18n?.get("fileType") as? String
+                        )
+                    })
                 }
                 "showKeepAliveFloatWindow" -> {
                     if (Settings.canDrawOverlays(this) && !isServiceRunning(this, KeepAliveFloatService::class.java)) {

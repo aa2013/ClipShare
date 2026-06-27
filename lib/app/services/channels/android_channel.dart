@@ -1,8 +1,7 @@
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/history_content_type.dart';
-import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -11,8 +10,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-import '../clipboard_service.dart';
-
 class AndroidChannelService extends GetxService {
   static const tag = "AndroidChannelService";
   late final MethodChannel androidChannel;
@@ -20,18 +17,6 @@ class AndroidChannelService extends GetxService {
 
   AndroidChannelService init() {
     androidChannel = appConfig.androidChannel;
-    if (Platform.isAndroid) {
-      if (appConfig.showHistoryFloat) {
-        showHistoryFloatWindow();
-      }
-      setHistoryFloatHandleWidth(appConfig.historyFloatHandleWidth);
-      if (appConfig.enhanceBackgroundKeepAlive) {
-        showKeepAliveFloatWindow();
-      }
-      lockHistoryFloatLoc(
-        {"loc": appConfig.lockHistoryFloatLoc},
-      );
-    }
     return this;
   }
 
@@ -60,7 +45,17 @@ class AndroidChannelService extends GetxService {
     if (!Platform.isAndroid) return;
     androidChannel.invokeMethod(
       AndroidChannelMethod.showHistoryFloatWindow.name,
-      {"width": appConfig.historyFloatHandleWidth},
+      {
+        "width": appConfig.historyFloatHandleWidth,
+        "i18n": {
+          "title": TranslationKey.historyFloatTitle.tr,
+          "countTemplate": TranslationKey.historyFloatCountTemplate.tr,
+          "imageUnavailable": TranslationKey.historyFloatImageUnavailable.tr,
+          "textType": TranslationKey.text.tr,
+          "imageType": TranslationKey.image.tr,
+          "fileType": TranslationKey.file.tr,
+        },
+      },
     );
   }
 

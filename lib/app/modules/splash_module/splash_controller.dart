@@ -93,6 +93,8 @@ class SplashController extends GetxController {
   }
 
   Future<void> init() async {
+    // 先更新语言，确保后续下发给 Android 悬浮窗的文案已是最终 locale。
+    appConfig.updateLanguage();
     if (PlatformExt.isDesktop) {
       //加载配置后初始化窗体配置
       await initWindowsManager();
@@ -133,6 +135,16 @@ class SplashController extends GetxController {
     if (Platform.isAndroid) {
       androidChannelService.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
       await copyAssets();
+      if (appConfig.showHistoryFloat) {
+        androidChannelService.showHistoryFloatWindow();
+      }
+      androidChannelService.setHistoryFloatHandleWidth(appConfig.historyFloatHandleWidth);
+      if (appConfig.enhanceBackgroundKeepAlive) {
+        androidChannelService.showKeepAliveFloatWindow();
+      }
+      androidChannelService.lockHistoryFloatLoc(
+        {"loc": appConfig.lockHistoryFloatLoc},
+      );
     }
     if(Platform.isIOS){
       if(appConfig.enablePIP){
@@ -144,7 +156,10 @@ class SplashController extends GetxController {
     // 初始化channel
     initChannel();
     initShareHandler();
-    appConfig.updateLanguage();
+    if (Platform.isAndroid && appConfig.showHistoryFloat) {
+      // 语言更新与 channel 初始化完成后再补发一次，避免首次启动过早导致悬浮窗文案未刷新。
+      androidChannelService.showHistoryFloatWindow();
+    }
     // 初始化托盘服务（必须在语言初始化之后，以确保菜单项使用正确的翻译）
     if (PlatformExt.isDesktop) {
       await Get.putAsync(() => TrayService().init(), permanent: true);

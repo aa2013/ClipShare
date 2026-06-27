@@ -41,6 +41,28 @@ import top.coclyun.clipshare.sendHistories
 import top.coclyun.clipshare.setHistoryFloatHandleWidth
 import java.io.File
 
+data class HistoryFloatStrings(
+    val title: String = "",
+    val countTemplate: String = "{count}",
+    val imageUnavailable: String = "",
+    val textType: String = "",
+    val imageType: String = "",
+    val fileType: String = "",
+) {
+    fun formatCount(count: Int): String {
+        return countTemplate.replace("{count}", count.toString())
+    }
+
+    fun formatType(type: String): String {
+        return when (type.lowercase()) {
+            "text" -> textType
+            "image" -> imageType
+            "file" -> fileType
+            else -> type
+        }
+    }
+}
+
 class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private lateinit var localBroadcastReceiver: BroadcastReceiver
     private lateinit var windowManager: WindowManager
@@ -54,6 +76,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var closing by mutableStateOf(false)
     private var handleVisible by mutableStateOf(true)
     private var handleWidth by mutableIntStateOf(32)
+    private var floatStrings by mutableStateOf(HistoryFloatStrings())
     private var minHistoryId = 0L
     private var reachedHistoryEnd = false
     private var currentLoadVisibleCount = 0
@@ -103,6 +126,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             setContent {
                 HistoryFloatContent(
                     histories = histories,
+                    strings = floatStrings,
                     expanded = expanded,
                     loading = loading,
                     closing = closing,
@@ -122,6 +146,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
+        updateFloatTexts(intent)
         if (intent?.action == lockHistoryFloatLocation) {
             lockLoc = intent.getBooleanExtra("lock", false)
             return START_STICKY
@@ -254,6 +279,26 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         updateFullscreenVisibility()
         fullscreenCheckHandler.removeCallbacks(fullscreenCheckRunnable)
         fullscreenCheckHandler.post(fullscreenCheckRunnable)
+    }
+
+    private fun updateFloatTexts(intent: Intent?) {
+        if (intent == null) {
+            return
+        }
+        val title = intent.getStringExtra(EXTRA_FLOAT_TITLE) ?: floatStrings.title
+        val countTemplate = intent.getStringExtra(EXTRA_FLOAT_COUNT_TEMPLATE) ?: floatStrings.countTemplate
+        val imageUnavailable = intent.getStringExtra(EXTRA_FLOAT_IMAGE_UNAVAILABLE) ?: floatStrings.imageUnavailable
+        val textType = intent.getStringExtra(EXTRA_FLOAT_TEXT_TYPE) ?: floatStrings.textType
+        val imageType = intent.getStringExtra(EXTRA_FLOAT_IMAGE_TYPE) ?: floatStrings.imageType
+        val fileType = intent.getStringExtra(EXTRA_FLOAT_FILE_TYPE) ?: floatStrings.fileType
+        floatStrings = HistoryFloatStrings(
+            title = title,
+            countTemplate = countTemplate,
+            imageUnavailable = imageUnavailable,
+            textType = textType,
+            imageType = imageType,
+            fileType = fileType,
+        )
     }
 
     private fun setPos1P3() {
@@ -409,6 +454,12 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     companion object {
+        const val EXTRA_FLOAT_TITLE = "historyFloatTitle"
+        const val EXTRA_FLOAT_COUNT_TEMPLATE = "historyFloatCountTemplate"
+        const val EXTRA_FLOAT_IMAGE_UNAVAILABLE = "historyFloatImageUnavailable"
+        const val EXTRA_FLOAT_TEXT_TYPE = "historyFloatTextType"
+        const val EXTRA_FLOAT_IMAGE_TYPE = "historyFloatImageType"
+        const val EXTRA_FLOAT_FILE_TYPE = "historyFloatFileType"
         private const val BASE_WINDOW_FLAGS =
             LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_NOT_TOUCH_MODAL
         private const val FULLSCREEN_CHECK_INTERVAL_MS = 500L

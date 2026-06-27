@@ -239,6 +239,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Floating Window";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
         return "Show History Floating Window";
+      case TranslationKey.historyFloatTitle:
+        return "Clipboard History";
+      case TranslationKey.historyFloatCountTemplate:
+        return "{count} records";
+      case TranslationKey.historyFloatImageUnavailable:
+        return "Image unavailable";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
         return "Floating Window Handle Width: @width";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:

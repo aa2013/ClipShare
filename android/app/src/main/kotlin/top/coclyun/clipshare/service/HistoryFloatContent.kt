@@ -19,10 +19,8 @@ import android.view.View.DragShadowBuilder
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -94,6 +92,7 @@ private val Accent = Color(0xFF2563EB)
 @Composable
 fun HistoryFloatContent(
     histories: List<History>,
+    strings: HistoryFloatStrings,
     expanded: Boolean,
     loading: Boolean,
     closing: Boolean,
@@ -111,6 +110,7 @@ fun HistoryFloatContent(
         if (expanded) {
             ExpandedHistoryPanel(
                 histories = histories,
+                strings = strings,
                 loading = loading,
                 closing = closing,
                 onCollapse = onCollapse,
@@ -215,6 +215,7 @@ private fun HistoryHandle(
 @Composable
 private fun ExpandedHistoryPanel(
     histories: List<History>,
+    strings: HistoryFloatStrings,
     loading: Boolean,
     closing: Boolean,
     onCollapse: () -> Unit,
@@ -285,13 +286,13 @@ private fun ExpandedHistoryPanel(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "剪贴历史",
+                            text = strings.title,
                             color = PrimaryText,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            text = "${histories.size} 条记录",
+                            text = strings.formatCount(histories.size),
                             color = SecondaryText,
                             style = MaterialTheme.typography.bodySmall,
                         )
@@ -311,6 +312,7 @@ private fun ExpandedHistoryPanel(
                     items(histories, key = { it.id }) { history ->
                         HistoryItem(
                             item = history,
+                            strings = strings,
                             onDragStart = onDragStart,
                             onDragEnd = onDragEnd,
                         )
@@ -337,6 +339,7 @@ private fun ExpandedHistoryPanel(
 @Composable
 private fun HistoryItem(
     item: History,
+    strings: HistoryFloatStrings,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
 ) {
@@ -369,7 +372,7 @@ private fun HistoryItem(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = item.type.uppercase(),
+                    text = strings.formatType(item.type),
                     color = Accent,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
@@ -415,7 +418,10 @@ private fun HistoryItem(
 
             Spacer(modifier = Modifier.height(8.dp))
             if (item.type.lowercase() == "image") {
-                HistoryImage(path = item.content)
+                HistoryImage(
+                    path = item.content,
+                    unavailableText = strings.imageUnavailable,
+                )
             } else {
                 Text(
                     text = item.content.take(min(260, item.content.length)),
@@ -448,19 +454,22 @@ private fun HistoryItem(
 }
 
 @Composable
-private fun HistoryImage(path: String) {
+private fun HistoryImage(
+    path: String,
+    unavailableText: String,
+) {
     val bitmap = remember(path) {
         BitmapFactory.decodeFile(path)?.asImageBitmap()
     }
 
     if (bitmap == null) {
         Text(
-            text = "图片已不可用",
+            text = unavailableText,
             color = SecondaryText,
             style = MaterialTheme.typography.bodySmall,
         )
     } else {
-        Image(
+        androidx.compose.foundation.Image(
             bitmap = bitmap,
             contentDescription = "image",
             modifier = Modifier
