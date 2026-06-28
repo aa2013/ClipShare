@@ -258,7 +258,7 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
   // Override behavior methods like buildOverscrollIndicator and buildScrollbar
   @override
   Set<PointerDeviceKind> get dragDevices => {
-    PointerDeviceKind.touch,
+    ...super.dragDevices,
     PointerDeviceKind.mouse,
   };
 }
