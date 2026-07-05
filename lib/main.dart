@@ -14,6 +14,7 @@ import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/clip_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
+import 'package:clipshare/app/services/device_connection_notify_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
@@ -160,6 +161,7 @@ Future<void> initMainServices() async {
   final registry = connRegistryService.registry;
   Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);
   Get.put(HistorySyncProgressService(), permanent: true);
+  Get.put(DeviceConnectionNotifyService(), permanent: true);
   Get.put<SocketService>(SocketService(registry), permanent: true);
   Get.put<StorageService>(StorageService(registry), permanent: true);
   Get.put(AndroidChannelService().init(), permanent: true);

@@ -24,8 +24,8 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
+import 'package:clipshare/app/services/device_connection_notify_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
-import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
@@ -35,7 +35,6 @@ import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
@@ -57,6 +56,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final appConfig = Get.find<ConfigService>();
   final connRegService = Get.find<ConnectionRegistryService>();
   final dbService = Get.find<DbService>();
+  final devConnNotifyService = Get.find<DeviceConnectionNotifyService>();
   static const String tag = "SocketService";
   static const maxParallelCnt = 10;
   Timer? _heartbeatTimer;
@@ -94,14 +94,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   List<RawDatagramSocket> multicasts = [];
-
-  //正在通知的设备，用于防抖，devId => (notifyId,isDisconnected)
-  //时常为 2s，如果 2s 内，该 map 有 key 且 id 仍然为发起通知时创建的 id 则允许通知，否则取消通知
-  final _devNotifyIdMap = <String, bool>{};
-  Timer? _devNotifyTimer;
-
-  //通知防抖时长
-  static final _debounceTime = 1500.ms;
 
   //region dev registry
   final DeviceConnectionRegistry _registry;
@@ -1286,7 +1278,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     AppVersion minVersion,
     AppVersion version,
   ) async {
-    showDevConnectedNotification(dev.guid);
+    devConnNotifyService.showConnected(
+      dev.guid,
+      isPaired: _devSockets[dev.guid]?.isPaired ?? false,
+    );
     final ip = client.ip;
     final port = client.isForwardMode ? forwardServerPort : client.port;
 
@@ -1452,7 +1447,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         //心跳超时
         logger.debug(tag, "judgeDeviceHeartbeatTimeout ${ds.dev.guid}");
         disconnectDevice(ds.dev, true);
-        showDevDisConnectNotification(ds.dev.guid);
+        devConnNotifyService.showDisconnected(ds.dev.guid, isPaired: ds.isPaired);
       }
     }
   }
@@ -1509,7 +1504,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     logger.debug(tag, "$devId 断开连接");
     final ds = _devSockets[devId];
     if (ds != null && ds.isPaired && autoReconnect) {
-      showDevDisConnectNotification(ds.dev.guid);
+      devConnNotifyService.showDisconnected(ds.dev.guid, isPaired: ds.isPaired);
     }
     //移除socket
     _devSockets.remove(devId);
@@ -1531,85 +1526,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (ds != null && autoReconnect) {
       _attemptReconnect(ds.dev.guid);
     }
-  }
-
-  ///设备连接后发起通知
-  void showDevConnectedNotification(String devId) {
-    if (!appConfig.notifyOnDevConn) {
-      return;
-    }
-    if (!(_devSockets[devId]?.isPaired ?? false)) {
-      //未配对的不理会
-      return;
-    }
-    _devNotifyTimer?.cancel();
-    //如果短时间内断开并重连，就同时取消通知
-    if (_devNotifyIdMap[devId] == true) {
-      _devNotifyIdMap.remove(devId);
-      return;
-    }
-    _devNotifyIdMap[devId] = false;
-    _devNotifyTimer = Timer(_debounceTime, () async {
-      _devNotifyIdMap.remove(devId);
-      final devService = Get.find<DeviceService>();
-      final notifyContent = TranslationKey.devConnectedNotifyContent.trParams({
-        "devName": devService.getName(devId),
-      });
-      final key = "dev-conn-$devId";
-      int? notifyId;
-      if (!appConfig.useTrayFlashingForConnection) {
-        await NotifyUtil.cancelAll(key);
-        notifyId = await NotifyUtil.notify(
-          key: key,
-          content: notifyContent,
-        );
-      } else {
-        final trayService = Get.find<TrayService>();
-        trayService.flashTrayNormal(notifyContent);
-      }
-      if (notifyId != null) {
-        Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId!);
-        });
-      }
-    });
-  }
-
-  ///设备断开后发起通知
-  void showDevDisConnectNotification(String devId) {
-    if (!appConfig.notifyOnDevDisconn) {
-      return;
-    }
-    if (!(_devSockets[devId]?.isPaired ?? false)) {
-      //未配对的不理会
-      return;
-    }
-    _devNotifyTimer?.cancel();
-    _devNotifyIdMap[devId] = true;
-    _devNotifyTimer = Timer(_debounceTime, () async {
-      _devNotifyIdMap.remove(devId);
-      final devService = Get.find<DeviceService>();
-      final notifyContent = TranslationKey.devDisconnectNotifyContent.trParams({
-        "devName": devService.getName(devId),
-      });
-      final key = "dev-disconn-$devId";
-      int? notifyId;
-      if (!appConfig.useTrayFlashingForConnection) {
-        await NotifyUtil.cancelAll(key);
-        notifyId = await NotifyUtil.notify(
-          key: key,
-          content: notifyContent,
-        );
-      } else {
-        final trayService = Get.find<TrayService>();
-        trayService.flashTrayWarning(notifyContent);
-      }
-      if (notifyId != null) {
-        Future.delayed(2.s, () {
-          NotifyUtil.cancel(key, notifyId!);
-        });
-      }
-    });
   }
 
   ///重连一次

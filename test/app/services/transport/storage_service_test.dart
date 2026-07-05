@@ -31,6 +31,7 @@ import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/device_connection_notify_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
@@ -55,6 +56,7 @@ void main() {
     late _TestDbService dbService;
     late _RecordingForwardStatusListener forwardStatusListener;
     late _RecordingDevAliveListener devAliveListener;
+    late _RecordingDeviceConnectionNotifyService notifyService;
 
     const selfDevId = 'device-a';
     const peerDevId = 'device-b';
@@ -96,6 +98,8 @@ void main() {
       Get.put<ConfigService>(configService);
       Get.put<ConnectionRegistryService>(connectionRegistryService);
       Get.put<DbService>(dbService);
+      notifyService = _RecordingDeviceConnectionNotifyService();
+      Get.put<DeviceConnectionNotifyService>(notifyService);
       Get.put<DeviceService>(_TestDeviceService(configService: configService));
       Get.put<HistorySyncProgressService>(_TestHistorySyncProgressService());
       Get.put<ClipboardSourceService>(_TestClipboardSourceService());
@@ -237,6 +241,7 @@ void main() {
       await _pumpAsyncQueue();
 
       await _waitForHistorySync(historySyncListener, missingId);
+      expect(notifyService.connectedDevIds, contains(peerDevId));
     });
 
     test('收到 offline 后会同步清理连接注册表和离线通知', () async {
@@ -265,6 +270,49 @@ void main() {
 
       expect(registry.hasDevice(peerDevId), isFalse);
       expect(devAliveListener.disconnectedDevIds, contains(peerDevId));
+      expect(notifyService.disconnectedDevIds, contains(peerDevId));
+    });
+
+    test('未注册在线设备收到 offline 时不会触发断开通知', () async {
+      const unregisteredDevId = 'device-c';
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+
+      await session.send(jsonEncode(WsMsgData(WsMsgType.offline, '', unregisteredDevId).toJson()));
+      await _pumpAsyncQueue();
+
+      expect(registry.hasDevice(unregisteredDevId), isFalse);
+      expect(notifyService.disconnectedDevIds, isEmpty);
+    });
+
+    test('手动断开 storage 设备时不触发断开通知', () async {
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+      notifyService.clear();
+
+      storageService.disconnectDevice(peerDevId);
+      await _pumpAsyncQueue();
+
+      expect(registry.hasDevice(peerDevId), isFalse);
+      expect(notifyService.disconnectedDevIds, isEmpty);
     });
 
     test('收到设备 online 后只补发该设备的 pending storage ACK', () async {
@@ -630,7 +678,6 @@ class _FakePendingStorageAckDao extends PendingStorageAckDao {
     return before - items.length;
   }
 
-  @override
   Future<List<PendingStorageAck>> getAll() async {
     return List<PendingStorageAck>.from(items);
   }
@@ -716,6 +763,31 @@ class _RecordingDevAliveListener with DevAliveListener {
   @override
   void onDisconnected(String devId) {
     disconnectedDevIds.add(devId);
+  }
+}
+
+/// 记录连接通知调用，避免单元测试触发真实系统通知。
+class _RecordingDeviceConnectionNotifyService extends DeviceConnectionNotifyService {
+  final List<String> connectedDevIds = <String>[];
+  final List<String> disconnectedDevIds = <String>[];
+
+  void clear() {
+    connectedDevIds.clear();
+    disconnectedDevIds.clear();
+  }
+
+  @override
+  void showConnected(String devId, {required bool isPaired}) {
+    if (isPaired) {
+      connectedDevIds.add(devId);
+    }
+  }
+
+  @override
+  void showDisconnected(String devId, {required bool isPaired}) {
+    if (isPaired) {
+      disconnectedDevIds.add(devId);
+    }
   }
 }
 

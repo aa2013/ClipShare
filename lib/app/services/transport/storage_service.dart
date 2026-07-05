@@ -37,6 +37,7 @@ import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/device_connection_notify_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
@@ -90,6 +91,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   final dbService = Get.find<DbService>();
   final connRegService = Get.find<ConnectionRegistryService>();
   final historySyncProgressService = Get.find<HistorySyncProgressService>();
+  final deviceConnectionNotifyService = Get.find<DeviceConnectionNotifyService>();
   final _connectedDevIds = <String>{};
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
@@ -642,7 +644,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   void disconnectDevice(String devId) {
     logger.info(tag, "send offline presence. targetDevId=$devId, source=disconnectDevice");
     _wsService.send(WsMsgData(WsMsgType.offline, "", devId));
-    _handleDeviceDisconnected(devId, source: 'disconnectDevice');
+    _handleDeviceDisconnected(devId, source: 'disconnectDevice', notify: false);
   }
 
   /// 统一记录 online presence 的发送来源，便于排查重连和手动连接场景。
@@ -1066,6 +1068,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         logger.warn(tag, "minVersion is null, target dev id = $devId");
         return success;
       }
+      deviceConnectionNotifyService.showConnected(devId, isPaired: result.isPaired);
       for (var listener in _devAliveListeners) {
         listener.onConnected(DevInfo.fromDevice(device), minVersion, version, protocol);
       }
@@ -1456,9 +1459,12 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   /// 统一处理设备离线时的本地状态收口，避免注册表和监听器状态漂移。
-  void _handleDeviceDisconnected(String devId, {required String source}) {
+  void _handleDeviceDisconnected(String devId, {required String source, bool notify = true}) {
     final removedConnected = _connectedDevIds.remove(devId);
     final existedInRegistry = _registry.hasDevice(devId);
+    if (notify && existedInRegistry) {
+      deviceConnectionNotifyService.showDisconnected(devId, isPaired: true);
+    }
     if (existedInRegistry) {
       _registry.removeDevice(devId);
     }
