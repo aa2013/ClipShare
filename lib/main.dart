@@ -23,6 +23,7 @@ import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/tag_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
+import 'package:clipshare/app/services/transport/transport_heartbeat_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/services/window_service.dart';
 import 'package:clipshare/app/translations/app_translations.dart';
@@ -162,6 +163,7 @@ Future<void> initMainServices() async {
   Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);
   Get.put(HistorySyncProgressService(), permanent: true);
   Get.put(DeviceConnectionNotifyService(), permanent: true);
+  Get.put(TransportHeartbeatService().init(), permanent: true);
   Get.put<SocketService>(SocketService(registry), permanent: true);
   Get.put<StorageService>(StorageService(registry), permanent: true);
   Get.put(AndroidChannelService().init(), permanent: true);

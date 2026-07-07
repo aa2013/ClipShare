@@ -44,6 +44,7 @@ import 'package:clipshare/app/services/syncing_file_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/transport/storage_ws_service.dart';
+import 'package:clipshare/app/services/transport/transport_heartbeat_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
@@ -92,11 +93,14 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   final connRegService = Get.find<ConnectionRegistryService>();
   final historySyncProgressService = Get.find<HistorySyncProgressService>();
   final deviceConnectionNotifyService = Get.find<DeviceConnectionNotifyService>();
+  final transportHeartbeatService = Get.find<TransportHeartbeatService>();
   final _connectedDevIds = <String>{};
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
   static const appInfoDir = "app-info";
   static const maxParallelCnt = 10;
+  static const _storageOnlineHeartbeatTaskName = 'storage-online';
+  static const _sameNetworkSocketGracePeriod = Duration(seconds: 3);
   static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
 
   String get _selfDevId => appConfig.device.guid;
@@ -130,6 +134,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       onMessage: _dispatchWsMessage,
       onStatusChanged: _onWsStatusChanged,
     );
+    _registerStorageOnlineHeartbeatTask();
   }
 
   WebDAVConfig? get _webDAVConfig => appConfig.webDAVConfig;
@@ -315,6 +320,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   Future<void> stop() async {
+    transportHeartbeatService.stop(_storageOnlineHeartbeatTaskName);
     _client = null;
     _lastDate = '';
     _lastDateFilePath = '';
@@ -633,26 +639,74 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   Future<void> disconnectWs() async {
+    transportHeartbeatService.stop(_storageOnlineHeartbeatTaskName);
     await _wsService.disconnect();
   }
 
   void connectDevice(String devId) {
-    logger.info(tag, "send online presence. targetDevId=$devId, source=connectDevice");
-    unawaited(_sendOnLineMsg(devId, source: 'connectDevice'));
+    logger.info(tag, "send online heartbeat. targetDevId=$devId, trigger=${StorageOnlineHeartbeatTrigger.connectDevice.name}");
+    unawaited(_sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDevice));
   }
 
   void disconnectDevice(String devId) {
-    logger.info(tag, "send offline presence. targetDevId=$devId, source=disconnectDevice");
+    logger.info(tag, "send offline. targetDevId=$devId, source=disconnectDevice");
     _wsService.send(WsMsgData(WsMsgType.offline, "", devId));
     _handleDeviceDisconnected(devId, source: 'disconnectDevice', notify: false);
   }
 
-  /// 统一记录 online presence 的发送来源，便于排查重连和手动连接场景。
-  Future<void> _sendOnLineMsg(String devId, {required String source}) async {
+  /// 注册存储在线心跳任务，统一复用传输心跳服务的定时器和屏幕生命周期。
+  void _registerStorageOnlineHeartbeatTask() {
+    transportHeartbeatService.registerTask(
+      TransportHeartbeatTask(
+        name: _storageOnlineHeartbeatTaskName,
+        shouldRun: () => _shouldKeepWsConnected() && _wsService.running,
+        onTick: (trigger) => _broadcastOnlineHeartbeat(trigger: _mapOnlineHeartbeatTrigger(trigger)),
+        onStop: (reason) {
+          if (reason != TransportHeartbeatStopReason.screenOffAutoClose) {
+            return;
+          }
+          // 息屏自动断开由统一心跳服务触发，避免 Storage 自己再维护一套定时器。
+          unawaited(disconnectWs());
+        },
+      ),
+    );
+  }
+
+  /// 将通用心跳触发原因转换为存储在线心跳的业务触发原因。
+  StorageOnlineHeartbeatTrigger _mapOnlineHeartbeatTrigger(TransportHeartbeatTrigger trigger) {
+    switch (trigger) {
+      case TransportHeartbeatTrigger.start:
+        return StorageOnlineHeartbeatTrigger.wsConnected;
+      case TransportHeartbeatTrigger.timer:
+        return StorageOnlineHeartbeatTrigger.timer;
+      case TransportHeartbeatTrigger.screenOpened:
+        return StorageOnlineHeartbeatTrigger.screenOpened;
+      case TransportHeartbeatTrigger.manual:
+        return StorageOnlineHeartbeatTrigger.manual;
+    }
+  }
+
+  /// 向所有云端已知设备广播在线心跳，用于弥补单次 online 消息丢失的问题。
+  Future<void> _broadcastOnlineHeartbeat({required StorageOnlineHeartbeatTrigger trigger}) async {
+    final client = _client;
+    if (client == null) {
+      logger.warn(tag, "storage client is null");
+      return;
+    }
+    final list = await client.list(path: devicesInfoDir);
+    final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
+    logger.debug(tag, "broadcast online heartbeat. trigger=${trigger.name}, targetCount=${deviceIds.length}");
+    for (var devId in deviceIds) {
+      await _sendOnlineHeartbeatToDevice(devId, trigger: trigger);
+    }
+  }
+
+  /// 向指定设备发送在线心跳，并返回底层 WebSocket 是否已成功入队。
+  Future<bool> _sendOnlineHeartbeatToDevice(String devId, {required StorageOnlineHeartbeatTrigger trigger}) async {
     try {
       final ipList = await _getInterfaceIpList();
       final port = appConfig.port;
-      _wsService.send(
+      final queued = _wsService.send(
         WsMsgData(
           WsMsgType.online,
           jsonEncode({"ipList": ipList, "port": port}),
@@ -661,14 +715,16 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       );
       logger.info(
         tag,
-        "send online presence. targetDevId=$devId, source=$source, ipCount=${ipList.length}, port=$port",
+        "send online heartbeat. targetDevId=$devId, trigger=${trigger.name}, queued=$queued, ipCount=${ipList.length}, port=$port",
       );
+      return queued;
     } catch (err, stack) {
       logger.error(
         tag,
-        "build online presence failed. targetDevId=$devId, source=$source, error=$err",
+        "build online heartbeat failed. targetDevId=$devId, trigger=${trigger.name}, error=$err",
         stack,
       );
+      return false;
     }
   }
 
@@ -702,17 +758,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     if (!_loadingMissingData) {
       unawaited(_loadMissingData());
     }
-    final client = _client;
-    if (client == null) {
-      logger.warn(tag, "storage client is null");
-      return;
-    }
-    final list = await client.list(path: devicesInfoDir);
-    final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
-    logger.debug(tag, "broadcast online presence after ws connected. targetCount=${deviceIds.length}");
-    for (var devId in deviceIds) {
-      await _sendOnLineMsg(devId, source: 'wsConnectedBroadcast');
-    }
+    transportHeartbeatService.start(_storageOnlineHeartbeatTaskName);
   }
 
   Future<void> _onWsDisconnected() async {
@@ -755,11 +801,11 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     //执行连接操作
     for (var devId in offlineAndPairedList) {
       if (_connectedDevIds.contains(devId)) {
-        logger.debug(tag, "reconnect device after online presence. targetDevId=$devId");
+        logger.debug(tag, "reconnect device after online heartbeat. targetDevId=$devId");
         await _connectDevice(devId);
       } else {
-        logger.debug(tag, "send online presence for offline paired device. targetDevId=$devId");
-        await _sendOnLineMsg(devId, source: 'connectDevices');
+        logger.debug(tag, "send online heartbeat for offline paired device. targetDevId=$devId");
+        await _sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDevices);
       }
     }
     return true;
@@ -791,8 +837,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     final result = await _addOrUpdateDevice(device);
-    logger.debug(tag, "send online presence after connect device. targetDevId=$devId");
-    await _sendOnLineMsg(devId, source: 'connectDeviceInternal');
+    logger.debug(tag, "send online heartbeat after connect device. targetDevId=$devId");
+    await _sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDeviceInternal);
     if (!result) {
       logger.warn(tag, "add or update device failed, device = $device");
     }
@@ -830,7 +876,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
     //返回值未false代表未执行连接
     if (!diffNetwork) {
-      // Let the socket path win on the same network instead of racing storage connect.
+      // 同网段优先让 Socket 接管；若短暂等待后 Socket 未建连，再用存储通道兜底更新在线状态。
+      unawaited(_fallbackConnectStorageDeviceAfterSocketGracePeriod(msg.targetDevId));
       return;
     }
     final ignored = !await _connectDevices();
@@ -843,6 +890,22 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       // 对端重连后主动补拉其离线期间写入的历史，避免只依赖 change 事件导致漏同步。
       unawaited(_reloadMissingDataForDevice(msg.targetDevId));
     }
+  }
+
+  /// 同网段 online 先等待 Socket 接管；若等待后仍未在线，则回退到存储通道连接。
+  Future<void> _fallbackConnectStorageDeviceAfterSocketGracePeriod(String devId) async {
+    await Future<void>.delayed(_sameNetworkSocketGracePeriod);
+    final isSocketConnected = _registry.getProtocol(devId)?.isSocket ?? false;
+    if (isSocketConnected) {
+      return;
+    }
+    final devController = Get.find<DeviceController>();
+    final connected = devController.onlineAndPairedList.any((item) => item.guid == devId);
+    if (connected) {
+      return;
+    }
+    logger.debug(tag, "fallback connect storage device after socket grace period. targetDevId=$devId");
+    await _connectDevice(devId);
   }
 
   /// 对单个重连设备执行一次缺失数据补拉，复用全量补拉的筛选与读取逻辑。
@@ -882,7 +945,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   Future<void> _processOfflineMsg(WsMsgData msg) async {
     final targetDevId = msg.targetDevId;
-    logger.debug(tag, "receive offline presence. targetDevId=$targetDevId");
+    logger.debug(tag, "receive offline. targetDevId=$targetDevId");
     _handleDeviceDisconnected(targetDevId, source: 'offlineMessage');
   }
 
@@ -1484,4 +1547,15 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
     return int.tryParse(record.data);
   }
+}
+
+/// 存储在线心跳触发原因，用于区分连接建立、定时心跳、亮屏恢复和手动连接等入口。
+enum StorageOnlineHeartbeatTrigger {
+  wsConnected,
+  timer,
+  screenOpened,
+  manual,
+  connectDevice,
+  connectDevices,
+  connectDeviceInternal,
 }

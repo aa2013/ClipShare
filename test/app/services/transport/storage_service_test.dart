@@ -37,6 +37,7 @@ import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
+import 'package:clipshare/app/services/transport/transport_heartbeat_service.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -103,6 +104,7 @@ void main() {
       Get.put<DeviceService>(_TestDeviceService(configService: configService));
       Get.put<HistorySyncProgressService>(_TestHistorySyncProgressService());
       Get.put<ClipboardSourceService>(_TestClipboardSourceService());
+      Get.put<TransportHeartbeatService>(TransportHeartbeatService().init());
       Get.put<SocketService>(_TestSocketService(registry));
       Get.put<DeviceController>(_TestDeviceController());
       Get.put<HistoryController>(_TestHistoryController());
@@ -558,6 +560,12 @@ class _TestConfigService extends GetxService implements ConfigService {
 
   @override
   int get port => 9527;
+
+  @override
+  int get heartbeatInterval => 60;
+
+  @override
+  bool get autoCloseConnAfterScreenOff => false;
 
   @override
   String get localName => 'Self Device';

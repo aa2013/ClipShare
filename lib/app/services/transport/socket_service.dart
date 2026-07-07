@@ -36,6 +36,7 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
+import 'package:clipshare/app/services/transport/transport_heartbeat_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
@@ -50,16 +51,16 @@ import 'package:collection/collection.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 
 class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final appConfig = Get.find<ConfigService>();
   final connRegService = Get.find<ConnectionRegistryService>();
   final dbService = Get.find<DbService>();
   final devConnNotifyService = Get.find<DeviceConnectionNotifyService>();
+  final transportHeartbeatService = Get.find<TransportHeartbeatService>();
   static const String tag = "SocketService";
   static const maxParallelCnt = 10;
-  Timer? _heartbeatTimer;
+  static const _socketHeartbeatTaskName = 'socket-ping';
   Timer? _forwardClientHeartbeatTimer;
   DateTime? _lastForwardServerPingTime;
 
@@ -79,7 +80,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   int? _pairingNotifyId;
   static bool _isInit = false;
   bool screenOpened = true;
-  Future? autoCloseConnTimer;
   bool _autoConnForwardServer = true;
   CancelTokenSource _discoveryTokenSource = CancelTokenSource();
 
@@ -110,9 +110,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
   Future<SocketService> init() async {
     if (_isInit) throw Exception("已初始化");
-    // 初始化，创建socket监听
+    // 初始化 Socket 监听后注册统一心跳任务，避免各传输服务各自维护定时器。
     await _runSocketServer();
-    //连接中转服务器
+    _registerSocketHeartbeatTask();
+    // 连接中转服务器。
     await connectForwardServer();
     startDiscoveryDevices();
     startHeartbeatTest();
@@ -125,6 +126,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   void onClose() {
     super.onClose();
     ScreenOpenedListener.inst.remove(this);
+    transportHeartbeatService.unregisterTask(_socketHeartbeatTaskName);
   }
 
   ///判断设备是否在线
@@ -323,7 +325,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       return;
     }
     //屏幕关闭且 设置了自动断连 且 定时器已到期 则不连接
-    if (!screenOpened && appConfig.autoCloseConnAfterScreenOff && autoCloseConnTimer == null) {
+    if (!transportHeartbeatService.screenOpened && appConfig.autoCloseConnAfterScreenOff && transportHeartbeatService.screenOffAutoClosed) {
       return;
     }
     if (!appConfig.enableForward) return;
@@ -1382,28 +1384,43 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   //region 心跳相关
+  /// 注册 Socket 心跳任务，统一交给传输心跳服务管理定时器。
+  void _registerSocketHeartbeatTask() {
+    transportHeartbeatService.registerTask(
+      TransportHeartbeatTask(
+        name: _socketHeartbeatTaskName,
+        shouldRun: () => true,
+        onTick: (trigger) {
+          // 定时心跳没有在线 Socket 时不发送，首次启动立即 ping。
+          if (trigger == TransportHeartbeatTrigger.timer && _devSockets.isEmpty) {
+            return;
+          }
+          if (trigger == TransportHeartbeatTrigger.timer) {
+            logger.debug(tag, "send ping");
+          }
+          DataSender.sendData2All(MsgType.ping, {}, false);
+        },
+        onStop: (reason) {
+          if (reason != TransportHeartbeatStopReason.screenOffAutoClose) {
+            return;
+          }
+          // 息屏到期时断开所有连接并停止中转服务存活判断。
+          logger.debug(tag, "屏幕关闭时间已到，断开所有连接和心跳测试");
+          disConnectAllConnections();
+          _stopJudgeForwardClientAlive();
+        },
+      ),
+    );
+  }
+
   ///开始所有设备的心跳测试
   void startHeartbeatTest() {
-    //先停止
-    stopHeartbeatTest();
-    //首次直接发送
-    DataSender.sendData2All(MsgType.ping, {}, false);
-    // judgeDeviceHeartbeatTimeout();
-    var interval = appConfig.heartbeatInterval;
-    if (interval <= 0) return;
-    //更新timer
-    _heartbeatTimer = Timer.periodic(interval.s, (timer) {
-      if (_devSockets.isEmpty) return;
-      logger.debug(tag, "send ping");
-      // judgeDeviceHeartbeatTimeout();
-      DataSender.sendData2All(MsgType.ping, {}, false);
-    });
+    transportHeartbeatService.start(_socketHeartbeatTaskName);
   }
 
   ///停止所有设备的心跳测试
   void stopHeartbeatTest() {
-    _heartbeatTimer?.cancel();
-    _heartbeatTimer = null;
+    transportHeartbeatService.stop(_socketHeartbeatTaskName);
   }
 
   ///定时判断中转服务连接存活状态
@@ -1459,9 +1476,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       connectForwardServer();
     }
     startDiscoveryDevices(scan: appConfig.enableAutoSyncOnScreenOpened);
-    startHeartbeatTest();
     logger.debug(tag, "屏幕打开");
-    autoCloseConnTimer = null;
   }
 
   @override
@@ -1472,23 +1487,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (!appConfig.autoCloseConnAfterScreenOff) {
       return;
     }
-    const minutes = 2;
-    logger.debug(tag, "屏幕关闭，开启定时器，$minutes分钟后关闭连接");
-    WakelockPlus.toggle(enable: true);
-    //开启定时器，到时间自动断开连接
-    autoCloseConnTimer = Future.delayed(minutes.min, () {
-      WakelockPlus.toggle(enable: false);
-      if (autoCloseConnTimer == null) {
-        logger.debug(tag, "延迟执行已取消");
-        return;
-      }
-      logger.debug(tag, "屏幕关闭时间已到，断开所有连接和心跳测试");
-      autoCloseConnTimer = null;
-      disConnectAllConnections();
-      stopHeartbeatTest();
-      _stopJudgeForwardClientAlive();
-    });
-    // logger.debug(tag, "定时器激活状态: ${autoCloseConnTimer?.isActive}");
+    logger.debug(tag, "屏幕关闭，等待统一心跳管理服务到期后关闭连接");
   }
 
   //endregion
