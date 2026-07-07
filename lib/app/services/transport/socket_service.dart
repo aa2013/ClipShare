@@ -16,6 +16,7 @@ import 'package:clipshare/app/data/models/dev_socket.dart';
 import 'package:clipshare/app/data/models/message_data.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/dev_pairing_handler.dart';
 import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
@@ -25,6 +26,7 @@ import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
 import 'package:clipshare/app/services/device_connection_notify_service.dart';
+import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
@@ -43,7 +45,6 @@ import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/network_util.dart';
@@ -57,6 +58,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   final connRegService = Get.find<ConnectionRegistryService>();
   final dbService = Get.find<DbService>();
   final devConnNotifyService = Get.find<DeviceConnectionNotifyService>();
+  final devService = Get.find<DeviceService>();
   final transportHeartbeatService = Get.find<TransportHeartbeatService>();
   static const String tag = "SocketService";
   static const maxParallelCnt = 10;
@@ -548,10 +550,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
       ///客户端连接
       case MsgType.connect:
-        final isSocket = _registry.getProtocol(dev.guid)?.isSocket ?? true;
-        if (!isSocket) {
-          logger.warn(tag, "已通过其他协议连接: ${dev.guid}");
-          return;
+        final currentProtocol = _registry.getProtocol(dev.guid);
+        if (currentProtocol != null && !currentProtocol.isSocket) {
+          // Socket 优先级高于存储连接，继续握手并在连接成功后覆盖注册表协议。
+          logger.debug(tag, "已通过${currentProtocol.name}协议连接，继续 Socket 握手覆盖: ${dev.guid}");
         }
         assert(() {
           ///忽略指定设备的连接
@@ -607,7 +609,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
       ///忘记设备
       case MsgType.forgetDev:
-        onDevForget(dev, appConfig.userId);
+        await onDevForget(dev, appConfig.userId);
         break;
 
       ///单条数据同步
@@ -714,7 +716,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         String code = msg.data["code"];
         //验证配对码
         var verify = DevPairingHandler.verify(dev.guid, code);
-        _onDevPaired(dev, msg.userId, verify, address);
+        await _onDevPaired(dev, msg.userId, verify, address);
         //返回配对结果
         dev.sendData(MsgType.paired, {"result": verify}, false);
         ipSetTemp.removeWhere((v) {
@@ -725,7 +727,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       ///获取配对结果
       case MsgType.paired:
         bool result = msg.data["result"];
-        _onDevPaired(dev, msg.userId, result, address);
+        await _onDevPaired(dev, msg.userId, result, address);
         ipSetTemp.removeWhere((v) => v == address);
         if (_pairing = true) {
           Get.back();
@@ -1020,9 +1022,10 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///检查是否已经掉线，如果掉线则移除
-  Future<bool> testIsOnline(String devId) async {
+  Future<bool> testIsOnline(String devId,{bool autoReconnect = true}) async {
     if (!_devSockets.containsKey(devId)) return false;
     var skt = _devSockets[devId]!;
+    final probeStart = DateTime.now();
     //发送一个ping事件，但是要求对方给回复
     await skt.dev.sendData(MsgType.ping, {
       "result": null,
@@ -1035,17 +1038,17 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     //等待过程中已经掉线
     if (!_devSockets.containsKey(devId)) {
       logger.debug(tag, "testIsOnline: offline in waitTime");
-      _onDevDisconnected(devId);
+      _onDevDisconnected(devId, autoReconnect: autoReconnect);
       return false;
     }
     skt = _devSockets[devId]!;
-    //检查上次ping的时间是否在误差范围内，如果不在这个范围说明可能已经掉线
-    final online = skt.lastPingTime.isWithinRange(waitTime);
+    // 只要本次探测等待期间收到过对端消息，就认为连接仍在线，避免 2s 等待后的调度延迟击穿边界。
+    final online = !skt.lastPingTime.isBefore(probeStart);
     final now = DateTime.now();
     final offsetMs = now.difference(skt.lastPingTime).inMilliseconds;
     logger.debug(tag, "testIsOnline: isWithinRange online: $online, offset $offsetMs ms");
     if (!online) {
-      _onDevDisconnected(devId);
+      _onDevDisconnected(devId, autoReconnect: autoReconnect);
     }
     return online;
   }
@@ -1182,17 +1185,43 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (localDevice != null) {
       var localIsPaired = localDevice.isPaired;
       var remoteIsPaired = msg.data["isPaired"];
+      final protocol = client.isForwardMode ? TransportProtocol.server : TransportProtocol.direct;
       //双方配对信息一致
       if (remoteIsPaired && localIsPaired) {
+        await devService.confirmPairingState(
+          device: localDevice,
+          localIsPaired: localIsPaired,
+          remoteIsPaired: remoteIsPaired,
+          protocol: protocol,
+        );
         paired = true;
         logger.debug(tag, "${dev.name} has paired");
       } else {
         //有一方已取消配对或未配对
-        //忘记设备
-        onDevForget(dev, appConfig.userId);
-        dbService.deviceDao.updateDevice(localDevice..isPaired = false);
+        await devService.confirmPairingState(
+          device: localDevice,
+          localIsPaired: localIsPaired,
+          remoteIsPaired: remoteIsPaired,
+          protocol: protocol,
+        );
+        await onDevForget(dev, appConfig.userId, updatePairingState: false);
         logger.debug(tag, "${dev.name} not paired");
       }
+    } else {
+      final protocol = client.isForwardMode ? TransportProtocol.server : TransportProtocol.direct;
+      // 有效 socket 已完成 pairedStatus 交换时，即使本地还没有设备记录，
+      // 也要登记“本地未配对”结论，避免 storage 后续把设备重新拉回 paired。
+      await devService.confirmPairingState(
+        device: Device(
+          guid: dev.guid,
+          devName: dev.name,
+          uid: appConfig.userId,
+          type: dev.type,
+        ),
+        localIsPaired: false,
+        remoteIsPaired: msg.data["isPaired"] == true,
+        protocol: protocol,
+      );
     }
     //告诉客户端配对状态
     var pairedStatusData = MessageData(
@@ -1341,9 +1370,28 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///设备配对成功
-  void _onDevPaired(DevInfo dev, int uid, bool result, String? address) {
+  Future<void> _onDevPaired(DevInfo dev, int uid, bool result, String? address) async {
     logger.debug(tag, "${dev.name} paired，address：$address");
-    _devSockets[dev.guid]?.isPaired = true;
+    _devSockets[dev.guid]?.isPaired = result;
+    if (result) {
+      final protocol = (address?.isInternalIPv4 ?? false) ? TransportProtocol.direct : TransportProtocol.server;
+      final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
+      await devService.confirmPairingState(
+        device: dbDev ??
+            Device(
+              guid: dev.guid,
+              devName: dev.name,
+              uid: uid,
+              type: dev.type,
+              internalAddress: (address?.isInternalIPv4 ?? false) ? address : null,
+              address: address,
+            ),
+        localIsPaired: true,
+        remoteIsPaired: true,
+        protocol: protocol,
+        manual: true,
+      );
+    }
     for (var listener in _devAliveListeners) {
       try {
         listener.onPaired(dev, uid, result, address);
@@ -1371,9 +1419,29 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///设备配对成功
-  void onDevForget(DevInfo dev, int uid) {
+  Future<void> onDevForget(
+    DevInfo dev,
+    int uid, {
+    bool updatePairingState = true,
+  }) async {
     logger.debug(tag, "${dev.name} forget");
     _devSockets[dev.guid]?.isPaired = false;
+    if (updatePairingState) {
+      final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
+      await devService.confirmPairingState(
+        device: dbDev ??
+            Device(
+              guid: dev.guid,
+              devName: dev.name,
+              uid: uid,
+              type: dev.type,
+            ),
+        localIsPaired: false,
+        remoteIsPaired: false,
+        protocol: _devSockets[dev.guid]?.socket.isForwardMode ?? false ? TransportProtocol.server : TransportProtocol.direct,
+        manual: true,
+      );
+    }
     for (var listener in _devAliveListeners) {
       try {
         listener.onForget(dev, uid);
@@ -1507,6 +1575,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     }
     //移除socket
     _devSockets.remove(devId);
+    devService.clearPairingSource(devId, ds?.socket.isForwardMode ?? false ? TransportProtocol.server : TransportProtocol.direct);
     //从注册服务移除设备
     _registry.removeDevice(devId);
     if (ds != null && ds.socket.isForwardMode) {

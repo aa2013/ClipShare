@@ -32,7 +32,6 @@ enum ConfigKey {
   forwardServer,
   webdavConfig,
   s3Config,
-  stepwiseCreateDirectory,
   forwardWay,
   workingMode,
   onlyForwardMode,

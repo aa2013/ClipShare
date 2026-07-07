@@ -31,7 +31,6 @@ import 'package:clipshare/app/utils/crypto.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/device/device_card.dart';
@@ -244,15 +243,22 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     AppVersion version,
     TransportProtocol protocol,
   ) async {
-    var dev = await Device.fromDevInfo(info);
+    final dev = await Device.fromDevInfo(info);
+    final displayDev = dev ??
+        Device(
+          guid: info.guid,
+          devName: info.name,
+          uid: 0,
+          type: info.type,
+        );
     for (var i = 0; i < pairedList.length; i++) {
       var paired = pairedList[i];
-      if (paired.dev == dev) {
-        //修改widget状态
-        paired.dev!.address = dev!.address;
+      if (paired.dev?.guid == info.guid) {
+        // 只更新已配对列表里的连接态，不再用协议强行改变配对事实。
+        paired.dev!.address = displayDev.address;
         pairedList[i] = paired.copyWith(
           isConnected: true,
-          dev: paired.dev,
+          dev: displayDev,
           minVersion: minVersion,
           version: version,
           protocol: protocol,
@@ -261,11 +267,11 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         return;
       }
     }
-    //设备非直连
-    if (dev != null && protocol != TransportProtocol.direct) {
+    discoverList.removeWhere((element) => element.dev?.guid == info.guid);
+    if (displayDev.isPaired) {
       pairedList.add(
         DeviceCard(
-          dev: dev,
+          dev: displayDev,
           isPaired: true,
           isConnected: true,
           isSelf: false,
@@ -279,18 +285,9 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
       pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
       return;
     }
-    var hasSame = discoverList.firstWhereOrNull((element) => element.dev?.guid == info.guid) != null;
-    if (hasSame) {
-      return;
-    }
     discoverList.add(
       DeviceCard(
-        dev: Device(
-          guid: info.guid,
-          devName: info.name,
-          uid: 0,
-          type: info.type,
-        ),
+        dev: displayDev,
         onTap: (device, isConnected, showReNameDlg) => _requestPairing(info, Get.context!),
         minVersion: minVersion,
         version: version,
@@ -346,12 +343,12 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     );
     forgetDev = forgetDev?.copyWith(isPaired: false);
     if (forgetDev?.isConnected ?? false) {
-      // 已经连接，minVersion必定不空
-      onConnected(
-        dev,
-        forgetDev!.minVersion!,
-        forgetDev.version!,
-        forgetDev.protocol,
+      discoverList.removeWhere((element) => element.dev?.guid == dev.guid);
+      discoverList.add(
+        forgetDev!.copyWith(
+          isPaired: false,
+          onTap: (device, isConnected, showReNameDlg) => _requestPairing(dev, Get.context!),
+        ),
       );
     }
     _notifyOnlineDevicesWindow();
@@ -374,41 +371,15 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     //关闭配对弹窗
     Get.back();
     newPairing = false;
-    var newDev = Device(
-      guid: dev.guid,
-      devName: dev.name,
-      uid: uid,
-      type: dev.type,
-      isPaired: true,
-      internalAddress: (address?.isInternalIPv4 ?? false) ? address : null,
-      address: address,
-    );
-    var dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
-    if (dbDev != null) {
-      //之前配对过，只是取消配对了
-      dbDev.isPaired = true;
-      devService.addOrUpdate(dbDev).then((res) {
-        if (res) {
-          _addPairedDevInPage(dbDev);
-          //已配对，请求所有缺失数据
-          sktService.reqMissingData();
-          return;
-        }
-        Global.showSnackBarErr(context: Get.context!, text: TranslationKey.deviceAdditionFailedDialogText.tr);
-      });
-    } else {
-      //新设备
-      devService.addOrUpdate(newDev).then((res) {
-        if (!res) {
-          logger.debug(tag, "Device information addition failed");
-          Global.showSnackBarErr(context: Get.context!, text: TranslationKey.deviceAdditionFailedDialogText.tr);
-          return;
-        }
-        _addPairedDevInPage(newDev);
-        //已配对，请求所有缺失数据
-        sktService.reqMissingData();
-      });
+    final pairedDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
+    if (pairedDev == null || !pairedDev.isPaired) {
+      logger.debug(tag, "Device information addition failed");
+      Global.showSnackBarErr(context: Get.context!, text: TranslationKey.deviceAdditionFailedDialogText.tr);
+      return;
     }
+    _addPairedDevInPage(pairedDev);
+    //已配对，请求所有缺失数据
+    sktService.reqMissingData();
   }
 
   @override
@@ -566,28 +537,27 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                             Global.showTipsDialog(
                               context: context,
                               text: TranslationKey.devicePageUnpairedDialogAck.tr,
-                              onOk: () {
+                              onOk: () async {
+                                final devInfo = DevInfo.fromDevice(device);
                                 if (isConnected) {
-                                  var devInfo = DevInfo.fromDevice(device);
-                                  sktService.onDevForget(
-                                    devInfo,
-                                    appConfig.userId,
-                                  );
+                                  await sktService.onDevForget(devInfo, appConfig.userId);
                                   devInfo.sendData(
                                     MsgType.forgetDev,
                                     {},
                                   );
-                                }
-                                //更新配对状态为未配对
-                                device.isPaired = false;
-                                dbService.deviceDao.updateDevice(device).then((cnt) {
-                                  if (cnt <= 0) return;
-                                  onForget(
-                                    DevInfo.fromDevice(device),
-                                    appConfig.userId,
+                                } else {
+                                  final confirmResult = await devService.confirmPairingState(
+                                    device: device,
+                                    localIsPaired: false,
+                                    remoteIsPaired: false,
+                                    protocol: device.protocol,
+                                    manual: true,
                                   );
-                                });
-                                Navigator.pop(context);
+                                  if (confirmResult.accepted) {
+                                    onForget(devInfo, appConfig.userId);
+                                  }
+                                }
+                                Get.back();
                               },
                               showCancel: true,
                             );
@@ -809,11 +779,22 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   ///添加已配对设备，更新 ui
   void _addPairedDevInPage(Device dev) {
     //配对成功，从连接列表中移除
-    var discoverDev = discoverList.firstWhere((ele) => ele.dev?.guid == dev.guid);
+    var discoverDev = discoverList.firstWhereOrNull((ele) => ele.dev?.guid == dev.guid);
     discoverList.removeWhere((ele) => ele.dev?.guid == dev.guid);
     //添加到已配对列表
+    pairedList.removeWhere((ele) => ele.dev?.guid == dev.guid);
     pairedList.add(
-      discoverDev.copyWith(
+      (discoverDev ??
+              DeviceCard(
+                dev: dev,
+                isPaired: false,
+                isConnected: true,
+                isSelf: false,
+                minVersion: null,
+                version: null,
+                protocol: dev.protocol,
+              ))
+          .copyWith(
         dev: dev,
         isPaired: true,
         isConnected: true,
@@ -824,7 +805,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
               isConnected,
               showReNameDlg,
               Get.context!,
-              discoverDev.protocol,
+              discoverDev?.protocol ?? dev.protocol,
             );
           }
         },
@@ -835,7 +816,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
               isConnected,
               showReNameDlg,
               Get.context!,
-              discoverDev.protocol,
+              discoverDev?.protocol ?? dev.protocol,
             );
           }
         },

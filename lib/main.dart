@@ -158,6 +158,7 @@ Future<void> initMainServices() async {
   await appConfig.initPath();
   await Get.putAsync(() => DbService().init(), permanent: true);
   await appConfig.init();
+  await Get.putAsync(() => DeviceService().init(), permanent: true);
   final connRegistryService = ConnectionRegistryService();
   final registry = connRegistryService.registry;
   Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);
@@ -170,7 +171,6 @@ Future<void> initMainServices() async {
   Get.put(ClipChannelService().init(), permanent: true);
   Get.put(MultiWindowChannelService(), permanent: true);
   Get.put(PendingFileService(), permanent: true);
-  await Get.putAsync(() => DeviceService().init(), permanent: true);
   await Get.putAsync(() => TagService().init(), permanent: true);
   await Get.putAsync(() => SyncingFileProgressService().init(), permanent: true);
   await Get.putAsync(() => ClipboardSourceService().init(), permanent: true);

@@ -228,9 +228,7 @@ class StorageWsService {
 
   Future<void> _notifyDisconnected(WebSocketChannel? channel) async {
     _emitStatus(StorageWsStatus.disconnected);
-    if (_onDisconnected != null) {
-      await _onDisconnected();
-    }
+    await _onDisconnected?.call();
     if (channel != null) {
       try {
         await channel.sink.close();

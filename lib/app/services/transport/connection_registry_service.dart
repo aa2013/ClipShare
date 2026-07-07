@@ -25,11 +25,21 @@ class DeviceConnectionRegistry {
   );
 
   bool hasDevice(String devId) {
-    return _devices.keys.where((item) => item.guid == devId).isNotEmpty;
+    return _devices.keys
+        .where((item) => item.guid == devId)
+        .isNotEmpty;
+  }
+
+  /// 获取当前通过存储通道注册的设备，供 WS 断线时统一收口本地连接态。
+  Set<String> getDevIdsByStorage() {
+    final list = _devices.entries.where((item) => !item.value.isSocket);
+    return list.map((item) => item.key.guid).toSet();
   }
 
   TransportProtocol? getProtocol(String devId) {
-    var dev = _devices.keys.where((item) => item.guid == devId).firstOrNull;
+    var dev = _devices.keys
+        .where((item) => item.guid == devId)
+        .firstOrNull;
     if (dev == null) {
       return null;
     }

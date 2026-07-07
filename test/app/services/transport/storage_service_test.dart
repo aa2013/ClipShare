@@ -7,6 +7,8 @@ import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
+import 'package:clipshare/app/data/enums/transport_protocol.dart';
+import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/storage/web_dav_config.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/enums/forward_server_status.dart';
@@ -101,7 +103,12 @@ void main() {
       Get.put<DbService>(dbService);
       notifyService = _RecordingDeviceConnectionNotifyService();
       Get.put<DeviceConnectionNotifyService>(notifyService);
-      Get.put<DeviceService>(_TestDeviceService(configService: configService));
+      Get.put<DeviceService>(
+        _TestDeviceService(
+          configService: configService,
+          deviceById: dbService.deviceById,
+        ),
+      );
       Get.put<HistorySyncProgressService>(_TestHistorySyncProgressService());
       Get.put<ClipboardSourceService>(_TestClipboardSourceService());
       Get.put<TransportHeartbeatService>(TransportHeartbeatService().init());
@@ -381,6 +388,49 @@ void main() {
       );
     });
 
+    test('有效 socket 未配对结论会阻止 storage 重新标记 paired', () async {
+      final deviceService = Get.find<DeviceService>();
+      final socketDevice = Device(
+        guid: peerDevId,
+        devName: 'Peer Device',
+        uid: configService.userId,
+        type: 'android',
+      );
+      dbService.deviceById.remove(peerDevId);
+
+      // socket 已完成 pairedStatus 交换后，本地无记录等价于本地未配对。
+      final socketResult = await deviceService.confirmPairingState(
+        device: socketDevice,
+        localIsPaired: false,
+        remoteIsPaired: true,
+        protocol: TransportProtocol.direct,
+      );
+      expect(socketResult.accepted, isTrue);
+      expect(dbService.deviceById[peerDevId]?.isPaired, isFalse);
+
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+
+      expect(dbService.deviceById[peerDevId]?.isPaired, isFalse);
+      expect(notifyService.connectedDevIds, isNot(contains(peerDevId)));
+    });
+
     test('ws 整体断开时即使没有额外 listener 也会清理连接注册表', () async {
       connectionRegistryService.removeDevAliveListener(devAliveListener);
 
@@ -408,6 +458,196 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 300));
 
       expect(registry.hasDevice(peerDevId), isFalse);
+    });
+
+    test('manual storage ws disconnect sends offline then notifies disconnected', () async {
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+      expect(registry.hasDevice(peerDevId), isTrue);
+      devAliveListener.disconnectedDevIds.clear();
+
+      final offlineFuture = _waitForWsMessage(
+        wsServer,
+        (msg) => msg.operation == WsMsgType.offline && msg.targetDevId == peerDevId,
+      );
+      await storageService.disconnectWs();
+      final offlineMsg = await offlineFuture;
+      await _pumpAsyncQueue();
+
+      expect(offlineMsg.targetDevId, peerDevId);
+      expect(registry.hasDevice(peerDevId), isFalse);
+      expect(devAliveListener.disconnectedDevIds, contains(peerDevId));
+    });
+
+    test('storage ws disconnect keeps socket devices registered', () async {
+      const socketDevId = 'device-c';
+      registry.addDevice(
+        DevInfo(socketDevId, 'Socket Device', 'android'),
+        TransportProtocol.direct,
+      );
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+      expect(registry.hasDevice(peerDevId), isTrue);
+      expect(registry.hasDevice(socketDevId), isTrue);
+      devAliveListener.disconnectedDevIds.clear();
+
+      await session.close(WebSocketStatus.goingAway, 'storage disconnect only');
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+
+      expect(registry.hasDevice(peerDevId), isFalse);
+      expect(registry.hasDevice(socketDevId), isTrue);
+      expect(devAliveListener.disconnectedDevIds, contains(peerDevId));
+      expect(devAliveListener.disconnectedDevIds, isNot(contains(socketDevId)));
+    });
+
+    test('socket 在线时 storage offline 不会清理 socket 注册状态', () async {
+      registry.addDevice(
+        DevInfo(peerDevId, 'Peer Device', 'android'),
+        TransportProtocol.direct,
+      );
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+      devAliveListener.disconnectedDevIds.clear();
+      notifyService.clear();
+
+      await session.send(jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()));
+      await _pumpAsyncQueue();
+
+      expect(registry.hasDevice(peerDevId), isTrue);
+      expect(registry.getProtocol(peerDevId), TransportProtocol.direct);
+      expect(devAliveListener.disconnectedDevIds, isNot(contains(peerDevId)));
+      expect(notifyService.disconnectedDevIds, isNot(contains(peerDevId)));
+    });
+
+    test('socket 在线时 storage online 不会覆盖 socket 协议', () async {
+      final socketService = Get.find<SocketService>() as _TestSocketService;
+      socketService.onlineResults[peerDevId] = true;
+      registry.addDevice(
+        DevInfo(peerDevId, 'Peer Device', 'android'),
+        TransportProtocol.direct,
+      );
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+      notifyService.clear();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+
+      expect(registry.hasDevice(peerDevId), isTrue);
+      expect(registry.getProtocol(peerDevId), TransportProtocol.direct);
+      expect(socketService.testedDevIds, contains(peerDevId));
+      expect(notifyService.connectedDevIds, isEmpty);
+    });
+
+    test('socket 探活失败后后续 storage online 可以恢复 storage 协议', () async {
+      final socketService = Get.find<SocketService>() as _TestSocketService;
+      socketService.onlineResults[peerDevId] = false;
+      registry.addDevice(
+        DevInfo(peerDevId, 'Peer Device', 'android'),
+        TransportProtocol.direct,
+      );
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+      notifyService.clear();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+
+      expect(socketService.testedDevIds, contains(peerDevId));
+      expect(registry.hasDevice(peerDevId), isTrue);
+      expect(registry.getProtocol(peerDevId), TransportProtocol.webdav);
+      expect(notifyService.connectedDevIds, contains(peerDevId));
+    });
+
+    test('socket 断开清理后后续 storage online 可以恢复 storage 协议', () async {
+      registry.addDevice(
+        DevInfo(peerDevId, 'Peer Device', 'android'),
+        TransportProtocol.direct,
+      );
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+      registry.removeDevice(peerDevId);
+      notifyService.clear();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+
+      expect(registry.hasDevice(peerDevId), isTrue);
+      expect(registry.getProtocol(peerDevId), TransportProtocol.webdav);
+      expect(notifyService.connectedDevIds, contains(peerDevId));
     });
   });
 }
@@ -653,6 +893,21 @@ class _FakeDeviceDao extends DeviceDao {
   }
 
   @override
+  Future<int> add(Device dev) async {
+    deviceById[dev.guid] = dev;
+    return 1;
+  }
+
+  @override
+  Future<int> updateDevice(Device dev) async {
+    if (!deviceById.containsKey(dev.guid)) {
+      return 0;
+    }
+    deviceById[dev.guid] = dev;
+    return 1;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -717,20 +972,23 @@ class _FakeOperationSyncDao extends OperationSyncDao {
 
 class _TestDeviceService extends DeviceService {
   final ConfigService configService;
+  final Map<String, Device> deviceById;
 
-  _TestDeviceService({required this.configService});
+  _TestDeviceService({
+    required this.configService,
+    required this.deviceById,
+  });
 
   @override
   Device getById(String id) {
+    final device = deviceById[id];
+    if (device != null) {
+      return device;
+    }
     if (id == configService.device.guid) {
       return configService.device;
     }
     return Device.unknown;
-  }
-
-  @override
-  Future<bool> addOrUpdate(Device device) async {
-    return true;
   }
 }
 
@@ -812,8 +1070,17 @@ class _TestClipboardSourceService extends ClipboardSourceService {
 class _TestSocketService extends SocketService {
   _TestSocketService(super.registry);
 
+  final Map<String, bool> onlineResults = <String, bool>{};
+  final List<String> testedDevIds = <String>[];
+
   @override
   bool get discovering => false;
+
+  @override
+  Future<bool> testIsOnline(String devId) async {
+    testedDevIds.add(devId);
+    return onlineResults[devId] ?? false;
+  }
 }
 
 class _TestDeviceController extends GetxController implements DeviceController {

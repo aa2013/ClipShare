@@ -94,7 +94,6 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   final historySyncProgressService = Get.find<HistorySyncProgressService>();
   final deviceConnectionNotifyService = Get.find<DeviceConnectionNotifyService>();
   final transportHeartbeatService = Get.find<TransportHeartbeatService>();
-  final _connectedDevIds = <String>{};
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
   static const appInfoDir = "app-info";
@@ -640,6 +639,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   Future<void> disconnectWs() async {
     transportHeartbeatService.stop(_storageOnlineHeartbeatTaskName);
+    _notifyStorageDevicesOfflineBeforeManualDisconnect();
     await _wsService.disconnect();
   }
 
@@ -652,6 +652,22 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     logger.info(tag, "send offline. targetDevId=$devId, source=disconnectDevice");
     _wsService.send(WsMsgData(WsMsgType.offline, "", devId));
     _handleDeviceDisconnected(devId, source: 'disconnectDevice', notify: false);
+  }
+
+  void _notifyStorageDevicesOfflineBeforeManualDisconnect() {
+    final devIds = _registry.getDevIdsByStorage();
+    logger.info(tag, "notify storage devices offline before manual disconnect. targetCount=${devIds.length}");
+    for (final devId in devIds) {
+      _wsService.send(WsMsgData(WsMsgType.offline, "", devId));
+    }
+  }
+
+  void _disconnectAllStorageDevices({required String source}) {
+    final devIds = _registry.getDevIdsByStorage();
+    logger.info(tag, "disconnect all storage devices. source=$source, targetCount=${devIds.length}");
+    for (final devId in devIds) {
+      _handleDeviceDisconnected(devId, source: source, notify: false);
+    }
   }
 
   /// 注册存储在线心跳任务，统一复用传输心跳服务的定时器和屏幕生命周期。
@@ -704,6 +720,11 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   /// 向指定设备发送在线心跳，并返回底层 WebSocket 是否已成功入队。
   Future<bool> _sendOnlineHeartbeatToDevice(String devId, {required StorageOnlineHeartbeatTrigger trigger}) async {
     try {
+      final devIds = _registry.getDevIdsByStorage();
+      if(devIds.isEmpty){
+        //无设备，跳过
+        return false;
+      }
       final ipList = await _getInterfaceIpList();
       final port = appConfig.port;
       final queued = _wsService.send(
@@ -762,11 +783,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   Future<void> _onWsDisconnected() async {
-    final devIds = _connectedDevIds.toList();
-    logger.debug(tag, "handle ws disconnected cleanup. targetCount=${devIds.length}");
-    for (var devId in devIds) {
-      _handleDeviceDisconnected(devId, source: 'wsDisconnected');
-    }
+    _disconnectAllStorageDevices(source: 'wsDisconnected');
   }
 
   void _onWsStatusChanged(StorageWsStatus status) {
@@ -800,15 +817,19 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     var offlineAndPairedList = devController.offlineAndPairedList.map((item) => item.guid).toSet();
     //执行连接操作
     for (var devId in offlineAndPairedList) {
-      if (_connectedDevIds.contains(devId)) {
-        logger.debug(tag, "reconnect device after online heartbeat. targetDevId=$devId");
-        await _connectDevice(devId);
-      } else {
+      if (_isConnected(devId)) {
         logger.debug(tag, "send online heartbeat for offline paired device. targetDevId=$devId");
         await _sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDevices);
+      } else {
+        logger.debug(tag, "reconnect device after online heartbeat. targetDevId=$devId");
+        await _connectDevice(devId);
       }
     }
     return true;
+  }
+
+  bool _isConnected(String devId) {
+    return _registry.getProtocol(devId) != null;
   }
 
   Future<void> _connectDevice(String devId) async {
@@ -848,11 +869,30 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   // 这里只是记录设备连接状态，按照优先级内网>外网
   // 先等待 socketService 设备发现流程结束，再调用存储服务的设备连接
   Future<void> _processOnlineMsg(WsMsgData msg) async {
-    if (msg.targetDevId == _selfDevId) {
+    final devId = msg.targetDevId;
+    if (devId == _selfDevId) {
       return;
     }
-    _connectedDevIds.add(msg.targetDevId);
-    unawaited(_retryPendingAcksForDevice(msg.targetDevId));
+    final sktService = Get.find<SocketService>();
+    if (sktService.discovering) {
+      // Socket 发现期间不触发 Storage 连接；online 是周期心跳，下一次心跳会继续兜底处理。
+      logger.debug(tag, "socket discovering");
+      return;
+    }
+    // 在线心跳也用于唤醒 pending ACK，即使设备已注册也要先补发后再跳过连接流程。
+    unawaited(_retryPendingAcksForDevice(devId));
+    //已经连接，跳过
+    if (_isConnected(devId)) {
+      final isSocket = _registry.getProtocol(devId)?.isSocket ?? false;
+      if (isSocket) {
+        //当网络环境切换，socket可能存在假连接现象，这里通过测试响应判断是否是真连接
+        final online = await sktService.testIsOnline(devId, autoReconnect: false);
+        if (online) {
+          logger.debug(tag, "connected, skip");
+          return;
+        }
+      }
+    }
     var diffNetwork = true;
     if (msg.data.isNotNullAndEmpty) {
       try {
@@ -874,16 +914,14 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       }
     }
 
-    //返回值未false代表未执行连接
     if (!diffNetwork) {
       // 同网段优先让 Socket 接管；若短暂等待后 Socket 未建连，再用存储通道兜底更新在线状态。
       unawaited(_fallbackConnectStorageDeviceAfterSocketGracePeriod(msg.targetDevId));
       return;
     }
-    final ignored = !await _connectDevices();
     final devController = Get.find<DeviceController>();
     final connected = devController.onlineAndPairedList.where((item) => item.guid == msg.targetDevId).isNotEmpty;
-    if (!ignored && !connected) {
+    if (!connected) {
       await _connectDevice(msg.targetDevId);
     }
     if (!_loadingMissingData) {
@@ -976,7 +1014,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       logger.warn(tag, "storage ack opId invalid. opId=$opId, targetDevId=$targetDevId");
       return;
     }
-    if (!_connectedDevIds.contains(targetDevId)) {
+    if (!_isConnected(targetDevId)) {
       await dbService.pendingStorageAckDao.add(
         PendingStorageAck(opId: opId, targetDevId: targetDevId),
       );
@@ -1108,12 +1146,25 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final devService = Get.find<DeviceService>();
     final isWebDAV = _client is WebDAVClient;
     final protocol = isWebDAV ? TransportProtocol.webdav : TransportProtocol.s3;
+    final currentProtocol = _registry.getProtocol(dev.guid);
+    if (currentProtocol?.isSocket ?? false) {
+      // Socket 在线时不允许存储连接覆盖页面和注册表里的实时协议状态。
+      logger.debug(tag, "skip storage device update because socket is connected. targetDevId=${dev.guid}");
+      return false;
+    }
     final address = protocol.name;
-    final result = dbDev ?? dev;
-    result.isPaired = true;
-    result.address = address;
-    final success = await devService.addOrUpdate(result);
-    if (!success) return false;
+    final result = (dbDev ?? dev).copyWith(address: address);
+    final confirmResult = await devService.confirmPairingState(
+      device: result,
+      localIsPaired: true,
+      remoteIsPaired: true,
+      protocol: protocol,
+    );
+    final success = confirmResult.accepted;
+    if (!success) {
+      logger.debug(tag, "confirmResult false");
+      return false;
+    }
     try {
       final devId = result.guid;
       final device = await getDeviceInfoFromCloud(devId);
@@ -1131,7 +1182,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         logger.warn(tag, "minVersion is null, target dev id = $devId");
         return success;
       }
-      deviceConnectionNotifyService.showConnected(devId, isPaired: result.isPaired);
+      deviceConnectionNotifyService.showConnected(devId, isPaired: confirmResult.isPaired);
       for (var listener in _devAliveListeners) {
         listener.onConnected(DevInfo.fromDevice(device), minVersion, version, protocol);
       }
@@ -1523,8 +1574,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   /// 统一处理设备离线时的本地状态收口，避免注册表和监听器状态漂移。
   void _handleDeviceDisconnected(String devId, {required String source, bool notify = true}) {
-    final removedConnected = _connectedDevIds.remove(devId);
-    final existedInRegistry = _registry.hasDevice(devId);
+    final currentProtocol = _registry.getProtocol(devId);
+    final existedInRegistry = currentProtocol != null;
+    if (currentProtocol?.isSocket ?? false) {
+      // 存储 offline 只代表存储通道离线，不能清理仍然存活的 Socket 连接。
+      logger.debug(tag, "ignore storage disconnect for socket device. targetDevId=$devId, source=$source, protocol=${currentProtocol!.name}");
+      return;
+    }
     if (notify && existedInRegistry) {
       deviceConnectionNotifyService.showDisconnected(devId, isPaired: true);
     }
@@ -1533,7 +1589,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
     logger.debug(
       tag,
-      "cleanup disconnected device. targetDevId=$devId, source=$source, removedConnected=$removedConnected, removedRegistry=$existedInRegistry",
+      "cleanup disconnected device. targetDevId=$devId, source=$source, removedRegistry=$existedInRegistry",
     );
     for (var listener in _devAliveListeners) {
       listener.onDisconnected(devId);
