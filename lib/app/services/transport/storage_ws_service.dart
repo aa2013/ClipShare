@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:clipshare/app/data/models/websocket/ws_msg_data.dart';
 import 'package:clipshare/app/data/models/websocket/ws_msg_type.dart';
+import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -23,6 +24,7 @@ class StorageWsService {
   final Uri Function() _connectUriBuilder;
   final bool Function() _shouldKeepConnected;
   final Duration _pingInterval;
+  final Duration _pingTimeout;
   final Duration _reconnectDelay;
   final StorageWsConnectFactory _connectFactory;
   final FutureOr<void> Function(WsMsgData message)? _onMessage;
@@ -38,6 +40,7 @@ class StorageWsService {
   Timer? _reconnectTimer;
   int? _activeSessionId;
   int _sessionSeed = 0;
+  DateTime? _lastServerMessageAt;
   bool _started = false;
   bool _disposed = false;
 
@@ -45,6 +48,7 @@ class StorageWsService {
     required Uri Function() connectUriBuilder,
     required bool Function() shouldKeepConnected,
     Duration pingInterval = const Duration(seconds: 30),
+    Duration? pingTimeout,
     Duration reconnectDelay = const Duration(seconds: 5),
     StorageWsConnectFactory connectFactory = WebSocketChannel.connect,
     FutureOr<void> Function(WsMsgData message)? onMessage,
@@ -54,6 +58,7 @@ class StorageWsService {
   }) : _connectUriBuilder = connectUriBuilder,
        _shouldKeepConnected = shouldKeepConnected,
        _pingInterval = pingInterval,
+       _pingTimeout = pingTimeout ?? pingInterval + 5.s,
        _reconnectDelay = reconnectDelay,
        _connectFactory = connectFactory,
        _onMessage = onMessage,
@@ -88,6 +93,7 @@ class StorageWsService {
     _activeSessionId = null;
     _channel = null;
     _stopPingTimer();
+    _lastServerMessageAt = null;
     if (channel != null || hasActiveSession) {
       await _notifyDisconnected(channel);
     }
@@ -140,7 +146,7 @@ class StorageWsService {
       _channel = channel;
       channel.stream.listen(
         (dynamic json) {
-          unawaited(_handleRawMessage(json));
+          unawaited(_handleRawMessage(sessionId: sessionId, rawJson: json));
         },
         onDone: () {
           unawaited(_handleDisconnected(sessionId: sessionId, reason: 'ws done'));
@@ -174,6 +180,7 @@ class StorageWsService {
       }
       logger.info(tag, 'websocket connected');
       _cancelReconnectTimer();
+      _markServerMessageReceived();
       _startPingTimer();
       _emitStatus(StorageWsStatus.connected);
       if (_onConnected != null) {
@@ -189,15 +196,28 @@ class StorageWsService {
     }
   }
 
-  Future<void> _handleRawMessage(dynamic json) async {
+  /// 解析当前会话的服务端消息并刷新活跃时间，旧会话晚到消息会被忽略，避免污染新连接状态。
+  Future<void> _handleRawMessage({
+    required int sessionId,
+    required dynamic rawJson,
+  }) async {
+    if (!_shouldHandleSession(sessionId)) {
+      logger.warn(tag, 'ignore websocket message from inactive session');
+      return;
+    }
     try {
-      final message = WsMsgData.fromJson((jsonDecode(json as String) as Map<dynamic, dynamic>).cast<String, dynamic>());
+      final message = WsMsgData.fromJson((jsonDecode(rawJson as String) as Map<dynamic, dynamic>).cast<String, dynamic>());
+      _markServerMessageReceived();
+      if (message.operation == WsMsgType.ping) {
+        logger.debug(tag, 'websocket ping ack received');
+        return;
+      }
       _messageController.add(message);
       if (_onMessage != null) {
         await _onMessage(message);
       }
     } catch (err, stack) {
-      logger.error(tag, '_handleRawMessage $err, $json', stack);
+      logger.error(tag, '_handleRawMessage $err, $rawJson', stack);
     }
   }
 
@@ -213,6 +233,7 @@ class StorageWsService {
       _activeSessionId = null;
       _channel = null;
       _stopPingTimer();
+      _lastServerMessageAt = null;
     }
     if (error == null) {
       logger.debug(tag, reason);
@@ -220,6 +241,7 @@ class StorageWsService {
       logger.error(tag, '$reason: $error', stack);
     }
     if (!isActiveSession) {
+      logger.warn(tag, "WebSocket disconnected, but the session is no longer the active one (likely replaced by a newer connection)");
       return;
     }
     await _notifyDisconnected(channel);
@@ -261,6 +283,7 @@ class StorageWsService {
       return false;
     }
     try {
+      // sink.add 只代表消息写入本地发送队列，不代表远端服务已经收到；真实断线仍依赖心跳超时兜底。
       channel.sink.add(payload);
       return true;
     } catch (err, stack) {
@@ -277,13 +300,20 @@ class StorageWsService {
     }
   }
 
+  /// 启动应用层心跳，定期发送 ping 并检查服务端是否在超时时间内返回任意消息。
   void _startPingTimer() {
     _stopPingTimer();
     _pingTimer = Timer.periodic(_pingInterval, (_) {
+      final sessionId = _activeSessionId;
+      if (sessionId == null) {
+        return;
+      }
       send(WsMsgData(WsMsgType.ping, '', ''));
+      _disconnectIfHeartbeatTimedOut(sessionId);
     });
   }
 
+  /// 停止心跳定时器，避免旧会话断开后继续发送 ping。
   void _stopPingTimer() {
     _pingTimer?.cancel();
     _pingTimer = null;
@@ -292,6 +322,29 @@ class StorageWsService {
   void _cancelReconnectTimer() {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
+  }
+
+  /// 记录服务端最新响应时间，用于识别极端网络下没有 onDone/onError 的半开连接。
+  void _markServerMessageReceived() {
+    _lastServerMessageAt = DateTime.now();
+  }
+
+  /// 当服务端长期没有任何消息返回时，主动收口当前连接并触发重连。
+  void _disconnectIfHeartbeatTimedOut(int sessionId) {
+    if (!_shouldHandleSession(sessionId)) {
+      return;
+    }
+    final lastServerMessageAt = _lastServerMessageAt;
+    if (lastServerMessageAt == null) {
+      _markServerMessageReceived();
+      return;
+    }
+    final elapsed = DateTime.now().difference(lastServerMessageAt);
+    if (elapsed <= _pingTimeout) {
+      return;
+    }
+    logger.warn(tag, 'websocket heartbeat timeout. elapsed=${elapsed.inMilliseconds}ms, timeout=${_pingTimeout.inMilliseconds}ms');
+    unawaited(_handleDisconnected(sessionId: sessionId, reason: 'websocket heartbeat timeout'));
   }
 
   bool _shouldHandleSession(int sessionId) {

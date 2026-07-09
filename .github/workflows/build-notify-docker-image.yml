@@ -2,6 +2,12 @@ name: Build and Push Notification Server
 
 on:
   workflow_dispatch:
+    inputs:
+      push_latest:
+        description: 'Push latest tag'
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   build-and-push:
@@ -37,12 +43,23 @@ jobs:
         with:
           platforms: linux/amd64,linux/arm64
 
+      - name: Prepare image tags
+        id: image_tags
+        run: |
+          image="${{ secrets.DOCKERHUB_USERNAME }}/clipshare-notify-server"
+          {
+            echo "tags<<EOF"
+            echo "${image}:${{ steps.version.outputs.version }}"
+            if [[ "${{ inputs.push_latest }}" == "true" ]]; then
+              echo "${image}:latest"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: ./go/notification
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/clipshare-notify-server:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/clipshare-notify-server:latest
+          tags: ${{ steps.image_tags.outputs.tags }}

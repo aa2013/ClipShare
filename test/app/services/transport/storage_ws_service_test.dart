@@ -225,6 +225,85 @@ void main() {
       await service.dispose();
       await firstSession.close();
     });
+
+    test('服务端不响应 ping 时会按心跳超时断开并自动重连', () async {
+      final statuses = <StorageWsStatus>[];
+      final service = StorageWsService(
+        connectUriBuilder: () => server.uri.replace(path: '/connect/test-dev'),
+        shouldKeepConnected: () => true,
+        pingInterval: const Duration(milliseconds: 30),
+        pingTimeout: const Duration(milliseconds: 80),
+        reconnectDelay: const Duration(milliseconds: 50),
+      );
+      final sub = service.statusStream.listen(statuses.add);
+
+      await service.connect();
+      await server.acceptedSessions.stream.first;
+
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+
+      expect(statuses.contains(StorageWsStatus.disconnected), isTrue);
+      expect(statuses.takeLast(2), <StorageWsStatus>[
+        StorageWsStatus.connecting,
+        StorageWsStatus.connected,
+      ]);
+
+      await sub.cancel();
+      await service.dispose();
+    });
+
+    test('服务端响应 ping 时保持连接且不误触发重连', () async {
+      await server.dispose();
+      server = TestStorageWsServer(respondToPing: true);
+      await server.start();
+      final statuses = <StorageWsStatus>[];
+      final service = StorageWsService(
+        connectUriBuilder: () => server.uri.replace(path: '/connect/test-dev'),
+        shouldKeepConnected: () => true,
+        pingInterval: const Duration(milliseconds: 30),
+        pingTimeout: const Duration(milliseconds: 80),
+        reconnectDelay: const Duration(milliseconds: 50),
+      );
+      final sub = service.statusStream.listen(statuses.add);
+
+      await service.connect();
+      await server.acceptedSessions.stream.first;
+
+      await Future<void>.delayed(const Duration(milliseconds: 180));
+
+      expect(statuses, <StorageWsStatus>[
+        StorageWsStatus.connecting,
+        StorageWsStatus.connected,
+      ]);
+      expect(server.sessions.length, 1);
+
+      await sub.cancel();
+      await service.dispose();
+    });
+
+    test('收到 ping 确认只刷新心跳，不分发给业务消息监听', () async {
+      await server.dispose();
+      server = TestStorageWsServer(respondToPing: true);
+      await server.start();
+      final messages = <WsMsgData>[];
+      final service = StorageWsService(
+        connectUriBuilder: () => server.uri.replace(path: '/connect/test-dev'),
+        shouldKeepConnected: () => true,
+        pingInterval: const Duration(milliseconds: 30),
+        pingTimeout: const Duration(milliseconds: 80),
+        reconnectDelay: const Duration(milliseconds: 50),
+        onMessage: messages.add,
+      );
+
+      await service.connect();
+      await server.acceptedSessions.stream.first;
+
+      await Future<void>.delayed(const Duration(milliseconds: 90));
+
+      expect(messages, isEmpty);
+
+      await service.dispose();
+    });
   });
 }
 

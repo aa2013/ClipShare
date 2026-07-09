@@ -1022,7 +1022,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///检查是否已经掉线，如果掉线则移除
-  Future<bool> testIsOnline(String devId,{bool autoReconnect = true}) async {
+  Future<bool> testIsOnline(String devId, { bool autoReconnect = true }) async {
     if (!_devSockets.containsKey(devId)) return false;
     var skt = _devSockets[devId]!;
     final probeStart = DateTime.now();

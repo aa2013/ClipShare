@@ -1077,7 +1077,7 @@ class _TestSocketService extends SocketService {
   bool get discovering => false;
 
   @override
-  Future<bool> testIsOnline(String devId) async {
+  Future<bool> testIsOnline(String devId, { bool autoReconnect = true }) async {
     testedDevIds.add(devId);
     return onlineResults[devId] ?? false;
   }
