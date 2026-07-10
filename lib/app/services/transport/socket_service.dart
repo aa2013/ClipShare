@@ -344,7 +344,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         },
         onDone: (self) {
           _forwardClient = null;
-          appConfig.forwardServerVersion.value = '';
+          appConfig.transportServerVersion.value = '';
           _updateForwardStatus(ForwardServerStatus.disconnected);
           _stopJudgeForwardClientAlive();
           logger.debug(tag, "forwardClient done");
@@ -479,7 +479,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         break;
       case ForwardMsgType.version:
         final version = data["version"]?.toString();
-        appConfig.forwardServerVersion.value = version ?? "";
+        appConfig.transportServerVersion.value = version ?? "";
         break;
       case ForwardMsgType.sendFile:
         final targetId = data["sender"];

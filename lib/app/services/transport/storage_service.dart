@@ -12,6 +12,7 @@ import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/data/models/semantic_version.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
 import 'package:clipshare/app/data/models/version.dart';
@@ -55,6 +56,8 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/network_util.dart';
+import 'package:clipshare/app/utils/notification_server_util.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:get/get.dart';
 import "package:msgpack_dart/msgpack_dart.dart" as m2;
@@ -86,13 +89,16 @@ import 'package:uri_file_reader/uri_file_reader.dart';
 /// - A
 ///  - 1321465456444
 /// 监听网络恢复
-class StorageService extends GetxService with DataSender implements DiscoverListener {
+class StorageService extends GetxService
+    with DataSender
+    implements DiscoverListener {
   static const tag = "StorageService";
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final connRegService = Get.find<ConnectionRegistryService>();
   final historySyncProgressService = Get.find<HistorySyncProgressService>();
-  final deviceConnectionNotifyService = Get.find<DeviceConnectionNotifyService>();
+  final deviceConnectionNotifyService =
+      Get.find<DeviceConnectionNotifyService>();
   final transportHeartbeatService = Get.find<TransportHeartbeatService>();
   static const devicesInfoDir = "devices-info";
   static const historyDir = "history";
@@ -101,6 +107,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   static const _storageOnlineHeartbeatTaskName = 'storage-online';
   static const _sameNetworkSocketGracePeriod = Duration(seconds: 3);
   static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
+  static const _minCompatibleWsVersion = SemanticVersion(1, 1, 0);
+  static const _incompatibleWsVersionNotifyKey = 'storage-ws-incompatible-version';
 
   String get _selfDevId => appConfig.device.guid;
   var _lastDate = '';
@@ -109,6 +117,7 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   var _loadingMissingData = false;
   var _uploadingSyncFailedData = false;
   late final StorageWsService _wsService;
+  int _notificationVersionRequestId = 0;
 
   bool get running => _wsService.running;
 
@@ -127,7 +136,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     _wsService = StorageWsService(
       connectUriBuilder: _buildWsUri,
       shouldKeepConnected: _shouldKeepWsConnected,
-      pingInterval: const Duration(seconds: Constants.defaultWsPingIntervalTime),
+      pingInterval: const Duration(
+        seconds: Constants.defaultWsPingIntervalTime,
+      ),
       onConnected: _onWsConnected,
       onDisconnected: _onWsDisconnected,
       onMessage: _dispatchWsMessage,
@@ -143,9 +154,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   Uri _buildWsUri() {
     late final String storageId;
     if (appConfig.enableWebDAV) {
-      storageId = CryptoUtil.toMD5("${_webDAVConfig!.server}${_webDAVConfig!.username}");
+      storageId = CryptoUtil.toMD5(
+        "${_webDAVConfig!.server}${_webDAVConfig!.username}",
+      );
     } else {
-      storageId = CryptoUtil.toMD5("${_s3Config!.endPoint}${_s3Config!.bucketName}${_s3Config!.accessKey}");
+      storageId = CryptoUtil.toMD5(
+        "${_s3Config!.endPoint}${_s3Config!.bucketName}${_s3Config!.accessKey}",
+      );
     }
     final connectKey = "$storageId:$_selfDevId";
     final serverHost = appConfig.notificationServer.trimEnd('/');
@@ -153,7 +168,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   bool _shouldKeepWsConnected() {
-    return appConfig.enableStorageSync && appConfig.enableForward && _client != null;
+    return appConfig.enableStorageSync &&
+        appConfig.enableForward &&
+        _client != null;
   }
 
   //region Init
@@ -217,9 +234,15 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     final sourceService = Get.find<ClipboardSourceService>();
-    var list = sourceService.appInfos.where((item) => item.devId == _selfDevId).toList();
-    final existsIds = (await client.list(path: dirPath)).map((item) => item.name).toSet();
-    list = list.where((item) => !existsIds.contains(item.id.toString())).toList();
+    var list = sourceService.appInfos
+        .where((item) => item.devId == _selfDevId)
+        .toList();
+    final existsIds = (await client.list(
+      path: dirPath,
+    )).map((item) => item.name).toSet();
+    list = list
+        .where((item) => !existsIds.contains(item.id.toString()))
+        .toList();
     for (var appInfo in list) {
       if (!await _uploadAppInfo(appInfo)) {
         continue;
@@ -246,7 +269,11 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final result = await MissingDataSyncHandler.process(opRecord);
     final id = appInfo.id;
     final path = "$dirPath/$id";
-    final success = await client.createFile(path, m2.serialize(result.result), createDir: true);
+    final success = await client.createFile(
+      path,
+      m2.serialize(result.result),
+      createDir: true,
+    );
     if (!success) {
       logger.warn(tag, "upload appInfo($id) failed");
       return false;
@@ -263,14 +290,23 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   Future<void> _checkAndDownloadMissingAppInfo(String devId) async {
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "_checkAndDownloadMissingAppInfo storage client is null");
+      logger.warn(
+        tag,
+        "_checkAndDownloadMissingAppInfo storage client is null",
+      );
       return;
     }
     final dirPath = getAppInfoDirectoryPath(devId);
     final sourceService = Get.find<ClipboardSourceService>();
     final list = await client.list(path: dirPath);
-    final cloudIds = list.where((item) => !item.isDir).map((item) => item.name).toSet();
-    final existsIds = sourceService.appInfos.where((item) => item.devId == devId).map((item) => item.id.toString()).toSet();
+    final cloudIds = list
+        .where((item) => !item.isDir)
+        .map((item) => item.name)
+        .toSet();
+    final existsIds = sourceService.appInfos
+        .where((item) => item.devId == devId)
+        .map((item) => item.id.toString())
+        .toSet();
     final diff = cloudIds.difference(existsIds);
     for (var id in diff) {
       try {
@@ -308,6 +344,11 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     try {
       await _updateBaseInfo();
       await _checkAndUploadLocalAppInfo();
+      if (!await _ensureCompatibleWsVersion()) {
+        await _wsService.disconnect();
+        _updateForwardStatus(ForwardServerStatus.disconnected);
+        return;
+      }
       uploadSyncFailedData();
       _loadMissingData();
       await _wsService.connect();
@@ -315,6 +356,61 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       logger.error(tag, err, stack);
       await _wsService.disconnect();
       _updateForwardStatus(ForwardServerStatus.disconnected);
+    }
+  }
+
+  Future<bool> _ensureCompatibleWsVersion() async {
+    try {
+      final versionText = await NotificationServerUtil.getVersion(
+        appConfig.notificationServer,
+      );
+      appConfig.transportServerVersion.value = versionText;
+      final version = SemanticVersion.parse(versionText);
+      if (version >= _minCompatibleWsVersion) {
+        return true;
+      }
+      await _showIncompatibleWsVersionTip(version);
+      return false;
+    } catch (err, stack) {
+      logger.error(
+        tag,
+        "check notification server version failed: $err",
+        stack,
+      );
+      return true;
+    }
+  }
+
+  Future<void> _showIncompatibleWsVersionTip(SemanticVersion version) async {
+    final text = TranslationKey.storageWsVersionIncompatibleContent.trParams({
+      'version': version.toString(),
+      'minVersion': _minCompatibleWsVersion.toString(),
+    });
+    final context = Get.context;
+    if (context != null) {
+      unawaited(
+        Global.showTipsDialog(
+          context: context,
+          title: TranslationKey.storageWsVersionIncompatibleTitle.tr,
+          text: text,
+        ).then((_) {}),
+      );
+    }
+    try {
+      if (!Get.testMode) {
+        NotifyUtil.cancelAll(_incompatibleWsVersionNotifyKey);
+        await NotifyUtil.notify(
+          key: _incompatibleWsVersionNotifyKey,
+          title: TranslationKey.storageWsVersionIncompatibleTitle.tr,
+          content: text,
+        );
+      }
+    } catch (err, stack) {
+      logger.error(
+        tag,
+        "show incompatible ws version notification failed: $err",
+        stack,
+      );
     }
   }
 
@@ -355,7 +451,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       void checkClientRuntimeType() {
         final currentType = _client?.runtimeType;
         if (clientType != currentType) {
-          throw DifferentStorageClientTypeException('current storage client($currentType) is not a $clientType');
+          throw DifferentStorageClientTypeException(
+            'current storage client($currentType) is not a $clientType',
+          );
         }
       }
 
@@ -389,7 +487,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     required StorageClient client,
     required void Function() checkClientRuntimeType,
   }) async {
-    final devHistoryDirMap = await _loadDevHistoryDirectoriesFromStorage(devIds);
+    final devHistoryDirMap = await _loadDevHistoryDirectoriesFromStorage(
+      devIds,
+    );
 
     // sync item : devId -> (date -> id)
     final syncMap = <String, Map<String, List<String>>>{};
@@ -404,7 +504,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         historyDates: devHistoryDirMap[devId] ?? const <String>[],
       );
       syncMap[devId] = devDateSyncMap;
-      totalSyncCnt += devDateSyncMap.values.fold(0, (prev, ids) => prev + ids.length);
+      totalSyncCnt += devDateSyncMap.values.fold(
+        0,
+        (prev, ids) => prev + ids.length,
+      );
     }
 
     final List<FutureFunction> tasks = [];
@@ -422,9 +525,19 @@ class StorageService extends GetxService with DataSender implements DiscoverList
               if (err is DifferentStorageClientTypeException) {
                 return;
               }
-              logger.error(tag, "load missing data file from storage failed! devId = $devId, date = $date, id = $id", stack);
+              logger.error(
+                tag,
+                "load missing data file from storage failed! devId = $devId, date = $date, id = $id",
+                stack,
+              );
             } finally {
-              historySyncProgressService.addProgress(devId, syncData, ++syncedCnt, totalSyncCnt, true);
+              historySyncProgressService.addProgress(
+                devId,
+                syncData,
+                ++syncedCnt,
+                totalSyncCnt,
+                true,
+              );
             }
           });
         }
@@ -442,7 +555,8 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     required List<String> historyDates,
   }) async {
     await _checkAndDownloadMissingAppInfo(devId);
-    final latestRecord = await dbService.opRecordDao.getLatestStorageSyncSuccessByDevId(devId);
+    final latestRecord = await dbService.opRecordDao
+        .getLatestStorageSyncSuccessByDevId(devId);
     final latestDate = DateTime.parse(latestRecord?.time ?? "1970-01-01");
     final latestId = latestRecord?.id ?? 0;
     final devDateSyncMap = <String, List<String>>{};
@@ -456,7 +570,11 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       try {
         final path = getHistoryDatePath(devId, date);
         final items = await client.list(path: path);
-        final ids = items.where((item) => !item.isDir).map((item) => item.name).where((id) => int.parse(id) > latestId).toList();
+        final ids = items
+            .where((item) => !item.isDir)
+            .map((item) => item.name)
+            .where((id) => int.parse(id) > latestId)
+            .toList();
         ids.sort((a, b) => int.parse(b) - int.parse(a));
         for (var id in ids) {
           checkClientRuntimeType();
@@ -470,7 +588,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     return devDateSyncMap;
   }
 
-  Future<Map<String, List<String>>> _loadDevHistoryDirectoriesFromStorage(List<String> devIds) async {
+  Future<Map<String, List<String>>> _loadDevHistoryDirectoriesFromStorage(
+    List<String> devIds,
+  ) async {
     final result = <String, List<String>>{};
     final client = _client;
     if (client == null) {
@@ -480,7 +600,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     for (var devId in devIds) {
       try {
         final list = await client.list(path: getHistoryDirectoryPath(devId));
-        final directoryNames = list.where((item) => item.isDir).map((item) => item.name).toList();
+        final directoryNames = list
+            .where((item) => item.isDir)
+            .map((item) => item.name)
+            .toList();
         result[devId] = directoryNames;
       } catch (err, stack) {
         logger.error(tag, err, stack);
@@ -499,7 +622,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         return result;
       }
       final list = await client.list(path: devicesInfoDir);
-      final deviceIds = list.where((item) => item.isDir).map((item) => item.name).toList();
+      final deviceIds = list
+          .where((item) => item.isDir)
+          .map((item) => item.name)
+          .toList();
       for (var devId in deviceIds) {
         if (devId == _selfDevId) {
           continue;
@@ -517,7 +643,12 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     return result;
   }
 
-  Future<Map<String, dynamic>?> _readSyncData(String devId, String date, String id, bool loadingMissingData) async {
+  Future<Map<String, dynamic>?> _readSyncData(
+    String devId,
+    String date,
+    String id,
+    bool loadingMissingData,
+  ) async {
     final client = _client;
     if (client == null) {
       logger.warn(tag, "_readSyncData storage client is null");
@@ -537,17 +668,25 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     return syncData;
   }
 
-  Future<Map<String, dynamic>?> _syncData(String devId, List<int> bytes, bool loadingMissingData) async {
+  Future<Map<String, dynamic>?> _syncData(
+    String devId,
+    List<int> bytes,
+    bool loadingMissingData,
+  ) async {
     final deviceService = Get.find<DeviceService>();
     final device = deviceService.getById(devId);
     Map<String, dynamic>? result;
     //on sync
     try {
-      final data = m2.deserialize(Uint8List.fromList(bytes)) as Map<dynamic, dynamic>;
+      final data =
+          m2.deserialize(Uint8List.fromList(bytes)) as Map<dynamic, dynamic>;
       final module = Module.getValue((data["module"]));
       final listeners = getListeners(module);
       if (listeners.isEmpty) {
-        logger.warn(tag, "storage sync listener not found. module=${module.moduleName}");
+        logger.warn(
+          tag,
+          "storage sync listener not found. module=${module.moduleName}",
+        );
         return null;
       }
       final map = data.cast<String, dynamic>();
@@ -575,7 +714,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
     _uploadingSyncFailedData = true;
     try {
-      final list = await dbService.opRecordDao.getStorageSyncFiledData(_selfDevId);
+      final list = await dbService.opRecordDao.getStorageSyncFiledData(
+        _selfDevId,
+      );
       final List<FutureFunction> tasks = [];
       for (var record in list) {
         try {
@@ -585,16 +726,25 @@ class StorageService extends GetxService with DataSender implements DiscoverList
             final date = DateTime.parse(record.time).format("yyyy-MM-dd");
             final historyDirPath = getHistoryDatePath(_selfDevId, date);
             if (!await client.createDirectory(historyDirPath)) {
-              logger.warn(tag, "retry sync create directory failed! path = $historyDirPath");
+              logger.warn(
+                tag,
+                "retry sync create directory failed! path = $historyDirPath",
+              );
               return;
             }
             final id = record.id;
             final path = "$historyDirPath/$id";
-            final result = await client.createFile(path, m2.serialize(syncData.result), createDir: true);
+            final result = await client.createFile(
+              path,
+              m2.serialize(syncData.result),
+              createDir: true,
+            );
             if (!result) {
               return;
             }
-            dbService.execSequentially(() => dbService.opRecordDao.updateStorageSyncStatus(id, true));
+            dbService.execSequentially(
+              () => dbService.opRecordDao.updateStorageSyncStatus(id, true),
+            );
             final historyId = _historyIdForSync(record);
             if (historyId != null) {
               dbService.execSequentially(() async {
@@ -610,9 +760,13 @@ class StorageService extends GetxService with DataSender implements DiscoverList
             }
             // Notify storage peers after retry success so they can load the recovered record.
             final devController = Get.find<DeviceController>();
-            final devices = devController.onlineAndPairedList.where((dev) => dev.isUseStorage);
+            final devices = devController.onlineAndPairedList.where(
+              (dev) => dev.isUseStorage,
+            );
             for (var dev in devices) {
-              _wsService.send(WsMsgData(WsMsgType.change, "$date:$id", dev.guid));
+              _wsService.send(
+                WsMsgData(WsMsgType.change, "$date:$id", dev.guid),
+              );
             }
           });
         } catch (err, stack) {
@@ -644,19 +798,33 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   void connectDevice(String devId) {
-    logger.info(tag, "send online heartbeat. targetDevId=$devId, trigger=${StorageOnlineHeartbeatTrigger.connectDevice.name}");
-    unawaited(_sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDevice));
+    logger.info(
+      tag,
+      "send online heartbeat. targetDevId=$devId, trigger=${StorageOnlineHeartbeatTrigger.connectDevice.name}",
+    );
+    unawaited(
+      _sendOnlineHeartbeatToDevice(
+        devId,
+        trigger: StorageOnlineHeartbeatTrigger.connectDevice,
+      ),
+    );
   }
 
   void disconnectDevice(String devId) {
-    logger.info(tag, "send offline. targetDevId=$devId, source=disconnectDevice");
+    logger.info(
+      tag,
+      "send offline. targetDevId=$devId, source=disconnectDevice",
+    );
     _wsService.send(WsMsgData(WsMsgType.offline, "", devId));
     _handleDeviceDisconnected(devId, source: 'disconnectDevice', notify: false);
   }
 
   void _notifyStorageDevicesOfflineBeforeManualDisconnect() {
     final devIds = _registry.getDevIdsByStorage();
-    logger.info(tag, "notify storage devices offline before manual disconnect. targetCount=${devIds.length}");
+    logger.info(
+      tag,
+      "notify storage devices offline before manual disconnect. targetCount=${devIds.length}",
+    );
     for (final devId in devIds) {
       _wsService.send(WsMsgData(WsMsgType.offline, "", devId));
     }
@@ -664,7 +832,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   void _disconnectAllStorageDevices({required String source}) {
     final devIds = _registry.getDevIdsByStorage();
-    logger.info(tag, "disconnect all storage devices. source=$source, targetCount=${devIds.length}");
+    logger.info(
+      tag,
+      "disconnect all storage devices. source=$source, targetCount=${devIds.length}",
+    );
     for (final devId in devIds) {
       _handleDeviceDisconnected(devId, source: source, notify: false);
     }
@@ -676,7 +847,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       TransportHeartbeatTask(
         name: _storageOnlineHeartbeatTaskName,
         shouldRun: () => _shouldKeepWsConnected() && _wsService.running,
-        onTick: (trigger) => _broadcastOnlineHeartbeat(trigger: _mapOnlineHeartbeatTrigger(trigger)),
+        onTick: (trigger) => _broadcastOnlineHeartbeat(
+          trigger: _mapOnlineHeartbeatTrigger(trigger),
+        ),
         onStop: (reason) {
           if (reason != TransportHeartbeatStopReason.screenOffAutoClose) {
             return;
@@ -689,7 +862,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   /// 将通用心跳触发原因转换为存储在线心跳的业务触发原因。
-  StorageOnlineHeartbeatTrigger _mapOnlineHeartbeatTrigger(TransportHeartbeatTrigger trigger) {
+  StorageOnlineHeartbeatTrigger _mapOnlineHeartbeatTrigger(
+    TransportHeartbeatTrigger trigger,
+  ) {
     switch (trigger) {
       case TransportHeartbeatTrigger.start:
         return StorageOnlineHeartbeatTrigger.wsConnected;
@@ -703,25 +878,37 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   /// 向所有云端已知设备广播在线心跳，用于弥补单次 online 消息丢失的问题。
-  Future<void> _broadcastOnlineHeartbeat({required StorageOnlineHeartbeatTrigger trigger}) async {
+  Future<void> _broadcastOnlineHeartbeat({
+    required StorageOnlineHeartbeatTrigger trigger,
+  }) async {
     final client = _client;
     if (client == null) {
       logger.warn(tag, "storage client is null");
       return;
     }
     final list = await client.list(path: devicesInfoDir);
-    final deviceIds = list.where((item) => item.isDir).map((item) => item.name).where((item) => item != _selfDevId).toList();
-    logger.debug(tag, "broadcast online heartbeat. trigger=${trigger.name}, targetCount=${deviceIds.length}");
+    final deviceIds = list
+        .where((item) => item.isDir)
+        .map((item) => item.name)
+        .where((item) => item != _selfDevId)
+        .toList();
+    logger.debug(
+      tag,
+      "broadcast online heartbeat. trigger=${trigger.name}, targetCount=${deviceIds.length}",
+    );
     for (var devId in deviceIds) {
       await _sendOnlineHeartbeatToDevice(devId, trigger: trigger);
     }
   }
 
   /// 向指定设备发送在线心跳，并返回底层 WebSocket 是否已成功入队。
-  Future<bool> _sendOnlineHeartbeatToDevice(String devId, {required StorageOnlineHeartbeatTrigger trigger}) async {
+  Future<bool> _sendOnlineHeartbeatToDevice(
+    String devId, {
+    required StorageOnlineHeartbeatTrigger trigger,
+  }) async {
     try {
       final devIds = _registry.getDevIdsByStorage();
-      if(devIds.isEmpty){
+      if (devIds.isEmpty) {
         //无设备，跳过
         return false;
       }
@@ -776,6 +963,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   Future<void> _onWsConnected() async {
+    final versionRequestId = ++_notificationVersionRequestId;
+    appConfig.transportServerVersion.value = '';
+    unawaited(_refreshNotificationServerVersion(versionRequestId));
     if (!_loadingMissingData) {
       unawaited(_loadMissingData());
     }
@@ -783,7 +973,28 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   Future<void> _onWsDisconnected() async {
+    _notificationVersionRequestId++;
+    appConfig.transportServerVersion.value = '';
     _disconnectAllStorageDevices(source: 'wsDisconnected');
+  }
+
+  /// 通过通知服务的 HTTP 检查接口刷新当前 WS 服务版本；失败不影响已建立的 WebSocket 连接。
+  Future<void> _refreshNotificationServerVersion(int requestId) async {
+    try {
+      final version = await NotificationServerUtil.getVersion(
+        appConfig.notificationServer,
+      );
+      if (requestId != _notificationVersionRequestId) {
+        return;
+      }
+      appConfig.transportServerVersion.value = version;
+    } catch (err, stack) {
+      logger.error(
+        tag,
+        "refresh notification server version failed: $err",
+        stack,
+      );
+    }
   }
 
   void _onWsStatusChanged(StorageWsStatus status) {
@@ -814,14 +1025,25 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     }
     final devController = Get.find<DeviceController>();
     //获取已配对且离线的设备
-    var offlineAndPairedList = devController.offlineAndPairedList.map((item) => item.guid).toSet();
+    var offlineAndPairedList = devController.offlineAndPairedList
+        .map((item) => item.guid)
+        .toSet();
     //执行连接操作
     for (var devId in offlineAndPairedList) {
       if (_isConnected(devId)) {
-        logger.debug(tag, "send online heartbeat for offline paired device. targetDevId=$devId");
-        await _sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDevices);
+        logger.debug(
+          tag,
+          "send online heartbeat for offline paired device. targetDevId=$devId",
+        );
+        await _sendOnlineHeartbeatToDevice(
+          devId,
+          trigger: StorageOnlineHeartbeatTrigger.connectDevices,
+        );
       } else {
-        logger.debug(tag, "reconnect device after online heartbeat. targetDevId=$devId");
+        logger.debug(
+          tag,
+          "reconnect device after online heartbeat. targetDevId=$devId",
+        );
         await _connectDevice(devId);
       }
     }
@@ -858,8 +1080,14 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     final result = await _addOrUpdateDevice(device);
-    logger.debug(tag, "send online heartbeat after connect device. targetDevId=$devId");
-    await _sendOnlineHeartbeatToDevice(devId, trigger: StorageOnlineHeartbeatTrigger.connectDeviceInternal);
+    logger.debug(
+      tag,
+      "send online heartbeat after connect device. targetDevId=$devId",
+    );
+    await _sendOnlineHeartbeatToDevice(
+      devId,
+      trigger: StorageOnlineHeartbeatTrigger.connectDeviceInternal,
+    );
     if (!result) {
       logger.warn(tag, "add or update device failed, device = $device");
     }
@@ -886,7 +1114,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       final isSocket = _registry.getProtocol(devId)?.isSocket ?? false;
       if (isSocket) {
         //当网络环境切换，socket可能存在假连接现象，这里通过测试响应判断是否是真连接
-        final online = await sktService.testIsOnline(devId, autoReconnect: false);
+        final online = await sktService.testIsOnline(
+          devId,
+          autoReconnect: false,
+        );
         if (online) {
           logger.debug(tag, "connected, skip");
           return;
@@ -916,11 +1147,15 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
     if (!diffNetwork) {
       // 同网段优先让 Socket 接管；若短暂等待后 Socket 未建连，再用存储通道兜底更新在线状态。
-      unawaited(_fallbackConnectStorageDeviceAfterSocketGracePeriod(msg.targetDevId));
+      unawaited(
+        _fallbackConnectStorageDeviceAfterSocketGracePeriod(msg.targetDevId),
+      );
       return;
     }
     final devController = Get.find<DeviceController>();
-    final connected = devController.onlineAndPairedList.where((item) => item.guid == msg.targetDevId).isNotEmpty;
+    final connected = devController.onlineAndPairedList
+        .where((item) => item.guid == msg.targetDevId)
+        .isNotEmpty;
     if (!connected) {
       await _connectDevice(msg.targetDevId);
     }
@@ -931,18 +1166,25 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   /// 同网段 online 先等待 Socket 接管；若等待后仍未在线，则回退到存储通道连接。
-  Future<void> _fallbackConnectStorageDeviceAfterSocketGracePeriod(String devId) async {
+  Future<void> _fallbackConnectStorageDeviceAfterSocketGracePeriod(
+    String devId,
+  ) async {
     await Future<void>.delayed(_sameNetworkSocketGracePeriod);
     final isSocketConnected = _registry.getProtocol(devId)?.isSocket ?? false;
     if (isSocketConnected) {
       return;
     }
     final devController = Get.find<DeviceController>();
-    final connected = devController.onlineAndPairedList.any((item) => item.guid == devId);
+    final connected = devController.onlineAndPairedList.any(
+      (item) => item.guid == devId,
+    );
     if (connected) {
       return;
     }
-    logger.debug(tag, "fallback connect storage device after socket grace period. targetDevId=$devId");
+    logger.debug(
+      tag,
+      "fallback connect storage device after socket grace period. targetDevId=$devId",
+    );
     await _connectDevice(devId);
   }
 
@@ -967,7 +1209,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       void checkClientRuntimeType() {
         final currentType = _client?.runtimeType;
         if (clientType != currentType) {
-          throw DifferentStorageClientTypeException('current storage client($currentType) is not a $clientType');
+          throw DifferentStorageClientTypeException(
+            'current storage client($currentType) is not a $clientType',
+          );
         }
       }
 
@@ -998,20 +1242,28 @@ class StorageService extends GetxService with DataSender implements DiscoverList
 
   Future<void> _processAckMsg(WsMsgData msg) async {
     try {
-      final data = (jsonDecode(msg.data) as Map<dynamic, dynamic>).cast<String, dynamic>();
+      final data = (jsonDecode(msg.data) as Map<dynamic, dynamic>)
+          .cast<String, dynamic>();
       final opId = data["opId"] as int;
       final devId = data["devId"] as String;
       await dbService.opSyncDao.add(
         OperationSync(opId: opId, devId: devId, uid: appConfig.userId),
       );
     } catch (err, stack) {
-      logger.error(tag, "process storage ack failed. msg=${msg.toJson()}, err=$err", stack);
+      logger.error(
+        tag,
+        "process storage ack failed. msg=${msg.toJson()}, err=$err",
+        stack,
+      );
     }
   }
 
   Future<void> _sendOrQueueStorageAck(dynamic opId, String targetDevId) async {
     if (opId is! int) {
-      logger.warn(tag, "storage ack opId invalid. opId=$opId, targetDevId=$targetDevId");
+      logger.warn(
+        tag,
+        "storage ack opId invalid. opId=$opId, targetDevId=$targetDevId",
+      );
       return;
     }
     if (!_isConnected(targetDevId)) {
@@ -1040,7 +1292,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   }
 
   Future<void> _retryPendingAcksForDevice(String targetDevId) async {
-    final list = await dbService.pendingStorageAckDao.getByTargetDevId(targetDevId);
+    final list = await dbService.pendingStorageAckDao.getByTargetDevId(
+      targetDevId,
+    );
     for (final ack in list) {
       if (_sendStorageAck(ack.opId, targetDevId)) {
         await dbService.pendingStorageAckDao.removeByKey(ack.opId, targetDevId);
@@ -1069,7 +1323,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       final localPath = appConfig.fileStorePath + "/$fileName".normalizePath;
       //add syncing file
       final syncingFileService = Get.find<SyncingFileProgressService>();
-      Device? dev = await dbService.deviceDao.getById(fromDevId, appConfig.userId);
+      Device? dev = await dbService.deviceDao.getById(
+        fromDevId,
+        appConfig.userId,
+      );
       if (dev == null) {
         logger.error(tag, "dev:$fromDevId not found");
         return;
@@ -1103,15 +1360,26 @@ class StorageService extends GetxService with DataSender implements DiscoverList
           sync: true,
         );
         final historyController = Get.find<HistoryController>();
-        historyController.addData(history, null, false).whenComplete(() => syncingFile!.close(true));
+        historyController
+            .addData(history, null, false)
+            .whenComplete(() => syncingFile!.close(true));
         if (!await client.deleteFile(fileInfoStoragePath)) {
-          logger.warn(tag, "delete storage file info failed! path = $fileInfoStoragePath");
+          logger.warn(
+            tag,
+            "delete storage file info failed! path = $fileInfoStoragePath",
+          );
         }
         if (!await client.deleteFile(storageFilePath)) {
-          logger.warn(tag, "delete storage file failed! path = $storageFilePath");
+          logger.warn(
+            tag,
+            "delete storage file failed! path = $storageFilePath",
+          );
         }
       } else {
-        logger.warn(tag, "_processSyncFileMsg download file failed!. filePath = $storageFilePath, fileInfo = $json");
+        logger.warn(
+          tag,
+          "_processSyncFileMsg download file failed!. filePath = $storageFilePath, fileInfo = $json",
+        );
         syncingFile.close(false);
       }
     } catch (err, stack) {
@@ -1149,7 +1417,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     final currentProtocol = _registry.getProtocol(dev.guid);
     if (currentProtocol?.isSocket ?? false) {
       // Socket 在线时不允许存储连接覆盖页面和注册表里的实时协议状态。
-      logger.debug(tag, "skip storage device update because socket is connected. targetDevId=${dev.guid}");
+      logger.debug(
+        tag,
+        "skip storage device update because socket is connected. targetDevId=${dev.guid}",
+      );
       return false;
     }
     final address = protocol.name;
@@ -1182,9 +1453,17 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         logger.warn(tag, "minVersion is null, target dev id = $devId");
         return success;
       }
-      deviceConnectionNotifyService.showConnected(devId, isPaired: confirmResult.isPaired);
+      deviceConnectionNotifyService.showConnected(
+        devId,
+        isPaired: confirmResult.isPaired,
+      );
       for (var listener in _devAliveListeners) {
-        listener.onConnected(DevInfo.fromDevice(device), minVersion, version, protocol);
+        listener.onConnected(
+          DevInfo.fromDevice(device),
+          minVersion,
+          version,
+          protocol,
+        );
       }
       _registry.addDevice(DevInfo.fromDevice(device), protocol);
     } catch (err, stack) {
@@ -1259,7 +1538,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       return;
     }
     for (var record in records) {
-      final dir = getHistoryDatePath(_selfDevId, DateTime.parse(record.time).format("yyyy-MM-dd"));
+      final dir = getHistoryDatePath(
+        _selfDevId,
+        DateTime.parse(record.time).format("yyyy-MM-dd"),
+      );
       client.deleteFile("$dir/${record.id}");
     }
   }
@@ -1317,7 +1599,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     storagePath = "$datePath/files";
     if (_lastDateFilePath != storagePath) {
       if (!await client.createDirectory(storagePath)) {
-        logger.error(tag, "sync file create directory failed! storageDirPath = $storagePath");
+        logger.error(
+          tag,
+          "sync file create directory failed! storageDirPath = $storagePath",
+        );
         //file sync progress failed
         syncingFile.setState(SyncingFileState.error);
         return;
@@ -1329,7 +1614,9 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     //endregion
     if (isUri) {
       //region uri file
-      final nullableStream = await uriFileReader.readFileAsBytesStream(filePath);
+      final nullableStream = await uriFileReader.readFileAsBytesStream(
+        filePath,
+      );
       if (nullableStream == null) {
         Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
         throw TranslationKey.failedToLoad.tr;
@@ -1346,7 +1633,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       // Read the stream before returning so sendData only finishes after upload work does.
       if (size != fileBytes.length) {
         //update sync file progress
-        logger.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
+        logger.warn(
+          tag,
+          "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath",
+        );
         syncingFile.setState(SyncingFileState.error);
         return;
       }
@@ -1359,7 +1649,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
       );
       if (!result) {
         //update sync file progress
-        logger.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+        logger.warn(
+          tag,
+          "sync file failed. path = $filePath, storagePath = $storageFilePath",
+        );
         syncingFile.setState(SyncingFileState.error);
       } else {
         final fileInfoCreated = await client.createFile(
@@ -1370,13 +1663,18 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         //涓婁紶鏂囦欢淇℃伅
         if (!fileInfoCreated) {
           await client.deleteFile(storageFilePath);
-          logger.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+          logger.warn(
+            tag,
+            "sync file info failed. path = $storageFileInfoPath. filePath = $filePath",
+          );
           return;
         }
         // Only add the local history once for URI files to avoid duplicate records.
         historyController.addData(history, null, false);
         //ws send
-        _wsService.send(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid));
+        _wsService.send(
+          WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid),
+        );
         syncingFile.setState(SyncingFileState.done);
       }
       if (DateTime.now().microsecondsSinceEpoch < 0) {
@@ -1386,7 +1684,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
             //read all
             if (size != fileBytes.length) {
               //update sync file progress
-              logger.warn(tag, "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath");
+              logger.warn(
+                tag,
+                "sync file failed. size ${fileBytes.length} != $size. path = $filePath, storagePath = $storageFilePath",
+              );
               syncingFile.setState(SyncingFileState.error);
               return;
             }
@@ -1399,7 +1700,10 @@ class StorageService extends GetxService with DataSender implements DiscoverList
             );
             if (!result) {
               //update sync file progress
-              logger.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+              logger.warn(
+                tag,
+                "sync file failed. path = $filePath, storagePath = $storageFilePath",
+              );
               syncingFile.setState(SyncingFileState.error);
             } else {
               //上传文件信息
@@ -1410,13 +1714,22 @@ class StorageService extends GetxService with DataSender implements DiscoverList
               );
               if (!result) {
                 await client.deleteFile(storageFilePath);
-                logger.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+                logger.warn(
+                  tag,
+                  "sync file info failed. path = $storageFileInfoPath. filePath = $filePath",
+                );
                 return;
               }
               //本地写入记录
               historyController.addData(history, null, false);
               //ws send
-              _wsService.send(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid));
+              _wsService.send(
+                WsMsgData(
+                  WsMsgType.syncFile,
+                  "$today:$_selfDevId:$id",
+                  dev.guid,
+                ),
+              );
               syncingFile.setState(SyncingFileState.done);
             }
           },
@@ -1426,10 +1739,17 @@ class StorageService extends GetxService with DataSender implements DiscoverList
     } else {
       //region local file
       syncingFile.setState(SyncingFileState.syncing);
-      final result = await client.uploadFile(storageFilePath, filePath, onProgress: onStorageProgressSync);
+      final result = await client.uploadFile(
+        storageFilePath,
+        filePath,
+        onProgress: onStorageProgressSync,
+      );
       if (!result) {
         //update sync file progress
-        logger.warn(tag, "sync file failed. path = $filePath, storagePath = $storageFilePath");
+        logger.warn(
+          tag,
+          "sync file failed. path = $filePath, storagePath = $storageFilePath",
+        );
         syncingFile.setState(SyncingFileState.error);
       } else {
         //上传文件信息
@@ -1440,13 +1760,18 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         );
         if (!result) {
           await client.deleteFile(storageFilePath);
-          logger.warn(tag, "sync file info failed. path = $storageFileInfoPath. filePath = $filePath");
+          logger.warn(
+            tag,
+            "sync file info failed. path = $storageFileInfoPath. filePath = $filePath",
+          );
           return;
         }
         //本地写入记录
         historyController.addData(history, null, false);
         //ws send
-        _wsService.send(WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid));
+        _wsService.send(
+          WsMsgData(WsMsgType.syncFile, "$today:$_selfDevId:$id", dev.guid),
+        );
         syncingFile.setState(SyncingFileState.done);
       }
       //endregion
@@ -1479,17 +1804,27 @@ class StorageService extends GetxService with DataSender implements DiscoverList
         if (!result) {
           // Mark the record unsynced here so the retry query can pick it up again later.
           await dbService.opRecordDao.updateStorageSyncStatus(id, false);
-          logger.warn(tag, "create history date directory failed! path = $path");
+          logger.warn(
+            tag,
+            "create history date directory failed! path = $path",
+          );
           return;
         }
       }
       var historyDirPath = getHistoryDatePath(_selfDevId, today);
       final path = "$historyDirPath/$id";
-      final result = await client.createFile(path, m2.serialize(data), createDir: true);
+      final result = await client.createFile(
+        path,
+        m2.serialize(data),
+        createDir: true,
+      );
       //写入存储服务，更新操作记录
       dbService.opRecordDao.updateStorageSyncStatus(id, result);
       if (!result) {
-        logger.warn(tag, "StorageService write data failed! key=${key.name}, data = ${jsonEncode(data)}");
+        logger.warn(
+          tag,
+          "StorageService write data failed! key=${key.name}, data = ${jsonEncode(data)}",
+        );
         return;
       }
     }
@@ -1538,19 +1873,25 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   Future<Device?> getDeviceInfoFromCloud(String devId) async {
     final bytes = await _client?.readFileBytes(getDeviceInfoPath(devId));
     if (bytes == null) return null;
-    return Device.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
+    return Device.fromJson(
+      (jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast(),
+    );
   }
 
   Future<AppVersion?> getDeviceVersionInfoFromCloud(String devId) async {
     final bytes = await _client?.readFileBytes(getDeviceVersionPath(devId));
     if (bytes == null) return null;
-    return AppVersion.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
+    return AppVersion.fromJson(
+      (jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast(),
+    );
   }
 
   Future<AppVersion?> getDeviceMinVersionInfoFromCloud(String devId) async {
     final bytes = await _client?.readFileBytes(getDeviceMinVersionPath(devId));
     if (bytes == null) return null;
-    return AppVersion.fromJson((jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast());
+    return AppVersion.fromJson(
+      (jsonDecode(utf8.decode(bytes)) as Map<dynamic, dynamic>).cast(),
+    );
   }
 
   @override
@@ -1568,17 +1909,29 @@ class StorageService extends GetxService with DataSender implements DiscoverList
   ///获取所有网卡 ip
   Future<List<String>> _getInterfaceIpList() async {
     final interfaces = await NetworkUtil.listInterfaces();
-    var expendAddress = interfaces.map((networkInterface) => networkInterface.addresses).expand((ip) => ip);
-    return expendAddress.where((ip) => ip.type == InternetAddressType.IPv4).map((address) => address.address).toList();
+    var expendAddress = interfaces
+        .map((networkInterface) => networkInterface.addresses)
+        .expand((ip) => ip);
+    return expendAddress
+        .where((ip) => ip.type == InternetAddressType.IPv4)
+        .map((address) => address.address)
+        .toList();
   }
 
   /// 统一处理设备离线时的本地状态收口，避免注册表和监听器状态漂移。
-  void _handleDeviceDisconnected(String devId, {required String source, bool notify = true}) {
+  void _handleDeviceDisconnected(
+    String devId, {
+    required String source,
+    bool notify = true,
+  }) {
     final currentProtocol = _registry.getProtocol(devId);
     final existedInRegistry = currentProtocol != null;
     if (currentProtocol?.isSocket ?? false) {
       // 存储 offline 只代表存储通道离线，不能清理仍然存活的 Socket 连接。
-      logger.debug(tag, "ignore storage disconnect for socket device. targetDevId=$devId, source=$source, protocol=${currentProtocol!.name}");
+      logger.debug(
+        tag,
+        "ignore storage disconnect for socket device. targetDevId=$devId, source=$source, protocol=${currentProtocol!.name}",
+      );
       return;
     }
     if (notify && existedInRegistry) {

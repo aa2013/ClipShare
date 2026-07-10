@@ -586,6 +586,8 @@ enum TranslationKey {
   execFailed,
   notificationServerStatus,
   notificationServerTips,
+  storageWsVersionIncompatibleTitle,
+  storageWsVersionIncompatibleContent,
   forwardSettingsWebDAVTitle,
   forwardSettingsS3Title,
   webdavServerUrlRequired,

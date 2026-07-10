@@ -135,8 +135,8 @@ class ConfigService extends GetxService {
   //规则是否已迁移
   bool _rulesMigrated = false;
 
-  //中转服务版本号
-  final forwardServerVersion = ''.obs;
+  //当前传输服务版本号，server 中转和 WS 通知服务二选一写入。
+  final transportServerVersion = ''.obs;
 
   //当前是否是深色模式
   bool get currentIsDarkMode {

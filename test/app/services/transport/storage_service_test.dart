@@ -151,7 +151,9 @@ void main() {
     tearDown(() async {
       DataSender.removeSyncListener(Module.history, historySyncListener);
       if (Get.isRegistered<ConnectionRegistryService>()) {
-        connectionRegistryService.removeForwardStatusListener(forwardStatusListener);
+        connectionRegistryService.removeForwardStatusListener(
+          forwardStatusListener,
+        );
         connectionRegistryService.removeDevAliveListener(devAliveListener);
       }
       if (Get.isRegistered<StorageService>()) {
@@ -180,7 +182,10 @@ void main() {
           ),
         ),
       );
-      await firstSession.close(WebSocketStatus.normalClosure, 'reconnect for missing data replay');
+      await firstSession.close(
+        WebSocketStatus.normalClosure,
+        'reconnect for missing data replay',
+      );
       await Future<void>.delayed(const Duration(milliseconds: 5300));
 
       expect(historySyncListener.syncedHistoryIds, contains(missingId));
@@ -198,6 +203,40 @@ void main() {
           ForwardServerStatus.connected,
         ],
       );
+    });
+
+    test('ws connected 后会刷新通知服务版本号', () async {
+      await storageService.start();
+      await _pumpAsyncQueue();
+
+      expect(configService.transportServerVersion.value, wsServer.version);
+    });
+
+    test('通知服务版本低于 1.1.0 时不会建立 storage ws 连接', () async {
+      wsServer.version = '1.0.9';
+
+      await storageService.start();
+      await _pumpAsyncQueue();
+
+      expect(wsServer.sessions, isEmpty);
+      expect(configService.transportServerVersion.value, '1.0.9');
+      expect(
+        forwardStatusListener.statuses,
+        <ForwardServerStatus>[
+          ForwardServerStatus.initializing,
+          ForwardServerStatus.disconnected,
+        ],
+      );
+    });
+
+    test('通知服务版本解析失败时保持允许 storage ws 连接', () async {
+      wsServer.version = 'invalid';
+
+      await storageService.start();
+      await _pumpAsyncQueue();
+
+      expect(wsServer.sessions, isNotEmpty);
+      expect(configService.transportServerVersion.value, 'invalid');
     });
 
     test('初始化阶段失败时状态从 initializing 落到 disconnected', () async {
@@ -223,7 +262,9 @@ void main() {
       await _pumpAsyncQueue();
       historySyncListener.clear();
 
-      await session.send(jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()));
+      await session.send(
+        jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()),
+      );
       await webDavServer.writeBytes(
         '/clipshare/history/$peerDevId/$baselineDate/$missingId',
         _encodeHistorySyncPayload(
@@ -274,7 +315,9 @@ void main() {
       await _pumpAsyncQueue();
       expect(registry.hasDevice(peerDevId), isTrue);
 
-      await session.send(jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()));
+      await session.send(
+        jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()),
+      );
       await _pumpAsyncQueue();
 
       expect(registry.hasDevice(peerDevId), isFalse);
@@ -289,7 +332,11 @@ void main() {
       final session = await sessionFuture;
       await _pumpAsyncQueue();
 
-      await session.send(jsonEncode(WsMsgData(WsMsgType.offline, '', unregisteredDevId).toJson()));
+      await session.send(
+        jsonEncode(
+          WsMsgData(WsMsgType.offline, '', unregisteredDevId).toJson(),
+        ),
+      );
       await _pumpAsyncQueue();
 
       expect(registry.hasDevice(unregisteredDevId), isFalse);
@@ -356,8 +403,14 @@ void main() {
       expect(ack.targetDevId, peerDevId);
       expect(payload['opId'], 2001);
       expect(payload['devId'], selfDevId);
-      expect(dbService.pendingStorageAckDao.items.map((item) => item.opId), contains(2002));
-      expect(dbService.pendingStorageAckDao.items.map((item) => item.opId), isNot(contains(2001)));
+      expect(
+        dbService.pendingStorageAckDao.items.map((item) => item.opId),
+        contains(2002),
+      );
+      expect(
+        dbService.pendingStorageAckDao.items.map((item) => item.opId),
+        isNot(contains(2001)),
+      );
     });
 
     test('收到 storage ACK 后写入 OperationSync', () async {
@@ -454,46 +507,54 @@ void main() {
       await _pumpAsyncQueue();
       expect(registry.hasDevice(peerDevId), isTrue);
 
-      await session.close(WebSocketStatus.goingAway, 'disconnect registry cleanup');
+      await session.close(
+        WebSocketStatus.goingAway,
+        'disconnect registry cleanup',
+      );
       await Future<void>.delayed(const Duration(milliseconds: 300));
 
       expect(registry.hasDevice(peerDevId), isFalse);
     });
 
-    test('manual storage ws disconnect sends offline then notifies disconnected', () async {
-      final sessionFuture = wsServer.acceptedSessions.stream.first;
-      await storageService.start();
-      final session = await sessionFuture;
-      await _pumpAsyncQueue();
+    test(
+      'manual storage ws disconnect sends offline then notifies disconnected',
+      () async {
+        final sessionFuture = wsServer.acceptedSessions.stream.first;
+        await storageService.start();
+        final session = await sessionFuture;
+        await _pumpAsyncQueue();
 
-      await session.send(
-        jsonEncode(
-          WsMsgData(
-            WsMsgType.online,
-            jsonEncode(<String, dynamic>{
-              'ipList': <String>[],
-              'port': 9527,
-            }),
-            peerDevId,
-          ).toJson(),
-        ),
-      );
-      await _pumpAsyncQueue();
-      expect(registry.hasDevice(peerDevId), isTrue);
-      devAliveListener.disconnectedDevIds.clear();
+        await session.send(
+          jsonEncode(
+            WsMsgData(
+              WsMsgType.online,
+              jsonEncode(<String, dynamic>{
+                'ipList': <String>[],
+                'port': 9527,
+              }),
+              peerDevId,
+            ).toJson(),
+          ),
+        );
+        await _pumpAsyncQueue();
+        expect(registry.hasDevice(peerDevId), isTrue);
+        devAliveListener.disconnectedDevIds.clear();
 
-      final offlineFuture = _waitForWsMessage(
-        wsServer,
-        (msg) => msg.operation == WsMsgType.offline && msg.targetDevId == peerDevId,
-      );
-      await storageService.disconnectWs();
-      final offlineMsg = await offlineFuture;
-      await _pumpAsyncQueue();
+        final offlineFuture = _waitForWsMessage(
+          wsServer,
+          (msg) =>
+              msg.operation == WsMsgType.offline &&
+              msg.targetDevId == peerDevId,
+        );
+        await storageService.disconnectWs();
+        final offlineMsg = await offlineFuture;
+        await _pumpAsyncQueue();
 
-      expect(offlineMsg.targetDevId, peerDevId);
-      expect(registry.hasDevice(peerDevId), isFalse);
-      expect(devAliveListener.disconnectedDevIds, contains(peerDevId));
-    });
+        expect(offlineMsg.targetDevId, peerDevId);
+        expect(registry.hasDevice(peerDevId), isFalse);
+        expect(devAliveListener.disconnectedDevIds, contains(peerDevId));
+      },
+    );
 
     test('storage ws disconnect keeps socket devices registered', () async {
       const socketDevId = 'device-c';
@@ -544,7 +605,9 @@ void main() {
       devAliveListener.disconnectedDevIds.clear();
       notifyService.clear();
 
-      await session.send(jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()));
+      await session.send(
+        jsonEncode(WsMsgData(WsMsgType.offline, '', peerDevId).toJson()),
+      );
       await _pumpAsyncQueue();
 
       expect(registry.hasDevice(peerDevId), isTrue);
@@ -611,7 +674,7 @@ void main() {
           ).toJson(),
         ),
       );
-      await _pumpAsyncQueue();
+      await _waitForProtocol(registry, peerDevId, TransportProtocol.webdav);
 
       expect(socketService.testedDevIds, contains(peerDevId));
       expect(registry.hasDevice(peerDevId), isTrue);
@@ -657,7 +720,10 @@ Future<void> _pumpAsyncQueue() async {
 }
 
 /// 轮询等待异步补拉完成，避免把断言绑定到固定毫秒延时上。
-Future<void> _waitForHistorySync(_RecordingSyncListener listener, int historyId) async {
+Future<void> _waitForHistorySync(
+  _RecordingSyncListener listener,
+  int historyId,
+) async {
   final stopwatch = Stopwatch()..start();
   while (stopwatch.elapsed < const Duration(seconds: 2)) {
     if (listener.syncedHistoryIds.contains(historyId)) {
@@ -668,6 +734,21 @@ Future<void> _waitForHistorySync(_RecordingSyncListener listener, int historyId)
   expect(listener.syncedHistoryIds, contains(historyId));
 }
 
+Future<void> _waitForProtocol(
+  DeviceConnectionRegistry registry,
+  String devId,
+  TransportProtocol protocol,
+) async {
+  final stopwatch = Stopwatch()..start();
+  while (stopwatch.elapsed < const Duration(seconds: 5)) {
+    if (registry.getProtocol(devId) == protocol) {
+      return;
+    }
+    await _pumpAsyncQueue();
+  }
+  expect(registry.getProtocol(devId), protocol);
+}
+
 /// 等待指定 websocket 消息，避免测试依赖固定延迟或误读初始化阶段的 online 消息。
 Future<WsMsgData> _waitForWsMessage(
   TestStorageWsServer server,
@@ -676,7 +757,9 @@ Future<WsMsgData> _waitForWsMessage(
   final completer = Completer<WsMsgData>();
   late final StreamSubscription<String> subscription;
   subscription = server.receivedMessages.stream.listen((raw) {
-    final msg = WsMsgData.fromJson((jsonDecode(raw) as Map<dynamic, dynamic>).cast<String, dynamic>());
+    final msg = WsMsgData.fromJson(
+      (jsonDecode(raw) as Map<dynamic, dynamic>).cast<String, dynamic>(),
+    );
     if (!completer.isCompleted && predicate(msg)) {
       completer.complete(msg);
     }
@@ -765,6 +848,9 @@ class _TestConfigService extends GetxService implements ConfigService {
   @override
   final Snowflake snowflake = Snowflake(1);
 
+  @override
+  final transportServerVersion = ''.obs;
+
   final Uri wsBaseUri;
   final Uri webDavBaseUri;
 
@@ -773,12 +859,12 @@ class _TestConfigService extends GetxService implements ConfigService {
     required this.wsBaseUri,
     required this.webDavBaseUri,
   }) : device = Device(
-          guid: selfDevId,
-          devName: 'Self Device',
-          uid: 1,
-          type: 'android',
-          isPaired: true,
-        );
+         guid: selfDevId,
+         devName: 'Self Device',
+         uid: 1,
+         type: 'android',
+         isPaired: true,
+       );
 
   @override
   bool get enableStorageSync => true;
@@ -818,12 +904,12 @@ class _TestConfigService extends GetxService implements ConfigService {
 
   @override
   WebDAVConfig? get webDAVConfig => WebDAVConfig(
-        server: webDavBaseUri.toString(),
-        username: 'tester',
-        password: 'secret',
-        baseDir: '/clipshare',
-        displayName: 'test-webdav',
-      );
+    server: webDavBaseUri.toString(),
+    username: 'tester',
+    password: 'secret',
+    baseDir: '/clipshare',
+    displayName: 'test-webdav',
+  );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -835,7 +921,8 @@ class _TestDbService extends DbService {
   OperationRecordDao? _operationRecordDao;
   DeviceDao? _deviceDao;
   @override
-  final _FakePendingStorageAckDao pendingStorageAckDao = _FakePendingStorageAckDao();
+  final _FakePendingStorageAckDao pendingStorageAckDao =
+      _FakePendingStorageAckDao();
   final _FakeOperationSyncDao operationSyncDao = _FakeOperationSyncDao();
 
   _TestDbService({
@@ -844,7 +931,8 @@ class _TestDbService extends DbService {
   });
 
   @override
-  OperationRecordDao get opRecordDao => _operationRecordDao ??= _FakeOperationRecordDao(latestStorageSyncRecordByDevId);
+  OperationRecordDao get opRecordDao => _operationRecordDao ??=
+      _FakeOperationRecordDao(latestStorageSyncRecordByDevId);
 
   @override
   DeviceDao get deviceDao => _deviceDao ??= _FakeDeviceDao(deviceById);
@@ -864,7 +952,9 @@ class _FakeOperationRecordDao extends OperationRecordDao {
   _FakeOperationRecordDao(this.latestStorageSyncRecordByDevId);
 
   @override
-  Future<OperationRecord?> getLatestStorageSyncSuccessByDevId(String devId) async {
+  Future<OperationRecord?> getLatestStorageSyncSuccessByDevId(
+    String devId,
+  ) async {
     return latestStorageSyncRecordByDevId[devId];
   }
 
@@ -916,7 +1006,10 @@ class _FakePendingStorageAckDao extends PendingStorageAckDao {
 
   @override
   Future<int> add(PendingStorageAck item) async {
-    final exists = items.any((current) => current.opId == item.opId && current.targetDevId == item.targetDevId);
+    final exists = items.any(
+      (current) =>
+          current.opId == item.opId && current.targetDevId == item.targetDevId,
+    );
     if (exists) {
       return 0;
     }
@@ -926,7 +1019,9 @@ class _FakePendingStorageAckDao extends PendingStorageAckDao {
 
   @override
   Future<List<PendingStorageAck>> getByTargetDevId(String targetDevId) async {
-    return items.where((item) => item.targetDevId == targetDevId).toList(growable: false);
+    return items
+        .where((item) => item.targetDevId == targetDevId)
+        .toList(growable: false);
   }
 
   @override
@@ -937,7 +1032,9 @@ class _FakePendingStorageAckDao extends PendingStorageAckDao {
   @override
   Future<int?> removeByKey(int opId, String targetDevId) async {
     final before = items.length;
-    items.removeWhere((item) => item.opId == opId && item.targetDevId == targetDevId);
+    items.removeWhere(
+      (item) => item.opId == opId && item.targetDevId == targetDevId,
+    );
     return before - items.length;
   }
 
@@ -952,7 +1049,10 @@ class _FakeOperationSyncDao extends OperationSyncDao {
   @override
   Future<int> add(OperationSync syncHistory) async {
     final exists = items.any(
-      (item) => item.opId == syncHistory.opId && item.devId == syncHistory.devId && item.uid == syncHistory.uid,
+      (item) =>
+          item.opId == syncHistory.opId &&
+          item.devId == syncHistory.devId &&
+          item.uid == syncHistory.uid,
     );
     if (exists) {
       return 0;
@@ -1003,8 +1103,14 @@ class _RecordingSyncListener implements SyncListener {
   Future ackSync(dynamic msg) async {}
 
   @override
-  Future onStorageSync(Map<String, dynamic> map, Device sender, bool loadingMissingData) async {
-    final history = History.fromJson((map['data'] as Map<dynamic, dynamic>).cast<String, dynamic>());
+  Future onStorageSync(
+    Map<String, dynamic> map,
+    Device sender,
+    bool loadingMissingData,
+  ) async {
+    final history = History.fromJson(
+      (map['data'] as Map<dynamic, dynamic>).cast<String, dynamic>(),
+    );
     syncedHistoryIds.add(history.id);
   }
 
@@ -1033,7 +1139,8 @@ class _RecordingDevAliveListener with DevAliveListener {
 }
 
 /// 记录连接通知调用，避免单元测试触发真实系统通知。
-class _RecordingDeviceConnectionNotifyService extends DeviceConnectionNotifyService {
+class _RecordingDeviceConnectionNotifyService
+    extends DeviceConnectionNotifyService {
   final List<String> connectedDevIds = <String>[];
   final List<String> disconnectedDevIds = <String>[];
 
@@ -1059,7 +1166,13 @@ class _RecordingDeviceConnectionNotifyService extends DeviceConnectionNotifyServ
 
 class _TestHistorySyncProgressService extends HistorySyncProgressService {
   @override
-  void addProgress(String devId, Map<String, dynamic>? syncData, int seq, int total, bool fromStorage) {}
+  void addProgress(
+    String devId,
+    Map<String, dynamic>? syncData,
+    int seq,
+    int total,
+    bool fromStorage,
+  ) {}
 }
 
 class _TestClipboardSourceService extends ClipboardSourceService {
@@ -1068,7 +1181,9 @@ class _TestClipboardSourceService extends ClipboardSourceService {
 }
 
 class _TestSocketService extends SocketService {
-  _TestSocketService(super.registry);
+  final DeviceConnectionRegistry testRegistry;
+
+  _TestSocketService(this.testRegistry) : super(testRegistry);
 
   final Map<String, bool> onlineResults = <String, bool>{};
   final List<String> testedDevIds = <String>[];
@@ -1077,9 +1192,13 @@ class _TestSocketService extends SocketService {
   bool get discovering => false;
 
   @override
-  Future<bool> testIsOnline(String devId, { bool autoReconnect = true }) async {
+  Future<bool> testIsOnline(String devId, {bool autoReconnect = true}) async {
     testedDevIds.add(devId);
-    return onlineResults[devId] ?? false;
+    final online = onlineResults[devId] ?? false;
+    if (!online) {
+      testRegistry.removeDevice(devId);
+    }
+    return online;
   }
 }
 
@@ -1097,9 +1216,13 @@ class _TestDeviceController extends GetxController implements DeviceController {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _TestHistoryController extends GetxController implements HistoryController {
+class _TestHistoryController extends GetxController
+    implements HistoryController {
   @override
-  void setMissingDataCopyMsg(Map<String, dynamic> syncData, [bool fromStorage = false]) {}
+  void setMissingDataCopyMsg(
+    Map<String, dynamic> syncData, [
+    bool fromStorage = false,
+  ]) {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -1109,9 +1232,7 @@ class _StoredEntry {
   final bool isDirectory;
   List<int> bytes;
 
-  _StoredEntry.directory()
-      : isDirectory = true,
-        bytes = const <int>[];
+  _StoredEntry.directory() : isDirectory = true, bytes = const <int>[];
 
   _StoredEntry.file(this.bytes) : isDirectory = false;
 }
@@ -1149,7 +1270,11 @@ class _TestWebDavServer {
   /// 删除指定路径，便于测试构造初始化失败场景。
   Future<void> deletePath(String path) async {
     final normalizedPath = _normalize(path);
-    _entries.removeWhere((entryPath, _) => entryPath == normalizedPath || entryPath.startsWith('$normalizedPath/'));
+    _entries.removeWhere(
+      (entryPath, _) =>
+          entryPath == normalizedPath ||
+          entryPath.startsWith('$normalizedPath/'),
+    );
   }
 
   /// 为指定目录制造 MKCOL 失败，便于稳定复现初始化阶段错误。
@@ -1200,7 +1325,10 @@ class _TestWebDavServer {
   }
 
   Future<void> _handlePut(HttpRequest request, String path) async {
-    final bytes = await request.fold<List<int>>(<int>[], (prev, element) => prev..addAll(element));
+    final bytes = await request.fold<List<int>>(
+      <int>[],
+      (prev, element) => prev..addAll(element),
+    );
     _ensureParentDirectories(path);
     _entries[path] = _StoredEntry.file(bytes);
     request.response.statusCode = HttpStatus.created;
@@ -1213,7 +1341,9 @@ class _TestWebDavServer {
       await request.response.close();
       return;
     }
-    _entries.removeWhere((entryPath, _) => entryPath == path || entryPath.startsWith('$path/'));
+    _entries.removeWhere(
+      (entryPath, _) => entryPath == path || entryPath.startsWith('$path/'),
+    );
     request.response.statusCode = HttpStatus.noContent;
     await request.response.close();
   }
@@ -1247,14 +1377,21 @@ class _TestWebDavServer {
       _buildPropfindResponse(path, entry),
     ];
     if (depth != '0' && entry.isDirectory) {
-      final children = _entries.entries.where((item) => _isDirectChild(path, item.key)).toList()
-        ..sort((a, b) => a.key.compareTo(b.key));
+      final children =
+          _entries.entries
+              .where((item) => _isDirectChild(path, item.key))
+              .toList()
+            ..sort((a, b) => a.key.compareTo(b.key));
       for (final child in children) {
         responses.add(_buildPropfindResponse(child.key, child.value));
       }
     }
     request.response.statusCode = HttpStatus.multiStatus;
-    request.response.headers.contentType = ContentType('text', 'xml', charset: 'utf-8');
+    request.response.headers.contentType = ContentType(
+      'text',
+      'xml',
+      charset: 'utf-8',
+    );
     request.response.write(
       '<?xml version="1.0" encoding="utf-8"?>'
       '<d:multistatus xmlns:d="DAV:">${responses.join()}</d:multistatus>',
@@ -1264,9 +1401,14 @@ class _TestWebDavServer {
 
   String _buildPropfindResponse(String path, _StoredEntry entry) {
     final href = entry.isDirectory && path != '/' ? '$path/' : path;
-    final displayName = href.split('/').where((item) => item.isNotEmpty).lastOrNull ?? '';
-    final contentType = entry.isDirectory ? 'httpd/unix-directory' : 'application/octet-stream';
-    final contentLength = entry.isDirectory ? '0' : entry.bytes.length.toString();
+    final displayName =
+        href.split('/').where((item) => item.isNotEmpty).lastOrNull ?? '';
+    final contentType = entry.isDirectory
+        ? 'httpd/unix-directory'
+        : 'application/octet-stream';
+    final contentLength = entry.isDirectory
+        ? '0'
+        : entry.bytes.length.toString();
     return '<d:response>'
         '<d:href>$href</d:href>'
         '<d:propstat>'
@@ -1287,7 +1429,10 @@ class _TestWebDavServer {
     if (unixPath.isEmpty || unixPath == '/') {
       return '/';
     }
-    final normalized = unixPath.replaceAll(RegExp(r'^/+'), '').replaceAll(RegExp(r'/+'), '/').replaceAll(RegExp(r'/+$'), '');
+    final normalized = unixPath
+        .replaceAll(RegExp(r'^/+'), '')
+        .replaceAll(RegExp(r'/+'), '/')
+        .replaceAll(RegExp(r'/+$'), '');
     return normalized.isEmpty ? '/' : '/$normalized';
   }
 

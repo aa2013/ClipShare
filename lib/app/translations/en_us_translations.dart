@@ -341,14 +341,16 @@ class EnUSTranslation extends AbstractTranslations {
         return "Disable";
       case TranslationKey.dontDetect:
         return "Don't Detect";
-      case TranslationKey.discoveringSettingsHeartbeatIntervalTooltipDialogContent:
+      case TranslationKey
+          .discoveringSettingsHeartbeatIntervalTooltipDialogContent:
         return "When a device switches networks, it cannot automatically detect if the device is offline.\n"
             "Enabling heartbeat detection will periodically check the device's liveliness.";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle:
         return "Heartbeat Interval";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel:
         return "Heartbeat Interval";
-      case TranslationKey.discoveringSettingsModifyHeartbeatDialogInputErrorText:
+      case TranslationKey
+          .discoveringSettingsModifyHeartbeatDialogInputErrorText:
         return "Unit in seconds, 0 to disable detection";
       case TranslationKey.forwardSettingsGroupName:
         return "Forward";
@@ -374,9 +376,11 @@ class EnUSTranslation extends AbstractTranslations {
         return "Enable Security Authentication";
       case TranslationKey.securitySettingsEnableSecurityDesc:
         return "Enable password or biometric authentication";
-      case TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogContent:
+      case TranslationKey
+          .securitySettingsEnableSecurityAppPwdRequiredDialogContent:
         return "Please create an app password first";
-      case TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogOkText:
+      case TranslationKey
+          .securitySettingsEnableSecurityAppPwdRequiredDialogOkText:
         return "Go to Create";
       case TranslationKey.securitySettingsEnableSecurityAppPwdModifyTitle:
         return "Change Password";
@@ -950,23 +954,30 @@ class EnUSTranslation extends AbstractTranslations {
         return "Error";
       case TranslationKey.defaultClipboardServerNotificationCfgErrorTextPrefix:
         return "";
-      case TranslationKey.defaultClipboardServerNotificationCfgStopListeningTitle:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgStopListeningTitle:
         return "Warning";
-      case TranslationKey.defaultClipboardServerNotificationCfgStopListeningText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgStopListeningText:
         return "Clipboard listening stopped";
       case TranslationKey.defaultClipboardServerNotificationCfgRunningTitle:
         return "Service is running";
-      case TranslationKey.defaultClipboardServerNotificationCfgShizukuRunningText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgShizukuRunningText:
         return "Shizuku mode is active";
       case TranslationKey.defaultClipboardServerNotificationCfgRootRunningText:
         return "Root mode is active";
-      case TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedTitle:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgShizukuDisconnectedTitle:
         return "Error";
-      case TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgShizukuDisconnectedText:
         return "Shizuku service has been disconnected";
-      case TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningTitle:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgWaitingRunningTitle:
         return "Waiting to Running";
-      case TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgWaitingRunningText:
         return "Waiting to Running Service";
       case TranslationKey.startSendFileToast:
         return "The file has started sending, please check the sending progress";
@@ -1060,13 +1071,15 @@ class EnUSTranslation extends AbstractTranslations {
         return "Failed to load app icon (@appName)";
       case TranslationKey.clipboardSettingsSourceRecordTitleTooltip:
         return "Tips";
-      case TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent:
+      case TranslationKey
+          .clipboardSettingsSourceRecordTitleTooltipDialogContent:
         return "Source detection is divided into two types: foreground copying and background copying from other apps. Foreground copying requires accessibility permissions to detect, while background copying can be obtained via dumpsys (with a delay of several hundred milliseconds).\n\nSource detection cannot guarantee complete accuracy, as it mainly relies on accessibility recognition and may mistakenly tag other apps.";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle:
         return "Record background copy source via dumpsys";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip:
         return "Description";
-      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
+      case TranslationKey
+          .clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
         return "Background copying may be misidentified. Using dumpsys to detect which app wrote to clipboard for correction";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
         return "Requires Root or Shizuku permissions, with several hundred milliseconds of delay";
@@ -1213,6 +1226,10 @@ class EnUSTranslation extends AbstractTranslations {
             "Notification service is required to alert devices of changes. \n"
             "You may use either self-hosted or public notification services. \n"
             "Notification content does not contain any sensitive information.";
+      case TranslationKey.storageWsVersionIncompatibleTitle:
+        return "Incompatible WS service version";
+      case TranslationKey.storageWsVersionIncompatibleContent:
+        return "Current WS service version is @version. Minimum required version is @minVersion. Please upgrade the WS service before using storage sync.";
 
       case TranslationKey.forwardSettingsWebDAVTitle:
         return "WebDAV Config";

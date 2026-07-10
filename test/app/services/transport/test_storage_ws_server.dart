@@ -24,14 +24,18 @@ class TestStorageWsSession {
 /// 复用的本地 WebSocket 服务端，便于不同存储测试走真实握手和消息流。
 class TestStorageWsServer {
   final bool respondToPing;
+  String version;
 
   late final HttpServer _server;
   final List<TestStorageWsSession> sessions = <TestStorageWsSession>[];
-  final StreamController<String> receivedMessages = StreamController<String>.broadcast();
-  final StreamController<TestStorageWsSession> acceptedSessions = StreamController<TestStorageWsSession>.broadcast();
+  final StreamController<String> receivedMessages =
+      StreamController<String>.broadcast();
+  final StreamController<TestStorageWsSession> acceptedSessions =
+      StreamController<TestStorageWsSession>.broadcast();
 
   TestStorageWsServer({
     this.respondToPing = false,
+    this.version = '1.1.0',
   });
 
   Uri get uri => Uri.parse('ws://127.0.0.1:${_server.port}');
@@ -40,6 +44,12 @@ class TestStorageWsServer {
   Future<void> start() async {
     _server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
     _server.listen((HttpRequest request) async {
+      if (request.uri.path == '/checkVersion') {
+        request.response.statusCode = HttpStatus.ok;
+        request.response.write(version);
+        await request.response.close();
+        return;
+      }
       if (!request.uri.path.startsWith('/connect/')) {
         request.response.statusCode = HttpStatus.notFound;
         await request.response.close();
@@ -71,11 +81,15 @@ class TestStorageWsServer {
       return;
     }
     try {
-      final wsMessage = WsMsgData.fromJson((jsonDecode(message) as Map<dynamic, dynamic>).cast<String, dynamic>());
+      final wsMessage = WsMsgData.fromJson(
+        (jsonDecode(message) as Map<dynamic, dynamic>).cast<String, dynamic>(),
+      );
       if (wsMessage.operation != WsMsgType.ping) {
         return;
       }
-      socket.add(jsonEncode(WsMsgData(WsMsgType.ping, '', wsMessage.targetDevId)));
+      socket.add(
+        jsonEncode(WsMsgData(WsMsgType.ping, '', wsMessage.targetDevId)),
+      );
     } catch (_) {
       // 测试服务端只关心合法 ping，其他异常输入交给被测逻辑自行处理。
     }

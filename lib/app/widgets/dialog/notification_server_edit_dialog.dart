@@ -1,8 +1,8 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/notification_server_util.dart';
 import 'package:clipshare/app/widgets/loading.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 class NotificationServerEditDialog extends StatefulWidget {
@@ -69,18 +69,18 @@ class _NotificationServerEditDialogState extends State<NotificationServerEditDia
       setState(() {
         testingConnection = true;
       });
-      final dio = Dio();
-      var httpUrl = _editor.text.toLowerCase().replaceFirst("ws://", "").replaceFirst("wss://", "");
-      httpUrl = "http://$httpUrl/checkVersion";
       ExceptionInfo? exception;
       try {
-        final resp = await dio.get(httpUrl);
-        assert(resp.data is String && (resp.data as String).isNotEmpty);
+        final serverVersion = await NotificationServerUtil.getVersion(_editor.text);
+        assert(serverVersion.isNotEmpty);
         setState(() {
-          version = resp.data;
+          version = serverVersion;
         });
       } catch (err, stack) {
         exception = ExceptionInfo(err: err, stackTrace: stack);
+      }
+      if (!mounted) {
+        return;
       }
       if (!testingConnection) {
         return;
@@ -114,7 +114,7 @@ class _NotificationServerEditDialogState extends State<NotificationServerEditDia
                 enabled: !testingConnection,
                 hintText: widget.hint,
                 labelText: widget.labelText,
-                hintStyle: TextStyle(color: Colors.grey),
+                hintStyle: const TextStyle(color: Colors.grey),
                 border: const OutlineInputBorder(),
                 errorText: showErr ? widget.errorText : null,
               ),

@@ -302,7 +302,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
               way: appConfig.forwardWay,
               enabled: appConfig.enableForward,
               status: settingsController.forwardServerStatus.value,
-              version: appConfig.forwardServerVersion.value,
+              version: appConfig.transportServerVersion.value,
             ),
             subtitleIcon: forwardWayIcon(appConfig.forwardWay),
             subtitleTooltip: forwardWayLabel(appConfig.forwardWay),

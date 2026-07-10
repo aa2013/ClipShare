@@ -187,7 +187,7 @@ class SettingsForwardPage extends SettingsSectionView {
                 if (status != ForwardServerStatus.connected) {
                   return const SizedBox.shrink();
                 }
-                final version = appConfig.forwardServerVersion.value;
+                final version = appConfig.transportServerVersion.value;
                 if (version.isNullOrEmpty) {
                   return const SizedBox.shrink();
                 }

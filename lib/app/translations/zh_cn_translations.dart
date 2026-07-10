@@ -293,14 +293,16 @@ class ZhCNTranslation extends AbstractTranslations {
         return "禁用";
       case TranslationKey.dontDetect:
         return "不检测";
-      case TranslationKey.discoveringSettingsHeartbeatIntervalTooltipDialogContent:
+      case TranslationKey
+          .discoveringSettingsHeartbeatIntervalTooltipDialogContent:
         return "当设备切换网络时无法自动检测到设备是否掉线\n"
             "启用心跳检测将会定时检查设备存活情况。";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle:
         return "心跳间隔";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel:
         return "心跳间隔";
-      case TranslationKey.discoveringSettingsModifyHeartbeatDialogInputErrorText:
+      case TranslationKey
+          .discoveringSettingsModifyHeartbeatDialogInputErrorText:
         return "单位秒，0为禁用检测";
       case TranslationKey.forwardSettingsGroupName:
         return "中转";
@@ -330,9 +332,11 @@ class ZhCNTranslation extends AbstractTranslations {
         return "启用安全认证";
       case TranslationKey.securitySettingsEnableSecurityDesc:
         return "启用密码或生物识别认证";
-      case TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogContent:
+      case TranslationKey
+          .securitySettingsEnableSecurityAppPwdRequiredDialogContent:
         return "请先创建应用密码";
-      case TranslationKey.securitySettingsEnableSecurityAppPwdRequiredDialogOkText:
+      case TranslationKey
+          .securitySettingsEnableSecurityAppPwdRequiredDialogOkText:
         return "去创建";
       case TranslationKey.securitySettingsEnableSecurityAppPwdModifyTitle:
         return "更改密码";
@@ -954,23 +958,30 @@ class ZhCNTranslation extends AbstractTranslations {
         return "错误";
       case TranslationKey.defaultClipboardServerNotificationCfgErrorTextPrefix:
         return "";
-      case TranslationKey.defaultClipboardServerNotificationCfgStopListeningTitle:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgStopListeningTitle:
         return "警告";
-      case TranslationKey.defaultClipboardServerNotificationCfgStopListeningText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgStopListeningText:
         return "剪贴板监听已停止";
       case TranslationKey.defaultClipboardServerNotificationCfgRunningTitle:
         return "服务运行中";
-      case TranslationKey.defaultClipboardServerNotificationCfgShizukuRunningText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgShizukuRunningText:
         return "Shizuku 模式";
       case TranslationKey.defaultClipboardServerNotificationCfgRootRunningText:
         return "Root 模式";
-      case TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedTitle:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgShizukuDisconnectedTitle:
         return "错误";
-      case TranslationKey.defaultClipboardServerNotificationCfgShizukuDisconnectedText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgShizukuDisconnectedText:
         return "Shizuku服务已断开，请检查Shizuku运行状态";
-      case TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningTitle:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgWaitingRunningTitle:
         return "等待服务运行";
-      case TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningText:
+      case TranslationKey
+          .defaultClipboardServerNotificationCfgWaitingRunningText:
         return "等待服务运行";
       case TranslationKey.startSendFileToast:
         return "文件已开始发送，请查看发送进度";
@@ -1068,13 +1079,15 @@ class ZhCNTranslation extends AbstractTranslations {
         return "App图标加载失败(@appName)";
       case TranslationKey.clipboardSettingsSourceRecordTitleTooltip:
         return "说明";
-      case TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent:
+      case TranslationKey
+          .clipboardSettingsSourceRecordTitleTooltipDialogContent:
         return "来源检测分为两种：前台复制和其他app后台复制，前台复制需要借助无障碍权限来检测，后台复制可通过dumpsys来获取（有数百毫秒的延迟）。\n\n来源检测不能保证完全准确，主要通过无障碍识别，有可能会误标记到其他应用上面";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle:
         return "通过 dumpsys 记录后台复制来源";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip:
         return "说明";
-      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
+      case TranslationKey
+          .clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
         return "如果有应用在后台复制有可能会误识别，通过 dumpsys 检测是谁写入了剪贴板以纠正";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
         return "需要 Root 或 Shizuku 权限，同时会有数百毫秒的延迟";
@@ -1219,6 +1232,10 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.notificationServerTips:
         return "使用存储服务作为中转时无法自动得知需要同步数据，需要依赖通知服务进行通知。\n"
             "可自建也可使用公共通知服务，通知内容不含任何敏感信息。";
+      case TranslationKey.storageWsVersionIncompatibleTitle:
+        return "WS 服务版本不兼容";
+      case TranslationKey.storageWsVersionIncompatibleContent:
+        return "当前 WS 服务版本为 @version，最低需要 @minVersion，请升级 WS 服务后再使用存储同步。";
       case TranslationKey.forwardSettingsWebDAVTitle:
         return "WebDAV配置信息";
       case TranslationKey.forwardSettingsS3Title:
