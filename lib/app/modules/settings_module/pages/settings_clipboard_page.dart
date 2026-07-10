@@ -71,7 +71,7 @@ class SettingsClipboardPage extends SettingsSectionView {
                     onTap: () async {
                       Global.showTipsDialog(
                         context: context,
-                        text: TranslationKey.clipboardSettingsSourceRecordTitleTooltipDialogContent.tr,
+                        text: TranslationKey.clipboardSettingsSourceRecordDialogContent.tr,
                       );
                     },
                   ),
@@ -138,7 +138,7 @@ class SettingsClipboardPage extends SettingsSectionView {
                 onTap: () async {
                   Global.showTipsDialog(
                     context: context,
-                    text: TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent.tr,
+                    text: TranslationKey.clipboardSettingsSourceRecordViaDumpsysDialogContent.tr,
                   );
                 },
               ),
@@ -211,11 +211,33 @@ class SettingsClipboardPage extends SettingsSectionView {
           TranslationKey.excludePrivateFormat,
           TranslationKey.excludePrivateFormatTips,
         ],
-        title: Text(
-          TranslationKey.excludePrivateFormat.tr,
-          maxLines: 1,
+        title: Row(
+          children: [
+            Text(
+              TranslationKey.excludePrivateFormat.tr,
+              maxLines: 1,
+            ),
+            const SizedBox(width: 5),
+            GestureDetector(
+              onTap: () {
+                Global.showTipsDialog(
+                  context: context,
+                  selectable: true,
+                  text: TranslationKey.excludePrivateFormatTips.tr,
+                );
+              },
+              child: const MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: Icon(
+                  Icons.info_outline,
+                  color: Colors.blueGrey,
+                  size: 15,
+                ),
+              ),
+            ),
+          ],
         ),
-        description: Text(TranslationKey.excludePrivateFormatTips.tr),
+        description: Text(TranslationKey.excludePrivateFormatDesc.tr),
         value: appConfig.isExcludeFormat,
         action: (v) {
           return Switch(

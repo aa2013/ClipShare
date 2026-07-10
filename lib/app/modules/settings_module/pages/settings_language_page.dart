@@ -1,3 +1,5 @@
+import 'package:clipshare/app/data/enums/app_language.dart';
+
 import 'settings_section_view_base.dart';
 
 class SettingsLanguagePage extends SettingsSectionView {
@@ -19,9 +21,9 @@ class SettingsLanguagePage extends SettingsSectionView {
   List<SettingEntry> buildSettingEntries(BuildContext context) {
     return [
       for (final item in Constants.languageSelections)
-        SettingCard<String>(
+        SettingCard<AppLanguage>(
           searchKeys: const [TranslationKey.selectLanguage],
-          searchAliases: [item.label, item.value],
+          searchAliases: [item.label, item.value.storageValue],
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -52,14 +54,15 @@ class SettingsLanguagePage extends SettingsSectionView {
     ];
   }
 
-  void _selectLanguage(String language) {
+  /// 处理用户点击语言项后的切换逻辑。
+  void _selectLanguage(AppLanguage language) {
     HapticFeedback.selectionClick();
     appConfig.setAppLanguage(language);
   }
 }
 
 class _LanguageBadge extends StatelessWidget {
-  final String language;
+  final AppLanguage language;
 
   const _LanguageBadge({
     required this.language,
@@ -82,8 +85,9 @@ class _LanguageBadge extends StatelessWidget {
     );
   }
 
+  /// 根据语言类型构建徽标内容，跟随系统时展示通用图标。
   Widget _buildContent(Color color) {
-    if (language == 'auto') {
+    if (language.isAuto) {
       return Icon(
         Icons.language_rounded,
         size: 18,
@@ -91,10 +95,10 @@ class _LanguageBadge extends StatelessWidget {
       );
     }
     return Text(
-      language == 'zh_CN' ? '中' : 'EN',
+      language.badgeText!,
       style: TextStyle(
         color: color,
-        fontSize: language == 'zh_CN' ? 16 : 13,
+        fontSize: language.badgeFontSize,
         fontWeight: FontWeight.w700,
       ),
     );

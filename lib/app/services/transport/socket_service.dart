@@ -671,7 +671,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         DevPairingHandler.addCode(dev.guid, CryptoUtil.toMD5(code));
         //发送通知
         _pairingNotifyId = await NotifyUtil.notify(
-          content: "${TranslationKey.newParingRequest.tr}: $code",
+          content: "${TranslationKey.devicePairingRequestNotificationContent.tr}: $code",
           key: "dev-pairing-${dev.guid}",
         );
         if (_pairing) {
@@ -682,7 +682,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           context: Get.context!,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text(TranslationKey.paringRequest.tr),
+              title: Text(TranslationKey.devicePairingRequestDialogTitle.tr),
               content: IntrinsicHeight(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,

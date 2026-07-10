@@ -1,3 +1,4 @@
+import 'package:clipshare/app/modules/settings_module/settings_text_styles.dart';
 import 'package:clipshare/app/modules/settings_module/widgets/settings_section_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -135,8 +136,8 @@ class _SettingsOverviewSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.62));
+    // 概览卡片副标题保持单行，版本等辅助信息应放到右侧区域避免状态文本换行。
+    final style = SettingsTextStyles.overviewSubtitle(context);
     if (icon == null) {
       final child = Text(
         text,
@@ -153,7 +154,7 @@ class _SettingsOverviewSubtitle extends StatelessWidget {
           Icon(
             icon,
             size: 14,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
+            color: SettingsTextStyles.subtitleIconColor(context),
           ),
           const SizedBox(width: 5),
           Flexible(

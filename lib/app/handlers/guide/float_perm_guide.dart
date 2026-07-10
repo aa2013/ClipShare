@@ -11,7 +11,7 @@ class FloatPermGuide extends BaseGuide {
     super.widget = PermissionGuide(
       title: TranslationKey.floatPermGuideTitle.tr,
       icon: Icons.filter_none_rounded,
-      description: TranslationKey.floatPermGuideDescription.tr,
+      description: TranslationKey.floatPermGuideDesc.tr,
       grantPerm: permHandler.request,
       checkPerm: canNext,
     );

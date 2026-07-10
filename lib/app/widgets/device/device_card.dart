@@ -268,7 +268,7 @@ class _DeviceCardState extends State<DeviceCard> {
       children: [
         Flexible(
           child: Text(
-            widget.dev!.name,
+            widget.dev!.displayName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(

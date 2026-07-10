@@ -126,7 +126,8 @@ class StorageService extends GetxService
 
   List<DevAliveListener> get _devAliveListeners => _registry.devAliveListeners;
 
-  List<ForwardStatusListener> get _forwardStatusListener => _registry.forwardStatusListener;
+  List<ForwardStatusListener> get _forwardStatusListener =>
+      _registry.forwardStatusListener;
 
   //endregion
 
@@ -382,10 +383,11 @@ class StorageService extends GetxService
   }
 
   Future<void> _showIncompatibleWsVersionTip(SemanticVersion version) async {
-    final text = TranslationKey.storageWsVersionIncompatibleContent.trParams({
-      'version': version.toString(),
-      'minVersion': _minCompatibleWsVersion.toString(),
-    });
+    final text = TranslationKey.storageWsVersionIncompatibleDialogContent
+        .trParams({
+          'version': version.toString(),
+          'minVersion': _minCompatibleWsVersion.toString(),
+        });
     final context = Get.context;
     if (context != null) {
       unawaited(
@@ -978,7 +980,7 @@ class StorageService extends GetxService
     _disconnectAllStorageDevices(source: 'wsDisconnected');
   }
 
-  /// 通过通知服务的 HTTP 检查接口刷新当前 WS 服务版本；失败不影响已建立的 WebSocket 连接。
+  /// 通过通知服务的 HTTP 检查接口刷新当前通知服务版本；失败不影响已建立的 WebSocket 连接。
   Future<void> _refreshNotificationServerVersion(int requestId) async {
     try {
       final version = await NotificationServerUtil.getVersion(

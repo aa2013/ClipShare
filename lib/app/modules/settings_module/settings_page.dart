@@ -32,9 +32,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
 
 class SettingsPage extends GetView<SettingsController> {
   const SettingsPage({super.key});
@@ -302,7 +299,6 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
               way: appConfig.forwardWay,
               enabled: appConfig.enableForward,
               status: settingsController.forwardServerStatus.value,
-              version: appConfig.transportServerVersion.value,
             ),
             subtitleIcon: forwardWayIcon(appConfig.forwardWay),
             subtitleTooltip: forwardWayLabel(appConfig.forwardWay),
@@ -366,8 +362,12 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
             tone: Colors.blueGrey,
             trailing: ThemeModeSelector(
               value: appConfig.appTheme,
-              onChanged: (mode) {
-                Future.delayed(100.ms, () => _setTheme(context, mode));
+              onChanged: (mode) async {
+                await Future.delayed(100.ms);
+                if (!context.mounted) {
+                  return;
+                }
+                await _setTheme(context, mode);
               },
             ),
             onTap: () {},

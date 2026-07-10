@@ -1,5 +1,3 @@
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_icons/simple_icons.dart';
 
@@ -12,7 +10,18 @@ enum SupportPlatForm {
 
   @override
   String toString() {
-    return name.upperFirst;
+    switch (this) {
+      case SupportPlatForm.android:
+        return 'Android';
+      case SupportPlatForm.iOS:
+        return 'iOS';
+      case SupportPlatForm.linux:
+        return 'Linux';
+      case SupportPlatForm.macos:
+        return 'macOS';
+      case SupportPlatForm.windows:
+        return 'Windows';
+    }
   }
   IconData get icon{
     switch(this){

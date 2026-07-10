@@ -62,7 +62,7 @@ class DeviceCardSimple extends StatelessWidget {
                                   child: SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     child: Text(
-                                      dev.name,
+                                      dev.displayName,
                                       maxLines: 1,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w500,

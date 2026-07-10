@@ -169,7 +169,7 @@ class LogClearButton extends StatelessWidget {
           context,
           AlertDialog(
             title: Text(TranslationKey.tips.tr),
-            content: Text(TranslationKey.logSettingsAckDelLogFiles.tr),
+            content: Text(TranslationKey.logSettingsDeleteLogFilesDialogContent.tr),
             actions: [
               TextButton(
                 onPressed: () {

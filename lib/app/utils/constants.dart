@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/app_language.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/theme/re-editor/highlight_log.dart';
@@ -138,20 +139,22 @@ class Constants {
     RadioData(value: 30, label: "30 ${TranslationKey.minute.tr}"),
   ];
 
-  static List<RadioData> get languageSelections {
-    return [
-        RadioData(value: 'zh_CN', label: "简体中文"),
-        RadioData(value: 'en_US', label: "English"),
-      ]
-      ..sort((a, b) => a.label.compareTo(b.label))
-      ..insert(0, RadioData(value: 'auto', label: TranslationKey.auto.tr));
+  /// 构建语言选择列表，统一复用强类型语言配置。
+  static List<RadioData<AppLanguage>> get languageSelections {
+    return AppLanguage.selectableValues
+        .map(
+          (language) => RadioData<AppLanguage>(
+            value: language,
+            label: language.label,
+          ),
+        )
+        .toList(growable: false);
   }
 
-  static const defaultLocale = Locale("zh", "CN");
-  static final supportedLocales = languageSelections.sublist(1).map((item) {
-    final codes = item.value.split("_");
-    return Locale(codes[0], codes.length == 1 ? null : codes[1]);
-  });
+  static const defaultLocale = AppLanguage.defaultLocale;
+
+  /// 提供给 Flutter 本地化系统的受支持语言列表。
+  static final supportedLocales = AppLanguage.supportedValues.map((language) => language.locale).toList(growable: false);
   static const localizationsDelegates = [
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,

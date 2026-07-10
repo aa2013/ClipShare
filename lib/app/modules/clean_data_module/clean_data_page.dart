@@ -180,7 +180,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                               }
                             },
                             selected: controller.selectedDevs.contains(dev.guid),
-                            label: Text(dev.name),
+                            label: Text(dev.displayName),
                           ),
                         );
                       }).toList(),

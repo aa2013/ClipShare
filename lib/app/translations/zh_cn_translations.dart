@@ -1,9 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/translations/app_translations.dart';
 import 'package:clipshare/app/utils/constants.dart';
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
 
 class ZhCNTranslation extends AbstractTranslations {
   @override
@@ -45,21 +42,21 @@ class ZhCNTranslation extends AbstractTranslations {
         return "选择工作模式";
       case TranslationKey.completed:
         return "已完成";
-      case TranslationKey.completedGuideTitleDescription:
+      case TranslationKey.completedGuideDesc:
         return "已完成全部设置";
       case TranslationKey.floatPermGuideTitle:
         return "悬浮窗权限";
-      case TranslationKey.floatPermGuideDescription:
+      case TranslationKey.floatPermGuideDesc:
         return "由于高版本Android系统限制，${Constants.appName}需要通过悬浮窗获取剪贴板焦点，开启悬浮窗后还可以随时从屏幕边缘查看剪贴板历史并进行拖拽选择";
       case TranslationKey.notificationPermGuideTitle:
         return "通知权限";
-      case TranslationKey.notificationPermGuideDescription:
+      case TranslationKey.notificationPermGuideDesc:
         return "开启通知，以启动前台服务";
       case TranslationKey.storagePermGuideTitle:
         return "存储权限";
-      case TranslationKey.storagePermGuideDescription:
+      case TranslationKey.storagePermGuideDesc:
         return "同步图片与文件时需要存储权限，否则无法保存文件。";
-      case TranslationKey.batteryOptimizationPermGuideDescription:
+      case TranslationKey.batteryOptimizationPermGuideDesc:
         return "为了保证后台存活需要将其从电池优化中移除\n"
             "此外，请在后台任务卡片中加锁并手机管家中设置允许自启！\n"
             "若点击[去授权]后无反应，请自行在手机设置中查找相关设置项";
@@ -91,7 +88,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return "断开连接";
       case TranslationKey.devicePageReconnect:
         return "重新连接";
-      case TranslationKey.devicePageUnpairedDialogAck:
+      case TranslationKey.devicePageUnpairedDialogContent:
         return "是否要取消配对？";
       case TranslationKey.devicePageUnpairedButtonText:
         return "取消配对";
@@ -117,8 +114,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "停止发现";
       case TranslationKey.sms:
         return "短信";
-      case TranslationKey.bottomNavigationSearchHistoryBarItemLabel:
-        return "搜索历史";
       case TranslationKey.homeAppBarSyncingProgressText:
         return "同步中";
       case TranslationKey.search:
@@ -143,8 +138,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "筛选日期";
       case TranslationKey.onlyNotSync:
         return "仅未同步";
-      case TranslationKey.searchPageMoreFilterByDateJudgeText:
-        return "日期";
       case TranslationKey.confirm:
         return "确定";
       case TranslationKey.toToday:
@@ -163,17 +156,17 @@ class ZhCNTranslation extends AbstractTranslations {
         return "正在加载环境状态";
       case TranslationKey.shizukuModeStatusTitle:
         return "Shizuku 模式";
-      case TranslationKey.shizukuModeRunningDescription:
+      case TranslationKey.shizukuModeRunningDesc:
         return "服务已运行，API @version";
       case TranslationKey.rootModeStatusTitle:
         return "Root 模式";
-      case TranslationKey.rootModeRunningDescription:
+      case TranslationKey.rootModeRunningDesc:
         return "已授权，服务已运行";
-      case TranslationKey.serverNotRunningDescription:
+      case TranslationKey.serverNotRunningDesc:
         return "服务未运行，部分功能不可用";
       case TranslationKey.envPermissionIgnored:
         return "已忽略权限";
-      case TranslationKey.envPermissionIgnoredDescription:
+      case TranslationKey.envPermissionIgnoredDesc:
         return "部分功能可能不可用";
       case TranslationKey.noSpecialPermissionRequired:
         return "无需特殊权限";
@@ -289,12 +282,9 @@ class ZhCNTranslation extends AbstractTranslations {
         return "说明";
       case TranslationKey.enable:
         return "启用";
-      case TranslationKey.disable:
-        return "禁用";
       case TranslationKey.dontDetect:
         return "不检测";
-      case TranslationKey
-          .discoveringSettingsHeartbeatIntervalTooltipDialogContent:
+      case TranslationKey.discoveringSettingsHeartbeatIntervalDialogContent:
         return "当设备切换网络时无法自动检测到设备是否掉线\n"
             "启用心跳检测将会定时检查设备存活情况。";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle:
@@ -388,8 +378,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "自动复制图片";
       case TranslationKey.syncSettingsAutoCopyImgDesc:
         return "启用后若其他设备复制了图片本机也会自动复制";
-      case TranslationKey.ruleSettingsGroupName:
-        return "规则";
       case TranslationKey.logSettingsGroupName:
         return "日志";
       case TranslationKey.logSettingsEnableTitle:
@@ -402,22 +390,16 @@ class ZhCNTranslation extends AbstractTranslations {
         return "打开文件位置";
       case TranslationKey.tips:
         return "提示";
-      case TranslationKey.logSettingsAckDelLogFiles:
+      case TranslationKey.logSettingsDeleteLogFilesDialogContent:
         return "是否删除日志文件？";
       case TranslationKey.statisticsSettingsGroupName:
         return "统计";
-      case TranslationKey.statisticsSettingsTitle:
-        return "查看统计";
-      case TranslationKey.statisticsSettingsDesc:
-        return "以图表呈现对本地记录的简略统计分析";
       case TranslationKey.about:
         return "关于";
       case TranslationKey.errorDialogTitle:
         return "错误";
       case TranslationKey.selfDeviceName:
         return "本机";
-      case TranslationKey.saveFileToPathForSettingDialogText:
-        return "该文件无法直接读取\n\n是否先保存到【文件存储路径】？";
       case TranslationKey.save:
         return "保存";
       case TranslationKey.saved:
@@ -464,7 +446,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return "删除";
       case TranslationKey.deleteWithFiles:
         return "连带文件删除";
-      case TranslationKey.deleteWithFilesOnSyncFilePageAckDialogText:
+      case TranslationKey.syncingFilePageDeleteSelectedDialogContent:
         return "是否删除选中的 @length 项？\n发送记录的文件不会被删除";
       case TranslationKey.onlyDeleteRecordsText:
         return "仅删除记录";
@@ -548,12 +530,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "全选";
       case TranslationKey.cancelSelectAll:
         return "取消全选";
-      case TranslationKey.inputCompletedErrorText:
-        return "请输入完整！";
-      case TranslationKey.onlineDevicesPageSelectDeviceToSend:
-        return "请选择要发送的设备";
-      case TranslationKey.send:
-        return "发送";
       case TranslationKey.multipleChoiceOperationAppBarTitle:
         return "多选操作";
       case TranslationKey.forwardServerNotAllowedSendFile:
@@ -564,9 +540,9 @@ class ZhCNTranslation extends AbstractTranslations {
         return "未知的返回结果";
       case TranslationKey.forwardServerConnectFailed:
         return "中转服务器连接失败";
-      case TranslationKey.newParingRequest:
+      case TranslationKey.devicePairingRequestNotificationContent:
         return "新配对请求";
-      case TranslationKey.paringRequest:
+      case TranslationKey.devicePairingRequestDialogTitle:
         return "配对请求";
       case TranslationKey.pairingCodeDialogContent:
         return "来自 @devName 的配对请求\n配对码:";
@@ -622,7 +598,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return "连接成功";
       case TranslationKey.connect:
         return "连接";
-      case TranslationKey.addDeviceAppBarTittle:
+      case TranslationKey.addDeviceDialogTitle:
         return '添加设备';
       case TranslationKey.errorFormatIp:
         return "请输入正确的IPv4/v6地址";
@@ -660,8 +636,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "标签管理";
       case TranslationKey.copySuccess:
         return "复制成功";
-      case TranslationKey.copyFailed:
-        return "复制失败";
       case TranslationKey.clipboardContent:
         return "剪贴板详情";
       case TranslationKey.deleteRecord:
@@ -674,7 +648,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return '分享文件';
       case TranslationKey.deleteTips:
         return "删除提示";
-      case TranslationKey.deleteRecordAck:
+      case TranslationKey.clipListDeleteRecordDialogContent:
         return "确定删除该记录？";
       case TranslationKey.backToTop:
         return "返回顶部";
@@ -690,8 +664,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "标签";
       case TranslationKey.pleaseInput:
         return "请输入";
-      case TranslationKey.renameDevice:
-        return "重命名设备";
       case TranslationKey.forward:
         return "中转";
       case TranslationKey.notCompatible:
@@ -737,8 +709,6 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.multiChoiceModeSelectedText:
         return "已选择 @text 项";
       case TranslationKey.goAuthorize:
-        return "去授权";
-      case TranslationKey.authorized:
         return "去授权";
       case TranslationKey.cannotEmpty:
         return "不能为空";
@@ -1079,15 +1049,13 @@ class ZhCNTranslation extends AbstractTranslations {
         return "App图标加载失败(@appName)";
       case TranslationKey.clipboardSettingsSourceRecordTitleTooltip:
         return "说明";
-      case TranslationKey
-          .clipboardSettingsSourceRecordTitleTooltipDialogContent:
+      case TranslationKey.clipboardSettingsSourceRecordDialogContent:
         return "来源检测分为两种：前台复制和其他app后台复制，前台复制需要借助无障碍权限来检测，后台复制可通过dumpsys来获取（有数百毫秒的延迟）。\n\n来源检测不能保证完全准确，主要通过无障碍识别，有可能会误标记到其他应用上面";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle:
         return "通过 dumpsys 记录后台复制来源";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip:
         return "说明";
-      case TranslationKey
-          .clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysDialogContent:
         return "如果有应用在后台复制有可能会误识别，通过 dumpsys 检测是谁写入了剪贴板以纠正";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
         return "需要 Root 或 Shizuku 权限，同时会有数百毫秒的延迟";
@@ -1137,24 +1105,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "在设备连接后自动同步断连期间缺失的数据";
       case TranslationKey.syncingData:
         return "同步数据中";
-      case TranslationKey.enableBlackList:
-        return "黑名单";
-      case TranslationKey.enableBlackListTips:
-        return "启用后命中规则的内容不会被记录";
-      case TranslationKey.enableWhiteList:
-        return "白名单";
-      case TranslationKey.enableWhiteListTips:
-        return "启用后命中规则的内容才会被记录";
-      case TranslationKey.contentCannotEmpty:
-        return "内容不能为空";
-      case TranslationKey.contentAndSourceCannotEmpty:
-        return "内容、来源、类型不能都为空";
-      case TranslationKey.ignoreCase:
-        return "忽略大小写";
-      case TranslationKey.application:
-        return "应用";
-      case TranslationKey.supportRegex:
-        return "支持正则表达式";
       case TranslationKey.content:
         return "内容";
       case TranslationKey.title:
@@ -1232,10 +1182,6 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.notificationServerTips:
         return "使用存储服务作为中转时无法自动得知需要同步数据，需要依赖通知服务进行通知。\n"
             "可自建也可使用公共通知服务，通知内容不含任何敏感信息。";
-      case TranslationKey.storageWsVersionIncompatibleTitle:
-        return "WS 服务版本不兼容";
-      case TranslationKey.storageWsVersionIncompatibleContent:
-        return "当前 WS 服务版本为 @version，最低需要 @minVersion，请升级 WS 服务后再使用存储同步。";
       case TranslationKey.forwardSettingsWebDAVTitle:
         return "WebDAV配置信息";
       case TranslationKey.forwardSettingsS3Title:
@@ -1336,10 +1282,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "标准S3协议的对象存储产品均可直接填写配置使用\n\n已测试腾讯云、七牛云均正常\n\n阿里云OSS需要单独填写";
       case TranslationKey.forwardWay:
         return "中转方式";
-      case TranslationKey.storageService:
-        return "存储服务";
-      case TranslationKey.forwardHost:
-        return "中转服务器";
       case TranslationKey.backupTypeConfig:
         return "配置信息";
       case TranslationKey.backupTypeAppInfo:
@@ -1362,10 +1304,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return "离线";
       case TranslationKey.enterSoftware:
         return "进入软件";
-      case TranslationKey.types:
-        return "类型";
-      case TranslationKey.selectTypes:
-        return "选择类型";
       case TranslationKey.segmentWords:
         return "分词";
       case TranslationKey.downloadFromGithub:
@@ -1434,8 +1372,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "部分系统在锁屏状态下无法自动复制，启用该功能后会在屏幕解锁后再去重试复制最新同步的数据";
       case TranslationKey.excludePrivateFormat:
         return "不记录排除格式";
+      case TranslationKey.excludePrivateFormatDesc:
+        return "不记录带有排除标记的剪贴板内容";
       case TranslationKey.excludePrivateFormatTips:
-        return "当检测到剪贴板含有特定标记（ExcludeClipboardContentFromMonitorProcessing）将不会记录";
+        return "当检测到剪贴板内容含有 ExcludeClipboardContentFromMonitorProcessing 标记时，将不会记录该内容。";
       case TranslationKey.moreActions:
         return "更多操作";
       case TranslationKey.retainDays:
@@ -1484,11 +1424,11 @@ class ZhCNTranslation extends AbstractTranslations {
         return "内容";
       case TranslationKey.codePromptParamsContentNotificationTitle:
         return "通知标题，仅在类型为通知时可用";
-      case TranslationKey.codePromptParamsContentSouce:
+      case TranslationKey.codePromptParamsContentSource:
         return "内容来源，可能是本机路径或者是App包名";
-      case TranslationKey.codePromptParamsContentTpye:
+      case TranslationKey.codePromptParamsContentType:
         return "内容类型";
-      case TranslationKey.codePromptNotificationTpye:
+      case TranslationKey.codePromptNotificationType:
         return "通知";
       case TranslationKey.codePromptImageType:
         return "图片";
@@ -1524,8 +1464,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return 'UTF8 编码库';
       case TranslationKey.codePromptOs:
         return '系统库（安全子集）';
-      case TranslationKey.codePromptBasic:
-        return '基础函数';
       case TranslationKey.codePromptType:
         return '获取变量类型';
       case TranslationKey.codePromptToString:
@@ -1954,8 +1892,6 @@ class ZhCNTranslation extends AbstractTranslations {
         return '数据备份';
       case TranslationKey.settingsSectionAboutLogSubtitle:
         return '应用信息';
-      case TranslationKey.settingsSectionLogSubtitle:
-        return '';
       case TranslationKey.settingsSectionStatisticsSubtitle:
         return '数据统计';
       case TranslationKey.settingsOverviewPermissionNormal:
@@ -1964,6 +1900,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return '@count 项待处理';
       case TranslationKey.settingsOverviewForwardClosed:
         return '未启用';
+      case TranslationKey.storageWsVersionIncompatibleTitle:
+        return "通知服务版本不兼容";
+      case TranslationKey.storageWsVersionIncompatibleDialogContent:
+        return "当前通知服务版本为 @version，最低需要 @minVersion，请升级通知服务后再使用存储同步。";
     }
   }
 }

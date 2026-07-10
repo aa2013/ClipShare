@@ -11,7 +11,7 @@ class BatteryPermGuide extends BaseGuide {
     super.widget = PermissionGuide(
       title: TranslationKey.batteryOptimization.tr,
       icon: Icons.filter_none_rounded,
-      description: TranslationKey.batteryOptimizationPermGuideDescription.tr,
+      description: TranslationKey.batteryOptimizationPermGuideDesc.tr,
       grantPerm: permHandler.request,
       checkPerm: canNext,
     );

@@ -17,7 +17,7 @@ class StoragePermGuide extends BaseGuide {
     super.widget = PermissionGuide(
       title: TranslationKey.storagePermGuideTitle.tr,
       icon: Icons.storage_outlined,
-      description: TranslationKey.storagePermGuideDescription.tr,
+      description: TranslationKey.storagePermGuideDesc.tr,
       grantPerm: PermissionHelper.reqAndroidStoragePerm,
       checkPerm: canNext,
     );

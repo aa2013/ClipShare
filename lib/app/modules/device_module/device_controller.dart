@@ -129,7 +129,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           ),
         );
       }
-      pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
+      pairedList.sort((a, b) => a.dev!.displayName.compareTo(b.dev!.displayName));
     });
   }
 
@@ -282,7 +282,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           onLongPress: (device, isConnected, showReNameDlg) => _onDeviceCardLongPress(device, isConnected, showReNameDlg),
         ),
       );
-      pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
+      pairedList.sort((a, b) => a.dev!.displayName.compareTo(b.dev!.displayName));
       return;
     }
     discoverList.add(
@@ -462,7 +462,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              device.name,
+                              device.displayName,
                               style: const TextStyle(fontSize: 25),
                             ),
                             Text(
@@ -536,7 +536,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
                           onTap: () {
                             Global.showTipsDialog(
                               context: context,
-                              text: TranslationKey.devicePageUnpairedDialogAck.tr,
+                              text: TranslationKey.devicePageUnpairedDialogContent.tr,
                               onOk: () async {
                                 final devInfo = DevInfo.fromDevice(device);
                                 if (isConnected) {
@@ -822,7 +822,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
         },
       ),
     );
-    pairedList.sort((a, b) => a.dev!.name.compareTo(b.dev!.name));
+    pairedList.sort((a, b) => a.dev!.displayName.compareTo(b.dev!.displayName));
   }
 
   //endregion

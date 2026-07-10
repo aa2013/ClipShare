@@ -75,7 +75,6 @@ enum SettingsSection {
   ),
   log(
     titleKey: TranslationKey.logSettingsGroupName,
-    subtitleKey: TranslationKey.settingsSectionLogSubtitle,
     icon: Icons.bug_report_outlined,
   ),
   aboutLog(
@@ -85,20 +84,20 @@ enum SettingsSection {
   );
 
   final TranslationKey titleKey;
-  final TranslationKey subtitleKey;
+  final TranslationKey? subtitleKey;
   final IconData icon;
   final bool opensSecondaryPage;
 
   const SettingsSection({
     required this.titleKey,
-    required this.subtitleKey,
+    this.subtitleKey,
     required this.icon,
     this.opensSecondaryPage = true,
   });
 
   String get title => titleKey.tr;
 
-  String get subtitle => subtitleKey.tr;
+  String get subtitle => subtitleKey?.tr ?? '';
 }
 class SettingsSearchItem {
   final SettingsSection section;

@@ -1,5 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/modules/settings_module/settings_text_styles.dart';
 import 'package:clipshare/app/modules/settings_module/widgets/settings_section_icon.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -53,7 +54,7 @@ class SettingsSectionTile extends StatelessWidget {
                         subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.62)),
+                        style: SettingsTextStyles.sectionSubtitle(context),
                       ),
                     ],
                   ],
@@ -68,6 +69,7 @@ class SettingsSectionTile extends StatelessWidget {
     );
   }
 
+  /// 生成设置分区副标题，语言分区需要展示当前生效的语言名称。
   String _sectionSubtitle() {
     if (section == SettingsSection.log) {
       return '';

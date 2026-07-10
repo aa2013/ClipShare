@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/app_language.dart';
 import 'package:clipshare/app/data/enums/devicce_id_generate_way.dart';
 import 'package:clipshare/app/data/enums/device_paried_filter_status.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
-import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
@@ -24,13 +24,9 @@ import 'package:clipshare/app/data/repository/dao/config_dao.dart';
 import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
-import 'package:clipshare/app/handlers/storage/s3_client.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
-import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -51,7 +47,6 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
-import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -62,7 +57,6 @@ import 'package:get/get.dart';
 import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
@@ -330,9 +324,9 @@ class ConfigService extends GetxService {
   }
 
   //语言
-  final RxString _language = 'auto'.obs;
+  final Rx<AppLanguage> _language = AppLanguage.auto.obs;
 
-  String get language => _language.value;
+  AppLanguage get language => _language.value;
 
   //启用日志记录
   late final RxBool _enableLogsRecord;
@@ -717,7 +711,12 @@ class ConfigService extends GetxService {
     _autoCopyImageAfterSync = (await cfg.getConfigByKey(ConfigKey.autoCopyImageAfterSync, false)).obs;
     _autoCopyImageAfterScreenShot = (await cfg.getConfigByKey(ConfigKey.autoCopyImageAfterScreenShot, true)).obs;
     _ignoreUpdateVersion.value = (await cfg.getConfigByKey<String?>(ConfigKey.ignoreUpdateVersion, null));
-    _language.value = (await cfg.getConfigByKey(ConfigKey.appLanguage, 'auto'));
+    _language.value = AppLanguage.fromStorageValue(
+      await cfg.getConfigByKey(
+        ConfigKey.appLanguage,
+        AppLanguage.auto.storageValue,
+      ),
+    );
     _recordHistoryDialogPosition.value = (await cfg.getConfigByKey(ConfigKey.recordHistoryDialogPosition, false));
     _historyDialogPosition.value = (await cfg.getConfigByKey(ConfigKey.historyDialogPosition, ""));
     _showOnRecentTasks.value = await cfg.getConfigByKey(ConfigKey.showOnRecentTasks, true);
@@ -1098,6 +1097,7 @@ class ConfigService extends GetxService {
     device = Device(
       guid: guid,
       devName: name,
+      // ConfigService 初始化早于 i18n，不能在这里使用 .tr；展示层再按当前语言本地化。
       customName: "本机",
       uid: 0,
       type: type,
@@ -1376,8 +1376,9 @@ class ConfigService extends GetxService {
     _ignoreUpdateVersion.value = versionCode;
   }
 
-  Future<void> setAppLanguage(String language) async {
-    await configDao.addOrUpdate(ConfigKey.appLanguage, language);
+  /// 持久化并应用新的界面语言配置。
+  Future<void> setAppLanguage(AppLanguage language) async {
+    await configDao.addOrUpdate(ConfigKey.appLanguage, language.storageValue);
     _language.value = language;
     updateLanguage();
     final homeController = Get.find<HomeController>();
@@ -1919,14 +1920,9 @@ class ConfigService extends GetxService {
     _rulesMigrated = true;
   }
 
-  ///更新语言选项
+  /// 根据当前语言配置刷新 GetX 的国际化环境。
   void updateLanguage() {
-    if (language == "auto") {
-      Get.updateLocale(Get.deviceLocale ?? Constants.defaultLocale);
-    } else {
-      final codes = language.split('_');
-      Get.updateLocale(Locale(codes[0], codes.length == 1 ? null : codes[1]));
-    }
+    Get.updateLocale(language.resolveLocale(Get.deviceLocale));
   }
 
   ///获取分词文件的存储位置

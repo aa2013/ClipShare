@@ -7,7 +7,7 @@ extension _ClipListItemRenderer on ClipListViewState {
       final onlyDeleteLocal = false.obs;
       Global.showTipsDialog(
         context: context,
-        text: TranslationKey.deleteRecordAck.tr,
+        text: TranslationKey.clipListDeleteRecordDialogContent.tr,
         title: TranslationKey.deleteTips.tr,
         customWidget: Container(
           margin: 10.insetT,

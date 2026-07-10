@@ -15,7 +15,7 @@ class NotifyPermGuide extends BaseGuide {
     super.widget = PermissionGuide(
       title: TranslationKey.notificationPermGuideTitle.tr,
       icon: Icons.notifications_active_outlined,
-      description: TranslationKey.notificationPermGuideDescription.tr,
+      description: TranslationKey.notificationPermGuideDesc.tr,
       grantPerm: permHandler.request,
       checkPerm: canNext,
     );

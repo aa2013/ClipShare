@@ -36,13 +36,11 @@ String forwardOverviewStatusText({
   required ForwardWay way,
   required bool enabled,
   required ForwardServerStatus status,
-  required String version,
 }) {
   if (way == ForwardWay.none || !enabled) {
     return TranslationKey.settingsOverviewForwardClosed.tr;
   }
-  final versionText = status == ForwardServerStatus.connected && version.isNotEmpty ? ' V$version' : '';
-  return '${status.tr}$versionText';
+  return status.tr;
 }
 
 /// Chooses the promoted forward overview card color from its current status.

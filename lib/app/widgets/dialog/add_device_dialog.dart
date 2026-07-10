@@ -80,7 +80,7 @@ class _AddDeviceDialogState extends State<AddDeviceDialog> {
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(TranslationKey.addDeviceAppBarTittle.tr),
+          Text(TranslationKey.addDeviceDialogTitle.tr),
           Visibility(
             visible: PlatformExt.isMobile,
             child: TextButton(

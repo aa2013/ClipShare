@@ -180,7 +180,7 @@ class FilterDetail extends StatelessWidget {
                         }
                       },
                       selected: controller.selectedDevIds.contains(dev.guid),
-                      label: Text(dev.name),
+                      label: Text(dev.displayName),
                     ),
                   ),
                 ),

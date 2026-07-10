@@ -1,9 +1,6 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/translations/app_translations.dart';
 import 'package:clipshare/app/utils/constants.dart';
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
 
 class EnUSTranslation extends AbstractTranslations {
   @override
@@ -14,16 +11,16 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.dialogCancelText:
         return "Cancel";
       case TranslationKey.dialogAuthorizationButtonText:
-        return "Go to Authorize";
+        return "Grant Access";
       case TranslationKey.floatPermRequestDialogTitle:
         return "Request Floating Window Permission";
       case TranslationKey.floatPermRequestDialogContent:
-        return 'Due to restrictions on Android 10 and above, the app cannot read the clipboard in the background. When the clipboard changes, the app needs to indirectly read the clipboard by accessing system logs and the floating window permission.'
-            '\n\nClick OK to go to the authorization page for the floating window permission.';
+        return 'Because Android 10+ blocks background clipboard access, the app reads clipboard changes indirectly through system logs and floating window access.'
+            '\n\nTap OK to open the floating window permission page.';
       case TranslationKey.requiredPermDialogTitle:
         return "Required Permission Missing";
       case TranslationKey.floatPermMissingDialogContent:
-        return 'Please grant the floating window permission, otherwise the clipboard cannot be read in the background.';
+        return 'Grant floating window access, or the clipboard cannot be read in the background.';
       case TranslationKey.shizukuPermRequestDialogTitle:
         return "Shizuku Permission Request";
       case TranslationKey.shizukuPermRequestDialogContent:
@@ -39,40 +36,40 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.batteryOptimization:
         return "Battery Optimization";
       case TranslationKey.batteryOptimizationPermRequestDialogContent:
-        return 'Disable battery optimization to improve background retention.\n'
-            'If there is no response after clicking [Go to Authorize], please manually find the relevant settings in your phone settings.';
+        return 'Turn off battery optimization to improve background keep-alive.\n'
+            'If tapping [Grant Access] does not respond, open the setting manually in your phone settings.';
       case TranslationKey.selectWorkMode:
         return "Select Work Mode";
       case TranslationKey.completed:
         return "Completed";
-      case TranslationKey.completedGuideTitleDescription:
-        return "All settings have been completed.";
+      case TranslationKey.completedGuideDesc:
+        return "Setup complete.";
       case TranslationKey.floatPermGuideTitle:
         return "Floating Window Permission";
-      case TranslationKey.floatPermGuideDescription:
-        return "Due to restrictions on higher Android versions, ${Constants.appName} needs to obtain clipboard focus through the floating window. After enabling the floating window, you can also view clipboard history and drag to select from the edge of the screen at any time.";
+      case TranslationKey.floatPermGuideDesc:
+        return "On newer Android versions, ${Constants.appName} needs floating window access to read the clipboard in the background. After enabling it, you can open clipboard history from the screen edge and drag to select items.";
       case TranslationKey.notificationPermGuideTitle:
         return "Notification Permission";
-      case TranslationKey.notificationPermGuideDescription:
+      case TranslationKey.notificationPermGuideDesc:
         return "Enable notifications to start the foreground service.";
       case TranslationKey.storagePermGuideTitle:
         return "Storage Permission";
-      case TranslationKey.storagePermGuideDescription:
+      case TranslationKey.storagePermGuideDesc:
         return "Storage permission is required to sync images and files, otherwise files cannot be saved.";
-      case TranslationKey.batteryOptimizationPermGuideDescription:
-        return "To ensure background survival, it needs to be removed from battery optimization.\n"
-            "Additionally, please lock it in the background task card and set it to allow auto-start in the phone manager!\n"
-            "If there is no response after clicking [Go to Authorize], please manually find the relevant settings in your phone settings.";
+      case TranslationKey.batteryOptimizationPermGuideDesc:
+        return "To improve background keep-alive, exclude the app from battery optimization.\n"
+            "Also lock it in recent tasks and allow auto-start in your phone manager.\n"
+            "If tapping [Grant Access] does not respond, open the setting manually in your phone settings.";
       case TranslationKey.aboutPageInstructionsItemName:
-        return "Instructions";
+        return "Guide";
       case TranslationKey.aboutPageJoinQQGroupItemName:
         return "Join QQ Group";
       case TranslationKey.aboutPageWebsiteItemName:
-        return "View Official Website";
+        return "Official Website";
       case TranslationKey.aboutPageLogsItemName:
-        return "Update Logs";
+        return "Changelog";
       case TranslationKey.aboutPageVersionItemName:
-        return "Software Version";
+        return "App Version";
       case TranslationKey.authenticationPageTitle:
         return "Authentication";
       case TranslationKey.authenticationPageBackendTimeoutVerificationTitle:
@@ -91,18 +88,18 @@ class EnUSTranslation extends AbstractTranslations {
         return "Disconnect";
       case TranslationKey.devicePageReconnect:
         return "Reconnect";
-      case TranslationKey.devicePageUnpairedDialogAck:
+      case TranslationKey.devicePageUnpairedDialogContent:
         return "Do you want to unpair?";
       case TranslationKey.devicePageUnpairedButtonText:
         return "Unpair";
       case TranslationKey.devicePagePairingDialogTitle:
-        return "Please Enter Pairing Code";
+        return "Enter Pairing Code";
       case TranslationKey.devicePagePairingTimeoutText:
-        return "Pairing Timeout!";
+        return "Pairing timed out!";
       case TranslationKey.devicePagePairingErrorText:
-        return "Pairing Code Error!";
+        return "Wrong pairing code!";
       case TranslationKey.devicePagePairingDialogConfirmText:
-        return "Pair!";
+        return "Pair";
       case TranslationKey.devicePageMyDevicesText:
         return "My Devices (@length)";
       case TranslationKey.devicePageForwardServerText:
@@ -110,15 +107,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.devicePageDiscoverDevicesText:
         return "Discover Devices (@length)";
       case TranslationKey.devicePageRediscoverTooltip:
-        return "Rediscover Devices";
+        return "Rediscover";
       case TranslationKey.devicePageManuallyTooltip:
-        return "Manually Add Device";
+        return "Add Device Manually";
       case TranslationKey.devicePageStopDiscoveringTooltip:
         return "Stop Discovering";
       case TranslationKey.sms:
         return "SMS";
-      case TranslationKey.bottomNavigationSearchHistoryBarItemLabel:
-        return "Search";
       case TranslationKey.homeAppBarSyncingProgressText:
         return "Syncing";
       case TranslationKey.search:
@@ -146,61 +141,59 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.filterBySource:
         return "Filter by Source";
       case TranslationKey.saveTopData:
-        return "Save top data";
+        return "Keep Pinned Data";
       case TranslationKey.removeLocalFiles:
         return "Remove local files";
       case TranslationKey.saveFilterConfig:
-        return "Save filter config";
+        return "Save Filter Preset";
       case TranslationKey.saveAutoCleanConfig:
-        return "Save auto clean config";
+        return "Save Auto-clean Settings";
       case TranslationKey.noDataFromFilter:
-        return "Filter did not find any data";
+        return "No data matched the filter";
       case TranslationKey.filterCleaningConfirmation:
-        return "Found @cnt items, this operation cannot be recovered. \nDo you want to continue?";
+        return "@cnt items found. This cannot be undone.\nContinue?";
       case TranslationKey.syncRecordsCleaningConfirmation:
-        return "Cleaning up device synchronization records will result in data being resynchronized after the next connection";
+        return "Clearing device sync records will resync data after the next connection.";
       case TranslationKey.onlyNotSync:
         return "Only Unsynced";
       case TranslationKey.syncRecordsCleanBtn:
-        return "Clean sync records for devices";
+        return "Clear Selected Sync Records";
       case TranslationKey.optionRecordsCleaningConfirmation:
-        return "Cleaning up device operation records will result in unsynchronized data not being automatically synchronized again";
+        return "Clearing device operation records will stop unsynced data from auto-syncing again.";
       case TranslationKey.optionRecordsCleanBtn:
-        return "Clean operation records for devices";
+        return "Clear Selected Operation Records";
       case TranslationKey.autoCleanFrequency:
         return "Frequency";
       case TranslationKey.execTime:
-        return "Exec time";
+        return "Run time";
       case TranslationKey.nextExecTime:
         return "Next cleaning time: ";
       case TranslationKey.errorCronTips:
-        return "Please enter the correct UnixCron expression";
+        return "Enter a valid Unix cron expression";
       case TranslationKey.filterTips:
-        return "If the corresponding filter is not selected, it means all are selected.\nThe date range will not be saved as a filtering configuration";
+        return "If a filter is left empty, all options are included.\nThe date range is not saved in filter presets.";
       case TranslationKey.autoCleanConfigTitle:
-        return "Auto clean";
+        return "Auto-clean";
       case TranslationKey.daily:
         return "Daily";
       case TranslationKey.weekly:
         return "Weekly";
       case TranslationKey.selectWeekDay:
-        return "Select WeekDay";
+        return "Select Weekday";
       case TranslationKey.deleteItemsUnit:
         return "items";
       case TranslationKey.pleaseSelectDevices:
-        return "Please Select Devices!";
+        return "Select devices first";
       case TranslationKey.saveSuccess:
-        return "Successfully saved!";
+        return "Saved!";
       case TranslationKey.pleaseSaveFilterConfig:
-        return "Please save filter config";
+        return "Save a filter preset first";
       case TranslationKey.saveFailed:
         return "Save failed";
       case TranslationKey.updateSuccess:
-        return "Successfully update!";
+        return "Updated!";
       case TranslationKey.updateFailed:
-        return "Update failed！";
-      case TranslationKey.searchPageMoreFilterByDateJudgeText:
-        return "Date";
+        return "Update failed!";
       case TranslationKey.confirm:
         return "Confirm";
       case TranslationKey.toToday:
@@ -214,20 +207,20 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.filterByTag:
         return "Filter by Tag";
       case TranslationKey.envStatusLoadingText:
-        return "Loading Environment Status...";
+        return "Loading environment status...";
       case TranslationKey.shizukuModeStatusTitle:
         return "Shizuku Mode";
-      case TranslationKey.shizukuModeRunningDescription:
+      case TranslationKey.shizukuModeRunningDesc:
         return "Service is running, API @version";
       case TranslationKey.rootModeStatusTitle:
         return "Root Mode";
-      case TranslationKey.rootModeRunningDescription:
-        return "Authorized, service is running";
-      case TranslationKey.serverNotRunningDescription:
-        return "Service is not running, some features are unavailable";
+      case TranslationKey.rootModeRunningDesc:
+        return "Authorized. Service is running.";
+      case TranslationKey.serverNotRunningDesc:
+        return "Service is not running. Some features are unavailable.";
       case TranslationKey.envPermissionIgnored:
         return "Permission Ignored";
-      case TranslationKey.envPermissionIgnoredDescription:
+      case TranslationKey.envPermissionIgnoredDesc:
         return "Some features may be unavailable";
       case TranslationKey.noSpecialPermissionRequired:
         return "No Special Permission Required";
@@ -236,13 +229,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.commonSettingsRunAtStartup:
         return "Run at Startup";
       case TranslationKey.commonSettingsRunMinimize:
-        return "Minimize Window on Startup";
+        return "Start Minimized";
       case TranslationKey.floatWindow:
         return "Floating Window";
       case TranslationKey.commonSettingsShowHistoriesFloatWindow:
-        return "Show History Floating Window";
+        return "Show History Panel";
       case TranslationKey.commonSettingsShowHistoriesFloatWindowTips:
-        return "Double-tap or drag the handle left to open the history floating panel.";
+        return "Double-tap or drag the handle left to open the history panel.";
       case TranslationKey.historyFloatTitle:
         return "Clipboard History";
       case TranslationKey.historyFloatCountTemplate:
@@ -250,15 +243,15 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.historyFloatImageUnavailable:
         return "Image unavailable";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue:
-        return "Floating Window Handle Width: @width";
+        return "Handle Width: @width";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColor:
-        return "Floating Window Handle Color";
+        return "Handle Color";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips:
-        return "Pick a color with transparency. Changes are applied to the native handle in real time.";
+        return "Pick a transparent color. Changes sync to the native handle in real time.";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
-        return "Enhance Background Keep Alive";
+        return "Boost Background Keep-alive";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:
-        return "Show a 1-pixel floating window to try to improve background keep-alive on some devices";
+        return "Show a 1 px floating window to improve background keep-alive on some devices.";
       case TranslationKey.commonSettingsLockHistoriesFloatWindowPosition:
         return "Lock Floating Window Position";
       case TranslationKey.preferenceSettingsRememberWindowSize:
@@ -284,19 +277,19 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.permissionSettingsNotificationTitle:
         return "Notification Permission";
       case TranslationKey.permissionSettingsNotificationDesc:
-        return "Used to start the foreground service";
+        return "Required to start the foreground service.";
       case TranslationKey.permissionSettingsFloatTitle:
         return "Floating Window Permission";
       case TranslationKey.permissionSettingsFloatDesc:
-        return "Obtain clipboard focus through the floating window on higher Android versions";
+        return "Used on newer Android versions to read the clipboard through a floating window.";
       case TranslationKey.permissionSettingsBatteryOptimiseTitle:
         return "Battery Optimization";
       case TranslationKey.permissionSettingsBatteryOptimiseDesc:
-        return "Add battery optimization to prevent being killed by the background system";
+        return "Exclude the app from battery optimization to reduce background kills.";
       case TranslationKey.permissionSettingsSmsTitle:
-        return "SMS Read";
+        return "SMS Access";
       case TranslationKey.permissionSettingsSmsDesc:
-        return "SMS sync is enabled, please grant SMS read permission";
+        return "SMS sync is enabled. Please grant SMS access.";
       case TranslationKey.discoveringSettingsGroupName:
         return "Discovery";
       case TranslationKey.discoveringSettingsLocalDeviceName:
@@ -306,66 +299,63 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.copyDeviceId:
         return "Copy Device ID";
       case TranslationKey.modifyDeviceName:
-        return "Modify Device Name";
+        return "Rename Device";
       case TranslationKey.deviceName:
         return "Device Name";
       case TranslationKey.modifyDeviceNameCompletedTooltip:
-        return "Restart the app after modification to take effect";
+        return "Restart to apply changes";
       case TranslationKey.port:
         return "Port";
       case TranslationKey.discoveringSettingsPortDesc:
-        return "Default value ${Constants.port}. Modifying it may prevent automatic discovery.";
+        return "Default: ${Constants.port}. Changing it may break auto-discovery.";
       case TranslationKey.modifyPort:
-        return "Modify Port";
+        return "Change Port";
       case TranslationKey.modifyPortErrorText:
         return "Port number range 0-65535";
       case TranslationKey.discoveringSettingsModifyPortCompletedTooltip:
-        return "Restart the app after modification to take effect";
+        return "Restart to apply changes";
       case TranslationKey.allowDiscovering:
         return "Discoverable";
       case TranslationKey.discoveringSettingsAllowDiscoveringDesc:
         return "Can be automatically discovered by other devices";
       case TranslationKey.discoveringSettingsOnlyForwardDiscoveringTitle:
-        return "Only Forward Discovery (Debug)";
+        return "Forward-only Discovery (Debug)";
       case TranslationKey.discoveringSettingsOnlyForwardDiscoveringDesc:
-        return "Only show this feature in development environments";
+        return "Visible only in development builds";
       case TranslationKey.discoveringSettingsHeartbeatIntervalTitle:
         return "Heartbeat Interval";
       case TranslationKey.discoveringSettingsHeartbeatIntervalDesc:
-        return "Check device liveliness. Default 30s, 0 to disable";
+        return "Device online check. Default: 30s; 0 disables it.";
       case TranslationKey.discoveringSettingsHeartbeatIntervalTooltip:
-        return "Description";
+        return "Info";
       case TranslationKey.enable:
         return "Enable";
-      case TranslationKey.disable:
-        return "Disable";
       case TranslationKey.dontDetect:
         return "Don't Detect";
-      case TranslationKey
-          .discoveringSettingsHeartbeatIntervalTooltipDialogContent:
-        return "When a device switches networks, it cannot automatically detect if the device is offline.\n"
-            "Enabling heartbeat detection will periodically check the device's liveliness.";
+      case TranslationKey.discoveringSettingsHeartbeatIntervalDialogContent:
+        return "When a device switches networks, its offline status cannot be detected automatically.\n"
+            "Enable heartbeat checks to verify device availability at intervals.";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogTitle:
         return "Heartbeat Interval";
       case TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel:
         return "Heartbeat Interval";
       case TranslationKey
           .discoveringSettingsModifyHeartbeatDialogInputErrorText:
-        return "Unit in seconds, 0 to disable detection";
+        return "Seconds. 0 disables it.";
       case TranslationKey.forwardSettingsGroupName:
         return "Forward";
       case TranslationKey.forwardSettingsForwardTitle:
         return "Use Forward Service";
       case TranslationKey.forwardSettingsForwardDownloadTooltip:
-        return "Download Forward Program";
+        return "Download Forward Service";
       case TranslationKey.forwardSettingsForwardDesc:
-        return "Forward server can sync data in public network environments";
+        return "Sync over the internet through a forward server.";
       case TranslationKey.forwardSettingsForwardEnableRequiredText:
-        return "Please set the forward server address first";
+        return "Set the forward server address first.";
       case TranslationKey.forwardSettingsForwardAddressTitle:
         return "Forward Server Address";
       case TranslationKey.forwardSettingsForwardAddressDesc:
-        return "Please use a trusted address or set up your own";
+        return "Use a trusted server or host your own.";
       case TranslationKey.configure:
         return "Configure";
       case TranslationKey.change:
@@ -373,15 +363,15 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.securitySettingsGroupName:
         return "Security";
       case TranslationKey.securitySettingsEnableSecurityTitle:
-        return "Enable Security Authentication";
+        return "Enable Authentication";
       case TranslationKey.securitySettingsEnableSecurityDesc:
-        return "Enable password or biometric authentication";
+        return "Use password or biometrics.";
       case TranslationKey
           .securitySettingsEnableSecurityAppPwdRequiredDialogContent:
         return "Please create an app password first";
       case TranslationKey
           .securitySettingsEnableSecurityAppPwdRequiredDialogOkText:
-        return "Go to Create";
+        return "Create Now";
       case TranslationKey.securitySettingsEnableSecurityAppPwdModifyTitle:
         return "Change Password";
       case TranslationKey.createAppPwd:
@@ -391,9 +381,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.create:
         return 'Create';
       case TranslationKey.securitySettingsReverificationTitle:
-        return "Password Re-verification";
+        return "Password Recheck";
       case TranslationKey.securitySettingsReverificationDesc:
-        return "Re-verify password after a specified duration in the background";
+        return "Ask for the password again after the app stays in the background for a while.";
       case TranslationKey.securitySettingsReverificationValue:
         return "@value minutes";
       case TranslationKey.hotKeySettingsGroupName:
@@ -401,67 +391,59 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.hotKeySettingsHistoryTitle:
         return "History Popup";
       case TranslationKey.hotKeySettingsHistoryDesc:
-        return "Bring up the history popup from anywhere on the screen";
+        return "Open the history popup from anywhere on screen";
       case TranslationKey.hotKeySettingsCombinationInvalidText:
-        return "Hotkey must be a combination of control and non-control keys!";
+        return "A hotkey must include one modifier and one non-modifier key.";
       case TranslationKey.hotKeySettingsSaveKeysDialogText:
-        return "Save hotkey (@keys) settings?";
+        return "Save hotkey \"@keys\"?";
       case TranslationKey.hotKeySettingsSaveKeysFailedText:
-        return "Failed to set @err";
+        return "Failed to save: @err";
       case TranslationKey.sendFile:
         return "Send File";
       case TranslationKey.hotKeySettingsFileDesc:
-        return "Sync selected files to other devices (invalid on desktop)";
+        return "Send selected files to other devices; desktop selection is unsupported";
       case TranslationKey.syncSettingsGroupName:
         return "Sync";
       case TranslationKey.syncSettingsSmsPermissionRequired:
-        return "Please grant SMS read permission first";
+        return "Grant SMS access first.";
       case TranslationKey.syncSettingsStoreImg2PicturesTitle:
-        return "Store Images in Pictures";
+        return "Save Images to Pictures";
       case TranslationKey.syncSettingsStoreImg2PicturesDesc:
-        return "Will be saved to Pictures/${Constants.appName}";
+        return "Saved to Pictures/${Constants.appName}";
       case TranslationKey.syncSettingsStoreImg2PicturesNoPermText:
-        return "No read/write permission, authorization required";
+        return "Storage access required.";
       case TranslationKey.syncSettingsStoreImg2PicturesCancelPerm:
-        return "User canceled authorization!";
+        return "Permission request canceled.";
       case TranslationKey.syncSettingsStoreFilePathTitle:
         return "File Storage Path";
       case TranslationKey.selection:
-        return "Selection";
+        return "Select";
       case TranslationKey.syncSettingsAutoCopyImgTitle:
-        return "Auto Copy Images";
+        return "Copy Images Automatically";
       case TranslationKey.syncSettingsAutoCopyImgDesc:
-        return "If enabled, images copied on other devices will be automatically copied on this device";
-      case TranslationKey.ruleSettingsGroupName:
-        return "Rules";
+        return "When enabled, images copied on other devices are also copied locally.";
       case TranslationKey.logSettingsGroupName:
         return "Logs";
       case TranslationKey.logSettingsEnableTitle:
         return "Enable Logging";
       case TranslationKey.logSettingsEnableDesc:
-        return "Will take up extra space, @size logs have been generated";
+        return "Uses extra storage. Current logs: @size";
       case TranslationKey.openFolder:
         return "Open Folder";
       case TranslationKey.openFilePos:
         return "Open File Location";
       case TranslationKey.tips:
-        return "Tips";
-      case TranslationKey.logSettingsAckDelLogFiles:
+        return "Notice";
+      case TranslationKey.logSettingsDeleteLogFilesDialogContent:
         return "Delete log files?";
       case TranslationKey.statisticsSettingsGroupName:
         return "Statistics";
-      case TranslationKey.statisticsSettingsTitle:
-        return "View Statistics";
-      case TranslationKey.statisticsSettingsDesc:
-        return "Presents a brief statistical analysis of local records in charts";
       case TranslationKey.about:
         return "About";
       case TranslationKey.errorDialogTitle:
         return "Error";
       case TranslationKey.selfDeviceName:
         return "Self";
-      case TranslationKey.saveFileToPathForSettingDialogText:
-        return "This file cannot be read directly\n\nSave to [File Storage Path] first?";
       case TranslationKey.save:
         return "Save";
       case TranslationKey.saved:
@@ -473,9 +455,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.pieDataStatisticsSyncItemLabel:
         return "Sync";
       case TranslationKey.statisticsPageAppBarText:
-        return "Statistical Analysis";
+        return "Statistics";
       case TranslationKey.statisticsPageFilterRangeText:
-        return "Statistics Range";
+        return "Range";
       case TranslationKey.refresh:
         return "Refresh";
       case TranslationKey.statisticsPageHistoryTypeCntTitle:
@@ -489,11 +471,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.syncingFilePageHistoryTabText:
         return "History";
       case TranslationKey.syncingFilePageReceiveTabText:
-        return "Receive Progress";
+        return "Receiving";
       case TranslationKey.syncingFilePageSendTabText:
-        return "Send Progress";
+        return "Sending";
       case TranslationKey.dragFileToSend:
-        return "Drag and drop the file here to send";
+        return "Drag files here to send";
       case TranslationKey.deleting:
         return "Deleting...";
       case TranslationKey.deletingSuccess:
@@ -508,14 +490,14 @@ class EnUSTranslation extends AbstractTranslations {
         return "Delete";
       case TranslationKey.deleteWithFiles:
         return "Delete with Files";
-      case TranslationKey.deleteWithFilesOnSyncFilePageAckDialogText:
-        return "Delete selected @length items?\nFiles in sent records will not be deleted";
+      case TranslationKey.syncingFilePageDeleteSelectedDialogContent:
+        return "Delete @length selected items?\nFiles from sent records will be kept.";
       case TranslationKey.onlyDeleteRecordsText:
-        return "Only Delete Records";
+        return "Records Only";
       case TranslationKey.failedToReadUpdateLog:
         return "Failed to Read Update Log!";
       case TranslationKey.skipGuide:
-        return "Skip This";
+        return "Skip";
       case TranslationKey.previousGuide:
         return "Previous";
       case TranslationKey.nextGuide:
@@ -525,7 +507,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.previewPageNoSuchFile:
         return "Image does not exist or has been deleted";
       case TranslationKey.copyPathSuccess:
-        return "Path Copied Successfully";
+        return "Path copied";
       case TranslationKey.tagEditPageAppBarTitle:
         return "Edit Tag";
       case TranslationKey.tagEditPageSearchOrCreateTag:
@@ -533,13 +515,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.tagEditPageCrateTagItem:
         return 'Create "@tag" Tag';
       case TranslationKey.updateLogPageAppBarTitle:
-        return 'Update Logs';
+        return 'Changelog';
       case TranslationKey.failedToReadFile:
         return "Failed to Read File";
       case TranslationKey.welcome:
         return "Welcome to ${Constants.appName}";
       case TranslationKey.welcomeContent:
-        return "We need to request some necessary permissions and settings before using the app.";
+        return "Before you start, we need a few permissions and some basic setup.";
       case TranslationKey.startNow:
         return "Start Now";
       case TranslationKey.name_:
@@ -553,7 +535,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.importRules:
         return "Import Rules";
       case TranslationKey.importRulesSuccess:
-        return "Successfully imported @length items";
+        return "Imported @length rules";
       case TranslationKey.importFromNet:
         return "Import from Network";
       case TranslationKey.importFromLocal:
@@ -592,28 +574,22 @@ class EnUSTranslation extends AbstractTranslations {
         return "Select All";
       case TranslationKey.cancelSelectAll:
         return "Cancel Select All";
-      case TranslationKey.inputCompletedErrorText:
-        return "Please complete the input!";
-      case TranslationKey.onlineDevicesPageSelectDeviceToSend:
-        return "Select devices";
-      case TranslationKey.send:
-        return "Send";
       case TranslationKey.multipleChoiceOperationAppBarTitle:
-        return "Multiple Choice Operation";
+        return "Bulk Actions";
       case TranslationKey.forwardServerNotAllowedSendFile:
-        return "The connected forward server does not allow file sync";
+        return "This forward server does not allow file sync.";
       case TranslationKey.sendFailed:
         return "Send Failed";
       case TranslationKey.forwardServerUnknownResult:
         return "Unknown Result";
       case TranslationKey.forwardServerConnectFailed:
         return "Forward Server Connection Failed";
-      case TranslationKey.newParingRequest:
+      case TranslationKey.devicePairingRequestNotificationContent:
         return "New Pairing Request";
-      case TranslationKey.paringRequest:
+      case TranslationKey.devicePairingRequestDialogTitle:
         return "Pairing Request";
       case TranslationKey.pairingCodeDialogContent:
-        return "Pairing request from @devName\nPairing Code:";
+        return "Pairing request from @devName\nCode:";
       case TranslationKey.cancelCurrentPairing:
         return 'Cancel This Pairing';
       case TranslationKey.deviceDiscoveryStatusViaBroadcast:
@@ -647,7 +623,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.dialogConfirmText:
         return "Confirm";
       case TranslationKey.dialogNeutralText:
-        return "Neutral Button";
+        return "Neutral";
       case TranslationKey.dialogRestoreDefaultText:
         return "Restore Default";
       case TranslationKey.open:
@@ -659,14 +635,14 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.minutesAgo:
         return "minutes ago";
       case TranslationKey.hoursAgo:
-        return "hours Ago";
+        return "hours ago";
       case TranslationKey.connectFailed:
         return "Connection Failed";
       case TranslationKey.connectSuccess:
         return "Connection Successful";
       case TranslationKey.connect:
         return "Connect";
-      case TranslationKey.addDeviceAppBarTittle:
+      case TranslationKey.addDeviceDialogTitle:
         return 'Add Device';
       case TranslationKey.errorFormatIp:
         return "Please enter a valid IPv4/v6 address";
@@ -675,13 +651,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.inputAgain:
         return "Enter Again";
       case TranslationKey.inputErrorAndAgain:
-        return "Input Error, Please Enter Again";
+        return "Incorrect input. Try again.";
       case TranslationKey.immediately:
         return "Immediately";
       case TranslationKey.minute:
         return 'Minute';
       case TranslationKey.alreadyNewestAppVersion:
-        return "Already the Latest Version";
+        return "Already up to date";
       case TranslationKey.checkUpdate:
         return "Check for Updates";
       case TranslationKey.topUp:
@@ -695,17 +671,15 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.syncRecord:
         return "Sync Record";
       case TranslationKey.resyncRecord:
-        return "Resync Record";
+        return "Sync Again";
       case TranslationKey.openFile:
         return "Open File";
       case TranslationKey.openFileFolder:
         return "Open File Folder";
       case TranslationKey.tagsManagement:
-        return "Tags Management";
+        return "Tags";
       case TranslationKey.copySuccess:
         return "Copied Successfully";
-      case TranslationKey.copyFailed:
-        return "Copy Failed";
       case TranslationKey.clipboardContent:
         return "Clipboard Details";
       case TranslationKey.deleteRecord:
@@ -718,8 +692,8 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Share File';
       case TranslationKey.deleteTips:
         return "Delete Tips";
-      case TranslationKey.deleteRecordAck:
-        return "Confirm Delete This Record?";
+      case TranslationKey.clipListDeleteRecordDialogContent:
+        return "Delete this record?";
       case TranslationKey.backToTop:
         return "Back to Top";
       case TranslationKey.fold:
@@ -734,8 +708,6 @@ class EnUSTranslation extends AbstractTranslations {
         return "Tag";
       case TranslationKey.pleaseInput:
         return "Please Enter";
-      case TranslationKey.renameDevice:
-        return "Rename Device";
       case TranslationKey.forward:
         return "Forward";
       case TranslationKey.notCompatible:
@@ -749,11 +721,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.shizukuMode:
         return "Shizuku Mode";
       case TranslationKey.shizukuModeDesc:
-        return "No Root required, Shizuku needs to be installed, reactivation required after phone restart";
+        return "No Root needed. Requires Shizuku and must be reactivated after a restart.";
       case TranslationKey.shizukuModeBatteryOptimiseTips:
-        return "To ensure proper authorization, please add Shizuku to the battery optimization whitelist and allow background running";
+        return "To keep Shizuku authorized, exclude it from battery optimization and allow it to run in the background.";
       case TranslationKey.shizukuRequestFailedDialogText:
-        return "Shizuku permission request failed, please ensure Shizuku is started and try again";
+        return "Shizuku request failed. Make sure Shizuku is running and try again.";
       case TranslationKey.requestFailed:
         return 'Request Failed';
       case TranslationKey.selectInstallerType:
@@ -769,11 +741,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.rootMode:
         return "Root Mode";
       case TranslationKey.rootModeDesc:
-        return "Start with Root permissions, no reactivation required after phone restart";
+        return "Runs with Root. No reactivation needed after a restart.";
       case TranslationKey.waitingRequestResult:
         return 'Waiting for Request Result';
       case TranslationKey.rootRequestFailedDialogText:
-        return "Seems like no Root permissions, you can choose Shizuku mode to start";
+        return "Root access was not found. You can use Shizuku mode instead.";
       case TranslationKey.ignoreMode:
         return "Ignore";
       case TranslationKey.ignoreModeDesc:
@@ -781,13 +753,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.multiChoiceModeSelectedText:
         return "@text items selected";
       case TranslationKey.goAuthorize:
-        return "Go to Authorize";
-      case TranslationKey.authorized:
-        return "Go to Authorize";
+        return "Grant Access";
       case TranslationKey.cannotEmpty:
-        return "Cannot be Empty";
+        return "Cannot be empty";
       case TranslationKey.ruleCannotEmpty:
-        return "Rule Cannot be Empty";
+        return "Rule cannot be empty";
       case TranslationKey.ruleAddDialogLabel:
         return "Rule";
       case TranslationKey.ruleAddDialogHint:
@@ -807,15 +777,15 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.forwardServerUnlimitedDevices:
         return "No restrictions for whitelist devices";
       case TranslationKey.publicForwardServer:
-        return "Public Server";
+        return "Public Forward Server";
       case TranslationKey.forwardServerSyncFileRateLimit:
         return "File Sync Rate Limit";
       case TranslationKey.forwardServerCannotSyncFile:
-        return "This forward server cannot sync files";
+        return "This forward server does not support file sync.";
       case TranslationKey.forwardServerNoLimits:
         return "No Restrictions";
       case TranslationKey.noLimits:
-        return "No Limits";
+        return "No Limit";
       case TranslationKey.deviceUnit:
         return "Device";
       case TranslationKey.day:
@@ -841,7 +811,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.configureForwardServerDialogTitle:
         return "Configure Forward Server";
       case TranslationKey.domainAndIp:
-        return "Domain/IP";
+        return "Domain / IP";
       case TranslationKey.host:
         return "Host";
       case TranslationKey.useKey:
@@ -851,7 +821,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.pleaseInputAccessKey:
         return "Please Enter Access Key";
       case TranslationKey.checkConnection:
-        return "Check";
+        return "Test";
       case TranslationKey.pleaseInputValidPort:
         return 'Please Enter a Valid Port';
       case TranslationKey.pleaseInputValidDomainOrIpv4_6:
@@ -869,19 +839,19 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.preference:
         return "Preference";
       case TranslationKey.preferenceSettingsRecordsDialogLocation:
-        return "Records Dialog Position Follows Mouse";
+        return "History Popup Position";
       case TranslationKey.preferenceSettingsRecordsDialogSize:
         return "Records Dialog Size";
       case TranslationKey.current:
         return "Current";
       case TranslationKey.followMousePos:
-        return "Follow the mouse position";
+        return "Follow Cursor";
       case TranslationKey.rememberLastPos:
         return "Remember last position";
       case TranslationKey.showOnRecentTasks:
-        return "Show on recent tasks";
+        return "Show in Recent Tasks";
       case TranslationKey.showOnRecentTasksDesc:
-        return "OCD-friendly option: hide the app from recent tasks when turned off";
+        return "When off, hide the app from recent tasks.";
       case TranslationKey.showLocalIpAddress:
         return "Show Local IP Address";
       case TranslationKey.localIpAddress:
@@ -889,7 +859,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.syncAutoCloseSettingTitle:
         return "Screen-off Auto Disconnect";
       case TranslationKey.syncAutoCloseSettingDesc:
-        return "For power-saving optimization, the sync connection will be disconnected after about 2~10 minutes of screen-off. To maintain background connection, please do not enable this feature.";
+        return "Disconnect sync after the screen stays off for 2-10 minutes. Leave this off to keep background connections.";
       case TranslationKey.scan:
         return "Scan QRCode";
       case TranslationKey.noCameraPermission:
@@ -901,15 +871,15 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.permissionSettingsIOSPhotosTitle:
         return "Photo Permission";
       case TranslationKey.permissionSettingsIOSPhotosDesc:
-        return "Unable to save images to Photo Library without permission";
+        return "Without this permission, images cannot be saved to Photos.";
       case TranslationKey.qrCodeScannerPageTitle:
-        return "Scan QR code";
+        return "Scan to Connect";
       case TranslationKey.qrCodeScanError:
-        return "It doesn't seem to be the connection QR code for ClipShare, please check";
+        return "This does not look like a ClipShare connection QR code. Please check.";
       case TranslationKey.attemptingToConnect:
         return "Attempting to connect";
       case TranslationKey.forwardServerStatus:
-        return "Forward Service Status";
+        return "Forward Status";
       case TranslationKey.connected:
         return "Connected";
       case TranslationKey.disconnected:
@@ -927,13 +897,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.cleanData:
         return "Clean Data";
       case TranslationKey.syncSettingsAutoCopyScreenShotTitle:
-        return "Auto Copy ScreenShot";
+        return "Auto-copy Screenshots";
       case TranslationKey.syncSettingsAutoCopyScreenShotDesc:
-        return "Some systems may experience delays in the background";
+        return "Background copy may be delayed on some systems.";
       case TranslationKey.showMoreItemsInRow:
-        return "Display more items in row";
+        return "More per Row";
       case TranslationKey.showMoreItemsInRowDesc:
-        return "When the width is sufficient, multiple items such as history records and device lists will be displayed on one line";
+        return "Use available width to fit more history & device items per row.";
       case TranslationKey.filter:
         return "Filter";
       case TranslationKey.monday:
@@ -972,19 +942,19 @@ class EnUSTranslation extends AbstractTranslations {
         return "Error";
       case TranslationKey
           .defaultClipboardServerNotificationCfgShizukuDisconnectedText:
-        return "Shizuku service has been disconnected";
+        return "Shizuku disconnected. Check its status.";
       case TranslationKey
           .defaultClipboardServerNotificationCfgWaitingRunningTitle:
-        return "Waiting to Running";
+        return "Waiting for Service";
       case TranslationKey
           .defaultClipboardServerNotificationCfgWaitingRunningText:
-        return "Waiting to Running Service";
+        return "Waiting for service to start";
       case TranslationKey.startSendFileToast:
-        return "The file has started sending, please check the sending progress";
+        return "File transfer started. Check the send progress.";
       case TranslationKey.folder:
         return "Folder";
       case TranslationKey.removeFromPendingList:
-        return "Remove from the sending list";
+        return "Remove from pending list";
       case TranslationKey.onlineDevices:
         return "Online devices";
       case TranslationKey.noOnlineDevices:
@@ -994,39 +964,39 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.clearPendingFiles:
         return "Clear pending list";
       case TranslationKey.pendingFileLen:
-        return "Total of @len files";
+        return "@len files total";
       case TranslationKey.addFilesFromSystem:
-        return "Add files from the system";
+        return "Add Files";
       case TranslationKey.viewPendingFiles:
-        return "View pending files";
+        return "View Pending Files";
       case TranslationKey.sendFiles:
-        return "Send files";
+        return "Send Files";
       case TranslationKey.unWriteablePathTips:
-        return "The selected location cannot be written, please select again";
+        return "The selected location is not writable. Choose another one.";
       case TranslationKey.clipboardListeningWay:
-        return "Clipboard Listening Way";
+        return "Clipboard Detection Mode";
       case TranslationKey.clipboardListeningWayTips:
-        return "Tips";
+        return "Info";
       case TranslationKey.clipboardListeningWithSystemHiddenApi:
         return "Hidden API";
       case TranslationKey.clipboardListeningWithSystemLogs:
         return "System Logs";
       case TranslationKey.clipboardListeningWayTipsDetail:
-        return "Provide two listening modes, but not both are compatible with your device. The default is to use the system's logs for listening, but not all are applicable. It may be found to be invalid on some devices. \n\nFor example, system log monitoring may not work on OriginOS. Please enable it according to the actual situation";
+        return "Two detection modes are available, but your device may not support both. The default uses system logs, which may not work on some devices.\n\nFor example, system log detection does not work on OriginOS. Choose the mode that fits your device.";
       case TranslationKey.clipboardListeningWayToggleConfirmContent:
-        return "Are you sure to switch to monitoring mode? \n\nWill switch to @way";
+        return "Switch detection mode?\n\nNew mode: @way";
       case TranslationKey.closeOnSameHotKeyTitle:
-        return "Close the pop-up window using the same shortcut key";
+        return "Hotkey Toggles Popup";
       case TranslationKey.closeOnSameHotKeyDesc:
-        return "The default mouse click on the form close button allows you to use the same shortcut keys to open and close pop ups when enabled";
+        return "Use the popup hotkey to both open and close it.";
       case TranslationKey.saveToAlbum:
         return "Save to album";
       case TranslationKey.openWithOtherApplications:
-        return "Open With Other Applications";
+        return "Open with Other Apps";
       case TranslationKey.enableAutoSyncOnScreenOpenedTitle:
-        return "Device detected when screen lights up";
+        return "Discover Devices on Wake";
       case TranslationKey.enableAutoSyncOnScreenOpenedDesc:
-        return "When the screen lights up, it will scan the network to discover devices. If the option to disconnect from the network after turning off the screen is enabled, the device may not automatically connect after switching to the network when the screen is turned off";
+        return "Scan for devices when the screen turns on. If screen-off auto-disconnect is on, network switches while off may not reconnect.";
       case TranslationKey.deviceDiscoveryStatusViaPaired:
         return "Connecting paired devices";
       case TranslationKey.export2Excel:
@@ -1034,7 +1004,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.export2ExcelFileName:
         return "HistoryRecordsExport.xlsx";
       case TranslationKey.historyOutputTips:
-        return "Export with current filters?\n\n(Excludes file sync records)";
+        return "Export using the current filters?\nFile sync records will not be exported.";
       case TranslationKey.exporting:
         return "Exporting...";
       case TranslationKey.modifyContent:
@@ -1058,53 +1028,51 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.clipboardSettingsGroupName:
         return "Clipboard";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
-        return "Record clipboard content source";
+        return "Record Clipboard Source";
       case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:
-        return "Accessibility services need to be enabled to assist with recording";
+        return "Requires Accessibility to help identify the source.";
       case TranslationKey.permissionSettingsAccessibilityTitle:
         return "Accessibility";
       case TranslationKey.permissionSettingsAccessibilityDesc:
-        return "Enable accessibility permission to assist in recording clipboard sources";
+        return "Enable this to help detect clipboard sources.";
       case TranslationKey.noAccessibilityPermTips:
-        return "Accessibility service is not enabled. Unable to detect the source of user-initiated copies. Would you like to grant accessibility permission?";
+        return "Accessibility is off, so manual copy sources cannot be detected. Grant Accessibility access now?";
       case TranslationKey.appIconLoadError:
         return "Failed to load app icon (@appName)";
       case TranslationKey.clipboardSettingsSourceRecordTitleTooltip:
-        return "Tips";
-      case TranslationKey
-          .clipboardSettingsSourceRecordTitleTooltipDialogContent:
-        return "Source detection is divided into two types: foreground copying and background copying from other apps. Foreground copying requires accessibility permissions to detect, while background copying can be obtained via dumpsys (with a delay of several hundred milliseconds).\n\nSource detection cannot guarantee complete accuracy, as it mainly relies on accessibility recognition and may mistakenly tag other apps.";
+        return "Info";
+      case TranslationKey.clipboardSettingsSourceRecordDialogContent:
+        return "Source detection has two cases: foreground copies and background copies from other apps. Foreground copies rely on Accessibility. Background copies can be identified through dumpsys, with a delay of a few hundred milliseconds.\n\nSource detection is not always exact. It mainly depends on Accessibility and may occasionally tag the wrong app.";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle:
-        return "Record background copy source via dumpsys";
+        return "Background Source via dumpsys";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip:
-        return "Description";
-      case TranslationKey
-          .clipboardSettingsSourceRecordViaDumpsysTitleTooltipDialogContent:
-        return "Background copying may be misidentified. Using dumpsys to detect which app wrote to clipboard for correction";
+        return "Info";
+      case TranslationKey.clipboardSettingsSourceRecordViaDumpsysDialogContent:
+        return "Background copies may be misidentified. Use dumpsys to check which app wrote to the clipboard and correct the source.";
       case TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc:
-        return "Requires Root or Shizuku permissions, with several hundred milliseconds of delay";
+        return "Requires Root or Shizuku and adds a delay of a few hundred milliseconds.";
       case TranslationKey.source:
         return "Source";
       case TranslationKey.clearSourceConfirmText:
-        return "Are you sure you want to clear the source information of this record?";
+        return "Clear the source info for this record?";
       case TranslationKey.clearSuccess:
         return "Cleared successfully";
       case TranslationKey.clearFailed:
         return "Failed to clear";
       case TranslationKey.selectApplication:
-        return "Select Applications";
+        return "Select App";
       case TranslationKey.preferenceSettingsDevDisconnNotification:
-        return "System notification when device disconnection";
+        return "Notify when a device disconnects";
       case TranslationKey.preferenceSettingsDevConnNotification:
-        return "System notification when device connected";
+        return "Notify when a device connects";
       case TranslationKey.notification:
         return "Notification";
       case TranslationKey.aboutPageDatabaseVersionItemName:
-        return "Database version";
+        return "Database Version";
       case TranslationKey.newVersionAvailable:
         return "New version available";
       case TranslationKey.showMainWindow:
-        return "Main Window";
+        return "Show Main Window";
       case TranslationKey.exitApp:
         return "Exit";
       case TranslationKey.exitAppViaHotKey:
@@ -1112,7 +1080,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.clearHotKeyConfirm:
         return "Are you sure you want to clear this shortcut key?";
       case TranslationKey.pleaseEnterHotKey:
-        return "Please enter hotkey";
+        return "Press a hotkey";
       case TranslationKey.userApp:
         return 'User';
       case TranslationKey.systemApp:
@@ -1124,51 +1092,33 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.syncData:
         return "Sync Data";
       case TranslationKey.syncSettingsAutoSyncMissingDataTitle:
-        return "Auto Sync Data";
+        return "Auto-sync Missing Data";
       case TranslationKey.syncSettingsAutoSyncMissingDataDesc:
-        return "Automatically sync missing data during disconnection after device connection";
+        return "After a device reconnects, sync data missed while it was offline.";
       case TranslationKey.syncingData:
         return "Syncing data";
-      case TranslationKey.enableBlackList:
-        return "Blacklist";
-      case TranslationKey.enableBlackListTips:
-        return "When enabled, content matching rules will not be recorded";
-      case TranslationKey.enableWhiteList:
-        return "Whitelist";
-      case TranslationKey.enableWhiteListTips:
-        return "When enabled, only content matching rules will be recorded";
-      case TranslationKey.contentCannotEmpty:
-        return "Content cannot be empty";
-      case TranslationKey.contentAndSourceCannotEmpty:
-        return "Both content, source, types cannot be empty";
-      case TranslationKey.ignoreCase:
-        return "Case insensitive";
-      case TranslationKey.application:
-        return "App";
-      case TranslationKey.supportRegex:
-        return "Regex supported";
       case TranslationKey.content:
         return "Content";
       case TranslationKey.title:
         return "Title";
       case TranslationKey.preferenceSettingsShowMobileNotificationTitle:
-        return "Receive Mobile Device Notifications";
+        return "Mobile Device Notifications";
       case TranslationKey.preferenceSettingsShowMobileNotificationDesc:
-        return "Notifications from connected mobile devices will display on this device (requires enabling notification logging on source device)";
+        return "Show connected mobile notifications here. Enable source-device history first.";
       case TranslationKey.permissionSettingsNotificationRecordTitle:
-        return "Notification History";
+        return "Notification History Access";
       case TranslationKey.permissionSettingsNotificationRecordDesc:
-        return "This permission is required to log notification history. On some devices, granting it may prevent the app process from terminating completely. To stop the app, you can revoke the permission first and then proceed.";
+        return "Records notification history. On some devices it may keep the app from fully stopping; revoke it before stopping the app.";
       case TranslationKey.noNotificationRecordPermTips:
-        return "No notification history access permission, unable to record notification history";
+        return "Notification History access is missing, so notification history cannot be recorded.";
       case TranslationKey.recordNotification:
-        return "Record notification history";
+        return "Record Notification History";
       case TranslationKey.logSettingsAutoUploadCrashLogTitle:
-        return "Automatic Crash Log Upload";
+        return "Auto-upload Crash Logs";
       case TranslationKey.logSettingsAutoUploadCrashLogDesc:
-        return "Upload crash error logs when the app crashes unexpectedly to help developers analyze issues";
+        return "Upload crash logs after an app crash to help developers analyze issues.";
       case TranslationKey.logSettingsAutoUploadCrashLogTips:
-        return "This log relies on the ACRA crash reporting tool. Only necessary information and crash stack traces are uploaded for analysis. Crash logs may be uploaded when the app is restarted";
+        return "Uses ACRA to upload only the data needed for analysis, including the crash stack trace. Logs may be uploaded the next time the app starts.";
       case TranslationKey.backupRestore:
         return "Backup & Restore";
       case TranslationKey.backup:
@@ -1176,11 +1126,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.restore:
         return "Restore";
       case TranslationKey.backupSettingDesc:
-        return "Export backup as a separate file for future database content restoration";
+        return "Export a backup file for restoring the database later.";
       case TranslationKey.restoreSettingDesc:
-        return "Restore data from backup files";
+        return "Restore data from a backup file.";
       case TranslationKey.startUp:
-        return "Start Up";
+        return "Start";
       case TranslationKey.userCancelled:
         return "User cancelled";
       case TranslationKey.cancelled:
@@ -1220,24 +1170,20 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.execFailed:
         return 'Execution failed';
       case TranslationKey.notificationServerStatus:
-        return 'Notification Server Status';
+        return 'Notification Status';
       case TranslationKey.notificationServerTips:
-        return "When using storage service as relay method, automatic synchronization detection is unavailable. \n"
-            "Notification service is required to alert devices of changes. \n"
-            "You may use either self-hosted or public notification services. \n"
-            "Notification content does not contain any sensitive information.";
-      case TranslationKey.storageWsVersionIncompatibleTitle:
-        return "Incompatible WS service version";
-      case TranslationKey.storageWsVersionIncompatibleContent:
-        return "Current WS service version is @version. Minimum required version is @minVersion. Please upgrade the WS service before using storage sync.";
+        return "When storage is used as the forward method, devices cannot automatically tell when data needs to be synced.\n"
+            "A notification service is used to notify devices about changes.\n"
+            "You can use either a self-hosted service or a public service.\n"
+            "Notification messages do not contain sensitive data.";
 
       case TranslationKey.forwardSettingsWebDAVTitle:
-        return "WebDAV Config";
+        return "WebDAV Settings";
       case TranslationKey.forwardSettingsS3Title:
-        return "S3 Config";
+        return "S3 Settings";
 
       case TranslationKey.configureWebDAVServer:
-        return "Configure WebDAV Server";
+        return "Configure WebDAV";
       case TranslationKey.webdavServerUrlRequired:
         return "Please enter WebDAV server URL";
       case TranslationKey.webdavUrlMustStartWithHttp:
@@ -1259,7 +1205,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.storagePath:
         return "Storage Path";
       case TranslationKey.storagePathHint:
-        return "Select Base Path";
+        return "Select Storage Path";
       case TranslationKey.pleaseInputCorrectURL:
         return "Please enter the correct URL";
       case TranslationKey.nameRequired:
@@ -1267,7 +1213,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.configName:
         return "Config Name";
       case TranslationKey.noConfig:
-        return "No Config";
+        return "None";
       case TranslationKey.s3EndpointRequired:
         return 'S3 endpoint is required';
       case TranslationKey.accessKeyRequired:
@@ -1281,9 +1227,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.endpoint:
         return 'Endpoint';
       case TranslationKey.s3AccessKey:
-        return 'AccessKey';
+        return 'Access Key';
       case TranslationKey.s3SecretKey:
-        return 'SecretKey';
+        return 'Secret Key';
       case TranslationKey.bucketName:
         return 'Bucket Name';
       case TranslationKey.region:
@@ -1293,13 +1239,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.objectStorageType:
         return 'Storage Type';
       case TranslationKey.standardS3Protocol:
-        return "Standard S3 Protocol";
+        return "Standard S3 protocol";
       case TranslationKey.aliyunOss:
         return "Alibaba Cloud OSS";
       case TranslationKey.pleaseInputCorrectDomain:
-        return "Please enter correct domain";
+        return "Please enter a valid domain";
       case TranslationKey.notificationServerConfigure:
-        return "Notification Server Configuration";
+        return "Notification Server Settings";
       case TranslationKey.notificationServerAddress:
         return "Notification Server Address";
       case TranslationKey.regionRequired:
@@ -1309,11 +1255,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.selectStoragePath:
         return "Select Storage Path";
       case TranslationKey.readonly:
-        return "Read Only";
+        return "Read-only";
       case TranslationKey.version:
         return "Version";
       case TranslationKey.changeForwardWayConfirm:
-        return 'Are you sure to switch the transit method? Will disconnect the current transfer related connections';
+        return 'Switch forward method? Current forward connections will be disconnected.';
       case TranslationKey.s3:
         return 'S3';
       case TranslationKey.none:
@@ -1321,9 +1267,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.forwardServer:
         return 'Forward Server';
       case TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText:
-        return "Please configure the WebDAV service first";
+        return "Configure WebDAV first";
       case TranslationKey.forwardSettingsForwardEnableRequiredS3Text:
-        return "Please configure the S3 service first";
+        return "Configure S3 first";
       case TranslationKey.createFolder:
         return 'Create Folder';
       case TranslationKey.invalidFolderName:
@@ -1333,13 +1279,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.notAllowRootPath:
         return 'Root path is not allowed';
       case TranslationKey.s3TypeTips:
-        return "Any object storage product compatible with the standard S3 protocol can be directly filled in for configuration and use.\n\nTencent Cloud and Qiniu Cloud have been tested and work properly.\n\nAlibaba Cloud OSS requires separate configuration.";
+        return "Any object storage service compatible with the standard S3 protocol can be configured directly.\n\nTencent Cloud and Qiniu Cloud have been tested and work well.\n\nAlibaba Cloud OSS requires separate settings.";
       case TranslationKey.forwardWay:
-        return "Forward Way";
-      case TranslationKey.storageService:
-        return "Storage Service";
-      case TranslationKey.forwardHost:
-        return "Forward Server";
+        return "Forward Method";
       case TranslationKey.backupTypeConfig:
         return "Config";
       case TranslationKey.backupTypeAppInfo:
@@ -1349,35 +1291,31 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.backupTypeHistory:
         return "History";
       case TranslationKey.backupTypeHistoryTag:
-        return "Tag";
+        return "Tags";
       case TranslationKey.backupTypeOperationRecord:
         return "Operation Record";
       case TranslationKey.backupTypeOperationSync:
         return "Sync Record";
       case TranslationKey.selectBackupItems:
-        return "Select Items";
+        return "Select Backup Items";
       case TranslationKey.online:
         return "Online";
       case TranslationKey.offline:
         return "Offline";
       case TranslationKey.enterSoftware:
-        return "Enter";
-      case TranslationKey.types:
-        return "Types";
-      case TranslationKey.selectTypes:
-        return "Select Types";
+        return "Enter App";
       case TranslationKey.segmentWords:
         return "Segment Words";
       case TranslationKey.downloadFromGithub:
         return 'Download from Github';
       case TranslationKey.notFoundJiebaFiles:
-        return "Jieba files not found\nPlease download the Jieba files and copy them to the \n @dirPath \n folder\nNote: Only dict.txt and prob_emit.txt are required";
+        return "Jieba files not found.\nDownload them and copy them to:\n@dirPath\nOnly dict.txt and prob_emit.txt are required.";
       case TranslationKey.installJiebaDictFile:
         return "Install";
       case TranslationKey.downloadFailed:
         return "Download failed!";
       case TranslationKey.jiebaFileInstallSuccess:
-        return "Install success";
+        return "Jieba files installed";
       case TranslationKey.encryptKey:
         return "Encryption Key";
       case TranslationKey.encryptKeyErrorTip:
@@ -1387,35 +1325,35 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.authFailed:
         return 'Authentication failed';
       case TranslationKey.dhKeySettingName:
-        return 'Encrypt encryption parameters';
+        return 'Encrypt Key Exchange';
       case TranslationKey.dhKeySettingDesc:
-        return 'When enabled, all connected devices must have this enabled with the same password, otherwise connection will fail';
+        return 'All devices need this and the same password, or connection fails.';
       case TranslationKey.dhKeySettingTips:
-        return 'Encrypts the parameters of the Diffie-Hellman key exchange algorithm used during device connection.\nWhen enabled, all connected devices must have this enabled with the same password, otherwise connection will fail.\n\nActually, not using this is also fine.';
+        return 'Encrypts the Diffie-Hellman key exchange parameters used during device connection.\nWhen enabled, all connected devices must enable this and use the same password, or they cannot connect.\n\nLeaving it off is also acceptable.';
       case TranslationKey.syncOutDateSettingTitle:
-        return 'Sync Data Time Limit';
+        return 'Sync Date Range';
       case TranslationKey.syncOutDateSettingDesc:
-        return 'Only sync data within the specified time period instead of all data';
+        return 'Sync only data in the selected time range.';
       case TranslationKey.pleaseWait:
         return "Please wait...";
       case TranslationKey.generateTodayAndroidLog:
         return "Generate Android native logs (today)";
       case TranslationKey.noDiscoveryIfsSettingTitle:
-        return 'Exclude NICs from Device Discovery';
+        return 'Exclude Discovery NICs';
       case TranslationKey.noDiscoveryIfsSettingDesc:
-        return 'Skip specified network interfaces during subnet scanning in the device discovery process';
+        return 'Skip selected NICs during subnet scans.';
       case TranslationKey.onlyManualDiscoverySubNetSettingTitle:
-        return 'Subnet Scanning Only for Manual Device Discovery';
+        return 'Manual Subnet Scan Only';
       case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
-        return 'Skip subnet scanning after network changes/screen wake-up, only scan when manually triggering discovery on the device page';
+        return 'No auto scans after network changes or screen wake; scan from Devices.';
       case TranslationKey.stopListeningOnScreenClosedSettingTitle:
-        return 'Stop listening on screen closed (Experimental)';
+        return 'Stop on Screen-off (Experimental)';
       case TranslationKey.stopListeningOnScreenClosedSettingDesc:
-        return 'Stop listening to clipboard one minute after the screen turns off. This may help save battery on some devices.';
+        return 'Stops clipboard listening 1 minute after screen-off to save battery on some devices.';
       case TranslationKey.keepConnectionsOnNetworkSwitchTitle:
-        return 'Keep connections on network switch';
+        return 'Keep Existing Connections';
       case TranslationKey.keepConnectionsOnNetworkSwitchDesc:
-        return 'When enabled, only WiFi/mobile switches and offline/online switches will actively disconnect and reconnect. Other network changes keep the current connections.';
+        return 'Reconnect only on Wi-Fi/mobile or online/offline changes; otherwise keep existing connections.';
       case TranslationKey.notNow:
         return 'Not now';
       case TranslationKey.faq:
@@ -1423,21 +1361,23 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.sendBroadcastOnAddData:
         return 'Send broadcast when adding data';
       case TranslationKey.sendBroadcastOnAddDataDesc:
-        return 'Send a system broadcast when clipboard changes/syncs new data to notify other apps like Tasker for additional processing';
+        return 'Send a system broadcast on clipboard changes or synced data so apps like Tasker can process it.';
       case TranslationKey.explain:
         return 'Explanation';
       case TranslationKey.sendBroadcastOnAddDataTips:
         return 'The broadcast Action is: ${Constants.kOnHistoryChangedBroadcastAction}\n\nThe current broadcast contains the following variables:\n1.type: Content type, valid values are: text, image, sms, file, notification\n2. content: Content, when it is an image or file, it is a local path; when it is a notification, it is JSON\n3. from_dev_id: Source device ID\n4. from_dev_name: Source device name';
       case TranslationKey.recopyOnScreenUnlockedTitle:
-        return "Recopy latest data after unlock";
+        return "Retry Latest Copy After Unlock";
       case TranslationKey.recopyOnScreenUnlockedTitleDesc:
-        return "Some systems cannot auto-copy in locked screen state. When enabled, this feature will retry copying the latest synced data after screen unlock";
+        return "On some systems, auto-copy fails while locked. Retry copying the latest synced data after unlock.";
       case TranslationKey.rulesManagement:
         return "Rules";
       case TranslationKey.excludePrivateFormat:
-        return "Exclude Private Formats";
+        return "Skip Excluded Formats";
+      case TranslationKey.excludePrivateFormatDesc:
+        return "Do not record clipboard entries marked for exclusion.";
       case TranslationKey.excludePrivateFormatTips:
-        return "Clipboard content with specific markers (ExcludeClipboardContentFromMonitorProcessing) will not be logged when detected";
+        return "When clipboard content contains the ExcludeClipboardContentFromMonitorProcessing marker, it will not be recorded.";
       case TranslationKey.moreActions:
         return "More Actions";
       case TranslationKey.retainDays:
@@ -1447,27 +1387,27 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.enablePIP:
         return "Enable Picture-in-Picture";
       case TranslationKey.enablePIPTip:
-        return "When enabled, received video files can be opened directly in Picture-in-Picture mode, and clipboard detection will also be enhanced.";
+        return "Open received videos in Picture-in-Picture and improve clipboard detection.";
       case TranslationKey.permissionSettingsClipboardTitle:
         return "Clipboard Permission";
       case TranslationKey.permissionSettingsClipboardDesc:
-        return "On some Android systems, the default is 'allow only while using the app,' which prevents the app from accessing the clipboard in the background. Requesting this permission resolves the issue.";
+        return "Some Android systems allow clipboard access only while in use. Grant this to enable background clipboard access.";
       case TranslationKey.local:
         return "Local";
       case TranslationKey.directConnect:
         return "Direct";
       case TranslationKey.selectBackupSource:
-        return "Backup Source";
+        return "Backup Location";
       case TranslationKey.notConfigured:
         return "Not Configured";
       case TranslationKey.storagePathTips:
-        return "Tips: Backup files and transfer files are stored in different folders within the same directory.\nIf the storage path is set to /ClipShare\nthen the temporary transfer files are stored in /ClipShare/history, \nthe backup files are stored in /ClipShare/backup.";
+        return "Backup files and transfer files are stored in different folders within the same directory.\nIf the storage path is set to /ClipShare\nthen the temporary transfer files are stored in /ClipShare/history, \nthe backup files are stored in /ClipShare/backup.";
       case TranslationKey.uploading:
         return "Uploading";
       case TranslationKey.useTrayFlashingForConnectionTitle:
-        return "Flash system tray on connection or disconnection";
+        return "Flash Tray on Connect/Disconnect";
       case TranslationKey.useTrayFlashingForConnectionDesc:
-        return "If enabled, flash the system tray; otherwise, use default system notifications";
+        return "Flash the tray instead of showing system notifications.";
       case TranslationKey.trayDevAliveTooltip:
         return "@first\n"
             "Connected to @pairedCnt paired devices\n"
@@ -1475,7 +1415,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.displayExtractedContent:
         return "Display Extracted Content";
       case TranslationKey.displayOriginContent:
-        return "Display Origin Content";
+        return "Display Original Content";
 
       //region lua code prompt
       case TranslationKey.codePromptParamsContentIsSyncDisabled:
@@ -1487,12 +1427,12 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.codePromptParamsContentDetail:
         return "Content";
       case TranslationKey.codePromptParamsContentNotificationTitle:
-        return "Notification title (available only when type is notification)";
-      case TranslationKey.codePromptParamsContentSouce:
-        return "Content source, either a local path or an App package name";
-      case TranslationKey.codePromptParamsContentTpye:
+        return "Notification title (notification type only)";
+      case TranslationKey.codePromptParamsContentSource:
+        return "Source, such as a local path or app package name";
+      case TranslationKey.codePromptParamsContentType:
         return "Content type";
-      case TranslationKey.codePromptNotificationTpye:
+      case TranslationKey.codePromptNotificationType:
         return "Notification";
       case TranslationKey.codePromptImageType:
         return "Image";
@@ -1503,13 +1443,13 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.codePromptJsonDecode:
         return "JSON decode";
       case TranslationKey.codePromptLogError:
-        return "Output error-level log information";
+        return "Log an error-level message";
       case TranslationKey.codePromptLogWarn:
-        return "Output warning-level log information";
+        return "Log a warning-level message";
       case TranslationKey.codePromptLogDebug:
-        return "Output debug-level log information";
+        return "Log a debug-level message";
       case TranslationKey.codePromptLogInfo:
-        return "Output info-level log information";
+        return "Log an info-level message";
       case TranslationKey.codePromptContentType:
         return "Content type";
       case TranslationKey.codePromptJson:
@@ -1528,8 +1468,6 @@ class EnUSTranslation extends AbstractTranslations {
         return 'UTF-8 Module';
       case TranslationKey.codePromptOs:
         return 'OS Module (safe subset)';
-      case TranslationKey.codePromptBasic:
-        return 'Basic functions';
       case TranslationKey.codePromptType:
         return 'Get value type';
       case TranslationKey.codePromptToString:
@@ -1924,9 +1862,9 @@ class EnUSTranslation extends AbstractTranslations {
         return 'You can import pure Lua libraries, or encapsulate some frequently used methods for scripts to call. The return value must be a table.\n'
             'The sandbox environment is the same as in the script.';
       case TranslationKey.recordMaxLength:
-        return 'Maximum content length';
+        return 'Max content length';
       case TranslationKey.recordMaxLengthTips:
-        return 'On some devices, exceeding the specified size(2MB) may cause query errors (but data can still be stored)';
+        return 'Can save 2 MB+ content, but search may fail.';
       case TranslationKey.length:
         return 'Length';
       case TranslationKey.mustGreaterThanZero:
@@ -1934,41 +1872,43 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.settingsSectionLanguageSubtitle:
         return 'Display language';
       case TranslationKey.settingsSectionPreferenceSubtitle:
-        return 'Interface and interaction';
+        return 'UI & interaction';
       case TranslationKey.settingsSectionNotificationSubtitle:
-        return 'Notifications and alerts';
+        return 'Alerts & reminders';
       case TranslationKey.settingsSectionClipboardSubtitle:
-        return 'Clipboard records and capture';
+        return 'Capture & history';
       case TranslationKey.settingsSectionPermissionSubtitle:
-        return 'Floating window, notifications, and permissions';
+        return 'App permissions';
       case TranslationKey.settingsSectionFloatWindowSubtitle:
         return 'Floating window and keep-alive';
       case TranslationKey.settingsSectionDiscoverySubtitle:
-        return 'Devices and connections';
+        return 'Devices & connections';
       case TranslationKey.settingsSectionForwardSubtitle:
-        return 'Relay and storage';
+        return 'Relay & storage';
       case TranslationKey.settingsSectionSecuritySubtitle:
-        return 'Verification and encryption';
+        return 'Auth & encryption';
       case TranslationKey.settingsSectionHotKeySubtitle:
-        return 'Custom popup and window shortcuts';
+        return 'Popup & window shortcuts';
       case TranslationKey.settingsSectionSyncSubtitle:
-        return 'Sync and saving';
+        return 'History saving';
       case TranslationKey.settingsSectionRulesSubtitle:
-        return 'Rules and scripts';
+        return 'Rules & scripts';
       case TranslationKey.settingsSectionBackupSubtitle:
-        return 'Data backup';
+        return 'Import & export';
       case TranslationKey.settingsSectionAboutLogSubtitle:
-        return 'App information';
-      case TranslationKey.settingsSectionLogSubtitle:
-        return '';
+        return 'App info';
       case TranslationKey.settingsSectionStatisticsSubtitle:
-        return 'Data statistics';
+        return 'Usage insights';
       case TranslationKey.settingsOverviewPermissionNormal:
         return 'All granted';
       case TranslationKey.settingsOverviewPermissionIssueCount:
         return '@count pending';
       case TranslationKey.settingsOverviewForwardClosed:
         return 'Off';
+      case TranslationKey.storageWsVersionIncompatibleTitle:
+        return "Incompatible version";
+      case TranslationKey.storageWsVersionIncompatibleDialogContent:
+        return "Current notification service version: @version. Minimum required: @minVersion. Please upgrade it before using storage sync.";
     }
   }
 }

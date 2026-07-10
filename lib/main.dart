@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:clipshare/app/data/enums/app_language.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/desktop_multi_window_args.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_window.dart';
@@ -194,6 +195,7 @@ final logoImg = Image.asset(
   height: 20,
 );
 
+/// 根据窗口参数和本地配置启动应用，并应用对应语言与主题。
 void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
   var isDarkMode = args?.themeMode == ThemeMode.dark || Get.isPlatformDarkMode;
   Locale? locale;
@@ -201,11 +203,12 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
   if (isMultiWindow) {
     windowManager.setTitleBarStyle(TitleBarStyle.hidden);
     locale = Locale(args.languageCode, args.countryCode);
-  }else{
+  } else {
     final appConfig = Get.find<ConfigService>();
-    if(appConfig.appTheme != ThemeMode.system) {
+    if (appConfig.appTheme != ThemeMode.system) {
       isDarkMode = appConfig.appTheme == ThemeMode.dark;
     }
+    locale = appConfig.language.resolveLocale(Get.deviceLocale);
   }
   runApp(
     ThemeProvider(
@@ -216,26 +219,26 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
           defaultTransition: Transition.native,
           builder: (ctx, child) {
             return ThemeSwitchingArea(
-              child: ThemeSwitcher(builder: (ctx){
+              child: ThemeSwitcher(builder: (ctx) {
                 return SystemThemeModeSync(
-                    child: Scaffold(
-                      appBar: null,
-                      backgroundColor: Colors.transparent,
-                      body: CustomTitleBarLayout(
-                        title: [
-                          const SizedBox(width: 5),
-                          logoImg,
-                          const SizedBox(width: 5),
-                          Text(
-                            title,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                        child: child ?? const SizedBox.shrink(),
-                      ),
+                  child: Scaffold(
+                    appBar: null,
+                    backgroundColor: Colors.transparent,
+                    body: CustomTitleBarLayout(
+                      title: [
+                        const SizedBox(width: 5),
+                        logoImg,
+                        const SizedBox(width: 5),
+                        Text(
+                          title,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                      child: child ?? const SizedBox.shrink(),
                     ),
+                  ),
                 );
-              },),
+              }),
             );
           },
           title: title,
@@ -246,7 +249,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
           darkTheme: darkThemeData,
           themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
           locale: locale,
-          fallbackLocale: const Locale('en', 'US'),
+          fallbackLocale: AppLanguage.enUS.locale,
           supportedLocales: Constants.supportedLocales,
           localizationsDelegates: Constants.localizationsDelegates,
           scrollBehavior: MyCustomScrollBehavior(),

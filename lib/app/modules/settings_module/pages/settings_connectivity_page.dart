@@ -182,7 +182,7 @@ class SettingsConnectivityPage extends SettingsSectionView {
                       onTap: () async {
                         Global.showTipsDialog(
                           context: context,
-                          text: TranslationKey.discoveringSettingsHeartbeatIntervalTooltipDialogContent.tr,
+                          text: TranslationKey.discoveringSettingsHeartbeatIntervalDialogContent.tr,
                         );
                       },
                     ),

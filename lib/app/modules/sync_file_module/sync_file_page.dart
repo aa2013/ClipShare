@@ -189,7 +189,7 @@ class SyncFilePage extends GetView<SyncFileController> {
                                     DialogController? tipsDialog;
                                     tipsDialog = await Global.showTipsDialog(
                                       context: context,
-                                      text: TranslationKey.deleteWithFilesOnSyncFilePageAckDialogText.trParams({"length": controller.selected.length.toString()}),
+                                      text: TranslationKey.syncingFilePageDeleteSelectedDialogContent.trParams({"length": controller.selected.length.toString()}),
                                       showCancel: true,
                                       showNeutral: true,
                                       neutralText: TranslationKey.deleteWithFiles.tr,

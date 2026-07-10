@@ -1,17 +1,15 @@
+import 'package:clipshare/app/data/enums/app_language.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/translations/zh_cn_translations.dart';
 import 'package:get/get.dart';
 
 import 'en_us_translations.dart';
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
 
 class AppTranslation extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
-        'en_US': EnUSTranslation().translations,
-        'zh_CN': ZhCNTranslation().translations,
+        AppLanguage.enUS.storageValue: EnUSTranslation().translations,
+        AppLanguage.zhCN.storageValue: ZhCNTranslation().translations,
       };
 }
 

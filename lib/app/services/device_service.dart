@@ -36,13 +36,13 @@ class DeviceService extends GetxService {
   }
 
   String getName(String id) {
-    return getById(id).name;
+    return getById(id).displayName;
   }
 
   Map<String, String> toIdNameMap() {
     Map<String, String> res = {};
     _devices.forEach((key, value) {
-      res[key] = value.name;
+      res[key] = value.displayName;
     });
     return res;
   }

@@ -25,7 +25,7 @@ class _FinishGuide extends StatelessWidget {
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.only(left: 12, right: 12),
-          child: Text(TranslationKey.completedGuideTitleDescription.tr),
+          child: Text(TranslationKey.completedGuideDesc.tr),
         ),
         TextButton.icon(
           onPressed: _gotoHomePage,

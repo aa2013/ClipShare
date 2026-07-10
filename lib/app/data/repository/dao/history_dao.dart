@@ -296,7 +296,7 @@ abstract class HistoryDao {
     const sql = """
     select 
       devId,
-      (select devName from Device where guid = devId) as devName,
+      (select ifnull(nullif(customName, ''), devName) from Device where guid = devId) as devName,
       count(*) as cnt,
       strftime('%Y-%m', time) as month
     from history 
@@ -310,7 +310,7 @@ abstract class HistoryDao {
       [uid, startMonth, endMonth],
     );
     String selfId = appConfig.device.guid;
-    String selfName = appConfig.device.name;
+    String selfName = appConfig.device.displayName;
     int unknown = 0;
     return result.map((item) {
       String devName = item['devName']?.toString() ?? 'Unknown${++unknown}';

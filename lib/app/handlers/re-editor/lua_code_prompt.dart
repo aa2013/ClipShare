@@ -180,19 +180,19 @@ const Map<String, List<CodePrompt>> luaCustomRelatedPrompts = {
     FieldPrompt(
       word: "notification",
       type: "string",
-      desc: TranslationKey.codePromptNotificationTpye,
+      desc: TranslationKey.codePromptNotificationType,
     ),
   ],
   'params': [
     FieldPrompt(
       word: "type",
       type: "ContentType",
-      desc: TranslationKey.codePromptParamsContentTpye,
+      desc: TranslationKey.codePromptParamsContentType,
     ),
     FieldPrompt(
       word: "source",
       type: "string?",
-      desc: TranslationKey.codePromptParamsContentSouce,
+      desc: TranslationKey.codePromptParamsContentSource,
     ),
     FieldPrompt(
       word: "title",

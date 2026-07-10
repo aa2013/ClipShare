@@ -237,7 +237,7 @@ class SplashController extends GetxController {
             max(fromId, 0),
           );
           var devMap = devService.toIdNameMap();
-          devMap[appConfig.devInfo.guid] = TranslationKey.selfDeviceName.tr;
+          devMap[appConfig.devInfo.guid] = appConfig.device.displayName;
           var res = {
             "list": lst,
             "devInfos": devMap,

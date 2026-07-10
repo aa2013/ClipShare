@@ -1,5 +1,6 @@
 import 'package:clipshare/app/modules/settings_module/settings_section_view_factory.dart';
 import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/modules/settings_module/settings_text_styles.dart';
 import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
 import 'package:flutter/material.dart';
 
@@ -81,7 +82,7 @@ class SettingsSectionContentPage extends StatelessWidget {
                               targetSection.subtitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurface.withValues(alpha: 0.62)),
+                              style: SettingsTextStyles.sectionSubtitle(context),
                             ),
                           ],
                         ],

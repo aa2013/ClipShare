@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
-import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:floor/floor.dart';
@@ -35,6 +35,19 @@ class Device {
   bool isPaired;
 
   String get name => customName == null || customName == "" ? devName : customName!;
+
+  /// UI 展示名：存储/同步仍使用 [name] 的原始值，本机在展示层再按当前语言翻译。
+  String get displayName {
+    final rawName = name;
+    var isSelfDevice = false;
+    final appConfig = Get.find<ConfigService>();
+    isSelfDevice = guid == appConfig.device.guid;
+    if (!isSelfDevice) {
+      return rawName;
+    }
+    final localizedName = TranslationKey.selfDeviceName.tr;
+    return localizedName == TranslationKey.selfDeviceName.name ? rawName : localizedName;
+  }
 
   static final unknown = Device.empty(devName: "unknown");
 

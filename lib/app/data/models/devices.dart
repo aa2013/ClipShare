@@ -1,3 +1,4 @@
+import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:get/get.dart';
@@ -19,11 +20,11 @@ class Devices {
     final appConfig = Get.find<ConfigService>();
     return id == appConfig.device.guid
         ? appConfig.device
-        : Device.empty(devName: "unknown");
+        : Device.empty(devName: TranslationKey.unknown.tr);
   }
 
   String getName(String id) {
-    return getById(id).name;
+    return getById(id).displayName;
   }
 
   Devices copyWith(Device dev) {
@@ -34,7 +35,7 @@ class Devices {
   Map<String, String> toIdNameMap() {
     Map<String, String> res = {};
     _devices.forEach((key, value) {
-      res[key] = value.name;
+      res[key] = value.displayName;
     });
     return res;
   }

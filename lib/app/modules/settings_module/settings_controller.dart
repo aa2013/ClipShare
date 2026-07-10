@@ -158,7 +158,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   Widget get shizukuEnvNormalTipDesc => Obx(
     () => Text(
-      TranslationKey.shizukuModeRunningDescription.trParams({
+      TranslationKey.shizukuModeRunningDesc.trParams({
         'version': shizukuVersion.value?.toString() ?? "",
       }),
       style: const TextStyle(fontSize: 14, color: Color(0xff6d6d70)),
@@ -166,7 +166,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   );
 
   Widget get shizukuEnvErrorTipDesc => Text(
-    TranslationKey.serverNotRunningDescription.tr,
+    TranslationKey.serverNotRunningDesc.tr,
     style: const TextStyle(fontSize: 14),
   );
 
@@ -184,12 +184,12 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   );
 
   Widget get rootEnvNormalTipDesc => Text(
-    TranslationKey.rootModeRunningDescription.tr,
+    TranslationKey.rootModeRunningDesc.tr,
     style: const TextStyle(fontSize: 14),
   );
 
   Widget get rootEnvErrorTipDesc => Text(
-    TranslationKey.serverNotRunningDescription.tr,
+    TranslationKey.serverNotRunningDesc.tr,
     style: const TextStyle(fontSize: 14),
   );
 
@@ -215,7 +215,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   );
 
   final ignoreTipDesc = Text(
-    TranslationKey.envPermissionIgnoredDescription.tr,
+    TranslationKey.envPermissionIgnoredDesc.tr,
     style: const TextStyle(fontSize: 14),
   );
 

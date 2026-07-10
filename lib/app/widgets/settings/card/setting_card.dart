@@ -1,4 +1,5 @@
 import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_text_styles.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -138,9 +139,6 @@ class _SettingCardState<T> extends State<SettingCard<T>> with SingleTickerProvid
       sub = Text(widget.value.toString());
     }
     final currentTheme = Theme.of(context);
-    final textTheme = currentTheme.textTheme;
-    final subtleTextColor =
-        currentTheme.colorScheme.onSurface.withValues(alpha: 0.56);
     final dividerColor = currentTheme.colorScheme.onSurface
         .withValues(alpha: Get.isDarkMode ? 0.12 : 0.08);
     final highlightedSearchId = SettingSearchHighlightScope.maybeOf(context)?.searchId;
@@ -219,21 +217,19 @@ class _SettingCardState<T> extends State<SettingCard<T>> with SingleTickerProvid
                                 ? MainAxisAlignment.center
                                 : MainAxisAlignment.start,
                             children: [
-                              Expanded(
-                                // flex: widget.titleFlex,
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Center(
-                                    child: DefaultTextStyle(
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium!
-                                          .copyWith(
-                                            fontWeight: FontWeight.normal,
-                                            fontSize: 16,
-                                          ),
-                                      child: widget.title,
-                                    ),
+                              // 标题不占用剩余高度，避免英文说明文字在右侧有 action 时被压到裁切。
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Center(
+                                  child: DefaultTextStyle(
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium!
+                                        .copyWith(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 16,
+                                        ),
+                                    child: widget.title,
                                   ),
                                 ),
                               ),
@@ -241,10 +237,7 @@ class _SettingCardState<T> extends State<SettingCard<T>> with SingleTickerProvid
                                 Wrap(
                                   children: [
                                     DefaultTextStyle(
-                                      style: textTheme.bodyMedium!.copyWith(
-                                        color: subtleTextColor,
-                                        height: 1.25,
-                                      ),
+                                      style: SettingsTextStyles.settingDescription(context),
                                       child: sub,
                                     ),
                                   ],
