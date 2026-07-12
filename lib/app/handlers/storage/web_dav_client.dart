@@ -29,7 +29,7 @@ class WebDAVClient extends StorageClient {
     if (serverPath.isEmpty || serverPath == Constants.unixDirSeparate) {
       return "";
     }
-    return _removeSuffix(serverPath);
+    return removePathSuffix(serverPath);
   }
 
   WebDAVClient(this._config) {
@@ -53,17 +53,6 @@ class WebDAVClient extends StorageClient {
     logger.error(tag, message, stack);
   }
 
-  String _removeSuffix(String str) {
-    return str.replaceFirst(RegExp(r'/+$'), '');
-  }
-
-  String _ensureDirSuffix(String str) {
-    if (str.isEmpty || str.endsWith(Constants.unixDirSeparate)) {
-      return str;
-    }
-    return "$str${Constants.unixDirSeparate}";
-  }
-
   String _stripServerPathPrefix(String path) {
     var normalizedPath = path.unixPath;
     final serverPathPrefix = _serverPathPrefix;
@@ -81,7 +70,7 @@ class WebDAVClient extends StorageClient {
   String _toClientPath(String path, {bool isDirectory = false}) {
     var normalizedPath = _stripServerPathPrefix(path);
     final baseDir = _baseDir.unixPath;
-    final baseDirWithoutSuffix = _removeSuffix(baseDir);
+    final baseDirWithoutSuffix = removePathSuffix(baseDir);
     if (normalizedPath.isEmpty || normalizedPath == Constants.unixDirSeparate) {
       normalizedPath = baseDir;
     } else if (normalizedPath == baseDirWithoutSuffix || normalizedPath == baseDir) {
@@ -89,7 +78,7 @@ class WebDAVClient extends StorageClient {
     } else if (!normalizedPath.startsWith(baseDir)) {
       normalizedPath = (baseDir + normalizedPath).unixPath;
     }
-    return isDirectory ? _ensureDirSuffix(normalizedPath) : _removeSuffix(normalizedPath);
+    return isDirectory ? ensureDirectoryPathSuffix(normalizedPath) : removePathSuffix(normalizedPath);
   }
 
   String _toStoragePath(String path, {required bool isDirectory}) {
@@ -102,7 +91,7 @@ class WebDAVClient extends StorageClient {
     if (normalizedPath == Constants.unixDirSeparate) {
       return normalizedPath;
     }
-    return isDirectory ? _ensureDirSuffix(normalizedPath) : _removeSuffix(normalizedPath);
+    return isDirectory ? ensureDirectoryPathSuffix(normalizedPath) : removePathSuffix(normalizedPath);
   }
 
   List<DavResource> _skipSelfResource(List<DavResource> resources) {

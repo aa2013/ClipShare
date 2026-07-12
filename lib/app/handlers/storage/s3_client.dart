@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -7,8 +6,6 @@ import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/data/models/storage/s3_config.dart';
 import 'package:clipshare/app/data/models/storage/storage_item.dart';
 import 'package:clipshare/app/handlers/storage/storage_client.dart';
-import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:minio/minio.dart';
 
@@ -19,10 +16,7 @@ class S3Client extends StorageClient {
   final Uint8List _empty = Uint8List(0);
 
   String get _baseDir {
-    if (_config.baseDir.endsWith("/")) {
-      return _config.baseDir;
-    }
-    return "${_config.baseDir}/";
+    return normalizeStorageBaseDir(_config.baseDir);
   }
 
   S3Client(S3Config config) {
@@ -46,12 +40,14 @@ class S3Client extends StorageClient {
     logger.error(tag, message, stack);
   }
 
-  String _removePrefix(String str) {
-    return str.replaceFirst(RegExp(r'^/+'), '');
+  /// 将业务公开路径转换成带 baseDir 的 S3 object key。
+  String _objectKey(String path, {bool isDirectory = false}) {
+    return buildObjectStorageKey(path, baseDir: _baseDir, isDirectory: isDirectory);
   }
 
-  String _removeSuffix(String str) {
-    return str.replaceFirst(RegExp(r'/+$'), '');
+  /// 将 S3 返回的 object key 转回公开路径，避免调用方再次带 baseDir。
+  String _publicPathFromObjectKey(String objectKey, {bool isDirectory = false}) {
+    return publicPathFromObjectStorageKey(objectKey, baseDir: _baseDir, isDirectory: isDirectory);
   }
 
   @override
@@ -69,10 +65,7 @@ class S3Client extends StorageClient {
 
   @override
   Future<bool> createDirectory(String path) async {
-    var dirPath = _removePrefix(_baseDir + path).unixPath;
-    if (!dirPath.endsWith(Constants.unixDirSeparate)) {
-      dirPath += Constants.unixDirSeparate;
-    }
+    final dirPath = _objectKey(path, isDirectory: true);
     try {
       await _client.putObject(
         _config.bucketName,
@@ -96,8 +89,8 @@ class S3Client extends StorageClient {
     StorageProgressFunc? onProgress,
     bool createDir = false,
   }) async {
-    var filePath = _removePrefix(_baseDir + path);
-    filePath = _removeSuffix(filePath).unixPath;
+    path = normalizeStoragePath(path);
+    final filePath = _objectKey(path);
     try {
       await _client.putObject(
         _config.bucketName,
@@ -118,11 +111,7 @@ class S3Client extends StorageClient {
 
   @override
   Future<bool> deleteDirectory(String path) async {
-    var dirPath = _removePrefix(_baseDir + path);
-    if (!dirPath.endsWith(Constants.unixDirSeparate)) {
-      dirPath += Constants.unixDirSeparate;
-    }
-    dirPath = dirPath.unixPath;
+    final dirPath = _objectKey(path, isDirectory: true);
     try {
       await _client.removeObject(_config.bucketName, dirPath);
       return true;
@@ -137,8 +126,8 @@ class S3Client extends StorageClient {
 
   @override
   Future<bool> deleteFile(String path) async {
-    var filePath = _removePrefix(_baseDir + path);
-    filePath = _removeSuffix(filePath).unixPath;
+    path = normalizeStoragePath(path);
+    final filePath = _objectKey(path);
     try {
       await _client.removeObject(_config.bucketName, filePath);
       return true;
@@ -158,9 +147,9 @@ class S3Client extends StorageClient {
     StorageProgressFunc? onProgress,
     bool isLocalDir = false,
   }) async {
-    path = _removeSuffix(path.unixPath).unixPath;
+    path = normalizeStoragePath(path);
+    final filePath = _objectKey(path);
     try {
-      var filePath = _removePrefix(_baseDir + path).unixPath;
       final props = await _client.statObject(_config.bucketName, filePath);
       final totalSize = props.size!;
       var count = 0;
@@ -198,16 +187,24 @@ class S3Client extends StorageClient {
 
   @override
   Future<bool> isDirectory(String path) async {
-    path = path.unixPath;
-    var dirPath = _removePrefix(_baseDir + path);
+    path = normalizeStoragePath(path);
+    final dirPath = _objectKey(path, isDirectory: true);
     try {
-      if (!dirPath.endsWith(Constants.unixDirSeparate)) {
-        dirPath += Constants.unixDirSeparate;
-      }
-      dirPath = dirPath.unixPath;
       final result = await _client.statObject(_config.bucketName, dirPath);
       return result.size == 0;
     } catch (err, stack) {
+      try {
+        // qiniu S3 对空目录 marker 的 HEAD 兼容性不稳定，使用前缀列表兜底确认目录存在。
+        final items = await _client.listAllObjectsV2(_config.bucketName, prefix: dirPath);
+        final hasDirectoryMarker = items.objects.any((item) => item.key == dirPath);
+        final hasChildren = items.objects.any((item) => item.key?.startsWith(dirPath) ?? false) ||
+            items.prefixes.any((prefix) => prefix.startsWith(dirPath));
+        if (hasDirectoryMarker || hasChildren) {
+          return true;
+        }
+      } catch (_) {
+        // 兜底检查失败时继续记录原始 HEAD 错误，方便定位真实服务端异常。
+      }
       _logStorageError('isDirectory', err, stack, <String, Object?>{
         'path': path,
         'objectKey': dirPath,
@@ -218,9 +215,8 @@ class S3Client extends StorageClient {
 
   @override
   Future<bool> isFile(String path) async {
-    path = path.unixPath;
-    var filePath = _removePrefix(_baseDir + path);
-    filePath = _removeSuffix(filePath).unixPath;
+    path = normalizeStoragePath(path);
+    final filePath = _objectKey(path);
     try {
       final result = await _client.statObject(_config.bucketName, filePath);
       return (result.size ?? 0) > 0;
@@ -238,11 +234,8 @@ class S3Client extends StorageClient {
     String path = "",
     bool recursive = false,
   }) async {
-    var dirPath = _removePrefix(_baseDir + path);
-    if (dirPath != '' && !dirPath.endsWith("/")) {
-      dirPath += "/";
-    }
-    dirPath = dirPath.unixPath;
+    path = normalizeStoragePath(path);
+    final dirPath = _objectKey(path, isDirectory: true);
     List<StorageItem> result = [];
     try {
       final items = await _client.listAllObjectsV2(
@@ -251,15 +244,19 @@ class S3Client extends StorageClient {
       );
       for (var item in items.prefixes) {
         late List<StorageItem> children;
+        final path = _publicPathFromObjectKey(item, isDirectory: true);
+        if (path.isEmpty) {
+          continue;
+        }
         if (recursive) {
-          children = await list(path: item, recursive: true);
+          children = await list(path: path, recursive: true);
         } else {
           children = [];
         }
         result.add(
           StorageItem(
-            path: item,
-            name: _removeSuffix(item).split("/").last,
+            path: path,
+            name: removePathSuffix(path).split("/").last,
             isDir: true,
             children: children,
           ),
@@ -269,10 +266,14 @@ class S3Client extends StorageClient {
         if (item.key?.endsWith("/") ?? true) {
           continue;
         }
+        final path = _publicPathFromObjectKey(item.key!);
+        if (path.isEmpty) {
+          continue;
+        }
         result.add(
           StorageItem(
-            path: item.key!,
-            name: item.key!.split("/").last,
+            path: path,
+            name: path.split("/").last,
             isDir: false,
             children: [],
           ),
@@ -308,8 +309,8 @@ class S3Client extends StorageClient {
     String path, {
     StorageProgressFunc? onProgress,
   }) async {
-    path = _removeSuffix(path.unixPath).unixPath;
-    final filePath = _removePrefix(_baseDir + path).unixPath;
+    path = normalizeStoragePath(path);
+    final filePath = _objectKey(path);
     try {
       final stream = (await _client.getObject(_config.bucketName, filePath));
       final List<int> result = [];
@@ -332,8 +333,8 @@ class S3Client extends StorageClient {
     String localFilePath, {
     StorageProgressFunc? onProgress,
   }) async {
-    var filePath = _removePrefix(_baseDir + path);
-    filePath = _removeSuffix(filePath).unixPath;
+    path = normalizeStoragePath(path);
+    final filePath = _objectKey(path);
     try {
       final file = File(localFilePath);
       final totalSize = await file.length();

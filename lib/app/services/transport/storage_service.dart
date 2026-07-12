@@ -199,7 +199,7 @@ class StorageService extends GetxService
   Future<void> _updateBaseInfo() async {
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_updateBaseInfo storage client is null");
       return;
     }
     final device = appConfig.device.copyWith(customName: appConfig.localName);
@@ -225,7 +225,7 @@ class StorageService extends GetxService
   Future<void> _checkAndUploadLocalAppInfo() async {
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_checkAndUploadLocalAppInfo storage client is null");
       return;
     }
     final dirPath = getAppInfoDirectoryPath(_selfDevId);
@@ -435,7 +435,7 @@ class StorageService extends GetxService
   Future<void> _loadMissingData() async {
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_loadMissingData storage client is null");
       return;
     }
     if (!appConfig.autoSyncMissingData) {
@@ -596,7 +596,7 @@ class StorageService extends GetxService
     final result = <String, List<String>>{};
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_loadDevHistoryDirectoriesFromStorage storage client is null");
       return result;
     }
     for (var devId in devIds) {
@@ -620,7 +620,7 @@ class StorageService extends GetxService
     try {
       final client = _client;
       if (client == null) {
-        logger.warn(tag, "storage client is null");
+        logger.warn(tag, "_loadDeviceInfosFromStorage storage client is null");
         return result;
       }
       final list = await client.list(path: devicesInfoDir);
@@ -885,7 +885,7 @@ class StorageService extends GetxService
   }) async {
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_broadcastOnlineHeartbeat storage client is null");
       return;
     }
     final list = await client.list(path: devicesInfoDir);
@@ -1016,7 +1016,7 @@ class StorageService extends GetxService
   ///执行设备连接操作（SocketService设备发现时不能执行）
   Future<bool> _connectDevices() async {
     if (_client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_connectDevices storage client is null");
       return false;
     }
     final sktService = Get.find<SocketService>();
@@ -1058,7 +1058,7 @@ class StorageService extends GetxService
 
   Future<void> _connectDevice(String devId) async {
     if (_client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_connectDevice storage client is null");
       return;
     }
     final device = await getDeviceInfoFromCloud(devId);
@@ -1109,10 +1109,9 @@ class StorageService extends GetxService
       logger.debug(tag, "socket discovering");
       return;
     }
-    // 在线心跳也用于唤醒 pending ACK，即使设备已注册也要先补发后再跳过连接流程。
-    unawaited(_retryPendingAcksForDevice(devId));
     //已经连接，跳过
-    if (_isConnected(devId)) {
+    final alreadyConnected = _isConnected(devId);
+    if (alreadyConnected) {
       final isSocket = _registry.getProtocol(devId)?.isSocket ?? false;
       if (isSocket) {
         //当网络环境切换，socket可能存在假连接现象，这里通过测试响应判断是否是真连接
@@ -1125,6 +1124,10 @@ class StorageService extends GetxService
           return;
         }
       }
+    }
+    if (!alreadyConnected) {
+      // 仅在设备从未注册或断线后重新上线时补发 pending ACK。
+      unawaited(_retryPendingAcksForDevice(devId));
     }
     var diffNetwork = true;
     if (msg.data.isNotNullAndEmpty) {
@@ -1194,7 +1197,7 @@ class StorageService extends GetxService
   Future<void> _reloadMissingDataForDevice(String devId) async {
     final client = _client;
     if (client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_reloadMissingDataForDevice storage client is null");
       return;
     }
     if (!appConfig.autoSyncMissingData) {
@@ -1235,7 +1238,7 @@ class StorageService extends GetxService
 
   Future<void> _processChangeMsg(WsMsgData msg) async {
     if (_client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "_processChangeMsg storage client is null");
       return;
     }
     final [date, id] = msg.data.split(":");
@@ -1497,7 +1500,7 @@ class StorageService extends GetxService
   ]) async {
     var id = data["id"];
     if (_client == null) {
-      logger.warn(tag, "storage client is null");
+      logger.warn(tag, "sendData storage client is null");
       //写入存储服务，更新操作记录
       //仅有少数几个key通过存储服务中转
       if (MsgType.storageServiceKeys.contains(key)) {

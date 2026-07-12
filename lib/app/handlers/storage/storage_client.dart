@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/data/models/storage/storage_item.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 
 /// 存储操作进度回调函数类型
@@ -45,6 +46,78 @@ abstract class StorageClient {
       parts.add('${entry.key}=$value');
     }
     return parts.join(', ');
+  }
+
+  /// 子类内部使用：去掉路径开头的 `/`，用于把公开路径转换为对象存储 key。
+  String removePathPrefix(String path) {
+    return path.replaceFirst(RegExp(r'^/+'), '');
+  }
+
+  /// 子类内部使用：去掉路径结尾的 `/`，避免文件路径误带目录后缀。
+  String removePathSuffix(String path) {
+    return path.replaceFirst(RegExp(r'/+$'), '');
+  }
+
+  /// 子类内部使用：保证目录路径以 `/` 结尾。
+  String ensureDirectoryPathSuffix(String path) {
+    if (path.isEmpty || path.endsWith(Constants.unixDirSeparate)) {
+      return path;
+    }
+    return '$path${Constants.unixDirSeparate}';
+  }
+
+  /// 子类内部使用：统一归一化公开路径或对象存储 key。
+  ///
+  /// 这里会统一 Windows/Unix 分隔符、折叠重复 `/`、移除开头 `/`。
+  /// 对象存储实现依赖该方法避免 baseDir 与业务路径拼接出 `//`。
+  String normalizeStoragePath(String path, {bool keepTrailingSlash = false}) {
+    var normalizedPath = path.unixPath.replaceAll(RegExp(r'/+'), '/');
+    normalizedPath = removePathPrefix(normalizedPath);
+    if (!keepTrailingSlash) {
+      normalizedPath = removePathSuffix(normalizedPath);
+    }
+    return normalizedPath;
+  }
+
+  /// 子类内部使用：统一归一化对象存储 baseDir，并在非空时补齐尾部 `/`。
+  String normalizeStorageBaseDir(String baseDir) {
+    final normalizedBaseDir = normalizeStoragePath(baseDir);
+    if (normalizedBaseDir.isEmpty) {
+      return '';
+    }
+    return ensureDirectoryPathSuffix(normalizedBaseDir);
+  }
+
+  /// 子类内部使用：将公开业务路径转换成带 baseDir 的对象存储 key。
+  String buildObjectStorageKey(
+    String path, {
+    required String baseDir,
+    bool isDirectory = false,
+  }) {
+    final normalizedPath = normalizeStoragePath(path);
+    var objectKey = '$baseDir$normalizedPath';
+    objectKey = normalizeStoragePath(objectKey, keepTrailingSlash: isDirectory);
+    if (isDirectory) {
+      objectKey = ensureDirectoryPathSuffix(objectKey);
+    }
+    return objectKey;
+  }
+
+  /// 子类内部使用：将对象存储返回的 key 转回公开业务路径。
+  String publicPathFromObjectStorageKey(
+    String objectKey, {
+    required String baseDir,
+    bool isDirectory = false,
+  }) {
+    var publicPath = normalizeStoragePath(objectKey, keepTrailingSlash: isDirectory);
+    final normalizedBaseDir = normalizeStoragePath(baseDir);
+    if (normalizedBaseDir.isNotEmpty) {
+      publicPath = publicPath.replaceFirst(RegExp('^${RegExp.escape(normalizedBaseDir)}(/|\$)'), '');
+    }
+    if (isDirectory) {
+      publicPath = ensureDirectoryPathSuffix(publicPath);
+    }
+    return publicPath;
   }
 
   /// 删除目录

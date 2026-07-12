@@ -105,25 +105,26 @@ void main() {
       });
 
       test('createDirectory builds nested directories stepwise', () async {
-        final isWebDAV = client is WebDAVClient;
-        if(!isWebDAV){
-          return true;
-        }
         final remoteRoot = _newRemoteRoot(target, 'dirs');
         final nestedDirectory = '$remoteRoot/level-1/level-2/level-3';
 
         try {
           expect(await client.createDirectory(nestedDirectory), isTrue);
-          expect(await client.isDirectory(remoteRoot), isTrue);
-          expect(await client.isDirectory('$remoteRoot/level-1'), isTrue);
-          expect(await client.isDirectory('$remoteRoot/level-1/level-2'), isTrue);
+          // 对象存储不要求真实父目录存在，但最终子目录必须可见可删除。
+          if (client is WebDAVClient) {
+            expect(await client.isDirectory(remoteRoot), isTrue);
+            expect(await client.isDirectory('$remoteRoot/level-1'), isTrue);
+            expect(await client.isDirectory('$remoteRoot/level-1/level-2'), isTrue);
+          }
           expect(await client.isDirectory(nestedDirectory), isTrue);
 
           final items = await client.list(path: remoteRoot, recursive: true);
           final flattenedPaths = _flattenItems(items).map((item) => item.path).toList();
 
-          expect(_containsStoragePath(flattenedPaths, '$remoteRoot/level-1', isDirectory: true), isTrue);
-          expect(_containsStoragePath(flattenedPaths, '$remoteRoot/level-1/level-2', isDirectory: true), isTrue);
+          if (client is WebDAVClient) {
+            expect(_containsStoragePath(flattenedPaths, '$remoteRoot/level-1', isDirectory: true), isTrue);
+            expect(_containsStoragePath(flattenedPaths, '$remoteRoot/level-1/level-2', isDirectory: true), isTrue);
+          }
           expect(_containsStoragePath(flattenedPaths, nestedDirectory, isDirectory: true), isTrue);
         } finally {
           await _cleanupRemoteTree(client, remoteRoot);
@@ -131,10 +132,6 @@ void main() {
       });
 
       test('createDirectory on existing directory is treated as success', () async {
-        final isWebDAV = client is WebDAVClient;
-        if(!isWebDAV){
-          return true;
-        }
         final remoteRoot = _newRemoteRoot(target, 'existing-dir');
 
         try {
@@ -199,15 +196,15 @@ void main() {
           expect(uploadProgress[0], equals(uploadProgress[1]));
           expect(await client.isFile(uploadFilePath), isTrue);
 
+          final listedItems = await client.list(path: remoteRoot, recursive: true);
+          final listedPaths = _flattenItems(listedItems).map((item) => item.path).toList();
           if(isWebDAV) {
-            final listedItems = await client.list(path: remoteRoot, recursive: true);
-            final listedPaths = _flattenItems(listedItems).map((item) => item.path).toList();
             expect(_containsStoragePath(listedPaths, bytesDirectoryPath, isDirectory: true), isTrue);
-            expect(_containsStoragePath(listedPaths, bytesFilePath), isTrue);
             expect(_containsStoragePath(listedPaths, uploadDirectoryPath, isDirectory: true), isTrue);
-            expect(_containsStoragePath(listedPaths, uploadFilePath), isTrue);
-            expect(listedPaths.any(_hasObviousServerPathLeak), isFalse);
           }
+          expect(_containsStoragePath(listedPaths, bytesFilePath), isTrue);
+          expect(_containsStoragePath(listedPaths, uploadFilePath), isTrue);
+          expect(listedPaths.any(_hasObviousServerPathLeak), isFalse);
 
           final readBytes = await client.readFileBytes(
             bytesFilePath,

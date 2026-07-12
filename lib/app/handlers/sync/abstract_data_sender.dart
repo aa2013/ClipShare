@@ -28,7 +28,7 @@ abstract mixin class DataSender {
     final devController = Get.find<DeviceController>();
     final appConfig = Get.find<ConfigService>();
     //如果当前中转方式为存储服务，先写入存储，后续再通知设备
-    if (ForwardWay.storageWays.contains(appConfig.forwardWay)) {
+    if (appConfig.enableForward && ForwardWay.storageWays.contains(appConfig.forwardWay)) {
       final storageService = Get.find<StorageService>();
       //如果无已配对的在线设备，且使用的存储服务，则直接写入存储不对设备发送通知
       if (devController.onlineAndPairedList.isEmpty) {

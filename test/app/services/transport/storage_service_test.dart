@@ -381,6 +381,13 @@ void main() {
       await storageService.start();
       final session = await sessionFuture;
       await _pumpAsyncQueue();
+      // 启动时的缺失数据扫描可能已经注册设备，这里明确模拟首次 online 前未连接。
+      registry.removeDevice(peerDevId);
+      final ackFuture = _waitForWsMessage(
+        wsServer,
+        (msg) =>
+            msg.operation == WsMsgType.ack && msg.targetDevId == peerDevId,
+      );
 
       await session.send(
         jsonEncode(
@@ -394,10 +401,7 @@ void main() {
           ).toJson(),
         ),
       );
-      final ack = await _waitForWsMessage(
-        wsServer,
-        (msg) => msg.operation == WsMsgType.ack,
-      );
+      final ack = await ackFuture;
       final payload = jsonDecode(ack.data) as Map<String, dynamic>;
 
       expect(ack.targetDevId, peerDevId);
@@ -411,6 +415,33 @@ void main() {
         dbService.pendingStorageAckDao.items.map((item) => item.opId),
         isNot(contains(2001)),
       );
+
+      final repeatedAckMessages = <WsMsgData>[];
+      final subscription = wsServer.receivedMessages.stream.listen((raw) {
+        final message = WsMsgData.fromJson(
+          (jsonDecode(raw) as Map<dynamic, dynamic>).cast<String, dynamic>(),
+        );
+        if (message.operation == WsMsgType.ack &&
+            message.targetDevId == peerDevId) {
+          repeatedAckMessages.add(message);
+        }
+      });
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _pumpAsyncQueue();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      await subscription.cancel();
+      expect(repeatedAckMessages, isEmpty);
     });
 
     test('收到 storage ACK 后写入 OperationSync', () async {
