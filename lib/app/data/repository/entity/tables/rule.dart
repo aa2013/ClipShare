@@ -93,17 +93,7 @@ class Rule {
     required this.version,
     this.enabled = false,
     required this.order,
-  }) {
-    //规则模式
-    if (RuleContentType.regex.name.equalsIgnoreCase(type)) {
-      assert(regexMain.isNotNullAndEmpty);
-      if (regexAllowExtractData) {
-        assert(regexExtractedContent.isNotNullAndEmpty);
-      }
-    } else {
-      assert(scriptContent.isNotNullAndEmpty);
-    }
-  }
+  });
 
   /// 从 JSON Map 创建 Rule 实例
   factory Rule.fromJson(Map<String, dynamic> json) {

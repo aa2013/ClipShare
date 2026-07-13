@@ -142,7 +142,7 @@ class RulesPage extends GetView<RulesController> {
             } else {
               //同步数据
               await opRecordDao.deleteByDataWithCascade(rule.id.toString());
-              await opRecordDao.add(OperationRecord.fromSimple(Module.rule, OpMethod.delete, rule.id));
+              await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.delete, rule.id));
             }
           }
           if (replayItems.isNotEmpty) {
@@ -215,7 +215,7 @@ class RulesPage extends GetView<RulesController> {
             }
             //同步数据
             await opRecordDao.deleteByDataWithCascade(lib.moduleName);
-            await opRecordDao.add(OperationRecord.fromSimple(Module.scriptModule, OpMethod.delete, lib.moduleName));
+            await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.scriptModule, OpMethod.delete, lib.moduleName));
             Global.showSnackBarSuc(text: TranslationKey.deleteSuccess.tr, context: context);
           } else {
             Global.showSnackBarSuc(text: TranslationKey.deletionFailed.tr, context: context);

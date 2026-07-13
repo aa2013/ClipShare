@@ -1,3 +1,4 @@
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_icons/simple_icons.dart';
 
@@ -23,8 +24,9 @@ enum SupportPlatForm {
         return 'Windows';
     }
   }
-  IconData get icon{
-    switch(this){
+
+  IconData get icon {
+    switch (this) {
       case SupportPlatForm.android:
         return SimpleIcons.android;
       case SupportPlatForm.iOS:
@@ -37,4 +39,11 @@ enum SupportPlatForm {
         return Icons.laptop_windows_outlined;
     }
   }
+
+  static SupportPlatForm getValue(String name) => SupportPlatForm.values.firstWhere(
+    (e) => e.name.equalsIgnoreCase(name),
+    orElse: () {
+      throw "key '$name' unknown on SupportPlatForm";
+    },
+  );
 }

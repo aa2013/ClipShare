@@ -80,7 +80,7 @@ class RuleItem implements Comparable<RuleItem> {
       id: rule.id,
       version: rule.version,
       name: rule.name,
-      platforms: rule.platforms.split(",").where((e) => e.isNotNullAndEmpty).map((e) => SupportPlatForm.values.byName(e.lowerFirst)).toSet(),
+      platforms: rule.platforms.split(",").where((e) => e.isNotNullAndEmpty).map((e) => SupportPlatForm.getValue(e)).toSet(),
       sources: rule.sources.split(",").where((e) => e.isNotNullAndEmpty).toSet(),
       trigger: RuleTrigger.values.byName(rule.trigger),
       type: RuleContentType.values.byName(rule.type),
