@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/rule/rule_exec_params.dart';
@@ -54,7 +55,13 @@ class RuleRegexContent {
 
   RuleApplyResult apply(RuleExecParams params) {
     final content = params.content;
-    final matched = content.matchRegExp(mainRegex, multiLines: true, dotAll: true);
+    final contentMatched = content.matchRegExp(mainRegex, multiLines: true, dotAll: true);
+    final title = params.title;
+    final isNotification = params.type == HistoryContentType.notification;
+    final titleMatched = isNotification && title.isNotNullAndEmpty
+        ? title!.matchRegExp(mainRegex, multiLines: true, dotAll: true)
+        : false;
+    final matched = contentMatched || titleMatched;
     final isWhiteMode = mode == WhiteBlackMode.white;
     if (mode != WhiteBlackMode.defaultMode) {
       //白名单模式，未命中则丢弃

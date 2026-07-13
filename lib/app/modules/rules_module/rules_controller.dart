@@ -476,7 +476,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
       RuleExecResult? execResult;
       //正则白名单模式
       final isRegexWhiteMode = rule.isUseRegex && rule.regex.mode == WhiteBlackMode.white;
-      //来源配置为空或不再设定的来源内
+      //来源配置为空或不在设定的来源内
       if (rule.sources.isNotEmpty && !rule.sources.contains(source?.id)) {
         if (isRegexWhiteMode) {
           //白名单丢弃，但需等待所有规则过完后统一判断，若有一个白名单通过则算通过
