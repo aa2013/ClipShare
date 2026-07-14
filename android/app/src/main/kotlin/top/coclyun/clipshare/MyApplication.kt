@@ -111,18 +111,20 @@ class MyApplication : Application() {
         }
     }
 
+    /**
+     * 初始化应用主进程的 FlutterEngine 和平台通道，独立进程只保留自身必要初始化。
+     */
     override fun onCreate() {
         super.onCreate()
-        ClipshareClipboardListenerPlugin.activityClass = MainActivity::class.java
         MyApplication.applicationContext = applicationContext
+        if (!isMainProcess()) {
+            Log.d(TAG, "Skip FlutterEngine initialization in non-main process: ${getCurrentProcessName()}")
+            return
+        }
+        ClipshareClipboardListenerPlugin.activityClass = MainActivity::class.java
         MyApplication.pendingIntent = createPendingIntent()
         // 创建 engine
         flutterEngine = FlutterEngine(this)
-        // 缓存 engine
-        FlutterEngineCache.getInstance().put(FLUTTER_ENGINE_ID, flutterEngine)
-        flutterEngine.dartExecutor.executeDartEntrypoint(
-            DartExecutor.DartEntrypoint.createDefault()
-        )
         GeneratedPluginRegistrant.registerWith(flutterEngine)
         this.binaryMessenger = flutterEngine.dartExecutor.binaryMessenger
         commonChannel = MethodChannel(binaryMessenger, "top.coclyun.clipshare/common")
@@ -132,6 +134,32 @@ class MyApplication : Application() {
         initAndroidChannel()
         createNotifyChannel()
         setupLocalBroadcastReceiver()
+        // 先完成插件、通知和平台通道注册，再启动 Dart，避免入口代码过早调用尚未准备好的 MethodChannel。
+        flutterEngine.dartExecutor.executeDartEntrypoint(
+            DartExecutor.DartEntrypoint.createDefault()
+        )
+        FlutterEngineCache.getInstance().put(FLUTTER_ENGINE_ID, flutterEngine)
+    }
+
+    /**
+     * 判断当前是否为应用主进程，只有主进程需要初始化并缓存 FlutterEngine。
+     */
+    private fun isMainProcess(): Boolean {
+        return packageName == getCurrentProcessName()
+    }
+
+    /**
+     * 获取当前进程名，用于避免 ACRA 等独立进程重复初始化 Flutter 引擎。
+     */
+    private fun getCurrentProcessName(): String? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return Application.getProcessName()
+        }
+        val currentPid = android.os.Process.myPid()
+        val activityManager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        return activityManager.runningAppProcesses
+            ?.firstOrNull { processInfo -> processInfo.pid == currentPid }
+            ?.processName
     }
 
     override fun attachBaseContext(newBase: Context?) {
@@ -165,6 +193,9 @@ class MyApplication : Application() {
         contentResolver.registerContentObserver(Uri.parse("content://sms/"), true, observer)
     }
 
+    /**
+     * 注册应用内历史记录广播，将悬浮窗请求转发到 Flutter 侧并回传查询结果。
+     */
     private fun setupLocalBroadcastReceiver() {
         localBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
@@ -184,20 +215,17 @@ class MyApplication : Application() {
                                             add(HashMap(map))
                                         }
                                     }
-                                    val intent = Intent(sendHistories)
-                                    intent.putExtra("list", serializableList)
-                                    intent.putExtra("more", more)
-                                    LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+                                    sendHistoriesResult(context, more, serializableList)
                                 }
 
                                 override fun error(
                                     errorCode: String, errorMessage: String?, errorDetails: Any?
                                 ) {
-                                    TODO("Not yet implemented")
+                                    Log.e(TAG, "Failed to get histories from Flutter: $errorCode, $errorMessage")
                                 }
 
                                 override fun notImplemented() {
-                                    TODO("Not yet implemented")
+                                    Log.e(TAG, "Flutter method getHistory is not implemented")
                                 }
 
                             })
@@ -213,6 +241,20 @@ class MyApplication : Application() {
         LocalBroadcastManager.getInstance(this).registerReceiver(
             localBroadcastReceiver, filter
         )
+    }
+
+    /**
+     * 将 Flutter 返回的历史记录查询结果转发给悬浮窗。
+     */
+    private fun sendHistoriesResult(
+        context: Context,
+        more: Boolean,
+        histories: List<HashMap<String, Any>>
+    ) {
+        val intent = Intent(sendHistories)
+        intent.putExtra("list", ArrayList(histories))
+        intent.putExtra("more", more)
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
     }
 
     private fun unRegisterSmsObserver() {
@@ -619,9 +661,11 @@ class MyApplication : Application() {
         )
     }
 
+    /**
+     * 创建通知点击 PendingIntent，当前按既有行为保留入口目标。
+     */
     private fun createPendingIntent(): PendingIntent {
-        val intent = Intent(this, this::class.java)
-        intent.putExtra("fromNotification", true)
+        val intent = Intent(this, ProxyActivity::class.java)
         return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 

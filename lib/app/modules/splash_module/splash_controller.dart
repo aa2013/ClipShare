@@ -82,6 +82,7 @@ class SplashController extends GetxController {
           } else {
             Get.offNamed(Routes.HOME);
           }
+          _scheduleDetachedAndroidRouteFrame();
         })
         .catchError((err, stack) {
           Global.showTipsDialog(
@@ -90,6 +91,16 @@ class SplashController extends GetxController {
             title: TranslationKey.errorDialogTitle.tr,
           );
         });
+  }
+
+  /// 服务无 Activity 拉起 Android 引擎时，规则迁移会让路由发生在初始预热帧结束后。
+  /// detached 生命周期不会调度普通帧，需要强制提交一次路由帧以创建目标页及其 Binding。
+  void _scheduleDetachedAndroidRouteFrame() {
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    if (!Platform.isAndroid || lifecycleState != AppLifecycleState.detached) {
+      return;
+    }
+    WidgetsBinding.instance.scheduleForcedFrame();
   }
 
   Future<void> init() async {
@@ -145,8 +156,8 @@ class SplashController extends GetxController {
         {"loc": appConfig.lockHistoryFloatLoc},
       );
     }
-    if(Platform.isIOS){
-      if(appConfig.enablePIP){
+    if (Platform.isIOS) {
+      if (appConfig.enablePIP) {
         final tempPath = await FileUtil.copyAssetToTemp(Constants.iosPIPDefaultVideoPath);
         final result = await clipboardManager.startPIP(tempPath);
         logger.debug(tag, "start pip $result");
