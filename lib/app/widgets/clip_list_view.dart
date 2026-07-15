@@ -329,7 +329,7 @@ class ClipListViewState extends State<ClipListView>
     final onlyDeleteLocal = false.obs;
     dialog = await Global.showTipsDialog(
       context: context,
-      text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
+      text: TranslationKey.multiDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
       showCancel: true,
       autoDismiss: false,
       customWidget: Container(

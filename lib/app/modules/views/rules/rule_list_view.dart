@@ -4,7 +4,6 @@ import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/support_platform.dart';
-import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
 import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
@@ -12,22 +11,12 @@ import 'package:clipshare/app/data/models/rule/rule_regex_content.dart';
 import 'package:clipshare/app/data/models/rule/rule_script_content.dart';
 import 'package:clipshare/app/data/repository/entity/tables/script_module.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
-import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
-import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/extensions/platform_extension.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
-import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/base/custom_keyboard_listener.dart';
 import 'package:clipshare/app/widgets/rule/script_module_card.dart';
 import 'package:clipshare/app/widgets/rule/rule_card.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
-import 'package:get/get.dart';
-import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 typedef OnRuleItemTap = FutureOr<bool> Function(RuleItem item);
 typedef OnScriptModuleItemTap = FutureOr<bool> Function(ScriptModule item);
@@ -384,7 +373,11 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
         shortcuts: [
           KeyboardShortcut(
             physicalKeys: {PhysicalKeyboardKey.escape},
-            onTrigger: _handleEscapeShortcut,
+            onTrigger: _exitSelectionMode,
+          ),
+          KeyboardShortcut(
+            physicalKeys: {PhysicalKeyboardKey.delete},
+            onTrigger: _deleteSelectedRules,
           ),
         ],
         child: Scaffold(
@@ -461,11 +454,8 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
               if (multiSelectMode)
                 fabButtonFun(
                   heroTag: "$tag.remove",
-                  onPressed: () {
-                    widget.onRuleItemRemove(selectedRules);
-                    _cancelSelect();
-                  },
-                  tooltip: TranslationKey.delete.tr,
+                  onPressed: _deleteSelectedRules,
+                  tooltip: "${TranslationKey.delete.tr} (${Constants.selectionDeleteShortcutLabel})",
                   child: const Icon(Icons.delete),
                 ),
               if (!multiSelectMode)
@@ -539,8 +529,8 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
               if (multiSelectMode)
                 fabButtonFun(
                   heroTag: "$tag.exit-select-mode",
-                  onPressed: _cancelSelect,
-                  tooltip: TranslationKey.ruleListExitSelectionModeTooltip.tr,
+                  onPressed: _exitSelectionMode,
+                  tooltip: "${TranslationKey.ruleListExitSelectionModeTooltip.tr} (${Constants.selectionExitShortcutLabel})",
                   child: const Icon(MdiIcons.cancel),
                 ),
             ],
@@ -550,11 +540,35 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
     );
   }
 
-  /// 仅在规则页多选状态下响应 Esc，避免模块列表或普通浏览状态被误关闭。
-  void _handleEscapeShortcut() {
+  /// 退出规则多选模式；Esc 快捷键和 FAB 共用该入口，避免不同触发方式状态不一致。
+  void _exitSelectionMode() {
     if (!isRulesTab || !multiSelectMode) {
       return;
     }
+    _cancelSelect();
+  }
+
+  /// 删除当前选中的规则；Delete 快捷键和删除 FAB 共用该入口。
+  void _deleteSelectedRules() {
+    if (!isRulesTab || !multiSelectMode || selectedRules.isEmpty) {
+      return;
+    }
+    final deletingRuleIds = selectedRules.toSet();
+    Global.showTipsDialog(
+      context: context,
+      title: TranslationKey.deleteTips.tr,
+      text: TranslationKey.multiDeleteAsk.trParams({"length": deletingRuleIds.length.toString()}),
+      showCancel: true,
+      onOk: () => _confirmDeleteSelectedRules(deletingRuleIds),
+    );
+  }
+
+  /// 确认后删除弹窗打开时选中的规则，避免弹窗期间选择变化影响删除目标。
+  void _confirmDeleteSelectedRules(Set<int> ids) {
+    if (ids.isEmpty) {
+      return;
+    }
+    widget.onRuleItemRemove(ids);
     _cancelSelect();
   }
 

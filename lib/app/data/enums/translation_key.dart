@@ -307,7 +307,7 @@ enum TranslationKey {
   copyContent,
   copyMergedContent,
   syncRecord,
-  clipListViewDeleteAsk,
+  multiDeleteAsk,
   deleteCompleted,
   resyncRecord,
   openFile,

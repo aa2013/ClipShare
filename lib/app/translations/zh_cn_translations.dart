@@ -640,7 +640,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return "剪贴板详情";
       case TranslationKey.deleteRecord:
         return "删除记录";
-      case TranslationKey.clipListViewDeleteAsk:
+      case TranslationKey.multiDeleteAsk:
         return "是否删除选中的 @length 项？";
       case TranslationKey.deleteCompleted:
         return "删除完成";

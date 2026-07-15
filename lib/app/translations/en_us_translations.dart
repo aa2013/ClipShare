@@ -684,7 +684,7 @@ class EnUSTranslation extends AbstractTranslations {
         return "Clipboard Details";
       case TranslationKey.deleteRecord:
         return "Delete Record";
-      case TranslationKey.clipListViewDeleteAsk:
+      case TranslationKey.multiDeleteAsk:
         return "Delete selected @length items?";
       case TranslationKey.deleteCompleted:
         return "Delete Completed";
