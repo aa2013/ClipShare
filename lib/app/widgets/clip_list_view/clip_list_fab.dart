@@ -77,61 +77,13 @@ extension _ClipListFab on ClipListViewState {
           ),
           children: [
             _fabButtonFun(
-              onPressed: () {
-                _cancelSelectionMode();
-                appConfig.disableMultiSelectionMode(true);
-                _refreshState();
-              },
-              tooltip: TranslationKey.deselect.tr,
+              onPressed: _exitSelectionMode,
+              tooltip: "${TranslationKey.deselect.tr} (${Constants.selectionExitShortcutLabel})",
               child: const Icon(MdiIcons.cancel),
             ),
             _fabButtonFun(
-              onPressed: () async {
-                void multiDelete(bool deleteFile, [bool onlyDeleteLocal = false]) async {
-                  Get.back();
-                  Global.showLoadingDialog(
-                    context: context,
-                    loadingText: TranslationKey.deleting.tr,
-                  );
-                  for (var item in _selectedItems) {
-                    await deleteItem(item, deleteFile: true, onlyDeleteLocal: onlyDeleteLocal);
-                  }
-                  Get.back();
-                  Global.showSnackBarSuc(
-                    context: context,
-                    text: TranslationKey.deleteCompleted.tr,
-                  );
-                  appConfig.disableMultiSelectionMode(true);
-                  _cancelSelectionMode();
-                }
-                DialogController? dialog;
-                final onlyDeleteLocal = false.obs;
-                dialog = await Global.showTipsDialog(
-                  context: context,
-                  text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
-                  showCancel: true,
-                  autoDismiss: false,
-                  customWidget: Container(
-                    margin: 10.insetT,
-                    child: Obx(() {
-                      return CheckboxListTile(
-                          title: Text(TranslationKey.onlyLocal.tr),
-                          value: onlyDeleteLocal.value,
-                          onChanged: (selected) {
-                            onlyDeleteLocal.value = selected ?? false;
-                          });
-                    }),
-                  ),
-                  showNeutral: _selectedItems.any((item) => item.isFile),
-                  neutralText: TranslationKey.deleteWithFiles.tr,
-                  onCancel: () {
-                    dialog!.close();
-                  },
-                  onNeutral: () => multiDelete(true, onlyDeleteLocal.value),
-                  onOk: () => multiDelete(false, onlyDeleteLocal.value),
-                );
-              },
-              tooltip: TranslationKey.delete.tr,
+              onPressed: _showSelectedDeleteDialog,
+              tooltip: "${TranslationKey.delete.tr} (${Constants.selectionDeleteShortcutLabel})",
               child: const Icon(Icons.delete_forever),
             ),
             _fabButtonFun(
@@ -139,6 +91,9 @@ extension _ClipListFab on ClipListViewState {
                 var list = _selectedItems.toList()..sort((a, b) => a.data.id.compareTo(b.data.id));
                 var content = list.map((item) => item.data.content).join('\n');
                 await clipboardManager.copy(ClipboardContentType.text, content);
+                if (!mounted) {
+                  return;
+                }
                 Global.showSnackBarSuc(text: TranslationKey.copySuccess.tr, context: context);
                 _cancelSelectionMode();
               } : null,
@@ -178,8 +133,8 @@ extension _ClipListFab on ClipListViewState {
     return FloatingActionButton(
       onPressed: onPressed,
       tooltip: tooltip,
-      child: child,
       backgroundColor: bgColor,
+      child: child,
     );
   }
 }

@@ -101,6 +101,12 @@ class Constants {
   //退出程序快捷键（Ctrl + Shift + Q）
   static final defaultExitAppHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyQ.usbHidUsage}";
 
+  // 多选模式退出操作在 tooltip 中展示的快捷键名称。
+  static const selectionExitShortcutLabel = "Esc";
+
+  // 多选模式删除操作在 tooltip 中展示的快捷键名称。
+  static const selectionDeleteShortcutLabel = "Del";
+
   static const androidRootStoragePath = "/storage/emulated/0";
   static const androidDownloadPath = "$androidRootStoragePath/Download";
   static const androidPicturesPath = "$androidRootStoragePath/Pictures";

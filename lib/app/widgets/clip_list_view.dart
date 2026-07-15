@@ -220,29 +220,66 @@ class ClipListViewState extends State<ClipListView>
     setState(() {});
   }
 
-  Future<void> deleteItem(ClipData item,
-      {bool deleteFile = false, bool onlyDeleteLocal = false}) async {
-    await dbService.historyDao.deleteByCascade(item.data.id);
-    widget.onRemove(item.data.id);
-    final historyController = Get.find<HistoryController>();
-    historyController.notifyHistoryWindow();
-    if (!onlyDeleteLocal) {
-      var opRecord = OperationRecord.fromSimple(
-        Module.history,
-        OpMethod.delete,
-        item.data.id,
-      );
-      dbService.opRecordDao.addAndNotify(opRecord);
-    }
-    if (!item.isImage && !item.isFile) {
-      return;
-    }
-    final path = item.data.content;
-    var file = File(path);
-    if (!file.existsSync()) return;
-    file.deleteSync();
-    if (item.isImage && Platform.isAndroid) {
-      androidChannelService.notifyMediaScan(path);
+  /// 删除单条历史记录，并在用户直接触发删除时显示加载弹窗以避免长耗时文件删除造成无响应感。
+  Future<void> deleteItem(
+    ClipData item, {
+    bool deleteFile = false,
+    bool onlyDeleteLocal = false,
+    bool showLoading = true,
+  }) async {
+    DialogController? loadingDialog;
+    var deleteSuccess = false;
+    try {
+      if (showLoading) {
+        loadingDialog = Global.showLoadingDialog(
+          context: context,
+          loadingText: TranslationKey.deleting.tr,
+        );
+      }
+      await dbService.historyDao.deleteByCascade(item.data.id);
+      widget.onRemove(item.data.id);
+      final historyController = Get.find<HistoryController>();
+      historyController.notifyHistoryWindow();
+      if (!onlyDeleteLocal) {
+        var opRecord = OperationRecord.fromSimple(
+          Module.history,
+          OpMethod.delete,
+          item.data.id,
+        );
+        dbService.opRecordDao.addAndNotify(opRecord);
+      }
+      if (deleteFile && (item.isImage || item.isFile)) {
+        final path = item.data.content;
+        var file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+          if (item.isImage && Platform.isAndroid) {
+            androidChannelService.notifyMediaScan(path);
+          }
+        }
+      }
+      deleteSuccess = true;
+    } catch (err, stack) {
+      logger.error(tag, err, stack);
+      if (!showLoading) {
+        rethrow;
+      }
+      await loadingDialog?.close();
+      loadingDialog = null;
+      if (mounted) {
+        Global.showSnackBarWarn(
+          context: context,
+          text: TranslationKey.deletionFailed.tr,
+        );
+      }
+    } finally {
+      await loadingDialog?.close();
+      if (deleteSuccess && showLoading && mounted) {
+        Global.showSnackBarSuc(
+          context: context,
+          text: TranslationKey.deleteSuccess.tr,
+        );
+      }
     }
   }
 
@@ -273,6 +310,89 @@ class ClipListViewState extends State<ClipListView>
     setState(() {});
   }
 
+  /// 退出多选模式；快捷键和 FAB 共用该入口，避免不同触发方式产生状态差异。
+  void _exitSelectionMode() {
+    if (!_selectMode) {
+      return;
+    }
+    _cancelSelectionMode();
+    appConfig.disableMultiSelectionMode(true);
+    _refreshState();
+  }
+
+  /// 打开多选删除确认弹窗；Delete 快捷键与删除 FAB 共用该入口。
+  Future<void> _showSelectedDeleteDialog() async {
+    if (!_selectMode || _selectedItems.isEmpty) {
+      return;
+    }
+    DialogController? dialog;
+    final onlyDeleteLocal = false.obs;
+    dialog = await Global.showTipsDialog(
+      context: context,
+      text: TranslationKey.clipListViewDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
+      showCancel: true,
+      autoDismiss: false,
+      customWidget: Container(
+        margin: 10.insetT,
+        child: Obx(() {
+          return CheckboxListTile(
+            title: Text(TranslationKey.onlyLocal.tr),
+            value: onlyDeleteLocal.value,
+            onChanged: (selected) {
+              onlyDeleteLocal.value = selected ?? false;
+            },
+          );
+        }),
+      ),
+      showNeutral: _selectedItems.any((item) => item.isFile),
+      neutralText: TranslationKey.deleteWithFiles.tr,
+      onCancel: () {
+        dialog?.close();
+      },
+      onNeutral: () => _deleteSelectedItems(true, onlyDeleteLocal.value),
+      onOk: () => _deleteSelectedItems(false, onlyDeleteLocal.value),
+    );
+  }
+
+  /// 删除当前多选数据；确认弹窗、FAB 与快捷键最终都复用这里的删除流程。
+  Future<void> _deleteSelectedItems(bool deleteFile, [bool onlyDeleteLocal = false]) async {
+    Get.back();
+    final loadingDialog = Global.showLoadingDialog(
+      context: context,
+      loadingText: TranslationKey.deleting.tr,
+    );
+    try {
+      for (var item in _selectedItems) {
+        await deleteItem(
+          item,
+          deleteFile: deleteFile,
+          onlyDeleteLocal: onlyDeleteLocal,
+          showLoading: false,
+        );
+      }
+      if (!mounted) {
+        return;
+      }
+      Global.showSnackBarSuc(
+        context: context,
+        text: TranslationKey.deleteCompleted.tr,
+      );
+      appConfig.disableMultiSelectionMode(true);
+      _cancelSelectionMode();
+    } catch (err, stack) {
+      logger.error(tag, err, stack);
+      await loadingDialog.close();
+      if (mounted) {
+        Global.showSnackBarWarn(
+          context: context,
+          text: TranslationKey.deletionFailed.tr,
+        );
+      }
+    } finally {
+      await loadingDialog.close();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -280,7 +400,13 @@ class ClipListViewState extends State<ClipListView>
         shortcuts: [
           KeyboardShortcut(
             physicalKeys: {PhysicalKeyboardKey.escape},
-            onTrigger: _cancelSelectionMode,
+            onTrigger: _exitSelectionMode,
+          ),
+          KeyboardShortcut(
+            physicalKeys: {PhysicalKeyboardKey.delete},
+            onTrigger: () {
+              _showSelectedDeleteDialog();
+            },
           ),
         ],
         child: _buildBody(),
