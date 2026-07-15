@@ -19,6 +19,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:timer_snackbar/timer_snackbar.dart';
 
+@deprecated
 class RuleSettingPage extends StatefulWidget {
   final bool Function(OldRule submit) onAdd;
   final Widget Function(

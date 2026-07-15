@@ -454,6 +454,18 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     }
   }
 
+  /// 处理页面级 Esc 快捷键；抽屉是覆盖层，应优先于页面多选状态关闭。
+  void handleEscapeShortcut() {
+    if (!drawer.isEmpty) {
+      drawer.popWithAnimation();
+      return;
+    }
+    if (appConfig.isMultiSelectionMode(currentPageController)) {
+      appConfig.disableMultiSelectionMode(true);
+      notifyMultiSelectionPopScopeDisable();
+    }
+  }
+
   void registerMultiSelectionPopScopeDisableListener(
     MultiSelectionPopScopeDisableListener listener,
   ) {

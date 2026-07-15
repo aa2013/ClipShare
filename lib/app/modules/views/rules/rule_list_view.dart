@@ -6,10 +6,12 @@ import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/support_platform.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
+import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/data/models/rule/rule_item.dart';
 import 'package:clipshare/app/data/models/rule/rule_regex_content.dart';
 import 'package:clipshare/app/data/models/rule/rule_script_content.dart';
 import 'package:clipshare/app/data/repository/entity/tables/script_module.dart';
+import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -19,6 +21,7 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/base/custom_keyboard_listener.dart';
 import 'package:clipshare/app/widgets/rule/script_module_card.dart';
 import 'package:clipshare/app/widgets/rule/rule_card.dart';
 import 'package:flutter/material.dart';
@@ -377,173 +380,189 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
           selectedRules.clear();
         });
       },
-      child: Scaffold(
-        body: Padding(
-          padding: 5.insetAll,
-          child: Column(
+      child: CustomKeyboardListener(
+        shortcuts: [
+          KeyboardShortcut(
+            physicalKeys: {PhysicalKeyboardKey.escape},
+            onTrigger: _handleEscapeShortcut,
+          ),
+        ],
+        child: Scaffold(
+          body: Padding(
+            padding: 5.insetAll,
+            child: Column(
+              children: [
+                buildSearchField(),
+                const SizedBox(height: 5),
+                Expanded(child: buildListView()),
+              ],
+            ),
+          ),
+          floatingActionButtonLocation: ExpandableFab.location,
+          floatingActionButton: ExpandableFab(
+            distance: distance,
+            type: ExpandableFabType.fan,
+            overlayStyle: const ExpandableFabOverlayStyle(blur: 8),
+            openButtonBuilder: RotateFloatingActionButtonBuilder(
+              fabSize: fabSize,
+              child: Tooltip(
+                message: TranslationKey.moreFilter.tr,
+                child: const Icon(Icons.menu),
+              ),
+            ),
+            closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+              fabSize: fabSize,
+              child: Tooltip(
+                message: TranslationKey.close.tr,
+                child: const Icon(Icons.close),
+              ),
+            ),
             children: [
-              buildSearchField(),
-              const SizedBox(height: 5),
-              Expanded(child: buildListView()),
+              if (isRulesTab)
+                fabButtonFun(
+                  heroTag: "$tag.multi-select",
+                  onPressed: widget.rules.isEmpty
+                      ? null
+                      : () {
+                          if (selectedRules.length >= widget.rules.length) {
+                            setState(() {
+                              selectedRules.clear();
+                              multiSelectMode = false;
+                            });
+                            return;
+                          }
+                          selectedRules.addAll(widget.rules.map((item) => item.id));
+                          if (selectedRules.isNotEmpty) {
+                            setState(() {
+                              multiSelectMode = true;
+                            });
+                          }
+                        },
+                  tooltip: selectedRules.length >= widget.rules.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
+                  child: Icon(
+                    selectedRules.length >= widget.rules.length ? Icons.deselect : Icons.select_all,
+                    color: widget.rules.isEmpty ? Colors.grey : null,
+                  ),
+                ),
+              // if (!multiSelectMode)
+              //   fabButtonFun(
+              //     heroTag: "$tag.import",
+              //     onPressed: () {},
+              //     tooltip: TranslationKey.import.tr,
+              //     child: const Icon(MdiIcons.import),
+              //   ),
+              // if (multiSelectMode)
+              //   fabButtonFun(
+              //     heroTag: "$tag.output",
+              //     onPressed: () {},
+              //     tooltip: TranslationKey.output.tr,
+              //     child: const Icon(MdiIcons.export),
+              //   ),
+              if (multiSelectMode)
+                fabButtonFun(
+                  heroTag: "$tag.remove",
+                  onPressed: () {
+                    widget.onRuleItemRemove(selectedRules);
+                    _cancelSelect();
+                  },
+                  tooltip: TranslationKey.delete.tr,
+                  child: const Icon(Icons.delete),
+                ),
+              if (!multiSelectMode)
+                fabButtonFun(
+                  heroTag: "$tag.add",
+                  onPressed: () {
+                    final controller = controllers[tabController.index];
+                    if (isRulesTab) {
+                      var newRule = RuleItem(
+                        id: appConfig.snowflake.nextId(),
+                        version: DateTime.now().yyyyMMddHHmmss,
+                        name: "Rule${widget.rules.length + 1}",
+                        platforms: SupportPlatForm.values.toSet(),
+                        sources: {},
+                        trigger: RuleTrigger.onCopy,
+                        type: RuleContentType.regex,
+                        regex: RuleRegexContent(
+                          mainRegex: '',
+                          allowExtractData: false,
+                          extractRegex: '',
+                          allowAddTag: false,
+                          tags: {},
+                          preventSync: false,
+                          isFinal: false,
+                          mode: WhiteBlackMode.defaultMode,
+                        ),
+                        script: RuleScriptContent(
+                          language: RuleScriptLanguage.lua,
+                          content: '',
+                        ),
+                        enabled: false,
+                        order: widget.rules.length + 1,
+                        isNewData: true,
+                      );
+                      widget.onRuleItemAdd(newRule);
+                    } else {
+                      //ScriptModule
+                      var newScriptModule = ScriptModule(
+                        moduleName: 'Module${widget.scriptModules.length + 1}',
+                        displayName: 'Module${widget.scriptModules.length + 1}',
+                        language: RuleScriptLanguage.lua,
+                        source: '',
+                        version: 0,
+                        isNewData: true,
+                      );
+                      widget.onScriptModuleItemAdd(newScriptModule);
+                    }
+                    //controller 只会attach到当前的tab
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!controller.hasClients) {
+                        logger.debug(
+                          tag,
+                          "$currentTab scroller controller not clients",
+                        );
+                        return;
+                      }
+                      try {
+                        controller.animateTo(
+                          controller.position.maxScrollExtent,
+                          duration: 200.ms,
+                          curve: Curves.easeOut,
+                        );
+                      } catch (err, stack) {
+                        logger.error(tag, err, stack);
+                      }
+                    });
+                  },
+                  tooltip: TranslationKey.add.tr,
+                  child: const Icon(Icons.add),
+                ),
+              if (multiSelectMode)
+                fabButtonFun(
+                  heroTag: "$tag.exit-select-mode",
+                  onPressed: _cancelSelect,
+                  tooltip: TranslationKey.ruleListExitSelectionModeTooltip.tr,
+                  child: const Icon(MdiIcons.cancel),
+                ),
             ],
           ),
-        ),
-        floatingActionButtonLocation: ExpandableFab.location,
-        floatingActionButton: ExpandableFab(
-          distance: distance,
-          type: ExpandableFabType.fan,
-          overlayStyle: const ExpandableFabOverlayStyle(blur: 8),
-          openButtonBuilder: RotateFloatingActionButtonBuilder(
-            fabSize: fabSize,
-            child: Tooltip(
-              message: TranslationKey.moreFilter.tr,
-              child: const Icon(Icons.menu),
-            ),
-          ),
-          closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-            fabSize: fabSize,
-            child: Tooltip(
-              message: TranslationKey.close.tr,
-              child: const Icon(Icons.close),
-            ),
-          ),
-          children: [
-            if (isRulesTab)
-              fabButtonFun(
-                heroTag: "$tag.multi-select",
-                onPressed: widget.rules.isEmpty
-                    ? null
-                    : () {
-                        if (selectedRules.length >= widget.rules.length) {
-                          setState(() {
-                            selectedRules.clear();
-                            multiSelectMode = false;
-                          });
-                          return;
-                        }
-                        selectedRules.addAll(widget.rules.map((item) => item.id));
-                        if (selectedRules.isNotEmpty) {
-                          setState(() {
-                            multiSelectMode = true;
-                          });
-                        }
-                      },
-                tooltip: selectedRules.length >= widget.rules.length ? TranslationKey.cancelSelectAll.tr : TranslationKey.selectAll.tr,
-                child: Icon(
-                  selectedRules.length >= widget.rules.length ? Icons.deselect : Icons.select_all,
-                  color: widget.rules.isEmpty ? Colors.grey : null,
-                ),
-              ),
-            // if (!multiSelectMode)
-            //   fabButtonFun(
-            //     heroTag: "$tag.import",
-            //     onPressed: () {},
-            //     tooltip: TranslationKey.import.tr,
-            //     child: const Icon(MdiIcons.import),
-            //   ),
-            // if (multiSelectMode)
-            //   fabButtonFun(
-            //     heroTag: "$tag.output",
-            //     onPressed: () {},
-            //     tooltip: TranslationKey.output.tr,
-            //     child: const Icon(MdiIcons.export),
-            //   ),
-            if (multiSelectMode)
-              fabButtonFun(
-                heroTag: "$tag.remove",
-                onPressed: () {
-                  widget.onRuleItemRemove(selectedRules);
-                  setState(() {
-                    multiSelectMode = false;
-                    selectedRules.clear();
-                  });
-                },
-                tooltip: TranslationKey.delete.tr,
-                child: const Icon(Icons.delete),
-              ),
-            if (!multiSelectMode)
-              fabButtonFun(
-                heroTag: "$tag.add",
-                onPressed: () {
-                  final controller = controllers[tabController.index];
-                  if (isRulesTab) {
-                    var newRule = RuleItem(
-                      id: appConfig.snowflake.nextId(),
-                      version: DateTime.now().yyyyMMddHHmmss,
-                      name: "Rule${widget.rules.length + 1}",
-                      platforms: SupportPlatForm.values.toSet(),
-                      sources: {},
-                      trigger: RuleTrigger.onCopy,
-                      type: RuleContentType.regex,
-                      regex: RuleRegexContent(
-                        mainRegex: '',
-                        allowExtractData: false,
-                        extractRegex: '',
-                        allowAddTag: false,
-                        tags: {},
-                        preventSync: false,
-                        isFinal: false,
-                        mode: WhiteBlackMode.defaultMode,
-                      ),
-                      script: RuleScriptContent(
-                        language: RuleScriptLanguage.lua,
-                        content: '',
-                      ),
-                      enabled: false,
-                      order: widget.rules.length + 1,
-                      isNewData: true,
-                    );
-                    widget.onRuleItemAdd(newRule);
-                  } else {
-                    //ScriptModule
-                    var newScriptModule = ScriptModule(
-                      moduleName: 'Module${widget.scriptModules.length + 1}',
-                      displayName: 'Module${widget.scriptModules.length + 1}',
-                      language: RuleScriptLanguage.lua,
-                      source: '',
-                      version: 0,
-                      isNewData: true,
-                    );
-                    widget.onScriptModuleItemAdd(newScriptModule);
-                  }
-                  //controller 只会attach到当前的tab
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (!controller.hasClients) {
-                      logger.debug(
-                        tag,
-                        "$currentTab scroller controller not clients",
-                      );
-                      return;
-                    }
-                    try {
-                      controller.animateTo(
-                        controller.position.maxScrollExtent,
-                        duration: 200.ms,
-                        curve: Curves.easeOut,
-                      );
-                    } catch (err, stack) {
-                      logger.error(tag, err, stack);
-                    }
-                  });
-                },
-                tooltip: TranslationKey.add.tr,
-                child: const Icon(Icons.add),
-              ),
-            if (multiSelectMode)
-              fabButtonFun(
-                heroTag: "$tag.exit-select-mode",
-                onPressed: () {
-                  setState(() {
-                    multiSelectMode = false;
-                    selectedRules.clear();
-                  });
-                },
-                tooltip: TranslationKey.ruleListExitSelectionModeTooltip.tr,
-                child: const Icon(MdiIcons.cancel),
-              ),
-          ],
         ),
       ),
     );
   }
+
+  /// 仅在规则页多选状态下响应 Esc，避免模块列表或普通浏览状态被误关闭。
+  void _handleEscapeShortcut() {
+    if (!isRulesTab || !multiSelectMode) {
+      return;
+    }
+    _cancelSelect();
+  }
+
+  void _cancelSelect(){
+    setState(() {
+      multiSelectMode = false;
+      selectedRules.clear();
+    });
+  }
+
 }

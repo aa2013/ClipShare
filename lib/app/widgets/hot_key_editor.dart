@@ -34,14 +34,6 @@ class _HotKeyEditorState extends State<HotKeyEditor> {
   final _focusNode = FocusNode();
   PhysicalKeyboardKey? _key;
   final List<HotKeyModifier> _modifiers = [];
-  List<HotKeyModifier> customOrder = [
-    HotKeyModifier.control,
-    HotKeyModifier.alt,
-    HotKeyModifier.shift,
-    HotKeyModifier.fn,
-    HotKeyModifier.capsLock,
-    HotKeyModifier.meta,
-  ];
   var _keyCodes = "";
 
   @override
@@ -70,6 +62,7 @@ class _HotKeyEditorState extends State<HotKeyEditor> {
       onKeyEvent: (event) {
         var isKeyUp = event is KeyUpEvent;
         var key = event.physicalKey;
+        const modifierOrder = PhysicalKeyboardKeyExt.modifierOrder;
         if (key.isModify) {
           //判断是否包含
           var isInclude = false;
@@ -86,8 +79,8 @@ class _HotKeyEditorState extends State<HotKeyEditor> {
           } else if (!isInclude) {
             _modifiers.add(key.toModify);
             _modifiers.sort((a, b) {
-              var i = customOrder.indexOf(a);
-              var j = customOrder.indexOf(b);
+              var i = modifierOrder.indexOf(a);
+              var j = modifierOrder.indexOf(b);
               return i.compareTo(j);
             });
           }

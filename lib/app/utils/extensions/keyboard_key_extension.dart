@@ -4,6 +4,16 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:uni_platform/src/extensions/keyboard_key.dart';
 
 extension PhysicalKeyboardKeyExt on PhysicalKeyboardKey {
+
+  static const modifierOrder = [
+    HotKeyModifier.control,
+    HotKeyModifier.alt,
+    HotKeyModifier.shift,
+    HotKeyModifier.fn,
+    HotKeyModifier.capsLock,
+    HotKeyModifier.meta,
+  ];
+
   bool get isModify {
     for (var keys in HotKeyModifier.values) {
       if (keys.physicalKeys.contains(this)) {

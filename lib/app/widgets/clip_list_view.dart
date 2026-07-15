@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/widgets/base/custom_keyboard_listener.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/module.dart';
@@ -274,7 +276,15 @@ class ClipListViewState extends State<ClipListView>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _buildBody(),
+      body: CustomKeyboardListener(
+        shortcuts: [
+          KeyboardShortcut(
+            physicalKeys: {PhysicalKeyboardKey.escape},
+            onTrigger: _cancelSelectionMode,
+          ),
+        ],
+        child: _buildBody(),
+      ),
       floatingActionButtonLocation: ExpandableFab.location,
       floatingActionButton: _buildFloatingActionButton(),
     );

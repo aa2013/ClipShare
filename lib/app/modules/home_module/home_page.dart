@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
@@ -14,6 +15,7 @@ import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/base/custom_keyboard_listener.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
 import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
@@ -24,6 +26,7 @@ import 'package:clipshare/app/widgets/loading_dots.dart';
 import 'package:clipshare/app/widgets/segment_text_view.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../sync_file_module/sync_file_page.dart';
@@ -59,10 +62,17 @@ class HomePage extends GetView<HomeController> {
           androidChannelService.moveToBg();
         }
       },
-      child: Obx(
-        () => Stack(
-          children: [
-            DropTarget(
+      child: CustomKeyboardListener(
+        shortcuts: [
+          KeyboardShortcut(
+            physicalKeys: {PhysicalKeyboardKey.escape},
+            onTrigger: controller.handleEscapeShortcut,
+          ),
+        ],
+        child: Obx(
+          () => Stack(
+            children: [
+              DropTarget(
               child: Obx(
                 () => Scaffold(
                   key: controller.homeScaffoldKey,
@@ -284,8 +294,9 @@ class HomePage extends GetView<HomeController> {
                 ),
               ),
             ),
-            Obx(() => MultiDrawer(controller: controller.drawer, width: controller.drawerWidth)),
-          ],
+              Obx(() => MultiDrawer(controller: controller.drawer, width: controller.drawerWidth)),
+            ],
+          ),
         ),
       ),
     );
