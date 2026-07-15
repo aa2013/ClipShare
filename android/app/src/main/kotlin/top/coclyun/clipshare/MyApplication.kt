@@ -125,7 +125,6 @@ class MyApplication : Application() {
         MyApplication.pendingIntent = createPendingIntent()
         // 创建 engine
         flutterEngine = FlutterEngine(this)
-        GeneratedPluginRegistrant.registerWith(flutterEngine)
         this.binaryMessenger = flutterEngine.dartExecutor.binaryMessenger
         commonChannel = MethodChannel(binaryMessenger, "top.coclyun.clipshare/common")
         androidChannel = MethodChannel(binaryMessenger, "top.coclyun.clipshare/android")

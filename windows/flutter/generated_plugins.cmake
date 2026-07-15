@@ -22,6 +22,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_embed_lua
   flutter_local_notifications_windows
+  jni
   zip_flutter
 )
 

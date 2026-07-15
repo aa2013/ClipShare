@@ -11,7 +11,6 @@ import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
 import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
-import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/handlers/permission_handler.dart';
 import 'package:clipshare/app/handlers/sync/app_info_sync_handler.dart';
@@ -321,7 +320,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
     //检查权限
     var permHandlers = [
       FloatPermHandler(),
-      if (appConfig.workingMode == EnvironmentType.shizuku && !appConfig.ignoreShizuku) ShizukuPermHandler(),
+      // if (appConfig.workingMode == EnvironmentType.shizuku && !appConfig.ignoreShizuku) ShizukuPermHandler(),
       NotifyPermHandler(),
     ];
     for (var handler in permHandlers) {

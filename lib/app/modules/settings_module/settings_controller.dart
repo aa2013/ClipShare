@@ -506,6 +506,26 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     }
   }
 
+  /// 标记 Shizuku 当前不可用。
+  ///
+  /// 该方法只更新界面状态，不调用 Shizuku 权限、版本或监听检查 API，用于 binder
+  /// 断开、授权被撤销等远端服务可能已经失效的回调路径。
+  void markShizukuUnavailable() {
+    if (!Platform.isAndroid || appConfig.workingMode != EnvironmentType.shizuku) {
+      return;
+    }
+    _envStatusCheckSeq++;
+    shizukuVersion.value = null;
+    envStatusIcon.value = warningIcon;
+    envStatusBgColor.value = warningBgColor;
+    envStatusTipContent.value = shizukuEnvErrorTipContent;
+    envStatusTipDesc.value = shizukuEnvErrorTipDesc;
+    hasWorkingModePerm.value = false;
+    hasShizukuPerm.value = false;
+    // Shizuku 失效后，依赖提权环境的剪贴板监听也按不可用展示，避免界面保留旧状态。
+    hasClipboardPerm.value = false;
+  }
+
   /// Shows a transient checking state before Android environment status is refreshed.
   void _showAndroidEnvStatusLoading() {
     envStatusIcon.value = envLoadingIcon;
