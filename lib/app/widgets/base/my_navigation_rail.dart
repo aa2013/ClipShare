@@ -44,6 +44,7 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
 
   final List<GlobalKey> keys = [];
   int? hoveredIndex;
+  int? focusedIndex;
 
   @override
   void initState() {
@@ -149,12 +150,14 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
     }
   }
 
+  /// 构建左侧导航项，并让菜单项进入 Flutter 焦点遍历链路以支持桌面键盘导航。
   Widget buildNavItem(int index) {
     final theme = Theme.of(context);
     final item = widget.items[index];
     final selected = widget.selectedIndex == index;
     final hovered = hoveredIndex == index;
-    final showBackground = selected || hovered;
+    final focused = focusedIndex == index;
+    final showBackground = selected || hovered || focused;
     final selectedColor = theme.bottomNavigationBarTheme.selectedItemColor ?? theme.colorScheme.primary;
     final unselectedColor = theme.bottomNavigationBarTheme.unselectedItemColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.68);
     final foregroundColor = selected ? selectedColor : unselectedColor;
@@ -166,38 +169,40 @@ class _MyNavigationRailState extends State<MyNavigationRail> {
         color: showBackground ? foregroundColor.withValues(alpha: selected ? 0.12 : 0.08) : null,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: GestureDetector(
+      child: InkWell(
         key: keys[index],
+        borderRadius: BorderRadius.circular(8),
+        onHover: (hovered) {
+          setState(() => hoveredIndex = hovered ? index : null);
+        },
+        onFocusChange: (focused) {
+          setState(() => focusedIndex = focused ? index : null);
+        },
         onTap: () {
           widget.onSelected(index);
         },
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => hoveredIndex = index),
-          onExit: (_) => setState(() => hoveredIndex = null),
-          child: Padding(
-            padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10),
-            child: IconTheme(
-              data: IconThemeData(color: foregroundColor),
-              child: DefaultTextStyle.merge(
-                style: TextStyle(
-                  color: foregroundColor,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                ),
-                child: Row(
-                  children: [
-                    Visibility(
-                      visible: widget.extended,
-                      replacement: Tooltip(
-                        message: item.tooltip,
-                        child: item.icon,
-                      ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 12, top: 10, bottom: 10),
+          child: IconTheme(
+            data: IconThemeData(color: foregroundColor),
+            child: DefaultTextStyle.merge(
+              style: TextStyle(
+                color: foregroundColor,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              ),
+              child: Row(
+                children: [
+                  Visibility(
+                    visible: widget.extended,
+                    replacement: Tooltip(
+                      message: item.tooltip,
                       child: item.icon,
                     ),
-                    if (widget.extended) const SizedBox(width: 12),
-                    if (widget.extended) item.label,
-                  ],
-                ),
+                    child: item.icon,
+                  ),
+                  if (widget.extended) const SizedBox(width: 12),
+                  if (widget.extended) item.label,
+                ],
               ),
             ),
           ),
