@@ -1,9 +1,7 @@
 import 'dart:io';
 
-import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
-import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/widgets/base/platform_title_button.dart';
 import 'package:flutter/material.dart';
