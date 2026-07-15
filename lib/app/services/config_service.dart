@@ -26,6 +26,7 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_record.dar
 import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
+import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -1385,6 +1386,10 @@ class ConfigService extends GetxService {
     homeController.initNavBarItems();
     final settingController = Get.find<SettingsController>();
     settingController.checkAndroidEnvPermission();
+    if (PlatformExt.isDesktop) {
+      final trayService = Get.find<TrayService>();
+      trayService.updateTrayMenus(false);
+    }
   }
 
   Future<void> setCleanDataConfig(CleanDataConfig cleanDataConfig) async {
