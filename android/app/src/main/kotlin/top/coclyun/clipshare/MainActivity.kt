@@ -1,20 +1,28 @@
 package top.coclyun.clipshare
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import io.flutter.embedding.android.FlutterFragmentActivity
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.engine.FlutterEngineCache
 
 class MainActivity : FlutterFragmentActivity() {
 
-    override fun provideFlutterEngine(context: Context): FlutterEngine? {
-        return FlutterEngineCache.getInstance().get(MyApplication.FLUTTER_ENGINE_ID)
+    /**
+     * 所有入口统一使用 Application 预热并缓存的主 FlutterEngine。
+     * 否则可能出现偶发性的 "Cannot execute operation because FlutterJNI is not attached to native"错误
+     */
+    override fun getCachedEngineId(): String {
+        return MyApplication.FLUTTER_ENGINE_ID
+    }
+
+    /**
+     * 主 FlutterEngine 承载后台通道和常驻服务回调，Activity 销毁或旋转重建时不能释放。
+     */
+    override fun shouldDestroyEngineWithHost(): Boolean {
+        return false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
