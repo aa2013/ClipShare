@@ -601,9 +601,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.newVersionDialogTitle:
         return "New Version";
       case TranslationKey.newVersionDialogSkipText:
-        return "Skip This Update";
+        return "Skip";
       case TranslationKey.newVersionDialogOkText:
-        return "Download Update";
+        return "Download";
       case TranslationKey.defaultLinkTagName:
         return "Link";
       case TranslationKey.unknownHistoryContentType:
@@ -659,7 +659,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.alreadyNewestAppVersion:
         return "Already up to date";
       case TranslationKey.checkUpdate:
-        return "Check for Updates";
+        return "Check";
       case TranslationKey.topUp:
         return "Pin to Top";
       case TranslationKey.cancelTopUp:

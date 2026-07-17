@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/app_language.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/update_log.dart';
 import 'package:clipshare/app/exceptions/fetch_update_logs_exception.dart';
@@ -10,7 +11,6 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
@@ -35,11 +35,22 @@ class AppUpdateInfoUtil {
   static const String _archArm64 = "arm64";
   static const String _archX86 = "ia32";
   static const String _archX64 = "x64";
+  static const String _defaultUpdateInfoFileName = "version-info.json";
   static final String _currentArch = Abi.current().toString().split("_").last;
+
+  /// 根据当前真实语言构造更新信息地址；中文沿用默认文件，非中文统一使用英文更新说明文件。
+  static String _buildUpdateInfoUrl(ConfigService appConfig) {
+    final locale = appConfig.language.resolveLocale(Get.deviceLocale);
+    if (locale.languageCode.toLowerCase() == AppLanguage.zhCnLocale.languageCode) {
+      return Constants.appUpdateInfoUrl;
+    }
+    return Constants.appUpdateInfoUrl.replaceFirst(_defaultUpdateInfoFileName, "version-info.en.json");
+  }
 
   static Future<List<UpdateLog>> fetchUpdateLogs() async {
     try {
-      final resp = await http.get(Uri.parse(Constants.appUpdateInfoUrl));
+      final appConfig = Get.find<ConfigService>();
+      final resp = await http.get(Uri.parse(_buildUpdateInfoUrl(appConfig)));
       if (resp.statusCode != 200) {
         throw FetchUpdateLogsException(resp.statusCode.toString());
       }
@@ -47,7 +58,6 @@ class AppUpdateInfoUtil {
       final body = jsonDecode(utf8.decode(resp.bodyBytes));
       final logs = body["logs"] as List<dynamic>;
       final system = Platform.isMacOS ? "MacOS" : Platform.operatingSystem;
-      final appConfig = Get.find<ConfigService>();
       final currentVersion = appConfig.version;
 
       for (var log in logs) {
