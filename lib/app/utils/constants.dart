@@ -247,6 +247,11 @@ class Constants {
   //Windows上使用，与项目中的 windows/packaging.exe/make_config.yaml 保持一致
   static const String appGuid = "B72665DE-3DB5-B0E9-0EF9-55CCB65D3D62";
 
+  // Windows 正式安装版 Toast 应用身份，需与 Inno Setup 快捷方式的 AppUserModelID 保持一致。
+  static const String windowsAppUserModelId = "top.coclyun.clipshare";
+  // Windows 开发运行使用独立 Toast 应用身份，避免覆盖正式安装版的通知图标注册信息。
+  static const String windowsDevAppUserModelId = "$windowsAppUserModelId.dev";
+
   static const windowsDirSeparate = "\\";
   static const unixDirSeparate = "/";
 

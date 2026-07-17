@@ -53,9 +53,13 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "{{SOURCE_DIR}}\\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
+#define MyAppUserModelID "top.coclyun.clipshare"
+#define MyToastIconPath "data\\flutter_assets\\assets\\images\\logo\\logo.ico"
+
 [Icons]
-Name: "{autoprograms}\\{{DISPLAY_NAME}}"; Filename: "{app}\\{{EXECUTABLE_NAME}}"
-Name: "{autodesktop}\\{{DISPLAY_NAME}}"; Filename: "{app}\\{{EXECUTABLE_NAME}}"; Tasks: desktopicon
+; Windows Toast 通过开始菜单快捷方式的 AppUserModelID 绑定应用身份和通知图标。
+Name: "{autoprograms}\\{{DISPLAY_NAME}}"; Filename: "{app}\\{{EXECUTABLE_NAME}}"; WorkingDir: "{app}"; IconFilename: "{app}\\{#MyToastIconPath}"; AppUserModelID: "{#MyAppUserModelID}"
+Name: "{autodesktop}\\{{DISPLAY_NAME}}"; Filename: "{app}\\{{EXECUTABLE_NAME}}"; WorkingDir: "{app}"; IconFilename: "{app}\\{#MyToastIconPath}"; AppUserModelID: "{#MyAppUserModelID}"; Tasks: desktopicon
 [Run]
 Filename: "{app}\\{{EXECUTABLE_NAME}}"; Description: "{cm:LaunchProgram,{{DISPLAY_NAME}}}"; Flags: {% if PRIVILEGES_REQUIRED == 'admin' %}runascurrentuser{% endif %} nowait postinstall skipifsilent
 
