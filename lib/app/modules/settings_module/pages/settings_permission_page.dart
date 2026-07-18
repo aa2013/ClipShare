@@ -109,7 +109,7 @@ class SettingsPermissionPage extends SettingsSectionView {
         ),
         show: (v) => Platform.isAndroid && v,
         onTap: () {
-          PermissionHelper.reqAndroidAccessibilityPerm();
+          controller.requestAccessibilityPermissionAndRefresh();
         },
       ),
       SettingCard(

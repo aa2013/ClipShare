@@ -138,9 +138,20 @@ class PermissionHelper {
     return await clipboardManager.checkAccessibility();
   }
 
-  ///请求无障碍权限
-  static Future<void> reqAndroidAccessibilityPerm() async {
-    if (!Platform.isAndroid) return;
-    return await clipboardManager.requestAccessibility();
+  ///静默尝试自动授予无障碍权限，不成功时不跳转系统设置
+  static Future<bool> tryAutoGrantAndroidAccessibilityPerm() async {
+    if (!Platform.isAndroid) return false;
+    //插件内部特权命令环境跟随剪贴板监听启动环境，这里只声明是否自动授权
+    return await clipboardManager.requestAccessibility(autoGrant: true);
+  }
+
+  ///请求无障碍权限，自动授权失败时回退到系统设置页
+  static Future<bool> reqAndroidAccessibilityPerm() async {
+    if (!Platform.isAndroid) return false;
+    final granted = await tryAutoGrantAndroidAccessibilityPerm();
+    if (granted) return true;
+    //没有 Shizuku/root 能力或自动写入失败时，回退到旧的手动授权流程
+    await clipboardManager.requestAccessibility();
+    return false;
   }
 }

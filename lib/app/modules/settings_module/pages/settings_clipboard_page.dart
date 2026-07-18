@@ -97,7 +97,7 @@ class SettingsClipboardPage extends SettingsSectionView {
                   showCancel: true,
                   okText: TranslationKey.goAuthorize.tr,
                   onOk: () {
-                    PermissionHelper.reqAndroidAccessibilityPerm();
+                    controller.requestAccessibilityPermissionAndRefresh();
                   },
                   showNeutral: true,
                   neutralText: TranslationKey.notNow.tr,

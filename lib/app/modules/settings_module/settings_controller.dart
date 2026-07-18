@@ -99,6 +99,9 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   final updater = 0.obs;
   Timer? _screenEventTimer;
   int _envStatusCheckSeq = 0;
+  bool _checkingAccessibilityPerm = false;
+  bool _accessibilityPermDialogPending = false;
+  static const _accessibilityPermissionRecheckDelay = Duration(seconds: 1);
 
   //region environment status widgets
   final Rx<Widget> envStatusIcon = Rx<Widget>(envLoadingIcon);
@@ -387,25 +390,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         //有权限或者不需要读取短信则视为有权限
         hasSmsReadPerm.value = granted || !ruleController.enableSmsSync;
       });
-      PermissionHelper.testAndroidAccessibilityPerm().then((granted) {
-        hasAccessibilityPerm.value = granted;
-        if (!granted && !appConfig.ignoreAccessibility && appConfig.sourceRecord) {
-          Global.showTipsDialog(
-            context: Get.context!,
-            text: TranslationKey.noAccessibilityPermTips.tr,
-            showCancel: true,
-            okText: TranslationKey.goAuthorize.tr,
-            onOk: () {
-              PermissionHelper.reqAndroidAccessibilityPerm();
-            },
-            showNeutral: true,
-            neutralText: TranslationKey.notNow.tr,
-            onNeutral: () {
-              appConfig.ignoreAccessibility = true;
-            },
-          );
-        }
-      });
+      _checkAccessibilityPermission();
       NotificationListenerService.isPermissionGranted().then((granted) {
         hasNotificationRecordPerm.value = granted;
         final androidNotificationListenerService = Get.find<AndroidNotificationListenerService>();
@@ -432,6 +417,66 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
     notifyHandler.hasPermission().then((v) {
       hasNotifyPerm.value = v;
     });
+  }
+
+  ///检查无障碍权限，来源记录启用时先静默自动授权，失败后再提示用户手动处理
+  Future<void> _checkAccessibilityPermission() async {
+    if (_checkingAccessibilityPerm) {
+      return;
+    }
+    _checkingAccessibilityPerm = true;
+    try {
+      var granted = await PermissionHelper.testAndroidAccessibilityPerm();
+      if (!granted && !appConfig.ignoreAccessibility && appConfig.sourceRecord) {
+        //启动或恢复页面时先尝试自动授权，避免支持 Shizuku/root 的设备仍然弹出手动授权提示
+        granted = await PermissionHelper.tryAutoGrantAndroidAccessibilityPerm();
+      }
+      if (!granted && !appConfig.ignoreAccessibility && appConfig.sourceRecord) {
+        //系统写入无障碍设置后服务状态可能延迟刷新，短暂等待后复查可减少误弹窗
+        await Future.delayed(_accessibilityPermissionRecheckDelay);
+        granted = await PermissionHelper.testAndroidAccessibilityPerm();
+      }
+      hasAccessibilityPerm.value = granted;
+      if (granted || appConfig.ignoreAccessibility || !appConfig.sourceRecord || _accessibilityPermDialogPending) {
+        return;
+      }
+      _accessibilityPermDialogPending = true;
+      final dialog = await Global.showTipsDialog(
+        context: Get.context!,
+        text: TranslationKey.noAccessibilityPermTips.tr,
+        showCancel: true,
+        okText: TranslationKey.goAuthorize.tr,
+        onOk: () async {
+          await requestAccessibilityPermissionAndRefresh();
+        },
+        onCancel: () {
+          _accessibilityPermDialogPending = false;
+        },
+        showNeutral: true,
+        neutralText: TranslationKey.notNow.tr,
+        onNeutral: () {
+          _accessibilityPermDialogPending = false;
+          appConfig.ignoreAccessibility = true;
+        },
+      );
+      if (dialog == null) {
+        _accessibilityPermDialogPending = false;
+      } else {
+        dialog.future.whenComplete(() => _accessibilityPermDialogPending = false);
+      }
+    } finally {
+      _checkingAccessibilityPerm = false;
+    }
+  }
+
+  ///请求无障碍授权后刷新设置页权限状态，避免自动授权成功后界面仍显示未授权
+  Future<bool> requestAccessibilityPermissionAndRefresh() async {
+    final requested = await PermissionHelper.reqAndroidAccessibilityPerm();
+    //自动写入 secure settings 后系统服务列表可能稍后才同步，等待后再复查一次
+    await Future.delayed(_accessibilityPermissionRecheckDelay);
+    final granted = requested || await PermissionHelper.testAndroidAccessibilityPerm();
+    hasAccessibilityPerm.value = granted;
+    return granted;
   }
 
   ///检查 Android 工作环境必要权限
