@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:clipshare/app/data/enums/forward_way.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section_view_factory.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -143,13 +144,11 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
   final settingsController = Get.find<SettingsController>();
   final sktService = Get.find<SocketService>();
   final storageService = Get.find<StorageService>();
-  late final List<SettingsSearchItem> _searchItems;
   String _query = '';
 
   @override
   void initState() {
     super.initState();
-    _searchItems = buildSettingsSearchItems(context);
     _searchController.addListener(() {
       setState(() {
         _query = _searchController.text;
@@ -168,7 +167,6 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
     final theme = Theme.of(context);
     final sections = _visibleSections;
     final searching = _query.trim().isNotEmpty;
-    final results = searching ? _searchItems.where((item) => item.matches(_query) && _isSearchItemVisible(item)).toList() : <SettingsSearchItem>[];
     final content = SafeArea(
       child: CustomScrollView(
         slivers: [
@@ -210,21 +208,26 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
               ),
             ),
           if (searching)
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-              sliver: results.isEmpty
-                  ? const SliverToBoxAdapter(child: SettingsEmptySearchTile())
-                  : SliverList.separated(
-                      itemCount: results.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final item = results[index];
-                        return SettingsSearchResultTile(
-                          item: item,
-                          onTap: () => _onSearchItemTap(context, item),
-                        );
-                      },
-                    ),
+            Obx(
+              () {
+                final results = _buildSearchResults(context);
+                return SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+                  sliver: results.isEmpty
+                      ? const SliverToBoxAdapter(child: SettingsEmptySearchTile())
+                      : SliverList.separated(
+                          itemCount: results.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final item = results[index];
+                            return SettingsSearchResultTile(
+                              item: item,
+                              onTap: () => _onSearchItemTap(context, item),
+                            );
+                          },
+                        ),
+                );
+              },
             )
           else
             SliverPadding(
@@ -251,9 +254,18 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
         child: content,
       );
     }
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: content,
+    return PopScope(
+      canPop: !searching,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop || !searching) {
+          return;
+        }
+        _clearSearch();
+      },
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        body: content,
+      ),
     );
   }
 
@@ -261,15 +273,42 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
     return SettingsSection.values.where((section) => isSettingsSectionListVisible(section, appConfig.isSmallScreen)).toList();
   }
 
-  bool _isSectionVisible(SettingsSection section) {
-    return isSettingsSectionAvailable(section, appConfig.isSmallScreen);
+  ///按当前权限和配置状态实时生成搜索结果，避免隐藏设置项仍出现在搜索中
+  List<SettingsSearchItem> _buildSearchResults(BuildContext context) {
+    return _buildSettingsSearchItems(context).where((item) => item.matches(_query) && isSettingsSectionAvailable(item.section, appConfig.isSmallScreen)).toList();
   }
 
-  bool _isSearchItemVisible(SettingsSearchItem item) {
-    return _isSectionVisible(item.section);
+  ///确认搜索项当前仍可见，防止权限状态刚变化时点击跳到空白设置页
+  bool _isSearchItemCurrentlyVisible(BuildContext context, SettingsSearchItem item) {
+    return _buildSettingsSearchItems(context).any((currentItem) {
+      return currentItem.section == item.section &&
+          currentItem.searchId == item.searchId &&
+          isSettingsSectionAvailable(currentItem.section, appConfig.isSmallScreen);
+    });
+  }
+
+  ///构建搜索项
+  List<SettingsSearchItem> _buildSettingsSearchItems(BuildContext context) {
+    final generatedItems = SettingsSection.values.expand((section) {
+      final view = buildSettingsSectionView(section, embedded: true);
+      return view?.buildSearchItems(context) ?? <SettingsSearchItem>[];
+    }).toList();
+    return [
+      ...generatedItems,
+    ];
+  }
+
+  ///清除设置搜索状态，用于返回键优先退出搜索而不是关闭设置页
+  void _clearSearch() {
+    _searchController.clear();
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 
   void _onSearchItemTap(BuildContext context, SettingsSearchItem item) {
+    if (!_isSearchItemCurrentlyVisible(context, item)) {
+      setState(() {});
+      return;
+    }
     if (widget.onSearchItemTap != null) {
       widget.onSearchItemTap!(item);
       return;
