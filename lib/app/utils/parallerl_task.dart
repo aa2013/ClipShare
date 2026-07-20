@@ -1,20 +1,20 @@
 import 'dart:async';
-import 'package:flutter/cupertino.dart';
+
+import 'package:flutter/foundation.dart';
 
 typedef FutureFunction = Future Function();
 
-///取消令牌源
+/// 取消令牌源，用于通知尚未开始的任务停止调度。
 class CancelTokenSource {
   final CancelToken token = CancelToken();
+
+  /// 重复取消保持幂等，便于多个生命周期入口共同收口。
   void cancel() {
-    if (token._isCanceled) {
-      throw 'Token already canceled';
-    }
     token._isCanceled = true;
   }
 }
 
-///取消令牌
+/// 只读取消令牌，已开始的任务由任务自身自然结束。
 class CancelToken {
   static final none = CancelToken();
   bool _isCanceled = false;
@@ -22,16 +22,15 @@ class CancelToken {
   bool get isCanceled => _isCanceled;
 }
 
-///并行任务工具
+/// 使用固定数量 worker 执行任务，并隔离单个任务的异常。
 class ParallelTask {
   final List<FutureFunction> _tasks;
   final Completer<void> _completer = Completer<void>();
-  late final CancelToken _token;
+  final CancelToken _token;
+  final int maxParallelCnt;
   bool _running = false;
   bool _stopped = false;
-
-  //最大并行执行的任务数量
-  final int maxParallelCnt;
+  int _nextTaskIndex = 0;
 
   bool get isCompleted => _completer.isCompleted;
 
@@ -39,97 +38,59 @@ class ParallelTask {
     required List<FutureFunction> tasks,
     this.maxParallelCnt = 10,
     CancelToken? token,
-  }) : _tasks = tasks,
+  }) : assert(maxParallelCnt > 0),
+       _tasks = tasks,
        _token = token ?? CancelToken.none;
 
+  /// 启动 worker；单个任务失败不会中断其他任务。
   Future<void> run() async {
+    if (_running || _completer.isCompleted) {
+      return _completer.future;
+    }
+    _running = true;
+    if (_tasks.isEmpty || _stopped || _token.isCanceled) {
+      _complete();
+      return _completer.future;
+    }
+
+    final workerCount = _tasks.length < maxParallelCnt ? _tasks.length : maxParallelCnt;
     try {
-      if (_running) {
-        throw 'Task already running';
-      }
-      if (_completer.isCompleted) {
-        throw 'Task already completed';
-      }
-      if(_token.isCanceled){
-        throw 'Task already canceled';
-      }
-      _running = true;
+      await Future.wait(List<Future<void>>.generate(workerCount, (_) => _runWorker()));
+    } finally {
+      _complete();
+    }
+    return _completer.future;
+  }
 
-      await _runTasks();
+  /// 停止派发新任务；已经启动的任务仍会自然收口。
+  Future<void> stop() async {
+    _stopped = true;
+    if (!_running) {
+      _complete();
+    }
+    await _completer.future;
+  }
 
-      await _completer.future;
-    } catch (err, stack) {
-      debugPrintStack(stackTrace: stack);
+  /// 单个 worker 顺序领取任务，领取动作在同步区间内完成。
+  Future<void> _runWorker() async {
+    while (!_stopped && !_token.isCanceled) {
+      if (_nextTaskIndex >= _tasks.length) {
+        return;
+      }
+      final task = _tasks[_nextTaskIndex++];
+      try {
+        await task();
+      } catch (error, stackTrace) {
+        debugPrint('ParallelTask task failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
     }
   }
 
-  Future<void> stop() async {
-    _stopped = true;
+  /// 只完成一次运行 Future。
+  void _complete() {
     if (!_completer.isCompleted) {
       _completer.complete();
     }
-  }
-
-  Future<void> _runTasks() async {
-    if (_tasks.isEmpty) {
-      _completer.complete();
-      return;
-    }
-
-    int runningCount = 0;
-    int index = 0;
-    int completedCount = 0;
-
-    Future<void> schedule() async {
-      if (_stopped) return;
-      if (_token.isCanceled) {
-        _completer.complete();
-        return;
-      }
-
-      while (index < _tasks.length && !_token.isCanceled) {
-        if (_token.isCanceled) {
-          _completer.complete();
-          return;
-        }
-        if(runningCount >= maxParallelCnt){
-          await Future.delayed(const Duration(milliseconds: 100));
-          continue;
-        }
-        final task = _tasks[index++];
-        runningCount++;
-
-        task()
-            .then((_) {
-              runningCount--;
-              completedCount++;
-
-              if (completedCount == _tasks.length) {
-                if (!_completer.isCompleted) {
-                  _completer.complete();
-                }
-                return;
-              }
-
-              // schedule();
-            })
-            .catchError((err, stack) {
-              debugPrintStack(stackTrace: stack);
-              runningCount--;
-              completedCount++;
-
-              if (completedCount == _tasks.length) {
-                if (!_completer.isCompleted) {
-                  _completer.complete();
-                }
-                return;
-              }
-
-              schedule();
-            });
-      }
-    }
-
-    await schedule();
   }
 }
