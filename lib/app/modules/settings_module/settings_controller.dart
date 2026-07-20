@@ -641,6 +641,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
 
   @override
   void onForwardServerStatusChanged(ForwardServerStatus status) {
+    logger.info(tag, "onForwardServerStatusChanged $status");
     forwardServerStatus.value = status;
   }
 

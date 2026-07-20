@@ -456,6 +456,8 @@ class FileSyncHandler {
       },
       cancelOnError: true,
       onDone: () {
+        // 对端发送完成后会主动关闭写端，本端必须立即释放 Socket，避免连接停留在 CLOSE_WAIT。
+        socket.destroy();
         var end = DateTime.now();
         int offset = max(end.difference(start).inSeconds, 1);
         int speed = size ~/ offset;

@@ -8,12 +8,13 @@ import 'package:get/get.dart';
 
 class SecureSocketServer {
   static const tag = "SecureSocketServer";
+
   final String ip;
   final int port;
   late final ServerSocket _server;
-  bool _listening = false;
   late final void Function(String ip, int port) _onConnected;
-  late final void Function(SecureSocketClient client, Map<String,dynamic> data) _onMessage;
+  late final void Function(SecureSocketClient client, Map<String, dynamic> data) _onMessage;
+  void Function(SecureSocketClient client)? _onClientReady;
   Function? _onError;
   void Function(
     Exception e,
@@ -28,100 +29,123 @@ class SecureSocketServer {
   )? _onClientDone;
   void Function()? _onDone;
   bool? _cancelOnError;
-  late final StreamSubscription _stream;
-  final Set<SecureSocketClient> _sktList = {};
+  StreamSubscription<Socket>? _stream;
+  final Set<SecureSocketClient> _clients = <SecureSocketClient>{};
+  Future<void>? _closingFuture;
 
   SecureSocketServer._private(this.ip, this.port);
 
-  ///服务端绑定监听端口
+  /// 服务端绑定监听端口，并等待每个入站连接完成设备级握手后再通知上层。
   static Future<SecureSocketServer> bind({
     required String ip,
     required int port,
     required void Function(String ip, int port) onConnected,
-    required void Function(SecureSocketClient client, Map<String,dynamic> data) onMessage,
+    required void Function(SecureSocketClient client, Map<String, dynamic> data) onMessage,
     Function? onError,
     void Function()? onDone,
     bool? cancelOnError,
-    void Function(Exception e, String ip, int port, SecureSocketClient client)?
-        onClientError,
+    void Function(Exception e, String ip, int port, SecureSocketClient client)? onClientError,
     void Function(String ip, int port, SecureSocketClient client)? onClientDone,
+    void Function(SecureSocketClient client)? onClientReady,
   }) async {
-    var sss = SecureSocketServer._private(ip, port);
-    sss._server = await ServerSocket.bind(ip, port, shared: true);
-    sss._onMessage = onMessage;
-    sss._onError = onError;
-    sss._onConnected = onConnected;
-    sss._onDone = onDone;
-    sss._onClientDone = onClientDone;
-    sss._onClientError = onClientError;
-    sss._listen();
-    return sss;
+    final server = SecureSocketServer._private(ip, port);
+    server._server = await ServerSocket.bind(ip, port, shared: true);
+    server._onMessage = onMessage;
+    server._onError = onError;
+    server._onConnected = onConnected;
+    server._onDone = onDone;
+    server._onClientDone = onClientDone;
+    server._onClientError = onClientError;
+    server._onClientReady = onClientReady;
+    server._cancelOnError = cancelOnError;
+    server._listen();
+    return server;
   }
 
-  ///监听新连接
   void _listen() {
-    if (_listening) {
-      throw Exception("SecureSocketService has started listening");
+    if (_stream != null) {
+      throw StateError("SecureSocketServer has already started listening.");
     }
-    _listening = true;
+    _stream = _server.listen(
+      (socket) {
+        unawaited(_handleAcceptedSocket(socket));
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        logger.error(tag, "Socket server failed: $error", stackTrace);
+        _onError?.call(error);
+      },
+      onDone: () {
+        _onDone?.call();
+      },
+      cancelOnError: _cancelOnError,
+    );
+  }
+
+  Future<void> _handleAcceptedSocket(Socket socket) async {
+    final appConfig = Get.find<ConfigService>();
+    final remoteIp = socket.remoteAddress.address;
+    final remotePort = socket.remotePort;
+    late final SecureSocketClient client;
+    client = SecureSocketClient.fromSocket(
+      socket: socket,
+      prime1: appConfig.prime1,
+      prime2: appConfig.prime2,
+      dhAesKey: appConfig.dhAesKey,
+      onMessage: _onMessage,
+      onDone: (closedClient) {
+        _clients.remove(closedClient);
+        _onClientDone?.call(remoteIp, remotePort, closedClient);
+      },
+      onError: (error, failedClient) {
+        _clients.remove(failedClient);
+        logger.error(tag, "Accepted Socket failed: $error");
+        _onClientError?.call(error, remoteIp, remotePort, failedClient);
+      },
+      cancelOnError: _cancelOnError,
+    );
+    _clients.add(client);
     try {
-      _stream = _server.listen(
-        (client) {
-          final appConfig = Get.find<ConfigService>();
-          String ip = client.remoteAddress.address;
-          //此处端口不是客户端的服务端口，是客户端的socket进程端口
-          int port = client.remotePort;
-          late SecureSocketClient ssc;
-          ssc = SecureSocketClient.fromSocket(
-            socket: client,
-            prime1: appConfig.prime1,
-            prime2: appConfig.prime2,
-            dhAesKey: appConfig.dhAesKey,
-            onConnected: (SecureSocketClient ssc) {
-              _onConnected(ssc.ip, ssc.port);
-            },
-            onMessage: _onMessage,
-            onDone: (SecureSocketClient client) {
-              logger.debug(tag, "_onClientDone");
-              if (_onClientDone != null) {
-                _onClientDone!.call(ip, port, client);
-              }
-              if (_sktList.contains(ssc)) {
-                _sktList.remove(ssc);
-              }
-            },
-            onError: (e, SecureSocketClient client) {
-              logger.error(tag, "_onClientError error:$e");
-              if (_onClientError != null) {
-                _onClientError!(e, ip, port, client);
-              }
-            },
-            cancelOnError: _cancelOnError,
-          );
-          _sktList.add(ssc);
-        },
-        onError: (e, stack) {
-          logger.error("SecureSocketServer", "error:$e");
-          if (_onError != null) {
-            _onError!(e);
-          }
-        },
-        onDone: _onDone,
-        cancelOnError: _cancelOnError,
+      await client.waitReady();
+      _onConnected(client.ip, client.port);
+      _onClientReady?.call(client);
+    } catch (error, stackTrace) {
+      _clients.remove(client);
+      logger.debug(tag, "Accepted Socket closed before ready: $error $stackTrace");
+      _onClientError?.call(
+        error is Exception ? error : Exception(error.toString()),
+        remoteIp,
+        remotePort,
+        client,
       );
-    } catch (e) {
-      _listening = false;
-      rethrow;
+      await client.close();
     }
   }
 
-  ///发送数据
+  /// 通过服务端持有的当前客户端发送一条消息。
   Future<void> send(SecureSocketClient client, Map map) async {
     await client.send(map);
   }
 
-  ///关闭连接
+  /// 关闭监听端口和所有已接入客户端，避免服务停止后残留连接。
   Future<void> close() {
-    return _server.close();
+    final closingFuture = _closingFuture;
+    if (closingFuture != null) {
+      return closingFuture;
+    }
+    final future = _close();
+    _closingFuture = future;
+    return future;
+  }
+
+  Future<void> _close() async {
+    final clients = _clients.toList(growable: false);
+    _clients.clear();
+    try {
+      await _stream?.cancel();
+    } catch (_) {}
+    await _server.close();
+    for (final client in clients) {
+      await client.close();
+    }
   }
 }
