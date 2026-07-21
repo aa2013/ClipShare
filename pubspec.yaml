@@ -74,6 +74,8 @@ dependencies:
   resolve_windows_shortcut: ^2.0.0
   # 快捷键
   hotkey_manager: ^0.2.2
+  # Windows 注册表
+  win32_registry: ^2.1.0
   # 允许 Flutter 桌面应用检索关于屏幕大小，显示，光标位置等信息。
   screen_retriever: ^0.2.0
   # 提供一种平台无关的方式以一致的方式访问设备的文件位置系统

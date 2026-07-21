@@ -78,4 +78,5 @@ enum ConfigKey {
   fileSenderWindowSize,
   useTrayFlashingForConnection,
   recordMaxLength,
+  takeOverWinV,
 }

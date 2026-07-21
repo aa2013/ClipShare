@@ -596,6 +596,11 @@ class ConfigService extends GetxService {
 
   int get recordMaxLength => _recordMaxLength.value;
 
+  ///Windows 是否接管 Win+V 打开历史弹窗。
+  final _takeOverWinV = false.obs;
+
+  bool get takeOverWinV => _takeOverWinV.value;
+
   //endregion
 
   //endregion
@@ -815,6 +820,7 @@ class ConfigService extends GetxService {
     );
     _useTrayFlashingForConnection.value = await cfg.getConfigByKey(ConfigKey.useTrayFlashingForConnection, false);
     _recordMaxLength.value = await cfg.getConfigByKey(ConfigKey.recordMaxLength, 200_000);
+    _takeOverWinV.value = await cfg.getConfigByKey(ConfigKey.takeOverWinV, false);
   }
 
   ///初始化路径信息
@@ -1612,6 +1618,15 @@ class ConfigService extends GetxService {
   Future<void> setRecordMaxLength(int recordMaxLength) async {
     await configDao.addOrUpdate(ConfigKey.recordMaxLength, recordMaxLength.toString());
     _recordMaxLength.value = recordMaxLength;
+  }
+
+  ///设置 Windows 是否接管 Win+V 打开历史弹窗。
+  Future<void> setTakeOverWinV(bool value) async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.takeOverWinV, value.toString());
+    _takeOverWinV.value = value;
   }
 
   //endregion

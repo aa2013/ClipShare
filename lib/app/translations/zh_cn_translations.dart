@@ -348,6 +348,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "历史弹窗";
       case TranslationKey.hotKeySettingsHistoryDesc:
         return "在屏幕任意位置唤起历史记录弹窗";
+      case TranslationKey.hotKeySettingsHistoryTakeOverWinVTooltip:
+        return "已接管 Win+V";
       case TranslationKey.hotKeySettingsCombinationInvalidText:
         return "快捷键必须是控制键和非控制键的组合！";
       case TranslationKey.hotKeySettingsSaveKeysDialogText:
@@ -700,6 +702,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "以 Root 权限启动，重启手机无需重新激活";
       case TranslationKey.waitingRequestResult:
         return '等待请求结果';
+      case TranslationKey.applyingSettings:
+        return '正在应用设置...';
       case TranslationKey.rootRequestFailedDialogText:
         return "似乎没有 Root 权限，可选择 Shizuku 模式启动";
       case TranslationKey.ignoreMode:
@@ -1031,6 +1035,14 @@ class ZhCNTranslation extends AbstractTranslations {
         return "设备 @devName 已连接";
       case TranslationKey.clipboardSettingsGroupName:
         return "剪贴板";
+      case TranslationKey.clipboardSettingsTakeOverWinVTitle:
+        return "接管 Win+V";
+      case TranslationKey.clipboardSettingsTakeOverWinVDesc:
+        return "使用 Win+V 唤起历史弹窗";
+      case TranslationKey.clipboardSettingsTakeOverWinVInfoDialogContent:
+        return "启用和关闭会重启资源管理器以生效。\n正常退出程序或正常卸载时会自动还原。";
+      case TranslationKey.clipboardSettingsTakeOverWinVDialogContent:
+        return "接管 Win+V 会修改当前用户的系统热键配置，并重启资源管理器以立即生效。是否继续？";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
         return "记录剪贴板内容来源";
       case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:

@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "win32_registry",
+      "license": "BSD-3-Clause",
+      "url": "https://pub.dev/packages/win32_registry",
+    },
+    {
       "name": "flutter_colorpicker",
       "license": "MIT",
       "url": "https://pub.dev/packages/flutter_colorpicker",

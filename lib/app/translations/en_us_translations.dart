@@ -392,6 +392,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "History Popup";
       case TranslationKey.hotKeySettingsHistoryDesc:
         return "Open the history popup from anywhere on screen";
+      case TranslationKey.hotKeySettingsHistoryTakeOverWinVTooltip:
+        return "Win+V is taken over";
       case TranslationKey.hotKeySettingsCombinationInvalidText:
         return "A hotkey must include one modifier and one non-modifier key.";
       case TranslationKey.hotKeySettingsSaveKeysDialogText:
@@ -744,6 +746,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Runs with Root. No reactivation needed after a restart.";
       case TranslationKey.waitingRequestResult:
         return 'Waiting for Request Result';
+      case TranslationKey.applyingSettings:
+        return 'Applying settings...';
       case TranslationKey.rootRequestFailedDialogText:
         return "Root access was not found. You can use Shizuku mode instead.";
       case TranslationKey.ignoreMode:
@@ -1027,6 +1031,14 @@ class EnUSTranslation extends AbstractTranslations {
         return "Device @devName connected";
       case TranslationKey.clipboardSettingsGroupName:
         return "Clipboard";
+      case TranslationKey.clipboardSettingsTakeOverWinVTitle:
+        return "Take Over Win+V";
+      case TranslationKey.clipboardSettingsTakeOverWinVDesc:
+        return "Use Win+V to open the history popup.";
+      case TranslationKey.clipboardSettingsTakeOverWinVInfoDialogContent:
+        return "Enabling or disabling this restarts Explorer so the change takes effect.\nNormal app exit or uninstall restores Win+V.";
+      case TranslationKey.clipboardSettingsTakeOverWinVDialogContent:
+        return "Taking over Win+V changes the current user's system hotkey setting and restarts Explorer so it takes effect immediately. Continue?";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
         return "Record Clipboard Source";
       case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:

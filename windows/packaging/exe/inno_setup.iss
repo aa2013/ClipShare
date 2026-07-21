@@ -13,6 +13,7 @@ OutputBaseFilename={{OUTPUT_BASE_FILENAME}}
 Compression=lzma
 SolidCompression=yes
 SetupIconFile={{SETUP_ICON_FILE}}
+UninstallDisplayIcon={app}\{{EXECUTABLE_NAME}}
 WizardStyle=modern
 PrivilegesRequired={{PRIVILEGES_REQUIRED}}
 ArchitecturesAllowed=x64
@@ -65,17 +66,102 @@ Filename: "{app}\\{{EXECUTABLE_NAME}}"; Description: "{cm:LaunchProgram,{{DISPLA
 
 [Code]
 #define MyAppExeName "{{EXECUTABLE_NAME}}"
+#define ExplorerAdvancedRegPath "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced"
+#define DisabledHotkeysValueName "DisabledHotkeys"
 
-procedure CurStepChanged(CurStep: TSetupStep);
+function RemoveWinVDisabledHotkey(Value: String): String;
+var
+    Index: Integer;
+begin
+    Result := Value;
+    // 从后向前移除 V，避免删除字符后影响后续下标。
+    for Index := Length(Result) downto 1 do
+    begin
+        if Uppercase(Copy(Result, Index, 1)) = 'V' then
+        begin
+            Delete(Result, Index, 1);
+        end;
+    end;
+end;
+
+function RestoreWinVHotkey(): Boolean;
+var
+    DisabledHotkeys: String;
+    RestoredHotkeys: String;
+begin
+    Result := False;
+    // 只读取并修改 DisabledHotkeys，保留其他被禁用的系统快捷键字符。
+    if not RegQueryStringValue(HKCU, '{#ExplorerAdvancedRegPath}', '{#DisabledHotkeysValueName}', DisabledHotkeys) then
+    begin
+        exit;
+    end;
+    if Pos('V', Uppercase(DisabledHotkeys)) <= 0 then
+    begin
+        exit;
+    end;
+    RestoredHotkeys := RemoveWinVDisabledHotkey(DisabledHotkeys);
+    if RestoredHotkeys = '' then
+    begin
+        RegDeleteValue(HKCU, '{#ExplorerAdvancedRegPath}', '{#DisabledHotkeysValueName}');
+    end
+    else
+    begin
+        RegWriteStringValue(HKCU, '{#ExplorerAdvancedRegPath}', '{#DisabledHotkeysValueName}', RestoredHotkeys);
+    end;
+    Result := True;
+end;
+
+procedure RestartExplorer();
 var
     ResultCode: Integer;
+    ExplorerPath: String;
+begin
+    // DisabledHotkeys 由 Explorer 读取，重启后才能立即恢复 Win+V。
+    Exec('taskkill', '/F /IM explorer.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+    Sleep(1000);
+    ExplorerPath := ExpandConstant('{win}\explorer.exe');
+    if not Exec(ExplorerPath, '', ExpandConstant('{win}'), SW_SHOWNORMAL, ewNoWait, ResultCode) then
+    begin
+        Log('未能重启资源管理器');
+    end;
+end;
+
+procedure TerminateAppProcess();
+var
+    ResultCode: Integer;
+begin
+    // 安装和卸载前都先结束正在运行的主程序，释放全局快捷键和安装目录文件句柄。
+    if not Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    begin
+        Log('未能终止进程，可能进程未运行');
+    end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
 begin
     // 仅在开始安装时执行（用户点击安装按钮后）
     if CurStep = ssInstall then
     begin
-        if not Exec('taskkill', '/F /IM {#MyAppExeName}', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+        TerminateAppProcess();
+    end;
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+    // 卸载向导启动后立即结束主程序，避免运行中的应用继续占用 Win+V。
+    TerminateAppProcess();
+    Result := True;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+    // 卸载时独立恢复 Win+V，避免安装器强制结束应用后跳过应用内退出恢复。
+    if CurUninstallStep = usUninstall then
+    begin
+        TerminateAppProcess();
+        if RestoreWinVHotkey() then
         begin
-            Log('未能终止进程，可能进程未运行');
+            RestartExplorer();
         end;
     end;
 end;

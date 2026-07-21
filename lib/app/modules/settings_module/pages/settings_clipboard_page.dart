@@ -79,10 +79,7 @@ class SettingsClipboardPage extends SettingsSectionView {
               ),
           ],
         ),
-        description: Visibility(
-          visible: Platform.isAndroid,
-          child: Text(TranslationKey.clipboardSettingsSourceRecordAndroidDesc.tr),
-        ),
+        description: Platform.isAndroid ? Text(TranslationKey.clipboardSettingsSourceRecordAndroidDesc.tr) : null,
         value: appConfig.sourceRecord,
         action: (v) {
           return Switch(

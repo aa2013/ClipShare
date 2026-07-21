@@ -43,6 +43,7 @@ import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/utils/windows_win_v_takeover.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/foundation.dart';
@@ -109,6 +110,7 @@ class SplashController extends GetxController {
     if (PlatformExt.isDesktop) {
       //加载配置后初始化窗体配置
       await initWindowsManager();
+      await initWinVTakeover();
       await initHotKey();
       initMultiWindowEvent();
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -218,13 +220,32 @@ class SplashController extends GetxController {
   ///初始化快捷键
   initHotKey() async {
     await AppHotKeyHandler.unRegisterAll();
-    if (appConfig.historyWindowHotKeys.isNotEmpty) {
-      var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.historyWindowHotKeys);
+    final historyWindowHotKeys = appConfig.takeOverWinV ? Constants.winVHistoryWindowKeys : appConfig.historyWindowHotKeys;
+    if (historyWindowHotKeys.isNotEmpty) {
+      var hotKey = AppHotKeyHandler.toSystemHotKey(historyWindowHotKeys);
       AppHotKeyHandler.registerHistoryWindow(hotKey);
     }
     if (appConfig.syncFileHotKeys.isNotEmpty) {
       var hotKey = AppHotKeyHandler.toSystemHotKey(appConfig.syncFileHotKeys);
       AppHotKeyHandler.registerFileSync(hotKey);
+    }
+  }
+
+  ///初始化 Win+V 接管状态，并以系统 DisabledHotkeys 当前值同步应用设置。
+  Future<void> initWinVTakeover() async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    final disabled = await isWinVDisabled();
+    if (disabled && !appConfig.takeOverWinV) {
+      await appConfig.setTakeOverWinV(true);
+      return;
+    }
+    if (!disabled && appConfig.takeOverWinV) {
+      final changed = await takeOverWinV();
+      if (changed) {
+        await restartExplorer();
+      }
     }
   }
 

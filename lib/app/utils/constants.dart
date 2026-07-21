@@ -92,6 +92,12 @@ class Constants {
   //默认历史弹窗快捷键（Ctrl + Alt + H）
   static final defaultHistoryWindowKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.altLeft.usbHidUsage};${PhysicalKeyboardKey.keyH.usbHidUsage}";
 
+  //Windows 接管系统剪贴板历史入口后，历史弹窗固定使用 Win + V。
+  static final winVHistoryWindowKeys = "${PhysicalKeyboardKey.metaLeft.usbHidUsage};${PhysicalKeyboardKey.keyV.usbHidUsage}";
+
+  //接管系统剪贴板历史入口时在界面展示的固定快捷键。
+  static const winVHotKeyLabel = "Win+V";
+
   //文件同步快捷键（Ctrl + Shift + C）
   static final defaultSyncFileHotKeys = "${Platform.isMacOS ? PhysicalKeyboardKey.metaLeft.usbHidUsage : PhysicalKeyboardKey.controlLeft.usbHidUsage},${PhysicalKeyboardKey.shiftLeft.usbHidUsage};${PhysicalKeyboardKey.keyC.usbHidUsage}";
 
