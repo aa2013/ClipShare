@@ -370,6 +370,12 @@ class ConfigService extends GetxService {
 
   String get screenShotStorePath => "$rootStorePath/Screenshots".normalizePath;
 
+  //Android 接收同步图片的自定义存储路径
+  late final RxString _imageStorePath;
+
+  ///获取 Android 接收同步图片时使用的存储路径，未自定义时使用应用私有目录。
+  String get imageStorePath => _imageStorePath.value.isEmpty ? androidPrivatePicturesPath : _imageStorePath.value;
+
   //保存至相册
   late final RxBool _saveToPictures;
 
@@ -662,6 +668,7 @@ class ConfigService extends GetxService {
       _fileStorePath = defaultFileStorePath.obs;
     }
     _saveToPictures = (await cfg.getConfigByKey(ConfigKey.saveToPictures, false)).obs;
+    _imageStorePath = (await cfg.getConfigByKey(ConfigKey.imageStorePath, '')).obs;
     _ignoreShizuku = (await cfg.getConfigByKey(ConfigKey.ignoreShizuku, false)).obs;
     _useAuthentication = (await cfg.getConfigByKey(ConfigKey.useAuthentication, false)).obs;
     _appRevalidateDuration = (await cfg.getConfigByKey(ConfigKey.appRevalidateDuration, 0)).obs;
@@ -1265,6 +1272,12 @@ class ConfigService extends GetxService {
   Future<void> setFileStorePath(String fileStorePath) async {
     await configDao.addOrUpdate(ConfigKey.fileStorePath, fileStorePath);
     _fileStorePath.value = fileStorePath;
+  }
+
+  ///持久化 Android 接收同步图片的自定义存储目录。
+  Future<void> setImageStorePath(String imageStorePath) async {
+    await configDao.addOrUpdate(ConfigKey.imageStorePath, imageStorePath);
+    _imageStorePath.value = imageStorePath;
   }
 
   Future<void> setSaveToPictures(bool saveToPictures) async {

@@ -151,8 +151,40 @@ class SettingsSyncPage extends SettingsSectionView {
             ),
             SettingCard(
               searchKeys: const [
+                TranslationKey.syncSettingsStoreImagePathTitle,
+              ],
+              title: Text(
+                TranslationKey.syncSettingsStoreImagePathTitle.tr,
+                maxLines: 1,
+              ),
+              description: Text(appConfig.imageStorePath),
+              value: false,
+              show: (v) => Platform.isAndroid && !appConfig.saveToPictures,
+              action: (v) {
+                return TextButton(
+                  onPressed: () async {
+                    final result = await FileUtil.pickWritableDirectory();
+                    if (result.isUnwritable) {
+                      if (!context.mounted) {
+                        return;
+                      }
+                      Global.showTipsDialog(context: context, text: TranslationKey.unWriteablePathTips.tr);
+                      return;
+                    }
+                    if (result.path != null) {
+                      await appConfig.setImageStorePath(result.path!);
+                    }
+                  },
+                  child: Text(
+                    TranslationKey.selection.tr,
+                    maxLines: 1,
+                  ),
+                );
+              },
+            ),
+            SettingCard(
+              searchKeys: const [
                 TranslationKey.syncSettingsStoreFilePathTitle,
-                TranslationKey.doubleClick2OpenPath,
               ],
               title: Text(
                 TranslationKey.syncSettingsStoreFilePathTitle.tr,
@@ -170,13 +202,16 @@ class SettingsSyncPage extends SettingsSectionView {
               action: (v) {
                 return TextButton(
                   onPressed: () async {
-                    String? directory = await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
-                    if (directory != null) {
-                      if (!FileUtil.testWriteable(directory)) {
-                        Global.showTipsDialog(context: context, text: TranslationKey.unWriteablePathTips.tr);
+                    final result = await FileUtil.pickWritableDirectory();
+                    if (result.isUnwritable) {
+                      if (!context.mounted) {
                         return;
                       }
-                      appConfig.setFileStorePath(directory);
+                      Global.showTipsDialog(context: context, text: TranslationKey.unWriteablePathTips.tr);
+                      return;
+                    }
+                    if (result.path != null) {
+                      await appConfig.setFileStorePath(result.path!);
                     }
                   },
                   child: Text(

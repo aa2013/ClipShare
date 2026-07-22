@@ -583,6 +583,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     });
   }
 
+  ///处理同步记录中的二进制内容
   Future<void> _processData(History history, dynamic historyContent, OpMethod method, DevInfo sender) async {
     if ([OpMethod.add, OpMethod.update].contains(method)) {
       switch (HistoryContentType.parse(history.type)) {
@@ -594,7 +595,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             if (appConfig.saveToPictures) {
               path = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
             } else {
-              path = "${appConfig.androidPrivatePicturesPath}/$fileName";
+              path = "${appConfig.imageStorePath}/$fileName";
             }
             logger.debug(tag, "newPath $path");
             //如果没有权限则请求

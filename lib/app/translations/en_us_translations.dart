@@ -416,6 +416,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Storage access required.";
       case TranslationKey.syncSettingsStoreImg2PicturesCancelPerm:
         return "Permission request canceled.";
+      case TranslationKey.syncSettingsStoreImagePathTitle:
+        return "Image Storage Path";
       case TranslationKey.syncSettingsStoreFilePathTitle:
         return "File Storage Path";
       case TranslationKey.selection:

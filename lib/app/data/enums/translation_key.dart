@@ -178,6 +178,7 @@ enum TranslationKey {
   syncSettingsStoreImg2PicturesDesc,
   syncSettingsStoreImg2PicturesNoPermText,
   syncSettingsStoreImg2PicturesCancelPerm,
+  syncSettingsStoreImagePathTitle,
   syncSettingsStoreFilePathTitle,
   selection,
   syncSettingsAutoCopyImgTitle,

@@ -372,6 +372,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "无读写权限，需要进行授权";
       case TranslationKey.syncSettingsStoreImg2PicturesCancelPerm:
         return "用户取消授权！";
+      case TranslationKey.syncSettingsStoreImagePathTitle:
+        return "图片存储路径";
       case TranslationKey.syncSettingsStoreFilePathTitle:
         return "文件存储路径";
       case TranslationKey.selection:

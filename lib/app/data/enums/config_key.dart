@@ -23,6 +23,7 @@ enum ConfigKey {
   heartbeatInterval,
   fileStorePath,
   saveToPictures,
+  imageStorePath,
   ignoreShizuku,
   useAuthentication,
   appRevalidateDuration,
