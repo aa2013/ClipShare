@@ -248,7 +248,6 @@ class ClipboardService extends GetxService with ClipboardListener {
       _recoveringShizukuBinderPermission = false;
       // Shizuku 服务断开时只标记界面状态，不主动查询或请求权限，避免触发失效 binder。
       settingsController.markShizukuUnavailable();
-      await _notifyShizukuDisconnected();
       return;
     }
     await _recoverShizukuAfterBinderAvailable();
@@ -322,10 +321,11 @@ class ClipboardService extends GetxService with ClipboardListener {
   /// 展示 Shizuku 自动授权失败提示。
   ///
   /// 仅自动恢复流程使用该提示，避免和工作模式选择页自己的失败提示重复。
-  void _showShizukuRequestFailedDialog() {
+  Future<void> _showShizukuRequestFailedDialog() async {
     if (_showingShizukuRequestFailedDialog || Get.context == null) return;
     _showingShizukuRequestFailedDialog = true;
-    Global.showTipsDialog(
+    DialogController? dialog;
+    dialog = await Global.showTipsDialog(
       context: Get.context!,
       title: TranslationKey.requestFailed.tr,
       text: TranslationKey.shizukuRequestFailedDialogText.tr,
@@ -333,6 +333,7 @@ class ClipboardService extends GetxService with ClipboardListener {
       autoDismiss: false,
       onOk: () {
         _showingShizukuRequestFailedDialog = false;
+        dialog?.close();
       },
     );
   }

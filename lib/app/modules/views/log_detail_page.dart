@@ -41,29 +41,27 @@ class _LogDetailState extends State<LogDetailPage>{
       children: [
         const Icon(Icons.text_snippet_outlined),
         const SizedBox(width: 5),
-        Text(fileName),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
+        Expanded(child: Text(fileName)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _findMode = !_findMode;
+                });
+              },
+              icon: const Icon(Icons.search, color: Colors.blueGrey,),
+            ),
+            if (PlatformExt.isMobile)
               IconButton(
                 onPressed: () {
-                  setState(() {
-                    _findMode = !_findMode;
-                  });
+                  Share.shareXFiles([XFile(filePath)], text: TranslationKey.shareFile.tr);
                 },
-                icon: const Icon(Icons.search, color: Colors.blueGrey,),
+                icon: const Icon(Icons.share, color: Colors.blueGrey,),
               ),
-              if (PlatformExt.isMobile)
-                IconButton(
-                  onPressed: () {
-                    Share.shareXFiles([XFile(filePath)], text: TranslationKey.shareFile.tr);
-                  },
-                  icon: const Icon(Icons.share, color: Colors.blueGrey,),
-                ),
-            ],
-          ),
-        ),
+          ],
+        )
       ],
     );
     final content = Padding(
