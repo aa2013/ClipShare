@@ -547,7 +547,7 @@ class ConfigService extends GetxService {
   bool get stopListeningOnScreenClosed => _stopListeningOnScreenClosed.value;
 
   ///网络切换时尽量保留现有连接，避免在无需重连的场景主动断开。
-  final _keepConnectionsOnNetworkSwitch = false.obs;
+  final _keepConnectionsOnNetworkSwitch = true.obs;
 
   bool get keepConnectionsOnNetworkSwitch => _keepConnectionsOnNetworkSwitch.value;
 
@@ -786,7 +786,7 @@ class ConfigService extends GetxService {
     );
     _onlyManualDiscoverySubNet.value = await cfg.getConfigByKey(ConfigKey.onlyManualDiscoverySubNet, true);
     _stopListeningOnScreenClosed.value = await cfg.getConfigByKey(ConfigKey.stopListeningOnScreenClosed, false);
-    _keepConnectionsOnNetworkSwitch.value = await cfg.getConfigByKey(ConfigKey.keepConnectionsOnNetworkSwitch, false);
+    _keepConnectionsOnNetworkSwitch.value = await cfg.getConfigByKey(ConfigKey.keepConnectionsOnNetworkSwitch, true);
     _sendBroadcastOnAdd.value = await cfg.getConfigByKey(ConfigKey.sendBroadcastOnAdd, false);
     _recopyOnScreenUnlocked.value = await cfg.getConfigByKey(ConfigKey.recopyOnScreenUnlocked, false);
     _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
