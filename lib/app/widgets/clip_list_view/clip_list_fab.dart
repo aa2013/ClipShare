@@ -5,6 +5,7 @@ extension _ClipListFab on ClipListViewState {
     const fabSize = ExpandableFabSize.regular;
     const distance = 145.0;
     final multiSelected = _selectMode && _selectedItems.length > 1;
+    final colorScheme = Theme.of(context).colorScheme;
     final fab = <Widget>[
       Visibility(
         visible: _selectMode,
@@ -14,7 +15,8 @@ extension _ClipListFab on ClipListViewState {
           child: Container(
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xffc3e8ff),
+              // 多选数量徽标使用主题容器色，确保深浅色模式都有足够对比度。
+              color: colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Center(
@@ -25,9 +27,7 @@ extension _ClipListFab on ClipListViewState {
                   "${_selectedItems.length} / ${widget.list.length}",
                   style: TextStyle(
                     fontSize: 20,
-                    color: appConfig.currentIsDarkMode
-                        ? Colors.white
-                        : Colors.black87,
+                    color: colorScheme.onPrimaryContainer,
                   ),
                 ),
             ),),

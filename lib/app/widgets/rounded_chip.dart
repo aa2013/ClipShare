@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 class RoundedChip extends RawChip {
+  /// 项目统一圆角 chip；边框交给 ChipTheme 控制，调用点显式传 side 时仍可覆盖。
   const RoundedChip({
     super.key,
     super.avatar,
@@ -10,7 +11,7 @@ class RoundedChip extends RawChip {
     super.onDeleted,
     super.deleteIconColor,
     super.deleteButtonTooltipMessage,
-    super.side = BorderSide.none,
+    super.side,
     super.shape = const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(50)),
     ),

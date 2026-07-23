@@ -61,6 +61,7 @@ final lightThemeData = ThemeData.light().copyWith(
   chipTheme: ChipThemeData(
     backgroundColor: const Color(0xffdde1e3),
     selectedColor: Colors.blue[100],
+    side: BorderSide.none,
   ),
   segmentedButtonTheme: SegmentedButtonThemeData(
     style: ButtonStyle(
@@ -84,16 +85,17 @@ const darkNavigationSurfaceColor = Color(0xFF182128);
 const darkNoneBorderInputColor = Color(0xFF182128);
 const darkSelectedNavigationColor = Color(0xFF8FC7F3);
 const darkUnselectedNavigationColor = Color(0xFF92A2AC);
+final _darkColorScheme = ColorScheme.fromSeed(
+  seedColor: Colors.lightBlueAccent,
+  brightness: Brightness.dark,
+  surface: darkBackgroundColor,
+  surfaceBright: darkBackgroundColor2,
+);
 final _darkNoneBorderInputDecoration = _baseNoneBorderInputDecoration.copyWith(
   fillColor: darkNoneBorderInputColor,
 );
 final darkThemeData = ThemeData.dark().copyWith(
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: Colors.lightBlueAccent,
-    brightness: Brightness.dark,
-    surface: darkBackgroundColor,
-    surfaceBright: darkBackgroundColor2,
-  ),
+  colorScheme: _darkColorScheme,
   appBarTheme: const AppBarTheme(
     backgroundColor: darkNavigationSurfaceColor,
     foregroundColor: Color(0xFFE5EEF4),
@@ -121,6 +123,8 @@ final darkThemeData = ThemeData.dark().copyWith(
   chipTheme: ChipThemeData(
     backgroundColor: darkBackgroundColor2,
     selectedColor: Colors.blue[800],
+    // 深色 chip 背景接近卡片色，统一补边框避免历史标签和设备 chip 融入背景。
+    side: BorderSide(color: _darkColorScheme.outlineVariant.withAlpha(50)),
   ),
   dialogBackgroundColor: darkBackgroundColor2,
 );
