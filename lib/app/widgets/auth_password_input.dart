@@ -14,9 +14,9 @@ class AuthPasswordInput extends StatefulWidget {
   final bool Function(String first, String? second) onFinished;
   final void Function()? onError;
   final bool Function(String input) onOk;
-  String? tipText;
-  String? againText;
-  String? errorText;
+  final String tipText;
+  final String againText;
+  final String errorText;
   final bool again;
   final bool showCancelBtn;
 
@@ -24,17 +24,15 @@ class AuthPasswordInput extends StatefulWidget {
     super.key,
     required this.onFinished,
     required this.onOk,
-    this.tipText,
-    this.againText,
-    this.errorText,
+    String? tipText,
+    String? againText,
+    String? errorText,
     this.again = false,
     this.onError,
     this.showCancelBtn = false,
-  }) {
-    tipText = tipText ?? TranslationKey.inputPassword.tr;
-    againText = againText ?? TranslationKey.inputAgain.tr;
-    errorText = errorText ?? TranslationKey.inputErrorAndAgain.tr;
-  }
+  })  : tipText = tipText ?? TranslationKey.inputPassword.tr,
+        againText = againText ?? TranslationKey.inputAgain.tr,
+        errorText = errorText ?? TranslationKey.inputErrorAndAgain.tr;
 
   @override
   State<StatefulWidget> createState() {
@@ -57,7 +55,7 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
 
   String get currentInput => secondInput && widget.again ? _second : _first;
 
-  String get _currentShowText => secondInput ? widget.againText! : widget.tipText!;
+  String get _currentShowText => secondInput ? widget.againText : widget.tipText;
   static const deleteIcon = Icon(
     Icons.backspace_outlined,
     color: Colors.orange,
@@ -167,178 +165,181 @@ class _AuthPasswordInputState extends State<AuthPasswordInput> {
     final numberContainerBg = currentTheme.cardTheme.color ?? currentTheme.colorScheme.surface;
     return KeyboardListener(
       focusNode: focusNode,
-      child: Material(
-        color: currentTheme.scaffoldBackgroundColor,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              child: Column(
-                children: [
-                  Image.asset(
-                    Constants.logoPngPath,
-                    width: 140,
-                    fit: BoxFit.fitWidth,
-                  ),
-                  Text(
-                    _error ? widget.errorText! : _currentShowText,
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: _error ? Colors.red : Colors.blue,
+      child: SafeArea(
+        maintainBottomViewPadding: Platform.isAndroid,
+        child: Material(
+          color: currentTheme.scaffoldBackgroundColor,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                child: Column(
+                  children: [
+                    Image.asset(
+                      Constants.logoPngPath,
+                      width: 140,
+                      fit: BoxFit.fitWidth,
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: 200,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        for (var i = 0; i < 4; i++)
-                          AnimatedContainer(
-                            width: inputDotWidth,
-                            height: inputDotWidth,
-                            duration: 200.ms,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(inputDotWidth / 2),
-                              color: currentInput.length > i ? Colors.blue : Colors.transparent,
-                              border: Border.all(
-                                color: Colors.blue,
-                                width: 1,
-                              ),
-                            ),
-                          ),
-                      ],
+                    Text(
+                      _error ? widget.errorText : _currentShowText,
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: _error ? Colors.red : Colors.blue,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              ),
-            ),
-            Expanded(
-              child: LayoutBuilder(
-                builder: (ctx, constraints) {
-                  var maxWidth = constraints.maxWidth / 3 * 0.8;
-                  var maxHeight = (constraints.maxHeight - separate * 5) / 4;
-                  final edgeLen = min(maxHeight, maxWidth);
-                  final radius = edgeLen / 2;
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      for (var i = 1; i <= 3; i++)
-                        Row(
-                          mainAxisAlignment: rowAlign,
-                          children: [
-                            for (var j = 1; j <= 3; j++)
-                              Ink(
-                                decoration: BoxDecoration(
-                                  //颜色放外面的Ink，否则水波纹被遮挡
-                                  color: numberContainerBg,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(radius),
-                                  ),
-                                ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(radius),
-                                  ),
-                                  child: AnimatedContainer(
-                                    width: edgeLen,
-                                    height: edgeLen,
-                                    duration: 200.ms,
-                                    child: Center(
-                                      child: Text(
-                                        "${(i - 1) * 3 + j}",
-                                        style: const TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  onTap: () => onNumberInput((i - 1) * 3 + j),
-                                ),
-                              ),
-                          ].cast<Widget>().separateWith(separateWidth),
-                        ),
-                      Stack(
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: 200,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Row(
-                            mainAxisAlignment: rowAlign,
-                            children: [
-                              SizedBox(
-                                width: edgeLen,
-                                height: edgeLen,
-                              ),
-                              Ink(
-                                decoration: BoxDecoration(
-                                  //颜色放外面的Ink，否则水波纹被遮挡
-                                  color: numberContainerBg,
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(radius),
-                                  ),
+                          for (var i = 0; i < 4; i++)
+                            AnimatedContainer(
+                              width: inputDotWidth,
+                              height: inputDotWidth,
+                              duration: 200.ms,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(inputDotWidth / 2),
+                                color: currentInput.length > i ? Colors.blue : Colors.transparent,
+                                border: Border.all(
+                                  color: Colors.blue,
+                                  width: 1,
                                 ),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(radius),
-                                  ),
-                                  child: AnimatedContainer(
-                                    width: edgeLen,
-                                    height: edgeLen,
-                                    duration: 200.ms,
-                                    child: const Center(
-                                      child: Text(
-                                        "0",
-                                        style: TextStyle(
-                                          fontSize: 30,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  onTap: () => onNumberInput(0),
-                                ),
-                              ),
-                              Ink(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(radius),
-                                  ),
-                                ),
-                                child: InkWell(
-                                  splashColor: Colors.orange.withOpacity(0.1),
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(radius),
-                                  ),
-                                  onTap: onNumberDelete,
-                                  child: AnimatedContainer(
-                                    width: edgeLen,
-                                    height: edgeLen,
-                                    duration: 200.ms,
-                                    child: const Center(
-                                      child: deleteIcon,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ].cast<Widget>().separateWith(separateWidth),
-                          ),
-                          if (widget.showCancelBtn && PlatformExt.isDesktop)
-                            Positioned(
-                              right: 30,
-                              bottom: 15,
-                              child: TextButton(
-                                onPressed: Get.back,
-                                child: Text(TranslationKey.dialogCancelText.tr),
                               ),
                             ),
                         ],
                       ),
-                    ].cast<Widget>().separateWith(separateHeight, first: true, last: true),
-                  );
-                },
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (ctx, constraints) {
+                    var maxWidth = constraints.maxWidth / 3 * 0.8;
+                    var maxHeight = (constraints.maxHeight - separate * 5) / 4;
+                    final edgeLen = min(maxHeight, maxWidth);
+                    final radius = edgeLen / 2;
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        for (var i = 1; i <= 3; i++)
+                          Row(
+                            mainAxisAlignment: rowAlign,
+                            children: [
+                              for (var j = 1; j <= 3; j++)
+                                Ink(
+                                  decoration: BoxDecoration(
+                                    //颜色放外面的Ink，否则水波纹被遮挡
+                                    color: numberContainerBg,
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(radius),
+                                    ),
+                                  ),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(radius),
+                                    ),
+                                    child: AnimatedContainer(
+                                      width: edgeLen,
+                                      height: edgeLen,
+                                      duration: 200.ms,
+                                      child: Center(
+                                        child: Text(
+                                          "${(i - 1) * 3 + j}",
+                                          style: const TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    onTap: () => onNumberInput((i - 1) * 3 + j),
+                                  ),
+                                ),
+                            ].cast<Widget>().separateWith(separateWidth),
+                          ),
+                        Stack(
+                          children: [
+                            Row(
+                              mainAxisAlignment: rowAlign,
+                              children: [
+                                SizedBox(
+                                  width: edgeLen,
+                                  height: edgeLen,
+                                ),
+                                Ink(
+                                  decoration: BoxDecoration(
+                                    //颜色放外面的Ink，否则水波纹被遮挡
+                                    color: numberContainerBg,
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(radius),
+                                    ),
+                                  ),
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(radius),
+                                    ),
+                                    child: AnimatedContainer(
+                                      width: edgeLen,
+                                      height: edgeLen,
+                                      duration: 200.ms,
+                                      child: const Center(
+                                        child: Text(
+                                          "0",
+                                          style: TextStyle(
+                                            fontSize: 30,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    onTap: () => onNumberInput(0),
+                                  ),
+                                ),
+                                Ink(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(radius),
+                                    ),
+                                  ),
+                                  child: InkWell(
+                                    splashColor: Colors.orange.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(radius),
+                                    ),
+                                    onTap: onNumberDelete,
+                                    child: AnimatedContainer(
+                                      width: edgeLen,
+                                      height: edgeLen,
+                                      duration: 200.ms,
+                                      child: const Center(
+                                        child: deleteIcon,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ].cast<Widget>().separateWith(separateWidth),
+                            ),
+                            if (widget.showCancelBtn && PlatformExt.isDesktop)
+                              Positioned(
+                                right: 30,
+                                bottom: 15,
+                                child: TextButton(
+                                  onPressed: Get.back,
+                                  child: Text(TranslationKey.dialogCancelText.tr),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ].cast<Widget>().separateWith(separateHeight, first: true, last: true),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
