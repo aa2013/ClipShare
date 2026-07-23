@@ -558,6 +558,7 @@ enum TranslationKey {
   exportFailedAndViewLogs,
   importing,
   loading,
+  segmenting,
   auto,
   doubleClick2OpenPath,
   editDb,

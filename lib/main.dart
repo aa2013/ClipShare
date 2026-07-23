@@ -19,6 +19,7 @@ import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/device_connection_notify_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
+import 'package:clipshare/app/services/jieba_segment_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
@@ -166,6 +167,7 @@ Future<void> initMainServices() async {
   final registry = connRegistryService.registry;
   Get.put<ConnectionRegistryService>(connRegistryService, permanent: true);
   Get.put(HistorySyncProgressService(), permanent: true);
+  Get.put(JiebaSegmentService(), permanent: true);
   Get.put(DeviceConnectionNotifyService(), permanent: true);
   Get.put(TransportHeartbeatService().init(), permanent: true);
   Get.put<SocketService>(SocketService(registry), permanent: true);

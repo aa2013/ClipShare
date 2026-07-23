@@ -28,6 +28,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -38,6 +39,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/services/jieba_segment_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -55,7 +57,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
@@ -190,9 +191,6 @@ class ConfigService extends GetxService {
 
   //本机是否启用 存储 进行中转
   bool get enableStorageSync => enableWebDAV || enableS3;
-
-  //jieba分词库是否已初始化
-  bool _jiebaInited = false;
 
   //设备连接时的df算法参数加密key
   String? _dhAesKey;
@@ -1944,35 +1942,6 @@ class ConfigService extends GetxService {
   /// 根据当前语言配置刷新 GetX 的国际化环境。
   void updateLanguage() {
     Get.updateLocale(language.resolveLocale(Get.deviceLocale));
-  }
-
-  ///获取分词文件的存储位置
-  Future<String> getJiebaSegmentFileDirPath() async {
-    late String dirPath;
-    if (Platform.isWindows) {
-      dirPath = Directory(Platform.resolvedExecutable).parent.path;
-      if (!FileUtil.testWriteable(dirPath)) {
-        dirPath = documentsPath;
-      }
-    } else {
-      dirPath = documentsPath;
-    }
-    return "$dirPath/jieba".normalizePath;
-  }
-
-  ///检测是否可分词
-  Future<bool> checkJiebaSegment() async {
-    if (_jiebaInited) {
-      return true;
-    }
-    final dirPath = await getJiebaSegmentFileDirPath();
-    final dictFilePath = "$dirPath/dict.txt".normalizePath;
-    final probEmitFilePath = "$dirPath/prob_emit.txt".normalizePath;
-    final result = await File(dictFilePath).exists() && await File(probEmitFilePath).exists();
-    if (!result) return false;
-    await JiebaSegmenter.init(dirPath);
-    _jiebaInited = true;
-    return true;
   }
 
   //endregion

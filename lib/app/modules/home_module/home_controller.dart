@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:clipshare/app/handlers/sync/script_module_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/rule_sync_handler.dart';
 import 'package:clipshare/app/modules/rules_module/rules_page.dart';
+import 'package:clipshare/app/services/jieba_segment_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
@@ -51,6 +52,7 @@ final _noScreenshot = NoScreenshot.instance;
 class HomeController extends GetxController with WidgetsBindingObserver, ScreenOpenedObserver {
   String get tag => "HomeController";
   final appConfig = Get.find<ConfigService>();
+  final segmentService = Get.find<JiebaSegmentService>();
   final sktService = Get.find<SocketService>();
   final settingsController = Get.find<SettingsController>();
   final storageService = Get.find<StorageService>();
@@ -531,9 +533,9 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
 
   ///显示分词信息
   Future<void> showSegmentWordsView(BuildContext context, String content) async {
-    final enabled = await appConfig.checkJiebaSegment();
+    final enabled = await segmentService.checkJiebaSegment(context);
     if (!enabled) {
-      final dirPath = await appConfig.getJiebaSegmentFileDirPath();
+      final dirPath = await segmentService.getJiebaSegmentFileDirPath();
       DialogController? dialog;
       dialog = await Global.showTipsDialog(
         context: context,
@@ -558,7 +560,7 @@ class HomeController extends GetxController with WidgetsBindingObserver, ScreenO
             onFinished: (success) async {
               try {
                 if (success) {
-                  final extraTo = await appConfig.getJiebaSegmentFileDirPath();
+                  final extraTo = await segmentService.getJiebaSegmentFileDirPath();
                   await ZipFile.openAndExtractAsync(downPath, extraTo);
                   Global.showSnackBarSuc(text: TranslationKey.jiebaFileInstallSuccess.tr, context: Get.context);
                   await File(downPath).delete();

@@ -18,14 +18,16 @@ class BlurBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma), // 模糊效果
-      child: Container(
-        decoration: BoxDecoration(
-          color: overlayColor ?? Colors.white.withOpacity(0.1), // 覆盖层颜色
-          borderRadius: borderRadius, // 圆角
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma), // 模糊效果
+        child: Container(
+          decoration: BoxDecoration(
+            color: overlayColor ?? Colors.white.withOpacity(0.1), // 覆盖层颜色
+            borderRadius: borderRadius, // 圆角
+          ),
+          child: child, // 子组件
         ),
-        child: child, // 子组件
       ),
     );
   }
