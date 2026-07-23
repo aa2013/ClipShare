@@ -102,6 +102,11 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
   bool _checkingAccessibilityPerm = false;
   bool _accessibilityPermDialogPending = false;
   static const _accessibilityPermissionRecheckDelay = Duration(seconds: 1);
+  static const _androidEnvStatusRunningRetryDelays = [
+    Duration(milliseconds: 500),
+    Duration(seconds: 1),
+    Duration(milliseconds: 1500),
+  ];
 
   //region environment status widgets
   final Rx<Widget> envStatusIcon = Rx<Widget>(envLoadingIcon);
@@ -496,21 +501,22 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
       );
     }
     bool hasPermission = true;
-    bool listening = await clipboardManager.checkIsRunning();
+    bool listening = true;
     var ignoreWorkingMode = false;
-    if (!listening) {
-      await Future.delayed(2.s, () async {
-        listening = await clipboardManager.checkIsRunning();
-      });
-    }
-    if (checkSeq != _envStatusCheckSeq) {
-      return;
-    }
     switch (mode) {
       case EnvironmentType.shizuku:
         hasPermission = await clipboardManager.checkPermission(mode!);
         if (checkSeq != _envStatusCheckSeq) {
           return;
+        }
+        if (hasPermission) {
+          // Shizuku 前台通知可能先于 user service 绑定完成出现，启动期需要短暂等待 ready 后再下结论。
+          listening = await _checkAndroidListenerRunningWithGracePeriod(checkSeq);
+          if (checkSeq != _envStatusCheckSeq) {
+            return;
+          }
+        } else {
+          listening = false;
         }
         envStatusTipContent.value = hasPermission ? shizukuEnvNormalTipContent : shizukuEnvErrorTipContent;
         envStatusTipDesc.value = hasPermission && listening ? shizukuEnvNormalTipDesc : shizukuEnvErrorTipDesc;
@@ -526,17 +532,28 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         if (checkSeq != _envStatusCheckSeq) {
           return;
         }
+        if (hasPermission) {
+          // Root 模式同样依赖前台服务与监听线程完成初始化，避免冷启动时把中间态误报为失败。
+          listening = await _checkAndroidListenerRunningWithGracePeriod(checkSeq);
+          if (checkSeq != _envStatusCheckSeq) {
+            return;
+          }
+        } else {
+          listening = false;
+        }
         envStatusTipContent.value = hasPermission && listening ? rootEnvNormalTipContent : rootEnvErrorTipContent;
         envStatusTipDesc.value = hasPermission && listening ? rootEnvNormalTipDesc : rootEnvErrorTipDesc;
         break;
       case EnvironmentType.androidPre10:
         hasPermission = true;
+        listening = true;
         envStatusTipContent.value = androidPre10TipContent;
         envStatusTipDesc.value = androidPre10EnvNormalTipDesc;
         break;
       default:
         ignoreWorkingMode = true;
         hasPermission = true;
+        listening = true;
         envStatusTipContent.value = ignoreTipContent;
         envStatusTipDesc.value = ignoreTipDesc;
     }
@@ -549,6 +566,28 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
         hasClipboardPerm.value = v;
       });
     }
+  }
+
+  /// 在提权工作模式启动期确认剪贴板监听是否已就绪。
+  ///
+  /// Shizuku/root 的前台通知可能早于实际监听服务 ready 出现；这里用有界短重试区分
+  /// “仍在启动中”和“确认未运行”，避免冷启动时一次 false 直接把设置页渲染成错误状态。
+  Future<bool> _checkAndroidListenerRunningWithGracePeriod(int checkSeq) async {
+    var listening = await clipboardManager.checkIsRunning();
+    if (listening) {
+      return true;
+    }
+    for (final delay in _androidEnvStatusRunningRetryDelays) {
+      await Future.delayed(delay);
+      if (checkSeq != _envStatusCheckSeq) {
+        return false;
+      }
+      listening = await clipboardManager.checkIsRunning();
+      if (listening) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// 标记 Shizuku 当前不可用。
