@@ -18,6 +18,7 @@ import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/listeners/tag_changed_listener.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
+import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -495,8 +496,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
     var applyResult = await ruleController.apply(type, content, source);
     if (applyResult.result?.isDropped ?? false) {
+      //截取最大长度
+      final logContent = "${content.substringMinLen(0,20)}...";
       //丢弃
-      logger.info(tag, "content: $content，dropped");
+      logger.info(tag, "content: $logContent，dropped");
       return;
     }
     switch (type) {
