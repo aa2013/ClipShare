@@ -106,6 +106,7 @@ class AppHotKeyHandler {
             title: title,
             tag: MultiWindowTag.history,
             themeMode: appConfig.appTheme,
+            selfDeviceGuid: appConfig.device.guid,
           ).toString(),
         );
         appConfig.historyWindow = window;
@@ -190,6 +191,7 @@ class AppHotKeyHandler {
             title: title,
             tag: MultiWindowTag.devices,
             themeMode: appConfig.appTheme,
+            selfDeviceGuid: appConfig.device.guid,
             otherArgs: args,
           ).toString(),
         );

@@ -10,6 +10,8 @@ class DesktopMultiWindowArgs {
   final String languageCode;
   String? countryCode;
   final ThemeMode themeMode;
+  /// 由主窗口传入子窗口的本机设备标识，用于子窗口独立计算设备展示名。
+  final String selfDeviceGuid;
   final Map<String, dynamic> otherArgs;
 
   DesktopMultiWindowArgs._private({
@@ -18,13 +20,16 @@ class DesktopMultiWindowArgs {
     required this.languageCode,
     this.countryCode,
     required this.themeMode,
+    required this.selfDeviceGuid,
     this.otherArgs = const {},
   });
 
+  /// 根据主窗口运行时状态创建可跨 Flutter 引擎传递的子窗口启动参数。
   factory DesktopMultiWindowArgs.init({
     required String title,
     required MultiWindowTag tag,
     required ThemeMode? themeMode,
+    required String selfDeviceGuid,
     Map<String, dynamic> otherArgs = const {},
   }) {
     final locale = Get.locale!;
@@ -39,6 +44,7 @@ class DesktopMultiWindowArgs {
       languageCode: locale.languageCode,
       countryCode: locale.countryCode,
       themeMode: themeMode,
+      selfDeviceGuid: selfDeviceGuid,
       otherArgs: otherArgs,
     );
   }
@@ -48,12 +54,14 @@ class DesktopMultiWindowArgs {
     return jsonEncode(this);
   }
 
+  /// 启动上下文
   Map<String, dynamic> toJson() {
     var map = {
       "tag": tag.name,
       "title": title,
       "languageCode": languageCode,
       "themeMode": themeMode.name,
+      "selfDeviceGuid": selfDeviceGuid,
       "otherArgs": otherArgs,
     };
     if (countryCode != null) {
@@ -62,6 +70,7 @@ class DesktopMultiWindowArgs {
     return map;
   }
 
+  /// 解析子窗口启动参数，缺少本机标识的旧参数回退为空字符串以保持可启动。
   factory DesktopMultiWindowArgs.fromJson(Map<String, dynamic> json) {
     ThemeMode themeMode = !json.containsKey('themeMode') || json['themeMode'] == "system"
         ? Get.isPlatformDarkMode
@@ -76,6 +85,7 @@ class DesktopMultiWindowArgs {
       languageCode: json['languageCode']!,
       countryCode: json['countryCode'],
       themeMode: themeMode,
+      selfDeviceGuid: json['selfDeviceGuid'] ?? "",
       otherArgs: json["otherArgs"] ?? {},
     );
   }

@@ -7,6 +7,7 @@ import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/app/data/enums/app_language.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/desktop_multi_window_args.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_window.dart';
 import 'package:clipshare/app/modules/views/windows/history/history_window.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
@@ -56,6 +57,7 @@ Future<void> main(List<String> args) async {
       //子窗口
       final windowId = int.parse(args[1]);
       multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
+      Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
       switch (multiWindowArgs.tag) {
         case MultiWindowTag.history:
           home = HistoryWindow(

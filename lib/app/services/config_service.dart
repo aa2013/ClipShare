@@ -1109,6 +1109,7 @@ class ConfigService extends GetxService {
       uid: 0,
       type: type,
     );
+    Device.initializeSelfGuid(device.guid);
   }
 
   //endregion
