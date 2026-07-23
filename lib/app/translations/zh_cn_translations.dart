@@ -1004,7 +1004,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.enableAutoSyncOnScreenOpenedTitle:
         return "屏幕亮起时发现设备";
       case TranslationKey.enableAutoSyncOnScreenOpenedDesc:
-        return "当屏幕亮起将会扫描网络以发现设备，若启用了熄屏后断开网络连接选项，当熄屏时切换网络后可能不会自动连接设备";
+        return "当屏幕亮起将会扫描网络以发现设备，若启用了息屏后断开网络连接选项，当息屏时切换网络后可能不会自动连接设备";
       case TranslationKey.deviceDiscoveryStatusViaPaired:
         return "连接已配对设备";
       case TranslationKey.export2Excel:
@@ -1359,9 +1359,9 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.onlyManualDiscoverySubNetSettingDesc:
         return '在网络切换/屏幕亮起后不进行子网扫描，仅在设备页面手动点击发现时才进行子网扫描';
       case TranslationKey.stopListeningOnScreenClosedSettingTitle:
-        return '熄屏后停止监听（实验性）';
+        return '息屏后停止监听（实验性）';
       case TranslationKey.stopListeningOnScreenClosedSettingDesc:
-        return '熄屏一分钟后停止监听剪贴板，在某些设备上可能能节省电量';
+        return '息屏一分钟后停止监听剪贴板，在某些设备上可能能节省电量';
       case TranslationKey.keepConnectionsOnNetworkSwitchTitle:
         return '切网时保持连接';
       case TranslationKey.keepConnectionsOnNetworkSwitchDesc:
