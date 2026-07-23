@@ -247,7 +247,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColor:
         return "Handle Color";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips:
-        return "Pick a transparent color. Changes sync to the native handle in real time.";
+        return "Pick a floating window color. Changes sync in real time.";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "Boost Background Keep-alive";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:

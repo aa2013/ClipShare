@@ -1,4 +1,5 @@
 ﻿import 'package:clipshare/app/services/config_service.dart';
+import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,6 +34,7 @@ class SystemThemeModeSyncState extends State<SystemThemeModeSync> with WidgetsBi
     final isDarkMode = WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       appConfig.updateAppTheme(context, isDarkMode ? ThemeMode.dark : ThemeMode.light);
+      Get.find<AndroidChannelService>().setHistoryFloatThemeMode(ThemeMode.system);
     });
   }
 

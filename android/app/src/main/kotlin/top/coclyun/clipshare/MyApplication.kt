@@ -48,6 +48,8 @@ import java.net.URLDecoder
 const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
 const val setHistoryFloatHandleWidth = "SET_HISTORY_FLOAT_HANDLE_WIDTH"
 const val setHistoryFloatHandleColor = "SET_HISTORY_FLOAT_HANDLE_COLOR"
+// 历史悬浮窗主题同步广播，取值与 Flutter ThemeMode.name 保持一致。
+const val setHistoryFloatThemeMode = "SET_HISTORY_FLOAT_THEME_MODE"
 const val loadHistories = "LOAD_HISTORIES"
 const val sendHistories = "SEND_HISTORIES"
 const val OnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED"
@@ -381,11 +383,13 @@ class MyApplication : Application() {
                 "showHistoryFloatWindow" -> {
                     val width = (args["width"] as? Number)?.toInt() ?: 32
                     val color = (args["color"] as? Number)?.toInt() ?: defaultHistoryFloatHandleColor
+                    val themeMode = args[HistoryFloatService.EXTRA_FLOAT_THEME_MODE] as? String
                     val i18n = args["i18n"] as? Map<*, *>
                     if (!isServiceRunning(this, HistoryFloatService::class.java)) {
                         startService(Intent(this, HistoryFloatService::class.java).apply {
                             putExtra("width", width)
                             putExtra("color", color)
+                            putExtra(HistoryFloatService.EXTRA_FLOAT_THEME_MODE, themeMode)
                             putExtra(
                                 HistoryFloatService.EXTRA_FLOAT_TITLE,
                                 i18n?.get("title") as? String
@@ -410,6 +414,19 @@ class MyApplication : Application() {
                                 HistoryFloatService.EXTRA_FLOAT_FILE_TYPE,
                                 i18n?.get("fileType") as? String
                             )
+                        })
+                    }
+                }
+                // 同步运行中的历史悬浮窗主题，不影响悬浮窗开关状态。
+                "setHistoryFloatThemeMode" -> {
+                    val themeMode = args[HistoryFloatService.EXTRA_FLOAT_THEME_MODE] as? String
+                    val intent = Intent(setHistoryFloatThemeMode)
+                    intent.putExtra(HistoryFloatService.EXTRA_FLOAT_THEME_MODE, themeMode)
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                    if (isServiceRunning(this, HistoryFloatService::class.java)) {
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            action = setHistoryFloatThemeMode
+                            putExtra(HistoryFloatService.EXTRA_FLOAT_THEME_MODE, themeMode)
                         })
                     }
                 }

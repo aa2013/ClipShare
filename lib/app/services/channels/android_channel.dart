@@ -6,7 +6,7 @@ import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
@@ -48,6 +48,7 @@ class AndroidChannelService extends GetxService {
       {
         "width": appConfig.historyFloatHandleWidth,
         "color": appConfig.historyFloatHandleColor,
+        "themeMode": appConfig.appTheme.name,
         "i18n": {
           "title": TranslationKey.historyFloatTitle.tr,
           "countTemplate": TranslationKey.historyFloatCountTemplate.tr,
@@ -81,6 +82,15 @@ class AndroidChannelService extends GetxService {
     androidChannel.invokeMethod(
       AndroidChannelMethod.setHistoryFloatHandleColor.name,
       {"color": color},
+    );
+  }
+
+  /// 同步历史悬浮窗主题，运行中的 Android 原生浮窗会即时切换亮暗色。
+  void setHistoryFloatThemeMode(ThemeMode mode) {
+    if (!Platform.isAndroid) return;
+    androidChannel.invokeMethod(
+      AndroidChannelMethod.setHistoryFloatThemeMode.name,
+      {"themeMode": mode.name},
     );
   }
 

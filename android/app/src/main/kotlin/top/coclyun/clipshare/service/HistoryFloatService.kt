@@ -40,6 +40,7 @@ import top.coclyun.clipshare.loadHistories
 import top.coclyun.clipshare.lockHistoryFloatLocation
 import top.coclyun.clipshare.sendHistories
 import top.coclyun.clipshare.setHistoryFloatHandleColor
+import top.coclyun.clipshare.setHistoryFloatThemeMode
 import top.coclyun.clipshare.setHistoryFloatHandleWidth
 import java.io.File
 
@@ -65,6 +66,43 @@ data class HistoryFloatStrings(
     }
 }
 
+/**
+ * 历史悬浮窗主题模式，字符串取值与 Flutter ThemeMode.name 保持一致。
+ */
+private enum class HistoryFloatThemeMode {
+    SYSTEM,
+    DARK,
+    LIGHT;
+
+    /**
+     * 根据当前 Android 配置解析悬浮窗是否应使用暗色配色。
+     */
+    fun isDark(context: Context): Boolean {
+        return when (this) {
+            SYSTEM -> {
+                val nightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
+                nightMode == Configuration.UI_MODE_NIGHT_YES
+            }
+
+            DARK -> true
+            LIGHT -> false
+        }
+    }
+
+    companion object {
+        /**
+         * 解析 Flutter 下发的主题字符串，未知值按跟随系统处理。
+         */
+        fun from(value: String?): HistoryFloatThemeMode {
+            return when (value?.lowercase()) {
+                "dark" -> DARK
+                "light" -> LIGHT
+                else -> SYSTEM
+            }
+        }
+    }
+}
+
 class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private lateinit var localBroadcastReceiver: BroadcastReceiver
     private lateinit var windowManager: WindowManager
@@ -79,7 +117,9 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var handleVisible by mutableStateOf(true)
     private var handleWidth by mutableIntStateOf(32)
     private var handleColor by mutableIntStateOf(defaultHistoryFloatHandleColor)
+    private var darkTheme by mutableStateOf(false)
     private var floatStrings by mutableStateOf(HistoryFloatStrings())
+    private var themeMode = HistoryFloatThemeMode.SYSTEM
     private var minHistoryId = 0L
     private var reachedHistoryEnd = false
     private var currentLoadVisibleCount = 0
@@ -136,6 +176,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     handleVisible = handleVisible,
                     handleWidth = handleWidth,
                     handleColor = handleColor,
+                    darkTheme = darkTheme,
                     onExpand = { unfoldView() },
                     onCollapse = { requestHideContainer() },
                     onCollapseFinished = { hideContainer() },
@@ -163,6 +204,11 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             handleColor = intent.getIntExtra("color", handleColor)
             return START_STICKY
         }
+        if (intent?.action == setHistoryFloatThemeMode) {
+            updateThemeMode(intent)
+            return START_STICKY
+        }
+        updateThemeMode(intent)
         handleWidth = intent?.getIntExtra("width", handleWidth) ?: handleWidth
         handleColor = intent?.getIntExtra("color", handleColor) ?: handleColor
         showFloatWindow()
@@ -182,6 +228,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        refreshSystemTheme()
         updateFullscreenVisibility()
     }
 
@@ -199,6 +246,10 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
                     setHistoryFloatHandleColor -> {
                         handleColor = intent.getIntExtra("color", handleColor)
+                    }
+
+                    setHistoryFloatThemeMode -> {
+                        updateThemeMode(intent)
                     }
 
                     sendHistories -> {
@@ -263,6 +314,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             addAction(lockHistoryFloatLocation)
             addAction(setHistoryFloatHandleWidth)
             addAction(setHistoryFloatHandleColor)
+            addAction(setHistoryFloatThemeMode)
             addAction(sendHistories)
         }
 
@@ -313,6 +365,23 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             imageType = imageType,
             fileType = fileType,
         )
+    }
+
+    /**
+     * 应用 Flutter 下发的历史悬浮窗主题模式，并触发 Compose 内容重组。
+     */
+    private fun updateThemeMode(intent: Intent?) {
+        themeMode = HistoryFloatThemeMode.from(intent?.getStringExtra(EXTRA_FLOAT_THEME_MODE))
+        darkTheme = themeMode.isDark(this)
+    }
+
+    /**
+     * 跟随系统时，Android 夜间模式变化需要单独刷新 resolved 暗色状态。
+     */
+    private fun refreshSystemTheme() {
+        if (themeMode == HistoryFloatThemeMode.SYSTEM) {
+            darkTheme = themeMode.isDark(this)
+        }
     }
 
     private fun setPos1P3() {
@@ -474,6 +543,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         const val EXTRA_FLOAT_TEXT_TYPE = "historyFloatTextType"
         const val EXTRA_FLOAT_IMAGE_TYPE = "historyFloatImageType"
         const val EXTRA_FLOAT_FILE_TYPE = "historyFloatFileType"
+        const val EXTRA_FLOAT_THEME_MODE = "themeMode"
         private const val BASE_WINDOW_FLAGS =
             LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_NOT_TOUCH_MODAL
         private const val FULLSCREEN_CHECK_INTERVAL_MS = 500L

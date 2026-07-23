@@ -193,7 +193,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColor:
         return "悬浮窗把手颜色";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips:
-        return "选择带透明度的颜色，修改后会实时同步到原生把手。";
+        return "选择悬浮窗颜色，修改后会实时同步。";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "增强后台保活";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:

@@ -19,6 +19,7 @@ import 'package:clipshare/app/modules/settings_module/widgets/settings_section_t
 import 'package:clipshare/app/modules/settings_module/widgets/theme_mode_selector.dart';
 import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
+import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
@@ -513,6 +514,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
         settingsController.envStatusBgColor.value = settingsController.warningBgColor;
       }
     });
+    Get.find<AndroidChannelService>().setHistoryFloatThemeMode(mode);
   }
 
   Future<void> _toggleLaunchAtStartup(bool checked) async {

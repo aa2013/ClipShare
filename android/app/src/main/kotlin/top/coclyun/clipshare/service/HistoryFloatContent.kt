@@ -50,6 +50,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -83,13 +85,48 @@ import top.coclyun.clipshare.defaultHistoryFloatHandleColor
 import java.io.File
 import kotlin.math.min
 
-private val PanelBackground = Color(0xFFF9FAFB)
-private val PanelStroke = Color(0xFFE5E7EB)
-private val ItemBackground = Color.White
-private val PrimaryText = Color(0xFF111827)
-private val SecondaryText = Color(0xFF6B7280)
-private val Accent = Color(0xFF2563EB)
+/**
+ * 历史悬浮窗专用色板，避免原生 Compose UI 与 Flutter 主题状态脱节。
+ */
+private data class HistoryFloatColors(
+    val panelBackground: Color,
+    val panelStroke: Color,
+    val itemBackground: Color,
+    val itemStroke: Color,
+    val primaryText: Color,
+    val secondaryText: Color,
+    val accent: Color,
+    val success: Color,
+    val imagePlaceholder: Color,
+)
 
+private val LightHistoryFloatColors = HistoryFloatColors(
+    panelBackground = Color(0xFFF9FAFB),
+    panelStroke = Color(0xFFE5E7EB),
+    itemBackground = Color.White,
+    itemStroke = Color(0xFFE9EEF5),
+    primaryText = Color(0xFF111827),
+    secondaryText = Color(0xFF6B7280),
+    accent = Color(0xFF2563EB),
+    success = Color(0xFF16A34A),
+    imagePlaceholder = Color(0xFFE5E7EB),
+)
+
+private val DarkHistoryFloatColors = HistoryFloatColors(
+    panelBackground = Color(0xFF111827),
+    panelStroke = Color(0xFF374151),
+    itemBackground = Color(0xFF1F2937),
+    itemStroke = Color(0xFF374151),
+    primaryText = Color(0xFFF9FAFB),
+    secondaryText = Color(0xFF9CA3AF),
+    accent = Color(0xFF60A5FA),
+    success = Color(0xFF22C55E),
+    imagePlaceholder = Color(0xFF374151),
+)
+
+/**
+ * 渲染历史悬浮窗根内容，主题色由 Flutter 同步后的暗色状态决定。
+ */
 @Composable
 fun HistoryFloatContent(
     histories: List<History>,
@@ -100,6 +137,7 @@ fun HistoryFloatContent(
     handleVisible: Boolean,
     handleWidth: Int,
     handleColor: Int,
+    darkTheme: Boolean,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
     onCollapseFinished: () -> Unit,
@@ -108,11 +146,13 @@ fun HistoryFloatContent(
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
 ) {
-    MaterialTheme {
+    val colors = if (darkTheme) DarkHistoryFloatColors else LightHistoryFloatColors
+    MaterialTheme(colorScheme = if (darkTheme) darkColorScheme() else lightColorScheme()) {
         if (expanded) {
             ExpandedHistoryPanel(
                 histories = histories,
                 strings = strings,
+                colors = colors,
                 loading = loading,
                 closing = closing,
                 onCollapse = onCollapse,
@@ -218,10 +258,14 @@ private fun HistoryHandle(
     }
 }
 
+/**
+ * 展开态历史面板，颜色从根内容统一下发以保持亮暗主题一致。
+ */
 @Composable
 private fun ExpandedHistoryPanel(
     histories: List<History>,
     strings: HistoryFloatStrings,
+    colors: HistoryFloatColors,
     loading: Boolean,
     closing: Boolean,
     onCollapse: () -> Unit,
@@ -279,9 +323,9 @@ private fun ExpandedHistoryPanel(
                 .padding(top = 52.dp, bottom = 52.dp, end = 12.dp)
                 .offset(x = panelOffset),
             shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(containerColor = PanelBackground),
+            colors = CardDefaults.cardColors(containerColor = colors.panelBackground),
             elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-            border = BorderStroke(1.dp, PanelStroke),
+            border = BorderStroke(1.dp, colors.panelStroke),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 Row(
@@ -293,18 +337,18 @@ private fun ExpandedHistoryPanel(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = strings.title,
-                            color = PrimaryText,
+                            color = colors.primaryText,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
                             text = strings.formatCount(histories.size),
-                            color = SecondaryText,
+                            color = colors.secondaryText,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
                     IconButton(onClick = onCollapse) {
-                        Text(text = "×", color = SecondaryText, style = MaterialTheme.typography.titleLarge)
+                        Text(text = "×", color = colors.secondaryText, style = MaterialTheme.typography.titleLarge)
                     }
                 }
 
@@ -319,6 +363,7 @@ private fun ExpandedHistoryPanel(
                         HistoryItem(
                             item = history,
                             strings = strings,
+                            colors = colors,
                             onDragStart = onDragStart,
                             onDragEnd = onDragEnd,
                         )
@@ -342,10 +387,14 @@ private fun ExpandedHistoryPanel(
     }
 }
 
+/**
+ * 单条历史记录卡片，复用面板色板保证文本、图标和边框同步切换。
+ */
 @Composable
 private fun HistoryItem(
     item: History,
     strings: HistoryFloatStrings,
+    colors: HistoryFloatColors,
     onDragStart: () -> Unit,
     onDragEnd: () -> Unit,
 ) {
@@ -357,9 +406,9 @@ private fun HistoryItem(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = ItemBackground),
+        colors = CardDefaults.cardColors(containerColor = colors.itemBackground),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        border = BorderStroke(1.dp, Color(0xFFE9EEF5)),
+        border = BorderStroke(1.dp, colors.itemStroke),
     ) {
         Column(
             modifier = Modifier
@@ -379,12 +428,12 @@ private fun HistoryItem(
             ) {
                 Text(
                     text = strings.formatType(item.type),
-                    color = Accent,
+                    color = colors.accent,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .clip(CircleShape)
-                        .background(Accent.copy(alpha = 0.10f))
+                        .background(colors.accent.copy(alpha = 0.10f))
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -402,7 +451,7 @@ private fun HistoryItem(
                             if (pinned) R.drawable.baseline_push_pin_24 else R.drawable.outline_push_not_pin_24
                         ),
                         contentDescription = "pin",
-                        tint = if (pinned) Accent else SecondaryText,
+                        tint = if (pinned) colors.accent else colors.secondaryText,
                     )
                 }
                 IconButton(
@@ -417,7 +466,7 @@ private fun HistoryItem(
                             if (copied) R.drawable.baseline_check_24 else R.drawable.outline_content_copy_24
                         ),
                         contentDescription = "copy",
-                        tint = if (copied) Color(0xFF16A34A) else SecondaryText,
+                        tint = if (copied) colors.success else colors.secondaryText,
                     )
                 }
             }
@@ -427,11 +476,12 @@ private fun HistoryItem(
                 HistoryImage(
                     path = item.content,
                     unavailableText = strings.imageUnavailable,
+                    colors = colors,
                 )
             } else {
                 Text(
                     text = item.content.take(min(260, item.content.length)),
-                    color = PrimaryText,
+                    color = colors.primaryText,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
@@ -442,7 +492,7 @@ private fun HistoryItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = item.time,
-                    color = SecondaryText,
+                    color = colors.secondaryText,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -459,10 +509,14 @@ private fun HistoryItem(
     }
 }
 
+/**
+ * 历史图片预览，图片缺失文案和占位背景跟随悬浮窗主题。
+ */
 @Composable
 private fun HistoryImage(
     path: String,
     unavailableText: String,
+    colors: HistoryFloatColors,
 ) {
     val bitmap = remember(path) {
         BitmapFactory.decodeFile(path)?.asImageBitmap()
@@ -471,7 +525,7 @@ private fun HistoryImage(
     if (bitmap == null) {
         Text(
             text = unavailableText,
-            color = SecondaryText,
+            color = colors.secondaryText,
             style = MaterialTheme.typography.bodySmall,
         )
     } else {
@@ -482,7 +536,7 @@ private fun HistoryImage(
                 .fillMaxWidth()
                 .height(108.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFE5E7EB)),
+                .background(colors.imagePlaceholder),
             contentScale = ContentScale.Crop,
         )
     }
