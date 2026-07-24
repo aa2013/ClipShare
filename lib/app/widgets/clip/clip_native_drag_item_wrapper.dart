@@ -37,18 +37,24 @@ class ClipNativeDragItemWrapper extends StatelessWidget {
             suggestedName: fileName,
             localData: {'type': 'clipshare-history-text'},
           );
+          final String content;
+          if (clip.isNotification) {
+            content = clip.notificationContent ?? "";
+          } else {
+            content = clip.data.content;
+          }
           if (_shouldDragTextAsVirtualFile(item)) {
             item.addVirtualFile(
               format: Formats.plainTextFile,
               provider: (sinkProvider, progress) {
-                final bytes = utf8.encode(clip.data.content);
+                final bytes = utf8.encode(content);
                 final sink = sinkProvider(fileSize: bytes.length);
                 sink.add(bytes);
                 sink.close();
               },
             );
           } else {
-            item.add(Formats.plainText(clip.data.content));
+            item.add(Formats.plainText(content));
           }
         } else {
           //文件不存在
