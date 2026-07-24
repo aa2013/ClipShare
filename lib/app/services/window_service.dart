@@ -50,9 +50,9 @@ class WindowService extends GetxService with WindowListener {
     }
   }
 
-  ///正常退出前恢复 Win+V，避免接管状态在 Explorer 中长期残留。
+  ///按用户设置在正常退出前恢复 Win+V，避免接管状态在 Explorer 中长期残留。
   Future<void> _restoreWinVBeforeExit() async {
-    if (!Platform.isWindows || !appConfig.takeOverWinV) {
+    if (!Platform.isWindows || !appConfig.takeOverWinV || !appConfig.restoreWinVOnExit) {
       return;
     }
     try {

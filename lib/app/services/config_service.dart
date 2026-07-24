@@ -598,6 +598,11 @@ class ConfigService extends GetxService {
 
   bool get takeOverWinV => _takeOverWinV.value;
 
+  ///Windows 正常退出程序时是否自动恢复系统 Win+V。
+  final _restoreWinVOnExit = true.obs;
+
+  bool get restoreWinVOnExit => _restoreWinVOnExit.value;
+
   //endregion
 
   //endregion
@@ -818,6 +823,7 @@ class ConfigService extends GetxService {
     _useTrayFlashingForConnection.value = await cfg.getConfigByKey(ConfigKey.useTrayFlashingForConnection, false);
     _recordMaxLength.value = await cfg.getConfigByKey(ConfigKey.recordMaxLength, 200_000);
     _takeOverWinV.value = await cfg.getConfigByKey(ConfigKey.takeOverWinV, false);
+    _restoreWinVOnExit.value = await cfg.getConfigByKey(ConfigKey.restoreWinVOnExit, true);
   }
 
   ///初始化路径信息
@@ -1627,6 +1633,15 @@ class ConfigService extends GetxService {
     }
     await configDao.addOrUpdate(ConfigKey.takeOverWinV, value.toString());
     _takeOverWinV.value = value;
+  }
+
+  ///设置正常退出程序时是否自动恢复 Windows 系统 Win+V。
+  Future<void> setRestoreWinVOnExit(bool value) async {
+    if (!Platform.isWindows) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.restoreWinVOnExit, value.toString());
+    _restoreWinVOnExit.value = value;
   }
 
   //endregion

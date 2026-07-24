@@ -79,4 +79,5 @@ enum ConfigKey {
   useTrayFlashingForConnection,
   recordMaxLength,
   takeOverWinV,
+  restoreWinVOnExit,
 }

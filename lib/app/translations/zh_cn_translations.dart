@@ -1039,10 +1039,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return "接管 Win+V";
       case TranslationKey.clipboardSettingsTakeOverWinVDesc:
         return "使用 Win+V 唤起历史弹窗";
-      case TranslationKey.clipboardSettingsTakeOverWinVInfoDialogContent:
-        return "启用和关闭会重启资源管理器以生效。\n正常退出程序或正常卸载时会自动还原。";
       case TranslationKey.clipboardSettingsTakeOverWinVDialogContent:
         return "接管 Win+V 会修改当前用户的系统热键配置，并重启资源管理器以立即生效。是否继续？";
+      case TranslationKey.clipboardSettingsRestoreWinVOnExitTitle:
+        return "程序退出自动恢复";
+      case TranslationKey.clipboardSettingsRestoreWinVOnExitDesc:
+        return "程序退出/卸载时自动恢复 Win+V";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
         return "记录剪贴板内容来源";
       case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:

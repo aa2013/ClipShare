@@ -1035,10 +1035,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Take Over Win+V";
       case TranslationKey.clipboardSettingsTakeOverWinVDesc:
         return "Use Win+V to open the history popup.";
-      case TranslationKey.clipboardSettingsTakeOverWinVInfoDialogContent:
-        return "Enabling or disabling this restarts Explorer so the change takes effect.\nNormal app exit or uninstall restores Win+V.";
       case TranslationKey.clipboardSettingsTakeOverWinVDialogContent:
         return "Taking over Win+V changes the current user's system hotkey setting and restarts Explorer so it takes effect immediately. Continue?";
+      case TranslationKey.clipboardSettingsRestoreWinVOnExitTitle:
+        return "Restore on App Exit";
+      case TranslationKey.clipboardSettingsRestoreWinVOnExitDesc:
+        return "Automatically restore Win+V when the app exits or is uninstalled.";
       case TranslationKey.clipboardSettingsSourceRecordTitle:
         return "Record Clipboard Source";
       case TranslationKey.clipboardSettingsSourceRecordAndroidDesc:
