@@ -54,7 +54,7 @@ class AppHotKeyHandler {
       key,
       keyDownHandler: (hotKey) async {
         final multiWindowService = Get.find<MultiWindowChannelService>();
-        clipboardManager.storeCurrentWindowHwnd();
+        // clipboardManager.storeCurrentWindowHwnd();
         final appConfig = Get.find<ConfigService>();
         var ids = List.empty();
         try {
