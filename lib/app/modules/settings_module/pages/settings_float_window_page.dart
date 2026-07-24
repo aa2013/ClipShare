@@ -1,12 +1,26 @@
 import 'dart:async';
-
+import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:get/get.dart';
+import 'dart:io';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsFloatWindowPage extends SettingsSectionView {
   SettingsFloatWindowPage({super.key, super.embedded}) : super(section: SettingsSection.floatWindow);
 
   static const _colorSyncDebounce = Duration(milliseconds: 32);
-  static const _defaultHandleColor = Color(ConfigService.defaultHistoryFloatHandleColor);
+  static const _defaultHandleColor = Color(Constants.defaultHistoryFloatHandleColor);
 
   @override
   List<Widget> buildCards(BuildContext context) {

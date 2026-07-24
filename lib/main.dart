@@ -20,6 +20,7 @@ import 'package:clipshare/app/services/device_connection_notify_service.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/jieba_segment_service.dart';
+import 'package:clipshare/app/services/multi_window_config_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/transport/connection_registry_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
@@ -52,7 +53,7 @@ Future<void> main(List<String> args) async {
     var isMultiWindow = args.firstOrNull == 'multi_window';
     Widget home = SplashPage();
     String title = Constants.appName;
-    DesktopMultiWindowArgs? multiWindowArgs;
+    DesktopMultiWindowArgs multiWindowArgs;
     if (isMultiWindow) {
       await ensureInitialized();
       //子窗口
@@ -79,7 +80,7 @@ Future<void> main(List<String> args) async {
       wcs.setAlwaysOnTop(true);
       wcs.setMinimizable(false);
       wcs.setMaximizable(false);
-      await initMultiWindowServices();
+      await initMultiWindowServices(multiWindowArgs);
       runMain(home, title, multiWindowArgs);
     } else {
       await ensureInitialized();
@@ -188,7 +189,8 @@ Future<void> initMainServices() async {
 }
 
 //初始化多窗口服务
-Future<void> initMultiWindowServices() async {
+Future<void> initMultiWindowServices(DesktopMultiWindowArgs args) async {
+  Get.put(MultiWindowConfigService(args));
   Get.put(MultiWindowChannelService());
   Get.put(PendingFileService());
 }

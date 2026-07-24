@@ -17,6 +17,8 @@
 #include "utils.h"
 #include "window_manager/window_manager_plugin.h"
 #include "desktop_drop/desktop_drop_plugin.h"
+#include <irondash_engine_context/irondash_engine_context_plugin_c_api.h>
+#include <super_native_extensions/super_native_extensions_plugin_c_api.h>
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
 	: project_(project) {
@@ -48,6 +50,8 @@ bool FlutterWindow::OnCreate() {
 		auto* registry = flutter_view_controller->engine();
 		WindowManagerPluginRegisterWithRegistrar(registry->GetRegistrarForPlugin("WindowManagerPlugin"));
         DesktopDropPluginRegisterWithRegistrar(registry->GetRegistrarForPlugin("DesktopDropPlugin"));
+		IrondashEngineContextPluginCApiRegisterWithRegistrar(registry->GetRegistrarForPlugin("IrondashEngineContextPluginCApi"));
+		SuperNativeExtensionsPluginCApiRegisterWithRegistrar(registry->GetRegistrarForPlugin("SuperNativeExtensionsPluginCApi"));
 	});
 	flutter_controller_->ForceRedraw();
 	return true;

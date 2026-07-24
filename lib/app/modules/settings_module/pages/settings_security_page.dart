@@ -1,3 +1,18 @@
+import 'dart:async';
+import 'package:clipshare/app/modules/home_module/home_controller.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/widgets/dialog/text_edit_dialog.dart';
+import 'package:get/get.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/dialog/single_select_dialog.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsSecurityPage extends SettingsSectionView {

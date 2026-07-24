@@ -1,4 +1,16 @@
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/widgets/dialog/text_edit_dialog.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'settings_section_view_base.dart';
+import 'dart:io';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 
 class SettingsClipboardPage extends SettingsSectionView {
   SettingsClipboardPage({super.key, super.embedded}) : super(section: SettingsSection.clipboard);

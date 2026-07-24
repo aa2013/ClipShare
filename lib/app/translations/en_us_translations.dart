@@ -435,7 +435,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.openFilePos:
         return "Open File Location";
       case TranslationKey.tips:
-        return "Notice";
+        return "Tips";
       case TranslationKey.logSettingsDeleteLogFilesDialogContent:
         return "Delete log files?";
       case TranslationKey.statisticsSettingsGroupName:

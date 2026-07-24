@@ -1,13 +1,9 @@
 import 'dart:io';
 
-import 'package:clipshare/app/data/enums/history_content_type.dart';
-import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/double_tap_wrapper.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
-import 'package:clipshare_clipboard_listener/enums.dart';
+import 'package:clipshare/app/widgets/clip/clip_native_drag_item_wrapper.dart';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
@@ -24,7 +20,6 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
-import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/clip/clip_simple_data_content.dart';
 import 'package:clipshare/app/widgets/clip/clip_simple_data_footer.dart';
 import 'package:clipshare/app/widgets/clip/clip_simple_data_header.dart';
@@ -210,50 +205,62 @@ class _ClipDataCardState extends State<ClipDataCard>
         ),
       ),
     );
+    final Widget child;
+    if(PlatformExt.isMobile){
+      child = buildSlidable(content);
+    } else {
+      child = ClipNativeDragItemWrapper(
+        clip: widget.clip,
+        child: content,
+      );
+    }
     return GestureDetector(
-      child: ClipRRect(
-        child: Slidable(
-          controller: slidController,
-          key: ValueKey(widget.clip.data.id),
-          startActionPane: ActionPane(
-            motion: const SizedBox.shrink(),
-            extentRatio: 0.01,
-            dismissible: DismissiblePane(
-              onDismissed: () {},
-              dismissThreshold: 0.1,
-              confirmDismiss: () {
-                slidController.close();
-                widget.onToggleSelected?.call();
-                return Future.value(false);
-              },
-            ),
-            children: const [],
-          ),
-          endActionPane: widget.selectMode
-              ? null
-              : ActionPane(
-                  extentRatio: 0.3,
-                  motion: const ScrollMotion(),
-                  children: [
-                    SlidableAction(
-                      onPressed: (context) {
-                        widget.onMoreActionsTap?.call();
-                      },
-                      autoClose: true,
-                      backgroundColor: Colors.blueGrey,
-                      foregroundColor: Colors.white,
-                      icon: Icons.menu,
-                      borderRadius: BorderRadius.circular(_borderRadius),
-                      label: TranslationKey.moreActions.tr,
-                    ),
-                  ],
-                ),
-          child: content,
-        ),
-      ),
+      child: ClipRRect(child: child),
       onSecondaryTapDown: (details) {
         rightTapWrapper.call(details);
       },
+    );
+  }
+
+  ///滑动操作块（移动端使用）
+  Widget buildSlidable(Widget content){
+    return Slidable(
+      controller: slidController,
+      key: ValueKey(widget.clip.data.id),
+      startActionPane: ActionPane(
+        motion: const SizedBox.shrink(),
+        extentRatio: 0.01,
+        dismissible: DismissiblePane(
+          onDismissed: () {},
+          dismissThreshold: 0.1,
+          confirmDismiss: () {
+            slidController.close();
+            widget.onToggleSelected?.call();
+            return Future.value(false);
+          },
+        ),
+        children: const [],
+      ),
+      endActionPane: widget.selectMode
+          ? null
+          : ActionPane(
+        extentRatio: 0.3,
+        motion: const ScrollMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (context) {
+              widget.onMoreActionsTap?.call();
+            },
+            autoClose: true,
+            backgroundColor: Colors.blueGrey,
+            foregroundColor: Colors.white,
+            icon: Icons.menu,
+            borderRadius: BorderRadius.circular(_borderRadius),
+            label: TranslationKey.moreActions.tr,
+          ),
+        ],
+      ),
+      child: content,
     );
   }
 

@@ -14,6 +14,8 @@ import 'package:clipshare/app/modules/settings_module/pages/settings_section_vie
 import 'package:clipshare/app/modules/settings_module/pages/settings_security_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_statistics_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_sync_page.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:flutter/material.dart';
 
 SettingsSectionView? buildSettingsSectionView(
   SettingsSection section, {

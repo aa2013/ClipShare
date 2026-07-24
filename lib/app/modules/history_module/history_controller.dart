@@ -18,10 +18,10 @@ import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
 import 'package:clipshare/app/listeners/tag_changed_listener.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
-import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
@@ -63,9 +63,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import 'package:synchronized/synchronized.dart';
-/**
- * GetX Template Generator - fb.com/htngu.99
- * */
 
 class HistoryController extends GetxController with WidgetsBindingObserver implements HistoryDataObserver, SyncListener, ScreenOpenedObserver, DeviceRemoveListener, DevAliveListener, TagChangedListener {
   final appConfig = Get.find<ConfigService>();

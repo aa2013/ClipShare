@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:isolate';
 
-import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jieba_flutter/analysis/jieba_segmenter.dart';
 import 'package:jieba_flutter/analysis/seg_token.dart';

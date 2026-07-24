@@ -1,5 +1,12 @@
 import 'package:clipshare/app/data/enums/app_language.dart';
-
+import 'package:get/get.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsLanguagePage extends SettingsSectionView {

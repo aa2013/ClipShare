@@ -1,0 +1,4 @@
+﻿enum MultiWindowConfig {
+  language,
+  themeMode,
+}

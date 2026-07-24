@@ -1,3 +1,22 @@
+import 'package:clipshare/app/services/clipboard_service.dart';
+import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/permission_helper.dart';
+import 'package:clipshare/app/widgets/dialog/outdate_time_input_dialog.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:get/get.dart';
+import 'dart:io';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:open_file_plus/open_file_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsSyncPage extends SettingsSectionView {

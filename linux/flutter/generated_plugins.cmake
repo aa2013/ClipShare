@@ -7,9 +7,11 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   desktop_multi_window
   hotkey_manager_linux
+  irondash_engine_context
   screen_retriever_linux
   smart_auth
   sqlite3_flutter_libs
+  super_native_extensions
   tray_manager
   url_launcher_linux
   window_manager

@@ -1,5 +1,5 @@
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare_clipboard_listener/models/app_info.dart';
+import 'package:clipshare/app/widgets/clip/clip_native_drag_item_wrapper.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
@@ -90,7 +90,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
   Widget build(BuildContext context) {
     final clip = widget.clip;
     var isDouble = false;
-    return SizedBox(
+    final child = SizedBox(
       height: 150,
       child: Card(
         elevation: 0,
@@ -157,6 +157,10 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> {
           ),
         ),
       ),
+    );
+    return ClipNativeDragItemWrapper(
+      clip: widget.clip,
+      child: child,
     );
   }
 }

@@ -1,4 +1,26 @@
-import '../forward_presentation.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:clipshare/app/data/enums/forward_server_status.dart';
+import 'package:clipshare/app/data/enums/forward_way.dart';
+import 'package:clipshare/app/modules/settings_module/forward_presentation.dart';
+import 'package:clipshare/app/widgets/dialog/forward_server_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/notification_server_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/qr_image_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/s3_config_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dialog/webdav_config_edit_dialog.dart';
+import 'package:clipshare/app/widgets/dot.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:flutter_context_menu/flutter_context_menu.dart';
+import 'package:get/get.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsForwardPage extends SettingsSectionView {

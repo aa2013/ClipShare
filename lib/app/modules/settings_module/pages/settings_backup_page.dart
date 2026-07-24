@@ -1,4 +1,10 @@
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'settings_section_view_base.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
 
 class SettingsBackupPage extends SettingsSectionView {
   SettingsBackupPage({super.key, super.embedded}) : super(section: SettingsSection.backup);

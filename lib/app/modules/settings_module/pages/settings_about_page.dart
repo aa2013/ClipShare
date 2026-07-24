@@ -1,7 +1,18 @@
 import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
+import 'package:clipshare/app/routes/app_pages.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/widgets/check_update_button.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
 import 'package:simple_icons/simple_icons.dart';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
 
 const aboutPageInstructionsSearchId = 'about_page_instructions';
 const aboutPageFaqSearchId = 'about_page_faq';

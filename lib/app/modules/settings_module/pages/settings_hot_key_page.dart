@@ -1,5 +1,22 @@
+import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/handlers/hot_key_handler.dart';
+import 'package:clipshare/app/services/tray_service.dart';
+import 'package:clipshare/app/utils/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/app/utils/windows_win_v_takeover.dart';
-
+import 'dart:async';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:clipshare/app/widgets/dialog/hot_key_editor_dialog.dart';
+import 'package:get/get.dart';
+import 'dart:io';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/constants.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsHotKeyPage extends SettingsSectionView {

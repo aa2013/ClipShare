@@ -153,7 +153,6 @@ dependencies:
     git: https://github.com/aa2013/no_screenshot.git
   # Android uri读取
   uri_file_reader: ^1.0.3
-#  uri_file_reader:
 #    path: ../uri_file_reader
   # 分词 (去除了分词文件减小压缩包体积，改为下载或导入)
   jieba_flutter:
@@ -193,6 +192,9 @@ dependencies:
   multi_split_view: ^3.6.1
   # Color picker
   flutter_colorpicker: ^1.1.0
+  # 原生拖拽
+  super_drag_and_drop: ^0.9.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

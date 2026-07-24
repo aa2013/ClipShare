@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/enums/device_paried_filter_status.dart';
 import 'package:clipshare/app/data/enums/forward_way.dart';
 import 'package:clipshare/app/data/enums/config_key.dart';
 import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/multi_window_config.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_script_language.dart';
@@ -25,10 +26,10 @@ import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
-import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/clean_data_config.dart';
@@ -39,7 +40,6 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:clipshare/app/services/jieba_segment_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/utils/constants.dart';
@@ -68,7 +68,6 @@ import 'package:path/path.dart' as p;
 final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
-  static const int defaultHistoryFloatHandleColor = 0x17FFFFFF;
 
   ConfigDao get configDao => Get.find<DbService>().configDao;
 
@@ -625,7 +624,7 @@ class ConfigService extends GetxService {
     _historyFloatHandleWidth = (await cfg.getConfigByKey(ConfigKey.historyFloatHandleWidth, 32)).obs;
     _historyFloatHandleColor = (await cfg.getConfigByKey(
       ConfigKey.historyFloatHandleColor,
-      defaultHistoryFloatHandleColor,
+      Constants.defaultHistoryFloatHandleColor,
     )).obs;
     _enhanceBackgroundKeepAlive = (await cfg.getConfigByKey(ConfigKey.enhanceBackgroundKeepAlive, false)).obs;
     _firstStartup = (await cfg.getConfigByKey(ConfigKey.firstStartup, true)).obs;
@@ -1375,6 +1374,8 @@ class ConfigService extends GetxService {
         setSystemUIOverlayLightStyle();
       }
     });
+    final windowChannelService = Get.find<MultiWindowChannelService>();
+    windowChannelService.updateConfig(MultiWindowConfig.themeMode, themeMode.name);
   }
 
   Future<void> setIgnoreUpdateVersion(String versionCode) async {
@@ -1941,7 +1942,13 @@ class ConfigService extends GetxService {
 
   /// 根据当前语言配置刷新 GetX 的国际化环境。
   void updateLanguage() {
-    Get.updateLocale(language.resolveLocale(Get.deviceLocale));
+    final locale = language.resolveLocale(Get.deviceLocale);
+    Get.updateLocale(locale);
+    final windowChannelService = Get.find<MultiWindowChannelService>();
+    windowChannelService.updateConfig(MultiWindowConfig.language, {
+      'languageCode':locale.languageCode,
+      'countryCode':locale.countryCode,
+    });
   }
 
   //endregion

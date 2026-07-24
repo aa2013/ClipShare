@@ -14,4 +14,5 @@ enum MultiWindowMethod {
   updateWindowSize,
   updateHistoryTop,
   deleteHistory,
+  updateConfig
 }

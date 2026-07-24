@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class LicensesController extends GetxController {
   final licenses = [
     {
+      "name": "super_drag_and_drop",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/super_drag_and_drop",
+    },
+    {
       "name": "win32_registry",
       "license": "BSD-3-Clause",
       "url": "https://pub.dev/packages/win32_registry",

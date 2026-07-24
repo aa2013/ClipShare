@@ -14,6 +14,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/multi_window_dispatch_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/widgets/clip/clip_data_card_compact.dart';
@@ -50,7 +51,7 @@ class CompactClipData {
   const CompactClipData({required this.devName, required this.data});
 }
 
-class _HistoryWindowState extends State<HistoryWindow> with WindowListener, WindowControlClickedListener {
+class _HistoryWindowState extends State<HistoryWindow> with WindowListener, WindowControlClickedListener implements MultiWindowMessageListener {
   final ScrollController _scrollController = ScrollController();
   List<CompactClipData> _list = [];
   bool _loadNewData = false;
@@ -66,6 +67,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   void initState() {
     super.initState();
     windowManager.addListener(this);
+    multiWindowMsgDispatchService.addListener(this);
     // 监听滚动事件
     _scrollController.addListener(_scrollListener);
     windowControlService.addListener(this);
@@ -81,45 +83,39 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       onSearchBtnClicked: refresh,
       filter: SearchFilter(),
     );
-    //处理弹窗事件
-    DesktopMultiWindow.setMethodHandler((
-      MethodCall call,
-      int fromWindowId,
-    ) async {
-      var args = jsonDecode(call.arguments);
-      var method = MultiWindowMethod.values.byName(call.method);
-      switch (method) {
-        //更新通知
-        case MultiWindowMethod.notify:
-          refresh();
-          break;
-        //关闭（隐藏）窗口
-        case MultiWindowMethod.showWindowFromHide:
-          var position = args["position"];
-          if (position != null) {
-            var [x, y] = (position as List<dynamic>).cast<double>();
-            windowManager.setPosition(Offset(x, y));
-          }
-          widget.windowController.show();
-          windowManager.setAlwaysOnTop(true);
-          historyFilterController.resetFilter();
-          refresh();
-          break;
-        //关闭（隐藏）窗口
-        case MultiWindowMethod.closeWindow:
-          widget.windowController.hide();
-          break;
-        //更新基础信息，如设备信息，来源信息，标签信息
-        case MultiWindowMethod.updateAllBaseData:
-          loadSearchCondition();
-          break;
-        default:
-      }
-      //都不符合，返回空
-      return Future.value();
-    });
     loadSearchCondition();
     refresh();
+  }
+
+  @override
+  FutureOr<void> onMultiWindowMessage(MultiWindowMethod method, Map<String, dynamic> args, int fromWindowId) {
+    switch (method) {
+      //更新通知
+      case MultiWindowMethod.notify:
+        refresh();
+        break;
+      //关闭（隐藏）窗口
+      case MultiWindowMethod.showWindowFromHide:
+        var position = args["position"];
+        if (position != null) {
+          var [x, y] = (position as List<dynamic>).cast<double>();
+          windowManager.setPosition(Offset(x, y));
+        }
+        widget.windowController.show();
+        windowManager.setAlwaysOnTop(true);
+        historyFilterController.resetFilter();
+        refresh();
+        break;
+      //关闭（隐藏）窗口
+      case MultiWindowMethod.closeWindow:
+        widget.windowController.hide();
+        break;
+      //更新基础信息，如设备信息，来源信息，标签信息
+      case MultiWindowMethod.updateAllBaseData:
+        loadSearchCondition();
+        break;
+      default:
+    }
   }
 
   @override
@@ -231,6 +227,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     windowManager.removeListener(this);
     windowControlService.removeListener(this);
     _scrollController.removeListener(_scrollListener);
+    multiWindowMsgDispatchService.removeListener(this);
   }
 
   Future<void> loadSearchCondition() async {

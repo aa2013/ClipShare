@@ -1,6 +1,18 @@
 import 'package:clipshare/app/modules/log_module/log_controller.dart';
 import 'package:clipshare/app/modules/log_module/log_list_view.dart';
-
+import 'package:clipshare/app/utils/file_util.dart';
+import 'package:clipshare/app/utils/log.dart';
+import 'package:get/get.dart';
+import 'dart:io';
+import 'package:clipshare/app/data/enums/translation_key.dart';
+import 'package:clipshare/app/modules/settings_module/settings_section.dart';
+import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card.dart';
+import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsLogPage extends SettingsSectionView {

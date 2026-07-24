@@ -53,6 +53,9 @@ class Constants {
   //数据广播Action
   static const kOnHistoryChangedBroadcastAction = "$appPkg.ACTION_ON_HISTORY_CHANGED";
 
+  //默认类似悬浮窗把手颜色
+  static const int defaultHistoryFloatHandleColor = 0x17FFFFFF;
+
   //默认卡片边框颜色
   static const defaultCardBorderColor = Color.fromARGB(255, 236, 237, 243);
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart';
@@ -8,6 +9,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_page.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/multi_window_dispatch_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -34,7 +36,7 @@ class FileSenderWindow extends StatefulWidget {
   }
 }
 
-class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener, WidgetsBindingObserver, WindowControlClickedListener {
+class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener, WidgetsBindingObserver, WindowControlClickedListener implements MultiWindowMessageListener {
   List<Device> _devices = [];
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
   final pendingFileService = Get.find<PendingFileService>();
@@ -46,48 +48,43 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener
     windowControlService.addListener(this);
     //监听生命周期
     WidgetsBinding.instance.addObserver(this);
+    multiWindowMsgDispatchService.addListener(this);
     windowManager.addListener(this);
     if (widget.args.containsKey("files")) {
       var files = widget.args["files"] as List<dynamic>;
       addPendingFiles(files.cast<String>());
     }
-    //处理弹窗事件
-    DesktopMultiWindow.setMethodHandler((
-      MethodCall call,
-      int fromWindowId,
-    ) async {
-      var args = jsonDecode(call.arguments);
-      var method = MultiWindowMethod.values.byName(call.method);
-      switch (method) {
-        //更新通知
-        case MultiWindowMethod.notify:
-          refresh();
-          break;
-        //关闭（隐藏）窗口
-        case MultiWindowMethod.showWindowFromHide:
-          var position = args["position"];
-          if (position != null) {
-            var [x, y] = (position as List<dynamic>).cast<double>();
-            windowManager.setPosition(Offset(x, y));
-          }
-          widget.windowController.show();
-          windowManager.setAlwaysOnTop(true);
-          var otherArgs = args["args"] as Map<String, dynamic>;
-          var files = otherArgs["files"] as List<dynamic>;
-          addPendingFiles(files.cast<String>());
-          refresh();
-          break;
-        //关闭（隐藏）窗口
-        case MultiWindowMethod.closeWindow:
-          widget.windowController.hide();
-          pendingFileService.clearPendingInfo();
-          break;
-        default:
-      }
-      //都不符合，返回空
-      return Future.value();
-    });
     refresh();
+  }
+
+  @override
+  FutureOr<void> onMultiWindowMessage(MultiWindowMethod method, Map<String, dynamic> args, int fromWindowId) {
+    switch (method) {
+      //更新通知
+      case MultiWindowMethod.notify:
+        refresh();
+        break;
+      //关闭（隐藏）窗口
+      case MultiWindowMethod.showWindowFromHide:
+        var position = args["position"];
+        if (position != null) {
+          var [x, y] = (position as List<dynamic>).cast<double>();
+          windowManager.setPosition(Offset(x, y));
+        }
+        widget.windowController.show();
+        windowManager.setAlwaysOnTop(true);
+        var otherArgs = args["args"] as Map<String, dynamic>;
+        var files = otherArgs["files"] as List<dynamic>;
+        addPendingFiles(files.cast<String>());
+        refresh();
+        break;
+      //关闭（隐藏）窗口
+      case MultiWindowMethod.closeWindow:
+        widget.windowController.hide();
+        pendingFileService.clearPendingInfo();
+        break;
+      default:
+    }
   }
 
   @override
@@ -111,6 +108,7 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener
     super.dispose();
     windowControlService.removeListener(this);
     windowManager.removeListener(this);
+    multiWindowMsgDispatchService.removeListener(this);
   }
 
   void refresh() async {
