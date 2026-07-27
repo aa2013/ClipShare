@@ -42,7 +42,7 @@ enum MsgType {
   //未知key
   unknown;
 
-  static UnmodifiableListView<MsgType> storageServiceKeys = UnmodifiableListView([sync, setTop, file, forgetDev]);
+  static UnmodifiableListView<MsgType> storageServiceKeys = UnmodifiableListView([sync, setTop, file]);
 
   static MsgType getValue(String name) => MsgType.values.firstWhere(
     (e) => e.name == name,

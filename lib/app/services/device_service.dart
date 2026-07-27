@@ -3,9 +3,11 @@ import 'package:clipshare/app/data/enums/transport_protocol.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
+import 'package:clipshare/app/utils/log.dart';
 import 'package:get/get.dart';
 
 class DeviceService extends GetxService {
+  static const tag = "DeviceService";
   final _dbService = Get.find<DbService>();
   final _appConfig = Get.find<ConfigService>();
   final _devices = <String, Device>{}.obs;
@@ -85,6 +87,7 @@ class DeviceService extends GetxService {
     final previousBlocks = previous != null &&
         (previous.priority > nextPriority || (previous.manual && !protocol.isSocket));
     if (!manual && previousBlocks) {
+      logger.info(tag, "!manual && previousBlocks");
       return DevicePairingConfirmResult(
         accepted: false,
         isPaired: _devices[devId]?.isPaired ?? previous.isPaired,
@@ -103,6 +106,7 @@ class DeviceService extends GetxService {
     final changed = existing?.isPaired != nextPaired;
     final success = await addOrUpdate(merged);
     if (!success) {
+      logger.info(tag, "confirmPairingState addOrUpdate false");
       return DevicePairingConfirmResult(
         accepted: false,
         isPaired: existing?.isPaired ?? false,
