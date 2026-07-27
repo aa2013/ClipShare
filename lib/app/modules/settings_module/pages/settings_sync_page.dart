@@ -2,7 +2,6 @@ import 'package:clipshare/app/services/clipboard_service.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/dialog/outdate_time_input_dialog.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'dart:io';
 import 'package:clipshare/app/data/enums/translation_key.dart';

@@ -7,7 +7,6 @@ import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/settings_module/forward_presentation.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
-import 'package:clipshare/app/modules/settings_module/settings_search_index.dart';
 import 'package:clipshare/app/modules/settings_module/settings_section.dart';
 import 'package:clipshare/app/modules/settings_module/settings_section_visibility.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_section_content_page.dart';

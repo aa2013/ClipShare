@@ -370,11 +370,19 @@ class ConfigService extends GetxService {
 
   String get screenShotStorePath => "$rootStorePath/Screenshots".normalizePath;
 
-  //Android 接收同步图片的自定义存储路径
+  //接收同步图片的自定义存储路径(当前仅Android)
   late final RxString _imageStorePath;
 
   ///获取 Android 接收同步图片时使用的存储路径，未自定义时使用应用私有目录。
-  String get imageStorePath => _imageStorePath.value.isEmpty ? androidPrivatePicturesPath : _imageStorePath.value;
+  String get imageStorePath {
+    if (!Platform.isAndroid) {
+      return _imageStorePath.value;
+    }
+    if (_imageStorePath.value.isEmpty) {
+      return androidPrivatePicturesPath;
+    }
+    return _imageStorePath.value;
+  }
 
   //保存至相册
   late final RxBool _saveToPictures;
