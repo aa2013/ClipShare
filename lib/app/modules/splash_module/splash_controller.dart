@@ -429,6 +429,14 @@ class SplashController extends GetxController {
           case AndroidChannelMethod.onScreenClosed:
             ScreenOpenedListener.inst.notify(method);
             break;
+          case AndroidChannelMethod.onFileOpened:
+            final uri = call.arguments["uri"]?.toString();
+            if (uri.isBlank == true) {
+              logger.debug(tag, "ignore empty uri");
+              break;
+            }
+            await _handleIncomingUri(uri!);
+            break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;
             HistoryDataListener.inst.onChanged(HistoryContentType.sms, content, null);
@@ -447,36 +455,52 @@ class SplashController extends GetxController {
     final handler = ShareHandlerPlatform.instance;
     appConfig.shareHandlerStream?.cancel();
     appConfig.shareHandlerStream = handler.sharedMediaStream.listen((SharedMedia media) async {
-      logger.info(tag, "ShareMedia: ${media.attachments}, content: ${media.content}");
-      if (media.attachments != null) {
-        var files = media.attachments!
-            .where((attachment) => attachment != null)
-            .map((attachment) => attachment!.path)
-            .map(
-              (f) => DropItemFile(f),
-            )
-            .toList();
-        logger.debug(tag, files);
-        if (files.isEmpty) {
-          return;
-        }
-        gotoOnlineDevicesPage(files);
-      } else if (media.content != null) {
-        final fileInfo = await uriFileReader.getFileInfoFromUri(media.content!);
-        if (fileInfo == null) {
-          Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
-          logger.debug(tag, "未从uri中获取到文件名称和大小：uri = ${media.content}");
-          return;
-        }
-        final fileName = fileInfo.fileName;
-        final size = fileInfo.size;
-        logger.info(tag, "ShareMedia fileName $fileName, size $size");
-        gotoOnlineDevicesPage([DropItemFileUri(media.content!, fileName, size)]);
-      } else {
-        Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveFileNotSupportDialogText.tr);
-        return;
-      }
+      await _handleExternalSharedMedia(media);
     });
+  }
+
+  /// 将 share_handler 的分享事件与 Android 原生补偿上送的打开文件事件收敛到同一套处理逻辑。
+  Future<void> _handleExternalSharedMedia(SharedMedia media) async {
+    logger.info(tag, "ShareMedia: ${media.attachments}, content: ${media.content}");
+    final attachments = media.attachments;
+    if (attachments != null) {
+      final files = attachments
+          .where((attachment) => attachment != null)
+          .map((attachment) => attachment!.path)
+          .map((path) => DropItemFile(path))
+          .toList(growable: false);
+      await _handleIncomingDropItems(files);
+      return;
+    }
+    final content = media.content;
+    if (content.isNullOrBlank != true) {
+      await _handleIncomingUri(content!);
+      return;
+    }
+    Global.showTipsDialog(context: Get.context!, text: TranslationKey.saveFileNotSupportDialogText.tr);
+  }
+
+  /// 统一处理直接可落地为本地路径的外部文件集合。
+  Future<void> _handleIncomingDropItems(List<DropItem> files) async {
+    logger.debug(tag, files);
+    if (files.isEmpty) {
+      return;
+    }
+    gotoOnlineDevicesPage(files);
+  }
+
+  /// 统一处理以 Uri 形式进入应用的外部文件，并复用现有文件信息解析能力。
+  Future<void> _handleIncomingUri(String uri) async {
+    final fileInfo = await uriFileReader.getFileInfoFromUri(uri);
+    if (fileInfo == null) {
+      Global.showSnackBarWarn(text: TranslationKey.failedToLoad.tr);
+      logger.debug(tag, "未从uri中获取到文件名称和大小：uri = $uri");
+      return;
+    }
+    final fileName = fileInfo.fileName;
+    final size = fileInfo.size;
+    logger.info(tag, "ShareMedia fileName $fileName, size $size");
+    await _handleIncomingDropItems([DropItemFileUri(uri, fileName, size)]);
   }
 
   void gotoOnlineDevicesPage(List<DropItem> files) {

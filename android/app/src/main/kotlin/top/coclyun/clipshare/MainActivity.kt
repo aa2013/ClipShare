@@ -28,6 +28,31 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MyApplication.mainActivity = this
+        dispatchFileOpenIntent(intent)
+    }
+
+    /**
+     * share_handler 依赖 Activity 的新 Intent 回调来处理运行中的分享事件。
+     * 这里额外补偿转发 ACTION_VIEW 文件打开事件，确保文件管理器“打开方式”也能复用 Flutter 侧统一处理链路。
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        dispatchFileOpenIntent(intent)
+    }
+
+    /**
+     * 首次创建与后续复用 Activity 都统一走这里分发文件打开事件，避免两条入口行为不一致。
+     */
+    private fun dispatchFileOpenIntent(intent: Intent?) {
+        val dataString = intent?.dataString
+        if (intent?.action != Intent.ACTION_VIEW || dataString.isNullOrEmpty()) {
+            return
+        }
+        MyApplication.androidChannel.invokeMethod(
+            "onFileOpened",
+            mapOf("uri" to dataString)
+        )
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
