@@ -164,6 +164,30 @@ class SettingsFloatWindowPage extends SettingsSectionView {
       ),
       SettingCard(
         searchKeys: const [
+          TranslationKey.commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle,
+          TranslationKey.commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips,
+        ],
+        title: Text(
+          TranslationKey.commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle.tr,
+        ),
+        description: Text(
+          TranslationKey.commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips.tr,
+        ),
+        value: appConfig.historyFloatHandleApplyAlphaToWholeHandle,
+        action: (v) => Switch(
+          value: appConfig.historyFloatHandleApplyAlphaToWholeHandle,
+          onChanged: (checked) async {
+            HapticFeedback.mediumImpact();
+            await appConfig.setHistoryFloatHandleApplyAlphaToWholeHandle(checked);
+            androidChannelService.setHistoryFloatHandleApplyAlphaToWholeHandle(
+              checked,
+            );
+          },
+        ),
+        show: (v) => Platform.isAndroid && appConfig.showHistoryFloat,
+      ),
+      SettingCard(
+        searchKeys: const [
           TranslationKey.commonSettingsLockHistoriesFloatWindowPosition,
         ],
         title: Text(

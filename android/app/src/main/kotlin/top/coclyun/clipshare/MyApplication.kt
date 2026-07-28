@@ -48,6 +48,7 @@ import java.net.URLDecoder
 const val lockHistoryFloatLocation = "LOCK_HISTORY_FLOAT_LOCATION"
 const val setHistoryFloatHandleWidth = "SET_HISTORY_FLOAT_HANDLE_WIDTH"
 const val setHistoryFloatHandleColor = "SET_HISTORY_FLOAT_HANDLE_COLOR"
+const val setHistoryFloatHandleApplyAlphaToWholeHandle = "SET_HISTORY_FLOAT_HANDLE_APPLY_ALPHA_TO_WHOLE_HANDLE"
 // 历史悬浮窗主题同步广播，取值与 Flutter ThemeMode.name 保持一致。
 const val setHistoryFloatThemeMode = "SET_HISTORY_FLOAT_THEME_MODE"
 const val loadHistories = "LOAD_HISTORIES"
@@ -383,12 +384,19 @@ class MyApplication : Application() {
                 "showHistoryFloatWindow" -> {
                     val width = (args["width"] as? Number)?.toInt() ?: 32
                     val color = (args["color"] as? Number)?.toInt() ?: defaultHistoryFloatHandleColor
+                    val applyAlphaToWholeHandle =
+                        args[HistoryFloatService.EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE] as? Boolean
+                            ?: false
                     val themeMode = args[HistoryFloatService.EXTRA_FLOAT_THEME_MODE] as? String
                     val i18n = args["i18n"] as? Map<*, *>
                     if (!isServiceRunning(this, HistoryFloatService::class.java)) {
                         startService(Intent(this, HistoryFloatService::class.java).apply {
                             putExtra("width", width)
                             putExtra("color", color)
+                            putExtra(
+                                HistoryFloatService.EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
+                                applyAlphaToWholeHandle
+                            )
                             putExtra(HistoryFloatService.EXTRA_FLOAT_THEME_MODE, themeMode)
                             putExtra(
                                 HistoryFloatService.EXTRA_FLOAT_TITLE,
@@ -456,6 +464,26 @@ class MyApplication : Application() {
                         startService(Intent(this, HistoryFloatService::class.java).apply {
                             action = setHistoryFloatHandleColor
                             putExtra("color", color)
+                        })
+                    }
+                }
+                "setHistoryFloatHandleApplyAlphaToWholeHandle" -> {
+                    val applyAlphaToWholeHandle =
+                        args[HistoryFloatService.EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE] as? Boolean
+                            ?: false
+                    val intent = Intent(setHistoryFloatHandleApplyAlphaToWholeHandle)
+                    intent.putExtra(
+                        HistoryFloatService.EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
+                        applyAlphaToWholeHandle
+                    )
+                    LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
+                    if (isServiceRunning(this, HistoryFloatService::class.java)) {
+                        startService(Intent(this, HistoryFloatService::class.java).apply {
+                            action = setHistoryFloatHandleApplyAlphaToWholeHandle
+                            putExtra(
+                                HistoryFloatService.EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
+                                applyAlphaToWholeHandle
+                            )
                         })
                     }
                 }

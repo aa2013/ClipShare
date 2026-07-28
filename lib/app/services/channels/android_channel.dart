@@ -48,6 +48,7 @@ class AndroidChannelService extends GetxService {
       {
         "width": appConfig.historyFloatHandleWidth,
         "color": appConfig.historyFloatHandleColor,
+        "applyAlphaToWholeHandle": appConfig.historyFloatHandleApplyAlphaToWholeHandle,
         "themeMode": appConfig.appTheme.name,
         "i18n": {
           "title": TranslationKey.historyFloatTitle.tr,
@@ -82,6 +83,15 @@ class AndroidChannelService extends GetxService {
     androidChannel.invokeMethod(
       AndroidChannelMethod.setHistoryFloatHandleColor.name,
       {"color": color},
+    );
+  }
+
+  /// 同步把手装饰层是否跟随用户所选颜色透明度。
+  void setHistoryFloatHandleApplyAlphaToWholeHandle(bool value) {
+    if (!Platform.isAndroid) return;
+    androidChannel.invokeMethod(
+      AndroidChannelMethod.setHistoryFloatHandleApplyAlphaToWholeHandle.name,
+      {"applyAlphaToWholeHandle": value},
     );
   }
 

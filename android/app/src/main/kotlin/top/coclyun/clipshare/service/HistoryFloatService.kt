@@ -38,6 +38,7 @@ import top.coclyun.clipshare.adapter.History
 import top.coclyun.clipshare.defaultHistoryFloatHandleColor
 import top.coclyun.clipshare.loadHistories
 import top.coclyun.clipshare.lockHistoryFloatLocation
+import top.coclyun.clipshare.setHistoryFloatHandleApplyAlphaToWholeHandle
 import top.coclyun.clipshare.sendHistories
 import top.coclyun.clipshare.setHistoryFloatHandleColor
 import top.coclyun.clipshare.setHistoryFloatThemeMode
@@ -117,6 +118,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     private var handleVisible by mutableStateOf(true)
     private var handleWidth by mutableIntStateOf(32)
     private var handleColor by mutableIntStateOf(defaultHistoryFloatHandleColor)
+    private var applyAlphaToWholeHandle by mutableStateOf(false)
     private var darkTheme by mutableStateOf(false)
     private var floatStrings by mutableStateOf(HistoryFloatStrings())
     private var themeMode = HistoryFloatThemeMode.SYSTEM
@@ -176,6 +178,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                     handleVisible = handleVisible,
                     handleWidth = handleWidth,
                     handleColor = handleColor,
+                    applyAlphaToWholeHandle = applyAlphaToWholeHandle,
                     darkTheme = darkTheme,
                     onExpand = { unfoldView() },
                     onCollapse = { requestHideContainer() },
@@ -204,6 +207,13 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             handleColor = intent.getIntExtra("color", handleColor)
             return START_STICKY
         }
+        if (intent?.action == setHistoryFloatHandleApplyAlphaToWholeHandle) {
+            applyAlphaToWholeHandle = intent.getBooleanExtra(
+                EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
+                applyAlphaToWholeHandle
+            )
+            return START_STICKY
+        }
         if (intent?.action == setHistoryFloatThemeMode) {
             updateThemeMode(intent)
             return START_STICKY
@@ -211,6 +221,10 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         updateThemeMode(intent)
         handleWidth = intent?.getIntExtra("width", handleWidth) ?: handleWidth
         handleColor = intent?.getIntExtra("color", handleColor) ?: handleColor
+        applyAlphaToWholeHandle = intent?.getBooleanExtra(
+            EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
+            applyAlphaToWholeHandle
+        ) ?: applyAlphaToWholeHandle
         showFloatWindow()
         return START_STICKY
     }
@@ -246,6 +260,13 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
                     setHistoryFloatHandleColor -> {
                         handleColor = intent.getIntExtra("color", handleColor)
+                    }
+
+                    setHistoryFloatHandleApplyAlphaToWholeHandle -> {
+                        applyAlphaToWholeHandle = intent.getBooleanExtra(
+                            EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
+                            applyAlphaToWholeHandle
+                        )
                     }
 
                     setHistoryFloatThemeMode -> {
@@ -314,6 +335,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             addAction(lockHistoryFloatLocation)
             addAction(setHistoryFloatHandleWidth)
             addAction(setHistoryFloatHandleColor)
+            addAction(setHistoryFloatHandleApplyAlphaToWholeHandle)
             addAction(setHistoryFloatThemeMode)
             addAction(sendHistories)
         }
@@ -544,6 +566,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         const val EXTRA_FLOAT_IMAGE_TYPE = "historyFloatImageType"
         const val EXTRA_FLOAT_FILE_TYPE = "historyFloatFileType"
         const val EXTRA_FLOAT_THEME_MODE = "themeMode"
+        const val EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE = "applyAlphaToWholeHandle"
         private const val BASE_WINDOW_FLAGS =
             LayoutParams.FLAG_NOT_FOCUSABLE or LayoutParams.FLAG_NOT_TOUCH_MODAL
         private const val FULLSCREEN_CHECK_INTERVAL_MS = 500L

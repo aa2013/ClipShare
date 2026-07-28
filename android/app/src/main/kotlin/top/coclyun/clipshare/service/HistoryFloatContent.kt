@@ -137,6 +137,7 @@ fun HistoryFloatContent(
     handleVisible: Boolean,
     handleWidth: Int,
     handleColor: Int,
+    applyAlphaToWholeHandle: Boolean,
     darkTheme: Boolean,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
@@ -167,6 +168,7 @@ fun HistoryFloatContent(
                 onMoveHandle = onMoveHandle,
                 handleWidth = handleWidth,
                 handleColor = Color(handleColor),
+                applyAlphaToWholeHandle = applyAlphaToWholeHandle,
             )
         }
     }
@@ -179,6 +181,7 @@ private fun HistoryHandle(
     onMoveHandle: (Float) -> Unit,
     handleWidth: Int = 32,
     handleColor: Color = Color(defaultHistoryFloatHandleColor),
+    applyAlphaToWholeHandle: Boolean = false,
 ) {
     var active by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -187,6 +190,9 @@ private fun HistoryHandle(
     val handleHeight by animateDpAsState(targetValue = if (active) 108.dp else 96.dp, label = "handleHeight")
     val borderAlpha by animateFloatAsState(targetValue = if (active) 0.24f else 0.10f, label = "handleBorderAlpha")
     val gripAlpha by animateFloatAsState(targetValue = if (active) 0.42f else 0.22f, label = "handleGripAlpha")
+    val overlayAlpha = if (active) 0.035f else 0.015f
+    // 把手装饰层背景透明度。
+    val handleDecorAlpha = if (applyAlphaToWholeHandle) handleColor.alpha else 1f
     Box(
         modifier = Modifier
             .width(handleWidth)
@@ -236,13 +242,12 @@ private fun HistoryHandle(
             color = handleColor,
             tonalElevation = 0.dp,
             shadowElevation = 0.dp,
-            // Preserve the original white stroke so the translucent shell still reads clearly.
-            border = BorderStroke(1.dp, Color.White.copy(alpha = borderAlpha)),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = borderAlpha * handleDecorAlpha)),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF111827).copy(alpha = if (active) 0.035f else 0.015f)),
+                    .background(Color(0xFF111827).copy(alpha = overlayAlpha * handleDecorAlpha)),
                 contentAlignment = Alignment.CenterStart,
             ) {
                 Box(
@@ -250,8 +255,7 @@ private fun HistoryHandle(
                         .padding(start = 8.dp)
                         .size(width = 4.dp, height = 24.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        // Keep the grip on the original white alpha ramp so it stays readable on any chosen shell color.
-                        .background(Color.White.copy(alpha = gripAlpha))
+                        .background(Color.White.copy(alpha = gripAlpha * handleDecorAlpha))
                 )
             }
         }

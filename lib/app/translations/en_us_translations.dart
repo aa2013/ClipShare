@@ -248,6 +248,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Handle Color";
       case TranslationKey.commonSettingsHistoriesFloatWindowHandleColorTips:
         return "Pick a floating window color. Changes sync in real time.";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle:
+        return "Apply alpha to whole handle";
+      case TranslationKey.commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips:
+        return "When enabled, the handle border, grip, and inner overlay follow the selected color alpha together.";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveTitle:
         return "Boost Background Keep-alive";
       case TranslationKey.commonSettingsEnhanceBackgroundKeepAliveDesc:

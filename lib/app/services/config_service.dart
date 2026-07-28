@@ -240,6 +240,11 @@ class ConfigService extends GetxService {
 
   int get historyFloatHandleColor => _historyFloatHandleColor.value;
 
+  // 控制把手装饰层是否跟随用户所选颜色的透明度。
+  late final RxBool _historyFloatHandleApplyAlphaToWholeHandle;
+
+  bool get historyFloatHandleApplyAlphaToWholeHandle => _historyFloatHandleApplyAlphaToWholeHandle.value;
+
   late final RxBool _enhanceBackgroundKeepAlive;
 
   bool get enhanceBackgroundKeepAlive => _enhanceBackgroundKeepAlive.value;
@@ -649,6 +654,10 @@ class ConfigService extends GetxService {
     _historyFloatHandleColor = (await cfg.getConfigByKey(
       ConfigKey.historyFloatHandleColor,
       Constants.defaultHistoryFloatHandleColor,
+    )).obs;
+    _historyFloatHandleApplyAlphaToWholeHandle = (await cfg.getConfigByKey(
+      ConfigKey.historyFloatHandleApplyAlphaToWholeHandle,
+      false,
     )).obs;
     _enhanceBackgroundKeepAlive = (await cfg.getConfigByKey(ConfigKey.enhanceBackgroundKeepAlive, false)).obs;
     _firstStartup = (await cfg.getConfigByKey(ConfigKey.firstStartup, true)).obs;
@@ -1195,6 +1204,15 @@ class ConfigService extends GetxService {
   Future<void> setHistoryFloatHandleColor(int color) async {
     await configDao.addOrUpdate(ConfigKey.historyFloatHandleColor, color.toString());
     _historyFloatHandleColor.value = color;
+  }
+
+  /// 设置是否将把手颜色透明度扩展到整个把手装饰层。
+  Future<void> setHistoryFloatHandleApplyAlphaToWholeHandle(bool value) async {
+    await configDao.addOrUpdate(
+      ConfigKey.historyFloatHandleApplyAlphaToWholeHandle,
+      value.toString(),
+    );
+    _historyFloatHandleApplyAlphaToWholeHandle.value = value;
   }
 
   Future<void> setEnhanceBackgroundKeepAlive(bool value) async {

@@ -93,6 +93,8 @@ enum TranslationKey {
   commonSettingsHistoriesFloatWindowHandleWidthValue,
   commonSettingsHistoriesFloatWindowHandleColor,
   commonSettingsHistoriesFloatWindowHandleColorTips,
+  commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle,
+  commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips,
   commonSettingsEnhanceBackgroundKeepAliveTitle,
   commonSettingsEnhanceBackgroundKeepAliveDesc,
   commonSettingsLockHistoriesFloatWindowPosition,

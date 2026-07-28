@@ -8,6 +8,7 @@ enum AndroidChannelMethod {
   closeHistoryFloatWindow,
   setHistoryFloatHandleWidth,
   setHistoryFloatHandleColor,
+  setHistoryFloatHandleApplyAlphaToWholeHandle,
   setHistoryFloatThemeMode,
   lockHistoryFloatLoc,
   showKeepAliveFloatWindow,

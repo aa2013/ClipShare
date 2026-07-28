@@ -7,6 +7,7 @@ enum ConfigKey {
   showHistoryFloat,
   historyFloatHandleWidth,
   historyFloatHandleColor,
+  historyFloatHandleApplyAlphaToWholeHandle,
   enhanceBackgroundKeepAlive,
   firstStartup,
   windowSize,
