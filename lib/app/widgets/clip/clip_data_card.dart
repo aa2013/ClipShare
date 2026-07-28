@@ -206,7 +206,7 @@ class _ClipDataCardState extends State<ClipDataCard>
       ),
     );
     final Widget child;
-    if(PlatformExt.isMobile){
+    if(PlatformExt.isMobile || widget.selectMode){
       child = buildSlidable(content);
     } else {
       child = ClipNativeDragItemWrapper(
