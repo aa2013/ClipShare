@@ -18,8 +18,13 @@ import 'package:clipshare/app/widgets/menu/my_menu_item.dart';
 
 class ClipContentView extends StatefulWidget {
   final ClipData clipData;
+  final bool filePathSelectable;
 
-  const ClipContentView({super.key, required this.clipData});
+  const ClipContentView({
+    super.key,
+    required this.clipData,
+    this.filePathSelectable = false,
+  });
 
   @override
   State<StatefulWidget> createState() {
@@ -52,7 +57,10 @@ class _ClipContentViewState extends State<ClipContentView> {
         },
       );
     } else if (widget.clipData.isFile) {
-      return ClipSimpleDataContent(clip: widget.clipData);
+      return ClipSimpleDataContent(
+        clip: widget.clipData,
+        filePathSelectable: widget.filePathSelectable,
+      );
     } else if (widget.clipData.isNotification) {
       return LayoutBuilder(
         builder: (context, constraints) {

@@ -316,6 +316,7 @@ enum TranslationKey {
   openFileFolder,
   tagsManagement,
   copySuccess,
+  copyFailed,
   clipboardContent,
   deleteRecord,
   shareFile,

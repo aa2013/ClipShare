@@ -684,6 +684,8 @@ class EnUSTranslation extends AbstractTranslations {
         return "Tags";
       case TranslationKey.copySuccess:
         return "Copied Successfully";
+      case TranslationKey.copyFailed:
+        return "Copied Failed";
       case TranslationKey.clipboardContent:
         return "Clipboard Details";
       case TranslationKey.deleteRecord:

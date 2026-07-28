@@ -199,29 +199,33 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
 
             ///剪贴板内容
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 5, bottom: 5),
-                child: ConditionWidget(
-                  visible: modifyMode,
-                  replacement: ClipContentView(
-                    clipData: widget.clipData,
-                  ),
-                  child: SizedBox.expand(
-                    child: TextField(
-                      textAlignVertical: TextAlignVertical.top,
-                      textAlign: TextAlign.left,
-                      controller: editController,
-                      decoration: const InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue, width: 1),
+              child: Align(
+                alignment: AlignmentGeometry.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 5, bottom: 5),
+                  child: ConditionWidget(
+                    visible: modifyMode,
+                    replacement: ClipContentView(
+                      clipData: widget.clipData,
+                      filePathSelectable: true,
+                    ),
+                    child: SizedBox.expand(
+                      child: TextField(
+                        textAlignVertical: TextAlignVertical.top,
+                        textAlign: TextAlign.left,
+                        controller: editController,
+                        decoration: const InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue, width: 1),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.blue, width: 1.5),
+                          ),
+                          border: OutlineInputBorder(),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.blue, width: 1.5),
-                        ),
-                        border: OutlineInputBorder(),
+                        maxLines: null,
+                        expands: true,
                       ),
-                      maxLines: null,
-                      expands: true,
                     ),
                   ),
                 ),

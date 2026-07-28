@@ -82,7 +82,6 @@ class SettingsFloatWindowPage extends SettingsSectionView {
             const SizedBox(width: 5),
             GestureDetector(
               onTap: () {
-                // Reuse the standard tips dialog so this setting matches other annotated settings.
                 Global.showTipsDialog(
                   context: context,
                   text: TranslationKey.commonSettingsShowHistoriesFloatWindowTips.tr,
@@ -102,7 +101,7 @@ class SettingsFloatWindowPage extends SettingsSectionView {
               child: SizedBox(
                 height: 30,
                 child: Slider(
-                  min: 24,
+                  min: 5,
                   max: 50,
                   divisions: 26,
                   padding: EdgeInsets.zero,

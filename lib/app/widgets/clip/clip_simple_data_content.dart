@@ -15,6 +15,7 @@ class ClipSimpleDataContent extends StatelessWidget {
   final bool imgOnlyView;
   final bool imgSingleView;
   final bool showOriginData;
+  final bool filePathSelectable;
 
   const ClipSimpleDataContent({
     super.key,
@@ -22,6 +23,7 @@ class ClipSimpleDataContent extends StatelessWidget {
     this.imgOnlyView = false,
     this.imgSingleView = false,
     this.showOriginData = false,
+    this.filePathSelectable = false,
   });
 
   Widget _renderText() {
@@ -88,16 +90,20 @@ class ClipSimpleDataContent extends StatelessWidget {
       return _renderImage(context);
     }
     if (clip.isFile) {
+      Widget text;
+      if(filePathSelectable){
+        text = SelectableText(clip.data.content);
+      }else{
+        text = Text(clip.data.content);
+      }
       return Row(
         children: [
           const Icon(
             Icons.file_present_outlined,
             color: Colors.blue,
           ),
-          const SizedBox(
-            width: 5,
-          ),
-          Expanded(child: Text(clip.data.content)),
+          const SizedBox(width: 5),
+          Expanded(child: text),
         ],
       );
     }

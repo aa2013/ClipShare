@@ -640,6 +640,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return "标签管理";
       case TranslationKey.copySuccess:
         return "复制成功";
+      case TranslationKey.copyFailed:
+        return "复制失败";
       case TranslationKey.clipboardContent:
         return "剪贴板详情";
       case TranslationKey.deleteRecord:
