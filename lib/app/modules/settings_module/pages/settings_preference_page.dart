@@ -19,17 +19,23 @@ class SettingsPreferencePage extends SettingsSectionView {
     return [
       Obx(
         () => SettingCardGroup(
+          showHeader: false,
+          cardList: buildCommonEntries(context),
+        ),
+      ),
+      const SizedBox(height: 12),
+      Obx(
+        () => SettingCardGroup(
           showHeader: showGroupHeader,
           groupName: TranslationKey.preference.tr,
           icon: const Icon(Icons.tune),
-          cardList: buildSettingEntries(context),
+          cardList: buildPopupEntries(context),
         ),
       ),
     ];
   }
 
-  @override
-  List<SettingEntry> buildSettingEntries(BuildContext context) {
+  List<SettingEntry> buildCommonEntries(BuildContext context) {
     return [
       SettingCard(
         searchKeys: const [
@@ -52,48 +58,6 @@ class SettingsPreferencePage extends SettingsSectionView {
           },
         ),
         show: (v) => Platform.isWindows || Platform.isMacOS,
-      ),
-      //弹窗记住上次位置
-      SettingCard(
-        searchKeys: const [
-          TranslationKey.preferenceSettingsRecordsDialogLocation,
-          TranslationKey.rememberLastPos,
-          TranslationKey.followMousePos,
-        ],
-        title: Text(
-          TranslationKey.preferenceSettingsRecordsDialogLocation.tr,
-        ),
-        description: Text("${TranslationKey.current.tr}: ${appConfig.recordHistoryDialogPosition ? TranslationKey.rememberLastPos.tr : TranslationKey.followMousePos.tr}"),
-        value: appConfig.recordHistoryDialogPosition,
-        action: (v) => Switch(
-          value: v,
-          onChanged: (checked) {
-            HapticFeedback.mediumImpact();
-            appConfig.setRecordHistoryDialogPosition(checked);
-            if (checked) {
-              appConfig.setHistoryDialogPosition("");
-            }
-          },
-        ),
-        show: (v) => PlatformExt.isDesktop,
-      ),
-      //弹窗记住上次尺寸
-      SettingCard(
-        searchKeys: const [
-          TranslationKey.preferenceSettingsRecordsDialogSize,
-        ],
-        title: Text(
-          TranslationKey.preferenceSettingsRecordsDialogSize.tr,
-        ),
-        value: appConfig.rememberPopupWindowSize,
-        action: (v) => Switch(
-          value: v,
-          onChanged: (checked) {
-            HapticFeedback.mediumImpact();
-            appConfig.setRememberPopupWindowSize(checked);
-          },
-        ),
-        show: (v) => PlatformExt.isDesktop,
       ),
       SettingCard(
         searchKeys: const [
@@ -138,25 +102,6 @@ class SettingsPreferencePage extends SettingsSectionView {
       ),
       SettingCard(
         searchKeys: const [
-          TranslationKey.closeOnSameHotKeyTitle,
-          TranslationKey.closeOnSameHotKeyDesc,
-        ],
-        title: Text(TranslationKey.closeOnSameHotKeyTitle.tr),
-        description: Text(TranslationKey.closeOnSameHotKeyDesc.tr),
-        value: appConfig.closeOnSameHotKey,
-        action: (v) {
-          return Switch(
-            value: v,
-            onChanged: (checked) {
-              HapticFeedback.mediumImpact();
-              appConfig.setCloseOnSameHotKey(checked);
-            },
-          );
-        },
-        show: (v) => PlatformExt.isDesktop,
-      ),
-      SettingCard(
-        searchKeys: const [
           TranslationKey.useTrayFlashingForConnectionTitle,
           TranslationKey.useTrayFlashingForConnectionDesc,
         ],
@@ -174,6 +119,97 @@ class SettingsPreferencePage extends SettingsSectionView {
         },
         show: (v) => PlatformExt.isDesktop && (appConfig.notifyOnDevConn || appConfig.notifyOnDevDisconn),
       ),
+    ];
+  }
+
+  List<SettingEntry> buildPopupEntries(BuildContext context) {
+    return [
+      //弹窗记住上次位置
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.preferenceSettingsRecordsDialogLocation,
+          TranslationKey.rememberLastPos,
+          TranslationKey.followMousePos,
+        ],
+        title: Text(
+          TranslationKey.preferenceSettingsRecordsDialogLocation.tr,
+        ),
+        description: Text("${TranslationKey.current.tr}: ${appConfig.recordHistoryDialogPosition ? TranslationKey.rememberLastPos.tr : TranslationKey.followMousePos.tr}"),
+        value: appConfig.recordHistoryDialogPosition,
+        action: (v) => Switch(
+          value: v,
+          onChanged: (checked) {
+            HapticFeedback.mediumImpact();
+            appConfig.setRecordHistoryDialogPosition(checked);
+            if (checked) {
+              appConfig.setHistoryDialogPosition("");
+            }
+          },
+        ),
+        show: (v) => PlatformExt.isDesktop,
+      ),
+      //弹窗记住上次尺寸
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.preferenceSettingsRecordsDialogSize,
+        ],
+        title: Text(
+          TranslationKey.preferenceSettingsRecordsDialogSize.tr,
+        ),
+        value: appConfig.rememberPopupWindowSize,
+        action: (v) => Switch(
+          value: v,
+          onChanged: (checked) {
+            HapticFeedback.mediumImpact();
+            appConfig.setRememberPopupWindowSize(checked);
+          },
+        ),
+        show: (v) => PlatformExt.isDesktop,
+      ),
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.preferenceSettingsAutoClosePopupOnBlurTitle,
+          TranslationKey.preferenceSettingsAutoClosePopupOnBlurDesc,
+        ],
+        title: Text(TranslationKey.preferenceSettingsAutoClosePopupOnBlurTitle.tr),
+        description: Text(TranslationKey.preferenceSettingsAutoClosePopupOnBlurDesc.tr),
+        value: appConfig.autoClosePopupOnBlur,
+        action: (v) => Switch(
+          value: v,
+          onChanged: (checked) {
+            HapticFeedback.mediumImpact();
+            appConfig.setAutoClosePopupOnBlur(checked);
+          },
+        ),
+        show: (v) => PlatformExt.isDesktop,
+      ),
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.closeOnSameHotKeyTitle,
+          TranslationKey.closeOnSameHotKeyDesc,
+        ],
+        title: Text(TranslationKey.closeOnSameHotKeyTitle.tr),
+        description: Text(TranslationKey.closeOnSameHotKeyDesc.tr),
+        value: appConfig.closeOnSameHotKey,
+        action: (v) {
+          return Switch(
+            value: v,
+            onChanged: (checked) {
+              HapticFeedback.mediumImpact();
+              appConfig.setCloseOnSameHotKey(checked);
+            },
+          );
+        },
+        show: (v) => PlatformExt.isDesktop,
+      ),
+    ];
+  }
+
+  @override
+  List<SettingEntry> buildSettingEntries(BuildContext context) {
+    return [
+      ...buildCommonEntries(context),
+      ...buildPopupEntries(context),
     ];
   }
 }

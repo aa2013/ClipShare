@@ -14,6 +14,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/multi_window_config_service.dart';
 import 'package:clipshare/app/services/multi_window_dispatch_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
@@ -24,7 +25,6 @@ import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -58,6 +58,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   bool _loading = true;
   bool _showBackToTopButton = false;
   final multiWindowService = Get.find<MultiWindowChannelService>();
+  final multiWindowConfigService = Get.find<MultiWindowConfigService>();
   final windowControlService = Get.find<WindowControlService>();
   Timer? _timer;
   bool filterLoading = true;
@@ -134,6 +135,18 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     super.onWindowResized();
     final size = await windowManager.getSize();
     await multiWindowService.updateWindowSize(0, WindowType.history, size);
+  }
+
+  @override
+  /// 子窗口失焦时按主窗口偏好决定是否自动隐藏，保持多窗口状态由主窗口统一管理。
+  void onWindowBlur() {
+    if (!multiWindowConfigService.autoClosePopupOnBlur) {
+      print(2222);
+      return;
+    }
+    print(1111);
+    // 统一走主窗口维护的隐藏流程，避免子窗口自行关闭后主窗口状态不同步。
+    multiWindowService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
   }
 
   @override

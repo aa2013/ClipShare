@@ -390,6 +390,8 @@ enum TranslationKey {
   syncFile,
   preference,
   preferenceSettingsRecordsDialogLocation,
+  preferenceSettingsAutoClosePopupOnBlurTitle,
+  preferenceSettingsAutoClosePopupOnBlurDesc,
   notification,
   current,
   followMousePos,

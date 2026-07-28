@@ -1,4 +1,5 @@
-﻿enum MultiWindowConfig {
+enum MultiWindowConfig {
   language,
   themeMode,
+  autoClosePopupOnBlur,
 }

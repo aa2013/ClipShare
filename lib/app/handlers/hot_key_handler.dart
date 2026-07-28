@@ -105,6 +105,7 @@ class AppHotKeyHandler {
             title: title,
             tag: MultiWindowTag.history,
             themeMode: appConfig.appTheme,
+            autoClosePopupOnBlur: appConfig.autoClosePopupOnBlur,
             selfDeviceGuid: appConfig.device.guid,
           ).toString(),
         );
@@ -162,8 +163,8 @@ class AppHotKeyHandler {
         //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
         Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
         var [width, height] = [355.0 * radio, 630.0 * radio];
-        if (appConfig.rememberPopupWindowSize && appConfig.historyWindowSize != null) {
-          final size = appConfig.historyWindowSize!;
+        if (appConfig.rememberPopupWindowSize && appConfig.fileSenderWindowSize != null) {
+          final size = appConfig.fileSenderWindowSize!;
           width = size.width * radio;
           height = size.height * radio;
         }
@@ -190,6 +191,7 @@ class AppHotKeyHandler {
             title: title,
             tag: MultiWindowTag.devices,
             themeMode: appConfig.appTheme,
+            autoClosePopupOnBlur: appConfig.autoClosePopupOnBlur,
             selfDeviceGuid: appConfig.device.guid,
             otherArgs: args,
           ).toString(),

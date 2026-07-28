@@ -17,9 +17,14 @@ class MultiWindowConfigService extends GetxService implements MultiWindowMessage
 
   ThemeMode get themeMode => _themeMode;
 
+  bool _autoClosePopupOnBlur = false;
+
+  bool get autoClosePopupOnBlur => _autoClosePopupOnBlur;
+
   MultiWindowConfigService(DesktopMultiWindowArgs args) {
-    Locale(args.languageCode, args.countryCode);
+    _locale = Locale(args.languageCode, args.countryCode);
     _themeMode = args.themeMode;
+    _autoClosePopupOnBlur = args.autoClosePopupOnBlur;
   }
 
   @override
@@ -51,6 +56,9 @@ class MultiWindowConfigService extends GetxService implements MultiWindowMessage
           case MultiWindowConfig.themeMode:
             _onThemeModeChanged(value);
             break;
+          case MultiWindowConfig.autoClosePopupOnBlur:
+            _onAutoClosePopupOnBlurChanged(value);
+            break;
         }
       } catch (err, stack) {
         debugPrint(err.toString());
@@ -71,6 +79,11 @@ class MultiWindowConfigService extends GetxService implements MultiWindowMessage
       theme: _themeMode == ThemeMode.dark ? darkThemeData : lightThemeData,
       isReversed: false,
     );
+  }
+
+  /// 同步主窗口的弹窗失焦关闭偏好，避免子窗口在运行期间保留旧值。
+  void _onAutoClosePopupOnBlurChanged(bool value) {
+    _autoClosePopupOnBlur = value;
   }
 
 }

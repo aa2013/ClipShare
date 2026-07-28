@@ -304,6 +304,11 @@ class ConfigService extends GetxService {
 
   bool get closeOnSameHotKey => _closeOnSameHotKey.value;
 
+  //桌面端弹窗失去焦点时自动关闭
+  final RxBool _autoClosePopupOnBlur = false.obs;
+
+  bool get autoClosePopupOnBlur => _autoClosePopupOnBlur.value;
+
   //主题
   late final RxString _appTheme;
 
@@ -809,6 +814,7 @@ class ConfigService extends GetxService {
     _excludeFormat.value = await cfg.getConfigByKey(ConfigKey.excludeFormat, true);
     _enablePIP.value = await cfg.getConfigByKey(ConfigKey.enablePIP, false);
     _rememberPopupWindowSize.value = await cfg.getConfigByKey(ConfigKey.rememberPopupWindowSize, false);
+    _autoClosePopupOnBlur.value = await cfg.getConfigByKey(ConfigKey.autoClosePopupOnBlur, false);
     _historyWindowSize.value = await cfg.getConfigByKey(
       ConfigKey.historyWindowSize,
       null,
@@ -1614,6 +1620,17 @@ class ConfigService extends GetxService {
     }
     await configDao.addOrUpdate(ConfigKey.rememberPopupWindowSize, value.toString());
     _rememberPopupWindowSize.value = value;
+  }
+
+  /// 设置桌面端弹窗失焦后是否自动隐藏，并同步给所有已打开的子窗口。
+  Future<void> setAutoClosePopupOnBlur(bool value) async {
+    if (!PlatformExt.isDesktop) {
+      return;
+    }
+    await configDao.addOrUpdate(ConfigKey.autoClosePopupOnBlur, value.toString());
+    _autoClosePopupOnBlur.value = value;
+    final windowChannelService = Get.find<MultiWindowChannelService>();
+    await windowChannelService.updateConfig(MultiWindowConfig.autoClosePopupOnBlur, value);
   }
 
   ///更新弹窗大小

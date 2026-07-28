@@ -10,6 +10,8 @@ class DesktopMultiWindowArgs {
   final String languageCode;
   String? countryCode;
   final ThemeMode themeMode;
+  /// 控制子窗口在失去焦点时是否自动走隐藏流程，保证首次创建时与主窗口偏好一致。
+  final bool autoClosePopupOnBlur;
   /// 由主窗口传入子窗口的本机设备标识，用于子窗口独立计算设备展示名。
   final String selfDeviceGuid;
   final Map<String, dynamic> otherArgs;
@@ -20,6 +22,7 @@ class DesktopMultiWindowArgs {
     required this.languageCode,
     this.countryCode,
     required this.themeMode,
+    required this.autoClosePopupOnBlur,
     required this.selfDeviceGuid,
     this.otherArgs = const {},
   });
@@ -29,6 +32,7 @@ class DesktopMultiWindowArgs {
     required String title,
     required MultiWindowTag tag,
     required ThemeMode? themeMode,
+    required bool autoClosePopupOnBlur,
     required String selfDeviceGuid,
     Map<String, dynamic> otherArgs = const {},
   }) {
@@ -44,6 +48,7 @@ class DesktopMultiWindowArgs {
       languageCode: locale.languageCode,
       countryCode: locale.countryCode,
       themeMode: themeMode,
+      autoClosePopupOnBlur: autoClosePopupOnBlur,
       selfDeviceGuid: selfDeviceGuid,
       otherArgs: otherArgs,
     );
@@ -61,6 +66,7 @@ class DesktopMultiWindowArgs {
       "title": title,
       "languageCode": languageCode,
       "themeMode": themeMode.name,
+      "autoClosePopupOnBlur": autoClosePopupOnBlur,
       "selfDeviceGuid": selfDeviceGuid,
       "otherArgs": otherArgs,
     };
@@ -85,6 +91,7 @@ class DesktopMultiWindowArgs {
       languageCode: json['languageCode']!,
       countryCode: json['countryCode'],
       themeMode: themeMode,
+      autoClosePopupOnBlur: json['autoClosePopupOnBlur'] ?? false,
       selfDeviceGuid: json['selfDeviceGuid'] ?? "",
       otherArgs: json["otherArgs"] ?? {},
     );

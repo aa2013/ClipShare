@@ -75,6 +75,7 @@ enum ConfigKey {
   excludeFormat,
   enablePIP,
   rememberPopupWindowSize,
+  autoClosePopupOnBlur,
   historyWindowSize,
   fileSenderWindowSize,
   useTrayFlashingForConnection,

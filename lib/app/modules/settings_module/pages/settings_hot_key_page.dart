@@ -37,7 +37,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
           showHeader: showGroupHeader,
           groupName: TranslationKey.hotKeySettingsGroupName.tr,
           icon: const Icon(Icons.keyboard_alt_outlined),
-          cardList: buildSettingEntries(context),
+          cardList: buildHotKeyEntries(context),
         ),
       ),
     ];
@@ -109,8 +109,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
     ];
   }
 
-  @override
-  List<SettingEntry> buildSettingEntries(BuildContext context) {
+  List<SettingEntry> buildHotKeyEntries(BuildContext context){
     return [
       SettingCard(
         searchKeys: const [
@@ -143,15 +142,15 @@ class SettingsHotKeyPage extends SettingsSectionView {
               onDone: (hotKey, keyCodes) {
                 AppHotKeyHandler.registerHistoryWindow(hotKey)
                     .then((v) {
-                      //设置为新值
-                      appConfig.setHistoryWindowHotKeys(keyCodes);
-                    })
+                  //设置为新值
+                  appConfig.setHistoryWindowHotKeys(keyCodes);
+                })
                     .catchError((err) {
-                      Global.showTipsDialog(
-                        context: context,
-                        text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                      );
-                    });
+                  Global.showTipsDialog(
+                    context: context,
+                    text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                  );
+                });
               },
               onClear: () {
                 Global.showTipsDialog(
@@ -207,15 +206,15 @@ class SettingsHotKeyPage extends SettingsSectionView {
             onDone: (hotKey, keyCodes) {
               AppHotKeyHandler.registerFileSync(hotKey)
                   .then((v) {
-                    //设置为新值
-                    appConfig.setSyncFileHotKeys(keyCodes);
-                  })
+                //设置为新值
+                appConfig.setSyncFileHotKeys(keyCodes);
+              })
                   .catchError((err) {
-                    Global.showTipsDialog(
-                      context: context,
-                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                    );
-                  });
+                Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                );
+              });
             },
             onClear: () {
               Global.showTipsDialog(
@@ -263,18 +262,18 @@ class SettingsHotKeyPage extends SettingsSectionView {
             onDone: (hotKey, keyCodes) {
               AppHotKeyHandler.registerShowMainWindow(hotKey)
                   .then((v) {
-                    //设置为新值
-                    appConfig.setShowMainWindowHotKeys(keyCodes);
-                    //更新托盘菜单
-                    final trayService = Get.find<TrayService>();
-                    trayService.updateTrayMenus(false);
-                  })
+                //设置为新值
+                appConfig.setShowMainWindowHotKeys(keyCodes);
+                //更新托盘菜单
+                final trayService = Get.find<TrayService>();
+                trayService.updateTrayMenus(false);
+              })
                   .catchError((err) {
-                    Global.showTipsDialog(
-                      context: context,
-                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                    );
-                  });
+                Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                );
+              });
             },
             onClear: () {
               Global.showTipsDialog(
@@ -324,18 +323,18 @@ class SettingsHotKeyPage extends SettingsSectionView {
             onDone: (hotKey, keyCodes) {
               AppHotKeyHandler.registerExitApp(hotKey)
                   .then((v) {
-                    //设置为新值
-                    appConfig.setExitAppHotKeys(keyCodes);
-                    //更新托盘菜单
-                    final trayService = Get.find<TrayService>();
-                    trayService.updateTrayMenus(false);
-                  })
+                //设置为新值
+                appConfig.setExitAppHotKeys(keyCodes);
+                //更新托盘菜单
+                final trayService = Get.find<TrayService>();
+                trayService.updateTrayMenus(false);
+              })
                   .catchError((err) {
-                    Global.showTipsDialog(
-                      context: context,
-                      text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
-                    );
-                  });
+                Global.showTipsDialog(
+                  context: context,
+                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({"err": err}),
+                );
+              });
             },
             onClear: () {
               Global.showTipsDialog(
@@ -372,6 +371,14 @@ class SettingsHotKeyPage extends SettingsSectionView {
         },
         show: (v) => PlatformExt.isDesktop,
       ),
+    ];
+  }
+
+  @override
+  List<SettingEntry> buildSettingEntries(BuildContext context) {
+    return [
+      ...buildWinVTakeOverEntries(context),
+      ...buildHotKeyEntries(context),
     ];
   }
 

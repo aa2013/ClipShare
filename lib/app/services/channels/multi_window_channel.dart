@@ -12,6 +12,7 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:get/get.dart';
+import 'package:window_manager/window_manager.dart';
 
 class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
@@ -45,6 +46,7 @@ class MultiWindowChannelService extends GetxService {
     MultiWindowTag tag,
   ) {
     if (!PlatformExt.isDesktop) return Future.value();
+    windowManager.hide();
     _hideWindowIds.add(closeWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,

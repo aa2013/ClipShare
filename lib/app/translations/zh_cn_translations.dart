@@ -804,6 +804,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "历史记录弹窗显示位置";
       case TranslationKey.preferenceSettingsRecordsDialogSize:
         return "记住上次弹窗尺寸";
+      case TranslationKey.preferenceSettingsAutoClosePopupOnBlurTitle:
+        return "失去焦点时自动关闭弹窗";
+      case TranslationKey.preferenceSettingsAutoClosePopupOnBlurDesc:
+        return "同时作用于历史弹窗和文件传输弹窗";
       case TranslationKey.current:
         return "当前";
       case TranslationKey.followMousePos:

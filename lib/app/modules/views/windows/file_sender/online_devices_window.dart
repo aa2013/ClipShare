@@ -9,6 +9,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_page.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
+import 'package:clipshare/app/services/multi_window_config_service.dart';
 import 'package:clipshare/app/services/multi_window_dispatch_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
@@ -16,7 +17,6 @@ import 'package:clipshare/app/utils/global.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -39,6 +39,7 @@ class FileSenderWindow extends StatefulWidget {
 class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener, WidgetsBindingObserver, WindowControlClickedListener implements MultiWindowMessageListener {
   List<Device> _devices = [];
   final multiWindowChannelService = Get.find<MultiWindowChannelService>();
+  final multiWindowConfigService = Get.find<MultiWindowConfigService>();
   final pendingFileService = Get.find<PendingFileService>();
   final windowControlService = Get.find<WindowControlService>();
 
@@ -91,7 +92,17 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener
   Future<void> onWindowResized() async {
     super.onWindowResized();
     final size = await windowManager.getSize();
-    await multiWindowChannelService.updateWindowSize(0, WindowType.history, size);
+    await multiWindowChannelService.updateWindowSize(0, WindowType.fileSender, size);
+  }
+
+  @override
+  /// 子窗口失焦时按统一偏好决定是否自动隐藏，确保待发送列表清理时机与手动关闭一致。
+  void onWindowBlur() {
+    if (!multiWindowConfigService.autoClosePopupOnBlur) {
+      return;
+    }
+    // 文件传输弹窗失焦后也走统一隐藏入口，确保待发送状态清理逻辑保持一致。
+    multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.devices);
   }
 
   void addPendingFiles(List<String> filePaths) {
@@ -100,7 +111,7 @@ class _FileSenderWindowState extends State<FileSenderWindow> with WindowListener
 
   @override
   void onCloseBtnClicked(bool isHide) {
-    multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
+    multiWindowChannelService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.devices);
   }
 
   @override
