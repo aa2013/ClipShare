@@ -245,7 +245,7 @@ flutter:
     - path: assets/md/updateLogs-Linux.md
       platforms:
         - linux
-    - path: assets/md/updateLogs-Macos.md
+    - path: assets/md/updateLogs-MacOS.md
       platforms:
         - macos
     - path: assets/md/updateLogs-Windows.md
