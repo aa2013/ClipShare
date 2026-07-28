@@ -8,6 +8,7 @@ import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/clip_data.dart';
+import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
@@ -17,14 +18,24 @@ import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/multi_window_config_service.dart';
 import 'package:clipshare/app/services/multi_window_dispatch_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/base/custom_keyboard_listener.dart';
 import 'package:clipshare/app/widgets/clip/clip_data_card_compact.dart';
+import 'package:clipshare/app/widgets/clip/clip_multi_selection_controller.dart';
+import 'package:clipshare/app/widgets/clip/clip_multi_selection_fab.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
+import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -53,6 +64,7 @@ class CompactClipData {
 
 class _HistoryWindowState extends State<HistoryWindow> with WindowListener, WindowControlClickedListener implements MultiWindowMessageListener {
   final ScrollController _scrollController = ScrollController();
+  final _selectionController = ClipMultiSelectionController();
   List<CompactClipData> _list = [];
   bool _loadNewData = false;
   bool _loading = true;
@@ -86,6 +98,27 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     );
     loadSearchCondition();
     refresh();
+  }
+
+  void _enableSelectMode() {
+    if (_selectionController.enabled) {
+      return;
+    }
+    _selectionController.enable();
+    setState(() {});
+  }
+
+  void _refreshState() {
+    setState(() {});
+  }
+
+  /// 统一清理历史弹窗多选状态，避免快捷键和 FAB 出现不一致的退出行为。
+  void _exitSelectionMode() {
+    if (!_selectionController.enabled) {
+      return;
+    }
+    _selectionController.clearAndExit();
+    _refreshState();
   }
 
   @override
@@ -158,6 +191,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     if (_scrollController.offset == 0) {
       Future.delayed(100.ms, () {
         _list = _list.sublist(0, min(_list.length, 20));
+        _selectionController.removeMissingItems(_list.map((item) => item.data));
         setState(() {});
       });
     }
@@ -222,6 +256,9 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                 } else {
                   _list = res;
                 }
+                _selectionController.removeMissingItems(
+                  _list.map((item) => item.data),
+                );
                 _loadNewData = false;
               });
             },
@@ -272,72 +309,139 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
 
   @override
   Widget build(BuildContext context) {
+    final canMergeCopy = _selectionController.canMergeCopy;
     return Scaffold(
-      body: Column(
-        children: [
-          if (Platform.isMacOS) const SizedBox(height: 15),
-          if (!filterLoading)
-            Container(
-              margin: const EdgeInsets.only(top: 10),
-              child: HistoryFilter(
-                controller: historyFilterController,
-                showFillColor: true,
-                onFilterTypeChanged: (_) {
-                  setState(() {
-                    _loading = true;
-                  });
-                },
-              ),
-            ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () => Future.wait<void>([loadSearchCondition(), refresh()]),
-              child: ConditionWidget(
-                visible: _loading,
-                replacement: ConditionWidget(
-                  visible: _list.isEmpty,
-                  replacement: ListView.builder(
-                    itemCount: _list.length,
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemBuilder: (ctx, idx) {
-                      return ClipDataCardCompact(
-                        devName: _list[idx].devName,
-                        clip: _list[idx].data,
-                        onTopChanged: (int id, bool isTop) {
-                          multiWindowService.updateHistoryTop(0, id, isTop);
-                        },
-                        onDelete: (int id) {
-                          multiWindowService.deleteHistory(0, id);
-                          setState(() {
-                            _list.removeWhere((item) => item.data.data.id == id);
-                          });
-                        },
-                      );
-                    },
-                  ),
-                  child: EmptyContent(),
+      body: CustomKeyboardListener(
+        shortcuts: [
+          KeyboardShortcut(
+            physicalKeys: {PhysicalKeyboardKey.escape},
+            onTrigger: _exitSelectionMode,
+          ),
+        ],
+        child: Column(
+          children: [
+            if (Platform.isMacOS) const SizedBox(height: 15),
+            if (!filterLoading)
+              Container(
+                margin: const EdgeInsets.only(top: 10),
+                child: HistoryFilter(
+                  controller: historyFilterController,
+                  showFillColor: true,
+                  onFilterTypeChanged: (_) {
+                    setState(() {
+                      _loading = true;
+                    });
+                  },
                 ),
-                child: const Loading(),
+              ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () => Future.wait<void>([loadSearchCondition(), refresh()]),
+                child: ConditionWidget(
+                  visible: _loading,
+                  replacement: ConditionWidget(
+                    visible: _list.isEmpty,
+                    replacement: ListView.builder(
+                      itemCount: _list.length,
+                      controller: _scrollController,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemBuilder: (ctx, idx) {
+                        final item = _list[idx];
+                        return ClipDataCardCompact(
+                          devName: item.devName,
+                          clip: item.data,
+                          selectMode: _selectionController.enabled,
+                          selected: _selectionController.contains(item.data),
+                          onTap: () {
+                            if (_selectionController.enabled) {
+                              _selectionController.toggleItem(item.data);
+                              _refreshState();
+                            }
+                          },
+                          onLongPress: () {
+                            _enableSelectMode();
+                            _selectionController.toggleItem(item.data);
+                            HapticFeedback.mediumImpact();
+                            _refreshState();
+                          },
+                          onToggleSelected: () {
+                            if (!_selectionController.enabled) {
+                              _enableSelectMode();
+                            }
+                            HapticFeedback.mediumImpact();
+                            _selectionController.selectRange(
+                              _list
+                                  .map((entry) => entry.data)
+                                  .toList(growable: false),
+                              item.data,
+                            );
+                            _refreshState();
+                          },
+                          onTopChanged: (int id, bool isTop) {
+                            multiWindowService.updateHistoryTop(0, id, isTop);
+                          },
+                          onDelete: (int id) {
+                            multiWindowService.deleteHistory(0, id);
+                            setState(() {
+                              _list.removeWhere(
+                                (entry) => entry.data.data.id == id,
+                              );
+                              _selectionController.removeMissingItems(
+                                _list.map((entry) => entry.data),
+                              );
+                            });
+                          },
+                        );
+                      },
+                    ),
+                    child: EmptyContent(),
+                  ),
+                  child: const Loading(),
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: ExpandableFab.location,
+      floatingActionButton: ClipMultiSelectionFab(
+        distance: 70,
+        selectMode: _selectionController.enabled,
+        selectedCount: _selectionController.selectedCount,
+        totalCount: _list.length,
+        showBackToTopButton: _showBackToTopButton,
+        onBackToTop: () {
+          Future.delayed(100.ms, () {
+            _scrollController.animateTo(
+              0,
+              duration: 500.ms,
+              curve: Curves.easeInOut,
+            );
+          });
+        },
+        actions: [
+          ClipMultiSelectionFabAction(
+            onPressed: _exitSelectionMode,
+            tooltip: "${TranslationKey.deselect.tr} (${Constants.selectionExitShortcutLabel})",
+            child: const Icon(MdiIcons.cancel),
+          ),
+          ClipMultiSelectionFabAction(
+            onPressed: canMergeCopy ? () async {
+              await multiWindowService.copyContent(0, _selectionController.mergedContent);
+              if (!mounted) {
+                return;
+              }
+              Global.showSnackBarSuc(
+                context: context,
+                text: TranslationKey.copySuccess.tr,
+              );
+              _exitSelectionMode();
+            } : null,
+            tooltip: TranslationKey.copyMergedContent.tr,
+            child: const Icon(Icons.content_copy_rounded),
           ),
         ],
       ),
-      floatingActionButton: _showBackToTopButton
-          ? FloatingActionButton(
-              onPressed: () {
-                Future.delayed(100.ms, () {
-                  _scrollController.animateTo(
-                    0,
-                    duration: 500.ms,
-                    curve: Curves.easeInOut,
-                  );
-                });
-              },
-              child: const Icon(Icons.arrow_upward),
-            )
-          : null,
     );
   }
 }

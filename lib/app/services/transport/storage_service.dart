@@ -33,6 +33,7 @@ import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
+import 'package:clipshare/app/listeners/screen_opened_listener.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
@@ -90,8 +91,9 @@ import 'package:uri_file_reader/uri_file_reader.dart';
 ///  - 1321465456444
 /// 监听网络恢复
 class StorageService extends GetxService
-    with DataSender
-    implements DiscoverListener {
+    with DataSender, ScreenOpenedObserver
+    implements DiscoverListener
+{
   static const tag = "StorageService";
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
@@ -146,6 +148,13 @@ class StorageService extends GetxService
       onStatusChanged: _onWsStatusChanged,
     );
     _registerStorageOnlineHeartbeatTask();
+    ScreenOpenedListener.inst.register(this);
+  }
+
+  @override
+  void onClose() {
+    super.onClose();
+    ScreenOpenedListener.inst.remove(this);
   }
 
   WebDAVConfig? get _webDAVConfig => appConfig.webDAVConfig;
@@ -319,6 +328,14 @@ class StorageService extends GetxService
   }
 
   //endregion
+
+  @override
+  void onScreenOpened() {
+    if(_client == null){
+      return;
+    }
+    unawaited(restart());
+  }
 
   Future<void> start() async {
     if (!appConfig.enableStorageSync) {

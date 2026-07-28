@@ -287,7 +287,7 @@ class SplashController extends GetxController {
           //加载所有设备信息
           return jsonEncode(sourceService.appInfos);
         case MultiWindowMethod.copy:
-          int id = args["id"];
+          final id = args["id"];
           dbService.historyDao.getById(id).then(
             (history) async {
               if (history == null) return;
@@ -295,6 +295,10 @@ class SplashController extends GetxController {
               clipboardManager.pasteToPreviousWindow();
             },
           );
+          break;
+        case MultiWindowMethod.copyContent:
+          final content = args["content"];
+          await clipboardManager.copy(ClipboardContentType.text, content);
           break;
         case MultiWindowMethod.getCompatibleOnlineDevices:
           var devices = devController.compatibleOnlineDevices;

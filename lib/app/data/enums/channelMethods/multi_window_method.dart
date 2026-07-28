@@ -5,6 +5,7 @@ enum MultiWindowMethod {
   getAllSources,
   updateAllBaseData,
   copy,
+  copyContent,
   notify,
   getCompatibleOnlineDevices,
   syncFiles,

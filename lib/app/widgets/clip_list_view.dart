@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -29,6 +28,8 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/clip/clip_data_card.dart';
+import 'package:clipshare/app/widgets/clip/clip_multi_selection_fab.dart';
+import 'package:clipshare/app/widgets/clip/clip_multi_selection_controller.dart';
 import 'package:clipshare/app/widgets/dialog/clip_detail_dialog.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:flutter/gestures.dart';
@@ -95,10 +96,7 @@ class ClipListViewState extends State<ClipListView>
   static bool _loadingNewData = false;
   var _showBackToTopButton = false;
   final String tag = "ClipListView";
-  var _selectMode = false;
-  /// 多选项需要同时去重并保留加入顺序，合并复制会按该迭代顺序拼接内容。
-  // ignore: prefer_collection_literals
-  final _selectedItems = LinkedHashSet<ClipData>();
+  final _selectionController = ClipMultiSelectionController();
   MenuController codeMenuController = MenuController();
 
   bool get isBigScreen =>
@@ -128,7 +126,7 @@ class ClipListViewState extends State<ClipListView>
     if (_lastListTailId != tailId) {
       _lastListTailId = tailId;
       _minId = tailId;
-      _selectedItems.removeWhere((item) => !widget.list.contains(item));
+      _selectionController.removeMissingItems(widget.list);
     }
   }
 
@@ -287,25 +285,21 @@ class ClipListViewState extends State<ClipListView>
   }
 
   void _enableSelectMode() {
-    if (_selectMode) {
+    if (_selectionController.enabled) {
       return;
     }
     appConfig.enableMultiSelectionMode(
       controller: widget.parentController,
     );
-    _selectMode = true;
+    _selectionController.enable();
     setState(() {});
   }
 
   void _toggleSelectState(ClipData data) {
-    if (!_selectMode) {
+    if (!_selectionController.enabled) {
       return;
     }
-    if (_selectedItems.contains(data)) {
-      _selectedItems.remove(data);
-    } else {
-      _selectedItems.add(data);
-    }
+    _selectionController.toggleItem(data);
     setState(() {});
   }
 
@@ -315,7 +309,7 @@ class ClipListViewState extends State<ClipListView>
 
   /// 退出多选模式；快捷键和 FAB 共用该入口，避免不同触发方式产生状态差异。
   void _exitSelectionMode() {
-    if (!_selectMode) {
+    if (!_selectionController.enabled) {
       return;
     }
     _cancelSelectionMode();
@@ -325,14 +319,17 @@ class ClipListViewState extends State<ClipListView>
 
   /// 打开多选删除确认弹窗；Delete 快捷键与删除 FAB 共用该入口。
   Future<void> _showSelectedDeleteDialog() async {
-    if (!_selectMode || _selectedItems.isEmpty) {
+    if (!_selectionController.enabled ||
+        _selectionController.selectedItems.isEmpty) {
       return;
     }
     DialogController? dialog;
     final onlyDeleteLocal = false.obs;
     dialog = await Global.showTipsDialog(
       context: context,
-      text: TranslationKey.multiDeleteAsk.trParams({"length": _selectedItems.length.toString()}),
+      text: TranslationKey.multiDeleteAsk.trParams({
+        "length": _selectionController.selectedCount.toString(),
+      }),
       showCancel: true,
       autoDismiss: false,
       customWidget: Container(
@@ -347,7 +344,7 @@ class ClipListViewState extends State<ClipListView>
           );
         }),
       ),
-      showNeutral: _selectedItems.any((item) => item.isFile),
+      showNeutral: _selectionController.selectedItems.any((item) => item.isFile),
       neutralText: TranslationKey.deleteWithFiles.tr,
       onCancel: () {
         dialog?.close();
@@ -365,7 +362,7 @@ class ClipListViewState extends State<ClipListView>
       loadingText: TranslationKey.deleting.tr,
     );
     try {
-      for (var item in _selectedItems) {
+      for (var item in _selectionController.selectedItems) {
         await deleteItem(
           item,
           deleteFile: deleteFile,
@@ -420,8 +417,7 @@ class ClipListViewState extends State<ClipListView>
   }
 
   void _cancelSelectionMode() {
-    _selectedItems.clear();
-    _selectMode = false;
+    _selectionController.clearAndExit();
     setState(() {});
   }
 

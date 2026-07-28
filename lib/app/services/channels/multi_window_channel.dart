@@ -121,6 +121,17 @@ class MultiWindowChannelService extends GetxService {
     );
   }
 
+
+  ///通知主窗体复制
+  Future copyContent(int targetWindowId, String content) {
+    if (!PlatformExt.isDesktop) return Future(() => false);
+    return DesktopMultiWindow.invokeMethod(
+      targetWindowId,
+      MultiWindowMethod.copyContent.name,
+      jsonEncode({"content": content}),
+    );
+  }
+
   ///通知子窗体数据变更
   Future notify(int targetWindowId) {
     if (!PlatformExt.isDesktop) return Future(() => false);

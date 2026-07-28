@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:clipshare/app/data/models/missing_data_sync_progress.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
@@ -91,7 +92,7 @@ class HistorySyncProgressService extends GetxService with DevAliveListener {
           historyController.setMissingDataCopyMsg(syncData, fromStorage);
         }
       } catch (err, stack) {
-        logger.error(tag, err, stack);
+        logger.error(tag, "$err ${jsonEncode(syncData)}", stack);
       }
     }
     _lastSyncTime = DateTime.now();

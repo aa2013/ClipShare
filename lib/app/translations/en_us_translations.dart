@@ -855,9 +855,9 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.preferenceSettingsRecordsDialogSize:
         return "Records Dialog Size";
       case TranslationKey.preferenceSettingsAutoClosePopupOnBlurTitle:
-        return "Automatically close popups when focus is lost";
+        return "Auto-dismiss popups";
       case TranslationKey.preferenceSettingsAutoClosePopupOnBlurDesc:
-        return "Applies to both the history popup and file transfer popup";
+        return "Dismisses popups when they lose focus.";
       case TranslationKey.current:
         return "Current";
       case TranslationKey.followMousePos:

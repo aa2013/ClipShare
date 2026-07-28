@@ -295,7 +295,7 @@ class ConfigService extends GetxService {
   bool get showOnRecentTasks => _showOnRecentTasks.value;
 
   //息屏一段时间后自动断连
-  final RxBool _autoCloseConnAfterScreenOff = true.obs;
+  final RxBool _autoCloseConnAfterScreenOff = false.obs;
 
   bool get autoCloseConnAfterScreenOff => _autoCloseConnAfterScreenOff.value;
 
@@ -762,7 +762,7 @@ class ConfigService extends GetxService {
     _recordHistoryDialogPosition.value = (await cfg.getConfigByKey(ConfigKey.recordHistoryDialogPosition, false));
     _historyDialogPosition.value = (await cfg.getConfigByKey(ConfigKey.historyDialogPosition, ""));
     _showOnRecentTasks.value = await cfg.getConfigByKey(ConfigKey.showOnRecentTasks, true);
-    _autoCloseConnAfterScreenOff.value = (await cfg.getConfigByKey(ConfigKey.autoCloseConnAfterScreenOff, true));
+    _autoCloseConnAfterScreenOff.value = (await cfg.getConfigByKey(ConfigKey.autoCloseConnAfterScreenOff, false));
     _cleanDataConfig.value = (await cfg.getConfigByKey<CleanDataConfig?>(
       ConfigKey.cleanDataConfig,
       null,

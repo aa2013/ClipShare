@@ -811,9 +811,9 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.preferenceSettingsRecordsDialogSize:
         return "记住上次弹窗尺寸";
       case TranslationKey.preferenceSettingsAutoClosePopupOnBlurTitle:
-        return "失去焦点时自动关闭弹窗";
+        return "自动关闭弹窗";
       case TranslationKey.preferenceSettingsAutoClosePopupOnBlurDesc:
-        return "同时作用于历史弹窗和文件传输弹窗";
+        return "当弹窗失去焦点时自动关闭";
       case TranslationKey.current:
         return "当前";
       case TranslationKey.followMousePos:

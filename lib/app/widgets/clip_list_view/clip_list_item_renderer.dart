@@ -50,10 +50,10 @@ extension _ClipListItemRenderer on ClipListViewState {
       clip: widget.list[i],
       imageMode: widget.imageMasonryGridViewLayout,
       routeToSearchOnClickChip: widget.enableRouteSearch,
-      selectMode: _selectMode,
-      selected: _selectedItems.contains(item),
+      selectMode: _selectionController.enabled,
+      selected: _selectionController.contains(item),
       onTap: () {
-        if (_selectMode) {
+        if (_selectionController.enabled) {
           _toggleSelectState(item);
         } else {
           var data = widget.list[i];
@@ -71,51 +71,21 @@ extension _ClipListItemRenderer on ClipListViewState {
         }
       },
       onToggleSelected: (){
-        if (!_selectMode) {
+        if (!_selectionController.enabled) {
           _enableSelectMode();
         }
         HapticFeedback.mediumImpact();
-        if (_selectedItems.isEmpty || _selectedItems.contains(item)) {
-          _toggleSelectState(item);
-          return;
-        }
-        var reverse = false;
-        var list = List.from(widget.list);
-        var start = -1;
-        var end = -1;
-        for (var i = 0; i < list.length; i++) {
-          if (!reverse && list[i] == item && start == -1) {
-            reverse = true;
-          }
-          if (reverse) {
-            if (list[i] == item) {
-              start = i;
-            } else if (_selectedItems.contains(list[i])) {
-              end = i;
-            }
-          } else {
-            if (_selectedItems.contains(list[i]) && start == -1) {
-              start = i;
-            }
-            if (list[i] == item && start != -1) {
-              end = i;
-              break;
-            }
-          }
-        }
-        for (var i = start; i <= end; i++) {
-          _selectedItems.add(list[i]);
-        }
+        _selectionController.selectRange(List<ClipData>.from(widget.list), item);
         _refreshState();
-
       },
       onMoreActionsTap: (){
         showClipBottomSheet(widget.list[i]);
       },
       onLongPress: () {
         _enableSelectMode();
-        _selectedItems.add(item);
+        _selectionController.toggleItem(item);
         HapticFeedback.mediumImpact();
+        _refreshState();
       },
       onDoubleTap: () async {
         if (widget.list[i].isFile) {
