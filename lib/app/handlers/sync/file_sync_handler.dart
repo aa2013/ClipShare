@@ -6,9 +6,11 @@ import 'dart:math';
 import 'package:clipshare/app/data/enums/forward_msg_type.dart';
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/msg_type.dart';
+import 'package:clipshare/app/data/enums/notification_payload_type.dart';
 import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
+import 'package:clipshare/app/data/models/notification_payload.dart';
 import 'package:clipshare/app/data/models/pending_file.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
@@ -25,8 +27,10 @@ import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -37,6 +41,7 @@ import '../../utils/log.dart';
 
 class FileSyncHandler {
   static const tag = "FileSyncer";
+  static const _receivedFileNotifyKeyPrefix = 'receive-file';
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
   final sktService = Get.find<SocketService>();
@@ -244,6 +249,28 @@ class FileSyncHandler {
       _forwardSkt?.close();
       onDone();
     });
+  }
+
+  /// 桌面端按配置在接收完成后发送通知，点击后直接打开接收的文件。
+  static Future<void> _notifyReceivedFileIfNeeded({
+    required ConfigService appConfig,
+    required File file,
+    required int fileId,
+  }) async {
+    if (!PlatformExt.isDesktop || !appConfig.notifyOnReceivedFile) {
+      return;
+    }
+    await NotifyUtil.notify(
+      title: file.fileName,
+      content: TranslationKey.preferenceSettingsNotifyOnReceivedFileDesc.tr,
+      key: '$_receivedFileNotifyKeyPrefix-$fileId',
+      payload: NotificationPayload(
+        type: NotificationPayloadType.openFile,
+        data: {
+          NotificationPayload.filePathKey: file.normalizePath,
+        },
+      ),
+    );
   }
 
   //region 静态方法接收和发送文件
@@ -455,7 +482,7 @@ class FileSyncHandler {
         syncingFile.close(false);
       },
       cancelOnError: true,
-      onDone: () {
+      onDone: () async {
         // 对端发送完成后会主动关闭写端，本端必须立即释放 Socket，避免连接停留在 CLOSE_WAIT。
         socket.destroy();
         var end = DateTime.now();
@@ -476,7 +503,16 @@ class FileSyncHandler {
           sync: true,
         );
         final historyController = Get.find<HistoryController>();
-        historyController.addData(history, null, false).whenComplete(() => syncingFile.close(true));
+        try {
+          await historyController.addData(history, null, false);
+        } finally {
+          syncingFile.close(true);
+        }
+        await _notifyReceivedFileIfNeeded(
+          appConfig: appConfig,
+          file: file,
+          fileId: fileId,
+        );
         if (file.isMediaFile) {
           //媒体文件，刷新媒体库
           if (Platform.isAndroid) {

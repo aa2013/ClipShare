@@ -523,6 +523,8 @@ enum TranslationKey {
   filterBySource,
   preferenceSettingsDevDisconnNotification,
   preferenceSettingsDevConnNotification,
+  preferenceSettingsNotifyOnReceivedFile,
+  preferenceSettingsNotifyOnReceivedFileDesc,
   aboutPageDatabaseVersionItemName,
   newVersionAvailable,
   showMainWindow,

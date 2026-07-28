@@ -60,6 +60,7 @@ enum ConfigKey {
   blacklist,
   enableRecordNotification,
   enableShowMobileNotification,
+  notifyOnReceivedFile,
   notificationBlackWhiteList,
   notificationServer,
   mobileDevIdGenerateWay,

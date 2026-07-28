@@ -504,6 +504,11 @@ class ConfigService extends GetxService {
 
   bool get enableShowMobileNotification => _enableShowMobileNotification.value;
 
+  //桌面端接收文件后发起通知
+  final _notifyOnReceivedFile = false.obs;
+
+  bool get notifyOnReceivedFile => _notifyOnReceivedFile.value;
+
   //webdav配置
   final _webdavConfig = Rx<WebDAVConfig?>(null);
 
@@ -786,6 +791,7 @@ class ConfigService extends GetxService {
     _autoSyncMissingData.value = (await cfg.getConfigByKey(ConfigKey.autoSyncMissingData, true));
     _enableRecordNotification.value = (await cfg.getConfigByKey(ConfigKey.enableRecordNotification, false));
     _enableShowMobileNotification.value = (await cfg.getConfigByKey(ConfigKey.enableShowMobileNotification, false));
+    _notifyOnReceivedFile.value = (await cfg.getConfigByKey(ConfigKey.notifyOnReceivedFile, false));
     _webdavConfig.value = (await cfg.getConfigByKey(
       ConfigKey.webdavConfig,
       null,
@@ -1509,6 +1515,12 @@ class ConfigService extends GetxService {
   Future<void> setEnableShowMobileNotification(bool enabled) async {
     await configDao.addOrUpdate(ConfigKey.enableShowMobileNotification, enabled.toString());
     _enableShowMobileNotification.value = enabled;
+  }
+
+  ///控制桌面端接收文件成功后是否发送系统通知
+  Future<void> setNotifyOnReceivedFile(bool enabled) async {
+    await configDao.addOrUpdate(ConfigKey.notifyOnReceivedFile, enabled.toString());
+    _notifyOnReceivedFile.value = enabled;
   }
 
   ///保存 webdav 配置

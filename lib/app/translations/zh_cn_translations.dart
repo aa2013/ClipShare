@@ -1099,6 +1099,10 @@ class ZhCNTranslation extends AbstractTranslations {
         return "设备连接断开时发起系统通知";
       case TranslationKey.preferenceSettingsDevConnNotification:
         return "设备连接后发起系统通知";
+      case TranslationKey.preferenceSettingsNotifyOnReceivedFile:
+        return "接收文件后发起通知";
+      case TranslationKey.preferenceSettingsNotifyOnReceivedFileDesc:
+        return "点击通知后自动打开文件";
       case TranslationKey.notification:
         return "通知";
       case TranslationKey.aboutPageDatabaseVersionItemName:

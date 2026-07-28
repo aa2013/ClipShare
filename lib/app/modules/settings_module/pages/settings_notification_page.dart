@@ -110,6 +110,23 @@ class SettingsNotificationPage extends SettingsSectionView {
         ),
         show: (v) => PlatformExt.isDesktop,
       ),
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.preferenceSettingsNotifyOnReceivedFile,
+          TranslationKey.preferenceSettingsNotifyOnReceivedFileDesc,
+        ],
+        title: Text(TranslationKey.preferenceSettingsNotifyOnReceivedFile.tr),
+        description: Text(TranslationKey.preferenceSettingsNotifyOnReceivedFileDesc.tr),
+        value: appConfig.notifyOnReceivedFile,
+        action: (v) => Switch(
+          value: v,
+          onChanged: (checked) {
+            HapticFeedback.mediumImpact();
+            appConfig.setNotifyOnReceivedFile(checked);
+          },
+        ),
+        show: (v) => PlatformExt.isDesktop,
+      ),
     ];
   }
 }

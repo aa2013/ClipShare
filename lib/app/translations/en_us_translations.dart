@@ -1091,6 +1091,10 @@ class EnUSTranslation extends AbstractTranslations {
         return "Notify when a device disconnects";
       case TranslationKey.preferenceSettingsDevConnNotification:
         return "Notify when a device connects";
+      case TranslationKey.preferenceSettingsNotifyOnReceivedFile:
+        return "Notify after receiving files";
+      case TranslationKey.preferenceSettingsNotifyOnReceivedFileDesc:
+        return "Click notification to open file";
       case TranslationKey.notification:
         return "Notification";
       case TranslationKey.aboutPageDatabaseVersionItemName:
