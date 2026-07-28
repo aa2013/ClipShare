@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
@@ -95,7 +96,9 @@ class ClipListViewState extends State<ClipListView>
   var _showBackToTopButton = false;
   final String tag = "ClipListView";
   var _selectMode = false;
-  final _selectedItems = <ClipData>{};
+  /// 多选项需要同时去重并保留加入顺序，合并复制会按该迭代顺序拼接内容。
+  // ignore: prefer_collection_literals
+  final _selectedItems = LinkedHashSet<ClipData>();
   MenuController codeMenuController = MenuController();
 
   bool get isBigScreen =>

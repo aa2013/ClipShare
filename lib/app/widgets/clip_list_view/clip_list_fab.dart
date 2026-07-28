@@ -88,8 +88,7 @@ extension _ClipListFab on ClipListViewState {
             ),
             _fabButtonFun(
               onPressed: multiSelected ? () async {
-                var list = _selectedItems.toList()..sort((a, b) => a.data.id.compareTo(b.data.id));
-                var content = list.map((item) => item.data.content).join('\n');
+                var content = _selectedItems.map((item) => item.data.content).join('\n');
                 await clipboardManager.copy(ClipboardContentType.text, content);
                 if (!mounted) {
                   return;
