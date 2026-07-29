@@ -191,6 +191,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
     final list = await widget.loadAppInfos();
     setState(() {
       originAppList = list;
+      searchResultList = list;
       loading = false;
     });
   }
@@ -216,7 +217,7 @@ class _AppSelectionPageState extends State<AppSelectionPage> with SingleTickerPr
         ],
       );
     } else {
-      body = RefreshIndicator(onRefresh: onRefresh, child: renderAppList(userApps));
+      body = RefreshIndicator(onRefresh: onRefresh, child: renderAppList(searchResultList));
     }
     return body;
   }
