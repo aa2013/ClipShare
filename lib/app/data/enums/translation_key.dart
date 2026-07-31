@@ -949,6 +949,7 @@ enum TranslationKey {
   settingsSectionSecuritySubtitle,
   settingsSectionHotKeySubtitle,
   settingsSectionSyncSubtitle,
+  settingsSectionCleanDataSubtitle,
   settingsSectionRulesSubtitle,
   settingsSectionBackupSubtitle,
   settingsSectionAboutLogSubtitle,

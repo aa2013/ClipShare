@@ -1925,6 +1925,8 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Popup & window shortcuts';
       case TranslationKey.settingsSectionSyncSubtitle:
         return 'History saving';
+      case TranslationKey.settingsSectionCleanDataSubtitle:
+        return 'Clean history and records';
       case TranslationKey.settingsSectionRulesSubtitle:
         return 'Rules & scripts';
       case TranslationKey.settingsSectionBackupSubtitle:

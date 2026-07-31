@@ -1920,6 +1920,8 @@ class ZhCNTranslation extends AbstractTranslations {
         return '自定义弹窗、窗体快捷键';
       case TranslationKey.settingsSectionSyncSubtitle:
         return '同步与保存';
+      case TranslationKey.settingsSectionCleanDataSubtitle:
+        return '清理历史数据与记录';
       case TranslationKey.settingsSectionRulesSubtitle:
         return '规则与脚本';
       case TranslationKey.settingsSectionBackupSubtitle:

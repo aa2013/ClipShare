@@ -12,6 +12,7 @@ import 'package:clipshare/app/modules/settings_module/pages/settings_permission_
 import 'package:clipshare/app/modules/settings_module/pages/settings_preference_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_security_page.dart';
+import 'package:clipshare/app/modules/settings_module/pages/settings_clean_data_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_statistics_page.dart';
 import 'package:clipshare/app/modules/settings_module/pages/settings_sync_page.dart';
 import 'package:clipshare/app/modules/settings_module/settings_section.dart';
@@ -44,6 +45,8 @@ SettingsSectionView? buildSettingsSectionView(
       return SettingsHotKeyPage(embedded: embedded);
     case SettingsSection.sync:
       return SettingsSyncPage(embedded: embedded);
+    case SettingsSection.cleanData:
+      return SettingsCleanDataPage(embedded: embedded);
     case SettingsSection.rules:
       return null;
     case SettingsSection.backup:

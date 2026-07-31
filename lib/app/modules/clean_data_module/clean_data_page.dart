@@ -13,7 +13,6 @@ import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:clipshare/app/widgets/clip/app_icon.dart';
 import 'package:clipshare/app/widgets/app_info_groups_view.dart';
 import 'package:clipshare/app/widgets/base/tiny_segmented_control.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
@@ -29,6 +28,13 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
  * */
 
 class CleanDataPage extends GetView<CleanDataController> {
+  final bool embedded;
+
+  CleanDataPage({
+    super.key,
+    this.embedded = false,
+  });
+
   final sourceService = Get.find<ClipboardSourceService>();
   final devService = Get.find<DeviceService>();
   final appConfig = Get.find<ConfigService>();
@@ -37,13 +43,13 @@ class CleanDataPage extends GetView<CleanDataController> {
   Widget build(BuildContext context) {
     final appConfig = Get.find<ConfigService>();
     final dbService = Get.find<DbService>();
-    final showAppBar = appConfig.isSmallScreen;
+    final showAppBar = appConfig.isSmallScreen && !embedded;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final sectionColor = colorScheme.onSurfaceVariant;
+    const sectionColor = Colors.blueGrey;
     final chipSide = BorderSide(color: colorScheme.outlineVariant);
-    final chipLabelStyle = TextStyle(color: colorScheme.onSurfaceVariant);
+    const chipLabelStyle = TextStyle(fontSize: 12);
     final filterChipSelectedColor = colorScheme.primaryContainer;
     final filterChipCheckmarkColor = colorScheme.onPrimaryContainer;
     final content = SingleChildScrollView(
@@ -62,7 +68,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 过滤器标题
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.filter_alt_rounded,
                         color: sectionColor,
                         size: 20,
@@ -72,7 +78,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       ),
                       Text(
                         TranslationKey.filter.tr,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: sectionColor,
@@ -83,7 +89,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                         onPressed: () {
                           Global.showTipsDialog(context: Get.context!, text: TranslationKey.filterTips.tr);
                         },
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.info_outline,
                           color: sectionColor,
                           size: 18,
@@ -97,7 +103,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 标签过滤
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.tag,
                         color: sectionColor,
                         size: 16,
@@ -107,7 +113,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       ),
                       Text(
                         TranslationKey.filterByTag.tr,
-                        style: TextStyle(color: sectionColor),
+                        style: const TextStyle(color: sectionColor),
                       ),
                     ],
                   ),
@@ -141,7 +147,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                                     }
                                   },
                                   selected: controller.selectedTags.contains(tag),
-                                  side: chipSide,
+                                  labelStyle: chipLabelStyle,
                                   selectedColor: filterChipSelectedColor,
                                   checkmarkColor: filterChipCheckmarkColor,
                                   label: Text(tag),
@@ -158,7 +164,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 设备过滤
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.devices_outlined,
                         color: sectionColor,
                         size: 16,
@@ -168,7 +174,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       ),
                       Text(
                         TranslationKey.filterByDevice.tr,
-                        style: TextStyle(color: sectionColor),
+                        style: const TextStyle(color: sectionColor),
                       ),
                     ],
                   ),
@@ -191,7 +197,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                               }
                             },
                             selected: controller.selectedDevs.contains(dev.guid),
-                            side: chipSide,
+                            labelStyle: chipLabelStyle,
                             selectedColor: filterChipSelectedColor,
                             checkmarkColor: filterChipCheckmarkColor,
                             label: Text(dev.displayName),
@@ -209,7 +215,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               MdiIcons.listBoxOutline,
                               color: sectionColor,
                               size: 16,
@@ -219,14 +225,14 @@ class CleanDataPage extends GetView<CleanDataController> {
                             ),
                             Text(
                               TranslationKey.filterBySource.tr,
-                              style: TextStyle(color: sectionColor),
+                              style: const TextStyle(color: sectionColor),
                             ),
                           ],
                         ),
                       ),
                       RoundedChip(
-                        avatar: Icon(Icons.add, color: sectionColor),
-                        side: chipSide,
+                        avatar: const Icon(Icons.add, color: sectionColor),
+                        labelStyle: chipLabelStyle,
                         label: Text(TranslationKey.selection.tr),
                         onPressed: () {
                           final page = AppSelectionPage(
@@ -276,7 +282,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       Expanded(
                         child: Row(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.date_range,
                               color: sectionColor,
                               size: 16,
@@ -286,15 +292,15 @@ class CleanDataPage extends GetView<CleanDataController> {
                             ),
                             Text(
                               TranslationKey.filterByDate.tr,
-                              style: TextStyle(color: sectionColor),
+                              style: const TextStyle(color: sectionColor),
                             ),
                           ],
                         ),
                       ),
                       Obx(
                         () => RoundedChip(
+                          labelStyle: chipLabelStyle,
                           label: Text(TranslationKey.retainDays.tr),
-                          side: chipSide,
                           selectedColor: filterChipSelectedColor,
                           checkmarkColor: filterChipCheckmarkColor,
                           onSelected: (selected) {
@@ -320,13 +326,13 @@ class CleanDataPage extends GetView<CleanDataController> {
                                 label: Obx(
                                   () => Text(
                                     controller.startDate.value ?? TranslationKey.startDate.tr,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: sectionColor,
                                     ),
                                   ),
                                 ),
-                                avatar: Icon(Icons.date_range_outlined, color: sectionColor),
-                                side: chipSide,
+                                avatar: const Icon(Icons.date_range_outlined, color: sectionColor),
+                                labelStyle: chipLabelStyle,
                                 deleteIcon: Obx(
                                   () => Visibility(
                                     visible: controller.startDate.value == null,
@@ -363,13 +369,13 @@ class CleanDataPage extends GetView<CleanDataController> {
                                 label: Obx(
                                   () => Text(
                                     controller.endDate.value ?? TranslationKey.endDate.tr,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: sectionColor,
                                     ),
                                   ),
                                 ),
-                                avatar: Icon(Icons.date_range_outlined, color: sectionColor),
-                                side: chipSide,
+                                avatar: const Icon(Icons.date_range_outlined, color: sectionColor),
+                                labelStyle: chipLabelStyle,
                                 deleteIcon: Obx(
                                   () => Visibility(
                                     visible: controller.endDate.value == null,
@@ -425,7 +431,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 内容类型过滤
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.category,
                         color: sectionColor,
                         size: 16,
@@ -435,7 +441,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       ),
                       Text(
                         TranslationKey.filterByContentType.tr,
-                        style: TextStyle(color: sectionColor),
+                        style: const TextStyle(color: sectionColor),
                       ),
                     ],
                   ),
@@ -465,7 +471,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                                       controller.selectedContentTypes.add(type);
                                     }
                                   },
-                                  side: chipSide,
+                                  labelStyle: chipLabelStyle,
                                   selectedColor: theme.chipTheme.selectedColor ?? filterChipSelectedColor,
                                   checkmarkColor: filterChipCheckmarkColor,
                                   label: Text(type.label),
@@ -676,7 +682,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                     children: [
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.timer,
                             color: sectionColor,
                             size: 20,
@@ -686,7 +692,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                           ),
                           Text(
                             TranslationKey.autoCleanConfigTitle.tr,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: sectionColor),
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: sectionColor),
                           ),
                         ],
                       ),
@@ -711,7 +717,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 清理频率
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.equalizer_outlined,
                         color: sectionColor,
                         size: 16,
@@ -721,7 +727,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       ),
                       Text(
                         TranslationKey.autoCleanFrequency.tr,
-                        style: TextStyle(color: sectionColor),
+                        style: const TextStyle(color: sectionColor),
                       ),
                     ],
                   ),
@@ -750,7 +756,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                   ///region 执行时间
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.timer,
                         color: sectionColor,
                         size: 16,
@@ -760,7 +766,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                       ),
                       Text(
                         TranslationKey.execTime.tr,
-                        style: TextStyle(color: sectionColor),
+                        style: const TextStyle(color: sectionColor),
                       ),
                     ],
                   ),
@@ -813,7 +819,7 @@ class CleanDataPage extends GetView<CleanDataController> {
                           decoration: InputDecoration(
                             label: Text("${TranslationKey.pleaseInput.tr} UnixCron"),
                             border: const OutlineInputBorder(),
-                            suffixIcon: Icon(
+                            suffixIcon: const Icon(
                               Icons.timer,
                               color: sectionColor,
                             ),
@@ -908,6 +914,10 @@ class CleanDataPage extends GetView<CleanDataController> {
             : null,
         body: SafeArea(child: content),
       );
+    }
+    if (embedded) {
+      // 设置二级页面已经提供页面容器，这里只返回清理数据内容，避免重复嵌套页面壳。
+      return content;
     }
     return Card(
       color: Theme.of(context).cardTheme.color,

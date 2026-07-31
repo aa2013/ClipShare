@@ -277,23 +277,6 @@ class SettingsSyncPage extends SettingsSectionView {
                 );
               },
             ),
-            SettingCard(
-              searchKeys: const [TranslationKey.cleanData],
-              title: Row(
-                children: [
-                  Text(
-                    TranslationKey.cleanData.tr,
-                    maxLines: 1,
-                  ),
-                ],
-              ),
-              value: null,
-              action: (v) => IconButton(
-                onPressed: controller.gotoCleanDataPage,
-                icon: arrowForwardIcon,
-              ),
-              onTap: controller.gotoCleanDataPage,
-            ),
             SettingCard<int>(
               searchKeys: const [
                 TranslationKey.syncOutDateSettingTitle,
