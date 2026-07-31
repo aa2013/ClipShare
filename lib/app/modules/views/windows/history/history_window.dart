@@ -29,8 +29,6 @@ import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading.dart';
-import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
-import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -174,10 +172,8 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   /// 子窗口失焦时按主窗口偏好决定是否自动隐藏，保持多窗口状态由主窗口统一管理。
   void onWindowBlur() {
     if (!multiWindowConfigService.autoClosePopupOnBlur) {
-      print(2222);
       return;
     }
-    print(1111);
     // 统一走主窗口维护的隐藏流程，避免子窗口自行关闭后主窗口状态不同步。
     multiWindowService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
   }
@@ -352,6 +348,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                           clip: item.data,
                           selectMode: _selectionController.enabled,
                           selected: _selectionController.contains(item.data),
+                          onCopied: onWindowBlur,
                           onTap: () {
                             if (_selectionController.enabled) {
                               _selectionController.toggleItem(item.data);

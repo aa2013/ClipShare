@@ -27,6 +27,7 @@ class ClipDataCardCompact extends StatefulWidget {
   final VoidCallback? onLongPress;
   final VoidCallback? onToggleSelected;
   final VoidCallback? onMoreActionsTap;
+  final VoidCallback onCopied;
   final bool selectMode;
   final bool selected;
 
@@ -36,6 +37,7 @@ class ClipDataCardCompact extends StatefulWidget {
     required this.devName,
     required this.onTopChanged,
     required this.onDelete,
+    required this.onCopied,
     this.onTap,
     this.onLongPress,
     this.onToggleSelected,
@@ -48,8 +50,7 @@ class ClipDataCardCompact extends StatefulWidget {
   State<StatefulWidget> createState() => _ClipDataCardCompactState();
 }
 
-class _ClipDataCardCompactState extends State<ClipDataCardCompact>
-    with TickerProviderStateMixin {
+class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerProviderStateMixin {
   final multiWindowService = Get.find<MultiWindowChannelService>();
   late final SlidableController _slidableController = SlidableController(this);
   bool _slided = false;
@@ -82,12 +83,11 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact>
               OpenFile.open(clip.data.content);
               return;
             }
-            multiWindowService.copy(0, clip.data.id).then(
-                  (args) => Global.showSnackBarSuc(
-                    context: context,
-                    text: TranslationKey.copySuccess.tr,
-                  ),
-                );
+            multiWindowService.copy(0, clip.data.id);
+            Global.showSnackBarSuc(
+              context: context,
+              text: TranslationKey.copySuccess.tr,
+            );
           },
         ),
         MenuItem(
@@ -144,12 +144,13 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact>
                     await OpenFile.open(clip.data.content);
                     return;
                   }
-                  multiWindowService.copy(0, clip.data.id).then(
-                        (args) => Global.showSnackBarSuc(
-                          context: context,
-                          text: TranslationKey.copySuccess.tr,
-                        ),
-                      );
+                  await multiWindowService.copy(0, clip.data.id);
+                  Global.showSnackBarSuc(
+                    context: context,
+                    text: TranslationKey.copySuccess.tr,
+                  );
+                  await Future.delayed(1000.ms);
+                  widget.onCopied.call();
                 },
           onLongPress: widget.onLongPress,
           onSecondaryTapDown: (details) {
