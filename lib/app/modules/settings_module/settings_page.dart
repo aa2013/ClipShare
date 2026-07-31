@@ -328,7 +328,7 @@ class _SettingsOverviewPageState extends State<SettingsOverviewPage> {
             trailing: const Icon(Icons.chevron_right_rounded, color: Colors.blueGrey),
             onTap: () => widget.onSectionTap(SettingsSection.permission),
             selected: widget.selectedSection == SettingsSection.permission,
-            visible: (Platform.isAndroid || Platform.isIOS) && (!appConfig.isSmallScreen || _permissionIssueCount() > 0),
+            visible: (Platform.isAndroid || Platform.isIOS) && _permissionIssueCount() > 0,
           ),
           // Keep relay status visible at the top while its detailed controls live in the relay page.
           SettingsOverviewTile(
