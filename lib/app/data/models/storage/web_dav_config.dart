@@ -6,6 +6,7 @@ class WebDAVConfig {
   final String password;
   final String baseDir;
   final String displayName;
+  final String? userAgent;
 
   const WebDAVConfig({
     required this.server,
@@ -13,6 +14,7 @@ class WebDAVConfig {
     required this.password,
     required this.baseDir,
     required this.displayName,
+    this.userAgent,
   });
 
   factory WebDAVConfig.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class WebDAVConfig {
       password: json["password"],
       baseDir: json["baseDir"],
       displayName: json["displayName"],
+      userAgent: json["userAgent"],
     );
   }
 
@@ -31,6 +34,7 @@ class WebDAVConfig {
     String? username,
     String? password,
     String? baseDir,
+    String? userAgent,
     bool? enable,
   }) {
     return WebDAVConfig(
@@ -39,6 +43,7 @@ class WebDAVConfig {
       username: username ?? this.username,
       password: password ?? this.password,
       baseDir: baseDir ?? this.baseDir,
+      userAgent: userAgent ?? this.userAgent,
     );
   }
 
@@ -49,6 +54,7 @@ class WebDAVConfig {
       "username": username,
       "password": password,
       "baseDir": baseDir,
+      "userAgent": userAgent,
     };
   }
 

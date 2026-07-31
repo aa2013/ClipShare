@@ -12,6 +12,7 @@ class S3Config {
   final String displayName;
   final String baseDir;
   final bool pathStyle;
+  final String? userAgent;
 
   const S3Config({
     required this.endPoint,
@@ -23,6 +24,7 @@ class S3Config {
     required this.type,
     this.region,
     this.pathStyle = false,
+    this.userAgent,
   });
 
   factory S3Config.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class S3Config {
       type: ObjStorageType.values.byName(json['type']),
       region: json['region'],
       pathStyle: json['pathStyle'],
+      userAgent: json['userAgent'],
     );
   }
 
@@ -50,6 +53,7 @@ class S3Config {
       "region": region,
       "type": type.name,
       "pathStyle": pathStyle,
+      "userAgent": userAgent,
     };
   }
 
@@ -73,6 +77,7 @@ class S3Config {
     ObjStorageType? type,
     String? region,
     bool? pathStyle,
+    String? userAgent,
   }) {
     return S3Config(
       endPoint: endPoint ?? this.endPoint,
@@ -84,6 +89,7 @@ class S3Config {
       type: type ?? this.type,
       region: region ?? this.region,
       pathStyle: pathStyle ?? this.pathStyle,
+      userAgent: userAgent ?? this.userAgent,
     );
   }
 }

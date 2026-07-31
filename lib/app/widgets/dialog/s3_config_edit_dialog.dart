@@ -41,6 +41,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
   final bucketNameEditor = TextEditingController();
   final regionEditor = TextEditingController();
   var pathStyle = false;
+  final uaEditor = TextEditingController();
   final baseDirEditor = TextEditingController(text: '/');
 
   ObjStorageType objectStorageType = ObjStorageType.s3;
@@ -66,6 +67,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     region: regionEditor.text.isNotEmpty ? regionEditor.text : null,
     pathStyle: pathStyle,
     baseDir: baseDirEditor.text,
+    userAgent: uaEditor.text.isNotEmpty ? uaEditor.text : null,
   );
 
   @override
@@ -88,6 +90,7 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
     baseDirEditor.text = config.baseDir;
     objectStorageType = config.type;
     pathStyle = config.pathStyle;
+    uaEditor.text = config.userAgent ?? '';
   }
 
   bool validateNameEditor() {
@@ -476,6 +479,18 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                     },
                   ),
                   const SizedBox(height: 16),
+                  if (objectStorageType == ObjStorageType.s3)
+                    TextField(
+                      controller: uaEditor,
+                      enabled: !testingConnection,
+                      decoration: InputDecoration(
+                        labelText: 'User-Agent',
+                        hintStyle: TextStyle(color: Colors.grey[400]),
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  if (objectStorageType == ObjStorageType.s3)
+                    const SizedBox(height: 16),
 
                   // Base Directory
                   Row(

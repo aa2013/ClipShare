@@ -35,6 +35,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
   final usernameEditor = TextEditingController();
   final passwordEditor = TextEditingController();
   final baseDirEditor = TextEditingController(text: '/');
+  final uaEditor = TextEditingController();
 
   bool _obscurePassword = true;
   String? nameErrText;
@@ -50,6 +51,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
     username: usernameEditor.text,
     password: passwordEditor.text,
     baseDir: baseDirEditor.text,
+    userAgent: uaEditor.text.isNotEmpty ? uaEditor.text : null,
   );
 
   @override
@@ -66,6 +68,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
     usernameEditor.text = config.username;
     passwordEditor.text = config.password;
     baseDirEditor.text = config.baseDir;
+    uaEditor.text = config.userAgent ?? '';
   }
 
   bool validateNameEditor() {
@@ -304,6 +307,19 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
                   },
                 ),
                 const SizedBox(height: 16),
+
+                //user-agent
+                TextField(
+                  controller: uaEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: 'User-Agent',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
                 Row(
                   children: [
                     Expanded(

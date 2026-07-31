@@ -40,6 +40,7 @@ class WebDAVClient extends StorageClient {
       // webdav_plus only keeps upload progress when using streaming uploads,
       // and those uploads must authenticate preemptively because streams cannot be replayed after a 401.
       isPreemptive: true,
+      userAgent: _config.userAgent,
     );
   }
 

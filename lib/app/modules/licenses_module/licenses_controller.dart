@@ -53,7 +53,7 @@ class LicensesController extends GetxController {
     {
       "name": "minio",
       "license": "MIT",
-      "url": "https://pub.dev/packages/minio",
+      "url": "https://github.com/aa2013/minio-dart",
     },
     {
       "name": "ali_yun_oss",
@@ -63,7 +63,7 @@ class LicensesController extends GetxController {
     {
       "name": "webdav_plus",
       "license": "MIT",
-      "url": "https://pub.dev/packages/webdav_plus",
+      "url": "https://github.com/aa2013/webdav_plus.git",
     },
     {
       "name": "zip_flutter",

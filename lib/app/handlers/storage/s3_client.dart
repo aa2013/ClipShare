@@ -27,6 +27,7 @@ class S3Client extends StorageClient {
       secretKey: config.secretKey,
       region: config.region,
       pathStyle: config.pathStyle,
+      userAgent: config.userAgent,
     );
   }
 
