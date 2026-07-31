@@ -49,54 +49,54 @@ import 'app/services/db_service.dart';
 import 'app/theme/app_theme.dart';
 
 Future<void> main(List<String> args) async {
-  try {
-    var isMultiWindow = args.firstOrNull == 'multi_window';
-    Widget home = SplashPage();
-    String title = Constants.appName;
-    DesktopMultiWindowArgs multiWindowArgs;
-    if (isMultiWindow) {
-      await ensureInitialized();
-      //子窗口
-      final windowId = int.parse(args[1]);
-      multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
-      Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
-      switch (multiWindowArgs.tag) {
-        case MultiWindowTag.history:
-          home = HistoryWindow(
-            windowController: WindowController.fromWindowId(windowId),
-            args: multiWindowArgs.otherArgs,
-          );
-          title = multiWindowArgs.title;
-          break;
-        case MultiWindowTag.devices:
-          home = FileSenderWindow(
-            windowController: WindowController.fromWindowId(windowId),
-            args: multiWindowArgs.otherArgs,
-          );
-          title = multiWindowArgs.title;
-          break;
-      }
-      final wcs = Get.find<WindowControlService>();
-      wcs.setAlwaysOnTop(true);
-      wcs.setMinimizable(false);
-      wcs.setMaximizable(false);
-      await initMultiWindowServices(multiWindowArgs);
-      runMain(home, title, multiWindowArgs);
-    } else {
-      await ensureInitialized();
-      await initMainServices();
-      runZonedGuarded(
-        () async {
+  await runZonedGuarded<Future<void>>(
+    () async {
+      try {
+        var isMultiWindow = args.firstOrNull == 'multi_window';
+        Widget home = SplashPage();
+        String title = Constants.appName;
+        DesktopMultiWindowArgs multiWindowArgs;
+        if (isMultiWindow) {
+          await ensureInitialized();
+          //子窗口
+          final windowId = int.parse(args[1]);
+          multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
+          Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
+          switch (multiWindowArgs.tag) {
+            case MultiWindowTag.history:
+              home = HistoryWindow(
+                windowController: WindowController.fromWindowId(windowId),
+                args: multiWindowArgs.otherArgs,
+              );
+              title = multiWindowArgs.title;
+              break;
+            case MultiWindowTag.devices:
+              home = FileSenderWindow(
+                windowController: WindowController.fromWindowId(windowId),
+                args: multiWindowArgs.otherArgs,
+              );
+              title = multiWindowArgs.title;
+              break;
+          }
+          final wcs = Get.find<WindowControlService>();
+          wcs.setAlwaysOnTop(true);
+          wcs.setMinimizable(false);
+          wcs.setMaximizable(false);
+          await initMultiWindowServices(multiWindowArgs);
+          runMain(home, title, multiWindowArgs);
+        } else {
+          await ensureInitialized();
+          await initMainServices();
           runMain(home, title, null);
-        },
-        (err, stack) {
-          logger.error("globalError", err, stack);
-        },
-      );
-    }
-  } catch (err, stack) {
-    showErrorInfoOnStartFailed(err, stack);
-  }
+        }
+      } catch (err, stack) {
+        showErrorInfoOnStartFailed(err, stack);
+      }
+    },
+    (err, stack) {
+      logger.error("globalError", err, stack);
+    },
+  );
 }
 
 Future<void> ensureInitialized() async {
