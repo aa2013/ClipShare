@@ -632,6 +632,7 @@ enum TranslationKey {
   invalidFolderName,
   createFailed,
   notAllowRootPath,
+  rootPathCannotEnableForward,
   s3TypeTips,
   forwardWay,
   connecting,

@@ -40,6 +40,39 @@ class SettingsForwardPage extends SettingsSectionView {
     ];
   }
 
+  /// 判断远端存储的基础目录是否为根路径，根路径允许保存但不能用于中转。
+  bool _isRootStorageBaseDir(String baseDir) {
+    final normalizedBaseDir = baseDir.trim().unixPath.replaceAll(RegExp(r'/+'), Constants.unixDirSeparate);
+    return normalizedBaseDir == Constants.unixDirSeparate;
+  }
+
+  /// 判断指定中转方式当前绑定的远端存储配置是否使用根路径。
+  bool _usesRootStorageBaseDir(ForwardWay way) {
+    if (way == ForwardWay.webdav) {
+      final config = appConfig.webDAVConfig;
+      return config != null && _isRootStorageBaseDir(config.baseDir);
+    }
+    if (way == ForwardWay.s3) {
+      final config = appConfig.s3Config;
+      return config != null && _isRootStorageBaseDir(config.baseDir);
+    }
+    return false;
+  }
+
+  /// 提示用户根路径配置只能保存，不能作为中转工作目录。
+  void _showRootPathForwardWarn(BuildContext context) {
+    Global.showSnackBarWarn(
+      context: context,
+      text: TranslationKey.rootPathCannotEnableForward.tr,
+    );
+  }
+
+  /// 中转已启用时保存根路径配置，需要立即停止存储中转并关闭启用开关。
+  Future<void> _disableStorageForwardForRootPath() async {
+    await storageService.stop();
+    await appConfig.setEnableForward(false);
+  }
+
   @override
   List<SettingEntry> buildSettingEntries(BuildContext context) {
     return [
@@ -100,11 +133,21 @@ class SettingsForwardPage extends SettingsSectionView {
                 enabled: v != ForwardWay.webdav,
                 onSelected: () {
                   Future<void> setup() async {
+                    final shouldDisableForRootPath = appConfig.enableForward
+                        && appConfig.webDAVConfig != null
+                        && _usesRootStorageBaseDir(ForwardWay.webdav);
+                    if (shouldDisableForRootPath) {
+                      _showRootPathForwardWarn(context);
+                    }
                     await appConfig.setForwardWay(ForwardWay.webdav);
                     await sktService.disConnectForwardServer();
                     if (!appConfig.enableForward || appConfig.webDAVConfig == null) {
                       //若无配置，关闭中转
                       await appConfig.setEnableForward(false);
+                      return;
+                    }
+                    if (shouldDisableForRootPath) {
+                      await _disableStorageForwardForRootPath();
                       return;
                     }
                     storageService.restart();
@@ -119,11 +162,21 @@ class SettingsForwardPage extends SettingsSectionView {
                 enabled: v != ForwardWay.s3,
                 onSelected: () async {
                   Future<void> setup() async {
+                    final shouldDisableForRootPath = appConfig.enableForward
+                        && appConfig.s3Config != null
+                        && _usesRootStorageBaseDir(ForwardWay.s3);
+                    if (shouldDisableForRootPath) {
+                      _showRootPathForwardWarn(context);
+                    }
                     await appConfig.setForwardWay(ForwardWay.s3);
                     await sktService.disConnectForwardServer();
                     if (!appConfig.enableForward || appConfig.s3Config == null) {
                       //若无配置，关闭中转
                       await appConfig.setEnableForward(false);
+                      return;
+                    }
+                    if (shouldDisableForRootPath) {
+                      await _disableStorageForwardForRootPath();
                       return;
                     }
                     storageService.restart();
@@ -311,6 +364,10 @@ class SettingsForwardPage extends SettingsSectionView {
                   );
                   return;
                 }
+                if (checked && _usesRootStorageBaseDir(appConfig.forwardWay)) {
+                  _showRootPathForwardWarn(context);
+                  return;
+                }
                 await appConfig.setEnableForward(checked);
                 if (checked) {
                   if (useServer) {
@@ -418,13 +475,23 @@ class SettingsForwardPage extends SettingsSectionView {
                       context,
                       WebDAVConfigEditDialog(
                         initValue: v,
-                        onOk: (config) {
-                          appConfig.setWebDavConfig(config);
+                        onOk: (config) async {
+                          final shouldDisableForRootPath = appConfig.enableForward
+                              && _isRootStorageBaseDir(config.baseDir);
+                          if (shouldDisableForRootPath) {
+                            _showRootPathForwardWarn(context);
+                          }
+                          await appConfig.setWebDavConfig(config);
                           if (appConfig.enableForward) {
-                            storageService.restart();
+                            if (shouldDisableForRootPath) {
+                              await _disableStorageForwardForRootPath();
+                            } else {
+                              storageService.restart();
+                            }
                           }
                         },
                       ),
+                      dismissible: false,
                     );
                   },
                   child: Text(text),
@@ -472,13 +539,22 @@ class SettingsForwardPage extends SettingsSectionView {
                       context,
                       S3ConfigEditDialog(
                         initValue: v,
-                        onOk: (config) {
-                          appConfig.setS3Config(config);
+                        onOk: (config) async {
+                          final shouldDisableForRootPath = appConfig.enableForward && _isRootStorageBaseDir(config.baseDir);
+                          if (shouldDisableForRootPath) {
+                            _showRootPathForwardWarn(context);
+                          }
+                          await appConfig.setS3Config(config);
                           if (appConfig.enableForward) {
-                            storageService.restart();
+                            if (shouldDisableForRootPath) {
+                              await _disableStorageForwardForRootPath();
+                            } else {
+                              storageService.restart();
+                            }
                           }
                         },
                       ),
+                      dismissible: false,
                     );
                   },
                   child: Text(text),

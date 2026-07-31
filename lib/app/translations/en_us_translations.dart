@@ -1310,6 +1310,8 @@ class EnUSTranslation extends AbstractTranslations {
         return 'Creation failed';
       case TranslationKey.notAllowRootPath:
         return 'Root path is not allowed';
+      case TranslationKey.rootPathCannotEnableForward:
+        return 'The storage path cannot be the root path';
       case TranslationKey.s3TypeTips:
         return "Any object storage service compatible with the standard S3 protocol can be configured directly.\n\nTencent Cloud and Qiniu Cloud have been tested and work well.\n\nAlibaba Cloud OSS requires separate settings.";
       case TranslationKey.forwardWay:

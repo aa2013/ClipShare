@@ -131,10 +131,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
 
   bool validateBaseDirEditor() {
     bool isValid;
-    if (baseDirEditor.text == "/") {
-      isValid = false;
-      baseDirErrText = TranslationKey.notAllowRootPath.tr;
-    } else if (baseDirEditor.text.isEmpty) {
+    if (baseDirEditor.text.isEmpty) {
       baseDirErrText = TranslationKey.baseDirectoryRequired.tr;
       isValid = false;
     } else if (!baseDirEditor.text.startsWith('/')) {
@@ -375,10 +372,6 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
                                       ),
                                       TextButton(
                                         onPressed: () {
-                                          if (selectedPath == "/") {
-                                            Global.showTipsDialog(context: context, text: TranslationKey.notAllowRootPath.tr);
-                                            return;
-                                          }
                                           baseDirEditor.text = selectedPath;
                                           dialog?.close();
                                           validateFields();
