@@ -723,7 +723,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.notCompatible:
         return "Version Incompatible";
       case TranslationKey.notCompatibleDialogText:
-        return "Incompatible with the device's software version, data sync is disabled.\n"
+        return "Incompatible with the device's software version, device connection and data sync may not work properly.\n"
             "Minimum version required is @minName(@minCode})\n"
             "Current software version is @selfName(@selfCode)";
       case TranslationKey.emptyData:

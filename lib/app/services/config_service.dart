@@ -104,7 +104,7 @@ class ConfigService extends GetxService {
   late final Snowflake snowflake;
   late final AppVersion version;
   late final double osVersion;
-  final minVersion = const AppVersion("1.0.0-beta", "3");
+  final minVersion = const AppVersion("1.5.0", "27");
 
   //路径
   AppPathConfig? _customPathConfig;
