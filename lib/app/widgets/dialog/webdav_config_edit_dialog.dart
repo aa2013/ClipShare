@@ -310,7 +310,7 @@ class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
                   controller: uaEditor,
                   enabled: !testingConnection,
                   decoration: InputDecoration(
-                    labelText: 'User-Agent',
+                    labelText: 'User-Agent (${TranslationKey.optional.tr})',
                     hintStyle: TextStyle(color: Colors.grey[400]),
                     border: const OutlineInputBorder(),
                   ),

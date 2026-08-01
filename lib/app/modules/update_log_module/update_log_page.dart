@@ -17,8 +17,16 @@ class UpdateLogPage extends GetView<UpdateLogController> {
   Widget build(BuildContext context) {
     final appConfig = Get.find<ConfigService>();
     final showAppBar = appConfig.isSmallScreen;
+    final String platform;
+    if (Platform.isIOS) {
+      platform = "IOS";
+    } else if (Platform.isMacOS) {
+      platform = "MacOS";
+    } else {
+      platform = Platform.operatingSystem.upperFirst;
+    }
     final content = FutureBuilder(
-      future: rootBundle.loadString("assets/md/updateLogs-${Platform.operatingSystem.upperFirst}.md"),
+      future: rootBundle.loadString("assets/md/updateLogs-$platform.md"),
       builder: (context, v) {
         return Markdown(
           data: v.data ?? TranslationKey.failedToReadUpdateLog.tr,

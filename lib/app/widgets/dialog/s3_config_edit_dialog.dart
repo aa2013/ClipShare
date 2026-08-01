@@ -476,12 +476,14 @@ class _S3ConfigEditDialogState extends State<S3ConfigEditDialog> {
                     },
                   ),
                   const SizedBox(height: 16),
+
+                  //(optional)
                   if (objectStorageType == ObjStorageType.s3)
                     TextField(
                       controller: uaEditor,
                       enabled: !testingConnection,
                       decoration: InputDecoration(
-                        labelText: 'User-Agent',
+                        labelText: 'User-Agent (${TranslationKey.optional.tr})',
                         hintStyle: TextStyle(color: Colors.grey[400]),
                         border: const OutlineInputBorder(),
                       ),

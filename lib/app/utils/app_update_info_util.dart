@@ -63,6 +63,8 @@ class AppUpdateInfoUtil {
       } else if (Platform.isIOS) {
         system = "IOS";
       } else {
+        //iOS = ios
+        //macOS = macos
         system = Platform.operatingSystem;
       }
       final currentVersion = appConfig.version;
