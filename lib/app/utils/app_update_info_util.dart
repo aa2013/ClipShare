@@ -57,14 +57,21 @@ class AppUpdateInfoUtil {
       final updateLogs = List<UpdateLog>.empty(growable: true);
       final body = jsonDecode(utf8.decode(resp.bodyBytes));
       final logs = body["logs"] as List<dynamic>;
-      final system = Platform.isMacOS ? "MacOS" : Platform.operatingSystem;
+      final String system;
+      if (Platform.isMacOS) {
+        system = "MacOS";
+      } else if (Platform.isIOS) {
+        system = "IOS";
+      } else {
+        system = Platform.operatingSystem;
+      }
       final currentVersion = appConfig.version;
 
       for (var log in logs) {
         log['url'] = body["downloads"][system.upperFirst]["url"];
         final ul = UpdateLog.fromJson(log);
         final platform = ul.platform.toLowerCase();
-        if ((platform != system && platform != 'all') || ul.version <= currentVersion) {
+        if ((platform != system.toLowerCase() && platform != 'all') || ul.version <= currentVersion) {
           continue;
         }
         updateLogs.add(ul);

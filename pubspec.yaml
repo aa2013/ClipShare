@@ -257,6 +257,9 @@ flutter:
     - path: assets/md/updateLogs-Windows.md
       platforms:
         - windows
+    - path: assets/md/updateLogs-IOS.md
+      platforms:
+        - ios
     - path: assets/scripts/update_windows.bat
       platforms:
         - windows
