@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:clipshare/app/data/enums/syncing_file_state.dart';
 import 'package:clipshare/app/data/models/syncing_file.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/sync_file_module/sync_file_controller.dart';
 import 'package:get/get.dart';
 

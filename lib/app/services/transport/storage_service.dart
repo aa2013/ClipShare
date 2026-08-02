@@ -62,7 +62,8 @@ import 'package:clipshare/app/utils/network_util.dart';
 import 'package:clipshare/app/utils/notification_server_util.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare/app/utils/parallerl_task.dart';
-import 'package:get/get.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:get/get.dart' hide Value;
 import "package:msgpack_dart/msgpack_dart.dart" as m2;
 import 'package:uri_file_reader/uri_file_reader.dart';
 
@@ -213,7 +214,7 @@ class StorageService extends GetxService
       logger.warn(tag, "_updateBaseInfo storage client is null");
       return;
     }
-    final device = appConfig.device.copyWith(customName: appConfig.localName);
+    final device = appConfig.device.copyWith(customName: Value(appConfig.localName));
     // WebDAV 在部分服务端上不会自动补父目录，这里统一让写文件顺带补齐路径。
     await client.createFile(
       getDeviceInfoPath(_selfDevId),
@@ -273,7 +274,7 @@ class StorageService extends GetxService
       logger.debug(tag, "_uploadAppInfo createDirectory $dirPath failed.");
       return false;
     }
-    final opRecord = OperationRecord.fromSimple(
+    final opRecord = newOperationRecord(
       Module.appInfo,
       OpMethod.add,
       appInfo.id.toString(),
@@ -810,7 +811,7 @@ class StorageService extends GetxService
                 final historyController = Get.find<HistoryController>();
                 historyController.updateData(
                   (his) => his.id == historyId,
-                  (his) => his.sync = true,
+                  (his) => his.copyWith(sync: true),
                   true,
                 );
               });
@@ -1307,7 +1308,7 @@ class StorageService extends GetxService
       final opId = data["opId"] as int;
       final devId = data["devId"] as String;
       await dbService.opSyncDao.add(
-        OperationSync(opId: opId, devId: devId, uid: appConfig.userId),
+        newOperationSync(opId: opId, devId: devId, uid: appConfig.userId),
       );
     } catch (err, stack) {
       logger.error(
@@ -1418,6 +1419,7 @@ class StorageService extends GetxService
           content: localPath,
           type: HistoryContentType.file.value,
           size: size,
+          top: false,
           sync: true,
         );
         final historyController = Get.find<HistoryController>();
@@ -1485,7 +1487,7 @@ class StorageService extends GetxService
       return false;
     }
     final address = protocol.name;
-    final result = (dbDev ?? dev).copyWith(address: address);
+    final result = (dbDev ?? dev).copyWith(address: Value(address));
     final confirmResult = await devService.confirmPairingState(
       device: result,
       localIsPaired: true,
@@ -1654,6 +1656,7 @@ class StorageService extends GetxService
       content: filePath.safeDecodeUri(),
       type: HistoryContentType.file.value,
       size: size,
+      top: false,
       sync: true,
     );
 

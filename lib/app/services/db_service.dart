@@ -5,119 +5,101 @@ import 'package:clipshare/app/data/repository/dao/config_dao.dart';
 import 'package:clipshare/app/data/repository/dao/device_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_dao.dart';
 import 'package:clipshare/app/data/repository/dao/history_tag_dao.dart';
-import 'package:clipshare/app/data/repository/dao/pending_storage_ack_dao.dart';
-import 'package:clipshare/app/data/repository/dao/script_module_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
+import 'package:clipshare/app/data/repository/dao/pending_storage_ack_dao.dart';
 import 'package:clipshare/app/data/repository/dao/rule_dao.dart';
+import 'package:clipshare/app/data/repository/dao/script_module_dao.dart';
 import 'package:clipshare/app/data/repository/dao/user_dao.dart';
-import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
-import 'package:clipshare/app/data/repository/entity/tables/config.dart';
-import 'package:clipshare/app/data/repository/entity/tables/device.dart';
-import 'package:clipshare/app/data/repository/entity/tables/history.dart';
-import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
-import 'package:clipshare/app/data/repository/entity/tables/pending_storage_ack.dart';
-import 'package:clipshare/app/data/repository/entity/tables/script_module.dart';
-import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
-import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
-import 'package:clipshare/app/data/repository/entity/tables/user.dart';
-import 'package:clipshare/app/data/repository/entity/tables/rule.dart';
-import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
+import 'package:clipshare/app/data/repository/db/app_database.dart';
+import 'package:clipshare/app/data/repository/db/app_tables.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:floor/floor.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:sqflite/sqflite.dart' as sqflite;
 
-part 'package:clipshare/app/data/repository/db/app_db.floor.g.dart';
-
 const tables = [
-  Config,
-  Device,
-  History,
-  User,
-  OperationSync,
-  HistoryTag,
-  OperationRecord,
-  AppInfo,
-  Rule,
-  ScriptModule,
-  PendingStorageAck,
+  'Config',
+  'Device',
+  'History',
+  'User',
+  'OperationSync',
+  'HistoryTag',
+  'OperationRecord',
+  'AppInfo',
+  'Rule',
+  'ScriptModule',
+  'PendingStorageAck',
 ];
-const views = [VHistoryTagHold];
-
-/// 添加实体类到 @Database 注解中，app_db 中添加 get 方法
-/// 生成方法（二选一）
-///
-/// 1. 执行命令 flutter pub run build_runner build --delete-conflicting-outputs
-///    生成的文件位于 .dart_tool/build/generated/项目名称/lib/db
-///    下面这行放在 app_db.floor.g.dart 文件里，使其变成 app_database.dart 文件的一部分：
-///    part of 'app_db.dart';
-///
-/// 2. 直接执行 scripts/db_gen.bat 一键完成
-@Database(
-  version: 10,
-  entities: tables,
-  views: views,
-)
-abstract class _AppDb extends FloorDatabase {
-  UserDao get userDao;
-
-  ConfigDao get configDao;
-
-  HistoryDao get historyDao;
-
-  DeviceDao get deviceDao;
-
-  OperationSyncDao get operationSyncDao;
-
-  HistoryTagDao get historyTagDao;
-
-  OperationRecordDao get operationRecordDao;
-
-  AppInfoDao get appInfoDao;
-
-  RuleDao get ruleDao;
-
-  ScriptModuleDao get scriptModuleDao;
-
-  PendingStorageAckDao get pendingStorageAckDao;
-}
+const views = [vHistoryTagHoldViewName];
 
 class DbService extends GetxService {
-  ///定义数据库变量
-  late final _AppDb _db;
+  /// Drift 数据库实例，负责真实连接、迁移和 Repository 创建。
+  late final AppDatabase _db;
 
-  ConfigDao get configDao => _db.configDao;
+  AppDatabase get database => _db;
 
-  HistoryDao get historyDao => _db.historyDao;
+  ConfigDao get configRepository => _db.configDao;
 
-  DeviceDao get deviceDao => _db.deviceDao;
+  HistoryDao get historyRepository => _db.historyDao;
 
-  UserDao get userDao => _db.userDao;
+  DeviceDao get deviceRepository => _db.deviceDao;
 
-  OperationSyncDao get opSyncDao => _db.operationSyncDao;
+  UserDao get userRepository => _db.userDao;
 
-  HistoryTagDao get historyTagDao => _db.historyTagDao;
+  OperationSyncDao get operationSyncRepository => _db.operationSyncDao;
 
-  OperationRecordDao get opRecordDao => _db.operationRecordDao;
+  HistoryTagDao get historyTagRepository => _db.historyTagDao;
 
-  AppInfoDao get appInfoDao => _db.appInfoDao;
+  OperationRecordDao get operationRecordRepository => _db.operationRecordDao;
 
-  RuleDao get ruleDao => _db.ruleDao;
+  AppInfoDao get clipboardSourceRepository => _db.appInfoDao;
 
-  ScriptModuleDao get scriptModuleDao => _db.scriptModuleDao;
+  RuleDao get ruleRepository => _db.ruleDao;
 
-  PendingStorageAckDao get pendingStorageAckDao => _db.pendingStorageAckDao;
+  ScriptModuleDao get scriptModuleRepository => _db.scriptModuleDao;
+
+  PendingStorageAckDao get pendingStorageAckRepository => _db.pendingStorageAckDao;
+
+  /// todo 兼容旧调用点的过渡 getter，内部已经完全由 Drift Repository 承接。
+  ConfigDao get configDao => configRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [historyRepository]。
+  HistoryDao get historyDao => historyRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [deviceRepository]。
+  DeviceDao get deviceDao => deviceRepository;
+
+  /// todo 兼容已废弃用户表的旧调用点。
+  UserDao get userDao => userRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [operationSyncRepository]。
+  OperationSyncDao get opSyncDao => operationSyncRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [historyTagRepository]。
+  HistoryTagDao get historyTagDao => historyTagRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [operationRecordRepository]。
+  OperationRecordDao get opRecordDao => operationRecordRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [clipboardSourceRepository]。
+  AppInfoDao get appInfoDao => clipboardSourceRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [ruleRepository]。
+  RuleDao get ruleDao => ruleRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [scriptModuleRepository]。
+  ScriptModuleDao get scriptModuleDao => scriptModuleRepository;
+
+  /// todo 兼容旧调用点的过渡 getter，后续可逐步替换为 [pendingStorageAckRepository]。
+  PendingStorageAckDao get pendingStorageAckDao => pendingStorageAckRepository;
 
   final tag = "DbService";
 
   late final int version;
 
-  sqflite.DatabaseExecutor get dbExecutor => _db.database;
   Future _queue = Future.value();
 
   void execSequentially(Future Function() f) {
@@ -126,24 +108,28 @@ class DbService extends GetxService {
 
   Future<DbService> init() async {
     final appConfig = Get.find<ConfigService>();
-    // 获取应用程序的文件目录
-    var dbPath = "clipshare.db";
-    if (appConfig.databasePath.isNotNullAndEmpty) {
-      dbPath = "${appConfig.databasePath}/$dbPath".normalizePath;
-    }
-    _db = await $Floor_AppDb.databaseBuilder(dbPath).addMigrations([
-      migration1to2,
-      migration2to3,
-      migration3to4,
-      migration4to5,
-      migration5to6,
-      migration6to7,
-      migration7to8,
-      migration8to9,
-      migration9to10,
-    ]).build();
-    version = await _db.database.database.getVersion();
+    final dbPath = await _resolveDbPath(appConfig);
+    _db = AppDatabase(AppDatabase.openFile(dbPath));
+    final row = await _db.customSelect('PRAGMA user_version').getSingle();
+    version = row.data.values.first as int? ?? dbSchemaVersion;
     return this;
+  }
+
+  /// 执行数据库编辑器输入的单条原始 SQL，并返回数据库返回的结果行。
+  ///
+  /// 直接使用 Drift 底层 executor，不预先识别 SQL 类型，因此查询、写入、
+  /// DDL 以及带 RETURNING 子句的语句都沿用 SQLite executor 的原生行为。
+  Future<List<Map<String, Object?>>> rawQuery(String sql) {
+    return _db.executor.runSelect(sql, const []);
+  }
+
+  /// 解析数据库路径，自定义目录优先，否则沿用 sqflite 旧默认数据库目录。
+  Future<String> _resolveDbPath(ConfigService appConfig) async {
+    const dbFileName = "clipshare.db";
+    if (appConfig.databasePath.isNotNullAndEmpty) {
+      return "${appConfig.databasePath}/$dbFileName".normalizePath;
+    }
+    return sqflite.getDatabasesPath().then((path) => "$path/$dbFileName".normalizePath);
   }
 
   @override
@@ -151,166 +137,4 @@ class DbService extends GetxService {
     debugPrint("db service onClose");
     return _db.close();
   }
-
-  static Future<bool> hasColumnInTable(sqflite.Database database, String tableName, String columnName) async {
-    final result = await database.rawQuery("SELECT COUNT(*) as cnt FROM pragma_table_info('$tableName') WHERE name='$columnName'");
-    if (result.isEmpty) return false;
-    if (!result.first.containsKey("cnt")) {
-      return false;
-    }
-    final cnt = result.first["cnt"] as int;
-    return cnt > 0;
-  }
-
-  ///----- 迁移策略 更新数据库版本后需要重新生成数据库代码 -----
-  ///数据库版本 1 -> 2
-  ///操作记录表新增设备id字段，用于从连接设备同步其他已配对设备数据
-  final migration1to2 = Migration(1, 2, (database) async {
-    if (!await hasColumnInTable(database, 'OperationRecord', 'devId')) {
-      await database.execute('ALTER TABLE OperationRecord ADD COLUMN devId TEXT');
-    }
-  });
-
-  ///数据库版本 2 -> 3
-  ///操作同步表联合主键
-  final migration2to3 = Migration(2, 3, (database) async {
-    await database.execute('''
-        CREATE TABLE OperationSyncNew (
-          opId INTEGER NOT NULL,
-          devId TEXT NOT NULL,
-          uid INTEGER NOT NULL,
-          time TEXT NOT NULL,
-          PRIMARY KEY (opId, devId, uid)
-        );
-      ''');
-
-    await database.execute('''
-      INSERT INTO OperationSyncNew (opId, devId, uid, time)
-      SELECT opId, devId, uid, time FROM OperationSync;
-    ''');
-
-    await database.execute('DROP TABLE OperationSync;');
-    await database.execute(
-      'ALTER TABLE OperationSyncNew RENAME TO OperationSync;',
-    );
-  });
-
-  ///数据库版本 3 -> 4
-  ///历史表增加更新时间字段
-  final migration3to4 = Migration(3, 4, (database) async {
-    if (!await hasColumnInTable(database, 'History', 'updateTime')) {
-      await database.execute("ALTER TABLE `History` ADD COLUMN `updateTime` TEXT;");
-    }
-  });
-
-  ///数据库版本 4 -> 5
-  ///新增 app 信息表
-  ///历史表增加来源字段
-  final migration4to5 = Migration(4, 5, (database) async {
-    if (!await hasColumnInTable(database, 'History', 'source')) {
-      await database.execute("ALTER TABLE `History` ADD COLUMN `source` TEXT;");
-    }
-    await database.execute("CREATE TABLE IF NOT EXISTS `AppInfo` (`id` INTEGER NOT NULL, `appId` TEXT NOT NULL, `devId` TEXT NOT NULL, `name` TEXT NOT NULL, `iconB64` TEXT NOT NULL, PRIMARY KEY (`id`));");
-    await database.execute('CREATE UNIQUE INDEX IF NOT EXISTS `index_AppInfo_appId_devId` ON `AppInfo` (`appId`, `devId`);');
-  });
-
-  ///数据库版本 5 -> 6
-  ///支持存储服务为中转方式，操作记录表新增存储同步标记字段
-  final migration5to6 = Migration(5, 6, (database) async {
-    if (!await hasColumnInTable(database, 'OperationRecord', 'storageSync')) {
-      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `storageSync` INTEGER;");
-    }
-    //todo 后续移除 UID 字段的时候这里需要改
-    try {
-      //升级时更新，如果已经配置过中转服务，将中转方式更新为 server，否则忽略
-      await database.execute(r"""
-        INSERT OR IGNORE INTO config (key, value,uid)
-        SELECT 'forwardWay', 'server', 0
-        WHERE EXISTS (
-            SELECT 1 FROM config WHERE key = 'forwardServer'
-        )
-        AND NOT EXISTS (
-            SELECT 1 FROM config WHERE key = 'forwardWay'
-        )
-    """);
-    } catch (err, stack) {
-      print("$err,$stack");
-    }
-  });
-
-  ///v1.4.0 数据库版本 6 -> 7
-  ///为历史表增加设备id和来源字段的索引，避免删除速度过慢
-  final migration6to7 = Migration(6, 7, (database) async {
-    await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId` ON `History` (`devId`)');
-    await database.execute('CREATE INDEX IF NOT EXISTS `index_History_devId_source` ON `History` (`devId`, `source`)');
-  });
-
-  ///v1.4.3 新增字段记录内网地址 7 -> 8
-  ///增加内网地址记录字段
-  final migration7to8 = Migration(7, 8, (database) async {
-    if (!await hasColumnInTable(database, 'Device', 'internalAddress')) {
-      await database.execute("ALTER TABLE `Device` ADD COLUMN `internalAddress` TEXT;");
-    }
-  });
-
-  ///v1.5.0 数据库版本 8 -> 9
-  ///为历史表增加提取字段，可通过规则/脚本提取内容，该字段不为空时同步后将复制该内容
-  ///增加规则表和规则库表
-  final migration8to9 = Migration(8, 9, (database) async {
-    if (!await hasColumnInTable(database, 'History', 'extracted')) {
-      await database.execute("ALTER TABLE `History` ADD COLUMN `extracted` TEXT;");
-    }
-    if (!await hasColumnInTable(database, 'OperationRecord', 'moduleEn')) {
-      await database.execute("ALTER TABLE `OperationRecord` ADD COLUMN `moduleEn` TEXT;");
-    }
-    await database.execute('CREATE INDEX IF NOT EXISTS `index_OperationRecord_moduleEn_method` ON `OperationRecord` (`moduleEn`, `method`)');
-    //规则表
-    await database.execute("""
-        CREATE TABLE IF NOT EXISTS `Rule` (
-        `id`                      INTEGER NOT NULL,
-        `name`                    TEXT NOT NULL,
-        `platforms`               TEXT NOT NULL,
-        `sources`                 TEXT NOT NULL,
-        `trigger`                 TEXT NOT NULL,
-        `type`                    TEXT NOT NULL,
-        `regexWhiteBlackMode`     TEXT,
-        `regexMain`               TEXT NOT NULL,
-        `regexAllowExtractData`   INTEGER NOT NULL,
-        `regexExtractedContent`   TEXT NOT NULL,
-        `regexAllowAddTag`        INTEGER NOT NULL,
-        `regexTags`               TEXT NOT NULL,
-        `regexIsSyncDisabled`     INTEGER NOT NULL,
-        `regexIsFinalRule`        INTEGER NOT NULL,
-        `scriptLanguage`          TEXT NOT NULL,
-        `scriptContent`           TEXT NOT NULL,
-        `version`                 INTEGER NOT NULL,
-        `enabled`                 INTEGER NOT NULL,
-        `order`                   INTEGER NOT NULL,
-        PRIMARY KEY (`id`)
-    )
-    """);
-    //规则库
-    await database.execute("""
-    CREATE TABLE IF NOT EXISTS `ScriptModule` (
-        `moduleName`     TEXT NOT NULL,
-        `displayName`    TEXT NOT NULL,
-        `language`       TEXT NOT NULL,
-        `source`         TEXT NOT NULL,
-        `version`        INTEGER NOT NULL,
-        PRIMARY KEY (`moduleName`)
-    )
-    """);
-  });
-
-  ///数据库版本 9 -> 10
-  ///新增存储中转 ACK 待发送队列表，避免 storage ACK 发送失败后丢失确认。
-  final migration9to10 = Migration(9, 10, (database) async {
-    await database.execute('''
-      CREATE TABLE IF NOT EXISTS `PendingStorageAck` (
-        `opId` INTEGER NOT NULL,
-        `targetDevId` TEXT NOT NULL,
-        PRIMARY KEY (`opId`, `targetDevId`)
-      )
-    ''');
-  });
 }

@@ -35,7 +35,7 @@ class AppInfoSyncHandler implements SyncListener {
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -55,7 +55,7 @@ class AppInfoSyncHandler implements SyncListener {
   }) async {
     final appInfoMap = jsonDecode(map["data"]) as Map<String, dynamic>;
     map["data"] = "";
-    final opRecord = OperationRecord.fromJson(map);
+    final opRecord = operationRecordFromJson(map);
     final appInfo = AppInfo.fromJson(appInfoMap.cast());
     var success = false;
     switch (opRecord.method) {
@@ -74,7 +74,7 @@ class AppInfoSyncHandler implements SyncListener {
     }
     historyController.updateData(
       (his) => his.source == appInfo.appId,
-      (his) => {},
+      (his) => his,
     );
     return opRecord;
   }

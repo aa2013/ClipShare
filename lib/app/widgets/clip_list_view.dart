@@ -217,7 +217,7 @@ class ClipListViewState extends State<ClipListView>
   }
 
   void _sortList() {
-    widget.list.sort((a, b) => b.data.compareTo(a.data));
+    widget.list.sort();
     setState(() {});
   }
 
@@ -242,7 +242,7 @@ class ClipListViewState extends State<ClipListView>
       final historyController = Get.find<HistoryController>();
       historyController.notifyHistoryWindow();
       if (!onlyDeleteLocal) {
-        var opRecord = OperationRecord.fromSimple(
+        var opRecord = newOperationRecord(
           Module.history,
           OpMethod.delete,
           item.data.id,

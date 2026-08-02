@@ -51,14 +51,16 @@ class _ScriptModuleDetailState extends State<ScriptModuleDetail> {
   var shouldSave = false;
 
   ScriptModule toNewModule() {
-    return ScriptModule(
+    final module = ScriptModule(
       moduleName: moduleNameEditor.text,
       displayName: displayNameEditor.text,
       language: widget.module.language,
       source: codeEditor.text,
       version: widget.module.version,
-      isNewData: widget.module.isNewData,
     );
+    // 新建状态是 UI 临时状态，不进入 Drift 生成的数据类构造器。
+    module.isNewData = widget.module.isNewData;
+    return module;
   }
 
   Future<String?> validate(ScriptModule lib) async {

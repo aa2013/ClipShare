@@ -510,8 +510,9 @@ class _RuleListViewState extends State<RuleListView> with SingleTickerProviderSt
                         language: RuleScriptLanguage.lua,
                         source: '',
                         version: 0,
-                        isNewData: true,
                       );
+                      // 新建状态由 ScriptModule 扩展保存，避免污染数据库字段。
+                      newScriptModule.isNewData = true;
                       widget.onScriptModuleItemAdd(newScriptModule);
                     }
                     //controller 只会attach到当前的tab

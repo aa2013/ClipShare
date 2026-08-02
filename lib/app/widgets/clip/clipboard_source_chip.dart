@@ -13,9 +13,10 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/clip/app_icon.dart';
 import 'package:clipshare/app/widgets/dynamic_size_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Value;
 
 class ClipboardSourceChip extends StatelessWidget {
   final ClipData clip;
@@ -57,7 +58,7 @@ class ClipboardSourceChip extends StatelessWidget {
               if (success) {
                 historyController.updateData(
                   (history) => history.id == id,
-                  (history) => history.source = appInfo.appId,
+                  (history) => history.copyWith(source: Value(appInfo.appId)),
                   false,
                 );
                 Global.showSnackBarSuc(
@@ -95,7 +96,7 @@ class ClipboardSourceChip extends StatelessWidget {
             if (success) {
               historyController.updateData(
                 (history) => history.id == id,
-                (history) => history.source = null,
+                (history) => history.copyWith(source: const Value(null)),
                 false,
               );
               //移除未使用的剪贴板来源信息

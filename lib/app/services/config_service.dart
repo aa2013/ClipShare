@@ -1147,8 +1147,9 @@ class ConfigService extends GetxService {
       customName: "本机",
       uid: 0,
       type: type,
+      isPaired: true,
     );
-    Device.initializeSelfGuid(device.guid);
+    initializeSelfDeviceGuid(device.guid);
   }
 
   //endregion
@@ -1795,11 +1796,16 @@ class ConfigService extends GetxService {
               id: isDefaultTag ? 2061101839524896768 :snowflake.nextId(),
               name: name,
               platforms: allPlatforms,
+              sources: '',
               trigger: RuleTrigger.onCopy.name,
               type: RuleContentType.regex.name,
               regexTags: name,
               regexMain: regex,
+              regexAllowExtractData: false,
+              regexExtractedContent: '',
               regexAllowAddTag: true,
+              regexIsSyncDisabled: false,
+              regexIsFinalRule: false,
               version: version,
               order: order++,
               enabled: true,
@@ -1831,9 +1837,16 @@ class ConfigService extends GetxService {
               id: snowflake.nextId(),
               name: name,
               platforms: SupportPlatForm.android.name,
+              sources: '',
               trigger: RuleTrigger.onSms.name,
               type: RuleContentType.regex.name,
               regexMain: regex,
+              regexAllowExtractData: false,
+              regexExtractedContent: '',
+              regexAllowAddTag: false,
+              regexTags: '',
+              regexIsSyncDisabled: false,
+              regexIsFinalRule: false,
               version: version,
               order: order++,
               enabled: enableSmsSync,
@@ -1854,9 +1867,16 @@ class ConfigService extends GetxService {
               id: snowflake.nextId(),
               name: TranslationKey.all.tr,
               platforms: SupportPlatForm.android.name,
+              sources: '',
               trigger: RuleTrigger.onSms.name,
               type: RuleContentType.regex.name,
               regexMain: ".+",
+              regexAllowExtractData: false,
+              regexExtractedContent: '',
+              regexAllowAddTag: false,
+              regexTags: '',
+              regexIsSyncDisabled: false,
+              regexIsFinalRule: false,
               version: version,
               order: order++,
               enabled: enableSmsSync,
@@ -1918,6 +1938,11 @@ class ConfigService extends GetxService {
             type: RuleContentType.regex.name,
             sources: sources,
             regexMain: regex,
+            regexAllowExtractData: false,
+            regexExtractedContent: '',
+            regexAllowAddTag: false,
+            regexTags: '',
+            regexIsSyncDisabled: false,
             version: version,
             order: order++,
             regexWhiteBlackMode: WhiteBlackMode.black.name,
@@ -1950,6 +1975,12 @@ class ConfigService extends GetxService {
             type: RuleContentType.regex.name,
             sources: sources,
             regexMain: regex,
+            regexAllowExtractData: false,
+            regexExtractedContent: '',
+            regexAllowAddTag: false,
+            regexTags: '',
+            regexIsSyncDisabled: false,
+            regexIsFinalRule: false,
             version: version,
             order: order++,
             regexWhiteBlackMode: WhiteBlackMode.white.name,
@@ -1992,11 +2023,15 @@ class ConfigService extends GetxService {
             id: snowflake.nextId(),
             name: "${TranslationKey.content.tr}${index++}",
             platforms: allPlatforms,
+            sources: '',
             trigger: RuleTrigger.onCopy.name,
             type: RuleContentType.regex.name,
             regexTags: "",
             regexMain: rule.content,
+            regexAllowExtractData: false,
+            regexExtractedContent: '',
             regexAllowAddTag: false,
+            regexIsSyncDisabled: false,
             regexIsFinalRule: true,
             version: version,
             order: order++,
@@ -2017,7 +2052,7 @@ class ConfigService extends GetxService {
       await ruleDao.addRules(rules);
       final opRecordDao = Get.find<DbService>().opRecordDao;
       for (var newRule in rules) {
-        await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.add, newRule.id));
+        await opRecordDao.addAndNotify(newOperationRecord(Module.rule, OpMethod.add, newRule.id));
       }
     }
     _rulesMigrated = true;

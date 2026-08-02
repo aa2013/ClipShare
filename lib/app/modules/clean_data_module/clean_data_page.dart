@@ -3,6 +3,7 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/week_day.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/clean_data_module/clean_data_controller.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';

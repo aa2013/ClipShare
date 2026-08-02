@@ -277,10 +277,10 @@ class _ClipDataCardState extends State<ClipDataCard>
             var id = widget.clip.data.id;
             //置顶取反
             var isTop = !widget.clip.data.top;
-            widget.clip.data.top = isTop;
+            widget.clip.data = widget.clip.data.copyWith(top: isTop);
             dbService.historyDao.setTop(id, isTop).then((v) {
               if (v == null || v <= 0) return;
-              var opRecord = OperationRecord.fromSimple(
+              var opRecord = newOperationRecord(
                 Module.historyTop,
                 OpMethod.update,
                 id,
@@ -379,13 +379,13 @@ class _ClipDataCardState extends State<ClipDataCard>
     //删除tag
     await dbService.historyTagDao.removeAllByHisId(id);
     //删除历史
-    return dbService.historyDao.delete(id).then((v) {
+    return dbService.historyDao.deleteHistory(id).then((v) {
       if (v == null || v <= 0) return false;
       //移除未使用的剪贴板来源信息
       final sourceService = Get.find<ClipboardSourceService>();
       sourceService.removeNotUsed();
       //添加删除记录
-      var opRecord = OperationRecord.fromSimple(
+      var opRecord = newOperationRecord(
         Module.history,
         OpMethod.delete,
         id,

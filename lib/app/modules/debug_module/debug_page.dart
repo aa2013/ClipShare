@@ -106,7 +106,7 @@ class DebugPage extends GetView<DebugController> {
         ),
         TextButton(
           onPressed: () {
-            dbService.historyDao.delete(1843814268377853952).then((res) {
+            dbService.historyDao.deleteHistory(1843814268377853952).then((res) {
               print(res);
             });
           },

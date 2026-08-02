@@ -31,8 +31,9 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/widgets/clip/app_icon.dart';
 import 'package:clipshare/app/widgets/clip/clip_content_view.dart';
 import 'package:clipshare/app/widgets/clip/clip_tag_row_view.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Value;
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -114,11 +115,11 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                         var id = widget.clip.data.id;
                         //置顶取反
                         var isTop = !widget.clip.data.top;
-                        widget.clip.data.top = isTop;
+                        widget.clip.data = widget.clip.data.copyWith(top: isTop);
 
                         dbService.historyDao.setTop(id, isTop).then((v) {
                           if (v == null || v <= 0) return;
-                          var opRecord = OperationRecord.fromSimple(
+                          var opRecord = newOperationRecord(
                             Module.historyTop,
                             OpMethod.update,
                             id,
@@ -173,20 +174,23 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
                               data: widget.clip.data,
                               onDone: (bool didUpdate, String? newData) {
                                 if (newData == null || !didUpdate) return;
-                                widget.clip.data.content = newData;
-                                widget.clip.data.updateTime = DateTime.now().toString();
-                                dbService.historyDao.updateHistory(widget.clip.data).then((res) {
+                                final updatedHistory = widget.clip.data.copyWith(
+                                  content: newData,
+                                  updateTime: Value(DateTime.now().toString()),
+                                );
+                                widget.clip.data = updatedHistory;
+                                dbService.historyDao.updateHistory(updatedHistory).then((res) {
                                   final success = res == 1;
                                   if (success) {
-                                    var opRecord = OperationRecord.fromSimple(
+                                    var opRecord = newOperationRecord(
                                       Module.history,
                                       OpMethod.update,
                                       widget.clip.data.id.toString(),
                                     );
                                     dbService.opRecordDao.addAndNotify(opRecord);
                                     Global.showSnackBarSuc(text: TranslationKey.updateSuccess.tr, context: Get.context!);
-                                    whereFunc(History item) => item.id == widget.clip.data.id;
-                                    callbackFunc(History item) => item.content = newData;
+                                    whereFunc(History item) => item.id == updatedHistory.id;
+                                    callbackFunc(History item) => updatedHistory;
                                     historyController.updateData(whereFunc, callbackFunc);
                                   } else {
                                     Global.showSnackBarSuc(text: TranslationKey.updateFailed.tr, context: Get.context!);

@@ -48,7 +48,7 @@ class TagService extends GetxService {
         _tags[tag.hisId] = Set.from(_tags[tag.hisId]!..remove(tag.tagName));
       }
     }
-    var opRecord = OperationRecord.fromSimple(
+    var opRecord = newOperationRecord(
       Module.tag,
       OpMethod.delete,
       tag.id.toString(),
@@ -72,7 +72,7 @@ class TagService extends GetxService {
       if (!res) {
         return false;
       }
-      var opRecord = OperationRecord.fromSimple(
+      var opRecord = newOperationRecord(
         Module.tag,
         OpMethod.add,
         tag.id.toString(),

@@ -1,51 +1,28 @@
-import 'dart:convert';
+import '../../db/app_database.dart';
 
-import 'package:floor/floor.dart';
+export '../../db/app_database.dart' show OperationSync;
 
-@Entity(
-  primaryKeys: ['opId', 'devId', 'uid'],
-  tableName: "OperationSync",
-)
-class OperationSync {
-  ///操作记录 id
-  @primaryKey
-  int opId;
+/// 新建同步确认记录，默认使用当前时间保持旧构造器语义。
+OperationSync newOperationSync({
+  required int opId,
+  required String devId,
+  required int uid,
+  String? time,
+}) {
+  return OperationSync(
+    opId: opId,
+    devId: devId,
+    uid: uid,
+    time: time ?? DateTime.now().toString(),
+  );
+}
 
-  ///设备 id
-  @primaryKey
-  String devId;
-
-  /// 用户 id
-  @primaryKey
-  int uid;
-
-  ///同步时间
-  String time = DateTime.now().toString();
-
-  OperationSync({
-    required this.opId,
-    required this.devId,
-    required this.uid,
-  });
-
-  factory OperationSync.fromJson(Map<String, dynamic> map) {
-    return OperationSync(
-      opId: map["opId"],
-      devId: map["devId"],
-      uid: map["uid"],
-    );
-  }
-
-  @override
-  String toString() {
-    return jsonEncode(toJson());
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "opId": opId,
-      "devId": devId,
-      "uid": uid,
-    };
-  }
+/// 从旧备份 JSON 还原同步记录，缺失 time 时使用当前时间保持旧构造语义。
+OperationSync operationSyncFromJson(Map<String, dynamic> map) {
+  return newOperationSync(
+    opId: map['opId'],
+    devId: map['devId'],
+    uid: map['uid'],
+    time: map['time'] ?? DateTime.now().toString(),
+  );
 }

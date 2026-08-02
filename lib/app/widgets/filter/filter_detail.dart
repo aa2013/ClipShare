@@ -3,6 +3,7 @@ import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/local_app_info.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
+import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/modules/views/app_selection_page.dart';
 import 'package:clipshare/app/utils/extensions/list_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';

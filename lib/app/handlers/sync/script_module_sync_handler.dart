@@ -31,7 +31,7 @@ class ScriptModuleSyncHandler implements SyncListener {
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -52,8 +52,8 @@ class ScriptModuleSyncHandler implements SyncListener {
   }) async {
     final ruleMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    final opRecord = OperationRecord.fromJson(map);
-    final ruleLib = ScriptModule.fromJson(ruleMap.cast());
+    final opRecord = operationRecordFromJson(map);
+    final ruleLib = scriptModuleFromJson(ruleMap.cast());
     var success = false;
     await dbService.opRecordDao.deleteByDataWithCascade(ruleLib.moduleName);
     switch (opRecord.method) {
@@ -69,7 +69,6 @@ class ScriptModuleSyncHandler implements SyncListener {
         success = (await dbService.scriptModuleDao.addModule(ruleLib)) > 0;
         if (success) {
           ruleController.addOrUpdateRuleLib(ruleLib);
-          opRecord.data = ruleLib.moduleName;
         }
         break;
       case OpMethod.delete:
@@ -84,12 +83,13 @@ class ScriptModuleSyncHandler implements SyncListener {
       return null;
     }
     // 脚本模块会先清理同名旧记录，存储回放后必须把新记录直接标记为已完成存储同步。
+    final opRecordWithData = opRecord.copyWith(data: ruleLib.moduleName);
     final localOpRecord = fromStorage
-        ? StorageSyncRecordHelper.copyWithStorageData(opRecord, opRecord.data)
-        : opRecord;
+        ? StorageSyncRecordHelper.copyWithStorageData(opRecordWithData, opRecordWithData.data)
+        : opRecordWithData;
     await dbService.opRecordDao.add(localOpRecord);
     await dbService.opSyncDao.add(
-      OperationSync(opId: localOpRecord.id, devId: senderDevId, uid: appConfig.userId),
+      newOperationSync(opId: localOpRecord.id, devId: senderDevId, uid: appConfig.userId),
     );
     return localOpRecord;
   }

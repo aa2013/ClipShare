@@ -30,7 +30,7 @@ class TagSyncHandler implements SyncListener {
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -50,7 +50,7 @@ class TagSyncHandler implements SyncListener {
   }) async {
     final tagMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    final opRecord = OperationRecord.fromJson(map);
+    final opRecord = operationRecordFromJson(map);
     final tag = HistoryTag.fromJson(tagMap.cast());
     var success = false;
     switch (opRecord.method) {
