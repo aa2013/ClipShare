@@ -61,7 +61,7 @@ Future<void> main(List<String> args) async {
           //子窗口
           final windowId = int.parse(args[1]);
           multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
-          Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
+          initializeSelfDeviceGuid(multiWindowArgs.selfDeviceGuid);
           switch (multiWindowArgs.tag) {
             case MultiWindowTag.history:
               home = HistoryWindow(

@@ -58,8 +58,9 @@ import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/cupertino.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Value;
 import 'package:syncfusion_flutter_xlsio/xlsio.dart';
 import 'package:synchronized/synchronized.dart';
 
@@ -216,15 +217,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   ///更新页面数据
   void updateData(
     bool Function(History history) where,
-    void Function(History history) cb, [
+    History Function(History history) cb, [
     bool shouldRefresh = false,
   ]) {
     for (var i = 0; i < _tempList.length; i++) {
       final item = _tempList[i];
       //查找符合条件的数据
       if (where(item.data)) {
-        //更新数据
-        cb(item.data);
+        // Drift 数据类不可变，列表中需要替换为新的 ClipData。
+        _tempList[i] = ClipData(cb(item.data));
       }
     }
     if (shouldRefresh) {
@@ -243,7 +244,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (nextContentType != HistoryContentType.image && _listContentType.value == HistoryContentType.image) {
       _listContentType.value = nextContentType;
     }
-    final future = filterLoading.value || !hasActiveFilter ? dbService.historyDao.getHistoriesTop100(appConfig.userId, []) : dbService.historyDao.getHistoriesPageByFilter(appConfig.userId, searchFilter, false);
+    final future = filterLoading.value || !hasActiveFilter
+        ? dbService.historyDao.getHistoriesTop100(appConfig.userId, [])
+        : dbService.historyDao.getHistoriesPageByFilter(appConfig.userId, searchFilter, false);
     return future.then((lst) {
       _tempList.assignAll(ClipData.fromList(lst));
       debounceUpdate(nextContentType);
@@ -339,7 +342,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     // 重新设置计时器，延迟 200 毫秒执行
     _debounce = Timer(200.ms, () {
       final lst = [..._tempList];
-      lst.sort((a, b) => b.data.compareTo(a.data));
+      lst.sort();
       if (contentType != null && contentType != HistoryContentType.image) {
         _listContentType.value = contentType;
       }
@@ -410,7 +413,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   Future ackSync(MessageData msg) async {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -426,15 +429,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       logger.warn(tag, "not found history id: opId = $opId");
       return;
     }
-    return dbService.historyDao.setSync(hisId, true).then((_) {
-      for (var clip in _tempList) {
-        if (clip.data.id.toString() == hisId.toString()) {
-          clip.data.sync = true;
-          debounceUpdate();
-          break;
-        }
+    await dbService.historyDao.setSync(hisId, true);
+    for (var clip in _tempList) {
+      if (clip.data.id.toString() == hisId.toString()) {
+        final index = _tempList.indexOf(clip);
+        _tempList[index] = ClipData(clip.data.copyWith(sync: true));
+        debounceUpdate();
+        break;
       }
-    });
+    }
   }
 
   Future f = Future.value();
@@ -523,7 +526,9 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       content: content,
       type: type.value,
       size: size,
-      source: source?.id,
+      top: false,
+      sync: false,
+      source: appConfig.sourceRecord || type == HistoryContentType.notification ? source?.id : null,
       extracted: applyResult.result?.extractedContent,
     );
     if (appConfig.sourceRecord || type == HistoryContentType.notification) {
@@ -539,8 +544,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           true,
         );
       }
-    } else {
-      history.source = null;
     }
     await addData(history, applyResult.result, true);
   }
@@ -582,13 +585,13 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       //更新页面
       updateData(
         (h) => h.id == history.id,
-        (his) => his.top = history.top,
+        (his) => his.copyWith(top: history.top),
       );
     });
   }
 
   ///处理同步记录中的二进制内容
-  Future<void> _processData(History history, dynamic historyContent, OpMethod method, DevInfo sender) async {
+  Future<History> _processData(History history, dynamic historyContent, OpMethod method, DevInfo sender) async {
     if ([OpMethod.add, OpMethod.update].contains(method)) {
       switch (HistoryContentType.parse(history.type)) {
         case HistoryContentType.image:
@@ -616,7 +619,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               }
             }
           }
-          history.content = path;
+          history = history.copyWith(content: path);
           var file = File(path);
           await file.parent.create(recursive: true);
           if (!file.existsSync()) {
@@ -675,6 +678,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           break;
       }
     }
+    return history;
   }
 
   Future<AppInfo?> _getNotificationAppInfo(History history, String? pkgName, DevInfo sender) async {
@@ -739,7 +743,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         }
         break;
       case OpMethod.delete:
-        cnt = await dbService.historyDao.delete(history.id).then((cnt) {
+        cnt = await dbService.historyDao.deleteHistory(history.id).then((cnt) {
           if (cnt == null || cnt == 0) return 0;
           sourceService.removeNotUsed();
           _tempList.removeWhere((element) => element.data.id == history.id);
@@ -768,20 +772,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     final historyMap = _extractHistoryData(msg.data["data"]).cast<String, dynamic>();
     msg.data["data"] = "";
 
-    var opRecord = OperationRecord.fromJson(msg.data);
+    var opRecord = operationRecordFromJson(msg.data);
 
     //处理历史记录内容，如果该记录是文件，content字段里面是一个map需要做转换
     dynamic historyContent = _extractHistoryContent(historyMap);
 
     //反序列化为对象
-    History history = History.fromJson(historyMap);
-    history.sync = true;
+    History history = History.fromJson(historyMap).copyWith(sync: true);
     if (opRecord.module == Module.historyTop) {
       //更新数据库
       return _updateHistoryTop(history);
     }
 
-    await _processData(history, historyContent, opRecord.method, msg.send);
+    history = await _processData(history, historyContent, opRecord.method, msg.send);
     final cnt = await _process2Db(history, opRecord.method, msg.key == MsgType.missingData, true);
     if (cnt <= 0) return;
     notifyHistoryWindow();
@@ -795,20 +798,19 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     final historyMap = _extractHistoryData(map["data"]).cast<String, dynamic>();
     map["data"] = "";
 
-    var opRecord = OperationRecord.fromJson(map);
+    var opRecord = operationRecordFromJson(map);
 
     //处理历史记录内容，如果该记录是文件，content字段里面是一个map需要做转换
     dynamic historyContent = _extractHistoryContent(historyMap);
 
     //反序列化为对象
-    History history = History.fromJson(historyMap);
-    history.sync = true;
+    History history = History.fromJson(historyMap).copyWith(sync: true);
     if (opRecord.module == Module.historyTop) {
       //更新数据库
       return _updateHistoryTop(history);
     }
 
-    await _processData(history, historyContent, opRecord.method, DevInfo.fromDevice(sender));
+    history = await _processData(history, historyContent, opRecord.method, DevInfo.fromDevice(sender));
     final cnt = await _process2Db(history, opRecord.method, loadingMissingData, false);
     if (cnt <= 0) return;
     notifyHistoryWindow();
@@ -816,7 +818,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     await dbService.opRecordDao.add(
       opRecord.copyWith(
         data: history.id.toString(),
-        storageSync: true,
+        storageSync: const Value(true),
       ),
     );
   }
@@ -848,7 +850,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       return cnt;
     }
     //添加历史操作记录
-    var opRecord = OperationRecord.fromSimple(
+    var opRecord = newOperationRecord(
       Module.history,
       OpMethod.add,
       history.id.toString(),
@@ -865,7 +867,8 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
             await dbService.historyDao.setSync(history.id, true).then((_) {
               for (var clip in _tempList) {
                 if (clip.data.id.toString() == history.id.toString()) {
-                  clip.data.sync = true;
+                  final index = _tempList.indexOf(clip);
+                  _tempList[index] = ClipData(clip.data.copyWith(sync: true));
                   debounceUpdate();
                   break;
                 }
@@ -900,7 +903,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           return;
         }
 
-        history.source = source.id;
         // add source icon
         sourceService.addOrUpdate(
           AppInfo(
@@ -912,7 +914,13 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           ),
           true,
         );
-        await dbService.historyDao.updateHistorySourceAndNotify(history.id, source.id);
+        final updated = await dbService.historyDao.updateHistorySourceAndNotify(history.id, source.id);
+        if (updated) {
+          updateData(
+            (item) => item.id == history.id,
+            (item) => item.copyWith(source: Value(source.id)),
+          );
+        }
       });
     }
     //endregion
@@ -929,7 +937,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     if (tags.isNotEmpty) {
       for (var tag in tags) {
-        tagService.add(HistoryTag(tag, history.id));
+        tagService.add(newHistoryTag(tag, history.id));
       }
     }
     return cnt;

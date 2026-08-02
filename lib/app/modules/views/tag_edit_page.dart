@@ -104,7 +104,7 @@ class _TagEditPageState extends State<TagEditPage> {
 
               ///生成所有需要添加的 tag
               for (var v in willAddSet) {
-                var t = HistoryTag(v.tagName, widget.hisId);
+                var t = newHistoryTag(v.tagName, widget.hisId);
                 willAddList.add(t);
               }
 

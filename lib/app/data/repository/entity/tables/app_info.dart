@@ -2,87 +2,21 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/utils/constants.dart';
-import 'package:floor/floor.dart';
 
-///app信息
-@Entity(
-  indices: [
-    Index(value: ['appId', "devId"], unique: true),
-  ],
-)
-class AppInfo {
-  ///主键，雪花 id
-  @PrimaryKey(autoGenerate: false)
-  int id;
+import '../../db/app_database.dart';
 
-  ///在Android上是包名
-  String appId;
+export '../../db/app_database.dart' show AppInfo;
 
-  ///设备id
-  String devId;
-
-  ///应用名称
-  String name;
-
-  ///icon
-  String iconB64;
-
-  AppInfo({
-    required this.id,
-    required this.appId,
-    required this.devId,
-    required this.name,
-    required this.iconB64,
-  });
-
-  factory AppInfo.fromJson(Map<String, dynamic> map) {
-    return AppInfo(
-      id: map["id"],
-      appId: map["appId"],
-      devId: map["devId"],
-      name: map["name"],
-      iconB64: map["iconB64"],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "appId": appId,
-      "devId": devId,
-      "name": name,
-      "iconB64": iconB64,
-    };
-  }
-
-  @override
-  String toString() {
-    return jsonEncode(toJson());
-  }
-
-  ///判断内容是否相同（不含id）
-  ///场景：当app更新等情况导致图标变化，就需要做更新操作
-  bool hasSameContent(AppInfo? appInfo) {
-    if (appInfo == null) return false;
-    return appInfo.appId == appId && appInfo.devId == devId && appInfo.name == name && appInfo.iconB64 == iconB64;
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) || other is AppInfo && runtimeType == other.runtimeType && (id == other.id && appId == other.appId);
-  }
-
-  @override
-  int get hashCode => id.hashCode & appId.hashCode;
-}
-
+/// 应用来源行对象的业务扩展，真实数据类由 Drift 生成。
 extension AppInfoExt on AppInfo {
   static final Map<String, Uint8List> _bytes = {};
 
+  /// 按 appId 清理图标缓存，避免来源删除后继续持有旧图标字节。
   static void removeWhere(bool Function(String, Uint8List) func) {
     return _bytes.removeWhere(func);
   }
 
+  /// 解码应用图标，空图标使用内置透明图片兜底。
   Uint8List get iconBytes {
     if (!_bytes.containsKey(appId)) {
       if (iconB64.isEmpty) {
@@ -93,5 +27,11 @@ extension AppInfoExt on AppInfo {
       }
     }
     return _bytes[appId]!;
+  }
+
+  /// 判断应用来源内容是否一致，id 不参与内容变更判断。
+  bool hasSameContent(AppInfo? appInfo) {
+    if (appInfo == null) return false;
+    return appInfo.appId == appId && appInfo.devId == devId && appInfo.name == name && appInfo.iconB64 == iconB64;
   }
 }

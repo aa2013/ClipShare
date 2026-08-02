@@ -1,4 +1,5 @@
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
+import 'package:drift/drift.dart' show Value;
 
 class StorageSyncRecordHelper {
   const StorageSyncRecordHelper._();
@@ -11,7 +12,7 @@ class StorageSyncRecordHelper {
     final recordMap = Map<String, dynamic>.from(map);
     recordMap['data'] = data;
     recordMap['storageSync'] = true;
-    return OperationRecord.fromJson(recordMap);
+    return operationRecordFromJson(recordMap);
   }
 
   /// 存储中转写回本地操作记录时，必须保留 storageSync=true，避免再次进入补传队列。
@@ -21,7 +22,7 @@ class StorageSyncRecordHelper {
   ) {
     return record.copyWith(
       data: data,
-      storageSync: true,
+      storageSync: const Value(true),
     );
   }
 }

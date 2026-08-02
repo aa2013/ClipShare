@@ -12,7 +12,8 @@ import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:get/get.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:get/get.dart' hide Value;
 
 class HistorySourceSyncHandler implements SyncListener {
   final appConfig = Get.find<ConfigService>();
@@ -32,7 +33,7 @@ class HistorySourceSyncHandler implements SyncListener {
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -52,7 +53,7 @@ class HistorySourceSyncHandler implements SyncListener {
   }) async {
     final historyMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    final opRecord = OperationRecord.fromJson(map);
+    final opRecord = operationRecordFromJson(map);
     final history = History.fromJson(historyMap.cast());
     var success = false;
     switch (opRecord.method) {
@@ -88,7 +89,7 @@ class HistorySourceSyncHandler implements SyncListener {
     }
     historyController.updateData(
       (his) => his.id == history.id,
-      (his) => his.source = history.source,
+      (his) => his.copyWith(source: Value(history.source)),
     );
     return opRecord;
   }

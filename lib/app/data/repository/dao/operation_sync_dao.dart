@@ -1,37 +1,61 @@
-import 'package:floor/floor.dart';
+import 'package:clipshare/app/data/repository/db/app_database.dart';
+import 'package:clipshare/app/data/repository/db/app_tables.dart';
+import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
+import 'package:drift/drift.dart';
 
-import '../entity/tables/operation_sync.dart';
+part 'operation_sync_dao.g.dart';
 
-@dao
-abstract class OperationSyncDao {
-  ///添加同步记录
-  @Insert(onConflict: OnConflictStrategy.ignore)
-  Future<int> add(OperationSync syncHistory);
+@DriftAccessor(tables: [OperationSyncs, OperationRecords, Histories])
+class OperationSyncDao extends DatabaseAccessor<AppDatabase> with _$OperationSyncDaoMixin {
+  OperationSyncDao(super.attachedDatabase);
 
-  ///删除当前用户的所有操作同步记录
-  @Query("delete OperationSync where uid = :uid")
-  Future<int?> removeAll(int uid);
+  /// 添加同步记录，联合主键冲突时保持幂等。
+  Future<int> add(OperationSync syncHistory) {
+    return into(operationSyncs).insert(
+      OperationSyncsCompanion.insert(
+        opId: syncHistory.opId,
+        devId: syncHistory.devId,
+        uid: syncHistory.uid,
+        time: syncHistory.time,
+      ),
+      mode: InsertMode.insertOrIgnore,
+    );
+  }
 
-  ///删除当前用户的所有操作同步记录
-  @Query("delete OperationSync where uid = :uid and opId in (:ids)")
-  Future<int?> deleteByIds(int uid, List<int> ids);
+  /// 删除当前用户的所有操作同步记录。
+  Future<int?> removeAll(int uid) {
+    return (delete(operationSyncs)..where((tbl) => tbl.uid.equals(uid))).go();
+  }
 
-  /// 删除指定设备的同步记录
-  @Query(
-    "delete from OperationSync where uid = :uid and devId in (:devIds)",
-  )
-  Future<int?> deleteByDevIds(int uid, List<String> devIds);
+  /// 按操作记录 id 批量删除当前用户同步记录。
+  Future<int?> deleteByIds(int uid, List<int> ids) {
+    if (ids.isEmpty) return Future.value(0);
+    return (delete(operationSyncs)..where((tbl) => tbl.uid.equals(uid) & tbl.opId.isIn(ids))).go();
+  }
 
-  ///重置设备所有记录为未同步
-  @Query("update history set sync = 0 where devId = :devId")
-  Future<int?> resetSyncStatus(String devId);
+  /// 删除指定设备的同步记录。
+  Future<int?> deleteByDevIds(int uid, List<String> devIds) {
+    if (devIds.isEmpty) return Future.value(0);
+    return (delete(operationSyncs)..where((tbl) => tbl.uid.equals(uid) & tbl.devId.isIn(devIds))).go();
+  }
 
-  ///根据操作记录数据删除同步记录
-  @Query(
-    "delete OperationSync where opId in (select id from OperationRecord where data = :opRecordData)",
-  )
-  Future<int?> deleteByOpRecordData(String opRecordData);
+  /// 重置设备所有历史记录为未同步。
+  Future<int?> resetSyncStatus(String devId) {
+    return (update(histories)..where((tbl) => tbl.devId.equals(devId))).write(
+      const HistoriesCompanion(sync: Value(false)),
+    );
+  }
 
-  @Query("select * from OperationSync")
-  Future<List<OperationSync>> getAll();
+  /// 根据操作记录 data 删除其对应同步记录。
+  Future<int?> deleteByOpRecordData(String opRecordData) async {
+    final opIdsQuery = selectOnly(operationRecords)
+      ..addColumns([operationRecords.id])
+      ..where(operationRecords.data.equals(opRecordData));
+    return (delete(operationSyncs)..where((tbl) => tbl.opId.isInQuery(opIdsQuery))).go();
+  }
+
+  /// 获取全部同步记录，主要用于备份和调试。
+  Future<List<OperationSync>> getAll() {
+    return select(operationSyncs).get();
+  }
 }

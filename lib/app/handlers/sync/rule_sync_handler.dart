@@ -31,7 +31,7 @@ class RuleSyncHandler implements SyncListener {
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -52,7 +52,7 @@ class RuleSyncHandler implements SyncListener {
   }) async {
     final ruleMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    final opRecord = OperationRecord.fromJson(map);
+    final opRecord = operationRecordFromJson(map);
     final rule = Rule.fromJson(ruleMap.cast());
     var success = false;
     switch (opRecord.method) {
@@ -71,7 +71,6 @@ class RuleSyncHandler implements SyncListener {
         success = (await dbService.ruleDao.addRule(rule)) > 0;
         if (success) {
           ruleController.addOrUpdateRule(rule);
-          opRecord.data = rule.id.toString();
         }
         break;
       case OpMethod.delete:
@@ -87,12 +86,13 @@ class RuleSyncHandler implements SyncListener {
       return null;
     }
     // 规则来自存储回放时，要保留 storageSync 标记，避免版本合并后再次回灌到云端。
+    final opRecordWithData = opRecord.copyWith(data: rule.id.toString());
     final localOpRecord = fromStorage
-        ? StorageSyncRecordHelper.copyWithStorageData(opRecord, opRecord.data)
-        : opRecord;
+        ? StorageSyncRecordHelper.copyWithStorageData(opRecordWithData, opRecordWithData.data)
+        : opRecordWithData;
     await dbService.opRecordDao.add(localOpRecord);
     await dbService.opSyncDao.add(
-      OperationSync(opId: localOpRecord.id, devId: senderDevId, uid: appConfig.userId),
+      newOperationSync(opId: localOpRecord.id, devId: senderDevId, uid: appConfig.userId),
     );
     return localOpRecord;
   }

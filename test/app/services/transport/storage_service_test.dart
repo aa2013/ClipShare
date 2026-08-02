@@ -16,6 +16,7 @@ import 'package:clipshare/app/data/repository/dao/device_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_record_dao.dart';
 import 'package:clipshare/app/data/repository/dao/operation_sync_dao.dart';
 import 'package:clipshare/app/data/repository/dao/pending_storage_ack_dao.dart';
+import 'package:clipshare/app/data/repository/db/app_database.dart';
 import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history.dart';
@@ -28,6 +29,7 @@ import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
+import 'package:drift/native.dart';
 import 'package:clipshare/app/modules/device_module/device_controller.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/services/clipboard_source_service.dart';
@@ -482,6 +484,7 @@ void main() {
         devName: 'Peer Device',
         uid: configService.userId,
         type: 'android',
+        isPaired: false,
       );
       dbService.deviceById.remove(peerDevId);
 
@@ -1061,7 +1064,7 @@ OperationRecord _buildOpRecord({
   required String data,
   required String time,
 }) {
-  final record = OperationRecord(
+  return OperationRecord(
     id: id,
     uid: 1,
     devId: devId,
@@ -1069,10 +1072,9 @@ OperationRecord _buildOpRecord({
     moduleEn: Module.history.name,
     method: OpMethod.add,
     data: data,
+    time: time,
     storageSync: true,
   );
-  record.time = time;
-  return record;
 }
 
 Device _buildDevice(String guid, String name) {
@@ -1099,6 +1101,7 @@ History _buildHistory({
     type: HistoryContentType.text.value,
     devId: devId,
     size: content.length,
+    top: false,
     sync: true,
   );
 }
@@ -1236,7 +1239,7 @@ class _TestDbService extends DbService {
 class _FakeOperationRecordDao extends OperationRecordDao {
   final Map<String, OperationRecord> latestStorageSyncRecordByDevId;
 
-  _FakeOperationRecordDao(this.latestStorageSyncRecordByDevId);
+  _FakeOperationRecordDao(this.latestStorageSyncRecordByDevId) : super(AppDatabase(NativeDatabase.memory()));
 
   @override
   Future<OperationRecord?> getLatestStorageSyncSuccessByDevId(
@@ -1257,7 +1260,7 @@ class _FakeOperationRecordDao extends OperationRecordDao {
 class _FakeDeviceDao extends DeviceDao {
   final Map<String, Device> deviceById;
 
-  _FakeDeviceDao(this.deviceById);
+  _FakeDeviceDao(this.deviceById) : super(AppDatabase(NativeDatabase.memory()));
 
   @override
   Future<Device?> getById(String guid, int uid) async {
@@ -1289,6 +1292,8 @@ class _FakeDeviceDao extends DeviceDao {
 }
 
 class _FakePendingStorageAckDao extends PendingStorageAckDao {
+  _FakePendingStorageAckDao() : super(AppDatabase(NativeDatabase.memory()));
+
   final List<PendingStorageAck> items = <PendingStorageAck>[];
 
   @override
@@ -1331,6 +1336,8 @@ class _FakePendingStorageAckDao extends PendingStorageAckDao {
 }
 
 class _FakeOperationSyncDao extends OperationSyncDao {
+  _FakeOperationSyncDao() : super(AppDatabase(NativeDatabase.memory()));
+
   final List<OperationSync> items = <OperationSync>[];
 
   @override
@@ -1375,7 +1382,7 @@ class _TestDeviceService extends DeviceService {
     if (id == configService.device.guid) {
       return configService.device;
     }
-    return Device.unknown;
+    return unknownDevice();
   }
 }
 

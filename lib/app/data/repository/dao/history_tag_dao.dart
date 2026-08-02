@@ -1,95 +1,140 @@
 import 'package:clipshare/app/data/models/statistics/history_tag_cnt.dart';
+import 'package:clipshare/app/data/repository/db/app_database.dart' hide VHistoryTagHold;
+import 'package:clipshare/app/data/repository/db/app_tables.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
-import 'package:clipshare/app/services/db_service.dart';
-import 'package:floor/floor.dart';
-import 'package:get/get.dart';
+import 'package:clipshare/app/data/repository/entity/views/v_history_tag_hold.dart';
+import 'package:drift/drift.dart';
 
-import '../entity/views/v_history_tag_hold.dart';
+part 'history_tag_dao.g.dart';
 
-@dao
-abstract class HistoryTagDao {
-  final dbService = Get.find<DbService>();
+@DriftAccessor(tables: [HistoryTags, Histories])
+class HistoryTagDao extends DatabaseAccessor<AppDatabase> with _$HistoryTagDaoMixin {
+  HistoryTagDao(super.attachedDatabase);
 
-  ///获取所有标签名
-  @Query("select distinct tagName from HistoryTag order by tagName")
-  Future<List<String>> getAllTagNames();
+  /// 获取所有标签名，按名称升序去重。
+  Future<List<String>> getAllTagNames() async {
+    final query = selectOnly(historyTags, distinct: true)
+      ..addColumns([historyTags.tagName])
+      ..orderBy([OrderingTerm.asc(historyTags.tagName)]);
+    final rows = await query.get();
+    return rows.map((row) => row.read<String>(historyTags.tagName)).whereType<String>().toList();
+  }
 
-  ///查询某个记录的标签列表
-  @Query("select * from HistoryTag where hisId = :hId")
-  Future<List<HistoryTag>> list(int hId);
+  /// 查询某个历史记录的标签列表。
+  Future<List<HistoryTag>> list(int hId) {
+    return (select(historyTags)..where((tbl) => tbl.hisId.equals(hId))).get();
+  }
 
-  ///查询所有标签列表
-  @Query("select * from HistoryTag")
-  Future<List<HistoryTag>> getAll();
+  /// 查询所有标签列表。
+  Future<List<HistoryTag>> getAll() {
+    return select(historyTags).get();
+  }
 
-  ///查询所有标签，返回值含有一个该历史 id 是否持有该标签的标记
-  @Query("SELECT * from VHistoryTagHold where hisId = :hId")
-  Future<List<VHistoryTagHold>> listWithHold(int hId);
+  /// 查询所有标签，并标记指定历史记录是否持有该标签。
+  Future<List<VHistoryTagHold>> listWithHold(int hId) async {
+    final rows = await customSelect(
+      'SELECT * FROM $vHistoryTagHoldViewName WHERE hisId = ?',
+      variables: [Variable.withInt(hId)],
+      readsFrom: {historyTags, histories},
+    ).get();
+    final result = rows.map((row) {
+      final rawHasTag = row.data['hasTag'];
+      return VHistoryTagHold(
+        row.read<int>('hisId'),
+        row.read<String>('tagName'),
+        rawHasTag == true || rawHasTag == 1,
+      );
+    }).toList();
+    result.sort();
+    return result;
+  }
 
-  ///插入一条标签
-  @Insert(onConflict: OnConflictStrategy.ignore)
-  Future<int> add(HistoryTag tag);
-
-  ///删除标签
-  @Query("delete from HistoryTag where hisId = :hId and tagName = :tagName ")
-  Future<int?> remove(int hId, String tagName);
-
-  ///删除标签
-  @Query("delete from HistoryTag where id = :id")
-  Future<int?> removeById(int id);
-
-  ///删除指定历史的所有标签
-  @Query("delete from HistoryTag where hisId = :hId")
-  Future<int?> removeAllByHisId(int hId);
-
-  ///获取指定历史的所有标签
-  @Query("select * from HistoryTag where hisId = :hId")
-  Future<List<HistoryTag>> getAllByHisId(int hId);
-
-  ///删除指定历史的所有标签
-  @Query("delete from HistoryTag where hisId in (:hIds)")
-  Future<int?> deleteByHisIds(List<int> hIds);
-
-  ///删除所有标签
-  @Query("delete from HistoryTag")
-  Future<int?> removeAll();
-
-  ///获取标签
-  @Query("select * from HistoryTag where hisId = :hId and tagName = :tagName ")
-  Future<HistoryTag?> get(int hId, String tagName);
-
-  ///获取标签
-  @Query("select * from HistoryTag where id = :id")
-  Future<HistoryTag?> getById(int id);
-
-  @update
-  Future<int> updateTag(HistoryTag tag);
-
-  ///查询各个标签的引用数量
-  Future<List<HistoryTagCnt>> getHistoryTagCnt(
-    int uid,
-    String startMonth,
-    String endMonth,
-  ) async {
-    const sql = """
-    select
-     tagName,
-     count(1) as cnt
-    from HistoryTag ht
-    join History h
-    on h.id = ht.hisId and h.uid = ?1
-    and strftime('%Y-%m', time) between ?2 and ?3
-    group by tagName
-    """;
-    List<Map<String, Object?>> result = await dbService.dbExecutor.rawQuery(
-      sql,
-      [uid, startMonth, endMonth],
+  /// 插入一条标签，唯一索引冲突时忽略。
+  Future<int> add(HistoryTag tag) {
+    return into(historyTags).insert(
+      HistoryTagsCompanion.insert(
+        id: Value(tag.id),
+        tagName: tag.tagName,
+        hisId: tag.hisId,
+      ),
+      mode: InsertMode.insertOrIgnore,
     );
+  }
+
+  /// 删除指定历史记录上的单个标签。
+  Future<int?> remove(int hId, String tagName) {
+    return (delete(historyTags)..where((tbl) => tbl.hisId.equals(hId) & tbl.tagName.equals(tagName))).go();
+  }
+
+  /// 按标签主键删除标签。
+  Future<int?> removeById(int id) {
+    return (delete(historyTags)..where((tbl) => tbl.id.equals(id))).go();
+  }
+
+  /// 删除指定历史记录的所有标签。
+  Future<int?> removeAllByHisId(int hId) {
+    return (delete(historyTags)..where((tbl) => tbl.hisId.equals(hId))).go();
+  }
+
+  /// 获取指定历史记录的所有标签。
+  Future<List<HistoryTag>> getAllByHisId(int hId) {
+    return (select(historyTags)..where((tbl) => tbl.hisId.equals(hId))).get();
+  }
+
+  /// 删除多个历史记录的所有标签。
+  Future<int?> deleteByHisIds(List<int> hIds) {
+    if (hIds.isEmpty) return Future.value(0);
+    return (delete(historyTags)..where((tbl) => tbl.hisId.isIn(hIds))).go();
+  }
+
+  /// 删除所有标签。
+  Future<int?> removeAll() {
+    return delete(historyTags).go();
+  }
+
+  /// 根据历史 id 和标签名获取标签。
+  Future<HistoryTag?> get(int hId, String tagName) {
+    return (select(historyTags)..where((tbl) => tbl.hisId.equals(hId) & tbl.tagName.equals(tagName))).getSingleOrNull();
+  }
+
+  /// 根据主键获取标签。
+  Future<HistoryTag?> getById(int id) {
+    return (select(historyTags)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+  }
+
+  /// 更新标签内容，按主键定位。
+  Future<int> updateTag(HistoryTag tag) {
+    return (update(historyTags)..where((tbl) => tbl.id.equals(tag.id))).write(
+      HistoryTagsCompanion(
+        tagName: Value(tag.tagName),
+        hisId: Value(tag.hisId),
+      ),
+    );
+  }
+
+  /// 查询各个标签的引用数量，月份聚合依赖 SQLite strftime。
+  Future<List<HistoryTagCnt>> getHistoryTagCnt(int uid, String startMonth, String endMonth) async {
+    final result = await customSelect(
+      '''
+      select tagName, count(1) as cnt
+      from HistoryTag ht
+      join History h
+      on h.id = ht.hisId and h.uid = ?1
+      and strftime('%Y-%m', time) between ?2 and ?3
+      group by tagName
+      ''',
+      variables: [
+        Variable.withInt(uid),
+        Variable.withString(startMonth),
+        Variable.withString(endMonth),
+      ],
+      readsFrom: {historyTags, histories},
+    ).get();
     return result
         .map(
           (item) => HistoryTagCnt(
-            cnt: item['cnt'] as int,
-            tagName: item['tagName'] as String,
+            cnt: item.read<int>('cnt'),
+            tagName: item.read<String>('tagName'),
           ),
         )
         .toList();
