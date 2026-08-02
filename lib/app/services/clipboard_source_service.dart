@@ -115,7 +115,7 @@ class ClipboardSourceService extends GetxService {
     final opMethod = data == null ? OpMethod.add : OpMethod.update;
     //通知其他设备更新数据
     _dbService.opRecordDao.addAndNotify(
-      OperationRecord.fromSimple(
+      newOperationRecord(
         Module.appInfo,
         opMethod,
         appInfo.id.toString(),

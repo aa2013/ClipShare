@@ -1,127 +1,64 @@
-﻿import 'package:clipshare/app/data/enums/rule/rule_content_type.dart';
 import 'package:clipshare/app/data/enums/rule/rule_trigger.dart';
 import 'package:clipshare/app/data/enums/white_black_mode.dart';
-import 'package:clipshare/app/utils/extensions/string_extension.dart';
-import 'package:floor/floor.dart';
-import 'dart:convert';
 
-@entity
-class Rule {
-  /// 主键，雪花 id
-  @PrimaryKey(autoGenerate: false)
-  int id;
+import '../../db/app_database.dart';
 
-  /// 规则名称
-  String name;
+export '../../db/app_database.dart' show Rule;
 
-  /// 支持平台，对应 [SupportPlatForm]，以 ',' 分割
-  String platforms;
+/// 从旧同步/备份 JSON 还原规则，兼容脚本字段使用 language/content 的历史载荷。
+Rule ruleFromJson(Map<String, dynamic> json) {
+  return Rule(
+    id: json['id'] as int,
+    name: json['name'] as String,
+    platforms: json['platforms'] as String,
+    sources: json['sources'] as String? ?? '',
+    trigger: json['trigger'] as String,
+    type: json['type'] as String,
+    regexWhiteBlackMode: json['regexWhiteBlackMode'] as String? ?? '',
+    regexMain: json['regexMain'] as String,
+    regexAllowExtractData: json['regexAllowExtractData'] as bool,
+    regexExtractedContent: json['regexExtractedContent'] as String,
+    regexAllowAddTag: json['regexAllowAddTag'] as bool,
+    regexTags: json['regexTags'] as String,
+    regexIsSyncDisabled: json['regexIsSyncDisabled'] as bool,
+    regexIsFinalRule: json['regexIsFinalRule'] as bool,
+    scriptLanguage: (json['language'] ?? json['scriptLanguage']) as String,
+    scriptContent: (json['content'] ?? json['scriptContent']) as String,
+    version: json['version'] as int,
+    enabled: json['enabled'] as bool,
+    order: json['order'] as int,
+  );
+}
 
-  /// 来源，以 ',' 分割
-  String sources;
+/// 构造空规则占位，供缺失数据同步删除流程使用。
+Rule emptyRule() {
+  return Rule(
+    id: 0,
+    name: '',
+    platforms: '',
+    sources: '',
+    trigger: RuleTrigger.onCopy.name,
+    type: '',
+    regexMain: '',
+    version: 0,
+    order: 0,
+    regexWhiteBlackMode: WhiteBlackMode.defaultMode.name,
+    regexAllowExtractData: false,
+    regexExtractedContent: '',
+    regexAllowAddTag: false,
+    regexTags: '',
+    regexIsSyncDisabled: false,
+    regexIsFinalRule: false,
+    scriptLanguage: 'lua',
+    scriptContent: '',
+    enabled: false,
+  );
+}
 
-  /// 触发时机，对应 [RuleTrigger]
-  String trigger;
-
-  /// 规则类型，对应 [RuleContentType]
-  String type;
-
-  // region 正则规则，对应 [RuleRegexContent]
-
-  /// 黑白名单模式
-  String regexWhiteBlackMode;
-
-  /// 主识别正则
-  String regexMain;
-
-  /// 启用数据提取
-  bool regexAllowExtractData;
-
-  /// 数据提取正则
-  String regexExtractedContent;
-
-  /// 允许匹配后增加标签
-  bool regexAllowAddTag;
-
-  /// 增加的标签，以 ',' 分割，标签内容不可包含 ','
-  String regexTags;
-
-  /// 匹配后是否阻止同步
-  bool regexIsSyncDisabled;
-
-  /// 是否是最终规则
-  bool regexIsFinalRule;
-
-  // endregion
-
-  // region 脚本规则
-
-  ///脚本语言
-  String scriptLanguage;
-
-  ///脚本内容
-  String scriptContent;
-
-  // endregion
-
-  /// 版本号
-  int version;
-
-  /// 是否启用
-  bool enabled;
-
-  /// 序号，排序依据
-  int order;
-
-  Rule({
-    required this.id,
-    required this.name,
-    required this.platforms,
-    this.sources = "",
-    required this.trigger,
-    required this.type,
-    required this.regexWhiteBlackMode,
-    required this.regexMain,
-    this.regexAllowExtractData = false,
-    this.regexExtractedContent = "",
-    this.regexAllowAddTag = false,
-    this.regexTags = "",
-    this.regexIsSyncDisabled = false,
-    this.regexIsFinalRule = false,
-    this.scriptLanguage = "lua",
-    this.scriptContent = "",
-    required this.version,
-    this.enabled = false,
-    required this.order,
-  });
-
-  /// 从 JSON Map 创建 Rule 实例
-  factory Rule.fromJson(Map<String, dynamic> json) {
-    return Rule(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      platforms: json['platforms'] as String,
-      sources: json['sources'] as String,
-      trigger: json['trigger'] as String,
-      type: json['type'] as String,
-      regexWhiteBlackMode: json['regexWhiteBlackMode'] as String,
-      regexMain: json['regexMain'] as String,
-      regexAllowExtractData: json['regexAllowExtractData'] as bool,
-      regexExtractedContent: json['regexExtractedContent'] as String,
-      regexAllowAddTag: json['regexAllowAddTag'] as bool,
-      regexTags: json['regexTags'] as String,
-      regexIsSyncDisabled: json['regexIsSyncDisabled'] as bool,
-      regexIsFinalRule: json['regexIsFinalRule'] as bool,
-      scriptLanguage: json['language'] as String,
-      scriptContent: json['content'] as String,
-      version: json['version'] as int,
-      enabled: json['enabled'] as bool,
-      order: json['order'] as int,
-    );
-  }
-
-  /// 转换为 JSON Map
-  Map<String, dynamic> toJson() {
+/// 规则行对象的业务扩展，真实数据类由 Drift 生成。
+extension RuleExt on Rule {
+  /// 旧同步载荷使用 language/content，不能直接依赖 Drift 的字段名序列化。
+  Map<String, dynamic> toLegacyJson() {
     return {
       'id': id,
       'name': name,
@@ -145,20 +82,6 @@ class Rule {
     };
   }
 
-  @override
-  String toString() => jsonEncode(toJson());
-
-  static Rule empty() {
-    return Rule(
-      id: 0,
-      name: "",
-      platforms: "",
-      trigger: RuleTrigger.onCopy.name,
-      type: "",
-      regexMain: "",
-      version: 0,
-      order: 0,
-      regexWhiteBlackMode: WhiteBlackMode.defaultMode.name
-    );
-  }
+  /// 深拷贝规则并保留旧 JSON 兼容字段。
+  Rule copy() => ruleFromJson(toLegacyJson());
 }

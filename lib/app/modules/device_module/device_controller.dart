@@ -150,7 +150,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -166,7 +166,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
       data = msg.data["data"];
       msg.data["data"] = "";
     }
-    var opRecord = OperationRecord.fromJson(msg.data);
+    var opRecord = operationRecordFromJson(msg.data);
     Map<String, dynamic> json = data.cast();
     Device dev = Device.fromJson(json);
     Future f = Future(() => null);
@@ -234,19 +234,19 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     AppVersion version,
     TransportProtocol protocol,
   ) async {
-    final dev = await Device.fromDevInfo(info);
+    final dev = await deviceFromDevInfo(info);
     final displayDev = dev ??
         Device(
           guid: info.guid,
           devName: info.name,
           uid: 0,
           type: info.type,
+          isPaired: false,
         );
     for (var i = 0; i < pairedList.length; i++) {
       var paired = pairedList[i];
       if (paired.dev?.guid == info.guid) {
         // 只更新已配对列表里的连接态，不再用协议强行改变配对事实。
-        paired.dev!.address = displayDev.address;
         pairedList[i] = paired.copyWith(
           isConnected: true,
           dev: displayDev,

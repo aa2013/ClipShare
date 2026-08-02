@@ -142,7 +142,7 @@ class RulesPage extends GetView<RulesController> {
             } else {
               //同步数据
               await opRecordDao.deleteByDataWithCascade(rule.id.toString());
-              await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.delete, rule.id));
+              await opRecordDao.addAndNotify(newOperationRecord(Module.rule, OpMethod.delete, rule.id));
             }
           }
           if (replayItems.isNotEmpty) {
@@ -215,7 +215,7 @@ class RulesPage extends GetView<RulesController> {
             }
             //同步数据
             await opRecordDao.deleteByDataWithCascade(lib.moduleName);
-            await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.scriptModule, OpMethod.delete, lib.moduleName));
+            await opRecordDao.addAndNotify(newOperationRecord(Module.scriptModule, OpMethod.delete, lib.moduleName));
             Global.showSnackBarSuc(text: TranslationKey.deleteSuccess.tr, context: context);
           } else {
             Global.showSnackBarSuc(text: TranslationKey.deletionFailed.tr, context: context);
@@ -275,7 +275,7 @@ class RulesPage extends GetView<RulesController> {
                       );
                       //同步数据
                       await opRecordDao.deleteByDataWithCascade(newRule.id.toString());
-                      await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.rule, OpMethod.add, newRule.id));
+                      await opRecordDao.addAndNotify(newOperationRecord(Module.rule, OpMethod.add, newRule.id));
                       controller.ensureSmsSyncReady(showDialog: true);
                     }
                   })
@@ -315,13 +315,14 @@ class RulesPage extends GetView<RulesController> {
                 if (old.moduleName != oldValue.moduleName) {
                   continue;
                 }
-                newValue.version = DateTime.now().yyyyMMddHHmmss;
+                var saveValue = newValue.copyWith(version: DateTime.now().yyyyMMddHHmmss);
+                saveValue.isNewData = newValue.isNewData;
                 late final Future<int> saveFuture;
-                if (newValue.isNewData) {
-                  newValue.isNewData = false;
-                  saveFuture = scriptModuleDao.addModule(newValue);
+                if (saveValue.isNewData) {
+                  saveValue.isNewData = false;
+                  saveFuture = scriptModuleDao.addModule(saveValue);
                 } else {
-                  saveFuture = scriptModuleDao.updateModule(newValue);
+                  saveFuture = scriptModuleDao.updateModule(saveValue);
                 }
                 saveFuture
                     .then((cnt) async {
@@ -335,14 +336,14 @@ class RulesPage extends GetView<RulesController> {
                           text: TranslationKey.saveSuccess.tr,
                           context: Get.context!,
                         );
-                        controller.scriptModules[i] = newValue;
-                        controller.selectedLuaModuleItem.value = newValue;
+                        controller.scriptModules[i] = saveValue;
+                        controller.selectedLuaModuleItem.value = saveValue;
                         //加载到全局函数
-                        final result = controller.loadLuaModules(newValue);
+                        final result = controller.loadLuaModules(saveValue);
                         logger.debug(logTag, "load module(${module.moduleName}): $result");
                         //同步数据
                         await opRecordDao.deleteByDataWithCascade(module.moduleName);
-                        await opRecordDao.addAndNotify(OperationRecord.fromSimple(Module.scriptModule, OpMethod.add, module.moduleName));
+                        await opRecordDao.addAndNotify(newOperationRecord(Module.scriptModule, OpMethod.add, module.moduleName));
                       }
                     })
                     .catchError((err, stack) {

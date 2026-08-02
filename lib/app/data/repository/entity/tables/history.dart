@@ -1,162 +1,45 @@
-import 'dart:convert';
+import '../../db/app_database.dart';
 
-import 'package:floor/floor.dart';
+export '../../db/app_database.dart' show History;
 
-@Entity(
-  indices: [
-    Index(value: ['devId'], unique: false),
-    Index(value: ['devId', "source"], unique: false),
-  ],
-)
-class History implements Comparable {
-  ///本地id
-  @PrimaryKey(autoGenerate: true)
-  int id;
+/// 构造空历史对象，供缺失数据同步流程作为删除占位使用。
+History emptyHistory({
+  int id = 0,
+  int uid = 0,
+  String time = '',
+  String content = '',
+  String type = '',
+  String devId = '',
+  bool top = false,
+  bool sync = false,
+  int size = 0,
+  String? updateTime,
+  String? source,
+  String? extracted,
+}) {
+  return History(
+    id: id,
+    uid: uid,
+    time: time,
+    content: content,
+    extracted: extracted,
+    type: type,
+    devId: devId,
+    top: top,
+    sync: sync,
+    size: size,
+    updateTime: updateTime,
+    source: source,
+  );
+}
 
-  ///用户id（uuid）
-  int uid;
+/// 将窗口通信中的 JSON 列表还原为 Drift 历史数据类。
+List<History> historyListFromJson(List<dynamic> jsonList) {
+  return jsonList.map((map) => History.fromJson((map as Map).cast<String, dynamic>())).toList(growable: true);
+}
 
-  ///时间
-  String time;
-
-  ///剪贴板内容
-  String content;
-
-  ///提取的内容，若该字段不为空，自动复制时复制这个
-  String? extracted;
-
-  ///内容类型
-  String type;
-
-  ///设备id
-  String devId;
-
-  ///是否置顶
-  bool top = false;
-
-  ///是否同步
-  bool sync = false;
-
-  ///内容大小、长度
-  late int size;
-
-  ///更新时间
-  String? updateTime;
-
-  ///来源
-  String? source;
-
-  History({
-    required this.id,
-    required this.uid,
-    required this.time,
-    required this.content,
-    required this.type,
-    required this.devId,
-    required this.size,
-    this.top = false,
-    this.sync = false,
-    this.updateTime,
-    this.source,
-    this.extracted,
-  });
-
-  @override
-  int compareTo(other) {
-    // 首先按照 top 属性排序
-    if (top && !other.top) {
-      return 1;
-    } else if (!top && other.top) {
-      return -1;
-    } else {
-      // 如果 top 属性相同，则按照 id 降序
-      return id.compareTo(other.id);
-    }
-  }
-
-  History.empty({
-    this.id = 0,
-    this.uid = 0,
-    this.time = "",
-    this.content = "",
-    this.type = "",
-    this.devId = "",
-    this.top = false,
-    this.sync = false,
-    this.size = 0,
-    this.updateTime,
-    this.source,
-    this.extracted,
-  });
-
-  static History fromJson(Map<String, dynamic> map) {
-    var id = map["id"];
-    var uid = map["uid"];
-    var time = map["time"];
-    var content = map["content"];
-    var type = map["type"];
-    var devId = map["devId"];
-    var top = map["top"];
-    var sync = map["sync"];
-    var size = map["size"];
-    return History(
-      id: id,
-      uid: uid,
-      time: time,
-      content: content,
-      type: type,
-      devId: devId,
-      size: size,
-      top: top,
-      sync: sync,
-      updateTime: map.containsKey("updateTime") ? map["updateTime"] : null,
-      source: map.containsKey("source") ? map["source"] : null,
-      extracted: map.containsKey("extracted") ? map["extracted"] : null,
-    );
-  }
-
-  static List<History> fromJsonList(List<dynamic> jsonList) {
-    List<History> res = List.empty(growable: true);
-    for (var map in jsonList) {
-      res.add(History.fromJson(map));
-    }
-    return res;
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "uid": uid,
-      "time": time,
-      "content": content,
-      "extracted": extracted,
-      "type": type,
-      "devId": devId,
-      "top": top,
-      "sync": sync,
-      "size": size,
-      "updateTime": updateTime,
-      "source": source,
-    };
-  }
-
-  @override
-  String toString() {
-    return jsonEncode(toJson());
-  }
-
-  History copy() {
-    return fromJson(toJson());
-  }
-
-  @override
-  int get hashCode => id.hashCode;
-
-  @override
-  bool operator ==(Object other) {
-    if (other is History) {
-      return id == other.id;
-    }
-    return false;
-  }
+/// 历史行对象的业务扩展，真实数据类由 Drift 生成。
+extension HistoryExt on History {
+  /// 深拷贝历史记录，沿用 Drift 生成的 JSON 序列化结构。
+  History copy() => History.fromJson(toJson());
 }

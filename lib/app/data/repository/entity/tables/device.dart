@@ -1,51 +1,59 @@
-import 'dart:convert';
-
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
-import 'package:floor/floor.dart';
 import 'package:get/get.dart';
 
-@entity
-class Device {
-  static String _selfGuid = "";
+import '../../db/app_database.dart';
 
-  ///设备id
-  @primaryKey
-  late String guid;
+export '../../db/app_database.dart' show Device;
 
-  ///设备名称
-  String devName;
+String _selfGuid = '';
 
-  ///用户 id
-  int uid;
+/// 初始化当前 Flutter 引擎的本机设备标识，供展示名本地化使用。
+void initializeSelfDeviceGuid(String guid) {
+  _selfGuid = guid;
+}
 
-  ///自定义名称
-  String? customName;
+/// 构造空设备对象，替代旧实体类的 Device.empty 构造器。
+Device emptyDevice({
+  String guid = '',
+  String devName = '',
+  int uid = 0,
+  String type = '',
+  bool isPaired = false,
+  String? customName,
+  String? address,
+  String? internalAddress,
+}) {
+  return Device(
+    guid: guid,
+    devName: devName,
+    uid: uid,
+    type: type,
+    customName: customName,
+    address: address,
+    internalAddress: internalAddress,
+    isPaired: isPaired,
+  );
+}
 
-  ///设备类型
-  String type = "unknown";
+/// 未知设备占位对象，避免调用方处理空设备时散落 magic value。
+Device unknownDevice() => emptyDevice(devName: 'unknown');
 
-  ///链接地址
-  String? address;
+/// 根据发现到的设备信息查询已保存设备，保持旧 Device.fromDevInfo 的语义。
+Future<Device?> deviceFromDevInfo(DevInfo dev) {
+  final appConfig = Get.find<ConfigService>();
+  final dbService = Get.find<DbService>();
+  return dbService.deviceDao.getById(dev.guid, appConfig.userId);
+}
 
-  ///内网地址
-  String? internalAddress;
+/// 设备行对象的展示和浅拷贝扩展，真实数据类由 Drift 生成。
+extension DeviceExt on Device {
+  /// 用户可见名称：自定义名称优先，否则使用设备名。
+  String get name => customName == null || customName == '' ? devName : customName!;
 
-  ///是否已配对
-  bool isPaired;
-
-  String get name => customName == null || customName == "" ? devName : customName!;
-
-  /// 初始化当前 Flutter 引擎的本机设备标识，子窗口需在创建页面前通过启动参数调用。
-  ///
-  /// 此值仅用于运行时展示，不参与设备实体的持久化与跨窗口 JSON 传输。
-  static void initializeSelfGuid(String guid) {
-    _selfGuid = guid;
-  }
-
-  /// UI 展示名：存储/同步仍使用 [name] 的原始值，本机在展示层再按当前语言翻译。
+  /// UI 展示名：本机设备在展示层按当前语言翻译，存储和同步仍使用原始名称。
   String get displayName {
     final rawName = name;
     if (_selfGuid.isEmpty || guid != _selfGuid) {
@@ -53,91 +61,5 @@ class Device {
     }
     final localizedName = TranslationKey.selfDeviceName.tr;
     return localizedName == TranslationKey.selfDeviceName.name ? rawName : localizedName;
-  }
-
-  static final unknown = Device.empty(devName: "unknown");
-
-  Device({
-    required this.guid,
-    required this.devName,
-    required this.uid,
-    required this.type,
-    this.customName,
-    this.address,
-    this.isPaired = false,
-    this.internalAddress,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      "guid": guid,
-      "devName": devName,
-      "uid": uid,
-      "type": type,
-      "address": address,
-      "customName": customName,
-      "isPaired": isPaired,
-      "internalAddress": internalAddress,
-    };
-  }
-
-  @override
-  String toString() {
-    return jsonEncode(toJson());
-  }
-
-  Device.empty({
-    this.guid = "",
-    this.devName = "",
-    this.uid = 0,
-    this.type = "",
-    this.isPaired = false,
-  });
-
-  @override
-  bool operator ==(Object other) => identical(this, other) || other is Device && runtimeType == other.runtimeType && guid == other.guid && uid == other.uid && type == other.type;
-
-  @override
-  int get hashCode => guid.hashCode ^ uid.hashCode ^ type.hashCode;
-
-  static Device fromJson(Map<String, dynamic> map) {
-    return Device(
-      guid: map["guid"],
-      devName: map["devName"],
-      uid: map["uid"],
-      type: map["type"],
-      customName: map["customName"],
-      address: map["address"],
-      internalAddress: map["internalAddress"],
-      isPaired: map["isPaired"],
-    );
-  }
-
-  static Future<Device?> fromDevInfo(DevInfo dev) {
-    final appConfig = Get.find<ConfigService>();
-    final dbService = Get.find<DbService>();
-    return dbService.deviceDao.getById(dev.guid, appConfig.userId);
-  }
-
-  Device copyWith({
-    String? guid,
-    String? devName,
-    int? uid,
-    String? type,
-    String? customName,
-    String? address,
-    String? internalAddress,
-    bool? isPaired,
-  }) {
-    return Device(
-      guid: guid ?? this.guid,
-      devName: devName ?? this.devName,
-      uid: uid ?? this.uid,
-      type: type ?? this.type,
-      customName: customName ?? this.customName,
-      address: address ?? this.address,
-      internalAddress: internalAddress ?? this.internalAddress,
-      isPaired: isPaired ?? this.isPaired,
-    );
   }
 }

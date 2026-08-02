@@ -21,7 +21,7 @@ class DeviceBackupHandler with BaseBackupHandler {
   @override
   Stream<Uint8List> loadData(Directory tempDir) async* {
     final myDev = appConfig.devInfo;
-    final device = Device(guid: myDev.guid, devName: myDev.name, uid: 0, type: myDev.type);
+    final device = Device(guid: myDev.guid, devName: myDev.name, uid: 0, type: myDev.type, isPaired: true);
     yield m2.serialize(device.toJson());
     final devices = await deviceDao.getAllDevices(appConfig.userId);
     for (var dev in devices) {

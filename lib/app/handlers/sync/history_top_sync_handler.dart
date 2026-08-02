@@ -30,7 +30,7 @@ class HistoryTopSyncHandler implements SyncListener {
   Future ackSync(MessageData msg) {
     var send = msg.send;
     var data = msg.data;
-    var opSync = OperationSync(
+    var opSync = newOperationSync(
       opId: data["id"],
       devId: send.guid,
       uid: appConfig.userId,
@@ -50,7 +50,7 @@ class HistoryTopSyncHandler implements SyncListener {
   }) async {
     final historyMap = map["data"] as Map<dynamic, dynamic>;
     map["data"] = "";
-    final opRecord = OperationRecord.fromJson(map);
+    final opRecord = operationRecordFromJson(map);
     final history = History.fromJson(historyMap.cast());
     var success = false;
     switch (opRecord.method) {
@@ -68,7 +68,7 @@ class HistoryTopSyncHandler implements SyncListener {
     }
     historyController.updateData(
       (his) => his.id == history.id,
-      (his) => his.top = history.top,
+      (his) => his.copyWith(top: history.top),
     );
     return opRecord;
   }

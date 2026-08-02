@@ -30,7 +30,7 @@ class RuleBackupHandler with BaseBackupHandler {
   @override
   Future<int> restore(Uint8List bytes, BackupVersionInfo version, Directory tempDir, RxBool cancel, OnRestoreDone onDone) async {
     final map = m2.deserialize(bytes) as Map<dynamic, dynamic>;
-    final rule = Rule.fromJson(map.cast<String, dynamic>());
+    final rule = ruleFromJson(map.cast<String, dynamic>());
     final rid = appConfig.snowflake.nextId();
     dbService.execSequentially(() {
       if (cancel.value) {

@@ -189,27 +189,25 @@ GitHub Actions also provides corresponding platform pipelines, see `.github/work
 
 ### Code Generation
 
-- Database code generation: `scripts/db_gen.bat`
+- Database code generation: `flutter pub run build_runner build`
 - App icon generation: `scripts/icon_gen.bat`
 
 ## Database Code Generation
 
-This project is based on `sqlite` and uses the [floor](https://pub.dev/packages/floor) framework.
-
-The database framework may also be migrated in the future.
+This project is based on `sqlite` and uses [drift](https://pub.dev/packages/drift) / [drift_flutter](https://pub.dev/packages/drift_flutter) for database access.
 
 Steps:
 + If you need to add a new table
-  + Add a new entity class in `lib/app/data/repository/entity/tables` and mark it with annotations
-  + Then add a new DAO interface in `lib/app/data/repository/dao` and mark it with annotations
-  + Then add the entity class to `tables` in `lib/app/services/db_service.dart`
-  + Then add the corresponding DAO getter field in `_AppDb` in `lib/app/services/db_service.dart`
-+ Modify SQL
-  + Modify the SQL on the corresponding DAO interface methods
+  + Add a Drift `Table` definition in `lib/app/data/repository/db/app_tables.dart`, keeping physical table and column names compatible when required
+  + Then register the table or view in `@DriftDatabase` in `lib/app/data/repository/db/app_database.dart`
+  + Then expose domain operations in `lib/app/data/repository/dao` or the corresponding Repository so business code does not scatter database query builders
++ Modify queries
+  + Prefer Drift ORM APIs, dynamic query builders, and Repository methods
+  + Use controlled raw SQL only for migrations, debug SQL, SQLite aggregations, or views when necessary
 + Modify version number
-  + If modifications are complete and you are preparing a release or PR, please update the version number in the `@Database` annotation on `_AppDb` in `lib/app/data/repository/db_service.dart`, usually by incrementing it
-  + Then add a version migration method in the `init` method in `lib/app/data/repository/db_service.dart`; note that DDL should be compatible with downgrade-then-upgrade cases, for example by using `IF NOT EXISTS` syntax or checking field existence
-+ Finally, run `cd scripts` to enter the script directory, then execute `db_gen.bat` for code generation
+  + Only update the database version constant in `lib/app/data/repository/db/app_tables.dart` when the physical SQLite schema changes
+  + Then add the corresponding migration in `lib/app/data/repository/db/app_database.dart`; note that DDL should be compatible with downgrade-then-upgrade cases, for example by using `IF NOT EXISTS` syntax or checking field existence
++ Finally, run `flutter pub run build_runner build` for code generation
 
 
 ## Optional: Self-host Notification Service (for Object Storage Relay)

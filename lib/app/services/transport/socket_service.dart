@@ -891,14 +891,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         dev.sendData(MsgType.appInfo, appInfo.toJson());
         break;
       case MsgType.appInfo:
-        final appInfo = AppInfo.fromJson(msg.data);
+        final sourceAppInfo = AppInfo.fromJson(msg.data);
         final sourceService = Get.find<ClipboardSourceService>();
 
         final ruleController = Get.find<RulesController>();
-        final notExists = ruleController.isNotExistAppInfo(appInfo.appId);
-        if(appInfo.id == 0){
-          appInfo.id = appInfo.appId.hash64;
-        }
+        final notExists = ruleController.isNotExistAppInfo(sourceAppInfo.appId);
+        final appInfo = sourceAppInfo.id == 0 ? sourceAppInfo.copyWith(id: sourceAppInfo.appId.hash64) : sourceAppInfo;
         final success = await sourceService.addOrUpdate(appInfo);
         if(success && notExists){
           ruleController.update();
@@ -1552,6 +1550,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
               type: dev.type,
               internalAddress: (address?.isInternalIPv4 ?? false) ? address : null,
               address: address,
+              isPaired: true,
             ),
         localIsPaired: true,
         remoteIsPaired: true,
@@ -1603,6 +1602,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
               devName: dev.name,
               uid: uid,
               type: dev.type,
+              isPaired: false,
         ),
         localIsPaired: false,
         remoteIsPaired: false,

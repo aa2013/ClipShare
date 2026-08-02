@@ -189,27 +189,25 @@ GitHub Actions 也提供了对应平台流水线，见 `.github/workflows/`：
 
 ### 代码生成
 
-- 数据库代码生成：`scripts/db_gen.bat`
+- 数据库代码生成：`flutter pub run build_runner build`
 - 应用图标生成：`scripts/icon_gen.bat`
 
 ## 数据库代码生成
 
-本项目基于 `sqlite`, 使用 [floor](https://pub.dev/packages/floor) 框架
-
-后续也可能迁移数据库框架
+本项目基于 `sqlite`, 使用 [drift](https://pub.dev/packages/drift) / [drift_flutter](https://pub.dev/packages/drift_flutter) 管理数据库访问。
 
 步骤：
 + 若需新增表
-  + 在 `lib/app/data/repository/entity/tables` 新增实体类，使用注解标记
-  + 然后在 `lib/app/data/repository/dao` 新增Dao接口，使用注解标记
-  + 然后在 `lib/app/services/db_service.dart` 中的 `tables` 添加实体类
-  + 然后在 `lib/app/services/db_service.dart` 中的 `_AppDb` 添加对应的 Dao 的 getter 字段
-+ 修改SQL
-  + 修改对应 Dao 中的接口上的 SQL
+  + 在 `lib/app/data/repository/db/app_tables.dart` 新增 Drift `Table` 定义，并保持物理表名、字段名与兼容要求一致
+  + 然后在 `lib/app/data/repository/db/app_database.dart` 的 `@DriftDatabase` 中注册表或视图
+  + 然后在 `lib/app/data/repository/dao` 或对应 Repository 中封装领域动作，避免业务层散落数据库查询构造器
++ 修改查询
+  + 优先使用 Drift ORM API、动态 query builder 和 Repository 方法
+  + 仅在 migration、调试 SQL、SQLite 聚合或视图等必要场景集中使用受控裸 SQL
 + 修改版本号
-  + 若已修改完成且准备发布版本或者pr，请修改 `lib/app/data/repository/db_service.dart` 中的 `_AppDb` 上的 `@Database` 注解中的版本号，通常递增即可
-  + 然后在 `lib/app/data/repository/db_service.dart` 中的 `init` 方法增加版本迁移方法，注意 DDL 要兼容降级再升级的情况，如增加 `IF NOT EXISTS` 语法或判断字段存在性
-+ 最后 `cd scripts` 进入脚本目录，执行 `db_gen.bat` 进行代码生成即可
+  + 只有 SQLite 物理结构变化时才修改 `lib/app/data/repository/db/app_tables.dart` 中的数据库版本常量
+  + 然后在 `lib/app/data/repository/db/app_database.dart` 中补充对应 migration，注意 DDL 要兼容降级再升级的情况，如增加 `IF NOT EXISTS` 语法或判断字段存在性
++ 最后执行 `flutter pub run build_runner build` 进行代码生成即可
 
 
 ## 可选：自建通知服务（对象存储中转配套）

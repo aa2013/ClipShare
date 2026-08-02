@@ -5,6 +5,16 @@ import 'package:get/get.dart';
 
 class LicensesController extends GetxController {
   final licenses = [
+    // {
+    //   "name": "flutter_riverpod",
+    //   "license": "MIT",
+    //   "url": "https://pub.dev/packages/flutter_riverpod",
+    // },
+    // {
+    //   "name": "riverpod_annotation",
+    //   "license": "MIT",
+    //   "url": "https://pub.dev/packages/riverpod_annotation",
+    // },
     {
       "name": "super_drag_and_drop",
       "license": "MIT",
@@ -111,9 +121,14 @@ class LicensesController extends GetxController {
       "url": "https://pub.dev/packages/get",
     },
     {
-      "name": "floor",
-      "license": "Apache-2.0",
-      "url": "https://pub.dev/packages/floor",
+      "name": "drift",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/drift",
+    },
+    {
+      "name": "drift_flutter",
+      "license": "MIT",
+      "url": "https://pub.dev/packages/drift_flutter",
     },
     {
       "name": "sqflite",
