@@ -346,11 +346,6 @@ class LicensesController extends GetxController {
       "url": "https://pub.dev/packages/easy_cron",
     },
     {
-      "name": "desktop_drop",
-      "license": "Apache-2.0",
-      "url": "https://pub.dev/packages/desktop_drop",
-    },
-    {
       "name": "animated_snack_bar",
       "license": "GPL-3.0",
       "url": "https://pub.dev/packages/animated_snack_bar",

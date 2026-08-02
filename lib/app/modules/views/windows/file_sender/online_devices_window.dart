@@ -5,6 +5,7 @@ import 'package:clipshare/app/data/enums/channelMethods/multi_window_method.dart
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
+import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/modules/views/windows/file_sender/online_devices_page.dart';
@@ -14,7 +15,6 @@ import 'package:clipshare/app/services/multi_window_dispatch_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/global.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';

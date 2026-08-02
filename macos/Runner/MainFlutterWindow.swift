@@ -3,7 +3,6 @@ import FlutterMacOS
 import LaunchAtLogin
 import desktop_multi_window
 import window_manager
-import desktop_drop
 import irondash_engine_context
 import super_native_extensions
 
@@ -34,7 +33,6 @@ class MainFlutterWindow: NSWindow {
     FlutterMultiWindowPlugin.setOnWindowCreatedCallback { controller in
         // 多窗口引擎不会自动复用主窗口插件注册表，需要把子窗口依赖的原生插件补注册。
         WindowManagerPlugin.register(with: controller.registrar(forPlugin: "WindowManagerPlugin"))
-        DesktopDropPlugin.register(with: controller.registrar(forPlugin: "DesktopDropPlugin"))
         IrondashEngineContextPlugin.register(with: controller.registrar(forPlugin: "IrondashEngineContextPlugin"))
         SuperNativeExtensionsPlugin.register(with: controller.registrar(forPlugin: "SuperNativeExtensionsPlugin"))
     }

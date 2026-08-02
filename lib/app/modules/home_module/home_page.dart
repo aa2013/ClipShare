@@ -5,7 +5,6 @@ import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/modules/history_module/history_controller.dart';
 import 'package:clipshare/app/modules/home_module/home_controller.dart';
-import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:clipshare/app/modules/sync_file_module/sync_file_controller.dart';
 import 'package:clipshare/app/modules/views/drag_and_send_file_page.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
@@ -13,11 +12,11 @@ import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/history_sync_progress_service.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/services/transport/socket_service.dart';
+import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/widgets/base/custom_keyboard_listener.dart';
-import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/base/multi_drawer.dart';
 import 'package:clipshare/app/widgets/base/my_navigation_rail.dart';
 import 'package:clipshare/app/widgets/blur_background.dart';
@@ -25,8 +24,8 @@ import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/drag_file_mask.dart';
 import 'package:clipshare/app/widgets/filter/history_filter.dart';
 import 'package:clipshare/app/widgets/loading_dots.dart';
+import 'package:clipshare/app/widgets/native_file_drop_region.dart';
 import 'package:clipshare/app/widgets/segment_text_view.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -72,10 +71,23 @@ class HomePage extends GetView<HomeController> {
           ),
         ],
         child: Obx(
-          () => Stack(
-            children: [
-              DropTarget(
-              child: Obx(
+          () => NativeFileDropRegion(
+            onDragEntered: () {
+              controller.dragging.value = true;
+              syncFileController.tabController.index = 2;
+            },
+            onDragExited: () {
+              controller.dragging.value = false;
+            },
+            onDropDone: (files) {
+              final syncFilePageIndex = controller.pages.indexWhere((item) => item is SyncFilePage);
+              controller.index = syncFilePageIndex;
+              controller.showPendingItemsDetail.value = true;
+              pendingFileService.addDropItems(files);
+            },
+            child: Stack(
+              children: [
+              Obx(
                 () => Scaffold(
                   key: controller.homeScaffoldKey,
                   appBar: !controller.isBigScreen
@@ -158,7 +170,7 @@ class HomePage extends GetView<HomeController> {
                          );
                          if(Platform.isMacOS){
                            return Padding(
-                             padding: 24.insetT,
+                             padding: Constants.macOSSafeAreaHeight.insetT,
                              child: widget,
                            );
                          }
@@ -189,21 +201,7 @@ class HomePage extends GetView<HomeController> {
                       : null,
                 ),
               ),
-              onDragEntered: (detail) {
-                controller.dragging.value = true;
-                syncFileController.tabController.index = 2;
-              },
-              onDragExited: (detail) {
-                controller.dragging.value = false;
-              },
-              onDragDone: (detail) {
-                final syncFilePageIndex = controller.pages.indexWhere((item) => item is SyncFilePage);
-                controller.index = syncFilePageIndex;
-                controller.showPendingItemsDetail.value = true;
-                pendingFileService.addDropItems(detail.files);
-              },
-            ),
-            Obx(
+              Obx(
               () => Visibility(
                 visible: controller.dragging.value && !controller.showPendingItemsDetail.value,
                 child: Positioned.fill(
@@ -297,7 +295,8 @@ class HomePage extends GetView<HomeController> {
               ),
             ),
               Obx(() => MultiDrawer(controller: controller.drawer, width: controller.drawerWidth)),
-            ],
+              ],
+            ),
           ),
         ),
       ),

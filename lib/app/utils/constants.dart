@@ -81,6 +81,8 @@ class Constants {
   //默认卡片边框颜色
   static const defaultCardBorderColor = Color.fromARGB(255, 236, 237, 243);
 
+  static const double macOSSafeAreaHeight = 25;
+
   //默认标签规则
   static String get defaultTagRules => jsonEncode(
     {

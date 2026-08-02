@@ -1,15 +1,16 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/services/pending_file_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:clipshare/app/widgets/native_file_drop_region.dart';
 import 'package:clipshare/app/widgets/dragAndSendFiles/online_devices.dart';
 import 'package:clipshare/app/widgets/dragAndSendFiles/pending_file_list.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -80,10 +81,10 @@ class _FileSenderPageState extends State<FileSenderPage> {
                 ),
               ),
               Expanded(
-                child: DropTarget(
+                child: NativeFileDropRegion(
                   child: Obx(() => buildPendingItems()),
-                  onDragDone: (detail) {
-                    pendingFileService.addDropItems(detail.files);
+                  onDropDone: (files) {
+                    pendingFileService.addDropItems(files);
                   },
                 ),
               ),

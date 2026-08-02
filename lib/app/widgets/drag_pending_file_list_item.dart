@@ -1,9 +1,8 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
-import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
 class DragPendingFileListItem extends StatelessWidget {
@@ -86,3 +85,4 @@ class DragPendingFileListItem extends StatelessWidget {
     );
   }
 }
+
