@@ -300,7 +300,7 @@ class _PreviewPageState extends State<PreviewPage> {
                                       transformationController: _controller,
                                       child: renderImageItem(idx, ct),
                                     ),
-                                    onTap: (){
+                                    onTap: () {
                                       setState(() {
                                         _showInfo = !_showInfo;
                                       });
@@ -417,23 +417,33 @@ class _PreviewPageState extends State<PreviewPage> {
 
   ///右键菜单
   void showMenu(String imgPath, Offset? position) {
+    final isAndroidDataPath = Platform.isAndroid && imgPath.startsWith(Constants.androidDataPath);
+    final isIOS = Platform.isIOS;
+    final save2Pictures = appConfig!.saveToPictures;
     final menu = ContextMenu(
       entries: [
-        if ((Platform.isAndroid && imgPath.startsWith(Constants.androidDataPath) && !appConfig!.saveToPictures || (Platform.isIOS && !appConfig!.saveToPictures) ))
+        if (isAndroidDataPath || (isIOS && !save2Pictures))
           MenuItem(
             label: TranslationKey.saveToAlbum.tr,
             icon: Icons.save_alt,
             onSelected: () async {
-              if(Platform.isAndroid){
+              if (Platform.isAndroid) {
                 //如果没有权限则请求
                 if (!(await PermissionHelper.testAndroidStoragePerm())) {
                   await PermissionHelper.reqAndroidStoragePerm();
                 }
-                final file = File(imgPath);
-                final fileName = file.fileName;
-                final newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+                final originFile = File(imgPath);
+                final fileName = originFile.fileName;
+                // 根据配置决定新路径
+                final String newPath;
+                if (save2Pictures) {
+                  newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
+                } else {
+                  newPath = "${appConfig!.imageStorePath}/$fileName";
+                }
                 try {
                   await File(newPath).parent.create(recursive: true);
+                  await originFile.copy(newPath);
                   Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
                   final androidChannelService = Get.find<AndroidChannelService>();
                   androidChannelService.notifyMediaScan(newPath);
@@ -442,8 +452,8 @@ class _PreviewPageState extends State<PreviewPage> {
                   Global.showSnackBarWarn(text: TranslationKey.saveFailed.tr, context: context);
                 }
               } else {
-                if(await PermissionHelper.checkIOSPhotoPermission()){
-                  if(!await PermissionHelper.reqIOSPhotoPermission()){
+                if (await PermissionHelper.checkIOSPhotoPermission()) {
+                  if (!await PermissionHelper.reqIOSPhotoPermission()) {
                     Global.showTipsDialog(context: Get.context!, text: TranslationKey.noPhotoPermission.tr);
                     return;
                   }
@@ -452,11 +462,10 @@ class _PreviewPageState extends State<PreviewPage> {
                   final imageSaver = ImageGallerySaver();
                   await imageSaver.saveImage(bytes);
                   Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
-                }else{
+                } else {
                   Global.showTipsDialog(context: Get.context!, text: TranslationKey.noPhotoPermission.tr);
                 }
               }
-
             },
           ),
         if (PlatformExt.isDesktop)
