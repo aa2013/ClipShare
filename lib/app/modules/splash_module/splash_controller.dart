@@ -355,7 +355,7 @@ class SplashController extends GetxController {
             if (v == null || v <= 0) return;
             final historyController = Get.find<HistoryController>();
             historyController.refreshData();
-            var opRecord = OperationRecord.fromSimple(
+            var opRecord = newOperationRecord(
               Module.historyTop,
               OpMethod.update,
               id,
@@ -369,7 +369,7 @@ class SplashController extends GetxController {
           final historyController = Get.find<HistoryController>();
           historyController.refreshData();
           //添加删除记录
-          var opRecord = OperationRecord.fromSimple(
+          var opRecord = newOperationRecord(
             Module.history,
             OpMethod.delete,
             id,
@@ -399,7 +399,7 @@ class SplashController extends GetxController {
               final historyController = Get.find<HistoryController>();
               historyController.updateData(
                 (history) => history.id == id,
-                (history) => history.top = top,
+                (history) => history.copyWith(top: top),
                 true,
               );
               return true;

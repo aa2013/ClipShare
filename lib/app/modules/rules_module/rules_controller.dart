@@ -410,7 +410,7 @@ class RulesController extends GetxController with WidgetsBindingObserver {
     }
     for (var saveData in [...saveList, ...updateList]) {
       await opRecordDao.addAndNotify(
-        OperationRecord.fromSimple(Module.rule, OpMethod.add, saveData.id),
+        newOperationRecord(Module.rule, OpMethod.add, saveData.id),
       );
     }
     //保存成功

@@ -13,8 +13,9 @@ import 'package:clipshare/app/services/device_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Value;
 
 class DeviceCard extends StatefulWidget {
   final Device? dev;
@@ -372,12 +373,12 @@ class _DeviceCardState extends State<DeviceCard> {
               onPressed: () async {
                 final navigator = Navigator.of(context);
                 final name = textController.text;
-                final res = await devService.addOrUpdate(dev..customName = name);
+                final updatedDev = dev.copyWith(customName: Value(name));
+                final res = await devService.addOrUpdate(updatedDev);
                 if (!res) {
                   return;
                 }
-                widget.dev!.customName = name;
-                final opRecord = OperationRecord.fromSimple(
+                final opRecord = newOperationRecord(
                   Module.device,
                   OpMethod.update,
                   dev.guid,

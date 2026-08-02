@@ -92,7 +92,7 @@ class RuleItem implements Comparable<RuleItem> {
         tags: rule.regexTags.split(",").where((e) => e.isNotNullAndEmpty).toSet(),
         preventSync: rule.regexIsSyncDisabled,
         isFinal: rule.regexIsFinalRule,
-        mode: WhiteBlackMode.values.byName(rule.regexWhiteBlackMode)
+        mode: WhiteBlackMode.values.byName(rule.regexWhiteBlackMode ?? WhiteBlackMode.defaultMode.name)
       ),
       script: RuleScriptContent(
         language: RuleScriptLanguage.getValue(rule.scriptLanguage),

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
@@ -19,7 +20,8 @@ import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:get/get.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:get/get.dart' hide Value;
 
 class MissingDataSyncHandler {
   static const tag = "SyncDataHandler";
@@ -31,7 +33,7 @@ class MissingDataSyncHandler {
     final syncOutdateLimitTimeSeconds = max(0, appConfig.syncOutdateLimitTime);
     final timeZoneOffsetSeconds = appConfig.timeZoneOffsetSeconds;
     final syncRecords = await dbService.opRecordDao.getSyncRecord(appConfig.userId, targetDev.guid, devId, syncOutdateLimitTimeSeconds, timeZoneOffsetSeconds);
-    final notIncludesAppInfos = sourceService.appInfos.where((item) => item.devId == devId && !syncedAppIds.contains(item.appId)).map((item) => OperationRecord.fromSimple(Module.appInfo, OpMethod.add, item.id)).toList();
+    final notIncludesAppInfos = sourceService.appInfos.where((item) => item.devId == devId && !syncedAppIds.contains(item.appId)).map((item) => newOperationRecord(Module.appInfo, OpMethod.add, item.id)).toList();
     final lst = [...notIncludesAppInfos, ...syncRecords];
     for (var i = 0; i < lst.length; i++) {
       var item = lst[i];
@@ -68,9 +70,7 @@ class MissingDataSyncHandler {
           if (opRecord.method != OpMethod.delete) {
             shouldRemove = true;
           } else {
-            var empty = Device.empty();
-            empty.guid = id;
-            empty.uid = appConfig.userId;
+            final empty = emptyDevice(guid: id, uid: appConfig.userId);
             result["data"] = empty.toJson();
           }
         } else {
@@ -83,8 +83,7 @@ class MissingDataSyncHandler {
           if (opRecord.method != OpMethod.delete) {
             shouldRemove = true;
           } else {
-            var empty = HistoryTag.empty();
-            empty.id = int.parse(id);
+            final empty = emptyHistoryTag(id: int.parse(id));
             result["data"] = empty.toJson();
           }
         } else {
@@ -97,8 +96,7 @@ class MissingDataSyncHandler {
           if (opRecord.method != OpMethod.delete) {
             shouldRemove = true;
           } else {
-            var empty = History.empty();
-            empty.id = int.parse(id);
+            final empty = emptyHistory(id: int.parse(id));
             result["data"] = empty.toJson();
           }
         } else {
@@ -124,9 +122,7 @@ class MissingDataSyncHandler {
           }
         } else {
           //更新置顶状态，将内容设为空，提高传输效率
-          history.content = "";
-          history.extracted = null;
-          result["data"] = history.toJson();
+          result["data"] = history.copyWith(content: '', extracted: const Value(null)).toJson();
         }
         break;
       case Module.rule:
@@ -135,8 +131,7 @@ class MissingDataSyncHandler {
           if (opRecord.method != OpMethod.delete) {
             shouldRemove = true;
           } else {
-            final empty = Rule.empty();
-            empty.id = int.parse(id);
+            final empty = emptyRule().copyWith(id: int.parse(id));
             result["data"] = empty.toJson();
           }
         } else {
@@ -149,8 +144,7 @@ class MissingDataSyncHandler {
           if (opRecord.method != OpMethod.delete) {
             shouldRemove = true;
           } else {
-            final empty = ScriptModule.empty();
-            empty.moduleName = id;
+            final empty = emptyScriptModule().copyWith(moduleName: id);
             result["data"] = empty.toJson();
           }
         } else {
@@ -165,9 +159,7 @@ class MissingDataSyncHandler {
           }
         } else {
           //更新来源，将内容设为空，提高传输效率
-          history.content = "";
-          history.extracted = null;
-          result["data"] = history.toJson();
+          result["data"] = history.copyWith(content: '', extracted: const Value(null)).toJson();
         }
         break;
       case Module.appInfo:
@@ -175,7 +167,7 @@ class MissingDataSyncHandler {
         if (appInfo == null) {
           shouldRemove = true;
         } else {
-          result["data"] = appInfo.toString();
+          result["data"] = jsonEncode(appInfo.toJson());
         }
         break;
       default:

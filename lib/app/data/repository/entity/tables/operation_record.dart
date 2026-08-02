@@ -3,157 +3,48 @@ import 'dart:convert';
 import 'package:clipshare/app/data/enums/module.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/services/config_service.dart';
-import 'package:floor/floor.dart';
 import 'package:get/get.dart';
 
-///
-/// 操作记录表
-@Entity(
-  indices: [
-    Index(value: ['uid', "module", "method"]),
-    Index(value: ["moduleEn", "method"]),
-  ],
-)
-class OperationRecord {
-  ///主键 id
-  @primaryKey
-  late int id;
+import '../../db/app_database.dart';
 
-  ///用户 id
-  late int uid;
+export '../../db/app_database.dart' show OperationRecord;
 
-  ///记录来自哪台设备
-  late String devId;
-
-  ///操作模块
-  @TypeConverters([ModuleTypeConverter])
-  late Module module;
-
-  ///操作模块(枚举名称)
-  String? moduleEn;
-
-  /// 操作方法
-  @TypeConverters([OpMethodTypeConverter])
-  late OpMethod method;
-
-  /// history的主键
-  late String data;
-
-  /// 操作时间
-  String time = DateTime.now().toString();
-
-  /// 存储服务同步
-  /// true 为已向存储服务同步
-  /// false 为未同步（如网络问题同步失败）
-  /// null 为以前还未启用存储服务时的数据
-  bool? storageSync;
-
-  OperationRecord({
-    required this.id,
-    required this.uid,
-    required this.devId,
-    required this.module,
-    required this.moduleEn,
-    required this.method,
-    required this.data,
-    this.storageSync,
-  });
-
-  OperationRecord.fromSimple(this.module, this.method, Object data) {
-    final appConfig = Get.find<ConfigService>();
-    id = appConfig.snowflake.nextId();
-    uid = appConfig.userId;
-    devId = appConfig.device.guid;
-    moduleEn = module.name;
-    this.data = data.toString();
-  }
-
-  static OperationRecord fromJson(map) {
-    var id = map["id"];
-    var uid = map["uid"];
-    var module = Module.getValue((map["module"]));
-    var method = OpMethod.getValue(map["method"]);
-    var data = map["data"];
-    var time = map["time"];
-    var devId = map["devId"];
-    var storageSync = map["storageSync"];
-    var record = OperationRecord(
-      id: id,
-      uid: uid,
-      devId: devId,
-      module: module,
-      moduleEn: module.name,
-      method: method,
-      data: data,
-      storageSync: storageSync,
-    );
-    record.time = time;
-    return record;
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "uid": uid,
-      "devId": devId,
-      "module": module.moduleName,
-      "moduleEn": module.name,
-      "method": method.name,
-      "data": data,
-      "time": time,
-      "storageSync": storageSync,
-    };
-  }
-
-  OperationRecord copyWith({
-    int? id,
-    int? uid,
-    String? devId,
-    Module? module,
-    OpMethod? method,
-    String? data,
-    bool? storageSync,
-  }) {
-    return OperationRecord(
-      id: id ?? this.id,
-      uid: uid ?? this.uid,
-      devId: devId ?? this.devId,
-      module: module ?? this.module,
-      moduleEn: (module ?? this.module).name,
-      method: method ?? this.method,
-      data: data ?? this.data,
-      storageSync: storageSync ?? this.storageSync,
-    );
-  }
-
-  @override
-  String toString() {
-    return jsonEncode(toJson());
-  }
+/// 构造本机操作记录，保持旧同步记录的雪花 id、用户、设备和枚举落库语义。
+OperationRecord newOperationRecord(Module module, OpMethod method, Object data) {
+  final appConfig = Get.find<ConfigService>();
+  return OperationRecord(
+    id: appConfig.snowflake.nextId(),
+    uid: appConfig.userId,
+    devId: appConfig.device.guid,
+    module: module,
+    moduleEn: module.name,
+    method: method,
+    data: _operationDataToString(data),
+    time: DateTime.now().toString(),
+    storageSync: null,
+  );
 }
 
-// 枚举类型到String的转换器
-class OpMethodTypeConverter extends TypeConverter<OpMethod, String> {
-  @override
-  OpMethod decode(String name) {
-    return OpMethod.getValue(name);
-  }
-
-  @override
-  String encode(OpMethod value) {
-    return value.name;
-  }
+/// 从同步/备份 JSON 还原操作记录，兼容 module 使用中文名或枚举名的旧载荷。
+OperationRecord operationRecordFromJson(Map<String, dynamic> map) {
+  final module = Module.getValue(map['module']);
+  return OperationRecord(
+    id: map['id'],
+    uid: map['uid'],
+    devId: map['devId'],
+    module: module,
+    moduleEn: map['moduleEn'] ?? module.name,
+    method: OpMethod.getValue(map['method']),
+    data: map['data'],
+    time: map['time'],
+    storageSync: map['storageSync'],
+  );
 }
 
-// 枚举类型到String的转换器
-class ModuleTypeConverter extends TypeConverter<Module, String> {
-  @override
-  Module decode(String name) {
-    return Module.getValue(name);
+/// 普通标量继续用 toString，复杂对象通过 toJson 序列化，避免 Drift 生成的 toString 进入同步载荷。
+String _operationDataToString(Object data) {
+  if (data is String || data is num || data is bool) {
+    return data.toString();
   }
-
-  @override
-  String encode(Module value) {
-    return value.moduleName;
-  }
+  return jsonEncode(data);
 }

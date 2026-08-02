@@ -15,8 +15,9 @@ import 'package:clipshare/app/widgets/clip/clip_tag_row_view.dart';
 import 'package:clipshare/app/widgets/clip/clipboard_source_chip.dart';
 import 'package:clipshare/app/widgets/condition_widget.dart';
 import 'package:clipshare/app/widgets/rounded_chip.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide Value;
 
 class ClipboardDetailDrawer extends StatefulWidget {
   final ClipData clipData;
@@ -103,23 +104,26 @@ class _ClipboardDetailDrawerState extends State<ClipboardDetailDrawer> {
                                   text: TranslationKey.confirmModifyContent.tr,
                                   showCancel: true,
                                   onOk: () {
-                                    widget.clipData.data.content = editController.text;
-                                    widget.clipData.data.updateTime = DateTime.now().toString();
-                                    dbService.historyDao.updateHistory(widget.clipData.data).then((res) {
+                                    final updatedHistory = widget.clipData.data.copyWith(
+                                      content: editController.text,
+                                      updateTime: Value(DateTime.now().toString()),
+                                    );
+                                    widget.clipData.data = updatedHistory;
+                                    dbService.historyDao.updateHistory(updatedHistory).then((res) {
                                       final success = res == 1;
                                       if (success) {
                                         setState(() {
                                           modifyMode = false;
                                         });
-                                        var opRecord = OperationRecord.fromSimple(
+                                        var opRecord = newOperationRecord(
                                           Module.history,
                                           OpMethod.update,
                                           widget.clipData.data.id.toString(),
                                         );
                                         dbService.opRecordDao.addAndNotify(opRecord);
                                         Global.showSnackBarSuc(text: TranslationKey.updateSuccess.tr, context: context);
-                                        whereFunc(History item) => item.id == widget.clipData.data.id;
-                                        callbackFunc(History item) => item.content = editController.text;
+                                        whereFunc(History item) => item.id == updatedHistory.id;
+                                        callbackFunc(History item) => updatedHistory;
                                         historyController.updateData(whereFunc, callbackFunc);
                                       } else {
                                         Global.showSnackBarSuc(text: TranslationKey.updateFailed.tr, context: context);

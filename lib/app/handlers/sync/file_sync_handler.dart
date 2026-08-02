@@ -223,6 +223,7 @@ class FileSyncHandler {
             content: path,
             type: HistoryContentType.file.value,
             size: fileSize,
+            top: false,
             sync: true,
           );
           final historyController = Get.find<HistoryController>();
@@ -502,6 +503,7 @@ class FileSyncHandler {
           content: filePath,
           type: HistoryContentType.file.value,
           size: size,
+          top: false,
           sync: true,
         );
         final historyController = Get.find<HistoryController>();

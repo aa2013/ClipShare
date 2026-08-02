@@ -20,7 +20,7 @@ class Devices {
     final appConfig = Get.find<ConfigService>();
     return id == appConfig.device.guid
         ? appConfig.device
-        : Device.empty(devName: TranslationKey.unknown.tr);
+        : emptyDevice(devName: TranslationKey.unknown.tr);
   }
 
   String getName(String id) {

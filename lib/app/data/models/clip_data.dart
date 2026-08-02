@@ -9,23 +9,12 @@ import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:flutter/widgets.dart';
 
-class ClipData {
+class ClipData implements Comparable<ClipData> {
   ClipData(this._data) {
-    if (isNotification) {
-      try {
-        var json = jsonDecode(_data.content);
-        _notificationContent = json;
-        if (json["img"] != null) {
-          _notificationImage = base64Decode(json["img"]);
-        }
-      } catch (err, stack) {
-        debugPrint(err.toString());
-        debugPrintStack(stackTrace: stack);
-      }
-    }
+    _refreshNotificationCache();
   }
 
-  final History _data;
+  History _data;
 
   Uint8List? _notificationImage;
 
@@ -48,6 +37,12 @@ class ClipData {
   }
 
   History get data => _data;
+
+  /// 替换展示包装中的历史行对象，供 Drift 不可变数据类做局部 UI 更新。
+  set data(History value) {
+    _data = value;
+    _refreshNotificationCache();
+  }
 
   bool get isImage => _data.type == HistoryContentType.image.value;
 
@@ -78,6 +73,24 @@ class ClipData {
 
   bool get hasExtracted => _data.extracted.isNotNullAndEmpty;
 
+  /// 通知类型的内容需要预解析图片和文本，替换数据时必须同步刷新缓存。
+  void _refreshNotificationCache() {
+    _notificationImage = null;
+    _notificationContent = null;
+    if (isNotification) {
+      try {
+        var json = jsonDecode(_data.content);
+        _notificationContent = json;
+        if (json["img"] != null) {
+          _notificationImage = base64Decode(json["img"]);
+        }
+      } catch (err, stack) {
+        debugPrint(err.toString());
+        debugPrintStack(stackTrace: stack);
+      }
+    }
+  }
+
   String getTimeStr() {
     return DateTime.parse(data.time).simpleStr;
   }
@@ -91,14 +104,25 @@ class ClipData {
   }
 
   @override
-  int get hashCode => _data.hashCode;
+  int compareTo(ClipData other) {
+    //置顶优先，同置顶状态下按 id 降序
+    if (data.top && !other.data.top) {
+      return -1;
+    } else if (!data.top && other.data.top) {
+      return 1;
+    }
+    return other.data.id.compareTo(data.id);
+  }
+
+  @override
+  int get hashCode => _data.id.hashCode;
 
   @override
   bool operator ==(Object other) {
     if (other is History) {
-      return _data == other;
+      return _data.id == other.id;
     } else if (other is ClipData) {
-      return _data == other._data;
+      return _data.id == other._data.id;
     }
     return false;
   }

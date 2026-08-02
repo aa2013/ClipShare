@@ -71,7 +71,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
             var isTop = !clip.data.top;
             widget.onTopChanged.call(id, isTop); // 修改这里
             setState(() {
-              clip.data.top = isTop;
+              clip.data = clip.data.copyWith(top: isTop);
             });
           },
         ),

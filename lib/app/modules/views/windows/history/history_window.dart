@@ -254,7 +254,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
             (json) {
               var data = jsonDecode(json);
               var devInfos = data["devInfos"] as Map<String, dynamic>;
-              var lst = History.fromJsonList(data["list"]);
+              var lst = historyListFromJson(data["list"]);
               var res = List<CompactClipData>.empty(growable: true);
               for (var history in lst) {
                 res.add(

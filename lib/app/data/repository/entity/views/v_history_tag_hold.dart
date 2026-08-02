@@ -1,15 +1,3 @@
-import 'package:floor/floor.dart';
-
-@DatabaseView("""
-select t1.* ,(t2.hisId is not null) as hasTag 
-from (
-  SELECT distinct h.id as hisId,tag.tagName
-  FROM
-    history as h,historyTag as tag
-) t1
-LEFT JOIN ( SELECT * FROM HistoryTag ) t2
-ON t2.hisId = t1.hisId and t2.tagName = t1.tagName
-""")
 class VHistoryTagHold implements Comparable<VHistoryTagHold> {
   int hisId;
   String tagName;

@@ -892,14 +892,12 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         dev.sendData(MsgType.appInfo, appInfo.toJson());
         break;
       case MsgType.appInfo:
-        final appInfo = AppInfo.fromJson(msg.data);
+        final sourceAppInfo = AppInfo.fromJson(msg.data);
         final sourceService = Get.find<ClipboardSourceService>();
 
         final ruleController = Get.find<RulesController>();
-        final notExists = ruleController.isNotExistAppInfo(appInfo.appId);
-        if (appInfo.id == 0) {
-          appInfo.id = appInfo.appId.hash64;
-        }
+        final notExists = ruleController.isNotExistAppInfo(sourceAppInfo.appId);
+        final appInfo = sourceAppInfo.id == 0 ? sourceAppInfo.copyWith(id: sourceAppInfo.appId.hash64) : sourceAppInfo;
         final success = await sourceService.addOrUpdate(appInfo);
         if (success && notExists) {
           ruleController.update();
@@ -1546,8 +1544,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       final protocol = (address?.isInternalIPv4 ?? false) ? TransportProtocol.direct : TransportProtocol.server;
       final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
       await devService.confirmPairingState(
-        device:
-            dbDev ??
+        device: dbDev ??
             Device(
               guid: dev.guid,
               devName: dev.name,
@@ -1555,6 +1552,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
               type: dev.type,
               internalAddress: (address?.isInternalIPv4 ?? false) ? address : null,
               address: address,
+              isPaired: true,
             ),
         localIsPaired: true,
         remoteIsPaired: true,
@@ -1600,14 +1598,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (updatePairingState) {
       final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
       await devService.confirmPairingState(
-        device:
-            dbDev ??
+        device: dbDev ??
             Device(
               guid: dev.guid,
               devName: dev.name,
               uid: uid,
               type: dev.type,
-            ),
+              isPaired: false,
+        ),
         localIsPaired: false,
         remoteIsPaired: false,
         protocol: session?.socket.isForwardMode ?? false ? TransportProtocol.server : TransportProtocol.direct,
@@ -1907,7 +1905,6 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
     }
   }
-
   /// 发送组播消息
   void sendMulticastMsg(
     MsgType key,
@@ -1942,7 +1939,9 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     int port = 0,
   ]) async {
     const ipv4Type = InternetAddressType.IPv4;
-    final interfaces = (await NetworkUtil.listInterfaces()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name)).where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
+    final interfaces = (await NetworkUtil.listInterfaces())
+        .where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name))
+        .where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
 
     final sockets = <RawDatagramSocket>[];
 

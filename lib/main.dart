@@ -62,7 +62,7 @@ Future<void> main(List<String> args) async {
           //子窗口
           final windowId = int.parse(args[1]);
           multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
-          Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
+          initializeSelfDeviceGuid(multiWindowArgs.selfDeviceGuid);
           switch (multiWindowArgs.tag) {
             case MultiWindowTag.history:
               // 历史弹窗不激活、不抢占前台焦点，让用户打开弹窗后仍可在原应用中继续输入。

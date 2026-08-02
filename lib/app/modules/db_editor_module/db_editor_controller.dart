@@ -48,7 +48,7 @@ class DbEditorController extends GetxController {
       // 清空已有表格
       _tableColumns.value = [];
       _tableRows.value = [];
-      List<Map<String, Object?>> list = await dbService.dbExecutor.rawQuery(editor.text);
+      List<Map<String, Object?>> list = await dbService.rawQuery(editor.text);
       appConfig.setSQLEditContent(editor.text);
       if (list.isEmpty) {
         return;

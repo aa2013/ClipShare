@@ -4,7 +4,8 @@ import 'package:clipshare/app/listeners/device_remove_listener.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/services/db_service.dart';
 import 'package:clipshare/app/utils/log.dart';
-import 'package:get/get.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:get/get.dart' hide Value;
 
 class DeviceService extends GetxService {
   static const tag = "DeviceService";
@@ -34,7 +35,7 @@ class DeviceService extends GetxService {
     if (_devices.containsKey(id)) {
       return _devices[id]!;
     }
-    return id == _appConfig.device.guid ? _appConfig.device : Device.unknown;
+    return id == _appConfig.device.guid ? _appConfig.device : unknownDevice();
   }
 
   String getName(String id) {
@@ -99,8 +100,8 @@ class DeviceService extends GetxService {
     final merged = (existing ?? device).copyWith(
       devName: device.devName.isEmpty ? existing?.devName : device.devName,
       type: device.type.isEmpty ? existing?.type : device.type,
-      address: device.address ?? existing?.address ?? protocol.name,
-      internalAddress: device.internalAddress ?? existing?.internalAddress,
+      address: Value(device.address ?? existing?.address ?? protocol.name),
+      internalAddress: Value(device.internalAddress ?? existing?.internalAddress),
       isPaired: nextPaired,
     );
     final changed = existing?.isPaired != nextPaired;
