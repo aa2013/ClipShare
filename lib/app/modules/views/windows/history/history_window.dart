@@ -72,6 +72,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   final windowControlService = Get.find<WindowControlService>();
   Timer? _timer;
   bool filterLoading = true;
+  /// 弹窗最近一次从隐藏状态恢复显示的时间，用于抑制显示瞬间的失焦自动关闭。
+  DateTime? _lastShownAt;
+  /// 本次显示后是否已成功获得焦点；成功聚焦前的失焦视为显示/抢焦过程的瞬时事件。
+  bool _focusedAfterShow = false;
   late final HistoryFilterController historyFilterController;
 
   @override
@@ -126,15 +130,22 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       case MultiWindowMethod.notify:
         refresh();
         break;
-      //关闭（隐藏）窗口
+      //从隐藏状态恢复显示弹窗
       case MultiWindowMethod.showWindowFromHide:
         var position = args["position"];
         if (position != null) {
           var [x, y] = (position as List<dynamic>).cast<double>();
           windowManager.setPosition(Offset(x, y));
         }
+        // 记录显示时间：显示/抢焦过程中可能产生瞬时失焦事件，
+        // 需要抑制这段时间内的失焦自动关闭，避免窗口“闪一下就消失”。
+        _lastShownAt = DateTime.now();
+        _focusedAfterShow = false;
         widget.windowController.show();
         windowManager.setAlwaysOnTop(true);
+        // 显示后主动抢占焦点，确保原生前台窗口追踪器记录“当前软件→弹窗”的切换，
+        // 使 pasteToPreviousWindow 的“上一个窗口”始终为打开弹窗前所在的软件。
+        windowManager.focus();
         historyFilterController.resetFilter();
         refresh();
         break;
@@ -171,11 +182,24 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   @override
   /// 子窗口失焦时按主窗口偏好决定是否自动隐藏，保持多窗口状态由主窗口统一管理。
   void onWindowBlur() {
+    // 弹窗刚显示、尚未成功抢到焦点前的失焦是显示/置顶过程的瞬时事件，
+    // 不触发自动关闭，避免“闪一下就消失”、需按两次 Win+V 的问题。
+    // 一旦成功聚焦（onWindowFocus），后续任何失焦都视为真实失焦，立即生效。
+    final shownAt = _lastShownAt;
+    if (shownAt != null && DateTime.now().difference(shownAt) < 500.ms && !_focusedAfterShow) {
+      return;
+    }
     if (!multiWindowConfigService.autoClosePopupOnBlur) {
       return;
     }
     // 统一走主窗口维护的隐藏流程，避免子窗口自行关闭后主窗口状态不同步。
     multiWindowService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
+  }
+
+  @override
+  void onWindowFocus() {
+    // 窗口成功获得焦点后，失焦即视为真实失焦，不再被瞬时事件抑制。
+    _focusedAfterShow = true;
   }
 
   @override

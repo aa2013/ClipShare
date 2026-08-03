@@ -64,7 +64,7 @@ class AppHotKeyHandler {
         }
         //只允许弹窗一次
         final windowId = appConfig.historyWindow?.windowId;
-        final isHide = true && multiWindowService.isHideWindow(windowId);
+        final isHide = multiWindowService.isHideWindow(windowId);
         if (ids.contains(windowId) && !isHide) {
           await multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.history);
           //偏好为使用相同快捷键关闭，直接结束
@@ -92,11 +92,19 @@ class AppHotKeyHandler {
         //限制在屏幕范围内
         final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
         if (appConfig.historyWindow != null) {
-          await multiWindowService.showWindowFromHide(
-            appConfig.historyWindow!.windowId,
-            position: [x, y],
-          );
-          return;
+          try {
+            await multiWindowService.showWindowFromHide(
+              appConfig.historyWindow!.windowId,
+              position: [x, y],
+            );
+          } catch (e) {
+            // IPC 失败说明子窗口可能已不可用，重置引用以便下次重新创建窗口。
+            logger.warn(tag, "showWindowFromHide failed, will recreate: $e");
+            appConfig.historyWindow = null;
+          }
+          if (appConfig.historyWindow != null) {
+            return;
+          }
         }
         //createWindow里面的参数必须传
         final title = TranslationKey.historyRecord.tr;
