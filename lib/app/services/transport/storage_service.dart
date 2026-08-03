@@ -331,10 +331,11 @@ class StorageService extends GetxService
 
   @override
   void onScreenOpened() {
-    if(_client == null){
-      return;
-    }
-    unawaited(restart());
+    // if(_client == null || _wsService.running){
+    //   return;
+    // }
+    //如果启用了且ws断开则重连
+    // unawaited(reconnectWs());
   }
 
   Future<void> start() async {
