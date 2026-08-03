@@ -44,9 +44,15 @@ class MultiWindowChannelService extends GetxService {
     int targetWindowId,
     int closeWindowId,
     MultiWindowTag tag,
-  ) {
+  ) async {
     if (!PlatformExt.isDesktop) return Future.value();
-    windowManager.hide();
+    try {
+      // windowManager.hide() 是 async 方法，必须 await 才能真正捕获其异常；
+      // 未 await 的 Future error 不会被同步 try-catch 捕获，会变成 unhandled async error。
+      await windowManager.hide();
+    } catch (_) {
+      // 子窗口中 windowManager.hide() 可能失败，但状态同步不能因此中断。
+    }
     _hideWindowIds.add(closeWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,

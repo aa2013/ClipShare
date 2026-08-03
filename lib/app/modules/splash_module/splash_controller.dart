@@ -287,13 +287,20 @@ class SplashController extends GetxController {
           return jsonEncode(sourceService.appInfos);
         case MultiWindowMethod.copy:
           final id = args["id"];
-          dbService.historyDao.getById(id).then(
-            (history) async {
-              if (history == null) return;
+          try {
+            // 等待复制并粘贴完成后再返回，确保弹窗在粘贴完成之前不会提前隐藏，
+            // 避免粘贴目标窗口错乱。
+            final history = await dbService.historyDao.getById(id);
+            if (history != null) {
               await history.copyContent();
-              clipboardManager.pasteToPreviousWindow();
-            },
-          );
+              await clipboardManager.pasteToPreviousWindow();
+            }
+          } catch (err, stack) {
+            // 复制/粘贴失败不能让 IPC 中断：否则子窗口 await copy 抛错，
+            // onCopied 不执行、弹窗不会关闭。记录日志后正常返回，
+            // 让子窗口照常走关闭流程。
+            logger.error(tag, err, stack);
+          }
           break;
         case MultiWindowMethod.copyContent:
           final content = args["content"];
