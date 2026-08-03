@@ -680,7 +680,7 @@ class ZhCNTranslation extends AbstractTranslations {
         return "版本不兼容";
       case TranslationKey.notCompatibleDialogText:
         return "与该设备的软件版本不兼容，设备连接和数据同步功能可能异常。"
-            "\n最低版本要求为 @minName(@minCode})"
+            "\n最低版本要求为 @minName(@minCode)"
             "\n当前软件版本为 @selfName(@selfCode)";
       case TranslationKey.emptyData:
         return "无数据";
