@@ -19,24 +19,53 @@ jobs:
   # Job 1: Fastforge 打包 deb、rpm
   # ============================================================
   build-deb-rpm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:22.04
 
     steps:
+    - name: Install Linux dependencies
+      run: |
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y \
+          git \
+          clang \
+          lld \
+          cmake \
+          ninja-build \
+          pkg-config \
+          jq \
+          libgtk-3-dev \
+          liblzma-dev \
+          curl \
+          file \
+          locate \
+          rpm \
+          patchelf \
+          libayatana-appindicator3-dev \
+          libkeybinder-3.0-dev \
+          fuse \
+          libfuse-dev
+
+    - name: Install Wayland protocol extension
+      run: |
+        mkdir -p /usr/share/wayland-protocols/staging/ext-data-control
+        curl -fsSL \
+          https://raw.githubusercontent.com/wayland-mirror/wayland-protocols/d5aed4e4903a77aefaef03359d1ffdc0d5093456/staging/ext-data-control/ext-data-control-v1.xml \
+          -o /usr/share/wayland-protocols/staging/ext-data-control/ext-data-control-v1.xml
+        test -s /usr/share/wayland-protocols/staging/ext-data-control/ext-data-control-v1.xml
+
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         submodules: false
 
-    - name: Install Linux dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
-        sudo apt-get install -y locate rpm patchelf
-        sudo apt-get install -y libayatana-appindicator3-dev
-        sudo apt-get install -y libkeybinder-3.0-dev
-        sudo apt-get install -y fuse libfuse-dev
-
     - name: Setup Flutter
+      run: |
+        git config --global --add safe.directory '*'
+
+    - name: Setup Flutter SDK
       uses: subosito/flutter-action@v2
       with:
         channel: stable
@@ -67,44 +96,57 @@ jobs:
         overwrite: true
 
   # ============================================================
-  # Job 2: Arch Linux 容器中打包 AppImage
+  # Job 2: Ubuntu 22.04 容器中打包 AppImage
   # ============================================================
   build-appimage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
-      image: archlinux:base-devel
+      image: ubuntu:22.04
 
     steps:
-    - name: Verify Arch environment
+    - name: Verify Ubuntu environment
       run: |
         cat /etc/os-release
         uname -a
 
     - name: Install system dependencies
       run: |
-        pacman -Syu --noconfirm
-        pacman -S --needed --noconfirm \
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y \
           git \
           curl \
           unzip \
-          xz \
+          xz-utils \
+          file \
           zip \
           clang \
+          lld \
           cmake \
-          ninja \
-          pkgconf \
-          gtk3 \
-          libkeybinder3 \
-          libayatana-appindicator \
-          libayatana-indicator \
-          ayatana-ido \
-          libdbusmenu-glib \
-          libdbusmenu-gtk3 \
-          libxtst \
-          wayland \
+          ninja-build \
+          pkg-config \
+          jq \
+          libgtk-3-dev \
+          liblzma-dev \
+          libayatana-appindicator3-dev \
+          libayatana-indicator3-dev \
+          libayatana-ido3-0.4-dev \
+          libdbusmenu-gtk3-dev \
+          libkeybinder-3.0-dev \
+          libxtst-dev \
+          libwayland-dev \
           wayland-protocols \
-          fuse2
-        ldconfig
+          fuse \
+          libfuse2 \
+          patchelf
+
+    - name: Install Wayland protocol extension
+      run: |
+        mkdir -p /usr/share/wayland-protocols/staging/ext-data-control
+        curl -fsSL \
+          https://raw.githubusercontent.com/wayland-mirror/wayland-protocols/d5aed4e4903a77aefaef03359d1ffdc0d5093456/staging/ext-data-control/ext-data-control-v1.xml \
+          -o /usr/share/wayland-protocols/staging/ext-data-control/ext-data-control-v1.xml
+        test -s /usr/share/wayland-protocols/staging/ext-data-control/ext-data-control-v1.xml
 
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -208,7 +250,7 @@ jobs:
         chmod +x appimagetool
 
         export APPIMAGE_EXTRACT_AND_RUN=1
-        ./appimagetool "${appdir}" "output/${appimage_name}"
+        ./appimagetool --appimage-extract-and-run "${appdir}" "output/${appimage_name}"
 
         echo "AppImage created: output/${appimage_name}"
 
@@ -224,9 +266,16 @@ jobs:
   # ============================================================
   combine:
     needs: [build-deb-rpm, build-appimage]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:22.04
 
     steps:
+    - name: Install Git
+      run: |
+        apt-get update
+        apt-get install -y git
+
     - name: Download deb/rpm artifacts
       uses: actions/download-artifact@v4
       with:
