@@ -19,7 +19,7 @@ jobs:
   # Job 1: Fastforge 打包 deb、rpm
   # ============================================================
   build-deb-rpm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - name: Checkout repository
@@ -70,9 +70,9 @@ jobs:
   # Job 2: Arch Linux 容器中打包 AppImage
   # ============================================================
   build-appimage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     container:
-      image: archlinux:base-devel
+      image: archlinux:base-devel-20251228.0.475343
 
     steps:
     - name: Verify Arch environment
