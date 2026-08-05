@@ -87,22 +87,28 @@ class ClipboardSourceService extends GetxService {
     if (isCached(appInfo)) {
       return true;
     }
-    //如果图标为空，不要更新
-    if(appInfo.iconB64.isEmpty){
-      return true;
-    }
     final data = await _dbService.appInfoDao.getByUniqueIndex(appInfo.devId, appInfo.appId);
+    final savedAppInfo = data != null && appInfo.iconB64.isEmpty && data.iconB64.isNotEmpty
+        // 远端可能只同步到来源名称，不能用空图标覆盖本地已有的有效图标。
+        ? MyAppInfo(
+            id: appInfo.id,
+            appId: appInfo.appId,
+            devId: appInfo.devId,
+            name: appInfo.name,
+            iconB64: data.iconB64,
+          )
+        : appInfo;
     var cnt = 0;
     if (data == null) {
-      cnt = await _dbService.appInfoDao.addAppInfo(appInfo);
+      cnt = await _dbService.appInfoDao.addAppInfo(savedAppInfo);
     } else {
-      cnt = await _dbService.appInfoDao.updateAppInfo(appInfo);
+      cnt = await _dbService.appInfoDao.updateAppInfo(savedAppInfo);
     }
     final success = cnt > 0;
     if (!success) {
       return false;
     }
-    _appInfos[appInfo.appId] = appInfo;
+    _appInfos[savedAppInfo.appId] = savedAppInfo;
     if (!notify) {
       return success;
     }
