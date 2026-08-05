@@ -30,6 +30,67 @@ class WritableDirectoryPickResult {
 class FileUtil {
   FileUtil._private();
 
+  static const _safeFileNameReplacement = "_";
+  static const _windowsReservedFileNames = {
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    "COM1",
+    "COM2",
+    "COM3",
+    "COM4",
+    "COM5",
+    "COM6",
+    "COM7",
+    "COM8",
+    "COM9",
+    "LPT1",
+    "LPT2",
+    "LPT3",
+    "LPT4",
+    "LPT5",
+    "LPT6",
+    "LPT7",
+    "LPT8",
+    "LPT9",
+  };
+
+  /// 清理接收端文件相对路径，避免远端文件名包含当前平台无法落盘的字符。
+  ///
+  /// [fileName] 可能携带同步文件夹层级，因此会逐段清理路径片段并保留目录结构。
+  static String sanitizeReceivedFileName(String fileName) {
+    final parts = fileName
+        .split(RegExp(r'[/\\]'))
+        .map(_sanitizeReceivedFileNamePart)
+        .toList();
+    return parts.join(path.separator);
+  }
+
+  /// 按平台规则清理单个路径片段，防止非法字符、保留名或路径穿越片段进入本地路径。
+  static String _sanitizeReceivedFileNamePart(String part) {
+    var safePart = part;
+    if (Platform.isWindows) {
+      safePart = safePart.replaceAll(RegExp(r'[<>:"|?*\x00-\x1F]'), _safeFileNameReplacement);
+      safePart = safePart.replaceAll(RegExp(r'[. ]+$'), "");
+    } else if (Platform.isMacOS) {
+      safePart = safePart.replaceAll(RegExp(r'[:\x00]'), _safeFileNameReplacement);
+    } else {
+      safePart = safePart.replaceAll("\x00", _safeFileNameReplacement);
+    }
+
+    if (safePart.isEmpty || safePart == "." || safePart == "..") {
+      return _safeFileNameReplacement;
+    }
+    if (Platform.isWindows) {
+      final baseName = safePart.split(".").first.toUpperCase();
+      if (_windowsReservedFileNames.contains(baseName)) {
+        return "$safePart$_safeFileNameReplacement";
+      }
+    }
+    return safePart;
+  }
+
   ///测试路径是否可写入
   static bool testWriteable(String dirPath) {
     final uuid = const Uuid().v4();

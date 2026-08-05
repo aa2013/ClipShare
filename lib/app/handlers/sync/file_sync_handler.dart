@@ -29,6 +29,7 @@ import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:flutter/cupertino.dart';
@@ -412,7 +413,8 @@ class FileSyncHandler {
       return;
     }
     var socket = await Socket.connect(ip, port);
-    String filePath = "${appConfig.fileStorePath}/$fileName";
+    final safeFileName = FileUtil.sanitizeReceivedFileName(fileName);
+    String filePath = "${appConfig.fileStorePath}/$safeFileName";
     File file = File(filePath);
     logger.debug(tag, "receive file $filePath");
     final dir = file.parent;

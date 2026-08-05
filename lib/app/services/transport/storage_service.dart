@@ -54,6 +54,7 @@ import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/storage_config_extension.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
+import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/network_util.dart';
@@ -1343,7 +1344,8 @@ class StorageService extends GetxService
       final size = map["size"] as int;
       final fileName = map["fileName"] as String;
       final storageFilePath = "$datePath/files/$fileName";
-      final localPath = appConfig.fileStorePath + "/$fileName".normalizePath;
+      final safeFileName = FileUtil.sanitizeReceivedFileName(fileName);
+      final localPath = appConfig.fileStorePath + "/$safeFileName".normalizePath;
       //add syncing file
       final syncingFileService = Get.find<SyncingFileProgressService>();
       Device? dev = await dbService.deviceDao.getById(
