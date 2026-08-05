@@ -10,7 +10,6 @@ import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
 import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
-import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/device_remove_listener.dart';
@@ -760,7 +759,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
 
   @override
   Future<void> onSync(MessageData msg) async {
-    var sender = msg.send;
     //抽取历史记录的map内容，然后将data赋值为空（操作记录反序列化里面data是字符串）
     final historyMap = _extractHistoryData(msg.data["data"]).cast<String, dynamic>();
     msg.data["data"] = "";
@@ -774,16 +772,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     History history = History.fromJson(historyMap);
     history.sync = true;
     if (opRecord.module == Module.historyTop) {
-      //发送同步确认
-      await AckSyncSender.send(
-        sender,
-        opRecord.id,
-        {
-          "id": opRecord.id,
-          "hisId": history.id,
-          "module": Module.historyTop.moduleName,
-        },
-      );
       //更新数据库
       return _updateHistoryTop(history);
     }
@@ -794,16 +782,6 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     notifyHistoryWindow();
     //将同步过来的数据添加到本地操作记录
     dbService.opRecordDao.add(opRecord.copyWith(data: history.id.toString()));
-    //发送同步确认
-    await AckSyncSender.send(
-      sender,
-      opRecord.id,
-      {
-        "id": opRecord.id,
-        "hisId": history.id,
-        "module": Module.history.moduleName,
-      },
-    );
   }
 
   @override

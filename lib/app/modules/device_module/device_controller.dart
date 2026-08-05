@@ -11,7 +11,6 @@ import 'package:clipshare/app/data/models/version.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
-import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
@@ -162,7 +161,6 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
 
   @override
   Future onSync(MessageData msg) {
-    var sender = msg.send;
     var data = <dynamic, dynamic>{};
     if (msg.data["data"] is Map) {
       data = msg.data["data"];
@@ -187,14 +185,7 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
           return Future.value();
       }
     }
-    //发送同步确认
-    return f.then(
-      (v) => AckSyncSender.send(
-        sender,
-        opRecord.id,
-        {"id": opRecord.id, "module": Module.device.moduleName},
-      ),
-    );
+    return f;
   }
 
   @override
