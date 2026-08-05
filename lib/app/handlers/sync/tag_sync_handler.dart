@@ -5,7 +5,6 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/data/repository/entity/tables/history_tag.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_record.dart';
 import 'package:clipshare/app/data/repository/entity/tables/operation_sync.dart';
-import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/sync_listener.dart';
@@ -41,14 +40,8 @@ class TagSyncHandler implements SyncListener {
 
   @override
   Future onSync(MessageData msg) async {
-    var sender = msg.send;
     final map = msg.data;
-    final opRecord = await _syncData(map);
-    await AckSyncSender.send(
-      sender,
-      opRecord.id,
-      {"id": opRecord.id, "module": Module.tag.moduleName},
-    );
+    await _syncData(map);
   }
 
   Future<OperationRecord> _syncData(

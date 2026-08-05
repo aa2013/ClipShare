@@ -21,6 +21,7 @@ import 'package:clipshare/app/handlers/socket/forward_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_client.dart';
 import 'package:clipshare/app/handlers/socket/secure_socket_server.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
+import 'package:clipshare/app/handlers/sync/ack_sync_sender.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
 import 'package:clipshare/app/modules/rules_module/rules_controller.dart';
@@ -1030,14 +1031,41 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   void _onSyncMsg(MessageData msg) {
     Module module = Module.getValue(msg.data["module"]);
     logger.debug(tag, "module ${module.moduleName}");
+    final opId = _syncAckOpId(msg);
+    final isReceivedSync = msg.key == MsgType.sync || msg.key == MsgType.missingData;
+    final shouldAckReceivedSync = isReceivedSync && opId != null && module != Module.unknown;
+    if (isReceivedSync && !shouldAckReceivedSync) {
+      logger.warn(
+        tag,
+        "skip sync ack because message is not recognizable. "
+        "key=${msg.key.name}, data=${jsonEncode(msg.data)}",
+      );
+    }
     //筛选某个模块的同步处理器
     var lst = getListeners(module);
+    if (isReceivedSync) {
+      dbService.execSequentially(() async {
+        try {
+          for (var listener in lst) {
+            await listener.onSync(msg);
+          }
+        } finally {
+          if (shouldAckReceivedSync) {
+            await AckSyncSender.send(
+              msg.send,
+              opId,
+              {
+                "id": opId,
+                "module": module.moduleName,
+              },
+            );
+          }
+        }
+      });
+      return;
+    }
     for (var listener in lst) {
       switch (msg.key) {
-        case MsgType.sync:
-        case MsgType.missingData:
-          dbService.execSequentially(() => listener.onSync(msg));
-          break;
         case MsgType.ackSync:
           dbService.execSequentially(() => listener.ackSync(msg));
           break;
@@ -1045,6 +1073,18 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
           break;
       }
     }
+  }
+
+  /// 读取同步消息的原始操作 id，只有能定位发送端 OperationRecord 时才允许公共层回 ACK。
+  int? _syncAckOpId(MessageData msg) {
+    final id = msg.data["id"];
+    if (id is int) {
+      return id;
+    }
+    if (id is String) {
+      return int.tryParse(id);
+    }
+    return null;
   }
 
   /// 当前是否正在执行发现流程，避免并发发现互相取消。

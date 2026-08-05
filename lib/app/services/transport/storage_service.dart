@@ -30,6 +30,7 @@ import 'package:clipshare/app/handlers/storage/storage_client.dart';
 import 'package:clipshare/app/handlers/storage/web_dav_client.dart';
 import 'package:clipshare/app/handlers/sync/abstract_data_sender.dart';
 import 'package:clipshare/app/handlers/sync/missing_data_sync_handler.dart';
+import 'package:clipshare/app/handlers/sync/storage_sync_record_helper.dart';
 import 'package:clipshare/app/listeners/dev_alive_listener.dart';
 import 'package:clipshare/app/listeners/discover_listener.dart';
 import 'package:clipshare/app/listeners/forward_status_listener.dart';
@@ -699,9 +700,18 @@ class StorageService extends GetxService
     Map<String, dynamic>? result;
     //on sync
     try {
-      final data =
-          m2.deserialize(Uint8List.fromList(bytes)) as Map<dynamic, dynamic>;
+      final data = m2.deserialize(Uint8List.fromList(bytes)) as Map<dynamic, dynamic>;
       final module = Module.getValue((data["module"]));
+      final map = data.cast<String, dynamic>();
+      final opId = _getStorageSyncOpId(map);
+      if (opId == null || module == Module.unknown) {
+        logger.warn(
+          tag,
+          "skip storage sync ack because message is not recognizable. "
+          "devId=$devId, module=${map["module"]}, id=${map["id"]}",
+        );
+        return null;
+      }
       final listeners = getListeners(module);
       if (listeners.isEmpty) {
         logger.warn(
@@ -710,16 +720,42 @@ class StorageService extends GetxService
         );
         return null;
       }
-      final map = data.cast<String, dynamic>();
-      for (var listener in listeners) {
-        // 等待每个监听器完成落库，避免进度先结束但实际数据还没写入本地。
-        await listener.onStorageSync(map, device, loadingMissingData);
+      // 原始同步数据会被 handler 修改，先保留一份用于进度、ACK 和已消费游标。
+      final syncData = jsonDecode(jsonEncode(map)) as Map<String, dynamic>;
+      try {
+        for (var listener in listeners) {
+          // 等待每个监听器完成落库，避免进度先结束但实际数据还没写入本地。
+          await listener.onStorageSync(map, device, loadingMissingData);
+        }
+      } catch (err, stack) {
+        logger.error(
+          tag,
+          "storage sync listener process failed. devId=$devId, opId=$opId, err=$err",
+          stack,
+        );
+      } finally {
+        // 存储同步收到并识别后即视为已消费，避免幂等跳过的数据下次仍被补拉。
+        await dbService.opRecordDao.add(
+          StorageSyncRecordHelper.fromStorageMap(syncData),
+        );
       }
-      result = jsonDecode(jsonEncode(map));
+      result = syncData;
     } catch (err, stack) {
       logger.error(tag, err, stack);
     }
     return result;
+  }
+
+  /// 读取存储同步消息的原始操作 id，只有可定位发送端 OperationRecord 时才确认。
+  int? _getStorageSyncOpId(Map<String, dynamic> map) {
+    final id = map["id"];
+    if (id is int) {
+      return id;
+    }
+    if (id is String) {
+      return int.tryParse(id);
+    }
+    return null;
   }
 
   //endregion
