@@ -104,6 +104,7 @@ class WebDAVClient extends StorageClient {
   }
 
   Future<DavResource?> _readResource(String path, {required bool isDirectory}) async {
+    StorageClient.recordClientInvoke('readResource', path: path);
     final resources = await _client.listWithDepth(
       _toClientPath(path, isDirectory: isDirectory),
       0,
@@ -127,6 +128,7 @@ class WebDAVClient extends StorageClient {
   @override
   Future<ExceptionInfo?> testConnect() async {
     try {
+      StorageClient.recordClientInvoke('testConnect');
       await _client.listWithDepth(Constants.unixDirSeparate, 0);
       return null;
     } catch (err, stack) {
@@ -137,6 +139,7 @@ class WebDAVClient extends StorageClient {
   @override
   Future<List<String>> listRootDirectoryNames() async {
     try {
+      StorageClient.recordClientInvoke('listRootDirectoryNames');
       final resources = await _client.list(_toClientPath("", isDirectory: true));
       final items = _skipSelfResource(resources);
       return items
@@ -160,6 +163,7 @@ class WebDAVClient extends StorageClient {
       throw '$path is not directory!';
     }
     final result = <StorageItem>[];
+    StorageClient.recordClientInvoke('list', path: path);
     final resources = await _client.list(dirPath);
     final items = _skipSelfResource(resources);
     for (final item in items) {
@@ -222,6 +226,7 @@ class WebDAVClient extends StorageClient {
     path = path.unixPath;
     final dirPath = _toClientPath(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke('createDirectory', path: path);
       await _client.createDirectory(dirPath);
       return true;
     } catch (err, stack) {
@@ -244,6 +249,7 @@ class WebDAVClient extends StorageClient {
       if (!isDir) {
         return false;
       }
+      StorageClient.recordClientInvoke('deleteDirectory', path: path);
       await _client.delete(_toClientPath(path, isDirectory: true));
       return true;
     } catch (err, stack) {
@@ -286,6 +292,7 @@ class WebDAVClient extends StorageClient {
           return false;
         }
       }
+      StorageClient.recordClientInvoke('createFile', path: path);
       await _client.putStream(
         filePath,
         Stream<List<int>>.value(bytes),
@@ -318,6 +325,7 @@ class WebDAVClient extends StorageClient {
         return false;
       }
       final filePath = _toClientPath(path, isDirectory: false);
+      StorageClient.recordClientInvoke('uploadFile', path: path);
       await _client.putFileStream(filePath, file, onProgress: onProgress);
       return true;
     } catch (err, stack) {
@@ -354,6 +362,7 @@ class WebDAVClient extends StorageClient {
         localPath = localDir.uri.resolve(resource.name).toFilePath();
       }
       await localDir.create(recursive: true);
+      StorageClient.recordClientInvoke('downloadFile', path: path);
       await _client.downloadToFile(filePath, localPath, onProgress: onProgress);
       return true;
     } catch (err, stack) {
@@ -376,6 +385,7 @@ class WebDAVClient extends StorageClient {
       if (!await isFile(path)) {
         return null;
       }
+      StorageClient.recordClientInvoke('readFileBytes', path: path);
       final bytes = await _client.get(_toClientPath(path, isDirectory: false));
       onProgress?.call(bytes.length, bytes.length);
       return bytes;
@@ -393,6 +403,7 @@ class WebDAVClient extends StorageClient {
       if (!isFile) {
         return false;
       }
+      StorageClient.recordClientInvoke('deleteFile', path: path);
       await _client.delete(_toClientPath(path, isDirectory: false));
       return true;
     } catch (err, stack) {

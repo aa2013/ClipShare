@@ -54,6 +54,7 @@ class S3Client extends StorageClient {
   @override
   Future<ExceptionInfo?> testConnect() async {
     try {
+      StorageClient.recordClientInvoke('testConnect');
       final result = await _client.bucketExists(_config.bucketName);
       if (!result) {
         throw 'Bucket Not Found';
@@ -68,6 +69,7 @@ class S3Client extends StorageClient {
   Future<bool> createDirectory(String path) async {
     final dirPath = _objectKey(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke('createDirectory', path: path);
       await _client.putObject(
         _config.bucketName,
         dirPath,
@@ -93,6 +95,7 @@ class S3Client extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke('createFile', path: path);
       await _client.putObject(
         _config.bucketName,
         filePath,
@@ -114,6 +117,7 @@ class S3Client extends StorageClient {
   Future<bool> deleteDirectory(String path) async {
     final dirPath = _objectKey(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke('deleteDirectory', path: path);
       await _client.removeObject(_config.bucketName, dirPath);
       return true;
     } catch (err, stack) {
@@ -130,6 +134,7 @@ class S3Client extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke('deleteFile', path: path);
       await _client.removeObject(_config.bucketName, filePath);
       return true;
     } catch (err, stack) {
@@ -151,9 +156,11 @@ class S3Client extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke('downloadFile', path: path);
       final props = await _client.statObject(_config.bucketName, filePath);
       final totalSize = props.size!;
       var count = 0;
+      StorageClient.recordClientInvoke('downloadFile', path: path);
       final stream = (await _client.getObject(_config.bucketName, filePath))
           .transform(
             StreamTransformer<List<int>, List<int>>.fromHandlers(
@@ -191,11 +198,13 @@ class S3Client extends StorageClient {
     path = normalizeStoragePath(path);
     final dirPath = _objectKey(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke('isDirectory', path: path);
       final result = await _client.statObject(_config.bucketName, dirPath);
       return result.size == 0;
     } catch (err, stack) {
       try {
         // qiniu S3 对空目录 marker 的 HEAD 兼容性不稳定，使用前缀列表兜底确认目录存在。
+        StorageClient.recordClientInvoke('isDirectory', path: path);
         final items = await _client.listAllObjectsV2(_config.bucketName, prefix: dirPath);
         final hasDirectoryMarker = items.objects.any((item) => item.key == dirPath);
         final hasChildren = items.objects.any((item) => item.key?.startsWith(dirPath) ?? false) ||
@@ -219,6 +228,7 @@ class S3Client extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke('isFile', path: path);
       final result = await _client.statObject(_config.bucketName, filePath);
       return (result.size ?? 0) > 0;
     } catch (err, stack) {
@@ -239,6 +249,7 @@ class S3Client extends StorageClient {
     final dirPath = _objectKey(path, isDirectory: true);
     List<StorageItem> result = [];
     try {
+      StorageClient.recordClientInvoke('list', path: path);
       final items = await _client.listAllObjectsV2(
         _config.bucketName,
         prefix: dirPath,
@@ -295,6 +306,7 @@ class S3Client extends StorageClient {
   @override
   Future<List<String>> listRootDirectoryNames() async {
     try {
+      StorageClient.recordClientInvoke('listRootDirectoryNames');
       final result = await _client.listAllObjectsV2(_config.bucketName);
       return result.prefixes;
     } catch (err, stack) {
@@ -313,6 +325,7 @@ class S3Client extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke('readFileBytes', path: path);
       final stream = (await _client.getObject(_config.bucketName, filePath));
       final List<int> result = [];
       await for (final chunk in stream) {
@@ -340,6 +353,7 @@ class S3Client extends StorageClient {
       final file = File(localFilePath);
       final totalSize = await file.length();
       final reader = file.openRead().map((chunk) => Uint8List.fromList(chunk));
+      StorageClient.recordClientInvoke('uploadFile', path: path);
       await _client.putObject(
         _config.bucketName,
         filePath,
