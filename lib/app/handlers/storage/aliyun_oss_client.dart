@@ -62,6 +62,7 @@ class AliyunOssClient extends StorageClient {
   @override
   Future<ExceptionInfo?> testConnect() async {
     try {
+      StorageClient.recordClientInvoke();
       await _client.listBucketResultV2(maxKeys: 1);
       return null;
     } catch (err, stack) {
@@ -73,6 +74,7 @@ class AliyunOssClient extends StorageClient {
   Future<bool> createDirectory(String path) async {
     final dirPath = _objectKey(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke();
       final resp = await _client.putObjectFromBytes(_empty, dirPath);
       return _responseIsOk(resp);
     } catch (err, stack) {
@@ -94,6 +96,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke();
       final resp = await _client.putObjectFromBytes(
         bytes,
         filePath,
@@ -115,6 +118,7 @@ class AliyunOssClient extends StorageClient {
   Future<bool> deleteDirectory(String path) async {
     final dirPath = _objectKey(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke();
       final resp = await _client.deleteObject(dirPath);
       return _responseIsOk(resp);
     } catch (err, stack) {
@@ -131,6 +135,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke();
       final resp = await _client.deleteObject(filePath);
       return _responseIsOk(resp);
     } catch (err, stack) {
@@ -152,6 +157,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke();
       final resp = (await _client.getObjectStream(
         filePath,
         params: OSSRequestParams(onReceiveProgress: onProgress),
@@ -180,6 +186,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final dirPath = _objectKey(path, isDirectory: true);
     try {
+      StorageClient.recordClientInvoke();
       final result = await _client.getObjectMeta(dirPath);
       return result != null && !result.isFile;
     } catch (err, stack) {
@@ -196,6 +203,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final dirPath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke();
       final result = await _client.getObjectMeta(dirPath);
       return result?.isFile ?? false;
     } catch (err, stack) {
@@ -219,6 +227,7 @@ class AliyunOssClient extends StorageClient {
     final items = <StorageItem>[];
     try {
       while (true) {
+        StorageClient.recordClientInvoke();
         final resp = await _client.listBucketResultV2(
           prefix: prefix,
           startAfter: prefix,
@@ -288,6 +297,7 @@ class AliyunOssClient extends StorageClient {
     final list = <String>[];
     try {
       while (true) {
+        StorageClient.recordClientInvoke();
         final resp = await _client.listBucketResultV2(continuationToken: token);
         final result = resp.data;
         if (result == null) {
@@ -317,6 +327,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke();
       final resp = (await _client.getObject(
         filePath,
         params: OSSRequestParams(onReceiveProgress: onProgress),
@@ -340,6 +351,7 @@ class AliyunOssClient extends StorageClient {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
     try {
+      StorageClient.recordClientInvoke();
       final resp = await _client.putObject(
         File(localFilePath),
         filePath,

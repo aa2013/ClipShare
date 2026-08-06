@@ -4,6 +4,7 @@ import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/data/models/storage/storage_item.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
+import 'package:clipshare/app/utils/log.dart';
 
 /// 存储操作进度回调函数类型
 /// [count] 表示当前已处理的量（已传输的字节数）
@@ -14,6 +15,15 @@ typedef StorageProgressFunc = void Function(int count, int total);
 ///
 /// 具体实现只需要提供单级目录创建能力，逐级建目录策略由基类统一处理，
 abstract class StorageClient {
+
+  /// 底层存储客户端（WebDAV/S3/OSS）累计调用次数，进程内全局统计。
+  static int _clientInvokeCount = 0;
+
+  /// 记录一次底层存储客户端调用，并打印累计调用次数。
+  static void recordClientInvoke() {
+    _clientInvokeCount += 1;
+    logger.info('StorageClient', 'Storage client invoke count: $_clientInvokeCount');
+  }
 
   /// 测试连接
   Future<ExceptionInfo?> testConnect();
