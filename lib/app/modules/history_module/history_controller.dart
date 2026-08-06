@@ -243,9 +243,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     if (nextContentType != HistoryContentType.image && _listContentType.value == HistoryContentType.image) {
       _listContentType.value = nextContentType;
     }
-    final future = filterLoading.value || !hasActiveFilter
-        ? dbService.historyDao.getHistoriesTop100(appConfig.userId, [])
-        : dbService.historyDao.getHistoriesPageByFilter(appConfig.userId, searchFilter, false);
+    final future = filterLoading.value || !hasActiveFilter ? dbService.historyDao.getHistoriesTop100(appConfig.userId, []) : dbService.historyDao.getHistoriesPageByFilter(appConfig.userId, searchFilter, false);
     return future.then((lst) {
       _tempList.assignAll(ClipData.fromList(lst));
       debounceUpdate(nextContentType);
@@ -393,7 +391,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     }
     if (fromStorage) {
       var copy = false;
-      if(type != ClipboardContentType.image || appConfig.autoCopyImageAfterSync){
+      if (type != ClipboardContentType.image || appConfig.autoCopyImageAfterSync) {
         history.copyContent();
         copy = true;
       }
@@ -420,7 +418,14 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     //记录同步记录
     await dbService.opSyncDao.add(opSync);
     //更新本地历史记录为已同步
-    var hisId = msg.data["hisId"];
+    var opId = msg.data["id"].toString().toInt();
+    //todo 优化 ack 方式
+    final opRecord = await dbService.opRecordDao.getById(opId);
+    final hisId = opRecord?.data.toInt();
+    if (hisId == null) {
+      logger.warn(tag, "not found history id: opId = $opId");
+      return;
+    }
     return dbService.historyDao.setSync(hisId, true).then((_) {
       for (var clip in _tempList) {
         if (clip.data.id.toString() == hisId.toString()) {
@@ -493,7 +498,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
     var applyResult = await ruleController.apply(type, content, source);
     if (applyResult.result?.isDropped ?? false) {
       //截取最大长度
-      final logContent = "${content.substringMinLen(0,20)}...";
+      final logContent = "${content.substringMinLen(0, 20)}...";
       //丢弃
       logger.info(tag, "content: $logContent，dropped");
       return;
@@ -602,11 +607,11 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
               await PermissionHelper.reqAndroidStoragePerm();
             }
           }
-          if (Platform.isIOS){
-            if(appConfig.saveToPictures){
-              if(await PermissionHelper.checkIOSPhotoPermission()){
+          if (Platform.isIOS) {
+            if (appConfig.saveToPictures) {
+              if (await PermissionHelper.checkIOSPhotoPermission()) {
                 await imageSaver.saveImage(Uint8List.fromList(data));
-              }else{
+              } else {
                 Global.showTipsDialog(context: Get.context!, text: TranslationKey.noPhotoPermission.tr);
               }
             }
@@ -637,7 +642,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
                 if (appInfo != null) {
                   final documentsPath = appConfig.documentsPath;
                   final file = File(p.join(documentsPath, "appIcons", "${appInfo.appId}.png"));
-                  if(!await file.exists()){
+                  if (!await file.exists()) {
                     await file.parent.create(recursive: true);
                     await file.writeAsBytes(appInfo.iconBytes);
                   }
@@ -721,7 +726,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
           }
 
           var copy = false;
-          if(type != ClipboardContentType.image || appConfig.autoCopyImageAfterSync){
+          if (type != ClipboardContentType.image || appConfig.autoCopyImageAfterSync) {
             history.copyContent();
             copy = true;
           }
