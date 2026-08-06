@@ -883,7 +883,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
         await sourceService.loadFuture;
         logger.debug(tag, "loadFuture completed");
         final appInfo = sourceService.getAppInfoByAppId(appId);
-        if(appInfo == null){
+        if (appInfo == null) {
           logger.debug(tag, "not found app info $appId");
           break;
         }
@@ -896,11 +896,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
 
         final ruleController = Get.find<RulesController>();
         final notExists = ruleController.isNotExistAppInfo(appInfo.appId);
-        if(appInfo.id == 0){
+        if (appInfo.id == 0) {
           appInfo.id = appInfo.appId.hash64;
         }
         final success = await sourceService.addOrUpdate(appInfo);
-        if(success && notExists){
+        if (success && notExists) {
           ruleController.update();
         }
         break;
@@ -1045,21 +1045,22 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     var lst = getListeners(module);
     if (isReceivedSync) {
       dbService.execSequentially(() async {
-        try {
-          for (var listener in lst) {
+        for (var listener in lst) {
+          try {
             await listener.onSync(msg);
+          } catch (err, stack) {
+            logger.error(tag, err, stack);
           }
-        } finally {
-          if (shouldAckReceivedSync) {
-            await AckSyncSender.send(
-              msg.send,
-              opId,
-              {
-                "id": opId,
-                "module": module.moduleName,
-              },
-            );
-          }
+        }
+        if (shouldAckReceivedSync) {
+          await AckSyncSender.send(
+            msg.send,
+            opId,
+            {
+              "id": opId,
+              "module": module.moduleName,
+            },
+          );
         }
       });
       return;
@@ -1228,8 +1229,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (!manual && appConfig.onlyManualDiscoverySubNet) {
       return tasks;
     }
-    final interfaces = (await NetworkUtil.listInterfaces())
-        .where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
+    final interfaces = (await NetworkUtil.listInterfaces()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name));
     final expendAddress = interfaces.map((itf) => itf.addresses).expand((address) => address);
     final ipv4Address = expendAddress.where((address) => address.type == InternetAddressType.IPv4);
     for (var address in ipv4Address) {
@@ -1299,7 +1299,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   }
 
   ///检查是否已经掉线，如果掉线则移除
-  Future<bool> testIsOnline(String devId, { bool autoReconnect = true }) async {
+  Future<bool> testIsOnline(String devId, {bool autoReconnect = true}) async {
     final session = _sessions.get(devId);
     if (session == null) {
       return false;
@@ -1433,6 +1433,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
     }
   }
+
   ///判断某个设备使用使用中转
   bool isUseForward(String guid) {
     final session = _sessions.get(guid);
@@ -1544,7 +1545,8 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       final protocol = (address?.isInternalIPv4 ?? false) ? TransportProtocol.direct : TransportProtocol.server;
       final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
       await devService.confirmPairingState(
-        device: dbDev ??
+        device:
+            dbDev ??
             Device(
               guid: dev.guid,
               devName: dev.name,
@@ -1597,13 +1599,14 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     if (updatePairingState) {
       final dbDev = await dbService.deviceDao.getById(dev.guid, appConfig.userId);
       await devService.confirmPairingState(
-        device: dbDev ??
+        device:
+            dbDev ??
             Device(
               guid: dev.guid,
               devName: dev.name,
               uid: uid,
               type: dev.type,
-        ),
+            ),
         localIsPaired: false,
         remoteIsPaired: false,
         protocol: session?.socket.isForwardMode ?? false ? TransportProtocol.server : TransportProtocol.direct,
@@ -1889,6 +1892,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       }
     }
   }
+
   /// 发送组播消息
   void sendMulticastMsg(
     MsgType key,
@@ -1923,9 +1927,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     int port = 0,
   ]) async {
     const ipv4Type = InternetAddressType.IPv4;
-    final interfaces = (await NetworkUtil.listInterfaces())
-        .where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name))
-        .where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
+    final interfaces = (await NetworkUtil.listInterfaces()).where((itf) => !appConfig.noDiscoveryIfs.contains(itf.name)).where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
 
     final sockets = <RawDatagramSocket>[];
 
