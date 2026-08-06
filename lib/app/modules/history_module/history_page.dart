@@ -36,26 +36,33 @@ class HistoryPage extends GetView<HistoryController> {
                     () => IndexedStack(
                       index: controller.loading ? 1 : 0,
                       children: [
-                        ClipListView(
-                          list: controller.list,
-                          parentController: controller,
-                          padding: isSmallScreen ? EdgeInsets.zero : null,
-                          onRefreshData: () {
-                            controller.refreshData(showLoading: false);
-                          },
-                          enableRouteSearch: true,
-                          onLoadMoreData: controller.loadData,
-                          imageMasonryGridViewLayout: controller.listContentType == HistoryContentType.image,
-                          onUpdate: () {
-                            controller.debounceUpdate();
-                            controller.notifyHistoryWindow();
-                          },
-                          onRemove: (id) {
-                            controller.removeById(id);
-                            controller.updateLatestLocalClip();
-                          },
+                        // 隐藏的 child 需禁用 Ticker，否则其无限动画（如加载指示器）会在后台持续驱动帧渲染
+                        TickerMode(
+                          enabled: !controller.loading,
+                          child: ClipListView(
+                            list: controller.list,
+                            parentController: controller,
+                            padding: isSmallScreen ? EdgeInsets.zero : null,
+                            onRefreshData: () {
+                              controller.refreshData(showLoading: false);
+                            },
+                            enableRouteSearch: true,
+                            onLoadMoreData: controller.loadData,
+                            imageMasonryGridViewLayout: controller.listContentType == HistoryContentType.image,
+                            onUpdate: () {
+                              controller.debounceUpdate();
+                              controller.notifyHistoryWindow();
+                            },
+                            onRemove: (id) {
+                              controller.removeById(id);
+                              controller.updateLatestLocalClip();
+                            },
+                          ),
                         ),
-                        const Loading(),
+                        TickerMode(
+                          enabled: controller.loading,
+                          child: const Loading(),
+                        ),
                       ],
                     ),
                   ),

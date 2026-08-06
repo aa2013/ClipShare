@@ -180,7 +180,14 @@ class HomePage extends GetView<HomeController> {
                         child: Obx(
                           () => IndexedStack(
                             index: controller.index,
-                            children: controller.pages,
+                            // 非当前页面禁用 Ticker，避免隐藏页面中的动画在后台持续驱动帧渲染造成 GPU 占用
+                            children: [
+                              for (var i = 0; i < controller.pages.length; i++)
+                                TickerMode(
+                                  enabled: i == controller.index,
+                                  child: controller.pages[i],
+                                ),
+                            ],
                           ),
                         ),
                       ),
