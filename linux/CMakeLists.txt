@@ -156,7 +156,6 @@ find_library(AYATANA_IDO_LIBRARY NAMES libayatana-ido3-0.4.so.0 ayatana-ido3-0.4
 find_library(DBUSMENU_GLIB_LIBRARY NAMES libdbusmenu-glib.so.4 dbusmenu-glib)
 find_library(DBUSMENU_GTK3_LIBRARY NAMES libdbusmenu-gtk3.so.4 dbusmenu-gtk3)
 find_library(XTST_LIBRARY NAMES libXtst.so.6 Xtst)
-find_library(WAYLAND_CLIENT_LIBRARY NAMES libwayland-client.so.0 wayland-client)
 
 function(INSTALL_EXTRA_RUNTIME_LIBRARY LIBRARY_VAR SONAME)
   if(${LIBRARY_VAR})
@@ -176,7 +175,6 @@ install_extra_runtime_library(AYATANA_IDO_LIBRARY "libayatana-ido3-0.4.so.0")
 install_extra_runtime_library(DBUSMENU_GLIB_LIBRARY "libdbusmenu-glib.so.4")
 install_extra_runtime_library(DBUSMENU_GTK3_LIBRARY "libdbusmenu-gtk3.so.4")
 install_extra_runtime_library(XTST_LIBRARY "libXtst.so.6")
-install_extra_runtime_library(WAYLAND_CLIENT_LIBRARY "libwayland-client.so.0")
 
 # Copy the native assets provided by the build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")

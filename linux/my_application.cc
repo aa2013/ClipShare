@@ -1,4 +1,5 @@
 #include "my_application.h"
+#include <errno.h>
 #include <unistd.h>
 #include <flutter_linux/flutter_linux.h>
 #include <glib/gstdio.h>
