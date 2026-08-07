@@ -159,9 +159,6 @@ class WebDAVClient extends StorageClient {
   Future<List<StorageItem>> list({String path = "", bool recursive = false}) async {
     path = path.unixPath;
     final dirPath = _toClientPath(path, isDirectory: true);
-    if (!await isDirectory(path)) {
-      throw '$path is not directory!';
-    }
     final result = <StorageItem>[];
     StorageClient.recordClientInvoke('list', path: path);
     final resources = await _client.list(dirPath);
@@ -201,9 +198,33 @@ class WebDAVClient extends StorageClient {
     }
   }
 
-  /// 逐级创建每一层目录，兼容不支持递归建目录的服务端
+  /// 先尝试直接创建目标目录，失败后再逐级补齐父目录。
+  ///
+  /// [path] 为公开存储路径。直接创建失败时不区分具体错误类型，
+  /// 统一回退到级联创建，以兼容不支持递归创建目录的 WebDAV 服务端。
   @override
   Future<bool> createDirectory(String path) async {
+    final normalizedPath = path.unixPath;
+    if (normalizedPath.isEmpty || normalizedPath == Constants.unixDirSeparate) {
+      return true;
+    }
+    try {
+      await _createDirectoryRequest(normalizedPath);
+      return true;
+    } catch (_) {
+      // 目标已存在时 WebDAV 常返回 MKCOL 失败，先确认目标目录可用再决定是否级联。
+      if (await _directoryExistsSilently(normalizedPath)) {
+        return true;
+      }
+      // 目标目录可能因父目录缺失而创建失败，交给级联逻辑补齐路径后重试。
+    }
+    return _createDirectoryCascade(normalizedPath);
+  }
+
+  /// 逐级创建每一层目录，兼容不支持递归建目录的服务端。
+  ///
+  /// [path] 为已经归一化的公开存储路径。
+  Future<bool> _createDirectoryCascade(String path) async {
     final normalizedPath = path.unixPath;
     final segments = normalizedPath.split('/').where((segment) => segment.isNotEmpty);
     final isAbsolutePath = normalizedPath.startsWith('/');
@@ -221,13 +242,21 @@ class WebDAVClient extends StorageClient {
     return true;
   }
 
+  /// 直接向 WebDAV 服务端发送一次 MKCOL 请求。
+  ///
+  /// [path] 为公开存储路径，调用方负责决定失败后的回退策略。
+  Future<void> _createDirectoryRequest(String path) async {
+    final normalizedPath = path.unixPath;
+    final dirPath = _toClientPath(normalizedPath, isDirectory: true);
+    StorageClient.recordClientInvoke('createDirectory', path: normalizedPath);
+    await _client.createDirectory(dirPath);
+  }
 
   Future<bool> _createDirectoryDirect(String path) async {
     path = path.unixPath;
     final dirPath = _toClientPath(path, isDirectory: true);
     try {
-      StorageClient.recordClientInvoke('createDirectory', path: path);
-      await _client.createDirectory(dirPath);
+      await _createDirectoryRequest(path);
       return true;
     } catch (err, stack) {
       if (await _directoryExistsSilently(path)) {
@@ -274,6 +303,10 @@ class WebDAVClient extends StorageClient {
     }
   }
 
+  /// 先直接写入文件，失败后按需级联创建父目录并重试一次。
+  ///
+  /// [createDir] 为 true 时启用失败回退；首次失败不立即记录错误，
+  /// 只有级联失败或重试失败时才将最终错误写入日志。
   @override
   Future<bool> createFile(
     String path,
@@ -283,33 +316,60 @@ class WebDAVClient extends StorageClient {
   }) async {
     path = path.unixPath;
     final filePath = _toClientPath(path, isDirectory: false);
+    Object? firstError;
     try {
-      if (createDir) {
-        final dir = (path.split(Constants.unixDirSeparate)..removeLast())
-            .join(Constants.unixDirSeparate);
-        final result = await createDirectory(dir);
-        if (!result) {
-          return false;
-        }
-      }
-      StorageClient.recordClientInvoke('createFile', path: path);
-      await _client.putStream(
-        filePath,
-        Stream<List<int>>.value(bytes),
-        bytes.length,
-        "application/octet-stream",
-      );
+      await _createFileRequest(path, filePath, bytes);
       onProgress?.call(bytes.length, bytes.length);
       return true;
     } catch (err, stack) {
+      firstError = err;
+      if (createDir) {
+        final dir = (path.split(Constants.unixDirSeparate)..removeLast())
+            .join(Constants.unixDirSeparate);
+        final directoryCreated = await createDirectory(dir);
+        if (directoryCreated) {
+          try {
+            await _createFileRequest(path, filePath, bytes);
+            onProgress?.call(bytes.length, bytes.length);
+            return true;
+          } catch (retryErr, retryStack) {
+            _logStorageError('createFile', retryErr, retryStack, <String, Object?>{
+              'path': path,
+              'clientPath': filePath,
+              'bytesLength': bytes.length,
+              'createDir': createDir,
+              'firstError': firstError,
+            });
+            return false;
+          }
+        }
+      }
       _logStorageError('createFile', err, stack, <String, Object?>{
         'path': path,
         'clientPath': filePath,
         'bytesLength': bytes.length,
         'createDir': createDir,
+        'fallback': createDir ? 'createDirectory' : null,
       });
       return false;
     }
+  }
+
+  /// 直接向 WebDAV 服务端发送一次文件写入请求。
+  ///
+  /// [path] 为公开存储路径，[filePath] 为已转换的客户端路径。
+  Future<void> _createFileRequest(
+    String path,
+    String filePath,
+    Uint8List bytes,
+  ) async {
+    StorageClient.recordClientInvoke('createFile', path: path);
+    await _client.putStream(
+      filePath,
+      Stream<List<int>>.value(bytes),
+      bytes.length,
+      "application/octet-stream",
+    );
   }
 
   @override
@@ -382,9 +442,7 @@ class WebDAVClient extends StorageClient {
   }) async {
     path = path.unixPath;
     try {
-      if (!await isFile(path)) {
-        return null;
-      }
+      // WebDAV GET 失败即可表达文件不存在或不可读，避免读取前额外探测文件类型。
       StorageClient.recordClientInvoke('readFileBytes', path: path);
       final bytes = await _client.get(_toClientPath(path, isDirectory: false));
       onProgress?.call(bytes.length, bytes.length);

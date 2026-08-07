@@ -49,13 +49,13 @@ const (
 	checkVersion = "checkVersion"
 )
 
-const version = "1.1.0"
+const version = "1.2.0"
 
 const (
 	// 写超时用于避免网络黑洞时单次消息发送长期阻塞。
 	writeWait = 10 * time.Second
-	// 读超时用于清理长期无任何客户端消息的半开连接，需大于客户端 ping 间隔。
-	pongWait = 90 * time.Second
+	// 服务端主动心跳间隔，移动端息屏时可能无法主动发包，但通常仍可接收服务端消息。
+	serverPingInterval = 30 * time.Second
 )
 
 type MsgData struct {
@@ -84,7 +84,7 @@ func handleCheckVersion(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleWebSocket 建立设备通知通道，并通过应用层 ping/ack 识别半开连接。
+// handleWebSocket 建立设备通知通道，并通过服务端主动 ping 识别半开连接。
 func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// 从URL路径中提取参数
 	content := strings.TrimPrefix(r.URL.Path, "/connect/")
@@ -121,11 +121,12 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// 当连接关闭时从映射中移除
 	defer removeConnection(key, devId, client)
 	logs.Info("WebSocket connection established. key = " + key + " devId = " + devId)
-	// 保持连接活跃
+	stopPing := startServerPing(key, devId, client)
+	defer close(stopPing)
+
+	// 持续读取客户端业务消息；不再设置读超时，避免移动端息屏后因无法主动发包被误清理。
 	for {
 		// 读取消息
-		// 客户端会定期发送应用层 ping，超时未收到任何消息时认为连接已经半开。
-		_ = conn.SetReadDeadline(time.Now().Add(pongWait))
 		msgType, data, err := conn.ReadMessage()
 		if err != nil {
 			logs.Error("Error reading from websocket: key = ", key, ",err = ", err)
@@ -154,15 +155,38 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		connections.Lock()
 		ws, ok := connections.DevMap[msg.TargetDevId]
-		connections.Unlock()
-		if ok {
-			if err := writeMessage(ws, MsgData{Operation: operation, TargetDevId: devId, Data: msg.Data}); err != nil {
-				logs.Error("Failed to send change message. from devId: ", devId, ", targetDevId: ", targetDevId, ",err = ", err)
-			}
-		} else {
-			logs.Warn("Device not found in connection list: ", targetDevId)
+			connections.Unlock()
+			if ok {
+				if err := writeMessage(ws, MsgData{Operation: operation, TargetDevId: devId, Data: msg.Data}); err != nil {
+					logs.Error("Failed to send change message. from devId: ", devId, ", targetDevId: ", targetDevId, ",err = ", err)
+					_ = ws.conn.Close()
+				}
+			} else {
+				logs.Warn("Device not found in connection list: ", targetDevId)
 		}
 	}
+}
+
+// startServerPing 定时向当前连接发送应用层 ping；写失败时关闭连接并交给读循环触发清理。
+func startServerPing(key string, devId string, client *clientConnection) chan struct{} {
+	stop := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(serverPingInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if err := writeMessage(client, MsgData{Operation: ping, TargetDevId: devId, Data: ""}); err != nil {
+					logs.Error("Failed to send server ping. key = ", key, ", devId = ", devId, ",err = ", err)
+					_ = client.conn.Close()
+					return
+				}
+			case <-stop:
+				return
+			}
+		}
+	}()
+	return stop
 }
 
 // addConnection 添加当前设备连接；同设备旧连接会被替换，避免旧会话继续占用转发表。

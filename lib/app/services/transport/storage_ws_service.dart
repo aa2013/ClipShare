@@ -300,7 +300,7 @@ class StorageWsService {
     }
   }
 
-  /// 启动应用层心跳，定期发送 ping 并检查服务端是否在超时时间内返回任意消息。
+  /// 启动服务端心跳监控，定期检查服务端是否在超时时间内返回任意消息。
   void _startPingTimer() {
     _stopPingTimer();
     _pingTimer = Timer.periodic(_pingInterval, (_) {
@@ -308,12 +308,12 @@ class StorageWsService {
       if (sessionId == null) {
         return;
       }
-      send(WsMsgData(WsMsgType.ping, '', ''));
+      // 通知服务负责主动下发 ping，客户端只做接收超时判断以兼容移动端息屏限制。
       _disconnectIfHeartbeatTimedOut(sessionId);
     });
   }
 
-  /// 停止心跳定时器，避免旧会话断开后继续发送 ping。
+  /// 停止心跳监控定时器，避免旧会话断开后继续触发超时收口。
   void _stopPingTimer() {
     _pingTimer?.cancel();
     _pingTimer = null;

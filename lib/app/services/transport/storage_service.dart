@@ -110,14 +110,23 @@ class StorageService extends GetxService
   static const maxParallelCnt = 10;
   static const _storageOnlineHeartbeatTaskName = 'storage-online';
   static const _sameNetworkSocketGracePeriod = Duration(seconds: 3);
+
+  /// 补拉缺失数据的冷却时长：同设备距上次补拉过近则直接跳过，避免反复全量扫描。
+  static const _reloadMissingCoolDown = Duration(seconds: 60);
   static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
   static const _minCompatibleWsVersion = SemanticVersion(1, 1, 0);
   static const _incompatibleWsVersionNotifyKey = 'storage-ws-incompatible-version';
 
   String get _selfDevId => appConfig.device.guid;
   var _lastDate = '';
-  var _lastDateFilePath = '';
   final _cache = <String>{};
+
+  /// 记录各设备最近一次补拉缺失数据的时间，用于心跳节流，避免重复全量扫描。
+  final _lastReloadAt = <String, DateTime>{};
+
+  /// 云端已知设备 id 缓存：启动时全量填充、收到 online 时增量补充、stop 时清空。
+  /// 作为心跳广播目标集，避免每 30s 重复列举云端设备目录。
+  final _cloudDeviceIds = <String>{};
   var _loadingMissingData = false;
   var _uploadingSyncFailedData = false;
   late final StorageWsService _wsService;
@@ -363,6 +372,7 @@ class StorageService extends GetxService
       return;
     }
     try {
+      await _initCloudDeviceIds();
       await _updateBaseInfo();
       await _checkAndUploadLocalAppInfo();
       if (!await _ensureCompatibleWsVersion()) {
@@ -371,7 +381,8 @@ class StorageService extends GetxService
         return;
       }
       uploadSyncFailedData();
-      _loadMissingData();
+      // 缺失数据全量扫描统一由 _onWsConnected 在连接建立后触发，
+      // 避免启动时此处再跑一遍导致同一连接期内重复全量扫描。
       await _wsService.connect();
     } catch (err, stack) {
       logger.error(tag, err, stack);
@@ -438,11 +449,28 @@ class StorageService extends GetxService
 
   Future<void> stop() async {
     transportHeartbeatService.stop(_storageOnlineHeartbeatTaskName);
+    _cloudDeviceIds.clear();
     _client = null;
     _lastDate = '';
-    _lastDateFilePath = '';
     connRegService.removeDiscoverListener(this);
     await _wsService.disconnect();
+  }
+
+  /// 启动时列举一次云端设备目录（排除自身），填充心跳广播目标集。
+  /// 此处只读取设备目录 id，不读取设备信息/版本文件；失败不影响启动。
+  Future<void> _initCloudDeviceIds() async {
+    final client = _client;
+    if (client == null) {
+      return;
+    }
+    final list = await client.list(path: devicesInfoDir);
+    _cloudDeviceIds
+      ..clear()
+      ..addAll(
+        list
+            .where((item) => item.isDir && item.name != _selfDevId)
+            .map((item) => item.name),
+      );
   }
 
   Future<void> restart() async {
@@ -643,11 +671,18 @@ class StorageService extends GetxService
         logger.warn(tag, "_loadDeviceInfosFromStorage storage client is null");
         return result;
       }
-      final list = await client.list(path: devicesInfoDir);
-      final deviceIds = list
-          .where((item) => item.isDir)
-          .map((item) => item.name)
-          .toList();
+      // 优先复用启动时填充的云端设备 id 缓存，避免每次全量扫描都重复列举 devices-info；
+      // 缓存为空（如重连前未初始化）时回退列举一次，并顺带刷新缓存。
+      if (_cloudDeviceIds.isEmpty) {
+        final list = await client.list(path: devicesInfoDir);
+        _cloudDeviceIds
+          ..clear()
+          ..addAll(
+            list.where((item) => item.isDir).map((item) => item.name),
+          );
+      }
+      // 拷贝快照遍历，避免并发 online 消息修改集合触发并发修改异常。
+      final deviceIds = List<String>.from(_cloudDeviceIds);
       for (var devId in deviceIds) {
         if (devId == _selfDevId) {
           continue;
@@ -782,13 +817,6 @@ class StorageService extends GetxService
           tasks.add(() async {
             final date = DateTime.parse(record.time).format("yyyy-MM-dd");
             final historyDirPath = getHistoryDatePath(_selfDevId, date);
-            if (!await client.createDirectory(historyDirPath)) {
-              logger.warn(
-                tag,
-                "retry sync create directory failed! path = $historyDirPath",
-              );
-              return;
-            }
             final id = record.id;
             final path = "$historyDirPath/$id";
             final result = await client.createFile(
@@ -943,12 +971,9 @@ class StorageService extends GetxService
       logger.warn(tag, "_broadcastOnlineHeartbeat storage client is null");
       return;
     }
-    final list = await client.list(path: devicesInfoDir);
-    final deviceIds = list
-        .where((item) => item.isDir)
-        .map((item) => item.name)
-        .where((item) => item != _selfDevId)
-        .toList();
+    // 目标设备集来自启动时缓存 + online 消息增量，避免每 30s 重复列举云端设备目录。
+    // 遍历前拷贝快照，防止 await 发送期间收到 online 回调修改集合触发并发修改异常。
+    final deviceIds = List.of(_cloudDeviceIds);
     logger.debug(
       tag,
       "broadcast online heartbeat. trigger=${trigger.name}, targetCount=${deviceIds.length}",
@@ -1164,6 +1189,8 @@ class StorageService extends GetxService
       logger.debug(tag, "socket discovering");
       return;
     }
+    // 在线设备 id 增量入缓存，让心跳广播覆盖启动之后新出现/新上线的设备。
+    _cloudDeviceIds.add(devId);
     //已经连接，跳过
     final alreadyConnected = _isConnected(devId);
     if (alreadyConnected) {
@@ -1219,7 +1246,9 @@ class StorageService extends GetxService
     if (!connected) {
       await _connectDevice(msg.targetDevId);
     }
-    if (!_loadingMissingData) {
+    // 仅当设备由离线转为在线（真正重连）时才补拉缺失数据；
+    // 持续在线的设备依赖 change 消息增量同步，避免每次 online 心跳都触发全量扫描。
+    if (!alreadyConnected && !_loadingMissingData) {
       // 对端重连后主动补拉其离线期间写入的历史，避免只依赖 change 事件导致漏同步。
       unawaited(_reloadMissingDataForDevice(msg.targetDevId));
     }
@@ -1262,6 +1291,13 @@ class StorageService extends GetxService
     if (_loadingMissingData) {
       return;
     }
+    // 心跳节流：同设备距上次补拉过近则跳过，作为“仅真重连才补拉”之外的并发兜底。
+    final now = DateTime.now();
+    final lastReload = _lastReloadAt[devId];
+    if (lastReload != null && now.difference(lastReload) < _reloadMissingCoolDown) {
+      return;
+    }
+    _lastReloadAt[devId] = now;
     _loadingMissingData = true;
     try {
       final clientType = client.runtimeType;
@@ -1657,19 +1693,8 @@ class StorageService extends GetxService
       sync: true,
     );
 
+    // 文件写入由存储客户端优先直写，失败时再负责级联创建父目录。
     storagePath = "$datePath/files";
-    if (_lastDateFilePath != storagePath) {
-      if (!await client.createDirectory(storagePath)) {
-        logger.error(
-          tag,
-          "sync file create directory failed! storageDirPath = $storagePath",
-        );
-        //file sync progress failed
-        syncingFile.setState(SyncingFileState.error);
-        return;
-      }
-      _lastDateFilePath = storagePath;
-    }
     final storageFilePath = "$storagePath/$fileName";
     final storageFileInfoPath = "$storagePath/$id";
     //endregion
@@ -1858,21 +1883,7 @@ class StorageService extends GetxService
     }
     if (!hasData) {
       //写入存储服务
-      if (today != _lastDate) {
-        _lastDate = today;
-        final path = getHistoryDatePath(_selfDevId, today);
-        final result = await client.createDirectory(path);
-        if (!result) {
-          // Mark the record unsynced here so the retry query can pick it up again later.
-          await dbService.opRecordDao.updateStorageSyncStatus(id, false);
-          logger.warn(
-            tag,
-            "create history date directory failed! path = $path",
-          );
-          return;
-        }
-      }
-      var historyDirPath = getHistoryDatePath(_selfDevId, today);
+      final historyDirPath = getHistoryDatePath(_selfDevId, today);
       final path = "$historyDirPath/$id";
       final result = await client.createFile(
         path,
