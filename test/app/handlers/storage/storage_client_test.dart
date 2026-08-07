@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:clipshare/app/data/models/exception_info.dart';
 import 'package:clipshare/app/data/models/storage/storage_item.dart';
 import 'package:clipshare/app/handlers/storage/storage_client.dart';
-import 'package:clipshare/app/modules/settings_module/pages/settings_section_view_base.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 简单的测试替身，用于验证 [StorageClient] 抽象基类的共享逻辑。
@@ -14,6 +13,28 @@ class _FakeStorageClient extends StorageClient {
 
   String formatErrorDetailsForTest(String op, Map<String, Object?> details) {
     return formatStorageErrorDetails(op, details);
+  }
+
+  String normalizeStoragePathForTest(
+    String path, {
+    bool keepTrailingSlash = false,
+  }) {
+    return normalizeStoragePath(
+      path,
+      keepTrailingSlash: keepTrailingSlash,
+    );
+  }
+
+  String buildObjectStorageKeyForTest(
+    String path, {
+    required String baseDir,
+    bool isDirectory = false,
+  }) {
+    return buildObjectStorageKey(
+      path,
+      baseDir: baseDir,
+      isDirectory: isDirectory,
+    );
   }
 
   @override
@@ -102,32 +123,49 @@ class _FakeStorageClient extends StorageClient {
 void main() {
   group('StorageClient', () {
 
-    test('createDirectory uses direct creation with normalized path by default', () async {
+    test('createDirectory delegates raw path to concrete client implementation', () async {
       final client = _FakeStorageClient();
 
       final created = await client.createDirectory(' //foo///bar// ');
 
       expect(created, isTrue);
-      expect(client.createdPaths, <String>['/foo/bar']);
+      expect(client.createdPaths, <String>[' //foo///bar// ']);
     });
 
-    test('createDirectory creates each level when stepwise mode is enabled', () async {
+    test('normalizeStoragePath normalizes separators and trims path boundary slashes', () {
       final client = _FakeStorageClient();
 
-      final created = await client.createDirectory('/foo//bar/baz/');
-
-      expect(created, isTrue);
-      expect(client.createdPaths, <String>['/foo', '/foo/bar', '/foo/bar/baz']);
+      expect(
+        client.normalizeStoragePathForTest(r'\foo//bar/baz/'),
+        'foo/bar/baz',
+      );
+      expect(
+        client.normalizeStoragePathForTest(
+          r'\foo//bar/baz/',
+          keepTrailingSlash: true,
+        ),
+        'foo/bar/baz/',
+      );
     });
 
-    test('createDirectory stops when a stepwise segment fails', () async {
+    test('buildObjectStorageKey joins baseDir and public path consistently', () {
       final client = _FakeStorageClient();
-      client.failedPaths.add('/foo/bar');
 
-      final created = await client.createDirectory('/foo/bar/baz');
-
-      expect(created, isFalse);
-      expect(client.createdPaths, <String>['/foo', '/foo/bar']);
+      expect(
+        client.buildObjectStorageKeyForTest(
+          '/foo//bar',
+          baseDir: 'base/',
+        ),
+        'base/foo/bar',
+      );
+      expect(
+        client.buildObjectStorageKeyForTest(
+          '/foo//bar',
+          baseDir: 'base/',
+          isDirectory: true,
+        ),
+        'base/foo/bar/',
+      );
     });
 
     test('formatStorageErrorDetails includes op and skips null values', () {
