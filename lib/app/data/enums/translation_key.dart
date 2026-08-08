@@ -880,6 +880,7 @@ enum TranslationKey {
   ruleDetailModeBlacklist,
   ruleDetailModeWhitelist,
   ruleDetailRegexLabel,
+  ruleDetailRegexTip,
   ruleDetailExtractContent,
   ruleDetailModeLabel,
   ruleDetailActionLabel,
