@@ -68,6 +68,24 @@ class MultiWindowChannelService extends GetxService {
     _hideWindowIds.add(windowId);
   }
 
+  ///主进程隐藏（关闭）指定的子窗口。
+  ///
+  /// 与 [closeWindow] 不同，这里只通知子窗口隐藏自身并同步主进程的隐藏状态，
+  /// 不会调用 windowManager.hide()，避免误隐藏主进程自身的窗口。
+  Future hideChildWindow(int windowId, MultiWindowTag tag) async {
+    if (!PlatformExt.isDesktop) return Future.value();
+    if (isHideWindow(windowId)) return Future.value();
+    _hideWindowIds.add(windowId);
+    return DesktopMultiWindow.invokeMethod(
+      windowId,
+      MultiWindowMethod.closeWindow.name,
+      jsonEncode({
+        "tag": tag.name,
+        "closeWindowId": windowId,
+      }),
+    );
+  }
+
   bool isHideWindow(int? windowId) {
     return _hideWindowIds.contains(windowId);
   }

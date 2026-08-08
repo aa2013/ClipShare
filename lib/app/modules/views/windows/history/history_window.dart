@@ -72,10 +72,8 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   final windowControlService = Get.find<WindowControlService>();
   Timer? _timer;
   bool filterLoading = true;
-  /// 弹窗最近一次从隐藏状态恢复显示的时间，用于抑制显示瞬间的失焦自动关闭。
+  /// 弹窗最近一次从隐藏状态恢复显示的时间，用于抑制显示瞬间的失焦兜底关闭。
   DateTime? _lastShownAt;
-  /// 本次显示后是否已成功获得焦点；成功聚焦前的失焦视为显示/抢焦过程的瞬时事件。
-  bool _focusedAfterShow = false;
   late final HistoryFilterController historyFilterController;
 
   @override
@@ -137,15 +135,13 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
           var [x, y] = (position as List<dynamic>).cast<double>();
           windowManager.setPosition(Offset(x, y));
         }
-        // 记录显示时间：显示/抢焦过程中可能产生瞬时失焦事件，
-        // 需要抑制这段时间内的失焦自动关闭，避免窗口“闪一下就消失”。
+        // 记录显示时间：弹窗不激活，正常情况下不会产生失焦事件；
+        // 该时间用于抑制显示瞬间意外失焦导致的兜底关闭，避免窗口“闪一下就消失”。
         _lastShownAt = DateTime.now();
-        _focusedAfterShow = false;
         widget.windowController.show();
         windowManager.setAlwaysOnTop(true);
-        // 显示后主动抢占焦点，确保原生前台窗口追踪器记录“当前软件→弹窗”的切换，
-        // 使 pasteToPreviousWindow 的“上一个窗口”始终为打开弹窗前所在的软件。
-        windowManager.focus();
+        // 不再调用 windowManager.focus()：弹窗已通过 WS_EX_NOACTIVATE 设为不激活，
+        // 避免抢占前台焦点打断用户输入；粘贴目标由插件记录的“打开弹窗前的前台窗口”保证。
         historyFilterController.resetFilter();
         refresh();
         break;
@@ -180,26 +176,24 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   }
 
   @override
-  /// 子窗口失焦时按主窗口偏好决定是否自动隐藏，保持多窗口状态由主窗口统一管理。
+  /// 弹窗失焦兜底：弹窗不激活后几乎不会触发失焦事件，这里仅在弹窗
+  /// 意外获得焦点并再次失去时兜底关闭，避免弹窗残留。
   void onWindowBlur() {
-    // 弹窗刚显示、尚未成功抢到焦点前的失焦是显示/置顶过程的瞬时事件，
-    // 不触发自动关闭，避免“闪一下就消失”、需按两次 Win+V 的问题。
-    // 一旦成功聚焦（onWindowFocus），后续任何失焦都视为真实失焦，立即生效。
+    // 抑制显示瞬间的意外失焦，避免窗口“闪一下就消失”。
     final shownAt = _lastShownAt;
-    if (shownAt != null && DateTime.now().difference(shownAt) < 500.ms && !_focusedAfterShow) {
+    if (shownAt != null && DateTime.now().difference(shownAt) < 500.ms) {
       return;
     }
+    _closeIfPreferenceEnabled();
+  }
+
+  /// 按主窗口偏好决定是否关闭弹窗，双击复制与失焦兜底共用。
+  void _closeIfPreferenceEnabled() {
     if (!multiWindowConfigService.autoClosePopupOnBlur) {
       return;
     }
     // 统一走主窗口维护的隐藏流程，避免子窗口自行关闭后主窗口状态不同步。
     multiWindowService.closeWindow(0, widget.windowController.windowId, MultiWindowTag.history);
-  }
-
-  @override
-  void onWindowFocus() {
-    // 窗口成功获得焦点后，失焦即视为真实失焦，不再被瞬时事件抑制。
-    _focusedAfterShow = true;
   }
 
   @override
@@ -372,7 +366,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                           clip: item.data,
                           selectMode: _selectionController.enabled,
                           selected: _selectionController.contains(item.data),
-                          onCopied: onWindowBlur,
+                          onCopied: _closeIfPreferenceEnabled,
                           onTap: () {
                             if (_selectionController.enabled) {
                               _selectionController.toggleItem(item.data);

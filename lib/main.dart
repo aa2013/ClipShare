@@ -35,6 +35,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/windows_injector.dart';
+import 'package:clipshare/app/utils/windows_popup_utils.dart';
 import 'package:clipshare/app/widgets/base/custom_title_bar_layout.dart';
 import 'package:clipshare/app/widgets/base/system_theme_mode_sync.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
@@ -64,6 +65,10 @@ Future<void> main(List<String> args) async {
           Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
           switch (multiWindowArgs.tag) {
             case MultiWindowTag.history:
+              // 历史弹窗不激活、不抢占前台焦点，让用户打开弹窗后仍可在原应用中继续输入。
+              if (Platform.isWindows) {
+                applyNoActivateToCurrentWindow();
+              }
               home = HistoryWindow(
                 windowController: WindowController.fromWindowId(windowId),
                 args: multiWindowArgs.otherArgs,

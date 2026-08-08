@@ -76,6 +76,9 @@ dependencies:
   hotkey_manager: ^0.2.2
   # Windows 注册表
   win32_registry: ^2.1.0
+  # Windows 原生 API（弹窗 WS_EX_NOACTIVATE）
+  win32: ^5.15.0
+  ffi: ^2.2.0
   # 允许 Flutter 桌面应用检索关于屏幕大小，显示，光标位置等信息。
   screen_retriever: ^0.2.0
   # 提供一种平台无关的方式以一致的方式访问设备的文件位置系统
@@ -111,7 +114,7 @@ dependencies:
   # 月份选择
   month_picker_dialog: ^5.1.2
   # 剪贴板监听
-  clipshare_clipboard_listener: ^1.3.4
+  clipshare_clipboard_listener: ^1.3.5
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
   # 大文本编辑器

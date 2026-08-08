@@ -1947,6 +1947,16 @@ class EnUSTranslation extends AbstractTranslations {
         return "Incompatible version";
       case TranslationKey.storageWsVersionIncompatibleDialogContent:
         return "Current notification service version: @version. Minimum required: @minVersion. Please upgrade it before using storage sync.";
+      case TranslationKey.noTargetWindow:
+        return 'Paste failed: no target window was found that can receive the paste action.';
+      case TranslationKey.openTargetProcessFailed:
+        return 'Paste failed: the target process could not be opened for inspection.';
+      case TranslationKey.inspectTargetFailed:
+        return 'Paste failed: the target process integrity level could not be read. Elevated privileges may be required.';
+      case TranslationKey.inspectSelfFailed:
+        return 'Paste failed: the current process integrity level could not be read.';
+      case TranslationKey.targetIntegrityHigher:
+        return 'Paste failed: elevated privileges may be required.';
     }
   }
 }

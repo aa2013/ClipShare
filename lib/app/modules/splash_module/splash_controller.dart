@@ -10,8 +10,10 @@ import 'package:clipshare/app/data/repository/entity/tables/operation_record.dar
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/paste_window_result_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
+import 'package:clipshare/app/utils/notify_util.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare/app/data/enums/channelMethods/android_channel_method.dart';
@@ -293,12 +295,12 @@ class SplashController extends GetxController {
             final history = await dbService.historyDao.getById(id);
             if (history != null) {
               await history.copyContent();
-              await clipboardManager.pasteToPreviousWindow();
+              var result = await clipboardManager.pasteToPreviousWindow();
+              if(result != PasteResult.success){
+                NotifyUtil.notify(content: result.tr, key: 'paste2Window');
+              }
             }
           } catch (err, stack) {
-            // 复制/粘贴失败不能让 IPC 中断：否则子窗口 await copy 抛错，
-            // onCopied 不执行、弹窗不会关闭。记录日志后正常返回，
-            // 让子窗口照常走关闭流程。
             logger.error(tag, err, stack);
           }
           break;

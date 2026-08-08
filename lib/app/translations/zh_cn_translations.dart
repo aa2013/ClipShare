@@ -1942,6 +1942,17 @@ class ZhCNTranslation extends AbstractTranslations {
         return "通知服务版本不兼容";
       case TranslationKey.storageWsVersionIncompatibleDialogContent:
         return "当前通知服务版本为 @version，最低需要 @minVersion，请升级通知服务后再使用存储同步。";
+
+      case TranslationKey.noTargetWindow:
+        return '粘贴失败，没有找到可接收此次粘贴操作的目标窗口';
+      case TranslationKey.openTargetProcessFailed:
+        return '粘贴失败，无法打开目标进程以进行检查';
+      case TranslationKey.inspectTargetFailed:
+        return '粘贴失败，无法读取目标进程的完整性级别，可能需要提升权限';
+      case TranslationKey.inspectSelfFailed:
+        return '粘贴失败，无法读取当前进程的完整性级别';
+      case TranslationKey.targetIntegrityHigher:
+        return '粘贴失败，可能需要提升权限';
     }
   }
 }

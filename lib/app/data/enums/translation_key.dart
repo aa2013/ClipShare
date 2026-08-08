@@ -959,7 +959,12 @@ enum TranslationKey {
   settingsOverviewPermissionIssueCount,
   settingsOverviewForwardClosed,
   permissionSettingsIOSPhotosTitle,
-  permissionSettingsIOSPhotosDesc;
+  permissionSettingsIOSPhotosDesc,
+  noTargetWindow,
+  openTargetProcessFailed,
+  inspectTargetFailed,
+  inspectSelfFailed,
+  targetIntegrityHigher;
 
   String get tr => name.tr;
 
