@@ -127,9 +127,13 @@ class DeviceService extends GetxService {
   }
 
   /// 设备连接断开后，移除该协议来源的运行态优先级，允许 storage 在无 socket 时恢复可信配对。
-  void clearPairingSource(String devId, TransportProtocol protocol) {
+  /// [force] 为 true 时强制清除（含 manual 配对来源），用于 socket 会话关闭后允许存储接管。
+  void clearPairingSource(String devId, TransportProtocol protocol, {bool force = false}) {
     final previous = _pairingSources[devId];
-    if (previous == null || previous.manual || previous.priority != _pairingPriority(protocol)) {
+    if (previous == null) {
+      return;
+    }
+    if (!force && (previous.manual || previous.priority != _pairingPriority(protocol))) {
       return;
     }
     _pairingSources.remove(devId);
