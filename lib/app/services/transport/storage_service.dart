@@ -1193,6 +1193,8 @@ class StorageService extends GetxService
     _cloudDeviceIds.add(devId);
     //已经连接，跳过
     final alreadyConnected = _isConnected(devId);
+    // 探活失败即视为 socket 掉线，后续直接走存储接管，不依赖 UI 在线列表判断。
+    var socketDied = false;
     if (alreadyConnected) {
       final isSocket = _registry.getProtocol(devId)?.isSocket ?? false;
       if (isSocket) {
@@ -1205,6 +1207,7 @@ class StorageService extends GetxService
           logger.debug(tag, "connected, skip");
           return;
         }
+        socketDied = true;
       }
     }
     if (!alreadyConnected) {
@@ -1239,11 +1242,8 @@ class StorageService extends GetxService
       );
       return;
     }
-    final devController = Get.find<DeviceController>();
-    final connected = devController.onlineAndPairedList
-        .where((item) => item.guid == msg.targetDevId)
-        .isNotEmpty;
-    if (!connected) {
+    // socket 探活失败或从未注册时直接走存储接管，避免依赖 UI 列表的异步竞态。
+    if (socketDied || !alreadyConnected) {
       await _connectDevice(msg.targetDevId);
     }
     // 仅当设备由离线转为在线（真正重连）时才补拉缺失数据；
@@ -1263,11 +1263,8 @@ class StorageService extends GetxService
     if (isSocketConnected) {
       return;
     }
-    final devController = Get.find<DeviceController>();
-    final connected = devController.onlineAndPairedList.any(
-      (item) => item.guid == devId,
-    );
-    if (connected) {
+    // 此时 socket 已确认未连接，若注册表仍持有该设备则说明已有其他通道接管，跳过。
+    if (_isConnected(devId)) {
       return;
     }
     logger.debug(
@@ -1563,6 +1560,8 @@ class StorageService extends GetxService
         );
       }
       _registry.addDevice(DevInfo.fromDevice(device), protocol);
+      // 存储接管后取消同设备 socket 重连循环，避免继续空转重试。
+      Get.find<SocketService>().cancelReconnect(devId);
     } catch (err, stack) {
       logger.error(tag, err, stack);
     }

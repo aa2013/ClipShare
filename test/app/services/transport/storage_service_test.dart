@@ -41,7 +41,9 @@ import 'package:clipshare/app/services/transport/socket_service.dart';
 import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/services/transport/transport_heartbeat_service.dart';
 import 'package:clipshare/app/handlers/storage/web_dav_client.dart';
+import 'package:clipshare/app/utils/parallerl_task.dart';
 import 'package:clipshare/app/utils/snowflake.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:msgpack_dart/msgpack_dart.dart' as m2;
@@ -744,6 +746,118 @@ void main() {
       expect(registry.getProtocol(peerDevId), TransportProtocol.webdav);
       expect(notifyService.connectedDevIds, contains(peerDevId));
     });
+
+    test('clearPairingSource 不带 force 保留 manual 来源', () async {
+      final deviceService = Get.find<DeviceService>();
+      // 模拟 _onDevPaired 完成 socket 配对，产生 manual 配对来源。
+      await deviceService.confirmPairingState(
+        device: _buildDevice(peerDevId, 'Peer Device'),
+        localIsPaired: true,
+        remoteIsPaired: true,
+        protocol: TransportProtocol.direct,
+        manual: true,
+      );
+      deviceService.clearPairingSource(peerDevId, TransportProtocol.direct);
+      final blocked = await deviceService.confirmPairingState(
+        device: _buildDevice(peerDevId, 'Peer Device'),
+        localIsPaired: true,
+        remoteIsPaired: true,
+        protocol: TransportProtocol.webdav,
+      );
+      // manual 来源仍会拦截 storage 自恢复。
+      expect(blocked.accepted, isFalse);
+    });
+
+    test('clearPairingSource force 可清除 manual 来源', () async {
+      final deviceService = Get.find<DeviceService>();
+      await deviceService.confirmPairingState(
+        device: _buildDevice(peerDevId, 'Peer Device'),
+        localIsPaired: true,
+        remoteIsPaired: true,
+        protocol: TransportProtocol.direct,
+        manual: true,
+      );
+      deviceService.clearPairingSource(
+        peerDevId,
+        TransportProtocol.direct,
+        force: true,
+      );
+      final accepted = await deviceService.confirmPairingState(
+        device: _buildDevice(peerDevId, 'Peer Device'),
+        localIsPaired: true,
+        remoteIsPaired: true,
+        protocol: TransportProtocol.webdav,
+      );
+      // 强制清除后允许存储接管。
+      expect(accepted.accepted, isTrue);
+    });
+
+    test('manual 配对 socket 探活失败后 storage online 可接管', () async {
+      final socketService = Get.find<SocketService>() as _TestSocketService;
+      final deviceService = Get.find<DeviceService>();
+      socketService.onlineResults[peerDevId] = false;
+
+      // 模拟 _onDevPaired 完成 socket 配对，产生 manual 配对来源（修复前会挡住存储接管）。
+      await deviceService.confirmPairingState(
+        device: _buildDevice(peerDevId, 'Peer Device'),
+        localIsPaired: true,
+        remoteIsPaired: true,
+        protocol: TransportProtocol.direct,
+        manual: true,
+      );
+      registry.addDevice(
+        DevInfo(peerDevId, 'Peer Device', 'android'),
+        TransportProtocol.direct,
+      );
+
+      final sessionFuture = wsServer.acceptedSessions.stream.first;
+      await storageService.start();
+      final session = await sessionFuture;
+      await _pumpAsyncQueue();
+      notifyService.clear();
+
+      await session.send(
+        jsonEncode(
+          WsMsgData(
+            WsMsgType.online,
+            jsonEncode(<String, dynamic>{
+              'ipList': <String>[],
+              'port': 9527,
+            }),
+            peerDevId,
+          ).toJson(),
+        ),
+      );
+      await _waitForProtocol(registry, peerDevId, TransportProtocol.webdav);
+
+      expect(socketService.testedDevIds, contains(peerDevId));
+      expect(registry.getProtocol(peerDevId), TransportProtocol.webdav);
+      expect(notifyService.connectedDevIds, contains(peerDevId));
+    });
+
+    test('存储接管后 socket 重连循环立即退出', () async {
+      final socketService = Get.find<SocketService>() as _TestSocketService;
+      registry.addDevice(
+        DevInfo(peerDevId, 'Peer Device', 'android'),
+        TransportProtocol.webdav,
+      );
+      await socketService.reconnectOnce(peerDevId);
+      // 存储已接管，重连循环应直接退出，不再尝试探活或直连。
+      expect(socketService.testedDevIds, isNot(contains(peerDevId)));
+      expect(socketService.reconnectAttempts, isEmpty);
+    });
+
+    test('未接管时重连循环仍按 probe→直连 顺序执行', () async {
+      final socketService = Get.find<SocketService>() as _TestSocketService;
+      dbService.deviceById[peerDevId] =
+          _buildDevice(peerDevId, 'Peer Device').copyWith(
+        internalAddress: '1.2.3.4:9527',
+      );
+      await socketService.reconnectOnce(peerDevId);
+      // 未接管时保持原有重连顺序：先探活，再尝试内网直连。
+      expect(socketService.testedDevIds, contains(peerDevId));
+      expect(socketService.reconnectAttempts, contains('direct:$peerDevId'));
+    });
   });
 
   group('WebDAV direct-first fallback', () {
@@ -1055,6 +1169,9 @@ class _TestConfigService extends GetxService implements ConfigService {
   int get userId => 1;
 
   @override
+  final currentNetWorkType = ConnectivityResult.wifi.obs;
+
+  @override
   int get port => 9527;
 
   @override
@@ -1357,6 +1474,7 @@ class _TestSocketService extends SocketService {
 
   final Map<String, bool> onlineResults = <String, bool>{};
   final List<String> testedDevIds = <String>[];
+  final List<String> reconnectAttempts = <String>[];
 
   @override
   bool get discovering => false;
@@ -1366,9 +1484,39 @@ class _TestSocketService extends SocketService {
     testedDevIds.add(devId);
     final online = onlineResults[devId] ?? false;
     if (!online) {
+      // 模拟真实 _closeCurrentSession 的关闭语义：清理注册表并强制清除配对来源。
       testRegistry.removeDevice(devId);
+      Get.find<DeviceService>().clearPairingSource(
+        devId,
+        TransportProtocol.direct,
+        force: true,
+      );
     }
     return online;
+  }
+
+  @override
+  Future<bool> manualConnect(
+    String host, {
+    String? sourceAddress,
+    int? port,
+    Function? onErr,
+    Map<String, dynamic> data = const {},
+    bool forward = false,
+    String? targetDevId,
+    CancelToken? cancelToken,
+  }) async {
+    reconnectAttempts.add('direct:$targetDevId');
+    return false;
+  }
+
+  @override
+  Future<bool> manualConnectByForward(
+    String devId, {
+    CancelToken? cancelToken,
+  }) async {
+    reconnectAttempts.add('forward:$devId');
+    return false;
   }
 }
 

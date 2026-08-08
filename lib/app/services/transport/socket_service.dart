@@ -368,6 +368,7 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
     devService.clearPairingSource(
       devId,
       session.socket.isForwardMode ? TransportProtocol.server : TransportProtocol.direct,
+      force: true,
     );
     _registry.removeDevice(devId);
     for (var listener in _devAliveListeners) {
@@ -1763,6 +1764,15 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
       if (token.isCanceled || _disposed) {
         return;
       }
+      // 已被存储中转接管时直接退出重连循环，避免继续空转重试。
+      final protocol = _registry.getProtocol(guid);
+      if (protocol != null && !protocol.isSocket) {
+        logger.debug(
+          tag,
+          "Reconnect loop exits because device is taken over by storage. device=${dev.name}",
+        );
+        return;
+      }
       attempted = true;
       if (await testIsOnline(guid, autoReconnect: false)) {
         final devSkt = _sessions.get(guid);
@@ -1830,6 +1840,11 @@ class SocketService extends GetxService with ScreenOpenedObserver, DataSender {
   void _cancelReconnect(String guid) {
     _reconnectTokenSources.remove(guid)?.cancel();
     _reconnectTasks.remove(guid);
+  }
+
+  /// 对外取消同设备重连循环，供存储中转接管等场景调用。
+  void cancelReconnect(String guid) {
+    _cancelReconnect(guid);
   }
 
   /// 合并本次请求令牌和外部取消令牌，任一令牌取消都让候选连接失效。
