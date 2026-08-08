@@ -513,44 +513,44 @@ class RulesController extends GetxController with WidgetsBindingObserver {
     RuleExecParams params, {
     String? scriptHash,
   }) async {
-    if (rule.isUseScript) {
-      final language = rule.script.language;
-      if (language != RuleScriptLanguage.lua) {
-        return RuleExecResult.error('not support language: $language');
-      }
-      final paramsJson = jsonEncode(params);
-      var hash = scriptHash ?? rule.id.toString();
-      var taskId = appConfig.snowflake.nextIdStr();
-      final completer = Completer<String>();
-      _luaCallbacks[taskId] = completer;
-      final result = _lua.run(
-        "return run_user_sandbox_method('$taskId', '$hash','$paramsJson')",
-      );
-      logger.debug(tag, 'run log result: $result');
-      if (result.containsIgnoreCase("error") && !completer.isCompleted) {
-        _luaCallbacks.remove(taskId);
-        completer.complete(result);
-      }
-      final scriptResult = await completer.future.timeout(
-        const Duration(seconds: 60),
-        onTimeout: () {
+    try {
+      if (rule.isUseScript) {
+        final language = rule.script.language;
+        if (language != RuleScriptLanguage.lua) {
+          return RuleExecResult.error('not support language: $language');
+        }
+        final paramsJson = jsonEncode(params);
+        var hash = scriptHash ?? rule.id.toString();
+        var taskId = appConfig.snowflake.nextIdStr();
+        final completer = Completer<String>();
+        _luaCallbacks[taskId] = completer;
+        final result = _lua.run(
+          "return run_user_sandbox_method('$taskId', '$hash','$paramsJson')",
+        );
+        logger.debug(tag, 'run log result: $result');
+        if (result.containsIgnoreCase("error") && !completer.isCompleted) {
           _luaCallbacks.remove(taskId);
-          return 'Lua script execution timed out';
-        },
-      );
-      logger.debug(tag, 'run result: $scriptResult');
-      try {
-        final result = jsonDecode(scriptResult);
-        return RuleExecResult.success(RuleApplyResult.fromJson(result));
-      } catch (err, stack) {
-        final msg = "$err\n$stack";
-        logger.error(tag, err, stack);
-        return RuleExecResult.error(msg);
+          completer.complete(result);
+        }
+        final scriptResult = await completer.future.timeout(
+          const Duration(seconds: 60),
+          onTimeout: () {
+            _luaCallbacks.remove(taskId);
+            return 'Lua script execution timed out';
+          },
+        );
+        logger.debug(tag, 'run result: $scriptResult');
+        final map = jsonDecode(scriptResult);
+        return RuleExecResult.success(RuleApplyResult.fromJson(map));
+      } else {
+        final regexRule = rule.regex;
+        final result = regexRule.apply(params);
+        return RuleExecResult.success(result);
       }
-    } else {
-      final regexRule = rule.regex;
-      final result = regexRule.apply(params);
-      return RuleExecResult.success(result);
+    } catch (err, stack) {
+      final msg = "$err\n$stack";
+      logger.error(tag, err, stack);
+      return RuleExecResult.error(msg);
     }
   }
 

@@ -1786,9 +1786,11 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.ruleDetailModeWhitelist:
         return 'Whitelist';
       case TranslationKey.ruleDetailRegexLabel:
-        return 'Rule:';
+        return 'Match rule:';
+      case TranslationKey.ruleDetailRegexTip:
+        return 'Regex is case-insensitive by default; the extraction rule only extracts the first match.';
       case TranslationKey.ruleDetailExtractContent:
-        return 'Extract content';
+        return 'Extract rule:';
       case TranslationKey.ruleDetailModeLabel:
         return 'Rule mode';
       case TranslationKey.ruleDetailActionLabel:

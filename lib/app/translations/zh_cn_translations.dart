@@ -1782,9 +1782,11 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.ruleDetailModeWhitelist:
         return '白名单';
       case TranslationKey.ruleDetailRegexLabel:
-        return '规则：';
+        return '识别规则：';
+      case TranslationKey.ruleDetailRegexTip:
+        return '正则默认忽略大小写，提取规则只提取匹配到的第一个内容';
       case TranslationKey.ruleDetailExtractContent:
-        return '提取内容';
+        return '提取规则：';
       case TranslationKey.ruleDetailModeLabel:
         return '规则模式';
       case TranslationKey.ruleDetailActionLabel:

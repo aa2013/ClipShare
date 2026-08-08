@@ -543,65 +543,101 @@ class _RuleDetailState extends State<RuleDetail> with SingleTickerProviderStateM
     final currentMode = whiteBlackMode;
     final isBlacklistMode = currentMode == WhiteBlackMode.black;
     final isWhitelistMode = currentMode == WhiteBlackMode.white;
-    return Column(
+    // 识别规则输入列：上方为识别规则输入框
+    final ruleInputColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: 10.insetV,
+          child: Text(TranslationKey.ruleDetailRegexLabel.tr),
+        ),
+        TextField(
+          maxLines: regexTextFieldMaxLines,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hint: Text(TranslationKey.ruleDetailRegexHint.tr),
+          ),
+          controller: regexTextController,
+        ),
+      ],
+    );
+    // 提取规则输入列：上方为提取开关与输入框，开关与标签左右分开布局
+    final extractInputColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: 10.insetV,
-                    child: Text(TranslationKey.ruleDetailRegexLabel.tr),
-                  ),
-                  TextField(
-                    maxLines: regexTextFieldMaxLines,
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      hint: Text(TranslationKey.ruleDetailRegexHint.tr),
-                    ),
-                    controller: regexTextController,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 5),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  IntrinsicWidth(
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: isAllowExtractData,
-                          onChanged: (checked) {
-                            setState(() {
-                              isAllowExtractData = checked ?? false;
-                            });
-                          },
-                        ),
-                        Text(TranslationKey.ruleDetailExtractContent.tr),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  TextField(
-                    enabled: isAllowExtractData,
-                    maxLines: regexTextFieldMaxLines,
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      hint: Text(TranslationKey.ruleDetailRegexHint.tr),
-                    ),
-                    controller: extractTextController,
-                  ),
-                ],
-              ),
+            Text(TranslationKey.ruleDetailExtractContent.tr),
+            // 启用开关，带"启用"文案标签
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(TranslationKey.enable.tr),
+                Checkbox(
+                  value: isAllowExtractData,
+                  onChanged: (checked) {
+                    setState(() {
+                      isAllowExtractData = checked ?? false;
+                    });
+                  },
+                ),
+              ],
             ),
           ],
         ),
+        const SizedBox(height: 2),
+        TextField(
+          enabled: isAllowExtractData,
+          maxLines: regexTextFieldMaxLines,
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hint: Text(TranslationKey.ruleDetailRegexHint.tr),
+          ),
+          controller: extractTextController,
+        ),
+      ],
+    );
+    // 小屏设备上下布局，桌面端左右并排布局
+    final inputsLayout = appConfig.isSmallScreen
+        ? Column(
+            children: [
+              ruleInputColumn,
+              const SizedBox(height: 10),
+              extractInputColumn,
+            ],
+          )
+        : Row(
+            children: [
+              Expanded(child: ruleInputColumn),
+              const SizedBox(width: 5),
+              Expanded(child: extractInputColumn),
+            ],
+          );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // 正则使用提示：前缀"提示："加粗突出，内容为说明文案
+        Container(
+          margin: 10.insetT,
+          child: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '${TranslationKey.tips.tr}: ',
+                  style: TextStyle(
+                    color: Colors.brown.withAlpha(200),
+                  ),
+                ),
+                TextSpan(
+                  text: TranslationKey.ruleDetailRegexTip.tr,
+                  style: const TextStyle(color: Colors.blueGrey),
+                ),
+              ],
+            ),
+          ),
+        ),
+        inputsLayout,
 
         ///region 规则模式
         Row(

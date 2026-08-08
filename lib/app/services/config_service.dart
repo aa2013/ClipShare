@@ -68,7 +68,6 @@ import 'package:path/path.dart' as p;
 final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
-
   ConfigDao get configDao => Get.find<DbService>().configDao;
 
   RuleDao get ruleDao => Get.find<DbService>().ruleDao;
@@ -650,7 +649,13 @@ class ConfigService extends GetxService {
   ///加载配置信息
   Future<void> loadConfigs() async {
     var cfg = configDao;
-    _port = (await cfg.getConfigByKey(ConfigKey.port, Constants.port)).obs;
+    final int defaultPort;
+    if (kDebugMode) {
+      defaultPort = Constants.port - 1;
+    } else {
+      defaultPort = Constants.port;
+    }
+    _port = (await cfg.getConfigByKey(ConfigKey.port, defaultPort)).obs;
     _localName = (await cfg.getConfigByKey(ConfigKey.localName, '')).obs;
     _startMini = (await cfg.getConfigByKey(ConfigKey.startMini, false)).obs;
     _allowDiscover = (await cfg.getConfigByKey(ConfigKey.allowDiscover, true)).obs;
@@ -899,14 +904,17 @@ class ConfigService extends GetxService {
     final execDirPath = File(Platform.resolvedExecutable).parent.absolute.path;
     if (Platform.isMacOS) {
       luaLibDirPath = p.join(
-          execDirPath,           // .../Contents/MacOS
-          '..',                  // 回到 Contents/
-          'Frameworks',
-          'App.framework',
-          'Resources',           // Contents/Frameworks/App.framework/Resources
-          'flutter_assets',
-          'assets',
-          'lua'
+        execDirPath,
+        // .../Contents/MacOS
+        '..',
+        // 回到 Contents/
+        'Frameworks',
+        'App.framework',
+        'Resources',
+        // Contents/Frameworks/App.framework/Resources
+        'flutter_assets',
+        'assets',
+        'lua',
       );
     } else if (Platform.isIOS) {
       luaLibDirPath = p.join(execDirPath, "Frameworks", "App.framework", "flutter_assets", "assets", "lua");
@@ -972,17 +980,17 @@ class ConfigService extends GetxService {
       databasePath = envDatabasePath;
     }
     if (fileStorePath != null) {
-      try{
+      try {
         await Directory(fileStorePath).create(recursive: true);
-      }catch(err, stack){
+      } catch (err, stack) {
         fileStorePath = null;
         logger.error(tag, err, stack);
       }
     }
     if (databasePath != null) {
-      try{
+      try {
         await Directory(databasePath).create(recursive: true);
-      }catch(err, stack){
+      } catch (err, stack) {
         databasePath = null;
         logger.error(tag, err, stack);
       }
@@ -992,7 +1000,7 @@ class ConfigService extends GetxService {
 
   ///文件默认存储路径
   Future<void> _initFileStorePath(AppPathConfig custom) async {
-    if(custom.fileStorePath != null){
+    if (custom.fileStorePath != null) {
       defaultFileStorePath = custom.fileStorePath!;
       return;
     }
@@ -1023,7 +1031,7 @@ class ConfigService extends GetxService {
 
   ///数据库路径
   Future<void> _initDatabasePath(AppPathConfig custom) async {
-    if(custom.databasePath != null){
+    if (custom.databasePath != null) {
       databasePath = custom.databasePath!;
       return;
     }
@@ -1792,7 +1800,7 @@ class ConfigService extends GetxService {
           final isDefaultTag = name == TranslationKey.defaultLinkTagName.tr;
           rules.add(
             Rule(
-              id: isDefaultTag ? 2061101839524896768 :snowflake.nextId(),
+              id: isDefaultTag ? 2061101839524896768 : snowflake.nextId(),
               name: name,
               platforms: allPlatforms,
               trigger: RuleTrigger.onCopy.name,
@@ -2029,8 +2037,8 @@ class ConfigService extends GetxService {
     Get.updateLocale(locale);
     final windowChannelService = Get.find<MultiWindowChannelService>();
     windowChannelService.updateConfig(MultiWindowConfig.language, {
-      'languageCode':locale.languageCode,
-      'countryCode':locale.countryCode,
+      'languageCode': locale.languageCode,
+      'countryCode': locale.countryCode,
     });
   }
 
