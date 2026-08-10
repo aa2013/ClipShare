@@ -300,9 +300,13 @@ class StorageService extends GetxService
       return false;
     }
     //ws send
-    final devController = Get.find<DeviceController>();
-    for (var dev in devController.onlineAndPairedList) {
-      _wsService.send(WsMsgData(WsMsgType.appInfo, id.toString(), dev.guid));
+    final devIds = _registry.getDevIdsByStorage();
+    logger.info(
+      tag,
+      "notify storage devices appInfo. targetCount=${devIds.length}",
+    );
+    for (final devId in devIds) {
+      _wsService.send(WsMsgData(WsMsgType.appInfo, id.toString(), devId));
     }
     return true;
   }
@@ -844,13 +848,14 @@ class StorageService extends GetxService
               });
             }
             // Notify storage peers after retry success so they can load the recovered record.
-            final devController = Get.find<DeviceController>();
-            final devices = devController.onlineAndPairedList.where(
-              (dev) => dev.isUseStorage,
+            final devIds = _registry.getDevIdsByStorage();
+            logger.info(
+              tag,
+              "notify storage devices changed. targetCount=${devIds.length}",
             );
-            for (var dev in devices) {
+            for (final devId in devIds) {
               _wsService.send(
-                WsMsgData(WsMsgType.change, "$date:$id", dev.guid),
+                WsMsgData(WsMsgType.change, "$date:$id", devId),
               );
             }
           });
@@ -1745,7 +1750,6 @@ class StorageService extends GetxService
           utf8.encode(jsonEncode(data)),
           createDir: true,
         );
-        //涓婁紶鏂囦欢淇℃伅
         if (!fileInfoCreated) {
           await client.deleteFile(storageFilePath);
           logger.warn(
@@ -1901,7 +1905,10 @@ class StorageService extends GetxService
     }
     // notify
     if (dev != null) {
+      logger.warn(tag, "notify on changed, dev = ${dev.name}(${dev.guid})");
       _wsService.send(WsMsgData(WsMsgType.change, "$today:$id", dev.guid));
+    } else {
+      logger.warn(tag, "notify canceled: dev is null");
     }
   }
 
