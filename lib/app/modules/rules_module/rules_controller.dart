@@ -544,6 +544,9 @@ class RulesController extends GetxController with WidgetsBindingObserver {
         return RuleExecResult.success(RuleApplyResult.fromJson(map));
       } else {
         final regexRule = rule.regex;
+        if (regexRule.mainRegex.isNullOrEmpty) {
+          return RuleExecResult.ignore();
+        }
         final result = regexRule.apply(params);
         return RuleExecResult.success(result);
       }

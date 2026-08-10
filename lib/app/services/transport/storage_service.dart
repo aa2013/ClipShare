@@ -114,7 +114,7 @@ class StorageService extends GetxService
   /// 补拉缺失数据的冷却时长：同设备距上次补拉过近则直接跳过，避免反复全量扫描。
   static const _reloadMissingCoolDown = Duration(seconds: 60);
   static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
-  static const _minCompatibleWsVersion = SemanticVersion(1, 1, 0);
+  static const _minCompatibleWsVersion = SemanticVersion(1, 2, 0);
   static const _incompatibleWsVersionNotifyKey = 'storage-ws-incompatible-version';
 
   String get _selfDevId => appConfig.device.guid;
