@@ -30,6 +30,7 @@ class ClipDataCardCompact extends StatefulWidget {
   final VoidCallback onCopied;
   final bool selectMode;
   final bool selected;
+  final bool clickToPaste;
 
   const ClipDataCardCompact({
     super.key,
@@ -44,6 +45,7 @@ class ClipDataCardCompact extends StatefulWidget {
     this.onMoreActionsTap,
     this.selectMode = false,
     this.selected = false,
+    this.clickToPaste = false,
   });
 
   @override
@@ -54,6 +56,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
   final multiWindowService = Get.find<MultiWindowChannelService>();
   late final SlidableController _slidableController = SlidableController(this);
   bool _slided = false;
+  static final _pastingIds = <int>{};
 
   ///右键菜单
   void showMenu(Offset? position, BuildContext context) {
@@ -105,6 +108,20 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
     menu.show(context);
   }
 
+  ///复制并粘贴到上一个窗口，单击粘贴与双击粘贴共用
+  Future<void> _copyAndPaste() async {
+    final clip = widget.clip;
+    if (!_pastingIds.add(clip.data.id)) return;
+    if (clip.isFile) {
+      await OpenFile.open(clip.data.content);
+      return;
+    }
+    await multiWindowService.copy(0, clip.data.id);
+    await Future.delayed(300.ms);
+    widget.onCopied.call();
+    _pastingIds.remove(clip.data.id);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -135,22 +152,16 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
             }
             if (widget.selectMode) {
               widget.onTap?.call();
+              return;
+            }
+            if (widget.clickToPaste) {
+              _copyAndPaste();
             }
           },
-          onDoubleTap: widget.selectMode
+          onDoubleTap: widget.selectMode || widget.clickToPaste
               ? null
               : () async {
-                  if (clip.isFile) {
-                    await OpenFile.open(clip.data.content);
-                    return;
-                  }
-                  await multiWindowService.copy(0, clip.data.id);
-                  Global.showSnackBarSuc(
-                    context: context,
-                    text: TranslationKey.copySuccess.tr,
-                  );
-                  await Future.delayed(1000.ms);
-                  widget.onCopied.call();
+                  await _copyAndPaste();
                 },
           onLongPress: widget.onLongPress,
           onSecondaryTapDown: (details) {
@@ -217,13 +228,11 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
       borderRadius: BorderRadius.circular(
         ClipDataCardCompact.selectedBorderRadius,
       ),
-      child: _buildSlidable(
-        widget.selectMode
-            ? child
-            : ClipNativeDragItemWrapper(
-                clip: widget.clip,
-                child: child,
-              ),
+      child: widget.selectMode
+          ? child
+          : ClipNativeDragItemWrapper(
+        clip: widget.clip,
+        child: child,
       ),
     );
   }

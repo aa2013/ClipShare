@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/hot_key_type.dart';
+import 'package:clipshare/app/data/enums/multi_window_config.dart';
 import 'package:clipshare/app/services/tray_service.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/log.dart';
@@ -69,7 +70,12 @@ class AppHotKeyHandler {
         if (ids.contains(windowId) && !isHide) {
           //偏好为使用相同快捷键关闭
           if (appConfig.closeOnSameHotKey) {
-            await multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.history);
+            // 用 hideChildWindow 替代 closeWindow：closeWindow 里的 windowManager.hide()
+            // 在主窗口 isolate 执行会隐藏主窗口（而非弹窗），导致按 Win+V 时主界面被关闭。
+            // hideChildWindow 只发 IPC 让子窗口自隐藏，主窗口不受影响。
+            await multiWindowService.hideChildWindow(windowId!, MultiWindowTag.history).catchError((err) {
+              logger.warn(tag, "hideChildWindow failed: $err");
+            });
             return;
           }
           // 偏好为不关闭：不 hide 弹窗，直接重新定位到光标处（下方 showWindowFromHide 会 setPosition）。
@@ -83,23 +89,44 @@ class AppHotKeyHandler {
         if (posCfg != Offset.zero && appConfig.recordHistoryDialogPosition) {
           offset = posCfg;
         }
-        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
-        Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
-        var [width, height] = [370.0 * radio, 630.0 * radio];
+        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器。
+        //已知限制：混合 DPI（主屏 150%+副屏 100%）下 getCursorScreenPoint 除的是
+        //Flutter view 的 DPR 而非光标所在显示器（screen_retriever 上游行为），
+        //换 getDisplayList() 也无法单独修复——多屏垂直判断可能不准，勿误以为是本处 bug。
+        //screenRetriever 的鼠标坐标/屏幕尺寸均为逻辑像素，位置计算用逻辑像素
+        //（原代码乘 devicePixelRatio 会放大尺寸，导致上方空间误判放不下）
+        //visibleSize 为可空（部分驱动/场景取不到），取不到时回退 size
+        final display = await screenRetriever.getPrimaryDisplay();
+        Size screenSize = display.visibleSize ?? display.size;
+        var [width, height] = [370.0, 630.0];
         if (appConfig.rememberPopupWindowSize && appConfig.historyWindowSize != null) {
           final size = appConfig.historyWindowSize!;
-          width = size.width * radio;
-          height = size.height * radio;
+          width = size.width;
+          height = size.height;
         }
         final maxX = max(screenSize.width - width, 0.0);
         final maxY = max(screenSize.height - height, 0.0);
-        //限制在屏幕范围内
-        final [x, y] = [min(maxX, offset.dx), min(maxY, offset.dy)];
+        //弹窗与光标/输入框的垂直间隔：弹上方贴紧光标上方，弹下方贴紧光标下方
+        const gapAbove = 15.0;
+        const gapBelow = 15.0;
+        final x = min(maxX, offset.dx);
+        final double y;
+        if (posCfg != Offset.zero && appConfig.recordHistoryDialogPosition) {
+          //记忆位置：原样使用（用户已手动调整过弹窗位置）
+          y = min(maxY, offset.dy);
+        } else {
+          //跟随鼠标：优先弹在光标/输入框上方（避免遮挡输入框与光标），
+          //上方空间不足（弹窗较高时普通输入框位置也放不下）才弹到下方
+          y = offset.dy - height - gapAbove >= 0
+              ? offset.dy - height - gapAbove
+              : min(maxY, offset.dy + gapBelow);
+        }
         if (appConfig.historyWindow != null) {
           try {
             await multiWindowService.showWindowFromHide(
               appConfig.historyWindow!.windowId,
               position: [x, y],
+              tag: MultiWindowTag.history,
               isRelocate: isRelocate,
             );
           } catch (e) {
@@ -120,13 +147,21 @@ class AppHotKeyHandler {
             themeMode: appConfig.appTheme,
             autoClosePopupOnBlur: appConfig.autoClosePopupOnBlur,
             selfDeviceGuid: appConfig.device.guid,
+            otherArgs: {MultiWindowConfig.clickToPaste.name: appConfig.clickToPaste},
           ).toString(),
         );
         appConfig.historyWindow = window;
+        //desktop_multi_window 的 setFrame 走 MoveWindow（物理像素，不乘 DPR），
+        //位置与尺寸须乘 radio 转物理；而 showWindowFromHide 的 position 走
+        //window_manager（逻辑像素），故位置计算用逻辑、setFrame 单独转物理。
         window
-          ..setFrame(Offset(x, y) & Size(width, height))
+          ..setFrame(Offset(x * radio, y * radio) & Size(width * radio, height * radio))
           ..setTitle(title)
           ..show();
+        //首次创建后补开启点击外部监听（showWindowFromHide 才会走显示路径，
+        //createWindow 路径没有会导致本机重启后第一个弹窗点击外部不关闭）。
+        //放在 setFrame/setTitle/show 之后：把这几步耗时从 300ms 宽限期预算里省出来。
+        multiWindowService.removeHideWindow(window.windowId, MultiWindowTag.history);
       },
     );
     _hotkeyMap[HotKeyType.historyWindow] = key;
@@ -165,7 +200,10 @@ class AppHotKeyHandler {
         final isHide = multiWindowService.isHideWindow(windowId);
         //只允许弹窗一次
         if (ids.contains(windowId) && !isHide) {
-          multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.devices);
+          // 同 history：主窗口 isolate 调 closeWindow 会隐藏主窗口，改用 hideChildWindow
+          await multiWindowService.hideChildWindow(windowId!, MultiWindowTag.devices).catchError((err) {
+            logger.warn(tag, "hideChildWindow failed: $err");
+          });
           //偏好为使用相同快捷键关闭，直接结束
           if (appConfig.closeOnSameHotKey) {
             return;
@@ -173,13 +211,18 @@ class AppHotKeyHandler {
         }
         var radio = windowManager.getDevicePixelRatio();
         var offset = await screenRetriever.getCursorScreenPoint();
-        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器
-        Size screenSize = (await screenRetriever.getPrimaryDisplay()).size;
-        var [width, height] = [355.0 * radio, 630.0 * radio];
+        //多显示器不知道怎么判断鼠标在哪个显示器中，所以默认主显示器。
+        //混合 DPI 限制同 history 分支（getCursorScreenPoint 除的是 Flutter view 的 DPR）。
+        //screenRetriever 的鼠标坐标/屏幕尺寸均为逻辑像素，位置计算用逻辑像素
+        //（与 history 同款修复：原乘 devicePixelRatio 会把尺寸放大，首次创建位置偏左上）
+        //visibleSize 为可空（部分驱动/场景取不到），取不到时回退 size
+        final display = await screenRetriever.getPrimaryDisplay();
+        Size screenSize = display.visibleSize ?? display.size;
+        var [width, height] = [355.0, 630.0];
         if (appConfig.rememberPopupWindowSize && appConfig.fileSenderWindowSize != null) {
           final size = appConfig.fileSenderWindowSize!;
-          width = size.width * radio;
-          height = size.height * radio;
+          width = size.width;
+          height = size.height;
         }
         final maxX = max(screenSize.width - width, 0.0);
         final maxY = max(screenSize.height - height, 0.0);
@@ -189,12 +232,22 @@ class AppHotKeyHandler {
           "files": filePaths,
         };
         if (appConfig.onlineDevicesWindow != null) {
-          await multiWindowService.showWindowFromHide(
-            appConfig.onlineDevicesWindow!.windowId,
-            position: [x, y],
-            args: args,
-          );
-          return;
+          try {
+            await multiWindowService.showWindowFromHide(
+              appConfig.onlineDevicesWindow!.windowId,
+              position: [x, y],
+              args: args,
+              tag: MultiWindowTag.devices,
+            );
+          } catch (e) {
+            // IPC 失败说明子窗口可能已不可用，重置引用以便下次重新创建窗口
+            // （否则陈旧引用会卡死该分支，文件弹窗此后打不开）。
+            logger.warn(tag, "showWindowFromHide failed, will recreate: $e");
+            appConfig.onlineDevicesWindow = null;
+          }
+          if (appConfig.onlineDevicesWindow != null) {
+            return;
+          }
         }
 
         //createWindow里面的参数必须传
@@ -210,8 +263,9 @@ class AppHotKeyHandler {
           ).toString(),
         );
         appConfig.onlineDevicesWindow = window;
+        //setFrame 走 MoveWindow（物理像素，不乘 DPR），位置与尺寸须乘 radio 转物理
         window
-          ..setFrame(Offset(x, y) & Size(width, height))
+          ..setFrame(Offset(x * radio, y * radio) & Size(width * radio, height * radio))
           ..setTitle(title)
           ..show();
       },

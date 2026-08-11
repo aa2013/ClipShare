@@ -1,3 +1,4 @@
+import 'package:clipshare/app/data/models/desktop_multi_window_args.dart';
 import 'package:clipshare/app/listeners/window_control_clicked_listener.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:get/get.dart';
@@ -11,8 +12,10 @@ class WindowControlService extends GetxService {
   final closeable = true.obs;
   final resizable = false.obs;
   final alwaysOnTop = false.obs;
+  final DesktopMultiWindowArgs? multiWindowArgs;
+  final historyPopupPinned = false.obs;
   final List<WindowControlClickedListener> _listeners = [];
-
+  WindowControlService(this.multiWindowArgs);
   void addListener(WindowControlClickedListener listener) {
     _listeners.add(listener);
   }
@@ -115,6 +118,10 @@ class WindowControlService extends GetxService {
   Future<void> setAlwaysOnTop(bool top) async {
     if (!PlatformExt.isDesktop) return;
     await windowManager.setAlwaysOnTop(top);
-    this.alwaysOnTop.value = false;
+    alwaysOnTop.value = top;
+  }
+
+  void setHistoryPopupPinned(bool pinned) {
+    historyPopupPinned.value = pinned;
   }
 }

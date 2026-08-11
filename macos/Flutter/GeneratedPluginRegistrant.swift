@@ -7,6 +7,7 @@ import Foundation
 
 import clipshare_clipboard_listener
 import connectivity_plus
+import desktop_click_outside
 import desktop_multi_window
 import device_info_plus
 import file_picker
@@ -31,6 +32,7 @@ import window_manager
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   ClipshareClipboardListenerPlugin.register(with: registry.registrar(forPlugin: "ClipshareClipboardListenerPlugin"))
   ConnectivityPlugin.register(with: registry.registrar(forPlugin: "ConnectivityPlugin"))
+  DesktopClickOutsidePlugin.register(with: registry.registrar(forPlugin: "DesktopClickOutsidePlugin"))
   FlutterMultiWindowPlugin.register(with: registry.registrar(forPlugin: "FlutterMultiWindowPlugin"))
   DeviceInfoPlusMacosPlugin.register(with: registry.registrar(forPlugin: "DeviceInfoPlusMacosPlugin"))
   FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))

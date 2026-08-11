@@ -58,11 +58,11 @@ Future<void> main(List<String> args) async {
         String title = Constants.appName;
         DesktopMultiWindowArgs multiWindowArgs;
         if (isMultiWindow) {
-          await ensureInitialized();
           //子窗口
           final windowId = int.parse(args[1]);
           multiWindowArgs = DesktopMultiWindowArgs.fromJson(jsonDecode(args[2]));
           Device.initializeSelfGuid(multiWindowArgs.selfDeviceGuid);
+          await ensureInitialized(multiWindowArgs);
           switch (multiWindowArgs.tag) {
             case MultiWindowTag.history:
               // 历史弹窗不激活、不抢占前台焦点，让用户打开弹窗后仍可在原应用中继续输入。
@@ -71,7 +71,6 @@ Future<void> main(List<String> args) async {
               }
               home = HistoryWindow(
                 windowController: WindowController.fromWindowId(windowId),
-                args: multiWindowArgs.otherArgs,
               );
               title = multiWindowArgs.title;
               break;
@@ -104,7 +103,7 @@ Future<void> main(List<String> args) async {
   );
 }
 
-Future<void> ensureInitialized() async {
+Future<void> ensureInitialized([DesktopMultiWindowArgs? multiWindowArgs]) async {
   WidgetsFlutterBinding.ensureInitialized();
   if (PlatformExt.isDesktop) {
     // Must add this line.
@@ -114,7 +113,7 @@ Future<void> ensureInitialized() async {
       WindowsInjector.instance.injectKeyData();
     }
   }
-  await Get.putAsync(() => WindowControlService().initWindows());
+  await Get.putAsync(() => WindowControlService(multiWindowArgs).initWindows());
 }
 
 //启动初始化失败显示错误信息
@@ -221,6 +220,7 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
     }
     locale = appConfig.language.resolveLocale(Get.deviceLocale);
   }
+
   runApp(
     ThemeProvider(
       initTheme: isDarkMode ? darkThemeData : lightThemeData,

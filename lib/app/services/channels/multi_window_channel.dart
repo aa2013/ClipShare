@@ -10,6 +10,7 @@ import 'package:clipshare/app/data/repository/entity/tables/app_info.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:desktop_click_outside/desktop_click_outside.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
@@ -18,14 +19,28 @@ class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
   final _hideWindowIds = <int>{};
 
+  void _setClickOutsideWatch(bool watch) {
+    final watcher = DesktopClickOutside.instance;
+    Future future;
+    if (watch) {
+      future = watcher.startWatching(gracePeriod: Duration.zero);
+    } else {
+      future = watcher.stopWatching();
+    }
+    future.catchError((_) {});
+  }
+
   ///显示弹窗（从隐藏状态恢复）
   Future showWindowFromHide(
     int targetWindowId, {
+    required MultiWindowTag tag,
     List<double>? position,
     Map<String, dynamic>? args,
     bool isRelocate = false,
   }) {
     if (!PlatformExt.isDesktop) return Future.value();
+    // 历史弹窗显示时开启共享点击外部监听；设备弹窗不触碰该开关，避免多个弹窗互相踩状态。
+    removeHideWindow(targetWindowId, tag);
     Map<String, dynamic> data = {
       "position": position,
       "isRelocate": isRelocate,
@@ -33,7 +48,6 @@ class MultiWindowChannelService extends GetxService {
     if (args != null) {
       data["args"] = args;
     }
-    _hideWindowIds.remove(targetWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
       MultiWindowMethod.showWindowFromHide.name,
@@ -48,13 +62,7 @@ class MultiWindowChannelService extends GetxService {
     MultiWindowTag tag,
   ) async {
     if (!PlatformExt.isDesktop) return Future.value();
-    try {
-      // windowManager.hide() 是 async 方法，必须 await 才能真正捕获其异常；
-      // 未 await 的 Future error 不会被同步 try-catch 捕获，会变成 unhandled async error。
-      await windowManager.hide();
-    } catch (_) {
-      // 子窗口中 windowManager.hide() 可能失败，但状态同步不能因此中断。
-    }
+    await windowManager.hide();
     _hideWindowIds.add(closeWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
@@ -66,8 +74,20 @@ class MultiWindowChannelService extends GetxService {
     );
   }
 
-  void addHideWindow(int windowId) {
+  void addHideWindow(int windowId, MultiWindowTag tag) {
     _hideWindowIds.add(windowId);
+    if (tag == MultiWindowTag.history) {
+      _setClickOutsideWatch(false);
+    }
+  }
+
+  ///登记已显示窗口；历史弹窗会同时开启点击外部监听。
+  ///首次 createWindow 路径也必须调用，不能只依赖 showWindowFromHide。
+  void removeHideWindow(int windowId, MultiWindowTag tag) {
+    _hideWindowIds.remove(windowId);
+    if (tag == MultiWindowTag.history) {
+      _setClickOutsideWatch(true);
+    }
   }
 
   ///主进程隐藏（关闭）指定的子窗口。
@@ -77,7 +97,8 @@ class MultiWindowChannelService extends GetxService {
   Future hideChildWindow(int windowId, MultiWindowTag tag) async {
     if (!PlatformExt.isDesktop) return Future.value();
     if (isHideWindow(windowId)) return Future.value();
-    _hideWindowIds.add(windowId);
+    // 隐藏状态与监听关闭统一走主 isolate 路径。
+    addHideWindow(windowId, tag);
     return DesktopMultiWindow.invokeMethod(
       windowId,
       MultiWindowMethod.closeWindow.name,
@@ -147,7 +168,6 @@ class MultiWindowChannelService extends GetxService {
     );
   }
 
-
   ///通知主窗体复制
   Future copyContent(int targetWindowId, String content) {
     if (!PlatformExt.isDesktop) return Future(() => false);
@@ -204,6 +224,16 @@ class MultiWindowChannelService extends GetxService {
         "type": type,
         "pos": "${pos.dx}x${pos.dy}",
       }),
+    );
+  }
+
+  ///同步历史弹窗置顶状态给主窗口（运行期状态，主窗口据此决定点击外部是否关闭弹窗）
+  Future setHistoryPinned(bool pinned) {
+    if (!PlatformExt.isDesktop) return Future.value();
+    return DesktopMultiWindow.invokeMethod(
+      0,
+      MultiWindowMethod.setHistoryPinned.name,
+      jsonEncode({"pinned": pinned}),
     );
   }
 

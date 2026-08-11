@@ -18,9 +18,6 @@ import 'window_service.dart';
 
 class TrayService extends GetxService with TrayListener, DevAliveListener {
   bool _trayClick = false;
-  // 托盘闪烁进行中标志：闪烁期间忽略新的闪烁请求，避免并发 setIcon("") 竞态
-  // 导致托盘图标最终停留在被清空的状态（fork 版 tray_manager 对空路径
-  // LoadImage 失败会 NIM_MODIFY 空图标，把图标从任务栏移除）。
   bool _flashing = false;
   static const tag = "TrayService";
   final windowService = Get.find<WindowService>();

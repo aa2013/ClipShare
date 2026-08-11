@@ -1009,6 +1009,12 @@ class ZhCNTranslation extends AbstractTranslations {
         return "使用相同快捷键关闭弹窗";
       case TranslationKey.closeOnSameHotKeyDesc:
         return "默认鼠标点击窗体关闭按钮，启用后可以使用相同的快捷键打开和关闭弹窗";
+      case TranslationKey.clickToPasteTitle:
+        return "历史弹窗粘贴触发行为";
+      case TranslationKey.clickToPasteDescSingle:
+        return "当前:单击粘贴";
+      case TranslationKey.clickToPasteDescDouble:
+        return "当前:双击粘贴";
       case TranslationKey.saveToAlbum:
         return "保存至相册";
       case TranslationKey.openWithOtherApplications:

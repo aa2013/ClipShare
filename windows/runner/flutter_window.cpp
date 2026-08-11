@@ -1,4 +1,4 @@
-﻿#include "flutter_window.h"
+#include "flutter_window.h"
 
 #include <codecvt>
 #include <Windows.h>
@@ -6,12 +6,9 @@
 #include <optional>
 #include <thread>
 #include <.plugin_symlinks/desktop_multi_window/windows/base_flutter_window.h>
-#include <flutter/encodable_value.h>
 
-#include "flutter/standard_method_codec.h"
 #include "flutter/generated_plugin_registrant.h"
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
-#include <vector>
 #include <shlobj.h>
 #include <atlbase.h> // CComPtr
 #include "utils.h"
@@ -51,6 +48,7 @@ bool FlutterWindow::OnCreate() {
 		IrondashEngineContextPluginCApiRegisterWithRegistrar(registry->GetRegistrarForPlugin("IrondashEngineContextPluginCApi"));
 		SuperNativeExtensionsPluginCApiRegisterWithRegistrar(registry->GetRegistrarForPlugin("SuperNativeExtensionsPluginCApi"));
 	});
+
 	flutter_controller_->ForceRedraw();
 	return true;
 }

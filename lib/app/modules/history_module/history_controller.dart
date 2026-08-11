@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
@@ -360,13 +361,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   void notifyHistoryWindow() {
     if (PlatformExt.isMobile) return;
     if (appConfig.historyWindow == null) return;
-    multiWindowChannelService.notify(appConfig.historyWindow!.windowId).catchError((err) {
-      if (err.toString().contains("target window not found")) {
-        appConfig.historyWindow = null;
-      } else {
-        logger.error(tag, err);
-      }
-    });
+    // 异步调用前捕获窗口 id：notify 有多个调用点，并发批量到达时回调里再取
+    // historyWindow 可能已被前一个 catchError 置空，! 会抛 null check
+    final deadWindowId = appConfig.historyWindow!.windowId;
+    multiWindowChannelService.notify(deadWindowId);
   }
 
   ///更新并复制最新的数据
