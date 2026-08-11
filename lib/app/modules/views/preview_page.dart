@@ -10,6 +10,7 @@ import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
+import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
@@ -417,7 +418,7 @@ class _PreviewPageState extends State<PreviewPage> {
 
   ///右键菜单
   void showMenu(String imgPath, Offset? position) {
-    final isAndroidDataPath = Platform.isAndroid && imgPath.startsWith(Constants.androidDataPath);
+    final isAndroidDataPath = imgPath.startsWith(Constants.androidDataPath);
     final isIOS = Platform.isIOS;
     final save2Pictures = appConfig!.saveToPictures;
     final menu = ContextMenu(
@@ -435,15 +436,16 @@ class _PreviewPageState extends State<PreviewPage> {
                 final originFile = File(imgPath);
                 final fileName = originFile.fileName;
                 // 根据配置决定新路径
-                final String newPath;
-                if (save2Pictures) {
-                  newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName";
-                } else {
-                  newPath = "${appConfig!.imageStorePath}/$fileName";
+                String newPath = "${appConfig!.imageStorePath}/$fileName".normalizePath;
+                if(newPath.startsWith(Constants.androidDataPath) || newPath==originFile.normalizePath || save2Pictures){
+                  //私有目录 或 等于原始路径 或 保存到相册
+                  newPath = "${Constants.androidPicturesPath}/${Constants.appName}/$fileName".normalizePath;
                 }
                 try {
                   await File(newPath).parent.create(recursive: true);
-                  await originFile.copy(newPath);
+                  // 先读入内存再写入，避免 File.copy 自复制时先删目标文件导致 0B
+                  final bytes = await originFile.readAsBytes();
+                  await File(newPath).writeAsBytes(bytes);
                   Global.showSnackBarSuc(text: TranslationKey.saveSuccess.tr, context: context);
                   final androidChannelService = Get.find<AndroidChannelService>();
                   androidChannelService.notifyMediaScan(newPath);
