@@ -125,7 +125,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
       }
       await multiWindowService.copy(0, clip.data.id);
       // 粘贴已完成（copy await 返回后粘贴动作已执行完），等待短暂延迟后关闭弹窗。
-      await Future.delayed(500.ms);
+      await Future.delayed(300.ms);
       widget.onCopied.call();
     } catch (e) {
       // 粘贴失败（如窗口引用失效，copy 是 IPC 会 reject）：不向上抛，

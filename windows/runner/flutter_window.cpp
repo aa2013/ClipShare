@@ -62,10 +62,10 @@ bool FlutterWindow::OnCreate() {
 		[this](const flutter::MethodCall<flutter::EncodableValue>& call,
 			   std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
 			if (call.method_name() == "enable") {
-				// 弹窗显示期间开启监听；带 500ms 宽限期，避免弹窗刚显示时被误关。
+				// 弹窗显示期间开启监听；带 300ms 宽限期，避免弹窗刚显示时被误关。
 				// 真正原因：enable 在窗口可见之前发出（Dart 侧先 enable 再走 IPC 显示），
 				// 冷创建时窗口出现前的延迟可能超过 150ms，宽限期过短会在弹窗刚出现时
-				// 把用户随后的第一次点击当成 dismiss。500ms 与子窗口 onWindowBlur 的抑制一致。
+				// 把用户随后的第一次点击当成 dismiss。300ms 与子窗口 onWindowBlur 的抑制一致。
 				watching_click_ = true;
 				watching_since_ = GetTickCount64();
 				result->Success();
@@ -142,8 +142,8 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 		break;
 	case WM_INPUT: {
 		// 弹窗可见期间监听全局鼠标按下：点击非本进程窗口 → 通知 Dart 关闭弹窗。
-		// 宽限期 500ms（与 enable 侧一致）：覆盖弹窗显示初期的点击，避免刚出现就被误关。
-		if (watching_click_ && GetTickCount64() - watching_since_ >= 500) {
+		// 宽限期 300ms（与 enable 侧一致）：覆盖弹窗显示初期的点击，避免刚出现就被误关。
+		if (watching_click_ && GetTickCount64() - watching_since_ >= 300) {
 			UINT size = 0;
 			if (GetRawInputData((HRAWINPUT)lparam, RID_INPUT, nullptr, &size,
 								sizeof(RAWINPUTHEADER)) != (UINT)-1 && size > 0) {
@@ -164,8 +164,9 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 							if (root) {
 								GetWindowThreadProcessId(root, &pid);
 							}
-							// 点击非本进程窗口视为外部（点击主窗口/弹窗不触发）
-							if (pid != GetCurrentProcessId() && click_outside_channel_) {
+							// 点击非本进程窗口，或点击本进程主窗口（主窗口打开时按 Win+V，
+							// 点主窗口应关闭弹窗；仅点击弹窗本身不触发）→ 通知 Dart 关闭。
+							if ((pid != GetCurrentProcessId() || root == GetHandle()) && click_outside_channel_) {
 								click_outside_channel_->InvokeMethod(
 									"onClickOutside",
 									std::make_unique<flutter::EncodableValue>());
