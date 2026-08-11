@@ -30,6 +30,8 @@ class ClipDataCardCompact extends StatefulWidget {
   final VoidCallback onCopied;
   final bool selectMode;
   final bool selected;
+  ///开启后单击条目直接复制粘贴（Win+V弹窗场景，由父窗口传入，避免子窗口isolate无ConfigService）
+  final bool clickToPaste;
 
   const ClipDataCardCompact({
     super.key,
@@ -44,6 +46,7 @@ class ClipDataCardCompact extends StatefulWidget {
     this.onMoreActionsTap,
     this.selectMode = false,
     this.selected = false,
+    this.clickToPaste = false,
   });
 
   @override
@@ -54,6 +57,10 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
   final multiWindowService = Get.find<MultiWindowChannelService>();
   late final SlidableController _slidableController = SlidableController(this);
   bool _slided = false;
+  /// 正在粘贴的条目 id 集合（static 跨卡片共享）：单击粘贴模式下防重入。
+  /// 用 Set 做 test-and-set（add 返回 false 即已在粘贴中）——单槽 int 有两个洞：
+  /// ①先完成的条目会把锁清掉，放行仍在飞的后一条；②交错点不同条目时同一条可重入。
+  static final _pastingIds = <int>{};
 
   ///右键菜单
   void showMenu(Offset? position, BuildContext context) {
@@ -105,6 +112,30 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
     menu.show(context);
   }
 
+  ///复制并粘贴到上一个窗口，单击粘贴与双击粘贴共用
+  Future<void> _copyAndPaste() async {
+    final clip = widget.clip;
+    // test-and-set：同一条目已在粘贴中则丢弃（双击=两次 onTap 的原始缺陷）；
+    // 不同条目并行放行（置顶连粘），跨条目顺序由主 isolate 的 _copyChain 保证
+    if (!_pastingIds.add(clip.data.id)) return;
+    try {
+      if (clip.isFile) {
+        await OpenFile.open(clip.data.content);
+        return;
+      }
+      await multiWindowService.copy(0, clip.data.id);
+      // 粘贴已完成（copy await 返回后粘贴动作已执行完），等待短暂延迟后关闭弹窗。
+      await Future.delayed(500.ms);
+      widget.onCopied.call();
+    } catch (e) {
+      // 粘贴失败（如窗口引用失效，copy 是 IPC 会 reject）：不向上抛，
+      // 否则调用点未 await 会变成 unhandled async error。
+      debugPrint("copyAndPaste failed: $e");
+    } finally {
+      _pastingIds.remove(clip.data.id);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -135,22 +166,17 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
             }
             if (widget.selectMode) {
               widget.onTap?.call();
+              return;
+            }
+            //开启单击粘贴时，单击直接复制并粘贴上屏
+            if (widget.clickToPaste) {
+              _copyAndPaste();
             }
           },
-          onDoubleTap: widget.selectMode
+          onDoubleTap: widget.selectMode || widget.clickToPaste
               ? null
               : () async {
-                  if (clip.isFile) {
-                    await OpenFile.open(clip.data.content);
-                    return;
-                  }
-                  await multiWindowService.copy(0, clip.data.id);
-                  Global.showSnackBarSuc(
-                    context: context,
-                    text: TranslationKey.copySuccess.tr,
-                  );
-                  await Future.delayed(1000.ms);
-                  widget.onCopied.call();
+                  await _copyAndPaste();
                 },
           onLongPress: widget.onLongPress,
           onSecondaryTapDown: (details) {

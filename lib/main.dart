@@ -71,7 +71,6 @@ Future<void> main(List<String> args) async {
               }
               home = HistoryWindow(
                 windowController: WindowController.fromWindowId(windowId),
-                args: multiWindowArgs.otherArgs,
               );
               title = multiWindowArgs.title;
               break;
@@ -245,6 +244,8 @@ void runMain(Widget home, String title, DesktopMultiWindowArgs? args) {
                           style: const TextStyle(fontSize: 12),
                         ),
                       ],
+                      // 仅历史弹窗显示置顶按钮（main.dart 需 import MultiWindowTag）
+                      showPinButton: args?.tag == MultiWindowTag.history,
                       child: child ?? const SizedBox.shrink(),
                     ),
                   ),

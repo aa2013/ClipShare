@@ -308,6 +308,14 @@ class ConfigService extends GetxService {
 
   bool get closeOnSameHotKey => _closeOnSameHotKey.value;
 
+  //桌面端Win+V弹窗单击条目直接复制粘贴
+  final RxBool _clickToPaste = false.obs;
+
+  bool get clickToPaste => _clickToPaste.value;
+
+  //历史弹窗置顶状态（运行期，不持久化，下次显示时重置）
+  final historyPinned = false.obs;
+
   //桌面端弹窗失去焦点时自动关闭
   final RxBool _autoClosePopupOnBlur = false.obs;
 
@@ -788,6 +796,7 @@ class ConfigService extends GetxService {
       convert: ClipboardListeningWay.parse,
     );
     _closeOnSameHotKey.value = (await cfg.getConfigByKey(ConfigKey.closeOnSameHotKey, false));
+    _clickToPaste.value = (await cfg.getConfigByKey(ConfigKey.clickToPaste, false));
     _enableAutoSyncOnScreenOpened.value = (await cfg.getConfigByKey(ConfigKey.enableAutoSyncOnScreenOpened, true));
     _sourceRecord.value = (await cfg.getConfigByKey(ConfigKey.sourceRecord, PlatformExt.isDesktop));
     _sourceRecordViaDumpsys.value = (await cfg.getConfigByKey(ConfigKey.sourceRecordViaDumpsys, false));
@@ -1440,7 +1449,8 @@ class ConfigService extends GetxService {
       }
     });
     final windowChannelService = Get.find<MultiWindowChannelService>();
-    windowChannelService.updateConfig(MultiWindowConfig.themeMode, themeMode.name);
+    //updateConfig 是异步 IPC，窗口引用陈旧时 reject，需 catchError 兜住（Bug1 同款）
+    windowChannelService.updateConfig(MultiWindowConfig.themeMode, themeMode.name).catchError((_) {});
   }
 
   Future<void> setIgnoreUpdateVersion(String versionCode) async {
@@ -1481,6 +1491,17 @@ class ConfigService extends GetxService {
   Future<void> setCloseOnSameHotKey(bool closeOnSameHotKey) async {
     await configDao.addOrUpdate(ConfigKey.closeOnSameHotKey, closeOnSameHotKey.toString());
     _closeOnSameHotKey.value = closeOnSameHotKey;
+  }
+
+  Future<void> setClickToPaste(bool clickToPaste) async {
+    await configDao.addOrUpdate(ConfigKey.clickToPaste, clickToPaste.toString());
+    _clickToPaste.value = clickToPaste;
+    // 推送到弹窗（弹窗常驻不销毁，走 updateConfig 通道实时生效，无需重启/重新打开）。
+    // updateConfig 是异步 IPC，窗口引用陈旧时会 reject，必须 catchError 兜住
+    // （否则 unhandled async error，与 Bug1 同款）。
+    Get.find<MultiWindowChannelService>()
+        .updateConfig(MultiWindowConfig.clickToPaste, clickToPaste)
+        .catchError((_) {});
   }
 
   Future<void> setEnableAutoSyncOnScreenOpened(bool enable) async {
@@ -1668,7 +1689,8 @@ class ConfigService extends GetxService {
     await configDao.addOrUpdate(ConfigKey.autoClosePopupOnBlur, value.toString());
     _autoClosePopupOnBlur.value = value;
     final windowChannelService = Get.find<MultiWindowChannelService>();
-    await windowChannelService.updateConfig(MultiWindowConfig.autoClosePopupOnBlur, value);
+    //updateConfig 是异步 IPC，窗口引用陈旧时 reject，需 catchError 兜住（Bug1 同款）
+    await windowChannelService.updateConfig(MultiWindowConfig.autoClosePopupOnBlur, value).catchError((_) {});
   }
 
   ///更新弹窗大小
@@ -2036,10 +2058,11 @@ class ConfigService extends GetxService {
     final locale = language.resolveLocale(Get.deviceLocale);
     Get.updateLocale(locale);
     final windowChannelService = Get.find<MultiWindowChannelService>();
+    //updateConfig 是异步 IPC，窗口引用陈旧时 reject，需 catchError 兜住（Bug1 同款）
     windowChannelService.updateConfig(MultiWindowConfig.language, {
       'languageCode': locale.languageCode,
       'countryCode': locale.countryCode,
-    });
+    }).catchError((_) {});
   }
 
   //endregion

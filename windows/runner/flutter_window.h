@@ -29,6 +29,13 @@ class FlutterWindow : public Win32Window {
 
   // The Flutter instance hosted by this window.
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+
+  // Click-outside-to-close popup: Raw Input (RIDEV_INPUTSINK) global mouse
+  // listener. Dart enables it while the history popup is visible; when a click
+  // lands on a non-own-process window, notify Dart to close the popup.
+  flutter::MethodChannel<flutter::EncodableValue>* click_outside_channel_ = nullptr;
+  bool watching_click_ = false;
+  ULONGLONG watching_since_ = 0;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

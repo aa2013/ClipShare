@@ -27,19 +27,31 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
   final appConfig = Get.find<ConfigService>();
   final connRegService = Get.find<ConnectionRegistryService>();
   Timer? _tooltipTimer;
+  /// 托盘图标注册重试定时器：启动早期 explorer 托盘区可能未就绪导致
+  /// NIM_ADD 静默失败，延迟重试几次覆盖竞态（图标已正常时重试无害）。
+  Timer? _trayRetryTimer;
 
   String get _warningIconPath {
     if(Platform.isWindows){
-      return Constants.logoWarnIcoPath;
+      //相对路径依赖工作目录（双击运行时 CWD=exe 目录，LoadImage 失败返回 NULL
+      //会把图标清空）；改用 exe 目录 + data/flutter_assets 的绝对路径，与 luaLibDirPath 同款
+      return _iconAbsPath(Constants.logoWarnIcoPath);
     }
     return Constants.logoWarnPngPath;
   }
 
   String get _normalIconPath {
     if(Platform.isWindows){
-      return Constants.logoIcoPath;
+      return _iconAbsPath(Constants.logoIcoPath);
     }
     return Constants.logoPngPath;
+  }
+
+  ///拼出 exe 目录下 data/flutter_assets 中资源的绝对路径
+  String _iconAbsPath(String assetPath) {
+    final execDir = File(Platform.resolvedExecutable).parent.absolute.path;
+    final sep = Platform.pathSeparator;
+    return '$execDir$sep' 'data$sep' 'flutter_assets$sep${assetPath.replaceAll('/', sep)}';
   }
 
   Future<TrayService> init() async {
@@ -54,6 +66,24 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
     await setToolTip(Constants.appName);
     await _resetIcon();
     updateTrayMenus();
+    _retryTrayIcon();
+  }
+
+  ///启动早期 explorer 托盘区可能未就绪导致 NIM_ADD 静默失败（无图标），
+  ///延迟重试 _resetIcon 覆盖竞态；图标已正常时重试只是 NIM_MODIFY，无害。
+  ///定时器为嵌套结构，间隔 2s*attempt，实际触发在启动后累计 2s/6s/12s（共 3 次）。
+  void _retryTrayIcon() {
+    _trayRetryTimer?.cancel();
+    var attempt = 0;
+    void tryAgain() {
+      attempt++;
+      if (attempt > 3) return;
+      _trayRetryTimer = Timer(2.s * attempt, () {
+        _resetIcon();
+        tryAgain();
+      });
+    }
+    tryAgain();
   }
 
   @override
@@ -128,10 +158,14 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
     }catch(_){
       //ignored
     }
-    await trayManager.setIcon(
-        id: Platform.isLinux ? Constants.appName : null,
-        iconPath
-    );
+    try {
+      await trayManager.setIcon(
+          id: Platform.isLinux ? Constants.appName : null,
+          iconPath
+      );
+    } catch (e, stack) {
+      logger.error(tag, "setIcon failed: $e", stack);
+    }
     await setToolTip(Constants.appName);
   }
 
@@ -167,10 +201,14 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
       // 无论闪烁是否异常中断，都必须恢复托盘图标，否则 setIcon("") 会
       // 把图标清空并停留在消失状态（任务栏找不到图标）。
       _flashing = false;
-      await trayManager.setIcon("");
-      await Future.delayed(intervalDuration);
-      await _resetIcon();
-      await _updateDevAliveTooltip(Constants.appName);
+      try {
+        await trayManager.setIcon("");
+        await Future.delayed(intervalDuration);
+        await _resetIcon();
+        await _updateDevAliveTooltip(Constants.appName);
+      } catch (e, stack) {
+        logger.error(tag, "flashTray restore failed: $e", stack);
+      }
     }
   }
 
@@ -289,6 +327,8 @@ class TrayService extends GetxService with TrayListener, DevAliveListener {
   void onClose() {
     trayManager.removeListener(this);
     connRegService.removeDevAliveListener(this);
+    _trayRetryTimer?.cancel();
+    _tooltipTimer?.cancel();
     super.onClose();
   }
 }

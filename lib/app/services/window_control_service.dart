@@ -11,6 +11,8 @@ class WindowControlService extends GetxService {
   final closeable = true.obs;
   final resizable = false.obs;
   final alwaysOnTop = false.obs;
+  /// 弹窗置顶状态：置顶后粘贴/点击外部不自动关闭，仅运行期有效（下次显示时重置）。
+  final pinned = false.obs;
   final List<WindowControlClickedListener> _listeners = [];
 
   void addListener(WindowControlClickedListener listener) {
@@ -115,6 +117,12 @@ class WindowControlService extends GetxService {
   Future<void> setAlwaysOnTop(bool top) async {
     if (!PlatformExt.isDesktop) return;
     await windowManager.setAlwaysOnTop(top);
-    this.alwaysOnTop.value = false;
+    this.alwaysOnTop.value = top;
+  }
+
+  ///切换弹窗置顶状态。弹窗本身显示时已 setAlwaysOnTop(true)（作者行为），
+  ///置顶按钮只控制"粘贴/点击外部是否自动关闭"，不改变窗口层级。
+  void setPinned(bool pinned) {
+    this.pinned.value = pinned;
   }
 }

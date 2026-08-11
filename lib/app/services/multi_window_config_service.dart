@@ -21,10 +21,16 @@ class MultiWindowConfigService extends GetxService implements MultiWindowMessage
 
   bool get autoClosePopupOnBlur => _autoClosePopupOnBlur;
 
+  bool _clickToPaste = false;
+
+  /// 单击条目直接粘贴开关（主窗口通过 otherArgs 传入初始值，运行期由 updateConfig 推送同步）
+  bool get clickToPaste => _clickToPaste;
+
   MultiWindowConfigService(DesktopMultiWindowArgs args) {
     _locale = Locale(args.languageCode, args.countryCode);
     _themeMode = args.themeMode;
     _autoClosePopupOnBlur = args.autoClosePopupOnBlur;
+    _clickToPaste = args.otherArgs[MultiWindowConfig.clickToPaste.name] as bool? ?? false;
   }
 
   @override
@@ -59,6 +65,9 @@ class MultiWindowConfigService extends GetxService implements MultiWindowMessage
           case MultiWindowConfig.autoClosePopupOnBlur:
             _onAutoClosePopupOnBlurChanged(value);
             break;
+          case MultiWindowConfig.clickToPaste:
+            _onClickToPasteChanged(value);
+            break;
         }
       } catch (err, stack) {
         debugPrint(err.toString());
@@ -84,6 +93,11 @@ class MultiWindowConfigService extends GetxService implements MultiWindowMessage
   /// 同步主窗口的弹窗失焦关闭偏好，避免子窗口在运行期间保留旧值。
   void _onAutoClosePopupOnBlurChanged(bool value) {
     _autoClosePopupOnBlur = value;
+  }
+
+  /// 同步主窗口的单击粘贴偏好（弹窗常驻不销毁，设置切换后不重启也生效）。
+  void _onClickToPasteChanged(bool value) {
+    _clickToPaste = value;
   }
 
 }

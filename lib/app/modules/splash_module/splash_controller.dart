@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/data/enums/module.dart';
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/op_method.dart';
 import 'package:clipshare/app/data/enums/window_type.dart';
 import 'package:clipshare/app/data/models/my_drop_item.dart';
@@ -65,6 +66,9 @@ class SplashController extends GetxController {
   static const tag = "SplashController";
   final appConfig = Get.find<ConfigService>();
   final dbService = Get.find<DbService>();
+  /// 复制/粘贴串行链：平台通道 handler 不排队，并发 copy 会交错执行
+  /// （写A→写B→粘→粘 会把 B 粘两次）；用 Future 链保证一次只处理一条。
+  Future<void> _copyChain = Future.value();
   final sourceService = Get.find<ClipboardSourceService>();
   final clipChannelService = Get.find<ClipChannelService>();
   final androidChannelService = Get.find<AndroidChannelService>();
@@ -289,24 +293,26 @@ class SplashController extends GetxController {
           return jsonEncode(sourceService.appInfos);
         case MultiWindowMethod.copy:
           final id = args["id"];
-          try {
-            // 等待复制并粘贴完成后再返回，确保弹窗在粘贴完成之前不会提前隐藏，
-            // 避免粘贴目标窗口错乱。
-            final history = await dbService.historyDao.getById(id);
-            if (history != null) {
-              await history.copyContent();
-              var result = await clipboardManager.pasteToPreviousWindow();
-              if(result != PasteResult.success){
-                NotifyUtil.notify(content: result.tr, key: 'paste2Window');
-              }
-            }
-          } catch (err, stack) {
+          // 串行化：并发 copy 时剪贴板写/粘贴会交错（见 _copyChain 注释），
+          // 链条上的 catchError 保证单条失败不阻塞后续条目。
+          _copyChain = _copyChain
+              .then((_) => _doCopyAndPaste(id))
+              .catchError((err, stack) {
             logger.error(tag, err, stack);
-          }
+          });
+          await _copyChain;
           break;
         case MultiWindowMethod.copyContent:
           final content = args["content"];
-          await clipboardManager.copy(ClipboardContentType.text, content);
+          // copyContent 也写系统剪贴板，须与 copy 同链串行——否则并发时合并内容的
+          // 写入会插进 copy 的写/粘之间，粘出去的是合并内容而非用户点的条目。
+          _copyChain = _copyChain
+              .then((_) => clipboardManager.copy(ClipboardContentType.text, content))
+              .catchError((err, stack) {
+            logger.error(tag, err, stack);
+            return false;
+          });
+          await _copyChain;
           break;
         case MultiWindowMethod.getCompatibleOnlineDevices:
           var devices = devController.compatibleOnlineDevices;
@@ -336,7 +342,9 @@ class SplashController extends GetxController {
           break;
         case MultiWindowMethod.closeWindow:
           var windowId = args["closeWindowId"] as int;
-          multiWindowService.addHideWindow(windowId);
+          //IPC 载荷带 tag：仅 history 需要关闭 Raw Input 监听（devices 不触碰，避免互相踩）
+          var tag = MultiWindowTag.getValue(args["tag"] as String);
+          multiWindowService.addHideWindow(windowId, tag);
           break;
         case MultiWindowMethod.updateWindowSize:
           //判断是否记录窗体大小，并记录
@@ -377,11 +385,28 @@ class SplashController extends GetxController {
           //通知其他设备
           await dbService.opRecordDao.addAndNotify(opRecord);
           break;
+        case MultiWindowMethod.setHistoryPinned:
+          //子窗口置顶状态同步（运行期，不持久化）：置顶时点击外部不自动关闭弹窗
+          appConfig.historyPinned.value = args["pinned"] == true;
+          break;
         default:
       }
       //都不符合，返回空
       return Future.value();
     });
+  }
+
+  ///执行复制并粘贴到上一个窗口（由 copy 消息经 _copyChain 串行调用）。
+  ///等待复制并粘贴完成后再返回，确保弹窗在粘贴完成之前不会提前隐藏，避免粘贴目标窗口错乱。
+  Future<void> _doCopyAndPaste(dynamic id) async {
+    final history = await dbService.historyDao.getById(id);
+    if (history != null) {
+      await history.copyContent();
+      var result = await clipboardManager.pasteToPreviousWindow();
+      if(result != PasteResult.success){
+        NotifyUtil.notify(content: result.tr, key: 'paste2Window');
+      }
+    }
   }
 
   void initChannel() {

@@ -11,6 +11,7 @@ import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/services/config_service.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:desktop_multi_window/desktop_multi_window.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -18,20 +19,35 @@ class MultiWindowChannelService extends GetxService {
   static const tag = "MultiWindowChannelService";
   final _hideWindowIds = <int>{};
 
+  /// 点击外部关闭弹窗：原生 Raw Input 监听的开关（弹窗显示时开启、隐藏时关闭）。
+  /// 子窗口 isolate 未注册原生 channel，调用会抛 MissingPluginException，需忽略。
+  static const _clickOutsideChannel = MethodChannel('clipshare/click_outside');
+
+  void _setClickOutsideWatch(bool watch) {
+    // invokeMethod 是 async，异常在 Future 中抛出，同步 try-catch 抓不到，
+    // 必须用 catchError 兜住（子窗口 isolate 无原生 channel 会抛 MissingPluginException）。
+    _clickOutsideChannel
+        .invokeMethod(watch ? 'enable' : 'disable')
+        .catchError((_) {});
+  }
+
   ///显示弹窗（从隐藏状态恢复）
   Future showWindowFromHide(
     int targetWindowId, {
     List<double>? position,
     Map<String, dynamic>? args,
+    required MultiWindowTag tag,
   }) {
     if (!PlatformExt.isDesktop) return Future.value();
+    // 弹窗显示：清除隐藏标记并开启 Raw Input 监听（仅 history 需要点击外部关闭，
+    // devices 显式传 MultiWindowTag.devices 不触碰开关，避免两个弹窗互相踩——开关是全局单例）
+    removeHideWindow(targetWindowId, tag);
     Map<String, dynamic> data = {
       "position": position,
     };
     if (args != null) {
       data["args"] = args;
     }
-    _hideWindowIds.remove(targetWindowId);
     return DesktopMultiWindow.invokeMethod(
       targetWindowId,
       MultiWindowMethod.showWindowFromHide.name,
@@ -46,6 +62,8 @@ class MultiWindowChannelService extends GetxService {
     MultiWindowTag tag,
   ) async {
     if (!PlatformExt.isDesktop) return Future.value();
+    // 注意：此方法可能被子窗口 isolate 调用（点关闭按钮/粘贴后自动关闭），
+    // 子窗口无原生 channel，disable 不发在此处（由主 isolate 的 addHideWindow 统一处理）。
     try {
       // windowManager.hide() 是 async 方法，必须 await 才能真正捕获其异常；
       // 未 await 的 Future error 不会被同步 try-catch 捕获，会变成 unhandled async error。
@@ -64,8 +82,24 @@ class MultiWindowChannelService extends GetxService {
     );
   }
 
-  void addHideWindow(int windowId) {
+  void addHideWindow(int windowId, MultiWindowTag tag) {
     _hideWindowIds.add(windowId);
+    // 所有关闭路径在主 isolate 的汇合点（含子窗口 closeWindow IPC 的处理），
+    // 统一在此关闭 Raw Input 监听——子窗口 isolate 直接调 disable 无效，
+    // 会导致监听永久开启（每次鼠标点击都走一遍检测链路）。
+    // 仅 history 弹窗需要点击外部关闭；devices 不触碰开关（全局单例，避免互相踩）。
+    if (tag == MultiWindowTag.history) {
+      _setClickOutsideWatch(false);
+    }
+  }
+
+  ///显示登记：清除隐藏标记并开启 Raw Input 监听（仅 history）。
+  ///与 [addHideWindow] 对称；首次创建窗口（createWindow）后也须调用，否则监听未开启。
+  void removeHideWindow(int windowId, MultiWindowTag tag) {
+    _hideWindowIds.remove(windowId);
+    if (tag == MultiWindowTag.history) {
+      _setClickOutsideWatch(true);
+    }
   }
 
   ///主进程隐藏（关闭）指定的子窗口。
@@ -75,7 +109,8 @@ class MultiWindowChannelService extends GetxService {
   Future hideChildWindow(int windowId, MultiWindowTag tag) async {
     if (!PlatformExt.isDesktop) return Future.value();
     if (isHideWindow(windowId)) return Future.value();
-    _hideWindowIds.add(windowId);
+    // 隐藏状态与 Raw Input 监听关闭统一走 addHideWindow（主 isolate 汇合点）
+    addHideWindow(windowId, tag);
     return DesktopMultiWindow.invokeMethod(
       windowId,
       MultiWindowMethod.closeWindow.name,
@@ -202,6 +237,16 @@ class MultiWindowChannelService extends GetxService {
         "type": type,
         "pos": "${pos.dx}x${pos.dy}",
       }),
+    );
+  }
+
+  ///同步历史弹窗置顶状态给主窗口（运行期状态，主窗口据此决定点击外部是否关闭弹窗）
+  Future setHistoryPinned(bool pinned) {
+    if (!PlatformExt.isDesktop) return Future.value();
+    return DesktopMultiWindow.invokeMethod(
+      0,
+      MultiWindowMethod.setHistoryPinned.name,
+      jsonEncode({"pinned": pinned}),
     );
   }
 

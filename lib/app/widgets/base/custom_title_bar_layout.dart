@@ -12,12 +12,15 @@ import 'package:window_manager/window_manager.dart';
 class CustomTitleBarLayout extends StatefulWidget {
   final List<Widget> title;
   final Widget child;
+  /// 是否显示置顶按钮（仅弹窗等子窗口需要）。
+  final bool showPinButton;
   static const double titleBarHeight = 35;
 
   const CustomTitleBarLayout({
     super.key,
     required this.title,
     required this.child,
+    this.showPinButton = false,
   });
 
   @override
@@ -124,6 +127,16 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                       ),
                     ),
                   ),
+                  //置顶按钮（关闭按钮左边）：置顶后弹窗粘贴/点击外部不自动关闭
+                  if (widget.showPinButton)
+                    Obx(
+                      () => PlatformTitleButton(
+                        onTap: () => windowControlService.setPinned(!windowControlService.pinned.value),
+                        icon: MdiIcons.pin,
+                        iconColor: windowControlService.pinned.value ? Colors.blue : Colors.grey,
+                        size: Platform.isWindows ? CustomTitleBarLayout.titleBarHeight : 25,
+                      ),
+                    ),
                   Obx(
                     () => Visibility(
                       visible: windowControlService.closeable.value,

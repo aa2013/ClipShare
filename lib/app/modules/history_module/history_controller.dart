@@ -5,6 +5,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:clipshare/app/data/enums/transport_protocol.dart';
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/models/dev_info.dart';
 import 'package:clipshare/app/data/models/rule/rule_apply_result.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
@@ -360,9 +361,15 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
   void notifyHistoryWindow() {
     if (PlatformExt.isMobile) return;
     if (appConfig.historyWindow == null) return;
-    multiWindowChannelService.notify(appConfig.historyWindow!.windowId).catchError((err) {
+    // 异步调用前捕获窗口 id：notify 有多个调用点，并发批量到达时回调里再取
+    // historyWindow 可能已被前一个 catchError 置空，! 会抛 null check
+    final deadWindowId = appConfig.historyWindow!.windowId;
+    multiWindowChannelService.notify(deadWindowId).catchError((err) {
       if (err.toString().contains("target window not found")) {
+        // 窗口已销毁：补关闭 Raw Input 监听（否则 watching 永久 true，
+        // 此后每次系统级鼠标点击都白跑一遍检测链路）
         appConfig.historyWindow = null;
+        multiWindowChannelService.addHideWindow(deadWindowId, MultiWindowTag.history);
       } else {
         logger.error(tag, err);
       }

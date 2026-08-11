@@ -11,6 +11,7 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/listeners/history_data_listener.dart';
+import 'package:flutter/services.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
@@ -58,6 +59,14 @@ class ClipboardService extends GetxService with ClipboardListener {
 
   Future<ClipboardService> init() async {
     clipboardManager.addListener(this);
+    if (Platform.isWindows) {
+      // 点击外部关闭弹窗：监听 runner 层 Raw Input 的"点击外部"事件
+      _clickOutsideChannel.setMethodCallHandler((call) async {
+        if (call.method == 'onClickOutside') {
+          _closeHistoryPopupIfNeeded();
+        }
+      });
+    }
     if (appConfig.autoCopyImageAfterScreenShot) {
       startListenScreenshot();
     }
@@ -217,15 +226,28 @@ class ClipboardService extends GetxService with ClipboardListener {
 
   @override
   /// 前台窗口变化（Windows）：弹窗不激活后不再有失焦事件，
-  /// 改由这里感知“用户切到了其他应用”，按偏好决定是否关闭历史弹窗。
+  /// 改由这里感知"用户切到了其他应用"，按偏好决定是否关闭历史弹窗。
+  /// 注意：Raw Input 只看鼠标点击，Alt+Tab 切走是键盘路径，仍须靠此事件兜底，两者互补。
   void onForegroundChanged(bool isSelf) {
-    if (!Platform.isWindows) {
-      return;
-    }
     if (isSelf) {
       return;
     }
+    _closeHistoryPopupIfNeeded();
+  }
+
+  /// runner 层 Raw Input 全局点击监听通道：弹窗可见时点击外部（非本进程窗口）触发。
+  static const _clickOutsideChannel = MethodChannel('clipshare/click_outside');
+
+  ///点击外部关闭弹窗（与 onForegroundChanged 相同的关闭逻辑）
+  void _closeHistoryPopupIfNeeded() {
+    if (!Platform.isWindows) {
+      return;
+    }
     if (!appConfig.autoClosePopupOnBlur) {
+      return;
+    }
+    //置顶状态下点击外部不自动关闭，除非用户手动关闭
+    if (appConfig.historyPinned.value) {
       return;
     }
     final historyWindow = appConfig.historyWindow;
@@ -236,7 +258,6 @@ class ClipboardService extends GetxService with ClipboardListener {
     if (multiWindowService.isHideWindow(historyWindow.windowId)) {
       return;
     }
-    // 主进程侧关闭历史弹窗，避免 windowManager.hide() 误隐藏主窗口。
     multiWindowService
         .hideChildWindow(historyWindow.windowId, MultiWindowTag.history)
         .catchError((err) {

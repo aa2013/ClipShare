@@ -202,6 +202,26 @@ class SettingsPreferencePage extends SettingsSectionView {
         },
         show: (v) => PlatformExt.isDesktop,
       ),
+      SettingCard(
+        searchKeys: const [
+          TranslationKey.clickToPasteTitle,
+          TranslationKey.clickToPasteDescSingle,
+          TranslationKey.clickToPasteDescDouble,
+        ],
+        title: Text(TranslationKey.clickToPasteTitle.tr),
+        description: Text(appConfig.clickToPaste ? TranslationKey.clickToPasteDescSingle.tr : TranslationKey.clickToPasteDescDouble.tr),
+        value: appConfig.clickToPaste,
+        action: (v) {
+          return Switch(
+            value: v,
+            onChanged: (checked) {
+              HapticFeedback.mediumImpact();
+              appConfig.setClickToPaste(checked);
+            },
+          );
+        },
+        show: (v) => PlatformExt.isDesktop,
+      ),
     ];
   }
 

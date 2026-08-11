@@ -763,7 +763,14 @@ class DeviceController extends GetxController with GetSingleTickerProviderStateM
     //通知弹窗更新设备列表
     final onlineDevicesWindow = appConfig.onlineDevicesWindow;
     if (onlineDevicesWindow != null) {
-      multiWindowChannelService.notify(onlineDevicesWindow.windowId);
+      multiWindowChannelService.notify(onlineDevicesWindow.windowId).catchError((err) {
+        if (err.toString().contains("target window not found")) {
+          // 窗口已销毁：重置陈旧引用，否则后续快捷键 showWindowFromHide 会失败
+          appConfig.onlineDevicesWindow = null;
+        } else {
+          logger.error(tag, err);
+        }
+      });
     }
   }
 
