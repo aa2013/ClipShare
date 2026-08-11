@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
@@ -11,6 +13,7 @@ import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/multi_window_tag.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/listeners/history_data_listener.dart';
+import 'package:desktop_click_outside/desktop_click_outside.dart';
 import 'package:clipshare/app/modules/settings_module/settings_controller.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/services/channels/multi_window_channel.dart';
@@ -55,9 +58,16 @@ class ClipboardService extends GetxService with ClipboardListener {
     waitingRunningText: TranslationKey.defaultClipboardServerNotificationCfgWaitingRunningText.tr,
   );
   String? _lastScreenshotContent;
+  StreamSubscription<void>? _clickOutsideSubscription;
 
   Future<ClipboardService> init() async {
     clipboardManager.addListener(this);
+    if (PlatformExt.isDesktop) {
+      // 点击外部事件
+      _clickOutsideSubscription = DesktopClickOutside.instance.onClickOutside.listen((_) {
+        _closeHistoryPopupIfNeeded();
+      });
+    }
     if (appConfig.autoCopyImageAfterScreenShot) {
       startListenScreenshot();
     }
@@ -216,16 +226,23 @@ class ClipboardService extends GetxService with ClipboardListener {
   }
 
   @override
-  /// 前台窗口变化（Windows）：弹窗不激活后不再有失焦事件，
-  /// 改由这里感知“用户切到了其他应用”，按偏好决定是否关闭历史弹窗。
   void onForegroundChanged(bool isSelf) {
-    if (!Platform.isWindows) {
-      return;
-    }
     if (isSelf) {
       return;
     }
+    _closeHistoryPopupIfNeeded();
+  }
+
+  ///按桌面端点击外部规则决定是否关闭历史弹窗。
+  void _closeHistoryPopupIfNeeded() {
+    if (!PlatformExt.isDesktop) {
+      return;
+    }
     if (!appConfig.autoClosePopupOnBlur) {
+      return;
+    }
+    // 置顶弹窗保持打开，直到用户显式关闭。
+    if (appConfig.historyPinned.value) {
       return;
     }
     final historyWindow = appConfig.historyWindow;
@@ -236,7 +253,6 @@ class ClipboardService extends GetxService with ClipboardListener {
     if (multiWindowService.isHideWindow(historyWindow.windowId)) {
       return;
     }
-    // 主进程侧关闭历史弹窗，避免 windowManager.hide() 误隐藏主窗口。
     multiWindowService
         .hideChildWindow(historyWindow.windowId, MultiWindowTag.history)
         .catchError((err) {
@@ -372,6 +388,7 @@ class ClipboardService extends GetxService with ClipboardListener {
   @override
   void onClose() {
     clipboardManager.removeListener(this);
+    _clickOutsideSubscription?.cancel();
     _detector.dispose();
     super.onClose();
   }

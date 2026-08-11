@@ -1005,6 +1005,12 @@ class EnUSTranslation extends AbstractTranslations {
         return "Hotkey Toggles Popup";
       case TranslationKey.closeOnSameHotKeyDesc:
         return "Use the popup hotkey to both open and close it.";
+      case TranslationKey.clickToPasteTitle:
+        return "History popup paste trigger";
+      case TranslationKey.clickToPasteDescSingle:
+        return "Current: single-click";
+      case TranslationKey.clickToPasteDescDouble:
+        return "Current: double-click";
       case TranslationKey.saveToAlbum:
         return "Save to album";
       case TranslationKey.openWithOtherApplications:

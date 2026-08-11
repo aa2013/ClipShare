@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:clipshare/app/data/enums/multi_window_tag.dart';
+import 'package:clipshare/app/services/multi_window_config_service.dart';
 import 'package:clipshare/app/services/window_control_service.dart';
 import 'package:clipshare/app/utils/constants.dart';
 import 'package:clipshare/app/utils/extensions/platform_extension.dart';
@@ -34,6 +36,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
     final media = MediaQuery.of(context);
     final isLandscape = media.orientation == Orientation.landscape;
     final isSmallScreen = media.size.width <= Constants.smallScreenWidth;
+    final pinWidget = _buildPinWidget(context);
     Widget child;
     if ((isLandscape || !isSmallScreen) && PlatformExt.isMobile) {
       child = Scaffold(
@@ -124,6 +127,7 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
                       ),
                     ),
                   ),
+                  pinWidget,
                   Obx(
                     () => Visibility(
                       visible: windowControlService.closeable.value,
@@ -145,5 +149,34 @@ class _CustomTitleBarLayoutState extends State<CustomTitleBarLayout> {
         Expanded(child: child),
       ],
     );
+  }
+
+  Widget _buildPinWidget(BuildContext context){
+    final multiWindowArgs = windowControlService.multiWindowArgs;
+    final isHistoryWindow = multiWindowArgs?.tag == MultiWindowTag.history;
+    final hasMultiWindowConfigService = Get.isRegistered<MultiWindowConfigService>();
+    if (hasMultiWindowConfigService) {
+      return Obx(() {
+        final multiWindowConfigService = Get.find<MultiWindowConfigService>();
+        final autoClosePopupOnBlur = multiWindowConfigService.autoClosePopupOnBlur;
+        final showHistoryPopupPin = isHistoryWindow && autoClosePopupOnBlur;
+        if (!showHistoryPopupPin) {
+          return const SizedBox.shrink();
+        }
+        return PlatformTitleButton(
+          onTap: () {
+            final pinned = !windowControlService.historyPopupPinned.value;
+            windowControlService.setHistoryPopupPinned(pinned);
+          },
+          icon: MdiIcons.pin,
+          iconColor: windowControlService.historyPopupPinned.value
+              ? Colors.blue
+              : Colors.grey,
+          size: Platform.isWindows ? CustomTitleBarLayout.titleBarHeight : 25,
+        );
+      });
+    } else {
+      return const SizedBox.shrink();
+    }
   }
 }

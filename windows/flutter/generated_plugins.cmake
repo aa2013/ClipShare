@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   clipshare_clipboard_listener
   connectivity_plus
+  desktop_click_outside
   desktop_multi_window
   hotkey_manager_windows
   irondash_engine_context

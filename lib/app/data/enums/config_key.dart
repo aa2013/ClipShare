@@ -50,6 +50,7 @@ enum ConfigKey {
   showMoreItemsInRow,
   clipboardListeningWay,
   closeOnSameHotKey,
+  clickToPaste,
   enableAutoSyncOnScreenOpened,
   sourceRecord,
   sourceRecordViaDumpsys,

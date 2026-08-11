@@ -70,6 +70,8 @@ dependencies:
   url_launcher: ^6.2.5
   # 多窗口
   desktop_multi_window: ^0.2.1
+  # Desktop click-outside watcher
+  desktop_click_outside: ^0.0.1
   # 解析 windows 快捷方式实际地址
   resolve_windows_shortcut: ^2.0.0
   # 快捷键
@@ -114,7 +116,7 @@ dependencies:
   # 月份选择
   month_picker_dialog: ^5.1.2
   # 剪贴板监听
-  clipshare_clipboard_listener: ^1.3.5
+  clipshare_clipboard_listener: ^1.3.6
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
   # 大文本编辑器

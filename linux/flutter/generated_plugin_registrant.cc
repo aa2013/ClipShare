@@ -7,6 +7,7 @@
 #include "generated_plugin_registrant.h"
 
 #include <clipshare_clipboard_listener/clipshare_clipboard_listener_plugin.h>
+#include <desktop_click_outside/desktop_click_outside_plugin.h>
 #include <desktop_multi_window/desktop_multi_window_plugin.h>
 #include <hotkey_manager_linux/hotkey_manager_linux_plugin.h>
 #include <irondash_engine_context/irondash_engine_context_plugin.h>
@@ -22,6 +23,9 @@ void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) clipshare_clipboard_listener_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "ClipshareClipboardListenerPlugin");
   clipshare_clipboard_listener_plugin_register_with_registrar(clipshare_clipboard_listener_registrar);
+  g_autoptr(FlPluginRegistrar) desktop_click_outside_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "DesktopClickOutsidePlugin");
+  desktop_click_outside_plugin_register_with_registrar(desktop_click_outside_registrar);
   g_autoptr(FlPluginRegistrar) desktop_multi_window_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "DesktopMultiWindowPlugin");
   desktop_multi_window_plugin_register_with_registrar(desktop_multi_window_registrar);

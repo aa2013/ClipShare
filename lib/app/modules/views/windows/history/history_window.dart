@@ -39,12 +39,10 @@ import 'package:window_manager/window_manager.dart';
 
 class HistoryWindow extends StatefulWidget {
   final WindowController windowController;
-  final Map? args;
 
   const HistoryWindow({
     super.key,
     required this.windowController,
-    this.args,
   });
 
   @override
@@ -74,11 +72,16 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   bool filterLoading = true;
   /// 弹窗最近一次从隐藏状态恢复显示的时间，用于抑制显示瞬间的失焦兜底关闭。
   DateTime? _lastShownAt;
+  /// 置顶状态订阅：置顶按钮切换后同步主窗口（点击外部是否关闭由主窗口判断）
+  StreamSubscription<bool>? _pinnedSubscription;
   late final HistoryFilterController historyFilterController;
 
   @override
   void initState() {
     super.initState();
+    _pinnedSubscription = windowControlService.historyPopupPinned.listen((pinned) {
+      multiWindowService.setHistoryPinned(pinned);
+    });
     windowManager.addListener(this);
     multiWindowMsgDispatchService.addListener(this);
     // 监听滚动事件
@@ -128,6 +131,9 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
       case MultiWindowMethod.notify:
         refresh();
         break;
+      case MultiWindowMethod.updateConfig:
+        setState(() {});
+        break;
       //从隐藏状态恢复显示弹窗
       case MultiWindowMethod.showWindowFromHide:
         var position = args["position"];
@@ -135,6 +141,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
           var [x, y] = (position as List<dynamic>).cast<double>();
           windowManager.setPosition(Offset(x, y));
         }
+        windowControlService.setHistoryPopupPinned(false);
         // 记录显示时间：弹窗不激活，正常情况下不会产生失焦事件；
         // 该时间用于抑制显示瞬间意外失焦导致的兜底关闭，避免窗口“闪一下就消失”。
         _lastShownAt = DateTime.now();
@@ -192,6 +199,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
 
   /// 按主窗口偏好决定是否关闭弹窗，双击复制与失焦兜底共用。
   void _closeIfPreferenceEnabled() {
+    //置顶状态下粘贴后不自动关闭，除非用户手动关闭
+    if (windowControlService.historyPopupPinned.value) {
+      return;
+    }
     if (!multiWindowConfigService.autoClosePopupOnBlur) {
       return;
     }
@@ -291,6 +302,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   @override
   void dispose() {
     super.dispose();
+    _pinnedSubscription?.cancel();
     windowManager.removeListener(this);
     windowControlService.removeListener(this);
     _scrollController.removeListener(_scrollListener);
@@ -367,6 +379,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                         return ClipDataCardCompact(
                           devName: item.devName,
                           clip: item.data,
+                          clickToPaste: multiWindowConfigService.clickToPaste,
                           selectMode: _selectionController.enabled,
                           selected: _selectionController.contains(item.data),
                           onCopied: _closeIfPreferenceEnabled,
