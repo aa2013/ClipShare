@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:clipshare/app/data/enums/history_content_type.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/data/models/search_filter.dart';
@@ -8,9 +10,9 @@ import 'package:clipshare/app/theme/app_theme.dart';
 import 'package:clipshare/app/widgets/filter/filter_detail.dart';
 import 'package:clipshare/app/widgets/filter/filter_type_segmented.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
+import 'package:window_manager/window_manager.dart';
 
 class HistoryFilterController {
   final allDevices = <Device>[].obs;
@@ -25,6 +27,8 @@ class HistoryFilterController {
   final focusNode = FocusNode();
   final TextEditingController textController = TextEditingController();
   final loading = false.obs;
+  /// 实时搜索防抖：输入停止 200ms 后才触发查询，避免每键一次 IPC/列表重建
+  Timer? _searchDebounce;
 
   SearchFilter get filter => SearchFilter(
     content: content.value,
@@ -78,8 +82,18 @@ class HistoryFilterController {
   }
 
   void dispose() {
+    _searchDebounce?.cancel();
     focusNode.dispose();
     textController.dispose();
+  }
+
+  ///实时搜索：输入变化时更新过滤条件，停止输入 200ms 后触发查询
+  void onTextChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 200), () {
+      content.value = value;
+      onSearchBtnClicked();
+    });
   }
 
   void setAllDevices(List<Device> devices) {
@@ -168,6 +182,13 @@ class HistoryFilterSearchRow extends StatelessWidget {
                 controller: controller.textController,
                 focusNode: controller.focusNode,
                 autofocus: false,
+                onTap: () {
+                  // 弹窗 WS_EX_NOACTIVATE 不激活、收不到键盘输入（搜索框无法打字）。
+                  // 用户点击搜索框 = 明确要输入，此处激活弹窗使其可输入；
+                  // 代价：搜索期间原应用（如微信）失焦、选区被清——主动搜索场景可接受。
+                  windowManager.focus();
+                },
+                onChanged: controller.onTextChanged,
                 textAlignVertical: TextAlignVertical.center,
                 decoration: noneBorderInputDecoration.copyWith(
                   fillColor: showFillColor ? null : Colors.transparent,
