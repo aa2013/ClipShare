@@ -141,9 +141,12 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
         widget.windowController.show();
         windowManager.setAlwaysOnTop(true);
         // 不再调用 windowManager.focus()：弹窗已通过 WS_EX_NOACTIVATE 设为不激活，
-        // 避免抢占前台焦点打断用户输入；粘贴目标由插件记录的“打开弹窗前的前台窗口”保证。
-        historyFilterController.resetFilter();
-        refresh();
+        // 避免抢占前台焦点打断用户输入
+        // 重新定位
+        if (args["isRelocate"] != true) {
+          historyFilterController.resetFilter();
+          refresh();
+        }
         break;
       //关闭（隐藏）窗口
       case MultiWindowMethod.closeWindow:
