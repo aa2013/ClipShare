@@ -23,10 +23,12 @@ class MultiWindowChannelService extends GetxService {
     int targetWindowId, {
     List<double>? position,
     Map<String, dynamic>? args,
+    bool isRelocate = false,
   }) {
     if (!PlatformExt.isDesktop) return Future.value();
     Map<String, dynamic> data = {
       "position": position,
+      "isRelocate": isRelocate,
     };
     if (args != null) {
       data["args"] = args;

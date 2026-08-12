@@ -27,7 +27,7 @@ class HistoryFilterController {
   final focusNode = FocusNode();
   final TextEditingController textController = TextEditingController();
   final loading = false.obs;
-  /// 实时搜索防抖：输入停止 200ms 后才触发查询，避免每键一次 IPC/列表重建
+  /// 实时搜索防抖
   Timer? _searchDebounce;
 
   SearchFilter get filter => SearchFilter(
@@ -111,6 +111,7 @@ class HistoryFilterController {
   void resetFilter({SearchFilter? filter}) {
     filter ??= SearchFilter();
     content.value = filter.content;
+    textController.text = filter.content;
     startDate.value = filter.startDate;
     endDate.value = filter.endDate;
     selectedTags.addAll(filter.tags);
@@ -183,9 +184,7 @@ class HistoryFilterSearchRow extends StatelessWidget {
                 focusNode: controller.focusNode,
                 autofocus: false,
                 onTap: () {
-                  // 弹窗 WS_EX_NOACTIVATE 不激活、收不到键盘输入（搜索框无法打字）。
-                  // 用户点击搜索框 = 明确要输入，此处激活弹窗使其可输入；
-                  // 代价：搜索期间原应用（如微信）失焦、选区被清——主动搜索场景可接受。
+                  // 弹窗 WS_EX_NOACTIVATE 不激活、收不到键盘输入（搜索框无法打字）
                   windowManager.focus();
                 },
                 onChanged: controller.onTextChanged,

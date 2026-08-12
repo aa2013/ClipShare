@@ -65,12 +65,16 @@ class AppHotKeyHandler {
         //只允许弹窗一次
         final windowId = appConfig.historyWindow?.windowId;
         final isHide = multiWindowService.isHideWindow(windowId);
+        bool isRelocate = false;
         if (ids.contains(windowId) && !isHide) {
-          await multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.history);
-          //偏好为使用相同快捷键关闭，直接结束
+          //偏好为使用相同快捷键关闭
           if (appConfig.closeOnSameHotKey) {
+            await multiWindowService.closeWindow(windowId!, windowId, MultiWindowTag.history);
             return;
           }
+          // 偏好为不关闭：不 hide 弹窗，直接重新定位到光标处（下方 showWindowFromHide 会 setPosition）。
+          // 避免隐藏 active 弹窗触发前台窗口变化，被 onForegroundChanged 误判为切走而关闭（闪一下消失）。
+          isRelocate = true;
         }
         var posCfg = appConfig.historyDialogPosition;
         var radio = windowManager.getDevicePixelRatio();
@@ -96,6 +100,7 @@ class AppHotKeyHandler {
             await multiWindowService.showWindowFromHide(
               appConfig.historyWindow!.windowId,
               position: [x, y],
+              isRelocate: isRelocate,
             );
           } catch (e) {
             // IPC 失败说明子窗口可能已不可用，重置引用以便下次重新创建窗口。
