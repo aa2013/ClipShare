@@ -87,7 +87,8 @@ class RuleRegexContent {
       content: params.content,
       tags: matched && allowAddTag ? tags : {},
       isSyncDisabled: matched ? preventSync : false,
-      isFinalRule: isFinal,
+      //只有命中时才视为最终规则，未命中不应中断后续规则链
+      isFinalRule: matched ? isFinal : false,
       extractedContent: extracted,
     );
   }
