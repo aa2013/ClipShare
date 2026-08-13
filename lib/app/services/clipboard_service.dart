@@ -184,20 +184,38 @@ class ClipboardService extends GetxService with ClipboardListener {
         var retryCnt = 0;
         while (retryCnt < 5) {
           logger.debug(tag, "retry ${retryCnt + 1} times..");
-          final exists = await File(path).exists();
+          final originFile = File(path);
+          final exists = await originFile.exists();
+
           //尝试直接判断保存的文件是否存在
           if (exists) {
-            HistoryDataListener.inst.onChanged(HistoryContentType.image, path, null);
-          } else {
-            //尝试提权复制
-            final result = await clipboardManager.executePrivilegedCommand("cp $path $newPath && echo 0");
-            if (result == "0") {
-              logger.debug(tag, "attempt copy file via command success");
-              HistoryDataListener.inst.onChanged(HistoryContentType.image, path, null);
-              break;
-            } else {
-              logger.debug(tag, "attempt copy file via command failed: $result");
+            try {
+              var attempts = 0;
+              List<int> bytes = [];
+              const maxAttempts = 2;
+              while (attempts++ < maxAttempts && (bytes = await originFile.readAsBytes()).isEmpty) {
+                if (attempts < maxAttempts) {
+                  await Future.delayed(1000.ms);
+                }
+              }
+              if (bytes.isNotEmpty) {
+                await File(newPath).writeAsBytes(bytes);
+                HistoryDataListener.inst.onChanged(HistoryContentType.image, newPath, null);
+                break;
+              }
+            } catch (err, stack) {
+              logger.error(tag, "copy screenshot failed: $err", stack);
             }
+          }
+
+          //尝试提权复制
+          final result = await clipboardManager.executePrivilegedCommand("cp $path $newPath && echo 0");
+          if (result == "0") {
+            logger.debug(tag, "attempt copy file via command success");
+            HistoryDataListener.inst.onChanged(HistoryContentType.image, newPath, null);
+            break;
+          } else {
+            logger.debug(tag, "attempt copy file via command failed: $result");
           }
           await Future.delayed(2.s);
           retryCnt++;

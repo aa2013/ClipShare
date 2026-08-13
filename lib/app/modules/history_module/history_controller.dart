@@ -481,6 +481,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
         size = await tempFile.length();
         var newPath = "${Platform.isAndroid ? appConfig.androidPrivatePicturesPath : appConfig.screenShotStorePath}/${tempFile.fileName}";
         var newFile = File(newPath);
+        //todo 如果开启了自定义图片保存以及截图复制，是否会导致冲突？
         FileUtil.moveFile(content, newPath);
         content = newFile.normalizePath;
         break;
