@@ -15,7 +15,7 @@ import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:open_file_plus/open_file_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:clipshare/app/utils/permission_handler_facade.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsSyncPage extends SettingsSectionView {

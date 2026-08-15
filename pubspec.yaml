@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.5.2-0813+29
+version: 1.5.2-0815+29
 
 environment:
   # At least Flutter 3.32.1
@@ -97,7 +97,9 @@ dependencies:
       url: https://github.com/aa2013/flutter_file_picker
       ref: modify-android-saf-intent
   # 权限请求
-  permission_handler: ^12.0.1
+  permission_handler_android: ^14.0.0
+  permission_handler_apple: ^9.6.1
+  permission_handler_platform_interface: ^4.4.0
   # 瀑布流布局
   flutter_staggered_grid_view: ^0.7.0
   # material 图标库

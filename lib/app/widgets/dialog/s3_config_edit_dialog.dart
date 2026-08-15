@@ -16,7 +16,7 @@ import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:clipshare/app/utils/permission_handler_facade.dart';
 
 class S3ConfigEditDialog extends StatefulWidget {
   final void Function(S3Config config) onOk;

@@ -10,7 +10,7 @@ import 'package:clipshare/app/widgets/settings/card/setting_card_group.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:clipshare/app/utils/permission_handler_facade.dart';
 import 'settings_section_view_base.dart';
 
 class SettingsPermissionPage extends SettingsSectionView {

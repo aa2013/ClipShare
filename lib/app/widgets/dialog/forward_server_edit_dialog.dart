@@ -15,7 +15,7 @@ import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:clipshare/app/widgets/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:clipshare/app/utils/permission_handler_facade.dart';
 
 class ForwardServerEditDialog extends StatefulWidget {
   final void Function(ForwardServerConfig serverConfig) onOk;

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:clipshare/app/utils/extensions/string_extension.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:open_file_plus/open_file_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:clipshare/app/utils/permission_handler_facade.dart';
 import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
 import 'package:path/path.dart' as path;
 

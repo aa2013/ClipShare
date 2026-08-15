@@ -10,7 +10,7 @@ import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:clipshare/app/utils/permission_handler_facade.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 class AddDeviceDialog extends StatefulWidget {
