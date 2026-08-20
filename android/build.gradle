@@ -14,6 +14,13 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// 第三方插件仍使用 Java 8 source/target，JDK 17 会为该兼容配置输出过时提示；保留兼容目标并关闭提示。
+subprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs += ['-Xlint:-options']
+    }
+}
+
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
