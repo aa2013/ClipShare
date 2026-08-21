@@ -5,6 +5,11 @@
 
 # ClipShare
 
+> [!IMPORTANT]
+> **项目正在进行大重构**
+>
+> 短期内将进行框架与结构方面的大规模重构：状态管理从 `GetX` 迁移到 `Riverpod`，数据库从 `floor` 迁移到 `drift`。重构期间除影响使用的 Bug 修复外，将**暂停发布新版本，暂停接收 PR**。
+
 ClipShare 是一个基于 Flutter 的跨平台剪贴板同步工具，支持文本、图片、文件、短信等内容在多设备间同步。
 
 - 官网：[https://clipshare.coclyun.top](https://clipshare.coclyun.top)

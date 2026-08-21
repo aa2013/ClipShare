@@ -5,6 +5,11 @@
 
 # ClipShare
 
+> [!IMPORTANT]
+> **Project is under major refactoring**
+>
+> A large-scale framework and structure refactoring is coming in the short term: state management will migrate from `GetX` to `Riverpod`, and the database from `floor` to `drift`. During this period, except for fixes to bugs that affect usability, **new releases and pull requests will be suspended**.
+
 ClipShare is a cross-platform clipboard synchronization tool based on Flutter, supporting synchronization of text, images, files, SMS, and other content across multiple devices.
 
 - Official website: [https://clipshare.coclyun.top](https://clipshare.coclyun.top)
