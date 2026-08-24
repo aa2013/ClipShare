@@ -5,6 +5,11 @@
 # IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
 # invoked from the command line by running `flutter analyze`.
 
+# 启用本地 analyzer 插件：校验分层依赖方向（仅允许 shared -> core -> features）。
+plugins:
+  clipshare_dependency_lint:
+    path: tools/clipshare_dependency_lint
+
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
@@ -24,9 +29,32 @@ linter:
     # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
     require_trailing_commas: true
+    # Use const where possible to reduce rebuilds
+    # 强制可 const 的场景使用 const，减少重建开销
+    prefer_const_constructors: true
+    # Const is required for const-capable local declarations
+    # 局部变量可 const 时必须声明 const
+    prefer_const_declarations: true
+    # Widget constructors must declare a key parameter
+    # widget 构造函数必须声明 key 参数
+    use_key_in_widget_constructors: true
+    # child/children list properties should come last for readability
+    # child/children 等列表属性统一放末尾，提升可读性
+    sort_child_properties_last: true
+    # Ignored futures must be handled explicitly to avoid dropped async errors
+    # 忽略的 Future 必须显式处理，避免异步错误被丢弃
+    unawaited_futures: true
+    # All functions must declare explicit return types
+    # 函数必须显式声明返回类型
+    always_declare_return_types: true
+    # Prefer single quotes for string literals
+    # 字符串字面量统一使用单引号
+    prefer_single_quotes: true
+    # Imports and directives must be ordered
+    # import/directives 按规则排序
+    directives_ordering: true
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
 formatter:
-  page-width: 120
   trailing_commas: preserve

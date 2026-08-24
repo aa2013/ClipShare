@@ -1,0 +1,8 @@
+# 插件包独立的分析配置。
+#
+# 必须放置该文件以终止 analysis_options.yaml 的向上查找：
+# 若不放置，插件包会继承项目根 analysis_options.yaml，
+# 其 plugins 段加载了本插件自身，可能导致递归加载。
+linter:
+  rules:
+    prefer_single_quotes: true
