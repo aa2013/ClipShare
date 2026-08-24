@@ -1,0 +1,29 @@
+import 'package:clipshare/shared/extensions/string_extension.dart';
+import 'package:re_editor/re_editor.dart';
+
+import 'case_insensitive_keyword_prompt.dart';
+
+class FunctionPrompt extends CaseInsensitiveKeywordPrompt {
+  final String returnType;
+  final Map<String, String> parameters;
+
+  const FunctionPrompt({
+    required super.word,
+    required this.returnType,
+    required this.parameters,
+    super.desc,
+  });
+
+  @override
+  CodeAutocompleteResult get autocomplete {
+    final keys = parameters.keys
+        .map((key) {
+          if (parameters[key]?.equalsIgnoreCase('string') ?? false) {
+            return "'$key'";
+          }
+          return '\$$key';
+        })
+        .join(', ');
+    return CodeAutocompleteResult.fromWord('$word($keys)');
+  }
+}

@@ -10,7 +10,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   hotkey_manager_windows
   irondash_engine_context
   local_auth_windows
-  permission_handler_windows
   screen_retriever_windows
   share_plus
   smart_auth
@@ -24,6 +23,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
   flutter_embed_lua
   flutter_local_notifications_windows
+  jni
   zip_flutter
 )
 

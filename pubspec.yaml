@@ -27,14 +27,15 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  get: ^4.6.6
+  flutter_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
+  go_router: ^17.5.0
   # 数据库框架
-  floor: ^1.4.2
-  sqflite: any
-  # sqlite3 macos 0.5.40 以上需要更高的macos版本，暂时固定在 0.5.40
-  sqlite3_flutter_libs: 0.5.40
+  drift: ^2.31.0
+  drift_flutter: ^0.2.8
+  # 仅用于定位旧 sqflite 默认数据库目录，数据库读写由 Drift 承接。
+  sqflite: ^2.4.2
   # 托盘插件 linux上需要安裝：sudo apt-get install libayatana-appindicator3-dev
-#  tray_manager: ^0.5.2
   tray_manager:
     git:
       url: https://github.com/aa2013/tray_manager
@@ -159,7 +160,6 @@ dependencies:
     git: https://github.com/aa2013/no_screenshot.git
   # Android uri读取
   uri_file_reader: ^1.0.3
-#    path: ../uri_file_reader
   # 分词 (去除了分词文件减小压缩包体积，改为下载或导入)
   jieba_flutter:
     git:
@@ -206,14 +206,18 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   # 原生拖拽
   super_drag_and_drop: ^0.9.1
+  synchronized: ^3.4.0+1
+  collection: any
+  intl: any
+  pointycastle: any
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  floor_generator: ^1.4.2
-  build_runner: ^2.1.2
+  riverpod_generator: ^4.0.3
+  drift_dev: ^2.31.0
+  build_runner: ^2.15.1
   flutter_launcher_icons: ^0.13.1
-
   flutter_lints: ^3.0.2
 flutter_launcher_icons:
   ios: true
@@ -228,6 +232,7 @@ flutter_launcher_icons:
     generate: true
     image_path: "assets/images/logo/logo.png"
 flutter:
+  generate: true # 启用 gen-l10n 国际化代码生成
   uses-material-design: true
   assets:
     - assets/images/
