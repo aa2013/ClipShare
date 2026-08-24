@@ -8,18 +8,19 @@ import 'package:test/test.dart';
 
 import '../lib/src/dependency_direction_rule.dart';
 
-/// 在临时包目录中写入文件。
+/// Writes a file into the temporary package directory.
 void _writeFile(Directory dir, String relPath, String content) {
   final file = File(_normalizeJoin(dir, relPath));
   file.parent.createSync(recursive: true);
   file.writeAsStringSync(content);
 }
 
-/// 拼接路径并统一分隔符为当前平台风格（analyzer 要求绝对且规范化路径）。
+/// Joins a path and normalizes separators for the current platform (the
+/// analyzer requires absolute, normalized paths).
 String _normalizeJoin(Directory dir, String relPath) =>
     p.normalize(p.join(dir.path, relPath));
 
-/// 返回 [relPath] 文件经分析引擎报告的全部诊断名。
+/// Returns all diagnostic names reported by the analysis engine for [relPath].
 Future<List<String>> _diagnosticNames(
   AnalysisContextCollection collection,
   Directory dir,
@@ -33,10 +34,12 @@ Future<List<String>> _diagnosticNames(
       .toList();
 }
 
-/// 使用真实分析引擎验证依赖方向规则的集成测试。
+/// Integration test that validates the dependency direction rule with the real
+/// analysis engine.
 ///
-/// 通过向 [Registry.ruleRegistry] 注册规则，并借助临时包目录，
-/// 让分析引擎实际运行规则，断言各依赖方向场景的报告结果。
+/// The rule is registered with [Registry.ruleRegistry], and a temporary package
+/// directory lets the analysis engine actually run it, asserting the reported
+/// result for each dependency direction scenario.
 void main() {
   late Directory tempDir;
   late AnalysisContextCollection collection;
@@ -52,7 +55,8 @@ void main() {
   setUp(() {
     tempDir = Directory.systemTemp.createTempSync('dep_direction_test');
     _writeFile(tempDir, 'pubspec.yaml', 'name: dep_direction_test_pkg\n');
-    // 需包含 linter 段，否则分析引擎不会加载 warning rule。
+    // A linter section is required, otherwise the analysis engine will not load
+    // warning rules.
     _writeFile(tempDir, 'analysis_options.yaml', 'linter:\n  rules:\n');
     _writeFile(
       tempDir,

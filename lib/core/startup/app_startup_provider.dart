@@ -1,0 +1,119 @@
+import 'dart:ui';
+
+import 'package:clipshare/core/clipboard/clipboard_service_provider.dart';
+import 'package:clipshare/core/clipboard/clipboard_source_provider.dart';
+import 'package:clipshare/core/constants/app_constants.dart';
+import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/device/device_provider.dart';
+import 'package:clipshare/core/history/history_recorder_provider.dart';
+import 'package:clipshare/core/local_device/local_device_info_provider.dart';
+import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
+import 'package:clipshare/core/platform/channels/clip/clip_channel_provider.dart';
+import 'package:clipshare/core/platform/channels/multi_window/multi_window_channel_provider.dart';
+import 'package:clipshare/core/platform/desktop/tray/tray_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_control_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
+import 'package:clipshare/core/rules/rules_provider.dart';
+import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
+import 'package:clipshare/core/settings/app_update/app_update_settings_provider.dart';
+import 'package:clipshare/core/settings/clean/clean_data_config_provider.dart';
+import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
+import 'package:clipshare/core/settings/device/device_settings_provider.dart';
+import 'package:clipshare/core/settings/discovery/discovery_settings_provider.dart';
+import 'package:clipshare/core/settings/float/float_window_settings_provider.dart';
+import 'package:clipshare/core/settings/forward/forward_settings_provider.dart';
+import 'package:clipshare/core/settings/hotkey/hotkey_settings_provider.dart';
+import 'package:clipshare/core/settings/log/log_settings_provider.dart';
+import 'package:clipshare/core/settings/notification/notification_settings_provider.dart';
+import 'package:clipshare/core/settings/preference/preference_settings_provider.dart';
+import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
+import 'package:clipshare/core/settings/security/security_settings_provider.dart';
+import 'package:clipshare/core/settings/sync/sync_settings_provider.dart';
+import 'package:clipshare/core/tag/tag_provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:window_manager/window_manager.dart';
+
+part 'app_startup_provider.g.dart';
+
+@riverpod
+Future<void> appStartup(Ref ref) async {
+  // 初始化平台通道
+  _initChannels(ref);
+
+  final List<Refreshable<Future>> preloadFutures = [
+    appPathsProvider.future,
+    appDbProvider.future,
+    //region settings
+    deviceSettingsProvider.future,
+    localDeviceInfoProvider.future,
+    quickSettingsProvider.future,
+    preferenceSettingsProvider.future,
+    cleanDataConfigProvider.future,
+    syncSettingsProvider.future,
+    appUpdateSettingsProvider.future,
+    securitySettingsProvider.future,
+    discoverySettingsProvider.future,
+    floatWindowSettingsProvider.future,
+    notificationSettingsProvider.future,
+    logSettingsProvider.future,
+    clipboardSettingsProvider.future,
+    hotkeySettingsProvider.future,
+    forwardSettingsProvider.future,
+    //endregion
+    tagProvider.future,
+    deviceProvider.future,
+    clipboardSourceProvider.future,
+    rulesExecutorProvider.future,
+    clipboardServiceProvider.future,
+    historyRecorderProvider.future,
+  ];
+  //不要使用 Future.wait() 因为顺序不保证可能导致后续初始化失败
+  for (var provider in preloadFutures) {
+    await ref.read(provider);
+  }
+
+  if (isDesktop) {
+    // 窗口服务管理，需先于托盘初始化
+    ref.read(windowServiceProvider);
+    // 托盘服务
+    ref.read(trayServiceProvider);
+    // 窗口管理
+    await _initWindowsManager(ref);
+  }
+}
+
+Future<void> _initWindowsManager(Ref ref) async {
+  if (!isDesktop) {
+    return;
+  }
+  var preferenceSettings = await ref.read(preferenceSettingsProvider.future);
+  final windowOptions = WindowOptions(
+    size: preferenceSettings.windowSize,
+    minimumSize: kReleaseMode ? const Size(showHistoryRightWidth * 1.0, 200) : null,
+    center: true,
+    skipTaskbar: false,
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+  final startMini = await ref.read(startMiniProvider.future);
+  await ref.read(windowControlProvider.notifier).syncWindowState();
+  return windowManager.waitUntilReadyToShow(windowOptions, () async {
+    if (!startMini) {
+      //非最小化启动
+      await windowManager.show();
+      await windowManager.focus();
+    }
+  });
+}
+
+void _initChannels(Ref ref) {
+  ref.read(clipChannelProvider);
+  if (isAndroid) {
+    ref.read(androidChannelProvider);
+  }
+  if (isDesktop) {
+    ref.read(multiWindowChannelProvider);
+  }
+}

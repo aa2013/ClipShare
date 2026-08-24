@@ -5,24 +5,25 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/error/error.dart';
 
-/// 分层名称与依赖层级映射。
+/// Maps layer names to their dependency level.
 ///
-/// 允许的依赖方向为层级单向递增：features -> core -> shared。
+/// The allowed dependency direction is strictly increasing:
+/// features -> core -> shared.
 enum DependencyLayer {
-  /// 最底层，可被任意上层依赖。
+  /// Lowest layer, depended on by any upper layer.
   shared,
 
-  /// 核心层，可依赖 shared，禁止依赖 features。
+  /// Core layer, may depend on shared, must not depend on features.
   core,
 
-  /// 功能层，可依赖 core 与 shared。
+  /// Feature layer, may depend on core and shared.
   features,
 }
 
-/// 从文件系统绝对路径中解析文件所属的依赖层。
+/// Resolves the dependency layer of a file from its absolute filesystem path.
 ///
-/// 路径需包含 `lib/(shared|core|features)/` 分段，lib 根目录（组装层）
-/// 及未匹配的文件返回 null。
+/// The path must contain a `lib/(shared|core|features)/` segment; files in the
+/// lib root (assembly layer) and unmatched files return null.
 DependencyLayer? layerOfFile(String path) {
   final normalized = path.replaceAll('\\', '/');
   final match =
@@ -33,9 +34,11 @@ DependencyLayer? layerOfFile(String path) {
   return _layerOfSegment(match.group(1)!);
 }
 
-/// 从 `package:clipshare/...` 形式的 URI 中解析目标文件所属的依赖层。
+/// Resolves the dependency layer of a target file from a `package:clipshare/...`
+/// URI.
 ///
-/// 目标不在 lib 三层内（如 lib 根目录文件）返回 null。
+/// Returns null when the target is outside the three lib layers
+/// (for example, a file in the lib root).
 DependencyLayer? layerOfPackageUri(String uri) {
   const prefix = 'package:clipshare/';
   if (!uri.startsWith(prefix)) {
@@ -44,7 +47,7 @@ DependencyLayer? layerOfPackageUri(String uri) {
   return _layerOfSegment(uri.substring(prefix.length).split('/').first);
 }
 
-/// 将目录分段名（shared/core/features）映射为依赖层。
+/// Maps a directory segment name (shared/core/features) to a dependency layer.
 DependencyLayer? _layerOfSegment(String segment) {
   return switch (segment) {
     'shared' => DependencyLayer.shared,
@@ -54,19 +57,22 @@ DependencyLayer? _layerOfSegment(String segment) {
   };
 }
 
-/// 校验 import/export 是否符合分层依赖方向的 warning 规则。
+/// Rule that validates whether import/export respects the layered dependency
+/// direction.
 class DependencyDirectionRule extends AnalysisRule {
   static const LintCode code = LintCode(
     'dependency_direction',
-    '反向依赖：仅允许 features -> core -> shared 的单向依赖。',
-    correctionMessage: '调整 import 目标，使依赖方向符合 features -> core -> shared。',
+    'Reverse dependency: only features -> core -> shared is allowed.',
+    correctionMessage:
+        'Adjust the import target so the direction follows features -> core -> shared.',
     severity: DiagnosticSeverity.ERROR,
   );
 
   DependencyDirectionRule()
     : super(
         name: 'dependency_direction',
-        description: '校验 clipshare 分层依赖方向，禁止反向依赖。',
+        description:
+            'Validates clipshare layered dependency direction, rejecting reverse dependencies.',
       );
 
   @override
@@ -83,7 +89,7 @@ class DependencyDirectionRule extends AnalysisRule {
   }
 }
 
-/// 遍历 import/export 指令并报告反向依赖的 visitor。
+/// Visitor that walks import/export directives and reports reverse dependencies.
 class _Visitor extends SimpleAstVisitor<void> {
   final DependencyDirectionRule rule;
 
@@ -101,7 +107,8 @@ class _Visitor extends SimpleAstVisitor<void> {
     _check(node, node.uri.stringValue);
   }
 
-  /// 校验单个指令：源文件层高于目标文件层即为反向依赖。
+  /// Checks a single directive: a dependency is illegal when the source layer
+  /// is higher than the target layer.
   void _check(Directive node, String? rawUri) {
     if (rawUri == null) {
       return;
@@ -110,17 +117,19 @@ class _Visitor extends SimpleAstVisitor<void> {
     if (currentUnit == null) {
       return;
     }
-    // 源文件不在 lib 三层内（如 lib 根目录的组装文件），豁免检查。
+    // Files outside the three lib layers (for example, assembly files in the
+    // lib root) are exempt from the check.
     final sourceLayer = layerOfFile(currentUnit.file.path);
     if (sourceLayer == null) {
       return;
     }
-    // 解析目标 URI 所属依赖层。
+    // Resolve the dependency layer of the target URI.
     DependencyLayer? targetLayer;
     if (rawUri.startsWith('package:clipshare/')) {
       targetLayer = layerOfPackageUri(rawUri);
     } else if (rawUri.startsWith('../') || rawUri.startsWith('./')) {
-      // 相对导入：基于当前文件位置解析目标绝对路径后再判定层级。
+      // Relative import: resolve the target to an absolute path based on the
+      // current file location before determining its layer.
       final currentUri = Uri.file(currentUnit.file.path.replaceAll('\\', '/'));
       final resolved = currentUri.resolveUri(Uri.parse(rawUri));
       targetLayer = layerOfFile(resolved.toFilePath());
@@ -128,8 +137,9 @@ class _Visitor extends SimpleAstVisitor<void> {
     if (targetLayer == null) {
       return;
     }
-    // 依赖方向单向递增：目标层层级不得高于源层。
-    // 即目标 index 大于源 index（如 core -> features、shared -> core）为反向依赖。
+    // The dependency direction is strictly increasing: the target layer must
+    // not be higher than the source layer. A larger target index (for example,
+    // core -> features or shared -> core) is a reverse dependency.
     if (sourceLayer.index < targetLayer.index) {
       rule.reportAtNode(node);
     }
