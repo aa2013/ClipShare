@@ -1,0 +1,28 @@
+import 'package:clipshare/shared/extensions/string_extension.dart';
+import 'package:clipshare/shared/utils/log.dart';
+
+enum Module {
+  unknown(moduleName: '未知'),
+  device(moduleName: '设备管理'),
+  tag(moduleName: '标签管理'),
+  history(moduleName: '历史记录'),
+  @Deprecated('no longer use')
+  rules(moduleName: '规则设置'),
+  rule(moduleName: '规则管理'),
+  scriptModule(moduleName: '脚本模块'),
+  historyTop(moduleName: '历史记录置顶'),
+  historySource(moduleName: '历史记录来源'),
+  appInfo(moduleName: 'App信息');
+
+  const Module({required this.moduleName});
+
+  final String moduleName;
+
+  static Module getValue(String name) => Module.values.firstWhere(
+    (e) => e.moduleName == name || e.name.equalsIgnoreCase(name),
+    orElse: () {
+      logger.debug('Module', "key '$name' unknown");
+      return Module.unknown;
+    },
+  );
+}

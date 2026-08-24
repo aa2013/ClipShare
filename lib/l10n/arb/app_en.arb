@@ -1,0 +1,3985 @@
+{
+  "@@locale": "en",
+  "unitWord": "words",
+  "@unitWord": {
+    "description": "translated key: unitWord"
+  },
+  "dialogCancelText": "Cancel",
+  "@dialogCancelText": {
+    "description": "translated key: dialogCancelText"
+  },
+  "dialogAuthorizationButtonText": "Grant Access",
+  "@dialogAuthorizationButtonText": {
+    "description": "translated key: dialogAuthorizationButtonText"
+  },
+  "floatPermRequestDialogTitle": "Request Floating Window Permission",
+  "@floatPermRequestDialogTitle": {
+    "description": "translated key: floatPermRequestDialogTitle"
+  },
+  "floatPermRequestDialogContent": "Because Android 10+ blocks background clipboard access, the app reads clipboard changes indirectly through system logs and floating window access.\n\nTap OK to open the floating window permission page.",
+  "@floatPermRequestDialogContent": {
+    "description": "translated key: floatPermRequestDialogContent"
+  },
+  "requiredPermDialogTitle": "Required Permission Missing",
+  "@requiredPermDialogTitle": {
+    "description": "translated key: requiredPermDialogTitle"
+  },
+  "floatPermMissingDialogContent": "Grant floating window access, or the clipboard cannot be read in the background.",
+  "@floatPermMissingDialogContent": {
+    "description": "translated key: floatPermMissingDialogContent"
+  },
+  "shizukuPermRequestDialogTitle": "Shizuku Permission Request",
+  "@shizukuPermRequestDialogTitle": {
+    "description": "translated key: shizukuPermRequestDialogTitle"
+  },
+  "shizukuPermRequestDialogContent": "Due to restrictions on Android 10 and above, Shizuku is required to read the clipboard in the background. Otherwise, the app can only passively receive clipboard data and cannot automatically sync.",
+  "@shizukuPermRequestDialogContent": {
+    "description": "translated key: shizukuPermRequestDialogContent"
+  },
+  "dontShowAgain": "Don''t Show Again",
+  "@dontShowAgain": {
+    "description": "translated key: dontShowAgain"
+  },
+  "dontShowAgainConfirm": "Confirm Don''t Show Again?",
+  "@dontShowAgainConfirm": {
+    "description": "translated key: dontShowAgainConfirm"
+  },
+  "notificationPermRequestDialogTitle": "Request Notification Permission",
+  "@notificationPermRequestDialogTitle": {
+    "description": "translated key: notificationPermRequestDialogTitle"
+  },
+  "notificationPermRequestDialogContent": "Used to send system notifications.",
+  "@notificationPermRequestDialogContent": {
+    "description": "translated key: notificationPermRequestDialogContent"
+  },
+  "batteryOptimization": "Battery Optimization",
+  "@batteryOptimization": {
+    "description": "translated key: batteryOptimization"
+  },
+  "batteryOptimizationPermRequestDialogContent": "Turn off battery optimization to improve background keep-alive.\nIf tapping [Grant Access] does not respond, open the setting manually in your phone settings.",
+  "@batteryOptimizationPermRequestDialogContent": {
+    "description": "translated key: batteryOptimizationPermRequestDialogContent"
+  },
+  "selectWorkMode": "Select Work Mode",
+  "@selectWorkMode": {
+    "description": "translated key: selectWorkMode"
+  },
+  "completed": "Completed",
+  "@completed": {
+    "description": "translated key: completed"
+  },
+  "completedGuideDesc": "Setup complete.",
+  "@completedGuideDesc": {
+    "description": "translated key: completedGuideDesc"
+  },
+  "floatPermGuideTitle": "Floating Window Permission",
+  "@floatPermGuideTitle": {
+    "description": "translated key: floatPermGuideTitle"
+  },
+  "floatPermGuideDesc": "On newer Android versions, {appName} needs floating window access to read the clipboard in the background. After enabling it, you can open clipboard history from the screen edge and drag to select items.",
+  "@floatPermGuideDesc": {
+    "description": "translated key: floatPermGuideDesc",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationPermGuideTitle": "Notification Permission",
+  "@notificationPermGuideTitle": {
+    "description": "translated key: notificationPermGuideTitle"
+  },
+  "notificationPermGuideDesc": "Enable notifications to start the foreground service.",
+  "@notificationPermGuideDesc": {
+    "description": "translated key: notificationPermGuideDesc"
+  },
+  "storagePermGuideTitle": "Storage Permission",
+  "@storagePermGuideTitle": {
+    "description": "translated key: storagePermGuideTitle"
+  },
+  "storagePermGuideDesc": "Storage permission is required to sync images and files, otherwise files cannot be saved.",
+  "@storagePermGuideDesc": {
+    "description": "translated key: storagePermGuideDesc"
+  },
+  "batteryOptimizationPermGuideDesc": "To improve background keep-alive, exclude the app from battery optimization.\nAlso lock it in recent tasks and allow auto-start in your phone manager.\nIf tapping [Grant Access] does not respond, open the setting manually in your phone settings.",
+  "@batteryOptimizationPermGuideDesc": {
+    "description": "translated key: batteryOptimizationPermGuideDesc"
+  },
+  "aboutPageInstructionsItemName": "Guide",
+  "@aboutPageInstructionsItemName": {
+    "description": "translated key: aboutPageInstructionsItemName"
+  },
+  "aboutPageJoinQQGroupItemName": "Join QQ Group",
+  "@aboutPageJoinQQGroupItemName": {
+    "description": "translated key: aboutPageJoinQQGroupItemName"
+  },
+  "aboutPageWebsiteItemName": "Official Website",
+  "@aboutPageWebsiteItemName": {
+    "description": "translated key: aboutPageWebsiteItemName"
+  },
+  "aboutPageLogsItemName": "Changelog",
+  "@aboutPageLogsItemName": {
+    "description": "translated key: aboutPageLogsItemName"
+  },
+  "aboutPageVersionItemName": "App Version",
+  "@aboutPageVersionItemName": {
+    "description": "translated key: aboutPageVersionItemName"
+  },
+  "authenticationPageTitle": "Authentication",
+  "@authenticationPageTitle": {
+    "description": "translated key: authenticationPageTitle"
+  },
+  "authenticationPageBackendTimeoutVerificationTitle": "Timeout Verification",
+  "@authenticationPageBackendTimeoutVerificationTitle": {
+    "description": "translated key: authenticationPageBackendTimeoutVerificationTitle"
+  },
+  "authenticationPageUsePassword": "Use Password",
+  "@authenticationPageUsePassword": {
+    "description": "translated key: authenticationPageUsePassword"
+  },
+  "authenticationPageStartVerification": "Start Verification",
+  "@authenticationPageStartVerification": {
+    "description": "translated key: authenticationPageStartVerification"
+  },
+  "authenticationPageRequireAuthentication": "Authentication Required",
+  "@authenticationPageRequireAuthentication": {
+    "description": "translated key: authenticationPageRequireAuthentication"
+  },
+  "deviceAdditionFailedDialogText": "Device Addition Failed",
+  "@deviceAdditionFailedDialogText": {
+    "description": "translated key: deviceAdditionFailedDialogText"
+  },
+  "rename": "Rename",
+  "@rename": {
+    "description": "translated key: rename"
+  },
+  "devicePageDisconnect": "Disconnect",
+  "@devicePageDisconnect": {
+    "description": "translated key: devicePageDisconnect"
+  },
+  "devicePageReconnect": "Reconnect",
+  "@devicePageReconnect": {
+    "description": "translated key: devicePageReconnect"
+  },
+  "devicePageUnpairedDialogContent": "Do you want to unpair?",
+  "@devicePageUnpairedDialogContent": {
+    "description": "translated key: devicePageUnpairedDialogContent"
+  },
+  "devicePageUnpairedButtonText": "Unpair",
+  "@devicePageUnpairedButtonText": {
+    "description": "translated key: devicePageUnpairedButtonText"
+  },
+  "devicePagePairingDialogTitle": "Enter Pairing Code",
+  "@devicePagePairingDialogTitle": {
+    "description": "translated key: devicePagePairingDialogTitle"
+  },
+  "devicePagePairingTimeoutText": "Pairing timed out!",
+  "@devicePagePairingTimeoutText": {
+    "description": "translated key: devicePagePairingTimeoutText"
+  },
+  "devicePagePairingErrorText": "Wrong pairing code!",
+  "@devicePagePairingErrorText": {
+    "description": "translated key: devicePagePairingErrorText"
+  },
+  "devicePagePairingDialogConfirmText": "Pair",
+  "@devicePagePairingDialogConfirmText": {
+    "description": "translated key: devicePagePairingDialogConfirmText"
+  },
+  "devicePageMyDevicesText": "My Devices ({length})",
+  "@devicePageMyDevicesText": {
+    "description": "translated key: devicePageMyDevicesText",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "devicePageForwardServerText": "Forward Connection",
+  "@devicePageForwardServerText": {
+    "description": "translated key: devicePageForwardServerText"
+  },
+  "devicePageDiscoverDevicesText": "Discover Devices ({length})",
+  "@devicePageDiscoverDevicesText": {
+    "description": "translated key: devicePageDiscoverDevicesText",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "devicePageRediscoverTooltip": "Rediscover",
+  "@devicePageRediscoverTooltip": {
+    "description": "translated key: devicePageRediscoverTooltip"
+  },
+  "devicePageManuallyTooltip": "Add Device Manually",
+  "@devicePageManuallyTooltip": {
+    "description": "translated key: devicePageManuallyTooltip"
+  },
+  "devicePageStopDiscoveringTooltip": "Stop Discovering",
+  "@devicePageStopDiscoveringTooltip": {
+    "description": "translated key: devicePageStopDiscoveringTooltip"
+  },
+  "sms": "SMS",
+  "@sms": {
+    "description": "translated key: sms"
+  },
+  "homeAppBarSyncingProgressText": "Syncing",
+  "@homeAppBarSyncingProgressText": {
+    "description": "translated key: homeAppBarSyncingProgressText"
+  },
+  "search": "Search",
+  "@search": {
+    "description": "translated key: search"
+  },
+  "logPageAppBarTitle": "Log Records",
+  "@logPageAppBarTitle": {
+    "description": "translated key: logPageAppBarTitle"
+  },
+  "all": "All",
+  "@all": {
+    "description": "translated key: all"
+  },
+  "text": "Text",
+  "@text": {
+    "description": "translated key: text"
+  },
+  "image": "Image",
+  "@image": {
+    "description": "translated key: image"
+  },
+  "file": "File",
+  "@file": {
+    "description": "translated key: file"
+  },
+  "moreFilter": "More Filters",
+  "@moreFilter": {
+    "description": "translated key: moreFilter"
+  },
+  "startDate": "Start Date",
+  "@startDate": {
+    "description": "translated key: startDate"
+  },
+  "endDate": "End Date",
+  "@endDate": {
+    "description": "translated key: endDate"
+  },
+  "filterByDate": "Filter by Date",
+  "@filterByDate": {
+    "description": "translated key: filterByDate"
+  },
+  "filterByContentType": "Filter by Type",
+  "@filterByContentType": {
+    "description": "translated key: filterByContentType"
+  },
+  "filterBySource": "Filter by Source",
+  "@filterBySource": {
+    "description": "translated key: filterBySource"
+  },
+  "saveTopData": "Keep Pinned Data",
+  "@saveTopData": {
+    "description": "translated key: saveTopData"
+  },
+  "removeLocalFiles": "Remove local files",
+  "@removeLocalFiles": {
+    "description": "translated key: removeLocalFiles"
+  },
+  "saveFilterConfig": "Save Filter Preset",
+  "@saveFilterConfig": {
+    "description": "translated key: saveFilterConfig"
+  },
+  "saveAutoCleanConfig": "Save Auto-clean Settings",
+  "@saveAutoCleanConfig": {
+    "description": "translated key: saveAutoCleanConfig"
+  },
+  "noDataFromFilter": "No data matched the filter",
+  "@noDataFromFilter": {
+    "description": "translated key: noDataFromFilter"
+  },
+  "filterCleaningConfirmation": "{cnt} items found. This cannot be undone.\nContinue?",
+  "@filterCleaningConfirmation": {
+    "description": "translated key: filterCleaningConfirmation",
+    "placeholders": {
+      "cnt": {
+        "type": "String"
+      }
+    }
+  },
+  "syncRecordsCleaningConfirmation": "Clearing device sync records will resync data after the next connection.",
+  "@syncRecordsCleaningConfirmation": {
+    "description": "translated key: syncRecordsCleaningConfirmation"
+  },
+  "onlyNotSync": "Only Unsynced",
+  "@onlyNotSync": {
+    "description": "translated key: onlyNotSync"
+  },
+  "syncRecordsCleanBtn": "Clear Selected Sync Records",
+  "@syncRecordsCleanBtn": {
+    "description": "translated key: syncRecordsCleanBtn"
+  },
+  "optionRecordsCleaningConfirmation": "Clearing device operation records will stop unsynced data from auto-syncing again.",
+  "@optionRecordsCleaningConfirmation": {
+    "description": "translated key: optionRecordsCleaningConfirmation"
+  },
+  "optionRecordsCleanBtn": "Clear Selected Operation Records",
+  "@optionRecordsCleanBtn": {
+    "description": "translated key: optionRecordsCleanBtn"
+  },
+  "autoCleanFrequency": "Frequency",
+  "@autoCleanFrequency": {
+    "description": "translated key: autoCleanFrequency"
+  },
+  "execTime": "Run time",
+  "@execTime": {
+    "description": "translated key: execTime"
+  },
+  "nextExecTime": "Next cleaning time: ",
+  "@nextExecTime": {
+    "description": "translated key: nextExecTime"
+  },
+  "errorCronTips": "Enter a valid Unix cron expression",
+  "@errorCronTips": {
+    "description": "translated key: errorCronTips"
+  },
+  "filterTips": "If a filter is left empty, all options are included.\nThe date range is not saved in filter presets.",
+  "@filterTips": {
+    "description": "translated key: filterTips"
+  },
+  "autoCleanConfigTitle": "Auto-clean",
+  "@autoCleanConfigTitle": {
+    "description": "translated key: autoCleanConfigTitle"
+  },
+  "daily": "Daily",
+  "@daily": {
+    "description": "translated key: daily"
+  },
+  "weekly": "Weekly",
+  "@weekly": {
+    "description": "translated key: weekly"
+  },
+  "selectWeekDay": "Select Weekday",
+  "@selectWeekDay": {
+    "description": "translated key: selectWeekDay"
+  },
+  "deleteItemsUnit": "items",
+  "@deleteItemsUnit": {
+    "description": "translated key: deleteItemsUnit"
+  },
+  "pleaseSelectDevices": "Select devices first",
+  "@pleaseSelectDevices": {
+    "description": "translated key: pleaseSelectDevices"
+  },
+  "saveSuccess": "Saved!",
+  "@saveSuccess": {
+    "description": "translated key: saveSuccess"
+  },
+  "pleaseSaveFilterConfig": "Save a filter preset first",
+  "@pleaseSaveFilterConfig": {
+    "description": "translated key: pleaseSaveFilterConfig"
+  },
+  "saveFailed": "Save failed",
+  "@saveFailed": {
+    "description": "translated key: saveFailed"
+  },
+  "updateSuccess": "Updated!",
+  "@updateSuccess": {
+    "description": "translated key: updateSuccess"
+  },
+  "updateFailed": "Update failed!",
+  "@updateFailed": {
+    "description": "translated key: updateFailed"
+  },
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "translated key: confirm"
+  },
+  "toToday": "Go to Today",
+  "@toToday": {
+    "description": "translated key: toToday"
+  },
+  "clear": "Clear",
+  "@clear": {
+    "description": "translated key: clear"
+  },
+  "settingsSearchHint": "Search settings...",
+  "@settingsSearchHint": {
+    "description": "translated key: settingsSearchHint"
+  },
+  "filterByDevice": "Filter by Device",
+  "@filterByDevice": {
+    "description": "translated key: filterByDevice"
+  },
+  "filterByTag": "Filter by Tag",
+  "@filterByTag": {
+    "description": "translated key: filterByTag"
+  },
+  "envStatusLoadingText": "Loading environment status...",
+  "@envStatusLoadingText": {
+    "description": "translated key: envStatusLoadingText"
+  },
+  "shizukuModeStatusTitle": "Shizuku Mode",
+  "@shizukuModeStatusTitle": {
+    "description": "translated key: shizukuModeStatusTitle"
+  },
+  "shizukuModeRunningDesc": "Service is running, API {version}",
+  "@shizukuModeRunningDesc": {
+    "description": "translated key: shizukuModeRunningDesc",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "rootModeStatusTitle": "Root Mode",
+  "@rootModeStatusTitle": {
+    "description": "translated key: rootModeStatusTitle"
+  },
+  "rootModeRunningDesc": "Authorized. Service is running.",
+  "@rootModeRunningDesc": {
+    "description": "translated key: rootModeRunningDesc"
+  },
+  "serverNotRunningDesc": "Service is not running. Some features are unavailable.",
+  "@serverNotRunningDesc": {
+    "description": "translated key: serverNotRunningDesc"
+  },
+  "envPermissionIgnored": "Permission Ignored",
+  "@envPermissionIgnored": {
+    "description": "translated key: envPermissionIgnored"
+  },
+  "envPermissionIgnoredDesc": "Some features may be unavailable",
+  "@envPermissionIgnoredDesc": {
+    "description": "translated key: envPermissionIgnoredDesc"
+  },
+  "noSpecialPermissionRequired": "No Special Permission Required",
+  "@noSpecialPermissionRequired": {
+    "description": "translated key: noSpecialPermissionRequired"
+  },
+  "switchWorkingMode": "Switch Working Mode",
+  "@switchWorkingMode": {
+    "description": "translated key: switchWorkingMode"
+  },
+  "commonSettingsRunAtStartup": "Run at Startup",
+  "@commonSettingsRunAtStartup": {
+    "description": "translated key: commonSettingsRunAtStartup"
+  },
+  "commonSettingsRunMinimize": "Start Minimized",
+  "@commonSettingsRunMinimize": {
+    "description": "translated key: commonSettingsRunMinimize"
+  },
+  "floatWindow": "Floating Window",
+  "@floatWindow": {
+    "description": "translated key: floatWindow"
+  },
+  "commonSettingsShowHistoriesFloatWindow": "Show History Panel",
+  "@commonSettingsShowHistoriesFloatWindow": {
+    "description": "translated key: commonSettingsShowHistoriesFloatWindow"
+  },
+  "commonSettingsShowHistoriesFloatWindowTips": "Double-tap or drag the handle left to open the history panel.",
+  "@commonSettingsShowHistoriesFloatWindowTips": {
+    "description": "translated key: commonSettingsShowHistoriesFloatWindowTips"
+  },
+  "historyFloatTitle": "Clipboard History",
+  "@historyFloatTitle": {
+    "description": "translated key: historyFloatTitle"
+  },
+  "historyFloatCountTemplate": "'{count}' records",
+  "@historyFloatCountTemplate": {
+    "description": "translated key: historyFloatCountTemplate"
+  },
+  "historyFloatImageUnavailable": "Image unavailable",
+  "@historyFloatImageUnavailable": {
+    "description": "translated key: historyFloatImageUnavailable"
+  },
+  "commonSettingsHistoriesFloatWindowHandleWidthValue": "Handle Width: {width}",
+  "@commonSettingsHistoriesFloatWindowHandleWidthValue": {
+    "description": "translated key: commonSettingsHistoriesFloatWindowHandleWidthValue",
+    "placeholders": {
+      "width": {
+        "type": "String"
+      }
+    }
+  },
+  "commonSettingsHistoriesFloatWindowHandleColor": "Handle Color",
+  "@commonSettingsHistoriesFloatWindowHandleColor": {
+    "description": "translated key: commonSettingsHistoriesFloatWindowHandleColor"
+  },
+  "commonSettingsHistoriesFloatWindowHandleColorTips": "Pick a floating window color. Changes sync in real time.",
+  "@commonSettingsHistoriesFloatWindowHandleColorTips": {
+    "description": "translated key: commonSettingsHistoriesFloatWindowHandleColorTips"
+  },
+  "commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle": "Apply alpha to whole handle",
+  "@commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle": {
+    "description": "translated key: commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandle"
+  },
+  "commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips": "When enabled, the handle border, grip, and inner overlay follow the selected color alpha together.",
+  "@commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips": {
+    "description": "translated key: commonSettingsHistoriesFloatWindowHandleAlphaToWholeHandleTips"
+  },
+  "commonSettingsEnhanceBackgroundKeepAliveTitle": "Boost Background Keep-alive",
+  "@commonSettingsEnhanceBackgroundKeepAliveTitle": {
+    "description": "translated key: commonSettingsEnhanceBackgroundKeepAliveTitle"
+  },
+  "commonSettingsEnhanceBackgroundKeepAliveDesc": "Show a 1 px floating window to improve background keep-alive on some devices.",
+  "@commonSettingsEnhanceBackgroundKeepAliveDesc": {
+    "description": "translated key: commonSettingsEnhanceBackgroundKeepAliveDesc"
+  },
+  "commonSettingsLockHistoriesFloatWindowPosition": "Lock Floating Window Position",
+  "@commonSettingsLockHistoriesFloatWindowPosition": {
+    "description": "translated key: commonSettingsLockHistoriesFloatWindowPosition"
+  },
+  "preferenceSettingsRememberWindowSize": "Remember Last Window Size",
+  "@preferenceSettingsRememberWindowSize": {
+    "description": "translated key: preferenceSettingsRememberWindowSize"
+  },
+  "preferenceSettingsWindowSizeRecordValue": "Recorded Value",
+  "@preferenceSettingsWindowSizeRecordValue": {
+    "description": "translated key: preferenceSettingsWindowSizeRecordValue"
+  },
+  "preferenceSettingsWindowSizeDefaultValue": "Default Value",
+  "@preferenceSettingsWindowSizeDefaultValue": {
+    "description": "translated key: preferenceSettingsWindowSizeDefaultValue"
+  },
+  "commonSettingsTheme": "Theme",
+  "@commonSettingsTheme": {
+    "description": "translated key: commonSettingsTheme"
+  },
+  "language": "Language",
+  "@language": {
+    "description": "translated key: language"
+  },
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "translated key: selectLanguage"
+  },
+  "themeAuto": "Follow System",
+  "@themeAuto": {
+    "description": "translated key: themeAuto"
+  },
+  "themeLight": "Light Mode",
+  "@themeLight": {
+    "description": "translated key: themeLight"
+  },
+  "themeDark": "Dark Mode",
+  "@themeDark": {
+    "description": "translated key: themeDark"
+  },
+  "permissionSettingsGroupName": "Permissions",
+  "@permissionSettingsGroupName": {
+    "description": "translated key: permissionSettingsGroupName"
+  },
+  "permissionSettingsNotificationTitle": "Notification Permission",
+  "@permissionSettingsNotificationTitle": {
+    "description": "translated key: permissionSettingsNotificationTitle"
+  },
+  "permissionSettingsNotificationDesc": "Required to start the foreground service.",
+  "@permissionSettingsNotificationDesc": {
+    "description": "translated key: permissionSettingsNotificationDesc"
+  },
+  "permissionSettingsFloatTitle": "Floating Window Permission",
+  "@permissionSettingsFloatTitle": {
+    "description": "translated key: permissionSettingsFloatTitle"
+  },
+  "permissionSettingsFloatDesc": "Used on newer Android versions to read the clipboard through a floating window.",
+  "@permissionSettingsFloatDesc": {
+    "description": "translated key: permissionSettingsFloatDesc"
+  },
+  "permissionSettingsBatteryOptimiseTitle": "Battery Optimization",
+  "@permissionSettingsBatteryOptimiseTitle": {
+    "description": "translated key: permissionSettingsBatteryOptimiseTitle"
+  },
+  "permissionSettingsBatteryOptimiseDesc": "Exclude the app from battery optimization to reduce background kills.",
+  "@permissionSettingsBatteryOptimiseDesc": {
+    "description": "translated key: permissionSettingsBatteryOptimiseDesc"
+  },
+  "permissionSettingsSmsTitle": "SMS Access",
+  "@permissionSettingsSmsTitle": {
+    "description": "translated key: permissionSettingsSmsTitle"
+  },
+  "permissionSettingsSmsDesc": "SMS sync is enabled. Please grant SMS access.",
+  "@permissionSettingsSmsDesc": {
+    "description": "translated key: permissionSettingsSmsDesc"
+  },
+  "discoveringSettingsGroupName": "Discovery",
+  "@discoveringSettingsGroupName": {
+    "description": "translated key: discoveringSettingsGroupName"
+  },
+  "discoveringSettingsLocalDeviceName": "Device Name",
+  "@discoveringSettingsLocalDeviceName": {
+    "description": "translated key: discoveringSettingsLocalDeviceName"
+  },
+  "discoveringSettingsDeviceNameCopyTip": "Device ID copied",
+  "@discoveringSettingsDeviceNameCopyTip": {
+    "description": "translated key: discoveringSettingsDeviceNameCopyTip"
+  },
+  "copyDeviceId": "Copy Device ID",
+  "@copyDeviceId": {
+    "description": "translated key: copyDeviceId"
+  },
+  "modifyDeviceName": "Rename Device",
+  "@modifyDeviceName": {
+    "description": "translated key: modifyDeviceName"
+  },
+  "deviceName": "Device Name",
+  "@deviceName": {
+    "description": "translated key: deviceName"
+  },
+  "modifyDeviceNameCompletedTooltip": "Restart to apply changes",
+  "@modifyDeviceNameCompletedTooltip": {
+    "description": "translated key: modifyDeviceNameCompletedTooltip"
+  },
+  "port": "Port",
+  "@port": {
+    "description": "translated key: port"
+  },
+  "discoveringSettingsPortDesc": "Default: {port}. Changing it may break auto-discovery.",
+  "@discoveringSettingsPortDesc": {
+    "description": "translated key: discoveringSettingsPortDesc",
+    "placeholders": {
+      "port": {
+        "type": "String"
+      }
+    }
+  },
+  "modifyPort": "Change Port",
+  "@modifyPort": {
+    "description": "translated key: modifyPort"
+  },
+  "modifyPortErrorText": "Port number range 0-65535",
+  "@modifyPortErrorText": {
+    "description": "translated key: modifyPortErrorText"
+  },
+  "discoveringSettingsModifyPortCompletedTooltip": "Restart to apply changes",
+  "@discoveringSettingsModifyPortCompletedTooltip": {
+    "description": "translated key: discoveringSettingsModifyPortCompletedTooltip"
+  },
+  "allowDiscovering": "Discoverable",
+  "@allowDiscovering": {
+    "description": "translated key: allowDiscovering"
+  },
+  "discoveringSettingsAllowDiscoveringDesc": "Can be automatically discovered by other devices",
+  "@discoveringSettingsAllowDiscoveringDesc": {
+    "description": "translated key: discoveringSettingsAllowDiscoveringDesc"
+  },
+  "discoveringSettingsOnlyForwardDiscoveringTitle": "Forward-only Discovery (Debug)",
+  "@discoveringSettingsOnlyForwardDiscoveringTitle": {
+    "description": "translated key: discoveringSettingsOnlyForwardDiscoveringTitle"
+  },
+  "discoveringSettingsOnlyForwardDiscoveringDesc": "Visible only in development builds",
+  "@discoveringSettingsOnlyForwardDiscoveringDesc": {
+    "description": "translated key: discoveringSettingsOnlyForwardDiscoveringDesc"
+  },
+  "discoveringSettingsHeartbeatIntervalTitle": "Heartbeat Interval",
+  "@discoveringSettingsHeartbeatIntervalTitle": {
+    "description": "translated key: discoveringSettingsHeartbeatIntervalTitle"
+  },
+  "discoveringSettingsHeartbeatIntervalDesc": "Device online check. Default: 30s; 0 disables it.",
+  "@discoveringSettingsHeartbeatIntervalDesc": {
+    "description": "translated key: discoveringSettingsHeartbeatIntervalDesc"
+  },
+  "discoveringSettingsHeartbeatIntervalTooltip": "Info",
+  "@discoveringSettingsHeartbeatIntervalTooltip": {
+    "description": "translated key: discoveringSettingsHeartbeatIntervalTooltip"
+  },
+  "enable": "Enable",
+  "@enable": {
+    "description": "translated key: enable"
+  },
+  "dontDetect": "Don''t Detect",
+  "@dontDetect": {
+    "description": "translated key: dontDetect"
+  },
+  "discoveringSettingsHeartbeatIntervalDialogContent": "When a device switches networks, its offline status cannot be detected automatically.\nEnable heartbeat checks to verify device availability at intervals.",
+  "@discoveringSettingsHeartbeatIntervalDialogContent": {
+    "description": "translated key: discoveringSettingsHeartbeatIntervalDialogContent"
+  },
+  "discoveringSettingsModifyHeartbeatDialogTitle": "Heartbeat Interval",
+  "@discoveringSettingsModifyHeartbeatDialogTitle": {
+    "description": "translated key: discoveringSettingsModifyHeartbeatDialogTitle"
+  },
+  "discoveringSettingsModifyHeartbeatDialogInputLabel": "Heartbeat IntervalSeconds. 0 disables it.",
+  "@discoveringSettingsModifyHeartbeatDialogInputLabel": {
+    "description": "translated key: discoveringSettingsModifyHeartbeatDialogInputLabel"
+  },
+  "forwardSettingsGroupName": "Forward",
+  "@forwardSettingsGroupName": {
+    "description": "translated key: forwardSettingsGroupName"
+  },
+  "forwardSettingsForwardTitle": "Use Forward Service",
+  "@forwardSettingsForwardTitle": {
+    "description": "translated key: forwardSettingsForwardTitle"
+  },
+  "forwardSettingsForwardDownloadTooltip": "Download Forward Service",
+  "@forwardSettingsForwardDownloadTooltip": {
+    "description": "translated key: forwardSettingsForwardDownloadTooltip"
+  },
+  "forwardSettingsForwardDesc": "Sync over the internet through a forward server.",
+  "@forwardSettingsForwardDesc": {
+    "description": "translated key: forwardSettingsForwardDesc"
+  },
+  "forwardSettingsForwardEnableRequiredText": "Set the forward server address first.",
+  "@forwardSettingsForwardEnableRequiredText": {
+    "description": "translated key: forwardSettingsForwardEnableRequiredText"
+  },
+  "forwardSettingsForwardAddressTitle": "Forward Server Address",
+  "@forwardSettingsForwardAddressTitle": {
+    "description": "translated key: forwardSettingsForwardAddressTitle"
+  },
+  "forwardSettingsForwardAddressDesc": "Use a trusted server or host your own.",
+  "@forwardSettingsForwardAddressDesc": {
+    "description": "translated key: forwardSettingsForwardAddressDesc"
+  },
+  "configure": "Configure",
+  "@configure": {
+    "description": "translated key: configure"
+  },
+  "change": "Change",
+  "@change": {
+    "description": "translated key: change"
+  },
+  "securitySettingsGroupName": "Security",
+  "@securitySettingsGroupName": {
+    "description": "translated key: securitySettingsGroupName"
+  },
+  "securitySettingsEnableSecurityTitle": "Enable Authentication",
+  "@securitySettingsEnableSecurityTitle": {
+    "description": "translated key: securitySettingsEnableSecurityTitle"
+  },
+  "securitySettingsEnableSecurityDesc": "Use password or biometrics.Please create an app password first",
+  "@securitySettingsEnableSecurityDesc": {
+    "description": "translated key: securitySettingsEnableSecurityDesc"
+  },
+  "securitySettingsEnableSecurityAppPwdModifyTitle": "Change Password",
+  "@securitySettingsEnableSecurityAppPwdModifyTitle": {
+    "description": "translated key: securitySettingsEnableSecurityAppPwdModifyTitle"
+  },
+  "createAppPwd": "Create App Password",
+  "@createAppPwd": {
+    "description": "translated key: createAppPwd"
+  },
+  "changeAppPwd": "Change App Password",
+  "@changeAppPwd": {
+    "description": "translated key: changeAppPwd"
+  },
+  "create": "Create",
+  "@create": {
+    "description": "translated key: create"
+  },
+  "securitySettingsReverificationTitle": "Password Recheck",
+  "@securitySettingsReverificationTitle": {
+    "description": "translated key: securitySettingsReverificationTitle"
+  },
+  "securitySettingsReverificationDesc": "Ask for the password again after the app stays in the background for a while.",
+  "@securitySettingsReverificationDesc": {
+    "description": "translated key: securitySettingsReverificationDesc"
+  },
+  "securitySettingsReverificationValue": "{value} minutes",
+  "@securitySettingsReverificationValue": {
+    "description": "translated key: securitySettingsReverificationValue",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "hotKeySettingsGroupName": "Hotkeys",
+  "@hotKeySettingsGroupName": {
+    "description": "translated key: hotKeySettingsGroupName"
+  },
+  "hotKeySettingsHistoryTitle": "History Popup",
+  "@hotKeySettingsHistoryTitle": {
+    "description": "translated key: hotKeySettingsHistoryTitle"
+  },
+  "hotKeySettingsHistoryDesc": "Open the history popup from anywhere on screen",
+  "@hotKeySettingsHistoryDesc": {
+    "description": "translated key: hotKeySettingsHistoryDesc"
+  },
+  "hotKeySettingsHistoryTakeOverWinVTooltip": "Win+V is taken over",
+  "@hotKeySettingsHistoryTakeOverWinVTooltip": {
+    "description": "translated key: hotKeySettingsHistoryTakeOverWinVTooltip"
+  },
+  "hotKeySettingsCombinationInvalidText": "A hotkey must include one modifier and one non-modifier key.",
+  "@hotKeySettingsCombinationInvalidText": {
+    "description": "translated key: hotKeySettingsCombinationInvalidText"
+  },
+  "hotKeySettingsSaveKeysDialogText": "Save hotkey \"{keys}\"?",
+  "@hotKeySettingsSaveKeysDialogText": {
+    "description": "translated key: hotKeySettingsSaveKeysDialogText",
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "hotKeySettingsSaveKeysFailedText": "Failed to save: {err}",
+  "@hotKeySettingsSaveKeysFailedText": {
+    "description": "translated key: hotKeySettingsSaveKeysFailedText",
+    "placeholders": {
+      "err": {
+        "type": "String"
+      }
+    }
+  },
+  "sendFile": "Send File",
+  "@sendFile": {
+    "description": "translated key: sendFile"
+  },
+  "hotKeySettingsFileDesc": "Send selected files to other devices; desktop selection is unsupported",
+  "@hotKeySettingsFileDesc": {
+    "description": "translated key: hotKeySettingsFileDesc"
+  },
+  "syncSettingsGroupName": "Sync",
+  "@syncSettingsGroupName": {
+    "description": "translated key: syncSettingsGroupName"
+  },
+  "syncSettingsSmsPermissionRequired": "Grant SMS access first.",
+  "@syncSettingsSmsPermissionRequired": {
+    "description": "translated key: syncSettingsSmsPermissionRequired"
+  },
+  "syncSettingsStoreImg2PicturesTitle": "Save Images to Pictures",
+  "@syncSettingsStoreImg2PicturesTitle": {
+    "description": "translated key: syncSettingsStoreImg2PicturesTitle"
+  },
+  "syncSettingsStoreImg2PicturesDesc": "Saved to Pictures/{appName}",
+  "@syncSettingsStoreImg2PicturesDesc": {
+    "description": "translated key: syncSettingsStoreImg2PicturesDesc",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "syncSettingsStoreImg2PicturesNoPermText": "Storage access required.",
+  "@syncSettingsStoreImg2PicturesNoPermText": {
+    "description": "translated key: syncSettingsStoreImg2PicturesNoPermText"
+  },
+  "syncSettingsStoreImg2PicturesCancelPerm": "Permission request canceled.",
+  "@syncSettingsStoreImg2PicturesCancelPerm": {
+    "description": "translated key: syncSettingsStoreImg2PicturesCancelPerm"
+  },
+  "syncSettingsStoreImagePathTitle": "Image Storage Path",
+  "@syncSettingsStoreImagePathTitle": {
+    "description": "translated key: syncSettingsStoreImagePathTitle"
+  },
+  "syncSettingsStoreFilePathTitle": "File Storage Path",
+  "@syncSettingsStoreFilePathTitle": {
+    "description": "translated key: syncSettingsStoreFilePathTitle"
+  },
+  "selection": "Select",
+  "@selection": {
+    "description": "translated key: selection"
+  },
+  "syncSettingsAutoCopyImgTitle": "Copy Images Automatically",
+  "@syncSettingsAutoCopyImgTitle": {
+    "description": "translated key: syncSettingsAutoCopyImgTitle"
+  },
+  "syncSettingsAutoCopyImgDesc": "When enabled, images copied on other devices are also copied locally.",
+  "@syncSettingsAutoCopyImgDesc": {
+    "description": "translated key: syncSettingsAutoCopyImgDesc"
+  },
+  "logSettingsGroupName": "Logs",
+  "@logSettingsGroupName": {
+    "description": "translated key: logSettingsGroupName"
+  },
+  "logSettingsEnableTitle": "Enable Logging",
+  "@logSettingsEnableTitle": {
+    "description": "translated key: logSettingsEnableTitle"
+  },
+  "logSettingsEnableDesc": "Uses extra storage. Current logs: {size}",
+  "@logSettingsEnableDesc": {
+    "description": "translated key: logSettingsEnableDesc",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "openFolder": "Open Folder",
+  "@openFolder": {
+    "description": "translated key: openFolder"
+  },
+  "openFilePos": "Open File Location",
+  "@openFilePos": {
+    "description": "translated key: openFilePos"
+  },
+  "tips": "Tips",
+  "@tips": {
+    "description": "translated key: tips"
+  },
+  "logSettingsDeleteLogFilesDialogContent": "Delete log files?",
+  "@logSettingsDeleteLogFilesDialogContent": {
+    "description": "translated key: logSettingsDeleteLogFilesDialogContent"
+  },
+  "statisticsSettingsGroupName": "Statistics",
+  "@statisticsSettingsGroupName": {
+    "description": "translated key: statisticsSettingsGroupName"
+  },
+  "about": "About",
+  "@about": {
+    "description": "translated key: about"
+  },
+  "errorDialogTitle": "Error",
+  "@errorDialogTitle": {
+    "description": "translated key: errorDialogTitle"
+  },
+  "selfDeviceName": "Self",
+  "@selfDeviceName": {
+    "description": "translated key: selfDeviceName"
+  },
+  "save": "Save",
+  "@save": {
+    "description": "translated key: save"
+  },
+  "saved": "Saved",
+  "@saved": {
+    "description": "translated key: saved"
+  },
+  "saveFileNotSupportDialogText": "Unsupported Type",
+  "@saveFileNotSupportDialogText": {
+    "description": "translated key: saveFileNotSupportDialogText"
+  },
+  "pieDataStatisticsLocalItemLabel": "Local",
+  "@pieDataStatisticsLocalItemLabel": {
+    "description": "translated key: pieDataStatisticsLocalItemLabel"
+  },
+  "pieDataStatisticsSyncItemLabel": "Sync",
+  "@pieDataStatisticsSyncItemLabel": {
+    "description": "translated key: pieDataStatisticsSyncItemLabel"
+  },
+  "statisticsPageAppBarText": "Statistics",
+  "@statisticsPageAppBarText": {
+    "description": "translated key: statisticsPageAppBarText"
+  },
+  "statisticsPageFilterRangeText": "Range",
+  "@statisticsPageFilterRangeText": {
+    "description": "translated key: statisticsPageFilterRangeText"
+  },
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "translated key: refresh"
+  },
+  "statisticsPageHistoryTypeCntTitle": "Record Count by Type",
+  "@statisticsPageHistoryTypeCntTitle": {
+    "description": "translated key: statisticsPageHistoryTypeCntTitle"
+  },
+  "statisticsPageSyncRatePie": "Sync Ratio",
+  "@statisticsPageSyncRatePie": {
+    "description": "translated key: statisticsPageSyncRatePie"
+  },
+  "statisticsPageHistoryCntForDevice": "Record Count by Device",
+  "@statisticsPageHistoryCntForDevice": {
+    "description": "translated key: statisticsPageHistoryCntForDevice"
+  },
+  "statisticsPageHistoryTagCnt": "Record Count by Tag",
+  "@statisticsPageHistoryTagCnt": {
+    "description": "translated key: statisticsPageHistoryTagCnt"
+  },
+  "syncingFilePageHistoryTabText": "History",
+  "@syncingFilePageHistoryTabText": {
+    "description": "translated key: syncingFilePageHistoryTabText"
+  },
+  "syncingFilePageReceiveTabText": "Receiving",
+  "@syncingFilePageReceiveTabText": {
+    "description": "translated key: syncingFilePageReceiveTabText"
+  },
+  "syncingFilePageSendTabText": "Sending",
+  "@syncingFilePageSendTabText": {
+    "description": "translated key: syncingFilePageSendTabText"
+  },
+  "dragFileToSend": "Drag files here to send",
+  "@dragFileToSend": {
+    "description": "translated key: dragFileToSend"
+  },
+  "deleting": "Deleting...",
+  "@deleting": {
+    "description": "translated key: deleting"
+  },
+  "deletingSuccess": "Deleted Successfully",
+  "@deletingSuccess": {
+    "description": "translated key: deletingSuccess"
+  },
+  "partialDeletionFailed": "Partial Deletion Failed",
+  "@partialDeletionFailed": {
+    "description": "translated key: partialDeletionFailed"
+  },
+  "deletionFailed": "Delete Failed",
+  "@deletionFailed": {
+    "description": "translated key: deletionFailed"
+  },
+  "deselect": "Deselect",
+  "@deselect": {
+    "description": "translated key: deselect"
+  },
+  "delete": "Delete",
+  "@delete": {
+    "description": "translated key: delete"
+  },
+  "deleteWithFiles": "Delete with Files",
+  "@deleteWithFiles": {
+    "description": "translated key: deleteWithFiles"
+  },
+  "syncingFilePageDeleteSelectedDialogContent": "Delete {length} selected items?\nFiles from sent records will be kept.",
+  "@syncingFilePageDeleteSelectedDialogContent": {
+    "description": "translated key: syncingFilePageDeleteSelectedDialogContent",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "onlyDeleteRecordsText": "Records Only",
+  "@onlyDeleteRecordsText": {
+    "description": "translated key: onlyDeleteRecordsText"
+  },
+  "failedToReadUpdateLog": "Failed to Read Update Log!",
+  "@failedToReadUpdateLog": {
+    "description": "translated key: failedToReadUpdateLog"
+  },
+  "skipGuide": "Skip",
+  "@skipGuide": {
+    "description": "translated key: skipGuide"
+  },
+  "previousGuide": "Previous",
+  "@previousGuide": {
+    "description": "translated key: previousGuide"
+  },
+  "nextGuide": "Next",
+  "@nextGuide": {
+    "description": "translated key: nextGuide"
+  },
+  "finishGuide": "Finish",
+  "@finishGuide": {
+    "description": "translated key: finishGuide"
+  },
+  "previewPageNoSuchFile": "Image does not exist or has been deleted",
+  "@previewPageNoSuchFile": {
+    "description": "translated key: previewPageNoSuchFile"
+  },
+  "copyPathSuccess": "Path copied",
+  "@copyPathSuccess": {
+    "description": "translated key: copyPathSuccess"
+  },
+  "tagEditPageAppBarTitle": "Edit Tag",
+  "@tagEditPageAppBarTitle": {
+    "description": "translated key: tagEditPageAppBarTitle"
+  },
+  "tagEditPageSearchOrCreateTag": "Search or Create Tag",
+  "@tagEditPageSearchOrCreateTag": {
+    "description": "translated key: tagEditPageSearchOrCreateTag"
+  },
+  "tagEditPageCrateTagItem": "Create \"{tag}\" Tag",
+  "@tagEditPageCrateTagItem": {
+    "description": "translated key: tagEditPageCrateTagItem",
+    "placeholders": {
+      "tag": {
+        "type": "String"
+      }
+    }
+  },
+  "updateLogPageAppBarTitle": "Changelog",
+  "@updateLogPageAppBarTitle": {
+    "description": "translated key: updateLogPageAppBarTitle"
+  },
+  "failedToReadFile": "Failed to Read File",
+  "@failedToReadFile": {
+    "description": "translated key: failedToReadFile"
+  },
+  "welcome": "Welcome to {appName}",
+  "@welcome": {
+    "description": "translated key: welcome",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "welcomeContent": "Before you start, we need a few permissions and some basic setup.",
+  "@welcomeContent": {
+    "description": "translated key: welcomeContent"
+  },
+  "startNow": "Start Now",
+  "@startNow": {
+    "description": "translated key: startNow"
+  },
+  "name_": "Name",
+  "@name_": {
+    "description": "translated key: name_"
+  },
+  "ruleContent": "Rule",
+  "@ruleContent": {
+    "description": "translated key: ruleContent"
+  },
+  "deleteSuccess": "Deleted Successfully",
+  "@deleteSuccess": {
+    "description": "translated key: deleteSuccess"
+  },
+  "revoke": "Revoke",
+  "@revoke": {
+    "description": "translated key: revoke"
+  },
+  "importRules": "Import Rules",
+  "@importRules": {
+    "description": "translated key: importRules"
+  },
+  "importRulesSuccess": "Imported {length} rules",
+  "@importRulesSuccess": {
+    "description": "translated key: importRulesSuccess",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "importFromNet": "Import from Network",
+  "@importFromNet": {
+    "description": "translated key: importFromNet"
+  },
+  "importFromLocal": "Import from Local",
+  "@importFromLocal": {
+    "description": "translated key: importFromLocal"
+  },
+  "urlFormatErrorText": "Please enter a valid URL",
+  "@urlFormatErrorText": {
+    "description": "translated key: urlFormatErrorText"
+  },
+  "fetch": "Fetch",
+  "@fetch": {
+    "description": "translated key: fetch"
+  },
+  "fetchingData": "Fetching Data...",
+  "@fetchingData": {
+    "description": "translated key: fetchingData"
+  },
+  "failedToLoad": "Failed to Load",
+  "@failedToLoad": {
+    "description": "translated key: failedToLoad"
+  },
+  "noSuchFile": "The selected file path does not exist!",
+  "@noSuchFile": {
+    "description": "translated key: noSuchFile"
+  },
+  "addRule": "Add Rule",
+  "@addRule": {
+    "description": "translated key: addRule"
+  },
+  "importRule": "Import Rule",
+  "@importRule": {
+    "description": "translated key: importRule"
+  },
+  "import": "Import",
+  "@import": {
+    "description": "translated key: import"
+  },
+  "add": "Add",
+  "@add": {
+    "description": "translated key: add"
+  },
+  "modify": "Modify",
+  "@modify": {
+    "description": "translated key: modify"
+  },
+  "output": "Export",
+  "@output": {
+    "description": "translated key: output"
+  },
+  "outputRule": "Export Rule",
+  "@outputRule": {
+    "description": "translated key: outputRule"
+  },
+  "outputSuccess": "Exported Successfully!",
+  "@outputSuccess": {
+    "description": "translated key: outputSuccess"
+  },
+  "outputFailed": "Export Failed",
+  "@outputFailed": {
+    "description": "translated key: outputFailed"
+  },
+  "exitSelectionMode": "Exit Selection Mode",
+  "@exitSelectionMode": {
+    "description": "translated key: exitSelectionMode"
+  },
+  "selectAll": "Select All",
+  "@selectAll": {
+    "description": "translated key: selectAll"
+  },
+  "cancelSelectAll": "Cancel Select All",
+  "@cancelSelectAll": {
+    "description": "translated key: cancelSelectAll"
+  },
+  "multipleChoiceOperationAppBarTitle": "Bulk Actions",
+  "@multipleChoiceOperationAppBarTitle": {
+    "description": "translated key: multipleChoiceOperationAppBarTitle"
+  },
+  "forwardServerNotAllowedSendFile": "This forward server does not allow file sync.",
+  "@forwardServerNotAllowedSendFile": {
+    "description": "translated key: forwardServerNotAllowedSendFile"
+  },
+  "sendFailed": "Send Failed",
+  "@sendFailed": {
+    "description": "translated key: sendFailed"
+  },
+  "forwardServerUnknownResult": "Unknown Result",
+  "@forwardServerUnknownResult": {
+    "description": "translated key: forwardServerUnknownResult"
+  },
+  "forwardServerConnectFailed": "Forward Server Connection Failed",
+  "@forwardServerConnectFailed": {
+    "description": "translated key: forwardServerConnectFailed"
+  },
+  "devicePairingRequestNotificationContent": "New Pairing Request",
+  "@devicePairingRequestNotificationContent": {
+    "description": "translated key: devicePairingRequestNotificationContent"
+  },
+  "devicePairingRequestDialogTitle": "Pairing Request",
+  "@devicePairingRequestDialogTitle": {
+    "description": "translated key: devicePairingRequestDialogTitle"
+  },
+  "pairingCodeDialogContent": "Pairing request from {devName}\nCode:",
+  "@pairingCodeDialogContent": {
+    "description": "translated key: pairingCodeDialogContent",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelCurrentPairing": "Cancel This Pairing",
+  "@cancelCurrentPairing": {
+    "description": "translated key: cancelCurrentPairing"
+  },
+  "deviceDiscoveryStatusViaBroadcast": "Broadcast Discovery",
+  "@deviceDiscoveryStatusViaBroadcast": {
+    "description": "translated key: deviceDiscoveryStatusViaBroadcast"
+  },
+  "deviceDiscoveryStatusViaScan": "Network Scan",
+  "@deviceDiscoveryStatusViaScan": {
+    "description": "translated key: deviceDiscoveryStatusViaScan"
+  },
+  "deviceDiscoveryStatusViaForward": "Forward Discovery",
+  "@deviceDiscoveryStatusViaForward": {
+    "description": "translated key: deviceDiscoveryStatusViaForward"
+  },
+  "newVersionDialogTitle": "New Version",
+  "@newVersionDialogTitle": {
+    "description": "translated key: newVersionDialogTitle"
+  },
+  "newVersionDialogSkipText": "Skip",
+  "@newVersionDialogSkipText": {
+    "description": "translated key: newVersionDialogSkipText"
+  },
+  "newVersionDialogOkText": "Download",
+  "@newVersionDialogOkText": {
+    "description": "translated key: newVersionDialogOkText"
+  },
+  "defaultLinkTagName": "Link",
+  "@defaultLinkTagName": {
+    "description": "translated key: defaultLinkTagName"
+  },
+  "unknownHistoryContentType": "Unknown",
+  "@unknownHistoryContentType": {
+    "description": "translated key: unknownHistoryContentType"
+  },
+  "allHistoryContentType": "All",
+  "@allHistoryContentType": {
+    "description": "translated key: allHistoryContentType"
+  },
+  "textHistoryContentType": "Text",
+  "@textHistoryContentType": {
+    "description": "translated key: textHistoryContentType"
+  },
+  "imageHistoryContentType": "Image",
+  "@imageHistoryContentType": {
+    "description": "translated key: imageHistoryContentType"
+  },
+  "richTextHistoryContentType": "Rich Text",
+  "@richTextHistoryContentType": {
+    "description": "translated key: richTextHistoryContentType"
+  },
+  "smsHistoryContentType": "SMS",
+  "@smsHistoryContentType": {
+    "description": "translated key: smsHistoryContentType"
+  },
+  "fileHistoryContentType": "File",
+  "@fileHistoryContentType": {
+    "description": "translated key: fileHistoryContentType"
+  },
+  "dialogConfirmText": "Confirm",
+  "@dialogConfirmText": {
+    "description": "translated key: dialogConfirmText"
+  },
+  "dialogNeutralText": "Neutral",
+  "@dialogNeutralText": {
+    "description": "translated key: dialogNeutralText"
+  },
+  "dialogRestoreDefaultText": "Restore Default",
+  "@dialogRestoreDefaultText": {
+    "description": "translated key: dialogRestoreDefaultText"
+  },
+  "open": "Open",
+  "@open": {
+    "description": "translated key: open"
+  },
+  "openLink": "Open Link",
+  "@openLink": {
+    "description": "translated key: openLink"
+  },
+  "moment": "Just Now",
+  "@moment": {
+    "description": "translated key: moment"
+  },
+  "minutesAgo": "minutes ago",
+  "@minutesAgo": {
+    "description": "translated key: minutesAgo"
+  },
+  "hoursAgo": "hours ago",
+  "@hoursAgo": {
+    "description": "translated key: hoursAgo"
+  },
+  "connectFailed": "Connection Failed",
+  "@connectFailed": {
+    "description": "translated key: connectFailed"
+  },
+  "connectSuccess": "Connection Successful",
+  "@connectSuccess": {
+    "description": "translated key: connectSuccess"
+  },
+  "connect": "Connect",
+  "@connect": {
+    "description": "translated key: connect"
+  },
+  "addDeviceDialogTitle": "Add Device",
+  "@addDeviceDialogTitle": {
+    "description": "translated key: addDeviceDialogTitle"
+  },
+  "errorFormatIp": "Please enter a valid IPv4/v6 address",
+  "@errorFormatIp": {
+    "description": "translated key: errorFormatIp"
+  },
+  "inputPassword": "Enter Password",
+  "@inputPassword": {
+    "description": "translated key: inputPassword"
+  },
+  "inputAgain": "Enter Again",
+  "@inputAgain": {
+    "description": "translated key: inputAgain"
+  },
+  "inputErrorAndAgain": "Incorrect input. Try again.",
+  "@inputErrorAndAgain": {
+    "description": "translated key: inputErrorAndAgain"
+  },
+  "immediately": "Immediately",
+  "@immediately": {
+    "description": "translated key: immediately"
+  },
+  "minute": "Minute",
+  "@minute": {
+    "description": "translated key: minute"
+  },
+  "alreadyNewestAppVersion": "Already up to date",
+  "@alreadyNewestAppVersion": {
+    "description": "translated key: alreadyNewestAppVersion"
+  },
+  "checkUpdate": "Check",
+  "@checkUpdate": {
+    "description": "translated key: checkUpdate"
+  },
+  "topUp": "Pin to Top",
+  "@topUp": {
+    "description": "translated key: topUp"
+  },
+  "cancelTopUp": "Unpin from Top",
+  "@cancelTopUp": {
+    "description": "translated key: cancelTopUp"
+  },
+  "copyContent": "Copy Content",
+  "@copyContent": {
+    "description": "translated key: copyContent"
+  },
+  "copyMergedContent": "Copy Merged Content",
+  "@copyMergedContent": {
+    "description": "translated key: copyMergedContent"
+  },
+  "syncRecord": "Sync Record",
+  "@syncRecord": {
+    "description": "translated key: syncRecord"
+  },
+  "resyncRecord": "Sync Again",
+  "@resyncRecord": {
+    "description": "translated key: resyncRecord"
+  },
+  "openFile": "Open File",
+  "@openFile": {
+    "description": "translated key: openFile"
+  },
+  "openFileFolder": "Open File Folder",
+  "@openFileFolder": {
+    "description": "translated key: openFileFolder"
+  },
+  "tagsManagement": "Tags",
+  "@tagsManagement": {
+    "description": "translated key: tagsManagement"
+  },
+  "copySuccess": "Copied Successfully",
+  "@copySuccess": {
+    "description": "translated key: copySuccess"
+  },
+  "copyFailed": "Copied Failed",
+  "@copyFailed": {
+    "description": "translated key: copyFailed"
+  },
+  "clipboardContent": "Clipboard Details",
+  "@clipboardContent": {
+    "description": "translated key: clipboardContent"
+  },
+  "deleteRecord": "Delete Record",
+  "@deleteRecord": {
+    "description": "translated key: deleteRecord"
+  },
+  "multiDeleteAsk": "Delete selected {length} items?",
+  "@multiDeleteAsk": {
+    "description": "translated key: multiDeleteAsk",
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCompleted": "Delete Completed",
+  "@deleteCompleted": {
+    "description": "translated key: deleteCompleted"
+  },
+  "shareFile": "Share File",
+  "@shareFile": {
+    "description": "translated key: shareFile"
+  },
+  "deleteTips": "Delete Tips",
+  "@deleteTips": {
+    "description": "translated key: deleteTips"
+  },
+  "clipListDeleteRecordDialogContent": "Delete this record?",
+  "@clipListDeleteRecordDialogContent": {
+    "description": "translated key: clipListDeleteRecordDialogContent"
+  },
+  "backToTop": "Back to Top",
+  "@backToTop": {
+    "description": "translated key: backToTop"
+  },
+  "fold": "Collapse",
+  "@fold": {
+    "description": "translated key: fold"
+  },
+  "unfold": "Expand",
+  "@unfold": {
+    "description": "translated key: unfold"
+  },
+  "clipboard": "Clipboard",
+  "@clipboard": {
+    "description": "translated key: clipboard"
+  },
+  "close": "Close",
+  "@close": {
+    "description": "translated key: close"
+  },
+  "tag": "Tag",
+  "@tag": {
+    "description": "translated key: tag"
+  },
+  "pleaseInput": "Please Enter",
+  "@pleaseInput": {
+    "description": "translated key: pleaseInput"
+  },
+  "forward": "Forward",
+  "@forward": {
+    "description": "translated key: forward"
+  },
+  "notCompatible": "Version Incompatible",
+  "@notCompatible": {
+    "description": "translated key: notCompatible"
+  },
+  "notCompatibleDialogText": "Incompatible with the device''s software version, device connection and data sync may not work properly.\nMinimum version required is {minName}({minCode})\nCurrent software version is {selfName}({selfCode})",
+  "@notCompatibleDialogText": {
+    "description": "translated key: notCompatibleDialogText",
+    "placeholders": {
+      "minName": {
+        "type": "String"
+      },
+      "minCode": {
+        "type": "String"
+      },
+      "selfName": {
+        "type": "String"
+      },
+      "selfCode": {
+        "type": "String"
+      }
+    }
+  },
+  "emptyData": "No Data",
+  "@emptyData": {
+    "description": "translated key: emptyData"
+  },
+  "shizukuMode": "Shizuku Mode",
+  "@shizukuMode": {
+    "description": "translated key: shizukuMode"
+  },
+  "shizukuModeDesc": "No Root needed. Requires Shizuku and must be reactivated after a restart.",
+  "@shizukuModeDesc": {
+    "description": "translated key: shizukuModeDesc"
+  },
+  "shizukuModeBatteryOptimiseTips": "To keep Shizuku authorized, exclude it from battery optimization and allow it to run in the background.",
+  "@shizukuModeBatteryOptimiseTips": {
+    "description": "translated key: shizukuModeBatteryOptimiseTips"
+  },
+  "shizukuRequestFailedDialogText": "Shizuku request failed. Make sure Shizuku is running and try again.",
+  "@shizukuRequestFailedDialogText": {
+    "description": "translated key: shizukuRequestFailedDialogText"
+  },
+  "requestFailed": "Request Failed",
+  "@requestFailed": {
+    "description": "translated key: requestFailed"
+  },
+  "selectInstallerType": "Select Installer Type",
+  "@selectInstallerType": {
+    "description": "translated key: selectInstallerType"
+  },
+  "openPathAfterDownload": "Open after download",
+  "@openPathAfterDownload": {
+    "description": "translated key: openPathAfterDownload"
+  },
+  "updateFromZipTips": "The portable ZIP also supports auto-updating upon download completion.",
+  "@updateFromZipTips": {
+    "description": "translated key: updateFromZipTips"
+  },
+  "requestSuccess": "Request Success",
+  "@requestSuccess": {
+    "description": "translated key: requestSuccess"
+  },
+  "clipboardPermissionRequestFailed": "Requesting clipboard permission requires Shizuku or Root",
+  "@clipboardPermissionRequestFailed": {
+    "description": "translated key: clipboardPermissionRequestFailed"
+  },
+  "rootMode": "Root Mode",
+  "@rootMode": {
+    "description": "translated key: rootMode"
+  },
+  "rootModeDesc": "Runs with Root. No reactivation needed after a restart.",
+  "@rootModeDesc": {
+    "description": "translated key: rootModeDesc"
+  },
+  "waitingRequestResult": "Waiting for Request Result",
+  "@waitingRequestResult": {
+    "description": "translated key: waitingRequestResult"
+  },
+  "applyingSettings": "Applying settings...",
+  "@applyingSettings": {
+    "description": "translated key: applyingSettings"
+  },
+  "rootRequestFailedDialogText": "Root access was not found. You can use Shizuku mode instead.",
+  "@rootRequestFailedDialogText": {
+    "description": "translated key: rootRequestFailedDialogText"
+  },
+  "ignoreMode": "Ignore",
+  "@ignoreMode": {
+    "description": "translated key: ignoreMode"
+  },
+  "ignoreModeDesc": "Clipboard cannot be monitored in the background, only passive sync is available",
+  "@ignoreModeDesc": {
+    "description": "translated key: ignoreModeDesc"
+  },
+  "multiChoiceModeSelectedText": "{text} items selected",
+  "@multiChoiceModeSelectedText": {
+    "description": "translated key: multiChoiceModeSelectedText",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "goAuthorize": "Grant Access",
+  "@goAuthorize": {
+    "description": "translated key: goAuthorize"
+  },
+  "cannotEmpty": "Cannot be empty",
+  "@cannotEmpty": {
+    "description": "translated key: cannotEmpty"
+  },
+  "ruleCannotEmpty": "Rule cannot be empty",
+  "@ruleCannotEmpty": {
+    "description": "translated key: ruleCannotEmpty"
+  },
+  "ruleAddDialogLabel": "Rule",
+  "@ruleAddDialogLabel": {
+    "description": "translated key: ruleAddDialogLabel"
+  },
+  "ruleAddDialogHint": "Please enter a regular expression",
+  "@ruleAddDialogHint": {
+    "description": "translated key: ruleAddDialogHint"
+  },
+  "validationTesting": "Validation Testing",
+  "@validationTesting": {
+    "description": "translated key: validationTesting"
+  },
+  "validationFailed": "Validation Failed",
+  "@validationFailed": {
+    "description": "translated key: validationFailed"
+  },
+  "verify": "Verify",
+  "@verify": {
+    "description": "translated key: verify"
+  },
+  "stop": "Stop",
+  "@stop": {
+    "description": "translated key: stop"
+  },
+  "failed": "Failed",
+  "@failed": {
+    "description": "translated key: failed"
+  },
+  "pleaseInputKey": "Please Enter Key",
+  "@pleaseInputKey": {
+    "description": "translated key: pleaseInputKey"
+  },
+  "forwardServerUnlimitedDevices": "No restrictions for whitelist devices",
+  "@forwardServerUnlimitedDevices": {
+    "description": "translated key: forwardServerUnlimitedDevices"
+  },
+  "publicForwardServer": "Public Forward Server",
+  "@publicForwardServer": {
+    "description": "translated key: publicForwardServer"
+  },
+  "forwardServerSyncFileRateLimit": "File Sync Rate Limit",
+  "@forwardServerSyncFileRateLimit": {
+    "description": "translated key: forwardServerSyncFileRateLimit"
+  },
+  "forwardServerCannotSyncFile": "This forward server does not support file sync.",
+  "@forwardServerCannotSyncFile": {
+    "description": "translated key: forwardServerCannotSyncFile"
+  },
+  "forwardServerNoLimits": "No Restrictions",
+  "@forwardServerNoLimits": {
+    "description": "translated key: forwardServerNoLimits"
+  },
+  "noLimits": "No Limit",
+  "@noLimits": {
+    "description": "translated key: noLimits"
+  },
+  "deviceUnit": "Device",
+  "@deviceUnit": {
+    "description": "translated key: deviceUnit"
+  },
+  "day": "Day",
+  "@day": {
+    "description": "translated key: day"
+  },
+  "hour": "Hour",
+  "@hour": {
+    "description": "translated key: hour"
+  },
+  "second": "Second",
+  "@second": {
+    "description": "translated key: second"
+  },
+  "forwardServerKeyNotStarted": "Not Started",
+  "@forwardServerKeyNotStarted": {
+    "description": "translated key: forwardServerKeyNotStarted"
+  },
+  "exhausted": "Exhausted",
+  "@exhausted": {
+    "description": "translated key: exhausted"
+  },
+  "forwardServerDeviceConnectionLimit": "Device Connection Limit",
+  "@forwardServerDeviceConnectionLimit": {
+    "description": "translated key: forwardServerDeviceConnectionLimit"
+  },
+  "forwardServerLifeSpan": "Validity Period",
+  "@forwardServerLifeSpan": {
+    "description": "translated key: forwardServerLifeSpan"
+  },
+  "forwardServerRemainingTime": "Remaining Time",
+  "@forwardServerRemainingTime": {
+    "description": "translated key: forwardServerRemainingTime"
+  },
+  "forwardServerRateLimit": "Rate Limit",
+  "@forwardServerRateLimit": {
+    "description": "translated key: forwardServerRateLimit"
+  },
+  "forwardServerRemark": "Remark",
+  "@forwardServerRemark": {
+    "description": "translated key: forwardServerRemark"
+  },
+  "configureForwardServerDialogTitle": "Configure Forward Server",
+  "@configureForwardServerDialogTitle": {
+    "description": "translated key: configureForwardServerDialogTitle"
+  },
+  "domainAndIp": "Domain / IP",
+  "@domainAndIp": {
+    "description": "translated key: domainAndIp"
+  },
+  "host": "Host",
+  "@host": {
+    "description": "translated key: host"
+  },
+  "useKey": "Use Key",
+  "@useKey": {
+    "description": "translated key: useKey"
+  },
+  "accessKey": "Access Key",
+  "@accessKey": {
+    "description": "translated key: accessKey"
+  },
+  "pleaseInputAccessKey": "Please Enter Access Key",
+  "@pleaseInputAccessKey": {
+    "description": "translated key: pleaseInputAccessKey"
+  },
+  "checkConnection": "Test",
+  "@checkConnection": {
+    "description": "translated key: checkConnection"
+  },
+  "pleaseInputValidPort": "Please Enter a Valid Port",
+  "@pleaseInputValidPort": {
+    "description": "translated key: pleaseInputValidPort"
+  },
+  "pleaseInputValidDomainOrIpv4_6": "Please Enter a Valid Domain or IPv4/v6 Address",
+  "@pleaseInputValidDomainOrIpv4_6": {
+    "description": "translated key: pleaseInputValidDomainOrIpv4_6"
+  },
+  "historyRecord": "Records",
+  "@historyRecord": {
+    "description": "translated key: historyRecord"
+  },
+  "myDevice": "Devices",
+  "@myDevice": {
+    "description": "translated key: myDevice"
+  },
+  "fileTransfer": "Transfer",
+  "@fileTransfer": {
+    "description": "translated key: fileTransfer"
+  },
+  "appSettings": "Settings",
+  "@appSettings": {
+    "description": "translated key: appSettings"
+  },
+  "syncFile": "Sync Files",
+  "@syncFile": {
+    "description": "translated key: syncFile"
+  },
+  "preference": "Preference",
+  "@preference": {
+    "description": "translated key: preference"
+  },
+  "preferenceSettingsRecordsDialogLocation": "History Popup Position",
+  "@preferenceSettingsRecordsDialogLocation": {
+    "description": "translated key: preferenceSettingsRecordsDialogLocation"
+  },
+  "preferenceSettingsRecordsDialogSize": "Records Dialog Size",
+  "@preferenceSettingsRecordsDialogSize": {
+    "description": "translated key: preferenceSettingsRecordsDialogSize"
+  },
+  "preferenceSettingsAutoClosePopupOnBlurTitle": "Auto-dismiss popups",
+  "@preferenceSettingsAutoClosePopupOnBlurTitle": {
+    "description": "translated key: preferenceSettingsAutoClosePopupOnBlurTitle"
+  },
+  "preferenceSettingsAutoClosePopupOnBlurDesc": "Dismisses popups when they lose focus.",
+  "@preferenceSettingsAutoClosePopupOnBlurDesc": {
+    "description": "translated key: preferenceSettingsAutoClosePopupOnBlurDesc"
+  },
+  "current": "Current",
+  "@current": {
+    "description": "translated key: current"
+  },
+  "followMousePos": "Follow Cursor",
+  "@followMousePos": {
+    "description": "translated key: followMousePos"
+  },
+  "rememberLastPos": "Remember last position",
+  "@rememberLastPos": {
+    "description": "translated key: rememberLastPos"
+  },
+  "showOnRecentTasks": "Show in Recent Tasks",
+  "@showOnRecentTasks": {
+    "description": "translated key: showOnRecentTasks"
+  },
+  "showOnRecentTasksDesc": "When off, hide the app from recent tasks.",
+  "@showOnRecentTasksDesc": {
+    "description": "translated key: showOnRecentTasksDesc"
+  },
+  "showLocalIpAddress": "Show Local IP Address",
+  "@showLocalIpAddress": {
+    "description": "translated key: showLocalIpAddress"
+  },
+  "localIpAddress": "Local IP Address",
+  "@localIpAddress": {
+    "description": "translated key: localIpAddress"
+  },
+  "syncAutoCloseSettingTitle": "Screen-off Auto Disconnect",
+  "@syncAutoCloseSettingTitle": {
+    "description": "translated key: syncAutoCloseSettingTitle"
+  },
+  "syncAutoCloseSettingDesc": "Disconnect sync after the screen stays off for 2-10 minutes. Leave this off to keep background connections.",
+  "@syncAutoCloseSettingDesc": {
+    "description": "translated key: syncAutoCloseSettingDesc"
+  },
+  "scan": "Scan QRCode",
+  "@scan": {
+    "description": "translated key: scan"
+  },
+  "noCameraPermission": "Please grant camera permission",
+  "@noCameraPermission": {
+    "description": "translated key: noCameraPermission"
+  },
+  "noPhotoPermission": "Please grant photo permission",
+  "@noPhotoPermission": {
+    "description": "translated key: noPhotoPermission"
+  },
+  "noNotificationPermission": "Please grant notification permission",
+  "@noNotificationPermission": {
+    "description": "translated key: noNotificationPermission"
+  },
+  "permissionSettingsIOSPhotosTitle": "Photo Permission",
+  "@permissionSettingsIOSPhotosTitle": {
+    "description": "translated key: permissionSettingsIOSPhotosTitle"
+  },
+  "permissionSettingsIOSPhotosDesc": "Without this permission, images cannot be saved to Photos.",
+  "@permissionSettingsIOSPhotosDesc": {
+    "description": "translated key: permissionSettingsIOSPhotosDesc"
+  },
+  "qrCodeScannerPageTitle": "Scan to Connect",
+  "@qrCodeScannerPageTitle": {
+    "description": "translated key: qrCodeScannerPageTitle"
+  },
+  "qrCodeScanError": "This does not look like a ClipShare connection QR code. Please check.",
+  "@qrCodeScanError": {
+    "description": "translated key: qrCodeScanError"
+  },
+  "attemptingToConnect": "Attempting to connect",
+  "@attemptingToConnect": {
+    "description": "translated key: attemptingToConnect"
+  },
+  "forwardServerStatus": "Forward Status",
+  "@forwardServerStatus": {
+    "description": "translated key: forwardServerStatus"
+  },
+  "connected": "Connected",
+  "@connected": {
+    "description": "translated key: connected"
+  },
+  "disconnected": "Disconnected",
+  "@disconnected": {
+    "description": "translated key: disconnected"
+  },
+  "initializing": "Initializing",
+  "@initializing": {
+    "description": "translated key: initializing"
+  },
+  "connecting": "Connecting",
+  "@connecting": {
+    "description": "translated key: connecting"
+  },
+  "forwardMode": "Forward Mode",
+  "@forwardMode": {
+    "description": "translated key: forwardMode"
+  },
+  "deviceId": "Device ID",
+  "@deviceId": {
+    "description": "translated key: deviceId"
+  },
+  "forwardServerNotConnected": "Not connected to the forward server",
+  "@forwardServerNotConnected": {
+    "description": "translated key: forwardServerNotConnected"
+  },
+  "cleanData": "Clean Data",
+  "@cleanData": {
+    "description": "translated key: cleanData"
+  },
+  "syncSettingsAutoCopyScreenShotTitle": "Auto-copy Screenshots",
+  "@syncSettingsAutoCopyScreenShotTitle": {
+    "description": "translated key: syncSettingsAutoCopyScreenShotTitle"
+  },
+  "syncSettingsAutoCopyScreenShotDesc": "Background copy may be delayed on some systems.",
+  "@syncSettingsAutoCopyScreenShotDesc": {
+    "description": "translated key: syncSettingsAutoCopyScreenShotDesc"
+  },
+  "showMoreItemsInRow": "More per Row",
+  "@showMoreItemsInRow": {
+    "description": "translated key: showMoreItemsInRow"
+  },
+  "showMoreItemsInRowDesc": "Use available width to fit more history & device items per row.",
+  "@showMoreItemsInRowDesc": {
+    "description": "translated key: showMoreItemsInRowDesc"
+  },
+  "filter": "Filter",
+  "@filter": {
+    "description": "translated key: filter"
+  },
+  "monday": "Monday",
+  "@monday": {
+    "description": "translated key: monday"
+  },
+  "tuesday": "Tuesday",
+  "@tuesday": {
+    "description": "translated key: tuesday"
+  },
+  "wednesday": "Wednesday",
+  "@wednesday": {
+    "description": "translated key: wednesday"
+  },
+  "thursday": "Thursday",
+  "@thursday": {
+    "description": "translated key: thursday"
+  },
+  "friday": "Friday",
+  "@friday": {
+    "description": "translated key: friday"
+  },
+  "saturday": "Saturday",
+  "@saturday": {
+    "description": "translated key: saturday"
+  },
+  "sunday": "Sunday",
+  "@sunday": {
+    "description": "translated key: sunday"
+  },
+  "defaultClipboardServerNotificationCfgErrorTitle": "Error",
+  "@defaultClipboardServerNotificationCfgErrorTitle": {
+    "description": "translated key: defaultClipboardServerNotificationCfgErrorTitle"
+  },
+  "defaultClipboardServerNotificationCfgErrorTextPrefix": "Warning",
+  "@defaultClipboardServerNotificationCfgErrorTextPrefix": {
+    "description": "translated key: defaultClipboardServerNotificationCfgErrorTextPrefix"
+  },
+  "defaultClipboardServerNotificationCfgRunningTitle": "Service is runningShizuku mode is active",
+  "@defaultClipboardServerNotificationCfgRunningTitle": {
+    "description": "translated key: defaultClipboardServerNotificationCfgRunningTitle"
+  },
+  "defaultClipboardServerNotificationCfgRootRunningText": "Root mode is activeError",
+  "@defaultClipboardServerNotificationCfgRootRunningText": {
+    "description": "translated key: defaultClipboardServerNotificationCfgRootRunningText"
+  },
+  "startSendFileToast": "File transfer started. Check the send progress.",
+  "@startSendFileToast": {
+    "description": "translated key: startSendFileToast"
+  },
+  "folder": "Folder",
+  "@folder": {
+    "description": "translated key: folder"
+  },
+  "removeFromPendingList": "Remove from pending list",
+  "@removeFromPendingList": {
+    "description": "translated key: removeFromPendingList"
+  },
+  "onlineDevices": "Online devices",
+  "@onlineDevices": {
+    "description": "translated key: onlineDevices"
+  },
+  "noOnlineDevices": "No online devices",
+  "@noOnlineDevices": {
+    "description": "translated key: noOnlineDevices"
+  },
+  "pendingFiles": "Pending files",
+  "@pendingFiles": {
+    "description": "translated key: pendingFiles"
+  },
+  "clearPendingFiles": "Clear pending list",
+  "@clearPendingFiles": {
+    "description": "translated key: clearPendingFiles"
+  },
+  "pendingFileLen": "{len} files total",
+  "@pendingFileLen": {
+    "description": "translated key: pendingFileLen",
+    "placeholders": {
+      "len": {
+        "type": "String"
+      }
+    }
+  },
+  "addFilesFromSystem": "Add Files",
+  "@addFilesFromSystem": {
+    "description": "translated key: addFilesFromSystem"
+  },
+  "viewPendingFiles": "View Pending Files",
+  "@viewPendingFiles": {
+    "description": "translated key: viewPendingFiles"
+  },
+  "sendFiles": "Send Files",
+  "@sendFiles": {
+    "description": "translated key: sendFiles"
+  },
+  "unWriteablePathTips": "The selected location is not writable. Choose another one.",
+  "@unWriteablePathTips": {
+    "description": "translated key: unWriteablePathTips"
+  },
+  "clipboardListeningWay": "Clipboard Detection Mode",
+  "@clipboardListeningWay": {
+    "description": "translated key: clipboardListeningWay"
+  },
+  "clipboardListeningWayTips": "Info",
+  "@clipboardListeningWayTips": {
+    "description": "translated key: clipboardListeningWayTips"
+  },
+  "clipboardListeningWithSystemHiddenApi": "Hidden API",
+  "@clipboardListeningWithSystemHiddenApi": {
+    "description": "translated key: clipboardListeningWithSystemHiddenApi"
+  },
+  "clipboardListeningWithSystemLogs": "System Logs",
+  "@clipboardListeningWithSystemLogs": {
+    "description": "translated key: clipboardListeningWithSystemLogs"
+  },
+  "clipboardListeningWayTipsDetail": "Two detection modes are available, but your device may not support both. The default uses system logs, which may not work on some devices.\n\nFor example, system log detection does not work on OriginOS. Choose the mode that fits your device.",
+  "@clipboardListeningWayTipsDetail": {
+    "description": "translated key: clipboardListeningWayTipsDetail"
+  },
+  "clipboardListeningWayToggleConfirmContent": "Switch detection mode?\n\nNew mode: {way}",
+  "@clipboardListeningWayToggleConfirmContent": {
+    "description": "translated key: clipboardListeningWayToggleConfirmContent",
+    "placeholders": {
+      "way": {
+        "type": "String"
+      }
+    }
+  },
+  "closeOnSameHotKeyTitle": "Hotkey Toggles Popup",
+  "@closeOnSameHotKeyTitle": {
+    "description": "translated key: closeOnSameHotKeyTitle"
+  },
+  "closeOnSameHotKeyDesc": "Use the popup hotkey to both open and close it.",
+  "@closeOnSameHotKeyDesc": {
+    "description": "translated key: closeOnSameHotKeyDesc"
+  },
+  "saveToAlbum": "Save to album",
+  "@saveToAlbum": {
+    "description": "translated key: saveToAlbum"
+  },
+  "openWithOtherApplications": "Open with Other Apps",
+  "@openWithOtherApplications": {
+    "description": "translated key: openWithOtherApplications"
+  },
+  "enableAutoSyncOnScreenOpenedTitle": "Discover Devices on Wake",
+  "@enableAutoSyncOnScreenOpenedTitle": {
+    "description": "translated key: enableAutoSyncOnScreenOpenedTitle"
+  },
+  "enableAutoSyncOnScreenOpenedDesc": "Scan for devices when the screen turns on. If screen-off auto-disconnect is on, network switches while off may not reconnect.",
+  "@enableAutoSyncOnScreenOpenedDesc": {
+    "description": "translated key: enableAutoSyncOnScreenOpenedDesc"
+  },
+  "deviceDiscoveryStatusViaPaired": "Connecting paired devices",
+  "@deviceDiscoveryStatusViaPaired": {
+    "description": "translated key: deviceDiscoveryStatusViaPaired"
+  },
+  "export2Excel": "Export to Excel",
+  "@export2Excel": {
+    "description": "translated key: export2Excel"
+  },
+  "export2ExcelFileName": "HistoryRecordsExport.xlsx",
+  "@export2ExcelFileName": {
+    "description": "translated key: export2ExcelFileName"
+  },
+  "historyOutputTips": "Export using the current filters?\nFile sync records will not be exported.",
+  "@historyOutputTips": {
+    "description": "translated key: historyOutputTips"
+  },
+  "exporting": "Exporting...",
+  "@exporting": {
+    "description": "translated key: exporting"
+  },
+  "modifyContent": "Modify Content",
+  "@modifyContent": {
+    "description": "translated key: modifyContent"
+  },
+  "confirmModifyContent": "Confirm the update content?",
+  "@confirmModifyContent": {
+    "description": "translated key: confirmModifyContent"
+  },
+  "modifyContentConfirmExitAndNoSave": "Don''t save",
+  "@modifyContentConfirmExitAndNoSave": {
+    "description": "translated key: modifyContentConfirmExitAndNoSave"
+  },
+  "unsavedTips": "You have unsaved changes. Leave this page?",
+  "@unsavedTips": {
+    "description": "translated key: unsavedTips"
+  },
+  "done": "Done",
+  "@done": {
+    "description": "translated key: done"
+  },
+  "download": "Download",
+  "@download": {
+    "description": "translated key: download"
+  },
+  "downloading": "Downloading",
+  "@downloading": {
+    "description": "translated key: downloading"
+  },
+  "devDisconnectNotifyContent": "Device {devName} disconnected",
+  "@devDisconnectNotifyContent": {
+    "description": "translated key: devDisconnectNotifyContent",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
+  "devConnectedNotifyContent": "Device {devName} connected",
+  "@devConnectedNotifyContent": {
+    "description": "translated key: devConnectedNotifyContent",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
+  "clipboardSettingsGroupName": "Clipboard",
+  "@clipboardSettingsGroupName": {
+    "description": "translated key: clipboardSettingsGroupName"
+  },
+  "clipboardSettingsTakeOverWinVTitle": "Take Over Win+V",
+  "@clipboardSettingsTakeOverWinVTitle": {
+    "description": "translated key: clipboardSettingsTakeOverWinVTitle"
+  },
+  "clipboardSettingsTakeOverWinVDesc": "Use Win+V to open the history popup.",
+  "@clipboardSettingsTakeOverWinVDesc": {
+    "description": "translated key: clipboardSettingsTakeOverWinVDesc"
+  },
+  "clipboardSettingsTakeOverWinVDialogContent": "Taking over Win+V changes the current user''s system hotkey setting and restarts Explorer so it takes effect immediately. Continue?",
+  "@clipboardSettingsTakeOverWinVDialogContent": {
+    "description": "translated key: clipboardSettingsTakeOverWinVDialogContent"
+  },
+  "clipboardSettingsRestoreWinVOnExitTitle": "Restore on App Exit",
+  "@clipboardSettingsRestoreWinVOnExitTitle": {
+    "description": "translated key: clipboardSettingsRestoreWinVOnExitTitle"
+  },
+  "clipboardSettingsRestoreWinVOnExitDesc": "Automatically restore Win+V when the app exits or is uninstalled.",
+  "@clipboardSettingsRestoreWinVOnExitDesc": {
+    "description": "translated key: clipboardSettingsRestoreWinVOnExitDesc"
+  },
+  "clipboardSettingsSourceRecordTitle": "Record Clipboard Source",
+  "@clipboardSettingsSourceRecordTitle": {
+    "description": "translated key: clipboardSettingsSourceRecordTitle"
+  },
+  "clipboardSettingsSourceRecordAndroidDesc": "Requires Accessibility to help identify the source.",
+  "@clipboardSettingsSourceRecordAndroidDesc": {
+    "description": "translated key: clipboardSettingsSourceRecordAndroidDesc"
+  },
+  "permissionSettingsAccessibilityTitle": "Accessibility",
+  "@permissionSettingsAccessibilityTitle": {
+    "description": "translated key: permissionSettingsAccessibilityTitle"
+  },
+  "permissionSettingsAccessibilityDesc": "Enable this to help detect clipboard sources.",
+  "@permissionSettingsAccessibilityDesc": {
+    "description": "translated key: permissionSettingsAccessibilityDesc"
+  },
+  "noAccessibilityPermTips": "Accessibility is off, so manual copy sources cannot be detected. Grant Accessibility access now?",
+  "@noAccessibilityPermTips": {
+    "description": "translated key: noAccessibilityPermTips"
+  },
+  "appIconLoadError": "Failed to load app icon ({appName})",
+  "@appIconLoadError": {
+    "description": "translated key: appIconLoadError",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "clipboardSettingsSourceRecordTitleTooltip": "Info",
+  "@clipboardSettingsSourceRecordTitleTooltip": {
+    "description": "translated key: clipboardSettingsSourceRecordTitleTooltip"
+  },
+  "clipboardSettingsSourceRecordDialogContent": "Source detection has two cases: foreground copies and background copies from other apps. Foreground copies rely on Accessibility. Background copies can be identified through dumpsys, with a delay of a few hundred milliseconds.\n\nSource detection is not always exact. It mainly depends on Accessibility and may occasionally tag the wrong app.",
+  "@clipboardSettingsSourceRecordDialogContent": {
+    "description": "translated key: clipboardSettingsSourceRecordDialogContent"
+  },
+  "clipboardSettingsSourceRecordViaDumpsysTitle": "Background Source via dumpsys",
+  "@clipboardSettingsSourceRecordViaDumpsysTitle": {
+    "description": "translated key: clipboardSettingsSourceRecordViaDumpsysTitle"
+  },
+  "clipboardSettingsSourceRecordViaDumpsysTitleTooltip": "Info",
+  "@clipboardSettingsSourceRecordViaDumpsysTitleTooltip": {
+    "description": "translated key: clipboardSettingsSourceRecordViaDumpsysTitleTooltip"
+  },
+  "clipboardSettingsSourceRecordViaDumpsysDialogContent": "Background copies may be misidentified. Use dumpsys to check which app wrote to the clipboard and correct the source.",
+  "@clipboardSettingsSourceRecordViaDumpsysDialogContent": {
+    "description": "translated key: clipboardSettingsSourceRecordViaDumpsysDialogContent"
+  },
+  "clipboardSettingsSourceRecordViaDumpsysAndroidDesc": "Requires Root or Shizuku and adds a delay of a few hundred milliseconds.",
+  "@clipboardSettingsSourceRecordViaDumpsysAndroidDesc": {
+    "description": "translated key: clipboardSettingsSourceRecordViaDumpsysAndroidDesc"
+  },
+  "source": "Source",
+  "@source": {
+    "description": "translated key: source"
+  },
+  "clearSourceConfirmText": "Clear the source info for this record?",
+  "@clearSourceConfirmText": {
+    "description": "translated key: clearSourceConfirmText"
+  },
+  "clearSuccess": "Cleared successfully",
+  "@clearSuccess": {
+    "description": "translated key: clearSuccess"
+  },
+  "clearFailed": "Failed to clear",
+  "@clearFailed": {
+    "description": "translated key: clearFailed"
+  },
+  "selectApplication": "Select App",
+  "@selectApplication": {
+    "description": "translated key: selectApplication"
+  },
+  "preferenceSettingsDevDisconnNotification": "Notify when a device disconnects",
+  "@preferenceSettingsDevDisconnNotification": {
+    "description": "translated key: preferenceSettingsDevDisconnNotification"
+  },
+  "preferenceSettingsDevConnNotification": "Notify when a device connects",
+  "@preferenceSettingsDevConnNotification": {
+    "description": "translated key: preferenceSettingsDevConnNotification"
+  },
+  "preferenceSettingsNotifyOnReceivedFile": "Notify after receiving files",
+  "@preferenceSettingsNotifyOnReceivedFile": {
+    "description": "translated key: preferenceSettingsNotifyOnReceivedFile"
+  },
+  "preferenceSettingsNotifyOnReceivedFileDesc": "Click notification to open file",
+  "@preferenceSettingsNotifyOnReceivedFileDesc": {
+    "description": "translated key: preferenceSettingsNotifyOnReceivedFileDesc"
+  },
+  "notification": "Notification",
+  "@notification": {
+    "description": "translated key: notification"
+  },
+  "aboutPageDatabaseVersionItemName": "Database Version",
+  "@aboutPageDatabaseVersionItemName": {
+    "description": "translated key: aboutPageDatabaseVersionItemName"
+  },
+  "newVersionAvailable": "New version available",
+  "@newVersionAvailable": {
+    "description": "translated key: newVersionAvailable"
+  },
+  "showMainWindow": "Show Main Window",
+  "@showMainWindow": {
+    "description": "translated key: showMainWindow"
+  },
+  "exitApp": "Exit",
+  "@exitApp": {
+    "description": "translated key: exitApp"
+  },
+  "exitAppViaHotKey": "Exiting {appName} via hotkey",
+  "@exitAppViaHotKey": {
+    "description": "translated key: exitAppViaHotKey",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "clearHotKeyConfirm": "Are you sure you want to clear this shortcut key?",
+  "@clearHotKeyConfirm": {
+    "description": "translated key: clearHotKeyConfirm"
+  },
+  "pleaseEnterHotKey": "Press a hotkey",
+  "@pleaseEnterHotKey": {
+    "description": "translated key: pleaseEnterHotKey"
+  },
+  "userApp": "User",
+  "@userApp": {
+    "description": "translated key: userApp"
+  },
+  "systemApp": "System",
+  "@systemApp": {
+    "description": "translated key: systemApp"
+  },
+  "fileNotFound": "File not found",
+  "@fileNotFound": {
+    "description": "translated key: fileNotFound"
+  },
+  "openingFile": "Opening File",
+  "@openingFile": {
+    "description": "translated key: openingFile"
+  },
+  "syncData": "Sync Data",
+  "@syncData": {
+    "description": "translated key: syncData"
+  },
+  "syncSettingsAutoSyncMissingDataTitle": "Auto-sync Missing Data",
+  "@syncSettingsAutoSyncMissingDataTitle": {
+    "description": "translated key: syncSettingsAutoSyncMissingDataTitle"
+  },
+  "syncSettingsAutoSyncMissingDataDesc": "After a device reconnects, sync data missed while it was offline.",
+  "@syncSettingsAutoSyncMissingDataDesc": {
+    "description": "translated key: syncSettingsAutoSyncMissingDataDesc"
+  },
+  "syncingData": "Syncing data",
+  "@syncingData": {
+    "description": "translated key: syncingData"
+  },
+  "content": "Content",
+  "@content": {
+    "description": "translated key: content"
+  },
+  "title": "Title",
+  "@title": {
+    "description": "translated key: title"
+  },
+  "preferenceSettingsShowMobileNotificationTitle": "Mobile Device Notifications",
+  "@preferenceSettingsShowMobileNotificationTitle": {
+    "description": "translated key: preferenceSettingsShowMobileNotificationTitle"
+  },
+  "preferenceSettingsShowMobileNotificationDesc": "Show connected mobile notifications here. Enable source-device history first.",
+  "@preferenceSettingsShowMobileNotificationDesc": {
+    "description": "translated key: preferenceSettingsShowMobileNotificationDesc"
+  },
+  "permissionSettingsNotificationRecordTitle": "Notification History Access",
+  "@permissionSettingsNotificationRecordTitle": {
+    "description": "translated key: permissionSettingsNotificationRecordTitle"
+  },
+  "permissionSettingsNotificationRecordDesc": "Records notification history. On some devices it may keep the app from fully stopping; revoke it before stopping the app.",
+  "@permissionSettingsNotificationRecordDesc": {
+    "description": "translated key: permissionSettingsNotificationRecordDesc"
+  },
+  "noNotificationRecordPermTips": "Notification History access is missing, so notification history cannot be recorded.",
+  "@noNotificationRecordPermTips": {
+    "description": "translated key: noNotificationRecordPermTips"
+  },
+  "recordNotification": "Record Notification History",
+  "@recordNotification": {
+    "description": "translated key: recordNotification"
+  },
+  "logSettingsAutoUploadCrashLogTitle": "Auto-upload Crash Logs",
+  "@logSettingsAutoUploadCrashLogTitle": {
+    "description": "translated key: logSettingsAutoUploadCrashLogTitle"
+  },
+  "logSettingsAutoUploadCrashLogDesc": "Upload crash logs after an app crash to help developers analyze issues.",
+  "@logSettingsAutoUploadCrashLogDesc": {
+    "description": "translated key: logSettingsAutoUploadCrashLogDesc"
+  },
+  "logSettingsAutoUploadCrashLogTips": "Uses ACRA to upload only the data needed for analysis, including the crash stack trace. Logs may be uploaded the next time the app starts.",
+  "@logSettingsAutoUploadCrashLogTips": {
+    "description": "translated key: logSettingsAutoUploadCrashLogTips"
+  },
+  "backupRestore": "Backup & Restore",
+  "@backupRestore": {
+    "description": "translated key: backupRestore"
+  },
+  "backup": "Backup",
+  "@backup": {
+    "description": "translated key: backup"
+  },
+  "restore": "Restore",
+  "@restore": {
+    "description": "translated key: restore"
+  },
+  "backupSettingDesc": "Export a backup file for restoring the database later.",
+  "@backupSettingDesc": {
+    "description": "translated key: backupSettingDesc"
+  },
+  "restoreSettingDesc": "Restore data from a backup file.",
+  "@restoreSettingDesc": {
+    "description": "translated key: restoreSettingDesc"
+  },
+  "startUp": "Start",
+  "@startUp": {
+    "description": "translated key: startUp"
+  },
+  "userCancelled": "User cancelled",
+  "@userCancelled": {
+    "description": "translated key: userCancelled"
+  },
+  "cancelled": "Cancelled",
+  "@cancelled": {
+    "description": "translated key: cancelled"
+  },
+  "exportFailedAndViewLogs": "Export failed, see logs for details",
+  "@exportFailedAndViewLogs": {
+    "description": "translated key: exportFailedAndViewLogs"
+  },
+  "exportSuccess": "Export succeeded",
+  "@exportSuccess": {
+    "description": "translated key: exportSuccess"
+  },
+  "importing": "Importing",
+  "@importing": {
+    "description": "translated key: importing"
+  },
+  "importFailed": "Import failed",
+  "@importFailed": {
+    "description": "translated key: importFailed"
+  },
+  "importSuccess": "Import succeeded",
+  "@importSuccess": {
+    "description": "translated key: importSuccess"
+  },
+  "restoreRestartPrompt": "Please restart the app manually to load the latest data and configuration",
+  "@restoreRestartPrompt": {
+    "description": "translated key: restoreRestartPrompt"
+  },
+  "loading": "Loading",
+  "@loading": {
+    "description": "translated key: loading"
+  },
+  "segmenting": "Segmenting",
+  "@segmenting": {
+    "description": "translated key: segmenting"
+  },
+  "auto": "Auto",
+  "@auto": {
+    "description": "translated key: auto"
+  },
+  "doubleClick2OpenPath": "Double-click to open path",
+  "@doubleClick2OpenPath": {
+    "description": "translated key: doubleClick2OpenPath"
+  },
+  "editDb": "Edit Database",
+  "@editDb": {
+    "description": "translated key: editDb"
+  },
+  "enterSQLHere": "Enter SQL here...",
+  "@enterSQLHere": {
+    "description": "translated key: enterSQLHere"
+  },
+  "optionalTables": "Optional table names:",
+  "@optionalTables": {
+    "description": "translated key: optionalTables"
+  },
+  "execSQL": "Execute SQL",
+  "@execSQL": {
+    "description": "translated key: execSQL"
+  },
+  "execSQLNoLimitTips": "This appears to be a SELECT statement without LIMIT clause. Large result sets may cause performance issues. Continue anyway?",
+  "@execSQLNoLimitTips": {
+    "description": "translated key: execSQLNoLimitTips"
+  },
+  "toggleSQLLimitCheck": "Toggle query LIMIT detection",
+  "@toggleSQLLimitCheck": {
+    "description": "translated key: toggleSQLLimitCheck"
+  },
+  "result": "Result",
+  "@result": {
+    "description": "translated key: result"
+  },
+  "execFailed": "Execution failed",
+  "@execFailed": {
+    "description": "translated key: execFailed"
+  },
+  "notificationServerStatus": "Notification Status",
+  "@notificationServerStatus": {
+    "description": "translated key: notificationServerStatus"
+  },
+  "notificationServerTips": "When storage is used as the forward method, devices cannot automatically tell when data needs to be synced.\nA notification service is used to notify devices about changes.\nYou can use either a self-hosted service or a public service.\nNotification messages do not contain sensitive data.",
+  "@notificationServerTips": {
+    "description": "translated key: notificationServerTips"
+  },
+  "forwardSettingsWebDAVTitle": "WebDAV Settings",
+  "@forwardSettingsWebDAVTitle": {
+    "description": "translated key: forwardSettingsWebDAVTitle"
+  },
+  "forwardSettingsS3Title": "S3 Settings",
+  "@forwardSettingsS3Title": {
+    "description": "translated key: forwardSettingsS3Title"
+  },
+  "configureWebDAVServer": "Configure WebDAV",
+  "@configureWebDAVServer": {
+    "description": "translated key: configureWebDAVServer"
+  },
+  "webdavServerUrlRequired": "Please enter WebDAV server URL",
+  "@webdavServerUrlRequired": {
+    "description": "translated key: webdavServerUrlRequired"
+  },
+  "webdavUrlMustStartWithHttp": "URL must start with http:// or https://",
+  "@webdavUrlMustStartWithHttp": {
+    "description": "translated key: webdavUrlMustStartWithHttp"
+  },
+  "usernameRequired": "Please enter username",
+  "@usernameRequired": {
+    "description": "translated key: usernameRequired"
+  },
+  "passwordRequired": "Please enter password",
+  "@passwordRequired": {
+    "description": "translated key: passwordRequired"
+  },
+  "baseDirectoryRequired": "Please select base directory",
+  "@baseDirectoryRequired": {
+    "description": "translated key: baseDirectoryRequired"
+  },
+  "baseDirectoryMustStartWithSlash": "Base directory must start with /",
+  "@baseDirectoryMustStartWithSlash": {
+    "description": "translated key: baseDirectoryMustStartWithSlash"
+  },
+  "serverUrl": "Server URL",
+  "@serverUrl": {
+    "description": "translated key: serverUrl"
+  },
+  "username": "Username",
+  "@username": {
+    "description": "translated key: username"
+  },
+  "password": "Password",
+  "@password": {
+    "description": "translated key: password"
+  },
+  "storagePath": "Storage Path",
+  "@storagePath": {
+    "description": "translated key: storagePath"
+  },
+  "storagePathHint": "Select Storage Path",
+  "@storagePathHint": {
+    "description": "translated key: storagePathHint"
+  },
+  "pleaseInputCorrectURL": "Please enter the correct URL",
+  "@pleaseInputCorrectURL": {
+    "description": "translated key: pleaseInputCorrectURL"
+  },
+  "nameRequired": "Please enter config name",
+  "@nameRequired": {
+    "description": "translated key: nameRequired"
+  },
+  "configName": "Config Name",
+  "@configName": {
+    "description": "translated key: configName"
+  },
+  "noConfig": "None",
+  "@noConfig": {
+    "description": "translated key: noConfig"
+  },
+  "s3EndpointRequired": "S3 endpoint is required",
+  "@s3EndpointRequired": {
+    "description": "translated key: s3EndpointRequired"
+  },
+  "accessKeyRequired": "Access Key is required",
+  "@accessKeyRequired": {
+    "description": "translated key: accessKeyRequired"
+  },
+  "secretKeyRequired": "Secret Key is required",
+  "@secretKeyRequired": {
+    "description": "translated key: secretKeyRequired"
+  },
+  "bucketNameRequired": "Bucket name is required",
+  "@bucketNameRequired": {
+    "description": "translated key: bucketNameRequired"
+  },
+  "configureS3Storage": "Configure S3 Storage",
+  "@configureS3Storage": {
+    "description": "translated key: configureS3Storage"
+  },
+  "endpoint": "Endpoint",
+  "@endpoint": {
+    "description": "translated key: endpoint"
+  },
+  "s3AccessKey": "Access Key",
+  "@s3AccessKey": {
+    "description": "translated key: s3AccessKey"
+  },
+  "s3SecretKey": "Secret Key",
+  "@s3SecretKey": {
+    "description": "translated key: s3SecretKey"
+  },
+  "bucketName": "Bucket Name",
+  "@bucketName": {
+    "description": "translated key: bucketName"
+  },
+  "region": "Region",
+  "@region": {
+    "description": "translated key: region"
+  },
+  "optional": "Optional",
+  "@optional": {
+    "description": "translated key: optional"
+  },
+  "objectStorageType": "Storage Type",
+  "@objectStorageType": {
+    "description": "translated key: objectStorageType"
+  },
+  "standardS3Protocol": "Standard S3 protocol",
+  "@standardS3Protocol": {
+    "description": "translated key: standardS3Protocol"
+  },
+  "aliyunOss": "Alibaba Cloud OSS",
+  "@aliyunOss": {
+    "description": "translated key: aliyunOss"
+  },
+  "pleaseInputCorrectDomain": "Please enter a valid domain",
+  "@pleaseInputCorrectDomain": {
+    "description": "translated key: pleaseInputCorrectDomain"
+  },
+  "notificationServerConfigure": "Notification Server Settings",
+  "@notificationServerConfigure": {
+    "description": "translated key: notificationServerConfigure"
+  },
+  "notificationServerAddress": "Notification Server Address",
+  "@notificationServerAddress": {
+    "description": "translated key: notificationServerAddress"
+  },
+  "regionRequired": "Region is required",
+  "@regionRequired": {
+    "description": "translated key: regionRequired"
+  },
+  "pleaseInputCorrectWsURL": "Please enter the correct address (ws:// or wss://)",
+  "@pleaseInputCorrectWsURL": {
+    "description": "translated key: pleaseInputCorrectWsURL"
+  },
+  "selectStoragePath": "Select Storage Path",
+  "@selectStoragePath": {
+    "description": "translated key: selectStoragePath"
+  },
+  "readonly": "Read-only",
+  "@readonly": {
+    "description": "translated key: readonly"
+  },
+  "version": "Version",
+  "@version": {
+    "description": "translated key: version"
+  },
+  "changeForwardWayConfirm": "Switch forward method? Current forward connections will be disconnected.",
+  "@changeForwardWayConfirm": {
+    "description": "translated key: changeForwardWayConfirm"
+  },
+  "s3": "S3",
+  "@s3": {
+    "description": "translated key: s3"
+  },
+  "none": "None",
+  "@none": {
+    "description": "translated key: none"
+  },
+  "forwardServer": "Forward Server",
+  "@forwardServer": {
+    "description": "translated key: forwardServer"
+  },
+  "forwardSettingsForwardEnableRequiredWebDAVText": "Configure WebDAV first",
+  "@forwardSettingsForwardEnableRequiredWebDAVText": {
+    "description": "translated key: forwardSettingsForwardEnableRequiredWebDAVText"
+  },
+  "forwardSettingsForwardEnableRequiredS3Text": "Configure S3 first",
+  "@forwardSettingsForwardEnableRequiredS3Text": {
+    "description": "translated key: forwardSettingsForwardEnableRequiredS3Text"
+  },
+  "createFolder": "Create Folder",
+  "@createFolder": {
+    "description": "translated key: createFolder"
+  },
+  "invalidFolderName": "Invalid name, cannot contain special characters and must be less than 255 characters",
+  "@invalidFolderName": {
+    "description": "translated key: invalidFolderName"
+  },
+  "createFailed": "Creation failed",
+  "@createFailed": {
+    "description": "translated key: createFailed"
+  },
+  "notAllowRootPath": "Root path is not allowed",
+  "@notAllowRootPath": {
+    "description": "translated key: notAllowRootPath"
+  },
+  "rootPathCannotEnableForward": "The storage path cannot be the root path",
+  "@rootPathCannotEnableForward": {
+    "description": "translated key: rootPathCannotEnableForward"
+  },
+  "s3TypeTips": "Any object storage service compatible with the standard S3 protocol can be configured directly.\n\nTencent Cloud and Qiniu Cloud have been tested and work well.\n\nAlibaba Cloud OSS requires separate settings.",
+  "@s3TypeTips": {
+    "description": "translated key: s3TypeTips"
+  },
+  "forwardWay": "Forward Method",
+  "@forwardWay": {
+    "description": "translated key: forwardWay"
+  },
+  "backupTypeConfig": "Config",
+  "@backupTypeConfig": {
+    "description": "translated key: backupTypeConfig"
+  },
+  "backupTypeAppInfo": "Clipboard Source",
+  "@backupTypeAppInfo": {
+    "description": "translated key: backupTypeAppInfo"
+  },
+  "backupTypeDevice": "Devices",
+  "@backupTypeDevice": {
+    "description": "translated key: backupTypeDevice"
+  },
+  "backupTypeHistory": "History",
+  "@backupTypeHistory": {
+    "description": "translated key: backupTypeHistory"
+  },
+  "backupTypeHistoryTag": "Tags",
+  "@backupTypeHistoryTag": {
+    "description": "translated key: backupTypeHistoryTag"
+  },
+  "backupTypeOperationRecord": "Operation Record",
+  "@backupTypeOperationRecord": {
+    "description": "translated key: backupTypeOperationRecord"
+  },
+  "backupTypeOperationSync": "Sync Record",
+  "@backupTypeOperationSync": {
+    "description": "translated key: backupTypeOperationSync"
+  },
+  "selectBackupItems": "Select Backup Items",
+  "@selectBackupItems": {
+    "description": "translated key: selectBackupItems"
+  },
+  "online": "Online",
+  "@online": {
+    "description": "translated key: online"
+  },
+  "offline": "Offline",
+  "@offline": {
+    "description": "translated key: offline"
+  },
+  "enterSoftware": "Enter App",
+  "@enterSoftware": {
+    "description": "translated key: enterSoftware"
+  },
+  "segmentWords": "Segment Words",
+  "@segmentWords": {
+    "description": "translated key: segmentWords"
+  },
+  "downloadFromGithub": "Download from Github",
+  "@downloadFromGithub": {
+    "description": "translated key: downloadFromGithub"
+  },
+  "notFoundJiebaFiles": "Jieba files not found.\nDownload them and copy them to:\n{dirPath}\nOnly dict.txt and prob_emit.txt are required.",
+  "@notFoundJiebaFiles": {
+    "description": "translated key: notFoundJiebaFiles",
+    "placeholders": {
+      "dirPath": {
+        "type": "String"
+      }
+    }
+  },
+  "installJiebaDictFile": "Install",
+  "@installJiebaDictFile": {
+    "description": "translated key: installJiebaDictFile"
+  },
+  "downloadFailed": "Download failed!",
+  "@downloadFailed": {
+    "description": "translated key: downloadFailed"
+  },
+  "jiebaFileInstallSuccess": "Jieba files installed",
+  "@jiebaFileInstallSuccess": {
+    "description": "translated key: jiebaFileInstallSuccess"
+  },
+  "encryptKey": "Encryption Key",
+  "@encryptKey": {
+    "description": "translated key: encryptKey"
+  },
+  "encryptKeyErrorTip": "Length must be at least 8 characters and cannot contain whitespace",
+  "@encryptKeyErrorTip": {
+    "description": "translated key: encryptKeyErrorTip"
+  },
+  "confirmClearEncryptKey": "Confirm clear encryption key?",
+  "@confirmClearEncryptKey": {
+    "description": "translated key: confirmClearEncryptKey"
+  },
+  "authFailed": "Authentication failed",
+  "@authFailed": {
+    "description": "translated key: authFailed"
+  },
+  "dhKeySettingName": "Encrypt Key Exchange",
+  "@dhKeySettingName": {
+    "description": "translated key: dhKeySettingName"
+  },
+  "dhKeySettingDesc": "All devices need this and the same password, or connection fails.",
+  "@dhKeySettingDesc": {
+    "description": "translated key: dhKeySettingDesc"
+  },
+  "dhKeySettingTips": "Encrypts the Diffie-Hellman key exchange parameters used during device connection.\nWhen enabled, all connected devices must enable this and use the same password, or they cannot connect.\n\nLeaving it off is also acceptable.",
+  "@dhKeySettingTips": {
+    "description": "translated key: dhKeySettingTips"
+  },
+  "syncOutDateSettingTitle": "Sync Date Range",
+  "@syncOutDateSettingTitle": {
+    "description": "translated key: syncOutDateSettingTitle"
+  },
+  "syncOutDateSettingDesc": "Sync only data in the selected time range.",
+  "@syncOutDateSettingDesc": {
+    "description": "translated key: syncOutDateSettingDesc"
+  },
+  "pleaseWait": "Please wait...",
+  "@pleaseWait": {
+    "description": "translated key: pleaseWait"
+  },
+  "generateTodayAndroidLog": "Generate Android native logs (today)",
+  "@generateTodayAndroidLog": {
+    "description": "translated key: generateTodayAndroidLog"
+  },
+  "noDiscoveryIfsSettingTitle": "Exclude Discovery NICs",
+  "@noDiscoveryIfsSettingTitle": {
+    "description": "translated key: noDiscoveryIfsSettingTitle"
+  },
+  "noDiscoveryIfsSettingDesc": "Skip selected NICs during subnet scans.",
+  "@noDiscoveryIfsSettingDesc": {
+    "description": "translated key: noDiscoveryIfsSettingDesc"
+  },
+  "onlyManualDiscoverySubNetSettingTitle": "Manual Subnet Scan Only",
+  "@onlyManualDiscoverySubNetSettingTitle": {
+    "description": "translated key: onlyManualDiscoverySubNetSettingTitle"
+  },
+  "onlyManualDiscoverySubNetSettingDesc": "No auto scans after network changes or screen wake; scan from Devices.",
+  "@onlyManualDiscoverySubNetSettingDesc": {
+    "description": "translated key: onlyManualDiscoverySubNetSettingDesc"
+  },
+  "stopListeningOnScreenClosedSettingTitle": "Stop on Screen-off (Experimental)",
+  "@stopListeningOnScreenClosedSettingTitle": {
+    "description": "translated key: stopListeningOnScreenClosedSettingTitle"
+  },
+  "stopListeningOnScreenClosedSettingDesc": "Stops clipboard listening 1 minute after screen-off to save battery on some devices.",
+  "@stopListeningOnScreenClosedSettingDesc": {
+    "description": "translated key: stopListeningOnScreenClosedSettingDesc"
+  },
+  "keepConnectionsOnNetworkSwitchTitle": "Keep Existing Connections",
+  "@keepConnectionsOnNetworkSwitchTitle": {
+    "description": "translated key: keepConnectionsOnNetworkSwitchTitle"
+  },
+  "keepConnectionsOnNetworkSwitchDesc": "Reconnect only on Wi-Fi/mobile or online/offline changes; otherwise keep existing connections.",
+  "@keepConnectionsOnNetworkSwitchDesc": {
+    "description": "translated key: keepConnectionsOnNetworkSwitchDesc"
+  },
+  "notNow": "Not now",
+  "@notNow": {
+    "description": "translated key: notNow"
+  },
+  "faq": "FAQ",
+  "@faq": {
+    "description": "translated key: faq"
+  },
+  "sendBroadcastOnAddData": "Send broadcast when adding data",
+  "@sendBroadcastOnAddData": {
+    "description": "translated key: sendBroadcastOnAddData"
+  },
+  "sendBroadcastOnAddDataDesc": "Send a system broadcast on clipboard changes or synced data so apps like Tasker can process it.",
+  "@sendBroadcastOnAddDataDesc": {
+    "description": "translated key: sendBroadcastOnAddDataDesc"
+  },
+  "explain": "Explanation",
+  "@explain": {
+    "description": "translated key: explain"
+  },
+  "sendBroadcastOnAddDataTips": "The broadcast Action is: {kOnHistoryChangedBroadcastAction}\n\nThe current broadcast contains the following variables:\n1.type: Content type, valid values are: text, image, sms, file, notification\n2. content: Content, when it is an image or file, it is a local path; when it is a notification, it is JSON\n3. from_dev_id: Source device ID\n4. from_dev_name: Source device name",
+  "@sendBroadcastOnAddDataTips": {
+    "description": "translated key: sendBroadcastOnAddDataTips",
+    "placeholders": {
+      "kOnHistoryChangedBroadcastAction": {
+        "type": "String"
+      }
+    }
+  },
+  "recopyOnScreenUnlockedTitle": "Retry Latest Copy After Unlock",
+  "@recopyOnScreenUnlockedTitle": {
+    "description": "translated key: recopyOnScreenUnlockedTitle"
+  },
+  "recopyOnScreenUnlockedTitleDesc": "On some systems, auto-copy fails while locked. Retry copying the latest synced data after unlock.",
+  "@recopyOnScreenUnlockedTitleDesc": {
+    "description": "translated key: recopyOnScreenUnlockedTitleDesc"
+  },
+  "rulesManagement": "Rules",
+  "@rulesManagement": {
+    "description": "translated key: rulesManagement"
+  },
+  "excludePrivateFormat": "Skip Excluded Formats",
+  "@excludePrivateFormat": {
+    "description": "translated key: excludePrivateFormat"
+  },
+  "excludePrivateFormatDesc": "Do not record clipboard entries marked for exclusion.",
+  "@excludePrivateFormatDesc": {
+    "description": "translated key: excludePrivateFormatDesc"
+  },
+  "excludePrivateFormatTips": "When clipboard content contains the ExcludeClipboardContentFromMonitorProcessing marker, it will not be recorded.",
+  "@excludePrivateFormatTips": {
+    "description": "translated key: excludePrivateFormatTips"
+  },
+  "moreActions": "More Actions",
+  "@moreActions": {
+    "description": "translated key: moreActions"
+  },
+  "retainDays": "Keep Last",
+  "@retainDays": {
+    "description": "translated key: retainDays"
+  },
+  "onlyLocal": "Only Local",
+  "@onlyLocal": {
+    "description": "translated key: onlyLocal"
+  },
+  "enablePIP": "Enable Picture-in-Picture",
+  "@enablePIP": {
+    "description": "translated key: enablePIP"
+  },
+  "enablePIPTip": "Open received videos in Picture-in-Picture and improve clipboard detection.",
+  "@enablePIPTip": {
+    "description": "translated key: enablePIPTip"
+  },
+  "permissionSettingsClipboardTitle": "Clipboard Permission",
+  "@permissionSettingsClipboardTitle": {
+    "description": "translated key: permissionSettingsClipboardTitle"
+  },
+  "permissionSettingsClipboardDesc": "Some Android systems allow clipboard access only while in use. Grant this to enable background clipboard access.",
+  "@permissionSettingsClipboardDesc": {
+    "description": "translated key: permissionSettingsClipboardDesc"
+  },
+  "local": "Local",
+  "@local": {
+    "description": "translated key: local"
+  },
+  "directConnect": "Direct",
+  "@directConnect": {
+    "description": "translated key: directConnect"
+  },
+  "selectBackupSource": "Backup Location",
+  "@selectBackupSource": {
+    "description": "translated key: selectBackupSource"
+  },
+  "notConfigured": "Not Configured",
+  "@notConfigured": {
+    "description": "translated key: notConfigured"
+  },
+  "storagePathTips": "Backup files and transfer files are stored in different folders within the same directory.\nIf the storage path is set to /ClipShare\nthen the temporary transfer files are stored in /ClipShare/history, \nthe backup files are stored in /ClipShare/backup.",
+  "@storagePathTips": {
+    "description": "translated key: storagePathTips"
+  },
+  "uploading": "Uploading",
+  "@uploading": {
+    "description": "translated key: uploading"
+  },
+  "useTrayFlashingForConnectionTitle": "Flash Tray on Connect/Disconnect",
+  "@useTrayFlashingForConnectionTitle": {
+    "description": "translated key: useTrayFlashingForConnectionTitle"
+  },
+  "useTrayFlashingForConnectionDesc": "Flash the tray instead of showing system notifications.",
+  "@useTrayFlashingForConnectionDesc": {
+    "description": "translated key: useTrayFlashingForConnectionDesc"
+  },
+  "trayDevAliveTooltip": "{first}\nConnected to {pairedCnt} paired devices\nConnected to {unpairedCnt} unpaired devices",
+  "@trayDevAliveTooltip": {
+    "description": "translated key: trayDevAliveTooltip",
+    "placeholders": {
+      "first": {
+        "type": "String"
+      },
+      "pairedCnt": {
+        "type": "String"
+      },
+      "unpairedCnt": {
+        "type": "String"
+      }
+    }
+  },
+  "displayExtractedContent": "Display Extracted Content",
+  "@displayExtractedContent": {
+    "description": "translated key: displayExtractedContent"
+  },
+  "displayOriginContent": "Display Original Content",
+  "@displayOriginContent": {
+    "description": "translated key: displayOriginContent"
+  },
+  "codePromptParamsContentIsSyncDisabled": "Whether to prevent sync",
+  "@codePromptParamsContentIsSyncDisabled": {
+    "description": "translated key: codePromptParamsContentIsSyncDisabled"
+  },
+  "codePromptParamsContentTags": "Tags",
+  "@codePromptParamsContentTags": {
+    "description": "translated key: codePromptParamsContentTags"
+  },
+  "codePromptParamsContentExtracted": "Extracted content",
+  "@codePromptParamsContentExtracted": {
+    "description": "translated key: codePromptParamsContentExtracted"
+  },
+  "codePromptParamsContentDetail": "Content",
+  "@codePromptParamsContentDetail": {
+    "description": "translated key: codePromptParamsContentDetail"
+  },
+  "codePromptParamsContentNotificationTitle": "Notification title (notification type only)",
+  "@codePromptParamsContentNotificationTitle": {
+    "description": "translated key: codePromptParamsContentNotificationTitle"
+  },
+  "codePromptParamsContentSource": "Source, such as a local path or app package name",
+  "@codePromptParamsContentSource": {
+    "description": "translated key: codePromptParamsContentSource"
+  },
+  "codePromptParamsContentType": "Content type",
+  "@codePromptParamsContentType": {
+    "description": "translated key: codePromptParamsContentType"
+  },
+  "codePromptNotificationType": "Notification",
+  "@codePromptNotificationType": {
+    "description": "translated key: codePromptNotificationType"
+  },
+  "codePromptImageType": "Image",
+  "@codePromptImageType": {
+    "description": "translated key: codePromptImageType"
+  },
+  "codePromptTextType": "Text",
+  "@codePromptTextType": {
+    "description": "translated key: codePromptTextType"
+  },
+  "codePromptSmsType": "SMS",
+  "@codePromptSmsType": {
+    "description": "translated key: codePromptSmsType"
+  },
+  "codePromptJsonDecode": "JSON decode",
+  "@codePromptJsonDecode": {
+    "description": "translated key: codePromptJsonDecode"
+  },
+  "codePromptLogError": "Log an error-level message",
+  "@codePromptLogError": {
+    "description": "translated key: codePromptLogError"
+  },
+  "codePromptLogWarn": "Log a warning-level message",
+  "@codePromptLogWarn": {
+    "description": "translated key: codePromptLogWarn"
+  },
+  "codePromptLogDebug": "Log a debug-level message",
+  "@codePromptLogDebug": {
+    "description": "translated key: codePromptLogDebug"
+  },
+  "codePromptLogInfo": "Log an info-level message",
+  "@codePromptLogInfo": {
+    "description": "translated key: codePromptLogInfo"
+  },
+  "codePromptContentType": "Content type",
+  "@codePromptContentType": {
+    "description": "translated key: codePromptContentType"
+  },
+  "codePromptJson": "JSON Module",
+  "@codePromptJson": {
+    "description": "translated key: codePromptJson"
+  },
+  "codePromptLog": "Log Module",
+  "@codePromptLog": {
+    "description": "translated key: codePromptLog"
+  },
+  "codePromptPrint": "Print output, equivalent to logger.debug()",
+  "@codePromptPrint": {
+    "description": "translated key: codePromptPrint"
+  },
+  "codePromptMath": "Math Module",
+  "@codePromptMath": {
+    "description": "translated key: codePromptMath"
+  },
+  "codePromptString": "String Module",
+  "@codePromptString": {
+    "description": "translated key: codePromptString"
+  },
+  "codePromptTable": "Table manipulation Module",
+  "@codePromptTable": {
+    "description": "translated key: codePromptTable"
+  },
+  "codePromptUtf8": "UTF-8 Module",
+  "@codePromptUtf8": {
+    "description": "translated key: codePromptUtf8"
+  },
+  "codePromptOs": "OS Module (safe subset)",
+  "@codePromptOs": {
+    "description": "translated key: codePromptOs"
+  },
+  "codePromptType": "Get value type",
+  "@codePromptType": {
+    "description": "translated key: codePromptType"
+  },
+  "codePromptToString": "Convert to string",
+  "@codePromptToString": {
+    "description": "translated key: codePromptToString"
+  },
+  "codePromptToNumber": "Convert to number",
+  "@codePromptToNumber": {
+    "description": "translated key: codePromptToNumber"
+  },
+  "codePromptPairs": "Iterate table (key-value pairs)",
+  "@codePromptPairs": {
+    "description": "translated key: codePromptPairs"
+  },
+  "codePromptIpairs": "Iterate array (numeric index)",
+  "@codePromptIpairs": {
+    "description": "translated key: codePromptIpairs"
+  },
+  "codePromptNext": "Get next element",
+  "@codePromptNext": {
+    "description": "translated key: codePromptNext"
+  },
+  "codePromptPcall": "Protected function call",
+  "@codePromptPcall": {
+    "description": "translated key: codePromptPcall"
+  },
+  "codePromptXpcall": "Protected call with error handler",
+  "@codePromptXpcall": {
+    "description": "translated key: codePromptXpcall"
+  },
+  "codePromptSelect": "Access variadic arguments",
+  "@codePromptSelect": {
+    "description": "translated key: codePromptSelect"
+  },
+  "codePromptAssert": "Assertion check",
+  "@codePromptAssert": {
+    "description": "translated key: codePromptAssert"
+  },
+  "codePromptError": "Raise an error",
+  "@codePromptError": {
+    "description": "translated key: codePromptError"
+  },
+  "codePromptMathAbs": "Absolute value",
+  "@codePromptMathAbs": {
+    "description": "translated key: codePromptMathAbs"
+  },
+  "codePromptMathAcos": "Arc cosine",
+  "@codePromptMathAcos": {
+    "description": "translated key: codePromptMathAcos"
+  },
+  "codePromptMathAsin": "Arc sine",
+  "@codePromptMathAsin": {
+    "description": "translated key: codePromptMathAsin"
+  },
+  "codePromptMathAtan": "Arc tangent",
+  "@codePromptMathAtan": {
+    "description": "translated key: codePromptMathAtan"
+  },
+  "codePromptMathCeil": "Round up",
+  "@codePromptMathCeil": {
+    "description": "translated key: codePromptMathCeil"
+  },
+  "codePromptMathCos": "Cosine",
+  "@codePromptMathCos": {
+    "description": "translated key: codePromptMathCos"
+  },
+  "codePromptMathDeg": "Radians to degrees",
+  "@codePromptMathDeg": {
+    "description": "translated key: codePromptMathDeg"
+  },
+  "codePromptMathExp": "Exponential",
+  "@codePromptMathExp": {
+    "description": "translated key: codePromptMathExp"
+  },
+  "codePromptMathFloor": "Round down",
+  "@codePromptMathFloor": {
+    "description": "translated key: codePromptMathFloor"
+  },
+  "codePromptMathFmod": "Remainder",
+  "@codePromptMathFmod": {
+    "description": "translated key: codePromptMathFmod"
+  },
+  "codePromptMathHuge": "Largest float value",
+  "@codePromptMathHuge": {
+    "description": "translated key: codePromptMathHuge"
+  },
+  "codePromptMathLog": "Logarithm",
+  "@codePromptMathLog": {
+    "description": "translated key: codePromptMathLog"
+  },
+  "codePromptMathMax": "Maximum value",
+  "@codePromptMathMax": {
+    "description": "translated key: codePromptMathMax"
+  },
+  "codePromptMathMaxInteger": "Maximum integer",
+  "@codePromptMathMaxInteger": {
+    "description": "translated key: codePromptMathMaxInteger"
+  },
+  "codePromptMathMin": "Minimum value",
+  "@codePromptMathMin": {
+    "description": "translated key: codePromptMathMin"
+  },
+  "codePromptMathMinInteger": "Minimum integer",
+  "@codePromptMathMinInteger": {
+    "description": "translated key: codePromptMathMinInteger"
+  },
+  "codePromptMathModf": "Integer and fractional parts",
+  "@codePromptMathModf": {
+    "description": "translated key: codePromptMathModf"
+  },
+  "codePromptMathPi": "Pi constant",
+  "@codePromptMathPi": {
+    "description": "translated key: codePromptMathPi"
+  },
+  "codePromptMathRad": "Degrees to radians",
+  "@codePromptMathRad": {
+    "description": "translated key: codePromptMathRad"
+  },
+  "codePromptMathRandom": "Random number",
+  "@codePromptMathRandom": {
+    "description": "translated key: codePromptMathRandom"
+  },
+  "codePromptMathRandomSeed": "Set random seed",
+  "@codePromptMathRandomSeed": {
+    "description": "translated key: codePromptMathRandomSeed"
+  },
+  "codePromptMathSin": "Sine",
+  "@codePromptMathSin": {
+    "description": "translated key: codePromptMathSin"
+  },
+  "codePromptMathSqrt": "Square root",
+  "@codePromptMathSqrt": {
+    "description": "translated key: codePromptMathSqrt"
+  },
+  "codePromptMathTan": "Tangent",
+  "@codePromptMathTan": {
+    "description": "translated key: codePromptMathTan"
+  },
+  "codePromptMathToInteger": "Convert to integer",
+  "@codePromptMathToInteger": {
+    "description": "translated key: codePromptMathToInteger"
+  },
+  "codePromptMathType": "Number subtype",
+  "@codePromptMathType": {
+    "description": "translated key: codePromptMathType"
+  },
+  "codePromptMathUlt": "Unsigned integer comparison",
+  "@codePromptMathUlt": {
+    "description": "translated key: codePromptMathUlt"
+  },
+  "codePromptStringByte": "Character code",
+  "@codePromptStringByte": {
+    "description": "translated key: codePromptStringByte"
+  },
+  "codePromptStringChar": "Create string from character codes",
+  "@codePromptStringChar": {
+    "description": "translated key: codePromptStringChar"
+  },
+  "codePromptStringDump": "Dump function bytecode",
+  "@codePromptStringDump": {
+    "description": "translated key: codePromptStringDump"
+  },
+  "codePromptStringLen": "String length",
+  "@codePromptStringLen": {
+    "description": "translated key: codePromptStringLen"
+  },
+  "codePromptStringSub": "Substring",
+  "@codePromptStringSub": {
+    "description": "translated key: codePromptStringSub"
+  },
+  "codePromptStringFind": "Find substring",
+  "@codePromptStringFind": {
+    "description": "translated key: codePromptStringFind"
+  },
+  "codePromptStringFormat": "Format string",
+  "@codePromptStringFormat": {
+    "description": "translated key: codePromptStringFormat"
+  },
+  "codePromptStringGMatch": "Iterate matches",
+  "@codePromptStringGMatch": {
+    "description": "translated key: codePromptStringGMatch"
+  },
+  "codePromptStringGSub": "Replace matches",
+  "@codePromptStringGSub": {
+    "description": "translated key: codePromptStringGSub"
+  },
+  "codePromptStringLower": "Convert to lowercase",
+  "@codePromptStringLower": {
+    "description": "translated key: codePromptStringLower"
+  },
+  "codePromptStringMatch": "Match pattern",
+  "@codePromptStringMatch": {
+    "description": "translated key: codePromptStringMatch"
+  },
+  "codePromptStringPack": "Pack values into binary string",
+  "@codePromptStringPack": {
+    "description": "translated key: codePromptStringPack"
+  },
+  "codePromptStringPackSize": "Packed size",
+  "@codePromptStringPackSize": {
+    "description": "translated key: codePromptStringPackSize"
+  },
+  "codePromptStringRep": "Repeat string",
+  "@codePromptStringRep": {
+    "description": "translated key: codePromptStringRep"
+  },
+  "codePromptStringReverse": "Reverse string",
+  "@codePromptStringReverse": {
+    "description": "translated key: codePromptStringReverse"
+  },
+  "codePromptStringUnpack": "Unpack binary string",
+  "@codePromptStringUnpack": {
+    "description": "translated key: codePromptStringUnpack"
+  },
+  "codePromptStringUpper": "Convert to uppercase",
+  "@codePromptStringUpper": {
+    "description": "translated key: codePromptStringUpper"
+  },
+  "codePromptTableInsert": "Insert element",
+  "@codePromptTableInsert": {
+    "description": "translated key: codePromptTableInsert"
+  },
+  "codePromptTableMove": "Move elements between tables",
+  "@codePromptTableMove": {
+    "description": "translated key: codePromptTableMove"
+  },
+  "codePromptTableRemove": "Remove element",
+  "@codePromptTableRemove": {
+    "description": "translated key: codePromptTableRemove"
+  },
+  "codePromptTableSort": "Sort table",
+  "@codePromptTableSort": {
+    "description": "translated key: codePromptTableSort"
+  },
+  "codePromptTableConcat": "Concatenate strings",
+  "@codePromptTableConcat": {
+    "description": "translated key: codePromptTableConcat"
+  },
+  "codePromptUtf8Len": "UTF-8 string length",
+  "@codePromptUtf8Len": {
+    "description": "translated key: codePromptUtf8Len"
+  },
+  "codePromptUtf8Char": "Create UTF-8 character",
+  "@codePromptUtf8Char": {
+    "description": "translated key: codePromptUtf8Char"
+  },
+  "codePromptUtf8CharPattern": "UTF-8 character pattern",
+  "@codePromptUtf8CharPattern": {
+    "description": "translated key: codePromptUtf8CharPattern"
+  },
+  "codePromptUtf8Codes": "Iterate UTF-8 code points",
+  "@codePromptUtf8Codes": {
+    "description": "translated key: codePromptUtf8Codes"
+  },
+  "codePromptUtf8CodePoint": "Get UTF-8 code points",
+  "@codePromptUtf8CodePoint": {
+    "description": "translated key: codePromptUtf8CodePoint"
+  },
+  "codePromptUtf8Offset": "Get UTF-8 offset",
+  "@codePromptUtf8Offset": {
+    "description": "translated key: codePromptUtf8Offset"
+  },
+  "codePromptOsClock": "CPU time used",
+  "@codePromptOsClock": {
+    "description": "translated key: codePromptOsClock"
+  },
+  "codePromptOsDate": "Get current date",
+  "@codePromptOsDate": {
+    "description": "translated key: codePromptOsDate"
+  },
+  "codePromptOsTime": "Get timestamp",
+  "@codePromptOsTime": {
+    "description": "translated key: codePromptOsTime"
+  },
+  "codePromptOsDiffTime": "Time difference",
+  "@codePromptOsDiffTime": {
+    "description": "translated key: codePromptOsDiffTime"
+  },
+  "codePromptLuaVersion": "Current Lua version",
+  "@codePromptLuaVersion": {
+    "description": "translated key: codePromptLuaVersion"
+  },
+  "codePromptTablePack": "Pack arguments into a table",
+  "@codePromptTablePack": {
+    "description": "translated key: codePromptTablePack"
+  },
+  "codePromptTableUnpack": "Unpack a table into multiple return values",
+  "@codePromptTableUnpack": {
+    "description": "translated key: codePromptTableUnpack"
+  },
+  "codePromptScriptParams": "Script parameters, including content, type, source, and other information",
+  "@codePromptScriptParams": {
+    "description": "translated key: codePromptScriptParams"
+  },
+  "codePromptIfSnippet": "If condition snippet",
+  "@codePromptIfSnippet": {
+    "description": "translated key: codePromptIfSnippet"
+  },
+  "codePromptElseSnippet": "Else snippet",
+  "@codePromptElseSnippet": {
+    "description": "translated key: codePromptElseSnippet"
+  },
+  "codePromptElseIfSnippet": "Else-if snippet",
+  "@codePromptElseIfSnippet": {
+    "description": "translated key: codePromptElseIfSnippet"
+  },
+  "codePromptWhileSnippet": "While loop snippet",
+  "@codePromptWhileSnippet": {
+    "description": "translated key: codePromptWhileSnippet"
+  },
+  "codePromptRepeatSnippet": "Repeat-until loop snippet",
+  "@codePromptRepeatSnippet": {
+    "description": "translated key: codePromptRepeatSnippet"
+  },
+  "codePromptForSnippet": "For numeric loop snippet",
+  "@codePromptForSnippet": {
+    "description": "translated key: codePromptForSnippet"
+  },
+  "codePromptForStepSnippet": "For loop with step snippet",
+  "@codePromptForStepSnippet": {
+    "description": "translated key: codePromptForStepSnippet"
+  },
+  "codePromptIPairsSnippet": "Ipairs iteration snippet",
+  "@codePromptIPairsSnippet": {
+    "description": "translated key: codePromptIPairsSnippet"
+  },
+  "codePromptPairsSnippet": "Pairs table iteration snippet",
+  "@codePromptPairsSnippet": {
+    "description": "translated key: codePromptPairsSnippet"
+  },
+  "codePromptFunctionSnippet": "Function definition snippet",
+  "@codePromptFunctionSnippet": {
+    "description": "translated key: codePromptFunctionSnippet"
+  },
+  "codePromptLocalFunctionSnippet": "Local function definition snippet",
+  "@codePromptLocalFunctionSnippet": {
+    "description": "translated key: codePromptLocalFunctionSnippet"
+  },
+  "codePromptPlatformAndroid": "Android platform",
+  "@codePromptPlatformAndroid": {
+    "description": "translated key: codePromptPlatformAndroid"
+  },
+  "codePromptNotify": "Notification",
+  "@codePromptNotify": {
+    "description": "translated key: codePromptNotify"
+  },
+  "codePromptAndroidToast": "Android toast message",
+  "@codePromptAndroidToast": {
+    "description": "translated key: codePromptAndroidToast"
+  },
+  "codePromptAndroidSendHistoryChangedBroadcast": "Android send history changed broadcast",
+  "@codePromptAndroidSendHistoryChangedBroadcast": {
+    "description": "translated key: codePromptAndroidSendHistoryChangedBroadcast"
+  },
+  "codePromptPlatform": "Platform",
+  "@codePromptPlatform": {
+    "description": "translated key: codePromptPlatform"
+  },
+  "codePromptPlatformIsAndroid": "Check if platform is Android",
+  "@codePromptPlatformIsAndroid": {
+    "description": "translated key: codePromptPlatformIsAndroid"
+  },
+  "codePromptPlatformIsIOS": "Check if platform is iOS",
+  "@codePromptPlatformIsIOS": {
+    "description": "translated key: codePromptPlatformIsIOS"
+  },
+  "codePromptPlatformIsWindows": "Check if platform is Windows",
+  "@codePromptPlatformIsWindows": {
+    "description": "translated key: codePromptPlatformIsWindows"
+  },
+  "codePromptPlatformIsMacOS": "Check if platform is macOS",
+  "@codePromptPlatformIsMacOS": {
+    "description": "translated key: codePromptPlatformIsMacOS"
+  },
+  "codePromptPlatformIsLinux": "Check if platform is Linux",
+  "@codePromptPlatformIsLinux": {
+    "description": "translated key: codePromptPlatformIsLinux"
+  },
+  "codePromptApp": "App",
+  "@codePromptApp": {
+    "description": "translated key: codePromptApp"
+  },
+  "codePromptAppVersionName": "App version name",
+  "@codePromptAppVersionName": {
+    "description": "translated key: codePromptAppVersionName"
+  },
+  "codePromptAppVersionNumber": "App version number",
+  "@codePromptAppVersionNumber": {
+    "description": "translated key: codePromptAppVersionNumber"
+  },
+  "codePromptDeviceSelf": "Current device",
+  "@codePromptDeviceSelf": {
+    "description": "translated key: codePromptDeviceSelf"
+  },
+  "codePromptDeviceSelfName": "Current device name",
+  "@codePromptDeviceSelfName": {
+    "description": "translated key: codePromptDeviceSelfName"
+  },
+  "codePromptDeviceSelfId": "Current device ID",
+  "@codePromptDeviceSelfId": {
+    "description": "translated key: codePromptDeviceSelfId"
+  },
+  "codePromptCrypto": "Cryptography",
+  "@codePromptCrypto": {
+    "description": "translated key: codePromptCrypto"
+  },
+  "codePromptCryptoMD5": "Compute MD5 hash",
+  "@codePromptCryptoMD5": {
+    "description": "translated key: codePromptCryptoMD5"
+  },
+  "codePromptCryptoSHA256": "Compute SHA-256 hash",
+  "@codePromptCryptoSHA256": {
+    "description": "translated key: codePromptCryptoSHA256"
+  },
+  "codePromptCryptoSHA1": "Compute SHA-1 hash",
+  "@codePromptCryptoSHA1": {
+    "description": "translated key: codePromptCryptoSHA1"
+  },
+  "codePromptBase64": "Base64",
+  "@codePromptBase64": {
+    "description": "translated key: codePromptBase64"
+  },
+  "codePromptBase64Encode": "Encode Base64",
+  "@codePromptBase64Encode": {
+    "description": "translated key: codePromptBase64Encode"
+  },
+  "codePromptBase64Decode": "Decode Base64",
+  "@codePromptBase64Decode": {
+    "description": "translated key: codePromptBase64Decode"
+  },
+  "codePromptRegex": "Regular expression",
+  "@codePromptRegex": {
+    "description": "translated key: codePromptRegex"
+  },
+  "codePromptRegexMatch": "Match all full matches and return as a list",
+  "@codePromptRegexMatch": {
+    "description": "translated key: codePromptRegexMatch"
+  },
+  "codePromptRegexMatchGroups": "Match all capture groups and return as a nested list",
+  "@codePromptRegexMatchGroups": {
+    "description": "translated key: codePromptRegexMatchGroups"
+  },
+  "codePromptHttp": "HTTP request Module",
+  "@codePromptHttp": {
+    "description": "translated key: codePromptHttp"
+  },
+  "codePromptTask": "Async task Module",
+  "@codePromptTask": {
+    "description": "translated key: codePromptTask"
+  },
+  "codePromptAsync": "Wraps a function as async, allowing await inside",
+  "@codePromptAsync": {
+    "description": "translated key: codePromptAsync"
+  },
+  "codePromptAwait": "Waits for an awaiter to complete and returns its result; can only be used inside an async function",
+  "@codePromptAwait": {
+    "description": "translated key: codePromptAwait"
+  },
+  "codePromptHttpGet": "GET request method (async)",
+  "@codePromptHttpGet": {
+    "description": "translated key: codePromptHttpGet"
+  },
+  "codePromptHttpPost": "POST request method (async)",
+  "@codePromptHttpPost": {
+    "description": "translated key: codePromptHttpPost"
+  },
+  "codePromptPut": "PUT request method (async)",
+  "@codePromptPut": {
+    "description": "translated key: codePromptPut"
+  },
+  "codePromptDelete": "DELETE request method (async)",
+  "@codePromptDelete": {
+    "description": "translated key: codePromptDelete"
+  },
+  "codePromptTaskCreate": "Creates a task (awaiter)",
+  "@codePromptTaskCreate": {
+    "description": "translated key: codePromptTaskCreate"
+  },
+  "rulesPageUnsavedChangesConfirm": "There are unsaved changes. Continue anyway?",
+  "@rulesPageUnsavedChangesConfirm": {
+    "description": "translated key: rulesPageUnsavedChangesConfirm"
+  },
+  "ruleItemContentRequired": "Rule content cannot be empty",
+  "@ruleItemContentRequired": {
+    "description": "translated key: ruleItemContentRequired"
+  },
+  "ruleItemExtractRuleRequired": "Extraction rule cannot be empty",
+  "@ruleItemExtractRuleRequired": {
+    "description": "translated key: ruleItemExtractRuleRequired"
+  },
+  "ruleItemScriptContentRequired": "Script content cannot be empty",
+  "@ruleItemScriptContentRequired": {
+    "description": "translated key: ruleItemScriptContentRequired"
+  },
+  "ruleItemUnsupportedOperation": "Unsupported operation",
+  "@ruleItemUnsupportedOperation": {
+    "description": "translated key: ruleItemUnsupportedOperation"
+  },
+  "ruleTriggerOnCopyText": "After copy",
+  "@ruleTriggerOnCopyText": {
+    "description": "translated key: ruleTriggerOnCopyText"
+  },
+  "ruleTriggerOnNotificationText": "New notification",
+  "@ruleTriggerOnNotificationText": {
+    "description": "translated key: ruleTriggerOnNotificationText"
+  },
+  "ruleTriggerOnSmsText": "New SMS",
+  "@ruleTriggerOnSmsText": {
+    "description": "translated key: ruleTriggerOnSmsText"
+  },
+  "ruleDetailRegexHint": "Enter a regular expression",
+  "@ruleDetailRegexHint": {
+    "description": "translated key: ruleDetailRegexHint"
+  },
+  "ruleDetailNameLabel": "Rule name: ",
+  "@ruleDetailNameLabel": {
+    "description": "translated key: ruleDetailNameLabel"
+  },
+  "ruleDetailNameHint": "Enter rule name",
+  "@ruleDetailNameHint": {
+    "description": "translated key: ruleDetailNameHint"
+  },
+  "ruleDetailPlatformLabel": "Platform",
+  "@ruleDetailPlatformLabel": {
+    "description": "translated key: ruleDetailPlatformLabel"
+  },
+  "ruleDetailTriggerLabel": "Trigger",
+  "@ruleDetailTriggerLabel": {
+    "description": "translated key: ruleDetailTriggerLabel"
+  },
+  "ruleDetailRuleLabel": "Rule",
+  "@ruleDetailRuleLabel": {
+    "description": "translated key: ruleDetailRuleLabel"
+  },
+  "ruleDetailRegexTab": "Regex",
+  "@ruleDetailRegexTab": {
+    "description": "translated key: ruleDetailRegexTab"
+  },
+  "ruleDetailScriptTab": "Script",
+  "@ruleDetailScriptTab": {
+    "description": "translated key: ruleDetailScriptTab"
+  },
+  "ruleDetailAutoWrapTooltip": "Auto wrap",
+  "@ruleDetailAutoWrapTooltip": {
+    "description": "translated key: ruleDetailAutoWrapTooltip"
+  },
+  "ruleDetailFullScreenTooltip": "Enter full-screen editor",
+  "@ruleDetailFullScreenTooltip": {
+    "description": "translated key: ruleDetailFullScreenTooltip"
+  },
+  "ruleDetailModeDefault": "Default",
+  "@ruleDetailModeDefault": {
+    "description": "translated key: ruleDetailModeDefault"
+  },
+  "ruleDetailModeBlacklist": "Blacklist",
+  "@ruleDetailModeBlacklist": {
+    "description": "translated key: ruleDetailModeBlacklist"
+  },
+  "ruleDetailModeWhitelist": "Whitelist",
+  "@ruleDetailModeWhitelist": {
+    "description": "translated key: ruleDetailModeWhitelist"
+  },
+  "ruleDetailRegexLabel": "Match rule:",
+  "@ruleDetailRegexLabel": {
+    "description": "translated key: ruleDetailRegexLabel"
+  },
+  "ruleDetailRegexTip": "Regex is case-insensitive by default; the extraction rule only extracts the first match.",
+  "@ruleDetailRegexTip": {
+    "description": "translated key: ruleDetailRegexTip"
+  },
+  "ruleDetailExtractContent": "Extract rule:",
+  "@ruleDetailExtractContent": {
+    "description": "translated key: ruleDetailExtractContent"
+  },
+  "ruleDetailModeLabel": "Rule mode",
+  "@ruleDetailModeLabel": {
+    "description": "translated key: ruleDetailModeLabel"
+  },
+  "ruleDetailActionLabel": "Actions",
+  "@ruleDetailActionLabel": {
+    "description": "translated key: ruleDetailActionLabel"
+  },
+  "ruleDetailAddTagLabel": "Add tags:",
+  "@ruleDetailAddTagLabel": {
+    "description": "translated key: ruleDetailAddTagLabel"
+  },
+  "ruleDetailAddTagDialogTitle": "Add tag",
+  "@ruleDetailAddTagDialogTitle": {
+    "description": "translated key: ruleDetailAddTagDialogTitle"
+  },
+  "ruleDetailFinalRule": "Stop following rules",
+  "@ruleDetailFinalRule": {
+    "description": "translated key: ruleDetailFinalRule"
+  },
+  "ruleDetailRunTestTooltip": "Run test",
+  "@ruleDetailRunTestTooltip": {
+    "description": "translated key: ruleDetailRunTestTooltip"
+  },
+  "ruleDetailPageTitle": "Rule details",
+  "@ruleDetailPageTitle": {
+    "description": "translated key: ruleDetailPageTitle"
+  },
+  "ruleModulesDetailSyntaxError": "Contains syntax errors. Please fix them",
+  "@ruleModulesDetailSyntaxError": {
+    "description": "translated key: ruleModulesDetailSyntaxError"
+  },
+  "scriptModulesDetailDisplayNameRequired": "Display name cannot be empty",
+  "@scriptModulesDetailDisplayNameRequired": {
+    "description": "translated key: scriptModulesDetailDisplayNameRequired"
+  },
+  "scriptModulesDetailModuleNameRequired": "Module name cannot be empty",
+  "@scriptModulesDetailModuleNameRequired": {
+    "description": "translated key: scriptModulesDetailModuleNameRequired"
+  },
+  "scriptModulesDetailModuleNameDuplicated": "Module name must be unique",
+  "@scriptModulesDetailModuleNameDuplicated": {
+    "description": "translated key: scriptModulesDetailModuleNameDuplicated"
+  },
+  "scriptModuleDetailContentRequired": "Content cannot be empty",
+  "@scriptModuleDetailContentRequired": {
+    "description": "translated key: scriptModuleDetailContentRequired"
+  },
+  "scriptModuleDetailDisplayNameLabel": "Display name: ",
+  "@scriptModuleDetailDisplayNameLabel": {
+    "description": "translated key: scriptModuleDetailDisplayNameLabel"
+  },
+  "scriptModuleDetailDisplayNameHint": "Enter display name",
+  "@scriptModuleDetailDisplayNameHint": {
+    "description": "translated key: scriptModuleDetailDisplayNameHint"
+  },
+  "scriptModuleDetailModuleNameLabel": "Module name",
+  "@scriptModuleDetailModuleNameLabel": {
+    "description": "translated key: scriptModuleDetailModuleNameLabel"
+  },
+  "scriptModuleDetailModuleNameImmutableTooltip": "Module name cannot be changed after saving",
+  "@scriptModuleDetailModuleNameImmutableTooltip": {
+    "description": "translated key: scriptModuleDetailModuleNameImmutableTooltip"
+  },
+  "scriptModuleDetailModuleNameHint": "Module name",
+  "@scriptModuleDetailModuleNameHint": {
+    "description": "translated key: scriptModuleDetailModuleNameHint"
+  },
+  "scriptModuleDetailNameInvalid": "Only letters, numbers, and underscores are allowed, and it cannot start with a number",
+  "@scriptModuleDetailNameInvalid": {
+    "description": "translated key: scriptModuleDetailNameInvalid"
+  },
+  "scriptModuleDetailPageTitle": "Module details",
+  "@scriptModuleDetailPageTitle": {
+    "description": "translated key: scriptModuleDetailPageTitle"
+  },
+  "ruleListDeleteModuleConfirm": "Delete it? If other scripts use it, they will stop working.",
+  "@ruleListDeleteModuleConfirm": {
+    "description": "translated key: ruleListDeleteModuleConfirm"
+  },
+  "ruleListExitSelectionModeTooltip": "Exit selection mode",
+  "@ruleListExitSelectionModeTooltip": {
+    "description": "translated key: ruleListExitSelectionModeTooltip"
+  },
+  "ruleCardDragDisabledTooltip": "Save data or clear the search input before reordering",
+  "@ruleCardDragDisabledTooltip": {
+    "description": "translated key: ruleCardDragDisabledTooltip"
+  },
+  "ruleCardDragTooltip": "Reorder",
+  "@ruleCardDragTooltip": {
+    "description": "translated key: ruleCardDragTooltip"
+  },
+  "scriptEditTestViewPanelTooltip": "Run panel",
+  "@scriptEditTestViewPanelTooltip": {
+    "description": "translated key: scriptEditTestViewPanelTooltip"
+  },
+  "scriptEditTestViewRunTooltip": "Run",
+  "@scriptEditTestViewRunTooltip": {
+    "description": "translated key: scriptEditTestViewRunTooltip"
+  },
+  "scriptEditTestViewExitFullScreenTooltip": "Exit full-screen editor",
+  "@scriptEditTestViewExitFullScreenTooltip": {
+    "description": "translated key: scriptEditTestViewExitFullScreenTooltip"
+  },
+  "scriptTestPanelParamsTab": "Params",
+  "@scriptTestPanelParamsTab": {
+    "description": "translated key: scriptTestPanelParamsTab"
+  },
+  "scriptTestPanelCompileInfoTab": "Compile info",
+  "@scriptTestPanelCompileInfoTab": {
+    "description": "translated key: scriptTestPanelCompileInfoTab"
+  },
+  "scriptTestPanelOutputTab": "Output",
+  "@scriptTestPanelOutputTab": {
+    "description": "translated key: scriptTestPanelOutputTab"
+  },
+  "scriptTestPanelRunResultTab": "Run result",
+  "@scriptTestPanelRunResultTab": {
+    "description": "translated key: scriptTestPanelRunResultTab"
+  },
+  "scriptTestPanelCollapseTooltip": "Collapse",
+  "@scriptTestPanelCollapseTooltip": {
+    "description": "translated key: scriptTestPanelCollapseTooltip"
+  },
+  "ruleCompileCodeNotFound": "Code not found",
+  "@ruleCompileCodeNotFound": {
+    "description": "translated key: ruleCompileCodeNotFound"
+  },
+  "ruleCompileCodeEmpty": "Code is empty",
+  "@ruleCompileCodeEmpty": {
+    "description": "translated key: ruleCompileCodeEmpty"
+  },
+  "ruleCompileSuccess": "Compile succeeded.",
+  "@ruleCompileSuccess": {
+    "description": "translated key: ruleCompileSuccess"
+  },
+  "ruleCompileFailedPrefix": "Compile failed:\n{message}",
+  "@ruleCompileFailedPrefix": {
+    "description": "translated key: ruleCompileFailedPrefix",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "scriptModuleCompileReturnTableRequired": "The Module return value must be a table.",
+  "@scriptModuleCompileReturnTableRequired": {
+    "description": "translated key: scriptModuleCompileReturnTableRequired"
+  },
+  "success": "Success",
+  "@success": {
+    "description": "translated key: success"
+  },
+  "error": "Error",
+  "@error": {
+    "description": "translated key: error"
+  },
+  "extracted": "Extracted",
+  "@extracted": {
+    "description": "translated key: extracted"
+  },
+  "tags": "Tags",
+  "@tags": {
+    "description": "translated key: tags"
+  },
+  "flags": "Flags",
+  "@flags": {
+    "description": "translated key: flags"
+  },
+  "finalRule": "Final",
+  "@finalRule": {
+    "description": "translated key: finalRule"
+  },
+  "dropped": "Dropped",
+  "@dropped": {
+    "description": "translated key: dropped"
+  },
+  "syncDisabled": "Prevent Sync",
+  "@syncDisabled": {
+    "description": "translated key: syncDisabled"
+  },
+  "rules": "Rules",
+  "@rules": {
+    "description": "translated key: rules"
+  },
+  "scriptModules": "Script Modules",
+  "@scriptModules": {
+    "description": "translated key: scriptModules"
+  },
+  "modules": "Modules",
+  "@modules": {
+    "description": "translated key: modules"
+  },
+  "unknown": "Unknown",
+  "@unknown": {
+    "description": "translated key: unknown"
+  },
+  "triggerOnCopy": "Trigger: Copy",
+  "@triggerOnCopy": {
+    "description": "translated key: triggerOnCopy"
+  },
+  "triggerOnNotification": "Trigger: Notification",
+  "@triggerOnNotification": {
+    "description": "translated key: triggerOnNotification"
+  },
+  "triggerOnSms": "Trigger: SMS",
+  "@triggerOnSms": {
+    "description": "translated key: triggerOnSms"
+  },
+  "modulesTip": "You can import pure Lua libraries, or encapsulate some frequently used methods for scripts to call. The return value must be a table.\nThe sandbox environment is the same as in the script.",
+  "@modulesTip": {
+    "description": "translated key: modulesTip"
+  },
+  "recordMaxLength": "Max content length",
+  "@recordMaxLength": {
+    "description": "translated key: recordMaxLength"
+  },
+  "recordMaxLengthTips": "Can save 2 MB+ content, but search may fail.",
+  "@recordMaxLengthTips": {
+    "description": "translated key: recordMaxLengthTips"
+  },
+  "length": "Length",
+  "@length": {
+    "description": "translated key: length"
+  },
+  "mustGreaterThanZero": "Must >= 0",
+  "@mustGreaterThanZero": {
+    "description": "translated key: mustGreaterThanZero"
+  },
+  "settingsSectionLanguageSubtitle": "Display language",
+  "@settingsSectionLanguageSubtitle": {
+    "description": "translated key: settingsSectionLanguageSubtitle"
+  },
+  "settingsSectionPreferenceSubtitle": "UI & interaction",
+  "@settingsSectionPreferenceSubtitle": {
+    "description": "translated key: settingsSectionPreferenceSubtitle"
+  },
+  "settingsSectionNotificationSubtitle": "Alerts & reminders",
+  "@settingsSectionNotificationSubtitle": {
+    "description": "translated key: settingsSectionNotificationSubtitle"
+  },
+  "settingsSectionClipboardSubtitle": "Capture & history",
+  "@settingsSectionClipboardSubtitle": {
+    "description": "translated key: settingsSectionClipboardSubtitle"
+  },
+  "settingsSectionPermissionSubtitle": "App permissions",
+  "@settingsSectionPermissionSubtitle": {
+    "description": "translated key: settingsSectionPermissionSubtitle"
+  },
+  "settingsSectionFloatWindowSubtitle": "Floating window and keep-alive",
+  "@settingsSectionFloatWindowSubtitle": {
+    "description": "translated key: settingsSectionFloatWindowSubtitle"
+  },
+  "settingsSectionDiscoverySubtitle": "Devices & connections",
+  "@settingsSectionDiscoverySubtitle": {
+    "description": "translated key: settingsSectionDiscoverySubtitle"
+  },
+  "settingsSectionForwardSubtitle": "Relay & storage",
+  "@settingsSectionForwardSubtitle": {
+    "description": "translated key: settingsSectionForwardSubtitle"
+  },
+  "settingsSectionSecuritySubtitle": "Auth & encryption",
+  "@settingsSectionSecuritySubtitle": {
+    "description": "translated key: settingsSectionSecuritySubtitle"
+  },
+  "settingsSectionHotKeySubtitle": "Popup & window shortcuts",
+  "@settingsSectionHotKeySubtitle": {
+    "description": "translated key: settingsSectionHotKeySubtitle"
+  },
+  "settingsSectionSyncSubtitle": "History saving",
+  "@settingsSectionSyncSubtitle": {
+    "description": "translated key: settingsSectionSyncSubtitle"
+  },
+  "settingsSectionCleanDataSubtitle": "Clean history and records",
+  "@settingsSectionCleanDataSubtitle": {
+    "description": "translated key: settingsSectionCleanDataSubtitle"
+  },
+  "settingsSectionRulesSubtitle": "Rules & scripts",
+  "@settingsSectionRulesSubtitle": {
+    "description": "translated key: settingsSectionRulesSubtitle"
+  },
+  "settingsSectionBackupSubtitle": "Import & export",
+  "@settingsSectionBackupSubtitle": {
+    "description": "translated key: settingsSectionBackupSubtitle"
+  },
+  "settingsSectionAboutLogSubtitle": "App info",
+  "@settingsSectionAboutLogSubtitle": {
+    "description": "translated key: settingsSectionAboutLogSubtitle"
+  },
+  "settingsSectionStatisticsSubtitle": "Usage insights",
+  "@settingsSectionStatisticsSubtitle": {
+    "description": "translated key: settingsSectionStatisticsSubtitle"
+  },
+  "settingsOverviewPermissionNormal": "All granted",
+  "@settingsOverviewPermissionNormal": {
+    "description": "translated key: settingsOverviewPermissionNormal"
+  },
+  "settingsOverviewPermissionIssueCount": "{count} pending",
+  "@settingsOverviewPermissionIssueCount": {
+    "description": "translated key: settingsOverviewPermissionIssueCount",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsOverviewForwardClosed": "Off",
+  "@settingsOverviewForwardClosed": {
+    "description": "translated key: settingsOverviewForwardClosed"
+  },
+  "storageWsVersionIncompatibleTitle": "Incompatible version",
+  "@storageWsVersionIncompatibleTitle": {
+    "description": "translated key: storageWsVersionIncompatibleTitle"
+  },
+  "storageWsVersionIncompatibleDialogContent": "Current notification service version: {version}. Minimum required: {minVersion}. Please upgrade it before using storage sync.",
+  "@storageWsVersionIncompatibleDialogContent": {
+    "description": "translated key: storageWsVersionIncompatibleDialogContent",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "minVersion": {
+        "type": "String"
+      }
+    }
+  },
+  "noTargetWindow": "Paste failed: no target window was found that can receive the paste action.",
+  "@noTargetWindow": {
+    "description": "translated key: noTargetWindow"
+  },
+  "openTargetProcessFailed": "Paste failed: the target process could not be opened for inspection.",
+  "@openTargetProcessFailed": {
+    "description": "translated key: openTargetProcessFailed"
+  },
+  "inspectTargetFailed": "Paste failed: the target process integrity level could not be read. Elevated privileges may be required.",
+  "@inspectTargetFailed": {
+    "description": "translated key: inspectTargetFailed"
+  },
+  "inspectSelfFailed": "Paste failed: the current process integrity level could not be read.",
+  "@inspectSelfFailed": {
+    "description": "translated key: inspectSelfFailed"
+  },
+  "targetIntegrityHigher": "Paste failed: elevated privileges may be required.",
+  "@targetIntegrityHigher": {
+    "description": "translated key: targetIntegrityHigher"
+  }
+}
