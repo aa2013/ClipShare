@@ -1,0 +1,16 @@
+name: clipshare_dependency_lint
+description: 校验 clipshare 分层依赖方向的 analyzer 插件（仅允许 shared -> core -> features）。
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.9.0 <4.0.0'
+
+dependencies:
+  # 版本须与项目 Flutter 内置分析服务器保持一致（Dart 3.11 / analyzer 9.0.0）。
+  analysis_server_plugin: 0.3.4
+  analyzer: ^9.0.0
+
+dev_dependencies:
+  path: ^1.9.0
+  test: ^1.25.0
