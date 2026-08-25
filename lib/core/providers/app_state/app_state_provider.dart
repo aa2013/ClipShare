@@ -7,7 +7,9 @@ part 'app_state_provider.g.dart';
 @Riverpod(keepAlive: true)
 class AppStateNotifier extends _$AppStateNotifier {
   @override
-  AppState build() => const AppState();
+  AppState build(){
+    return const AppState();
+  }
 
   /// 批量覆盖整个运行时配置
   void update(AppState value) {

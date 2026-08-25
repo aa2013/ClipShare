@@ -23,8 +23,6 @@ class AppState {
   ///设备发现状态描述文本
   final String? deviceDiscoveryStatus;
 
-  ///加密密钥
-  final String? dhAesKey;
 
   ///当前是否忽略无障碍权限缺失提示
   final bool ignoreAccessibility;
@@ -40,7 +38,6 @@ class AppState {
     this.isEnableMultiSelectionMode = false,
     this.authenticating = false,
     this.deviceDiscoveryStatus,
-    this.dhAesKey,
     this.ignoreAccessibility = false,
     this.ignoreShizuku = false,
   });
@@ -65,7 +62,6 @@ class AppState {
       isEnableMultiSelectionMode: isEnableMultiSelectionMode ?? this.isEnableMultiSelectionMode,
       authenticating: authenticating ?? this.authenticating,
       deviceDiscoveryStatus: deviceDiscoveryStatus ?? this.deviceDiscoveryStatus,
-      dhAesKey: dhAesKey ?? this.dhAesKey,
       ignoreAccessibility: ignoreAccessibility ?? this.ignoreAccessibility,
     );
   }

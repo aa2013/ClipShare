@@ -46,4 +46,4 @@ final class QuickSettingsProvider
   }
 }
 
-String _$quickSettingsHash() => r'd854f08ac760ce2c0dad23562d661cb1a915acb5';
+String _$quickSettingsHash() => r'089e4062cde8cce71749dd0594199b454b52443c';

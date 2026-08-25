@@ -1,5 +1,6 @@
 import 'package:clipshare/shared/utils/log.dart';
 
+/// 设备 id 生成方式
 enum DeviceIdGenerateWay {
   androidId,
   persistentDeviceId, //https://pub.dev/packages/persistent_device_id

@@ -46,4 +46,4 @@ final class LocalDeviceInfoProvider
   }
 }
 
-String _$localDeviceInfoHash() => r'336d74d5976ec3f38b3c1120f3b4e60916090995';
+String _$localDeviceInfoHash() => r'3962dfa0c743b350adfa0b69a0227e15e3dbee5e';

@@ -8,6 +8,7 @@ import 'package:clipshare/core/providers/desktop/window_control/window_control_p
 import 'package:clipshare/core/providers/desktop/window_service/window_service_provider.dart';
 import 'package:clipshare/core/providers/local_device/local_device_info_provider.dart';
 import 'package:clipshare/core/providers/settings/app_paths/app_paths_provider.dart';
+import 'package:clipshare/core/providers/settings/device/device_settings_provider.dart';
 import 'package:clipshare/core/providers/settings/preference/preference_settings_provider.dart';
 import 'package:clipshare/core/providers/settings/quick/quick_settings_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -21,6 +22,7 @@ Future<void> appStartup(Ref ref) async {
   await Future.wait([
     ref.watch(appPathsProvider.future),
     ref.watch(appDbProvider.future),
+    ref.watch(deviceSettingsProvider.future),
     ref.watch(localDeviceInfoProvider.future),
     ref.watch(quickSettingsProvider.future),
     ref.watch(preferenceSettingsProvider.future),

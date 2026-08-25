@@ -30,6 +30,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     if (_hasNavigatedToHome || next is! AsyncData<void>) {
       return;
     }
+    //todo 如果是Android 需要跳转到引导页
     _hasNavigatedToHome = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {

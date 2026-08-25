@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:clipshare/shared/enums/device_id_generate_way.dart';
 import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
 
@@ -41,10 +42,18 @@ class LocalDeviceInfo {
   ///本机设备名称
   final String localName;
 
+  ///是否是首次启动（一次性确定后固定，不随配置变化）
+  final bool firstSetup;
+
+  ///Android id 生成方式（一次性确定后固定，不随配置变化）
+  final DeviceIdGenerateWay androidIdGenerateWay;
+
   const LocalDeviceInfo({
     required this.baseDeviceInfo,
     required this.appVersion,
     required this.androidOsVersion,
     required this.localName,
+    this.firstSetup = true,
+    this.androidIdGenerateWay = DeviceIdGenerateWay.unknown,
   });
 }

@@ -1,11 +1,14 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
-import 'package:clipshare/core/providers/settings/device/devicce_id_generate_way.dart';
+import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/providers/settings/device/device_settings_provider.dart';
 import 'package:clipshare/core/utils/crypto.dart';
+import 'package:clipshare/shared/enums/config_key.dart';
+import 'package:clipshare/shared/enums/device_id_generate_way.dart';
 import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/models/local_device_info.dart';
 import 'package:clipshare/shared/models/version.dart';
+import 'package:clipshare/shared/utils/log.dart';
 import 'package:device_info_plus/device_info_plus.dart' hide BaseDeviceInfo;
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -14,19 +17,23 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'local_device_info_provider.g.dart';
 
+const _tag = 'localDeviceInfoProvider';
+
 @Riverpod(keepAlive: true)
 Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
   //读取版本信息
   final pkgInfo = await PackageInfo.fromPlatform();
   final appVersion = AppVersion(pkgInfo.version, pkgInfo.buildNumber);
   var androidOsVersion = 0.0;
-  //todo load from db
   final deviceSetting = await ref.watch(deviceSettingsProvider.future);
-  var androidDevIdGenerateWay = deviceSetting.androidIdGenerateWay;
-  //todo load from db
-  var firstStartup = false;
-  //todo load from db
-  var localName = '';
+  var localName = deviceSetting.customName ?? '';
+  final db = await ref.watch(appDbProvider.future);
+  final firstSetup = await db.configDao.getConfigByKey(ConfigKey.firstStartup, true);
+  final androidIdGenerateWay = await db.configDao.getConfigByKey(
+    ConfigKey.mobileDevIdGenerateWay,
+    DeviceIdGenerateWay.unknown,
+    convert: DeviceIdGenerateWay.parse,
+  );
 
   //读取设备id信息
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -35,32 +42,39 @@ Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
   late final PlatformType type;
   if (isAndroid) {
     var androidInfo = await deviceInfo.androidInfo;
-    final useAndroidId = [DeviceIdGenerateWay.unknown, DeviceIdGenerateWay.androidId].contains(androidDevIdGenerateWay);
-    if (useAndroidId && !firstStartup) {
+    final useAndroidId = [DeviceIdGenerateWay.unknown, DeviceIdGenerateWay.androidId].contains(androidIdGenerateWay);
+    if (useAndroidId && !firstSetup) {
       //使用 Android id
       guid = CryptoUtil.toMD5(androidInfo.id);
-      //todo update db
-      // await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
+      await db.configDao.addOrUpdate(
+        ConfigKey.mobileDevIdGenerateWay,
+        DeviceIdGenerateWay.androidId.name,
+      );
     } else {
       try {
         //Android id 有可能会重复，如果是首次启动，使用 PersistentDeviceId 生成 id，理论上卸载/重启后都不会变化
-        await PersistentDeviceId.getDeviceId().then((id) async {
-          if (id != null) {
-            guid = CryptoUtil.toMD5(id);
-            //todo update db
-            // await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.persistentDeviceId);
-          } else {
-            //获取失败，仍然使用Android id兜底
-            guid = CryptoUtil.toMD5(androidInfo.id);
-            //todo update db
-            // await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
-          }
-        });
+        final id = await PersistentDeviceId.getDeviceId();
+        if (id != null) {
+          guid = CryptoUtil.toMD5(id);
+          await db.configDao.addOrUpdate(
+            ConfigKey.mobileDevIdGenerateWay,
+            DeviceIdGenerateWay.persistentDeviceId.name,
+          );
+        } else {
+          //获取失败，仍然使用Android id兜底
+          guid = CryptoUtil.toMD5(androidInfo.id);
+          await db.configDao.addOrUpdate(
+            ConfigKey.mobileDevIdGenerateWay,
+            DeviceIdGenerateWay.androidId.name,
+          );
+        }
       } catch (err, stack) {
         guid = CryptoUtil.toMD5(androidInfo.id);
-        //todo update db
-        // await setMobileDeviceIdGenerateWay(DeviceIdGenerateWay.androidId);
-        debugPrint('$err,$stack');
+        await db.configDao.addOrUpdate(
+          ConfigKey.mobileDevIdGenerateWay,
+          DeviceIdGenerateWay.androidId.name,
+        );
+        logger.error(_tag, err, stack);
       }
     }
     name = androidInfo.model;
@@ -102,6 +116,7 @@ Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
   } else {
     name = localName;
   }
+
   final baseDevInfo = BaseDeviceInfo(id: guid, name: name, type: type);
   // final device = Device(
   //   guid: guid,
@@ -117,5 +132,7 @@ Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
     appVersion: appVersion,
     androidOsVersion: androidOsVersion,
     localName: localName,
+    firstSetup: firstSetup,
+    androidIdGenerateWay: androidIdGenerateWay,
   );
 }
