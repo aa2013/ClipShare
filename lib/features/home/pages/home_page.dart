@@ -1,6 +1,7 @@
 import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/features/home/pages/home_compact_page.dart';
 import 'package:clipshare/features/home/pages/home_wide_page.dart';
+import 'package:clipshare/features/settings/pages/settings.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/widgets/layouts/my_navigation_rail.dart';
 import 'package:flutter/material.dart';
@@ -43,7 +44,7 @@ class _HomeState extends State<HomePage> {
         'pages4',
         key: rulesPageKey,
       ),
-      const Text('pages5'),
+      const SettingsPage(),
     ];
     assert(() {
       pages.add(const Text('Debug'));

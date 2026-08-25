@@ -1,4 +1,5 @@
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/widgets/base/radio_group.dart';
 import 'package:flutter/material.dart';
 
 /// 应用支持的语言配置。
@@ -19,8 +20,14 @@ enum AppLanguage {
   static const Locale zhCnLocale = Locale('zh', 'CN');
   static const Locale enUsLocale = Locale('en', 'US');
   static const Locale defaultLocale = enUsLocale;
-  static const List<AppLanguage> supportedValues = [AppLanguage.zhCN, AppLanguage.enUS];
-  static const List<AppLanguage> selectableValues = [AppLanguage.auto, ...supportedValues];
+  static const List<AppLanguage> supportedValues = [
+    AppLanguage.zhCN,
+    AppLanguage.enUS,
+  ];
+  static const List<AppLanguage> selectableValues = [
+    AppLanguage.auto,
+    ...supportedValues,
+  ];
 
   const AppLanguage(this.storageValue);
 
@@ -94,4 +101,15 @@ enum AppLanguage {
     }
     return locale;
   }
+}
+
+List<RadioData<AppLanguage>> get languageSelections {
+  return AppLanguage.selectableValues
+      .map(
+        (language) => RadioData<AppLanguage>(
+          value: language,
+          label: language.label,
+        ),
+      )
+      .toList(growable: false);
 }
