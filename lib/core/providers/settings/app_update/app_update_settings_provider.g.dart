@@ -48,4 +48,4 @@ final class AppUpdateSettingsProvider
   }
 }
 
-String _$appUpdateSettingsHash() => r'68221f754081bc5512e25c61d24a76d2c3aaff5d';
+String _$appUpdateSettingsHash() => r'7aa2421dda3019b603c95e6bcaf5284975afcfd2';

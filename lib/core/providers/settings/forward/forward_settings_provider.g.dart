@@ -46,4 +46,4 @@ final class ForwardSettingsProvider
   }
 }
 
-String _$forwardSettingsHash() => r'86aa2fa8f37296e2aff06e7a3cbb77389de32a34';
+String _$forwardSettingsHash() => r'e1b91a9e1ab67f9dc2ed565a1e31e08dd84afd0a';

@@ -46,4 +46,4 @@ final class DeviceSettingsProvider
   }
 }
 
-String _$deviceSettingsHash() => r'c0dacfcc7ba2c05277a36a3f91cef32a4625f185';
+String _$deviceSettingsHash() => r'b1364817dff98f805015b5909dab3451ccc27ba8';

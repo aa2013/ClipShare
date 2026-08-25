@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/providers/desktop/tray/tray_service_provider.dart';
 import 'package:clipshare/core/providers/desktop/window_control/window_control_provider.dart';
+import 'package:clipshare/core/providers/desktop/window_service/window_service_provider.dart';
 import 'package:clipshare/core/providers/local_device/local_device_info_provider.dart';
 import 'package:clipshare/core/providers/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/providers/settings/preference/preference_settings_provider.dart';
@@ -21,7 +23,14 @@ Future<void> appStartup(Ref ref) async {
     ref.watch(quickSettingsProvider.future),
     ref.watch(preferenceSettingsProvider.future),
   ]);
-  await _initWindowsManager(ref);
+  if (isDesktop) {
+    // 窗口服务管理，需先于托盘初始化
+    ref.watch(windowServiceProvider);
+    // 托盘服务
+    ref.watch(trayServiceProvider);
+    // 窗口管理
+    await _initWindowsManager(ref);
+  }
 }
 
 Future<void> _initWindowsManager(Ref ref) async {

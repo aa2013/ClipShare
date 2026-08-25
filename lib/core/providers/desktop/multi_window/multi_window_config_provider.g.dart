@@ -46,7 +46,7 @@ final class MultiWindowConfigNotifierProvider
 }
 
 String _$multiWindowConfigNotifierHash() =>
-    r'3c3d8eb787e02550201fdc6f9cab171419cfeb7f';
+    r'b656c5893321af60b8cf8fd18e521e257993d880';
 
 /// 子窗口配置：启动参数初始化，并监听主窗口 [MultiWindowMethod.updateConfig] 推送。
 

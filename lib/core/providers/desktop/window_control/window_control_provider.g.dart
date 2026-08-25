@@ -45,7 +45,7 @@ final class WindowControlNotifierProvider
 }
 
 String _$windowControlNotifierHash() =>
-    r'6f1795d94255b7153e66568c26372b3ca31cdc50';
+    r'6ed17e2a8ddd939e0c73a3a02178d5be90bf7557';
 
 /// 桌面端窗体控制（最大化/最小化/关闭等）运行时能力。
 
