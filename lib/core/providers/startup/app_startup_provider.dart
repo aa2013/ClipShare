@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/providers/desktop/tray/tray_service_provider.dart';
 import 'package:clipshare/core/providers/desktop/window_control/window_control_provider.dart';
 import 'package:clipshare/core/providers/desktop/window_service/window_service_provider.dart';
@@ -19,6 +20,7 @@ part 'app_startup_provider.g.dart';
 Future<void> appStartup(Ref ref) async {
   await Future.wait([
     ref.watch(appPathsProvider.future),
+    ref.watch(appDbProvider.future),
     ref.watch(localDeviceInfoProvider.future),
     ref.watch(quickSettingsProvider.future),
     ref.watch(preferenceSettingsProvider.future),
@@ -37,7 +39,7 @@ Future<void> _initWindowsManager(Ref ref) async {
   if (!isDesktop) {
     return;
   }
-  var preferenceSettings = ref.watch(preferenceSettingsProvider).requireValue;
+  var preferenceSettings = await ref.read(preferenceSettingsProvider.future);
   final windowOptions = WindowOptions(
     size: preferenceSettings.windowSize,
     minimumSize: kReleaseMode ? const Size(showHistoryRightWidth * 1.0, 200) : null,
@@ -45,7 +47,7 @@ Future<void> _initWindowsManager(Ref ref) async {
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.hidden,
   );
-  var quickSettings = ref.watch(quickSettingsProvider).requireValue;
+  var quickSettings = await ref.read(quickSettingsProvider.future);
   await ref.read(windowControlProvider.notifier).syncWindowState();
   return windowManager.waitUntilReadyToShow(windowOptions, () async {
     if (!quickSettings.startMini) {

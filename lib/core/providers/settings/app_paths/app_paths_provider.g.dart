@@ -41,4 +41,4 @@ final class AppPathsProvider
   }
 }
 
-String _$appPathsHash() => r'63d079e1c7fc5e38cd5e0d60364daca28bb34a71';
+String _$appPathsHash() => r'ba072865b3d3b61520db320f5b6e99e914cfea1b';

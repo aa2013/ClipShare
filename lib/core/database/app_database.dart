@@ -55,11 +55,6 @@ class AppDriftValueSerializer extends ValueSerializer {
   }
 }
 
-/// 配置 Drift 全局 JSON 序列化器，必须在数据库和实体 JSON 操作前调用。
-void configureAppDriftValueSerializer() {
-  driftRuntimeOptions.defaultSerializer = const AppDriftValueSerializer();
-}
-
 @DriftDatabase(
   include: {'app_views.drift'},
   tables: [
@@ -91,7 +86,7 @@ void configureAppDriftValueSerializer() {
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor) {
-    configureAppDriftValueSerializer();
+    driftRuntimeOptions.defaultSerializer = const AppDriftValueSerializer();
   }
 
   /// 数据库 schema 当前版本为 v11，用于验证 History 新增字段的升级流程。
@@ -99,12 +94,10 @@ class AppDatabase extends _$AppDatabase {
   int get schemaVersion => dbSchemaVersion;
 
   /// 打开指定物理数据库文件，保持用户自定义 databasePath 的行为。
-  static QueryExecutor openFile(String dbPath) {
-    return LazyDatabase(() async {
-      final file = File(dbPath);
-      await file.parent.create(recursive: true);
-      return NativeDatabase(file);
-    });
+  static Future<QueryExecutor> openFile(String dbPath) async {
+    final file = File(dbPath);
+    await file.parent.create(recursive: true);
+    return NativeDatabase(file);
   }
 
   @override
