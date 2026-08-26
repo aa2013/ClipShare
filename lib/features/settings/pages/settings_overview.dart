@@ -1,4 +1,5 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/core/providers/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/core/utils/consumer_wrapper.dart';
@@ -11,6 +12,7 @@ import 'package:clipshare/features/settings/widgets/section/settings_section_til
 import 'package:clipshare/features/settings/widgets/settings_overview_group.dart';
 import 'package:clipshare/features/settings/widgets/theme_mode_selector.dart';
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/enums/config_key.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -319,8 +321,10 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
           tone: Colors.blueGrey,
           trailing: Switch(
             value: quickSettings.startMini,
-            onChanged: (v) {
-              //todo appConfig.setStartMini
+            onChanged: (v) async {
+              final db = ref.read(appDbProvider).requireValue;
+              await db.configDao.addOrUpdate(ConfigKey.startMini, v.toString());
+              ref.invalidate(quickSettingsProvider);
             },
           ),
           onTap: () => {},
@@ -470,8 +474,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
     } else {
       await launchAtStartup.disable();
     }
-    //todo
-    // appConfig.setLaunchAtStartup(checked, true);
+    ref.invalidate(quickSettingsProvider);
   }
 
   Widget _buildAndroidEnvironmentCards() {

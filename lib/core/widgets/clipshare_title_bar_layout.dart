@@ -1,8 +1,8 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
-import 'package:clipshare/core/providers/desktop/multi_window/multi_window_args_provider.dart';
-import 'package:clipshare/core/providers/desktop/multi_window/multi_window_config_provider.dart';
-import 'package:clipshare/core/providers/desktop/window_control/window_control_provider.dart';
+import 'package:clipshare/core/platform/desktop/multi_window/multi_window_args_provider.dart';
+import 'package:clipshare/core/platform/desktop/multi_window/multi_window_config_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_control_provider.dart';
 import 'package:clipshare/shared/enums/multi_window/multi_window_tag.dart';
 import 'package:clipshare/shared/widgets/layouts/platform_title_button.dart';
 import 'package:flutter/material.dart';

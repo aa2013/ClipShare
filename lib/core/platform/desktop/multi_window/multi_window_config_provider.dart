@@ -1,7 +1,7 @@
 
-import 'package:clipshare/core/providers/desktop/multi_window/multi_window_args_provider.dart';
-import 'package:clipshare/core/providers/desktop/multi_window/multi_window_config_state.dart';
-import 'package:clipshare/core/providers/desktop/multi_window/multi_window_dispatch.dart';
+import 'package:clipshare/core/platform/desktop/multi_window/multi_window_args_provider.dart';
+import 'package:clipshare/core/platform/desktop/multi_window/multi_window_config_state.dart';
+import 'package:clipshare/core/platform/desktop/multi_window/multi_window_dispatch.dart';
 import 'package:clipshare/shared/enums/multi_window/multi_window_config.dart';
 import 'package:clipshare/shared/enums/multi_window/multi_window_method.dart';
 import 'package:clipshare/shared/models/desktop_multi_window_args.dart';

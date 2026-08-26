@@ -3,9 +3,9 @@ import 'dart:ui';
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
-import 'package:clipshare/core/providers/desktop/tray/tray_service_provider.dart';
-import 'package:clipshare/core/providers/desktop/window_control/window_control_provider.dart';
-import 'package:clipshare/core/providers/desktop/window_service/window_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/tray/tray_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_control_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
 import 'package:clipshare/core/providers/local_device/local_device_info_provider.dart';
 import 'package:clipshare/core/providers/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/providers/settings/device/device_settings_provider.dart';
@@ -20,18 +20,18 @@ part 'app_startup_provider.g.dart';
 @riverpod
 Future<void> appStartup(Ref ref) async {
   await Future.wait([
-    ref.watch(appPathsProvider.future),
-    ref.watch(appDbProvider.future),
-    ref.watch(deviceSettingsProvider.future),
-    ref.watch(localDeviceInfoProvider.future),
-    ref.watch(quickSettingsProvider.future),
-    ref.watch(preferenceSettingsProvider.future),
+    ref.read(appPathsProvider.future),
+    ref.read(appDbProvider.future),
+    ref.read(deviceSettingsProvider.future),
+    ref.read(localDeviceInfoProvider.future),
+    ref.read(quickSettingsProvider.future),
+    ref.read(preferenceSettingsProvider.future),
   ]);
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化
-    ref.watch(windowServiceProvider);
+    ref.read(windowServiceProvider);
     // 托盘服务
-    ref.watch(trayServiceProvider);
+    ref.read(trayServiceProvider);
     // 窗口管理
     await _initWindowsManager(ref);
   }

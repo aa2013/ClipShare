@@ -1,6 +1,6 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
-import 'package:clipshare/core/providers/desktop/window_control/window_control_clicked_listener.dart';
-import 'package:clipshare/core/providers/desktop/window_control/window_control_state.dart';
+import 'package:clipshare/core/platform/desktop/window/window_control_clicked_listener.dart';
+import 'package:clipshare/core/platform/desktop/window/window_control_state.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:window_manager/window_manager.dart';

@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:clipshare/core/constants/platform_constants.dart';
-import 'package:clipshare/core/providers/desktop/tray/tray_service.dart';
-import 'package:clipshare/core/providers/desktop/window_service/window_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/tray/tray_service.dart';
+import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
 import 'package:clipshare/core/providers/settings/hotkey/hotkey_settings_provider.dart';
 import 'package:clipshare/l10n/l10n_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
