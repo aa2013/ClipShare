@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.5.3+30
+version: 1.5.3-082702+30
 
 environment:
   # At least Flutter 3.32.1
@@ -205,7 +205,13 @@ dependencies:
   # Color picker
   flutter_colorpicker: ^1.1.0
   # 原生拖拽
-  super_drag_and_drop: ^0.9.1
+  super_drag_and_drop:
+    git:
+      url: https://github.com/aa2013/super_native_extensions
+      ref: super_drag_and_drop_0_9_1
+      path: super_drag_and_drop
+  # 文件拖拽
+  desktop_drop: ^0.5.0
 
 dev_dependencies:
   flutter_test:

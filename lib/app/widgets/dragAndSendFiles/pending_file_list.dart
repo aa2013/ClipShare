@@ -1,7 +1,7 @@
-import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/widgets/drag_pending_file_list_item.dart';
 import 'package:clipshare/app/widgets/empty_content.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 
 class PendingFileList extends StatelessWidget {

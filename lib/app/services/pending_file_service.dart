@@ -4,24 +4,27 @@ import 'package:clipshare/app/data/models/my_drop_item.dart';
 import 'package:clipshare/app/data/models/pending_file.dart';
 import 'package:clipshare/app/data/repository/entity/tables/device.dart';
 import 'package:clipshare/app/handlers/sync/file_sync_handler.dart';
+import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:get/get.dart';
 
 class PendingFileService extends GetxService {
-  final _pendingItems = <DropItem>{};
+  final _pendingItems = <MyDropItem>{};
 
   final pendingItems = <DropItem>[].obs;
   final pendingDevs = <Device>{}.obs;
 
   ///添加待发送文件
   void addDropItems(List<DropItem> items) {
-    _pendingItems.addAll(items);
+    var it = items.map((item) => MyDropItem(item));
+    _pendingItems.addAll(it);
     _updatePendingItems();
   }
 
   ///移除待发送文件
   void removeDropItem(DropItem item) {
-    _pendingItems.remove(item);
+    _pendingItems.remove(MyDropItem(item));
     if (_pendingItems.isEmpty) {
       pendingDevs.clear();
     }
@@ -29,8 +32,8 @@ class PendingFileService extends GetxService {
   }
 
   void _updatePendingItems() {
-    final list = _pendingItems.toList(growable: false);
-    list.sort((a, b) {
+    pendingItems.value = _pendingItems.map((item) => item.value).toList(growable: false)
+      ..sort((a, b) {
         var typeA = FileSystemEntity.typeSync(a.path);
         var typeB = FileSystemEntity.typeSync(b.path);
         var dir = FileSystemEntityType.directory;
@@ -43,7 +46,6 @@ class PendingFileService extends GetxService {
           return 0; // 类型相同，保持原顺序
         }
       });
-    pendingItems.value = list;
   }
 
   ///发送文件
@@ -79,7 +81,7 @@ class PendingFileService extends GetxService {
             isDirectory: false,
             filePath: item.path,
             fileName: item.name,
-            size: item.fileSize,
+            size: item.size,
             directories: [],
           ),
         );
