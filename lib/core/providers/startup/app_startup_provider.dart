@@ -49,10 +49,10 @@ Future<void> _initWindowsManager(Ref ref) async {
     skipTaskbar: false,
     titleBarStyle: TitleBarStyle.hidden,
   );
-  var quickSettings = await ref.read(quickSettingsProvider.future);
+  final startMini = await ref.read(startMiniProvider.future);
   await ref.read(windowControlProvider.notifier).syncWindowState();
   return windowManager.waitUntilReadyToShow(windowOptions, () async {
-    if (!quickSettings.startMini) {
+    if (!startMini) {
       //非最小化启动
       await windowManager.show();
       await windowManager.focus();

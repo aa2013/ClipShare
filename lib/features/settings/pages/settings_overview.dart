@@ -324,7 +324,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
             onChanged: (v) async {
               final db = ref.read(appDbProvider).requireValue;
               await db.configDao.addOrUpdate(ConfigKey.startMini, v.toString());
-              ref.invalidate(quickSettingsProvider);
+              ref.invalidate(startMiniProvider);
             },
           ),
           onTap: () => {},
@@ -448,17 +448,33 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   }
 
   Future<void> _setTheme(BuildContext context, ThemeMode mode) async {
+    final appTheme = await ref.read(appThemeProvider.future);
+    if (mode == appTheme) {
+      return;
+    }
+    final db = await ref.read(appDbProvider.future);
+    await db.configDao.addOrUpdate(ConfigKey.appTheme, mode.name);
+    if(!context.mounted){
+      return;
+    }
+    var isDark = mode == ThemeMode.dark;
+    if(mode == ThemeMode.system){
+      isDark = context.isPlatformDarkMode;
+    }
+    context.updateTheme(isDark, onAnimationFinish: () {
+      //todo
+      // final currentBg = settingsController.envStatusBgColor.value;
+      // if (currentBg != null) {
+      //   settingsController.envStatusBgColor.value = settingsController.warningBgColor;
+      // }
+    });
     //todo
-    // if (mode == appConfig.appTheme) {
-    //   return;
-    // }
-    // await appConfig.setAppTheme(mode, context, () {
-    //   final currentBg = settingsController.envStatusBgColor.value;
-    //   if (currentBg != null) {
-    //     settingsController.envStatusBgColor.value = settingsController.warningBgColor;
-    //   }
-    // });
     // Get.find<AndroidChannelService>().setHistoryFloatThemeMode(mode);
+    // final currentBg = settingsController.envStatusBgColor.value;
+    // if (currentBg != null) {
+    //   settingsController.envStatusBgColor.value = settingsController.warningBgColor;
+    // }
+    ref.invalidate(appThemeProvider);
   }
 
   Future<void> _toggleLaunchAtStartup(bool checked) async {
@@ -474,7 +490,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
     } else {
       await launchAtStartup.disable();
     }
-    ref.invalidate(quickSettingsProvider);
+    ref.invalidate(appLaunchAtStartupProvider);
   }
 
   Widget _buildAndroidEnvironmentCards() {
