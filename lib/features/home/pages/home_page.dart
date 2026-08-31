@@ -1,35 +1,22 @@
 import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/features/home/pages/home_compact_page.dart';
 import 'package:clipshare/features/home/pages/home_wide_page.dart';
+import 'package:clipshare/features/home/providers/navigation_provider.dart';
 import 'package:clipshare/features/settings/pages/settings.dart';
-import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/widgets/layouts/my_navigation_rail.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  State<StatefulWidget> createState() => _HomeState();
+  ConsumerState<HomePage> createState() => _HomeState();
 }
 
-class _NavItem {
-  final Key? key;
-  final IconData icon;
-  final String label;
-
-  _NavItem({
-    this.key,
-    required this.icon,
-    required this.label,
-  });
-}
-
-class _HomeState extends State<HomePage> {
+class _HomeState extends ConsumerState<HomePage> {
   var index = 0;
-  static const rulesNavItemKey = Key('rules-nav');
   static const rulesPageKey = Key('rules-page');
-  static const notShowCompactNavItemKeys = [rulesNavItemKey];
   static const notShowCompactPageKeys = [rulesPageKey];
   static const navIconSize = 20.0;
   late final List<Widget> pages;
@@ -53,46 +40,8 @@ class _HomeState extends State<HomePage> {
     super.initState();
   }
 
-  ///初始化导航栏
-  List<_NavItem> initNavBarItems() {
-    final items = [
-      _NavItem(
-        icon: Icons.history,
-        label: TranslationKey.historyRecord.tr,
-      ),
-      _NavItem(
-        icon: Icons.devices_rounded,
-        label: TranslationKey.myDevice.tr,
-      ),
-      _NavItem(
-        icon: Icons.sync_alt_outlined,
-        label: TranslationKey.fileTransfer.tr,
-      ),
-      _NavItem(
-        key: rulesNavItemKey,
-        icon: Icons.code_outlined,
-        label: TranslationKey.rulesManagement.tr,
-      ),
-      _NavItem(
-        icon: Icons.settings,
-        label: TranslationKey.appSettings.tr,
-      ),
-    ];
-    assert(() {
-      items.add(
-        _NavItem(
-          icon: Icons.bug_report_outlined,
-          label: 'Debug',
-        ),
-      );
-      return true;
-    }());
-    return items;
-  }
-
-  ///构建宽屏导航菜单
-  List<MyNavigationItem> buildWideNavItems() {
-    final items = initNavBarItems();
+  ///根据统一导航数据构建宽屏导航菜单。
+  List<MyNavigationItem> buildWideNavItems(List<HomeNavigationItemData> items) {
     return items
         .map(
           (item) => MyNavigationItem(
@@ -107,11 +56,10 @@ class _HomeState extends State<HomePage> {
         .toList();
   }
 
-  ///构建窄屏导航菜单
-  List<BottomNavigationBarItem> buildCompactNavItems() {
-    final items = initNavBarItems();
+  ///根据统一导航数据构建窄屏导航菜单。
+  List<BottomNavigationBarItem> buildCompactNavItems(List<HomeNavigationItemData> items) {
     return items
-        .where((item) => !notShowCompactNavItemKeys.contains(item.key))
+        .where((item) => item.showInCompact)
         .map(
           (item) => BottomNavigationBarItem(
             icon: Icon(
@@ -127,17 +75,18 @@ class _HomeState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final navItems = ref.watch(homeNavigationItemsProvider);
     List<Widget> showPages;
     if (context.isCompactScreen) {
       showPages = pages.where((page) => !notShowCompactPageKeys.contains(page.key)).toList();
       return HomeCompactPage(
         pages: showPages,
-        navItems: buildCompactNavItems(),
+        navItems: buildCompactNavItems(navItems),
       );
     }
     showPages = pages;
     return HomeWidePage(
-      navItems: buildWideNavItems(),
+      navItems: buildWideNavItems(navItems),
       pages: showPages,
     );
   }

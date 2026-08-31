@@ -34,8 +34,7 @@ class SettingsOverviewPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<SettingsOverviewPage> createState() =>
-      _SettingsOverviewPageState();
+  ConsumerState<SettingsOverviewPage> createState() => _SettingsOverviewPageState();
 }
 
 class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
@@ -211,7 +210,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   List<SettingsSearchItem> _buildSettingsSearchItems(BuildContext context) {
     final generatedItems = SettingsSection.values.expand((section) {
       final view = buildSettingsSectionView(section, embedded: true);
-      return view?.buildSearchItems(context) ?? <SettingsSearchItem>[];
+      return view?.buildSearchItems(context, ref) ?? <SettingsSearchItem>[];
     }).toList();
     return [
       ...generatedItems,
