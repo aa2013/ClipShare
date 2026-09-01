@@ -125,7 +125,6 @@ class SettingsNotificationPage extends SettingsSectionView {
             appConfig.setNotifyOnReceivedFile(checked);
           },
         ),
-        show: (v) => PlatformExt.isDesktop,
       ),
     ];
   }

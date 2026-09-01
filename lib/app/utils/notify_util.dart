@@ -6,6 +6,7 @@ import 'package:clipshare/app/data/models/notification_payload.dart';
 import 'package:clipshare/app/data/enums/translation_key.dart';
 import 'package:clipshare/app/services/channels/android_channel.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
+import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/global.dart';
 import 'package:clipshare/app/utils/log.dart';
 import 'package:clipshare/app/utils/permission_helper.dart';
@@ -23,6 +24,8 @@ class NotifyUtil {
   static var _notifyId = 1;
   static final _notification = FlutterLocalNotificationsPlugin();
   static final Map<String, List<int>> _notifyIds = {};
+  /// Android 原生通知点击时通过 notifyId 回传，这里保存 id 与业务载荷的关联以统一分发。
+  static final Map<int, NotificationPayload> _payloadById = {};
   static const _windowsFlutterAssetsDir = 'flutter_assets';
   static const _windowsFlutterDataDir = 'data';
 
@@ -53,25 +56,48 @@ class NotifyUtil {
     await _notification.initialize(
       settings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        final payload = response.payload;
-        if (payload != null && payload.isNotEmpty) {
-          if (await _handleNotificationPayload(payload)) {
-            return;
+        final raw = response.payload;
+        NotificationPayload? payload;
+        if (raw != null && raw.isNotEmpty) {
+          try {
+            payload = NotificationPayload.fromJsonString(raw);
+          } catch (err, stack) {
+            logger.error(tag, 'parse notification payload failed: $err', stack);
           }
         }
-        await windowManager.show();
+        await _onNotificationTap(payload);
       },
     );
     _notificationReady = true;
   }
 
-  /// 统一处理通知点击后的业务分发，无法识别时回退到默认展示主窗口。
-  static Future<bool> _handleNotificationPayload(String payload) async {
+  /// 通知点击后的统一业务分发入口。
+  /// [payload] 为空表示普通通知（无可执行业务），仅做回退处理。
+  /// Android 原生回调与 flutter_local_notifications 回调都汇入这里，便于后续迁移。
+  static Future<void> _onNotificationTap(NotificationPayload? payload) async {
+    if (payload != null) {
+      if (await _handleNotificationPayload(payload)) {
+        return;
+      }
+    }
+    // 只有桌面端才需要拉起主窗口；移动端点击通知默认由系统带回前台。
+    if (PlatformExt.isDesktop) {
+      await windowManager.show();
+    }
+  }
+
+  /// 处理 Android 原生通知点击回调，按 notifyId 查找到业务载荷后统一分发。
+  static Future<void> handleNotifyClick(int notifyId) async {
+    final payload = _payloadById.remove(notifyId);
+    await _onNotificationTap(payload);
+  }
+
+  /// 统一处理通知点击后的业务分发，无法识别或处理失败时返回 false 交给上层回退处理。
+  static Future<bool> _handleNotificationPayload(NotificationPayload payload) async {
     try {
-      final notificationPayload = NotificationPayload.fromJsonString(payload);
-      switch (notificationPayload.type) {
+      switch (payload.type) {
         case NotificationPayloadType.openFile:
-          return _openFileFromPayload(notificationPayload);
+          return await _openFileFromPayload(payload);
       }
     } catch (err, stack) {
       logger.error(tag, 'handle notification payload failed: $err', stack);
@@ -132,6 +158,10 @@ class NotifyUtil {
     if (Platform.isAndroid) {
       final androidChannelService = Get.find<AndroidChannelService>();
       notifyId = await androidChannelService.sendNotify(title, content);
+      // Android 通知点击由原生通过 notifyId 回传，这里先保存载荷与 id 的关联以便统一分发。
+      if (notifyId != null && payload != null) {
+        _payloadById[notifyId] = payload;
+      }
     } else {
       if (!_notificationReady) {
         await _initNotifications();
@@ -206,6 +236,7 @@ class NotifyUtil {
       _notification.cancel(notifyId);
     }
     _notifyIds[key]!.remove(notifyId);
+    _payloadById.remove(notifyId);
   }
 
   static cancelExcludeLast(String key) {
@@ -226,6 +257,7 @@ class NotifyUtil {
       } else {
         _notification.cancel(id);
       }
+      _payloadById.remove(id);
     }
   }
 
@@ -241,6 +273,7 @@ class NotifyUtil {
       } else {
         _notification.cancel(id);
       }
+      _payloadById.remove(id);
     }
     _notifyIds[key]!.clear();
   }

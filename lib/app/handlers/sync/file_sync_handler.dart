@@ -27,7 +27,6 @@ import 'package:clipshare/app/services/transport/storage_service.dart';
 import 'package:clipshare/app/utils/extensions/device_extension.dart';
 import 'package:clipshare/app/utils/extensions/file_extension.dart';
 import 'package:clipshare/app/utils/extensions/number_extension.dart';
-import 'package:clipshare/app/utils/extensions/platform_extension.dart';
 import 'package:clipshare/app/utils/extensions/time_extension.dart';
 import 'package:clipshare/app/utils/file_util.dart';
 import 'package:clipshare/app/utils/global.dart';
@@ -252,13 +251,13 @@ class FileSyncHandler {
     });
   }
 
-  /// 桌面端按配置在接收完成后发送通知，点击后直接打开接收的文件。
+  /// 按配置在接收完成后发送通知，点击通知后打开接收的文件。
   static Future<void> _notifyReceivedFileIfNeeded({
     required ConfigService appConfig,
     required File file,
     required int fileId,
   }) async {
-    if (!PlatformExt.isDesktop || !appConfig.notifyOnReceivedFile) {
+    if (!appConfig.notifyOnReceivedFile) {
       return;
     }
     await NotifyUtil.notify(

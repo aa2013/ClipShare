@@ -56,6 +56,8 @@ const val sendHistories = "SEND_HISTORIES"
 const val OnHistoryChangedBroadcastAction = "top.coclyun.clipshare.ACTION_ON_HISTORY_CHANGED"
 // Match the original translucent white default until the user picks a custom handle color.
 val defaultHistoryFloatHandleColor = 0x17FFFFFF.toInt()
+// 通知点击回传 Flutter 时，Intent 中携带通知 id 的 extra 键。
+const val notifyIdExtra = "notifyId"
 
 class MyApplication : Application() {
 
@@ -75,7 +77,6 @@ class MyApplication : Application() {
         lateinit var androidChannel: MethodChannel
         lateinit var clipChannel: MethodChannel
         lateinit var applicationContext: Context
-        lateinit var pendingIntent: PendingIntent
 
 
         var commonNotifyId = 2
@@ -90,14 +91,23 @@ class MyApplication : Application() {
         val requestOverlayResultCode = 5002
 
         /**
-         * 发送通知
+         * 发送通知，点击后把通知 id 回传 Flutter 统一分发。
          */
         fun commonNotify(title:String?, content: String): Int {
+            val id = commonNotifyId++
+            // 通知点击时携带通知 id 上送 Flutter，由 Dart 侧统一分发点击后的业务。
+            val clickIntent = Intent(applicationContext, ProxyActivity::class.java)
+                .putExtra(notifyIdExtra, id)
+            val clickPendingIntent = PendingIntent.getActivity(
+                applicationContext, id, clickIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
             // 构建通知
             val builder = NotificationCompat.Builder(applicationContext, commonNotifyChannelId)
                 .setSmallIcon(R.drawable.launcher_icon).setContentTitle( title ?: "ClipShare")
                 .setContentText(content).setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setContentIntent(pendingIntent).setFullScreenIntent(pendingIntent, true)
+                .setContentIntent(clickPendingIntent)
+                .setFullScreenIntent(clickPendingIntent, true)
                 // 点击通知后自动关闭
                 .setAutoCancel(true)
                 // 设置为公开可见通知
@@ -107,10 +117,16 @@ class MyApplication : Application() {
             }
             val notificationManager =
                 applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager;
-            val id = commonNotifyId++
             // 发送通知
             notificationManager.notify(id, builder.build())
             return id
+        }
+
+        /**
+         * 将通知点击 id 上送 Flutter 统一分发。
+         */
+        fun notifyClickToDart(notifyId: Int) {
+            androidChannel.invokeMethod("onNotifyClick", mapOf("notifyId" to notifyId))
         }
     }
 
@@ -125,7 +141,6 @@ class MyApplication : Application() {
             return
         }
         ClipshareClipboardListenerPlugin.activityClass = MainActivity::class.java
-        MyApplication.pendingIntent = createPendingIntent()
         // 创建 engine
         flutterEngine = FlutterEngine(this)
         this.binaryMessenger = flutterEngine.dartExecutor.binaryMessenger
@@ -703,14 +718,6 @@ class MyApplication : Application() {
         androidChannel.invokeMethod(
             "onSmsChanged", mapOf("content" to content)
         )
-    }
-
-    /**
-     * 创建通知点击 PendingIntent，当前按既有行为保留入口目标。
-     */
-    private fun createPendingIntent(): PendingIntent {
-        val intent = Intent(this, ProxyActivity::class.java)
-        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 
 

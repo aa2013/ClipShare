@@ -474,6 +474,13 @@ class SplashController extends GetxController {
             }
             await _handleIncomingUri(uri!);
             break;
+          case AndroidChannelMethod.onNotifyClick:
+            // 通知点击由原生通过 notifyId 回传，统一交给 NotifyUtil 分发处理。
+            final notifyId = call.arguments["notifyId"];
+            if (notifyId is num) {
+              await NotifyUtil.handleNotifyClick(notifyId.toInt());
+            }
+            break;
           case AndroidChannelMethod.onSmsChanged:
             final content = call.arguments["content"]!;
             HistoryDataListener.inst.onChanged(HistoryContentType.sms, content, null);
