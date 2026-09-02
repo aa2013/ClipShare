@@ -24,7 +24,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+
+    - name: Enable Git long paths
+      run: git config --system core.longpaths true
+
     - name: Install InnoSetup
       uses: crazy-max/ghaction-chocolatey@v2
       with:
