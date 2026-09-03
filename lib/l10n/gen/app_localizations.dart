@@ -1589,7 +1589,7 @@ abstract class AppLocalizations {
   /// translated key: tagEditPageAppBarTitle
   ///
   /// In en, this message translates to:
-  /// **'Edit Tag'**
+  /// **'Select Tag'**
   String get tagEditPageAppBarTitle;
 
   /// translated key: tagEditPageSearchOrCreateTag

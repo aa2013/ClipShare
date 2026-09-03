@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:clipshare/core/extensions/context_extension.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 
 class HomeCompactPage extends StatefulWidget {

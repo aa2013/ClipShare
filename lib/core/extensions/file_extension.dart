@@ -1,17 +1,21 @@
 import 'dart:io';
 
+import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/utils/permission/permission_handler_facade.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
+import 'package:clipshare/shared/utils/log.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path/path.dart' as path;
 import 'package:resolve_windows_shortcut/resolve_windows_shortcut.dart';
 
 extension DirectoryExt on Directory {
+  static const tag = 'DirectoryExt';
+
   String get name => path.basename(this.path);
 
   String get normalizePath {
-    if (Platform.isWindows) {
+    if (isWindows) {
       return absolute.path.replaceAll(RegExp(r'(/+|\\+)'), '\\');
     } else {
       return absolute.path.replaceAll(RegExp(r'(/+|\\+)'), '/');
@@ -19,7 +23,7 @@ extension DirectoryExt on Directory {
   }
 
   Future<bool> existsTargetFileShortcut(String realPath) async {
-    if (!Platform.isWindows) return false;
+    if (!isWindows) return false;
     realPath = realPath.normalizePath;
     for (var entity in listSync(recursive: true)) {
       if (entity is Directory) return false;
@@ -31,15 +35,14 @@ extension DirectoryExt on Directory {
           return true;
         }
       } catch (err, stack) {
-        print(err);
-        print(stack);
+        logger.error(tag, err, stack);
       }
     }
     return false;
   }
 
   Future<void> deleteTargetFileShortcut(String realPath) async {
-    if (!Platform.isWindows) return;
+    if (!isWindows) return;
     realPath = realPath.normalizePath;
     for (var entity in listSync(recursive: true)) {
       if (entity is Directory) return;
@@ -51,8 +54,7 @@ extension DirectoryExt on Directory {
           return file.deleteSync();
         }
       } catch (err, stack) {
-        print(err);
-        print(stack);
+        logger.error(tag, err, stack);
       }
     }
   }
@@ -133,10 +135,10 @@ extension FileExt on File {
   }
 
   Future<void> openPath() async {
-    if (Platform.isWindows) {
+    if (isWindows) {
       await Process.run('explorer /select,"${this.path.normalizePath}"', []);
     } else {
-      if (Platform.isAndroid && this.path.toString().toLowerCase().endsWith('apk')) {
+      if (isAndroid && this.path.toString().toLowerCase().endsWith('apk')) {
         final granted = await Permission.requestInstallPackages.isGranted;
         if (!granted) {
           final status = await Permission.requestInstallPackages.request();

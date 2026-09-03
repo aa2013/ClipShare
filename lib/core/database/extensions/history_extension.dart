@@ -132,3 +132,26 @@ extension HistoryExt on History {
     }
   }
 }
+
+/// History 排序比较器：置顶优先，其次 id 降序。
+///
+/// 比较规则：
+/// 1. 置顶（[History.top] 为 true）的记录排在前面；
+/// 2. 同为置顶或同为非置顶时，按 id 降序排列。
+const Comparator<History> historyComparator = _compareHistoryTopIdDesc;
+
+/// History 按“置顶优先、id 降序”规则比较。
+int _compareHistoryTopIdDesc(History a, History b) {
+  if (a.top != b.top) {
+    return a.top ? -1 : 1;
+  }
+  return b.id.compareTo(a.id);
+}
+
+/// History 去重键提取函数：返回记录的 id，作为 SortedList 去重的键。
+///
+/// 同一条记录（同 id）在列表中只会保留一个；可传入 SortedList 的 keyOf 参数。
+const Object? Function(History history) historyKeyOf = _historyKeyOfId;
+
+/// History 提取 id 作为去重键。
+Object? _historyKeyOfId(History history) => history.id;

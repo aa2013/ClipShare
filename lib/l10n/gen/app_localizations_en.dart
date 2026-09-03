@@ -829,7 +829,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get copyPathSuccess => 'Path copied';
 
   @override
-  String get tagEditPageAppBarTitle => 'Edit Tag';
+  String get tagEditPageAppBarTitle => 'Select Tag';
 
   @override
   String get tagEditPageSearchOrCreateTag => 'Search or Create Tag';

@@ -13,7 +13,7 @@ class PermissionHelper {
   static const tag = 'PermissionHelper';
 
   ///测试存储权限
-  static Future<bool> testAndroidStoragePerm(String rootStorePath,int osVersion,[String? dirPath]) async {
+  static Future<bool> testAndroidStoragePerm(String rootStorePath, double osVersion,[String? dirPath]) async {
     if (!Platform.isAndroid) return true;
     dirPath = dirPath ?? rootStorePath;
     bool isGranted = false;
@@ -35,7 +35,7 @@ class PermissionHelper {
   }
 
   ///请求Android存储权限
-  static Future<void> reqAndroidStoragePerm(String rootStorePath,int osVersion, [String? dirPath]) async {
+  static Future<void> reqAndroidStoragePerm(String rootStorePath, double osVersion, [String? dirPath]) async {
     if (!Platform.isAndroid) return;
     dirPath = dirPath ?? rootStorePath;
     if (!dirPath.startsWith(androidDownloadPath)) {

@@ -1,5 +1,5 @@
-import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 
 class SettingsSectionIcon extends StatelessWidget {

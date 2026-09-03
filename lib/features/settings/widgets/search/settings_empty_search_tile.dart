@@ -1,5 +1,5 @@
-import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/widgets.dart';
 
 class SettingsEmptySearchTile extends StatelessWidget {

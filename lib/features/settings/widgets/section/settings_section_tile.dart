@@ -1,10 +1,10 @@
-import 'package:clipshare/core/extensions/context_extension.dart';
-import 'package:clipshare/core/providers/settings/quick/quick_settings_provider.dart';
+import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/utils/settings_text_styles.dart';
 import 'package:clipshare/features/settings/widgets/section/settings_section_icon.dart';
 import 'package:clipshare/l10n/app_language.dart';
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

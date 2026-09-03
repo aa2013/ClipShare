@@ -1,4 +1,5 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/shared/constants/ui_constants.dart';
 import 'package:flutter/material.dart';
 
 part 'app_theme_light.dart';

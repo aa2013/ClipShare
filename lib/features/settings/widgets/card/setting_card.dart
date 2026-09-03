@@ -1,7 +1,7 @@
-import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/features/settings/utils/settings_text_styles.dart';
 import 'package:clipshare/features/settings/widgets/card/setting_search_highlight_scope.dart';
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 
 import 'setting_entry.dart';

@@ -3,42 +3,16 @@ import 'dart:ui';
 
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
+import 'package:clipshare/shared/models/dialog_actions.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/widgets/base/dialog_actions_bar.dart';
+import 'package:clipshare/shared/widgets/layouts/dialog_frame_layout.dart';
 import 'package:clipshare/shared/widgets/loading/downloading_dialog.dart';
 import 'package:clipshare/shared/widgets/loading/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:synchronized/synchronized.dart';
 
 import 'crypto.dart';
-
-/// 单个弹窗按钮配置。
-class DialogAction {
-  final String? text;
-  final VoidCallback? onPressed;
-
-  const DialogAction({
-    this.text,
-    this.onPressed,
-  });
-}
-
-/// 提示弹窗底部按钮组：confirm/cancel 位于右侧，neutral 位于左侧。
-///
-/// 槽位传了才显示，未显式传 confirm 时默认提供一个"确定"按钮。
-class DialogActions {
-  final DialogAction? confirm;
-  final DialogAction? cancel;
-  final DialogAction? neutral;
-
-  const DialogActions({
-    this.confirm = const DialogAction(),
-    this.cancel,
-    this.neutral,
-  });
-
-  /// 三个槽位都未配置时表示不展示任何按钮。
-  bool get isEmpty => confirm == null && cancel == null && neutral == null;
-}
 
 class DialogManager {
   DialogManager._();
@@ -90,48 +64,69 @@ class DialogManager {
     return dlgCtl;
   }
 
+  /// 打开通用边框布局弹窗，仅用于非小屏幕。
+  ///
+  /// 头部由 [icon]/[title]/[showCloseButton] 决定，正文由 [content] 填充；
+  /// [width]/[height] 为空时由 [DialogFrameLayout] 按屏幕尺寸自适应；
+  /// [backgroundColor] 为空时取当前主题表面色；[footer] 为底部通用内容；
+  /// [actions] 为底部按钮组（neutral 左、cancel/confirm 右），与 [footer] 可共存；
+  /// [scrollable] 控制正文是否由边框包裹滚动；[dismissible] 控制点击空白处是否自动关闭。
+  DialogController frame(
+    BuildContext context, {
+    IconData? icon,
+    required String title,
+    required Widget content,
+    double? width,
+    double? height,
+    bool showCloseButton = true,
+    Color? backgroundColor,
+    Widget? footer,
+    DialogActions? actions,
+    bool scrollable = true,
+    bool dismissible = true,
+    bool autoDismiss = true,
+    String? barrierLabel,
+  }) {
+    final dlgCtl = DialogController(context);
+    final future = showGeneralDialog(
+      barrierDismissible: dismissible,
+      barrierLabel: dismissible ? barrierLabel ?? '' : null,
+      context: context,
+      transitionBuilder: _dialogTransition,
+      pageBuilder: (context, animation, secondaryAnimation) => DialogFrameLayout(
+        key: dlgCtl.key,
+        icon: icon,
+        title: title,
+        content: content,
+        width: width,
+        height: height,
+        showCloseButton: showCloseButton,
+        backgroundColor: backgroundColor,
+        footer: footer,
+        actions: actions,
+        scrollable: scrollable,
+        autoDismiss: autoDismiss,
+        onClose: () => dlgCtl.close(),
+      ),
+    );
+    dlgCtl.future = future.then((value) => dlgCtl.close());
+    return dlgCtl;
+  }
+
   /// 构建提示弹窗底部按钮。
   List<Widget> _buildTipsActions(
     DialogController dlgCtl,
     bool autoDismiss,
     DialogActions actions,
   ) {
-    final confirm = actions.confirm;
-    final cancel = actions.cancel;
-    final neutral = actions.neutral;
     if (actions.isEmpty) {
       return const [];
     }
-
-    TextButton buildButton(DialogAction action, String fallbackText) {
-      return TextButton(
-        onPressed: () {
-          if (autoDismiss) {
-            dlgCtl.close();
-          }
-          action.onPressed?.call();
-        },
-        child: Text(action.text ?? fallbackText),
-      );
-    }
-
     return [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (neutral != null)
-            buildButton(neutral, TranslationKey.dialogNeutralText.tr),
-          IntrinsicWidth(
-            child: Row(
-              children: [
-                if (cancel != null)
-                  buildButton(cancel, TranslationKey.dialogCancelText.tr),
-                if (confirm != null)
-                  buildButton(confirm, TranslationKey.dialogConfirmText.tr),
-              ],
-            ),
-          ),
-        ],
+      DialogActionsBar(
+        actions: actions,
+        autoDismiss: autoDismiss,
+        onClose: () => dlgCtl.close(),
       ),
     ];
   }

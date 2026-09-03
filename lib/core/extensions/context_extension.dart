@@ -1,28 +1,17 @@
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/theme/app/app_theme.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-extension ContextExtension on BuildContext {
-  MediaQueryData get media => MediaQuery.of(this);
-
-  bool get isLandscape => media.orientation == Orientation.landscape;
-
-  bool get isCompactScreen => media.size.width <= smallScreenWidth;
-
-  ThemeData get currentTheme => Theme.of(this);
-
-  Brightness get platformBrightness => media.platformBrightness;
-
-  bool get isPlatformDarkMode => platformBrightness == Brightness.dark;
-
-  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
-
+/// 基于 [BuildContext] 的主题相关扩展。
+extension ThemeContextExtension on BuildContext {
+  /// 无边框输入框装饰，按当前明暗模式选择。
   InputDecoration get noneBorderInputDecoration => isDarkMode
       ? darkNoneBorderInputDecoration
       : lightNoneBorderInputDecoration;
 
+  /// 切换明暗主题并同步系统 UI 样式。
   void updateTheme(
     bool isDark, {
     VoidCallback? onAnimationFinish,

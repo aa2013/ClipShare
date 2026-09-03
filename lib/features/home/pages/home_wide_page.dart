@@ -1,5 +1,9 @@
+import 'package:clipshare/core/utils/consumer_wrapper.dart';
+import 'package:clipshare/features/home/providers/drawer_provider.dart';
+import 'package:clipshare/shared/widgets/base/multi_drawer.dart';
 import 'package:clipshare/shared/widgets/layouts/my_navigation_rail.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomeWidePage extends StatefulWidget {
   final List<Widget> pages;
@@ -23,21 +27,26 @@ class _HomeWidePageSate extends State<HomeWidePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Stack(
       children: [
-        _buildNavigationRail(context),
-        Expanded(
-          child: IndexedStack(
-            index: index,
-            children: [
-              for (var i = 0; i < widget.pages.length; i++)
-                TickerMode(
-                  enabled: i == index,
-                  child: widget.pages[i],
-                ),
-            ],
-          ),
+        Row(
+          children: [
+            _buildNavigationRail(context),
+            Expanded(
+              child: IndexedStack(
+                index: index,
+                children: [
+                  for (var i = 0; i < widget.pages.length; i++)
+                    TickerMode(
+                      enabled: i == index,
+                      child: widget.pages[i],
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
+        consumerWrapper(_buildDrawer),
       ],
     );
   }
@@ -70,6 +79,14 @@ class _HomeWidePageSate extends State<HomeWidePage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, WidgetRef ref) {
+    final drawer = ref.watch(drawerProvider);
+    return MultiDrawer(
+      controller: drawer.controller,
+      width: drawer.width,
     );
   }
 }

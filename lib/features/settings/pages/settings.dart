@@ -1,7 +1,7 @@
-﻿import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/pages/settings_overview.dart';
 import 'package:clipshare/features/settings/pages/settings_tablet.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/widgets.dart';
 
 class SettingsPage extends StatelessWidget {

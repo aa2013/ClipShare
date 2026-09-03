@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:clipshare/core/providers/settings/quick/quick_settings_provider.dart';
+import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/l10n/app_language.dart';
 import 'package:clipshare/l10n/l10n_bridge.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

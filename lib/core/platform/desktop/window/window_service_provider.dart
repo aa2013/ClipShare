@@ -1,7 +1,7 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/platform/desktop/window/window_service.dart';
-import 'package:clipshare/core/providers/settings/hotkey/hotkey_settings_provider.dart';
-import 'package:clipshare/core/providers/settings/preference/preference_settings_provider.dart';
+import 'package:clipshare/core/settings/hotkey/hotkey_settings_provider.dart';
+import 'package:clipshare/core/settings/preference/preference_settings_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'window_service_provider.g.dart';

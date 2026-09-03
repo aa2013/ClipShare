@@ -1,6 +1,5 @@
 import 'package:clipshare/core/database/app_database_provider.dart';
-import 'package:clipshare/core/extensions/context_extension.dart';
-import 'package:clipshare/core/providers/settings/quick/quick_settings_provider.dart';
+import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/pages/settings_section_view_base.dart';
 import 'package:clipshare/features/settings/widgets/card/setting_card.dart';
@@ -9,6 +8,7 @@ import 'package:clipshare/features/settings/widgets/card/setting_entry.dart';
 import 'package:clipshare/l10n/app_language.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/enums/config_key.dart';
+import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

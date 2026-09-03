@@ -1,5 +1,5 @@
 import 'package:clipshare/core/database/app_database.dart';
-import 'package:clipshare/core/providers/settings/app_paths/app_paths_provider.dart';
+import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_database_provider.g.dart';

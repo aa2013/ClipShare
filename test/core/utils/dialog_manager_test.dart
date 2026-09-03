@@ -1,4 +1,5 @@
 import 'package:clipshare/core/utils/dialog.dart';
+import 'package:clipshare/shared/models/dialog_actions.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

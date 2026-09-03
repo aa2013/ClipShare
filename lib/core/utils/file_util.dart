@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
+import 'package:clipshare/shared/utils/log.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
@@ -28,7 +29,7 @@ class WritableDirectoryPickResult {
 
 class FileUtil {
   FileUtil._private();
-
+  static const tag = 'FileUtil';
   static const _safeFileNameReplacement = '_';
   static const _windowsReservedFileNames = {
     'CON',
@@ -219,9 +220,9 @@ class FileUtil {
         }
       }
 
-      print('ZIP文件解压完成，路径: $destDir');
-    } catch (e) {
-      print('解压ZIP文件时出错: $e');
+      logger.info(tag, 'ZIP文件解压完成，路径: $destDir');
+    } catch (e, stack) {
+      logger.error(tag, '解压ZIP文件时出错: $e', stack);
       rethrow;
     }
   }

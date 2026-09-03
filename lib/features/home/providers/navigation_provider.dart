@@ -1,7 +1,6 @@
 import 'package:clipshare/l10n/l10n_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:flutter/material.dart';
-import 'package:clipshare/l10n/l10n_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'navigation_provider.g.dart';

@@ -964,7 +964,7 @@
   "@copyPathSuccess": {
     "description": "translated key: copyPathSuccess"
   },
-  "tagEditPageAppBarTitle": "编辑标签",
+  "tagEditPageAppBarTitle": "选择标签",
   "@tagEditPageAppBarTitle": {
     "description": "translated key: tagEditPageAppBarTitle"
   },

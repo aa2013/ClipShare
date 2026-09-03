@@ -55,5 +55,11 @@ final lightThemeData = ThemeData.light().copyWith(
       ),
     ),
   ),
-  canvasColor: Colors.white, dialogTheme: const DialogThemeData(backgroundColor: Color(0xffdde1e3)),
+  canvasColor: Colors.white,
+  dialogTheme: DialogThemeData(
+    backgroundColor: const Color(0xffdde1e3),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(dialogCornerRadius),
+    ),
+  ),
 );

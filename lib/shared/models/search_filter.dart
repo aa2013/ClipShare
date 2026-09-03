@@ -39,17 +39,27 @@ class SearchFilter {
       ..type = HistoryContentType.parse(json['type']);
   }
 
-  SearchFilter copy() {
-    final newFilter = SearchFilter();
-    newFilter.content = content;
-    newFilter.startDate = startDate;
-    newFilter.endDate = endDate;
-    newFilter.tags.addAll(tags);
-    newFilter.devIds.addAll(devIds);
-    newFilter.appIds.addAll(appIds);
-    newFilter.onlyNoSync = onlyNoSync;
-    newFilter.type = type;
-    return newFilter;
+  /// 返回新的筛选条件副本；集合字段深拷贝，调用方可安全级联修改。
+  SearchFilter copyWith({
+    String? content,
+    String? startDate,
+    String? endDate,
+    Set<String>? tags,
+    Set<String>? devIds,
+    Set<String>? appIds,
+    bool? onlyNoSync,
+    HistoryContentType? type,
+  }) {
+    return SearchFilter(
+      content: content ?? this.content,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      tags: tags ?? Set.of(this.tags),
+      devIds: devIds ?? Set.of(this.devIds),
+      appIds: appIds ?? Set.of(this.appIds),
+      onlyNoSync: onlyNoSync ?? this.onlyNoSync,
+      type: type ?? this.type,
+    );
   }
 
   @override

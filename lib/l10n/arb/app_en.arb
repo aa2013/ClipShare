@@ -1057,7 +1057,7 @@
   "@copyPathSuccess": {
     "description": "translated key: copyPathSuccess"
   },
-  "tagEditPageAppBarTitle": "Edit Tag",
+  "tagEditPageAppBarTitle": "Select Tag",
   "@tagEditPageAppBarTitle": {
     "description": "translated key: tagEditPageAppBarTitle"
   },

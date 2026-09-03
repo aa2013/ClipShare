@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:clipshare/app.dart';
+import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ Future<void> main(List<String> args) async {
       if (isDesktop) {
         await windowManager.ensureInitialized();
       }
+      isMultiWindow = args.firstOrNull == 'multi_window';
       //todo 多窗口标记占位：启动参数 args.firstOrNull == 'multi_window' 时走子窗口流程
       runApp(const ProviderScope(child: ClipShareApp()));
     },

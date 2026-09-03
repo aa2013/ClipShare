@@ -1898,8 +1898,63 @@ enum TranslationKey {
     };
   }
 
-  @Deprecated('no longer use')
+  /// 获取当前语言下的带参翻译文本。
+  ///
+  /// 过渡代理：带参键映射到生成类的对应方法；[params] 以生成方法的参数名为键，
+  /// 缺失参数按空串兜底，避免调用方遗漏参数时抛错。
   String trParams([Map<String, String> params = const {}]) {
-    return name;
+    final l10n = L10nBridge.current;
+    return switch (this) {
+      TranslationKey.floatPermGuideDesc => l10n.floatPermGuideDesc(params['appName'] ?? ''),
+      TranslationKey.devicePageMyDevicesText => l10n.devicePageMyDevicesText(params['length'] ?? ''),
+      TranslationKey.devicePageDiscoverDevicesText => l10n.devicePageDiscoverDevicesText(params['length'] ?? ''),
+      TranslationKey.filterCleaningConfirmation => l10n.filterCleaningConfirmation(params['cnt'] ?? ''),
+      TranslationKey.shizukuModeRunningDesc => l10n.shizukuModeRunningDesc(params['version'] ?? ''),
+      TranslationKey.commonSettingsHistoriesFloatWindowHandleWidthValue =>
+        l10n.commonSettingsHistoriesFloatWindowHandleWidthValue(params['width'] ?? ''),
+      TranslationKey.discoveringSettingsPortDesc => l10n.discoveringSettingsPortDesc(params['port'] ?? ''),
+      TranslationKey.securitySettingsReverificationValue => l10n.securitySettingsReverificationValue(params['value'] ?? ''),
+      TranslationKey.hotKeySettingsSaveKeysDialogText => l10n.hotKeySettingsSaveKeysDialogText(params['keys'] ?? ''),
+      TranslationKey.hotKeySettingsSaveKeysFailedText => l10n.hotKeySettingsSaveKeysFailedText(params['err'] ?? ''),
+      TranslationKey.syncSettingsStoreImg2PicturesDesc => l10n.syncSettingsStoreImg2PicturesDesc(params['appName'] ?? ''),
+      TranslationKey.logSettingsEnableDesc => l10n.logSettingsEnableDesc(params['size'] ?? ''),
+      TranslationKey.syncingFilePageDeleteSelectedDialogContent =>
+        l10n.syncingFilePageDeleteSelectedDialogContent(params['length'] ?? ''),
+      TranslationKey.tagEditPageCrateTagItem => l10n.tagEditPageCrateTagItem(params['tag'] ?? ''),
+      TranslationKey.welcome => l10n.welcome(params['appName'] ?? ''),
+      TranslationKey.importRulesSuccess => l10n.importRulesSuccess(params['length'] ?? ''),
+      TranslationKey.pairingCodeDialogContent => l10n.pairingCodeDialogContent(params['devName'] ?? ''),
+      TranslationKey.multiDeleteAsk => l10n.multiDeleteAsk(params['length'] ?? ''),
+      TranslationKey.notCompatibleDialogText => l10n.notCompatibleDialogText(
+          params['minName'] ?? '',
+          params['minCode'] ?? '',
+          params['selfName'] ?? '',
+          params['selfCode'] ?? '',
+        ),
+      TranslationKey.multiChoiceModeSelectedText => l10n.multiChoiceModeSelectedText(params['text'] ?? ''),
+      TranslationKey.pendingFileLen => l10n.pendingFileLen(params['len'] ?? ''),
+      TranslationKey.clipboardListeningWayToggleConfirmContent =>
+        l10n.clipboardListeningWayToggleConfirmContent(params['way'] ?? ''),
+      TranslationKey.devDisconnectNotifyContent => l10n.devDisconnectNotifyContent(params['devName'] ?? ''),
+      TranslationKey.devConnectedNotifyContent => l10n.devConnectedNotifyContent(params['devName'] ?? ''),
+      TranslationKey.appIconLoadError => l10n.appIconLoadError(params['appName'] ?? ''),
+      TranslationKey.exitAppViaHotKey => l10n.exitAppViaHotKey(params['appName'] ?? ''),
+      TranslationKey.notFoundJiebaFiles => l10n.notFoundJiebaFiles(params['dirPath'] ?? ''),
+      TranslationKey.sendBroadcastOnAddDataTips =>
+        l10n.sendBroadcastOnAddDataTips(params['kOnHistoryChangedBroadcastAction'] ?? ''),
+      TranslationKey.trayDevAliveTooltip => l10n.trayDevAliveTooltip(
+          params['first'] ?? '',
+          params['pairedCnt'] ?? '',
+          params['unpairedCnt'] ?? '',
+        ),
+      TranslationKey.ruleCompileFailedPrefix => l10n.ruleCompileFailedPrefix(params['message'] ?? ''),
+      TranslationKey.settingsOverviewPermissionIssueCount =>
+        l10n.settingsOverviewPermissionIssueCount(params['count'] ?? ''),
+      TranslationKey.storageWsVersionIncompatibleDialogContent => l10n.storageWsVersionIncompatibleDialogContent(
+          params['version'] ?? '',
+          params['minVersion'] ?? '',
+        ),
+      _ => name,
+    };
   }
 }

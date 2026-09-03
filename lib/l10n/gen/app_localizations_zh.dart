@@ -790,7 +790,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get copyPathSuccess => '复制路径成功';
 
   @override
-  String get tagEditPageAppBarTitle => '编辑标签';
+  String get tagEditPageAppBarTitle => '选择标签';
 
   @override
   String get tagEditPageSearchOrCreateTag => '搜索或创建标签';
