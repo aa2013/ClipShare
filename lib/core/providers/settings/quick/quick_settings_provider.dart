@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
-import 'package:clipshare/core/constants/platform_constants.dart' as PlatformExt;
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/extensions/file_extension.dart';
 import 'package:clipshare/core/providers/settings/app_paths/app_paths_provider.dart';
@@ -86,7 +85,7 @@ Future<bool> _detectLaunchAtStartup(Ref ref) async {
   final packageInfo = await PackageInfo.fromPlatform();
   launchAtStartup.setup(
     appName: packageInfo.appName,
-    appPath: PlatformExt.startupExecutablePath,
+    appPath: startupExecutablePath,
   );
   final appPaths = await ref.read(appPathsProvider.future);
   final userStartupPath = appPaths.windowsUserStartUpDirPath;

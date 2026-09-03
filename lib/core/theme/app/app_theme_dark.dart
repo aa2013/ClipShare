@@ -46,7 +46,13 @@ final darkThemeData = ThemeData.dark().copyWith(
     selectedColor: Colors.blue[800],
     // 深色 chip 背景接近卡片色，统一补边框避免历史标签和设备 chip 融入背景。
     side: BorderSide(color: _darkColorScheme.outlineVariant.withAlpha(50)),
-  ), dialogTheme: const DialogThemeData(backgroundColor: _darkBackgroundColorBright),
+  ),
+  dialogTheme: DialogThemeData(
+    backgroundColor: _darkBackgroundColorBright,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(dialogCornerRadius),
+    ),
+  ),
 );
 
 // InputDecoration get noneBorderInputDecoration {

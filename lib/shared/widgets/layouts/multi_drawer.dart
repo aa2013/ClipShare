@@ -171,9 +171,9 @@ class _MultiDrawerState extends State<MultiDrawer> with TickerProviderStateMixin
         return;
       }
       var slideController = _slideControllers.last;
-      slideController.reverse();
+      await slideController.reverse();
       if (controller.isRoot) {
-        _overlayController.reverse();
+        await _overlayController.reverse();
       }
       return Future.delayed(widget.duration ?? defaultDuration, () {
         if (!controller.isEmpty) {

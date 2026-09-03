@@ -97,7 +97,7 @@ class AppDatabase extends _$AppDatabase {
   static Future<QueryExecutor> openFile(String dbPath) async {
     final file = File(dbPath);
     await file.parent.create(recursive: true);
-    return NativeDatabase(file);
+    return NativeDatabase.createInBackground(file);
   }
 
   @override

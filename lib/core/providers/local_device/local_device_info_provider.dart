@@ -1,16 +1,17 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/providers/device/local_device_info.dart';
 import 'package:clipshare/core/providers/settings/device/device_settings_provider.dart';
 import 'package:clipshare/core/utils/crypto.dart';
+import 'package:clipshare/l10n/l10n.dart';
 import 'package:clipshare/shared/enums/config_key.dart';
 import 'package:clipshare/shared/enums/device_id_generate_way.dart';
 import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
-import 'package:clipshare/shared/models/local_device_info.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:device_info_plus/device_info_plus.dart' hide BaseDeviceInfo;
-import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -118,17 +119,17 @@ Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
   }
 
   final baseDevInfo = BaseDeviceInfo(id: guid, name: name, type: type);
-  // final device = Device(
-  //   guid: guid,
-  //   devName: name,
-  //   // todo ConfigService 初始化早于 i18n，不能在这里使用 .tr；展示层再按当前语言本地化。
-  //   customName: '本机',
-  //   uid: 0,
-  //   type: type,
-  // );
+  final device = Device(
+    guid: guid,
+    devName: name,
+    customName: TranslationKey.selfDeviceName.tr,
+    uid: 0,
+    type: type.toString(),
+    isPaired: true,
+  );
   return LocalDeviceInfo(
     baseDeviceInfo: baseDevInfo,
-    // device: device,
+    self: device,
     appVersion: appVersion,
     androidOsVersion: androidOsVersion,
     localName: localName,

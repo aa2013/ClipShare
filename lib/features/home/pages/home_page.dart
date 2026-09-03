@@ -1,10 +1,16 @@
 import 'package:clipshare/core/extensions/context_extension.dart';
+import 'package:clipshare/features/debug/pages/debug_page.dart';
+import 'package:clipshare/features/history/pages/history_page.dart';
 import 'package:clipshare/features/home/pages/home_compact_page.dart';
 import 'package:clipshare/features/home/pages/home_wide_page.dart';
+import 'package:clipshare/features/home/providers/drawer_provider.dart';
 import 'package:clipshare/features/home/providers/navigation_provider.dart';
 import 'package:clipshare/features/settings/pages/settings.dart';
+import 'package:clipshare/shared/models/keyboard_shortcut.dart';
+import 'package:clipshare/shared/widgets/base/custom_keyboard_listener.dart';
 import 'package:clipshare/shared/widgets/layouts/my_navigation_rail.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -24,7 +30,7 @@ class _HomeState extends ConsumerState<HomePage> {
   @override
   void initState() {
     pages = [
-      const Text('pages1'),
+      const HistoryPage(),
       const Text('pages2'),
       const Text('pages3'),
       const Text(
@@ -34,7 +40,7 @@ class _HomeState extends ConsumerState<HomePage> {
       const SettingsPage(),
     ];
     assert(() {
-      pages.add(const Text('Debug'));
+      pages.add(const DebugPage());
       return true;
     }());
     super.initState();
@@ -77,17 +83,42 @@ class _HomeState extends ConsumerState<HomePage> {
   Widget build(BuildContext context) {
     final navItems = ref.watch(homeNavigationItemsProvider);
     List<Widget> showPages;
+    Widget content;
     if (context.isCompactScreen) {
       showPages = pages.where((page) => !notShowCompactPageKeys.contains(page.key)).toList();
-      return HomeCompactPage(
+      content = HomeCompactPage(
         pages: showPages,
         navItems: buildCompactNavItems(navItems),
       );
+    }else{
+      showPages = pages;
     }
-    showPages = pages;
-    return HomeWidePage(
+    content = HomeWidePage(
       navItems: buildWideNavItems(navItems),
       pages: showPages,
     );
+    return CustomKeyboardListener(
+      shortcuts: [
+        KeyboardShortcut(
+          physicalKeys: {PhysicalKeyboardKey.escape},
+          onTrigger: handleEscapeShortcut,
+        ),
+      ],
+      child: content,
+    );
+  }
+
+  /// 处理页面级 Esc 快捷键；抽屉是覆盖层，应优先于页面多选状态关闭。
+  void handleEscapeShortcut() {
+    final drawer = ref.read(drawerProvider).controller;
+    if (!drawer.isEmpty) {
+      drawer.popWithAnimation();
+      return;
+    }
+    //todo
+    // if (appConfig.isMultiSelectionMode(currentPageController)) {
+    //   appConfig.disableMultiSelectionMode(true);
+    //   notifyMultiSelectionPopScopeDisable();
+    // }
   }
 }

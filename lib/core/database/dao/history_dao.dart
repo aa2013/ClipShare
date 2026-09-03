@@ -1,8 +1,8 @@
 import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_tables.dart';
 import 'package:clipshare/core/database/tables/operation_record.dart';
+import 'package:clipshare/core/providers/device/local_device_info.dart';
 import 'package:clipshare/core/utils/snowflake.dart';
-import 'package:clipshare/shared/models/local_device_info.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 import 'package:clipshare/shared/models/search_filter.dart';
@@ -17,9 +17,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   HistoryDao(super.attachedDatabase);
 
   /// 获取最新记录。
-  Future<History?> getLatestLocalClip(int uid) {
+  Future<History?> getLatestLocalClip() {
     return (select(histories)
-          ..where((tbl) => tbl.uid.equals(uid))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.id)])
           ..limit(1))
         .getSingleOrNull();
@@ -27,7 +26,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
 
   /// 根据条件查询，一次查 100 条，置顶优先，id 降序。
   Future<List<History>> getHistoriesPageByWhere(
-    int uid,
     int fromId,
     String content,
     String type,
@@ -39,7 +37,7 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
     bool onlyNoSync,
     bool ignoreTop,
   ) {
-    final query = select(histories)..where((tbl) => tbl.uid.equals(uid));
+    final query = select(histories);
     if (fromId > 0) {
       query.where((tbl) => tbl.id.isSmallerThanValue(fromId));
     }
@@ -79,9 +77,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 根据搜索过滤器分页查询历史。
-  Future<List<History>> getHistoriesPageByFilter(int uid, SearchFilter filter, bool ignoreTop, [int fromId = 0]) {
+  Future<List<History>> getHistoriesPageByFilter(SearchFilter filter, bool ignoreTop, [int fromId = 0]) {
     return getHistoriesPageByWhere(
-      uid,
       fromId,
       filter.content,
       filter.type.value,
@@ -240,8 +237,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 获取前 100 条历史记录。
-  Future<List<History>> getHistoriesTop100(int uid, List<String> types) {
-    final query = select(histories)..where((tbl) => tbl.uid.equals(uid));
+  Future<List<History>> getHistoriesTop100([List<String> types = const []]) {
+    final query = select(histories);
     if (types.isNotEmpty) {
       query.where((tbl) => tbl.type.isIn(types));
     }
@@ -255,8 +252,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 分页获取 100 条历史记录。
-  Future<List<History>> getHistoriesPage(int uid, int fromId, List<String> types) {
-    final query = select(histories)..where((tbl) => tbl.uid.equals(uid));
+  Future<List<History>> getHistoriesPage(int fromId, List<String> types) {
+    final query = select(histories);
     if (fromId > 0) {
       query.where((tbl) => tbl.id.isSmallerThanValue(fromId));
     }
@@ -309,9 +306,9 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 获取所有图片历史。
-  Future<List<History>> getAllImages(int uid) {
+  Future<List<History>> getAllImages() {
     return (select(histories)
-          ..where((tbl) => tbl.uid.equals(uid) & tbl.type.equals('Image'))
+          ..where((tbl) => tbl.type.equals('Image'))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.id)]))
         .get();
   }

@@ -1,5 +1,5 @@
+import 'package:clipshare/core/providers/device/local_device_info.dart';
 import 'package:clipshare/l10n/translation_key.dart';
-import 'package:clipshare/shared/models/local_device_info.dart';
 
 import '../app_database.dart';
 

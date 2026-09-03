@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:clipshare/core/providers/device/local_device_info.dart';
 import 'package:clipshare/core/utils/snowflake.dart';
-import 'package:clipshare/shared/models/local_device_info.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 
@@ -9,7 +9,7 @@ import '../app_database.dart';
 
 export '../app_database.dart' show OperationRecord;
 
-/// 构造本机操作记录，保持旧同步记录的雪花 id、用户、设备和枚举落库语义。
+/// 构造本机操作记录
 OperationRecord newOperationRecord(
   Snowflake snowflake,
   BaseDeviceInfo baseDeviceInfo,

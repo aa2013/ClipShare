@@ -1,6 +1,7 @@
 import 'package:analysis_server_plugin/plugin.dart';
 import 'package:analysis_server_plugin/registry.dart';
 
+import 'src/default_text_style_font_rule.dart';
 import 'src/dependency_direction_rule.dart';
 
 /// 插件入口实例，供 Dart 分析服务器加载。
@@ -15,5 +16,7 @@ class DependencyLintPlugin extends Plugin {
   void register(PluginRegistry registry) {
     // 注册为 warning 规则：默认启用，无需额外配置即可在 flutter analyze 中报告。
     registry.registerWarningRule(DependencyDirectionRule());
+    // 禁止裸 TextStyle 覆盖 DefaultTextStyle/AnimatedDefaultTextStyle，避免丢失主题字体。
+    registry.registerWarningRule(DefaultTextStyleFontRule());
   }
 }

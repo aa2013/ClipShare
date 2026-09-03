@@ -20,7 +20,7 @@ version: 1.5.3+30
 
 environment:
   # At least Flutter 3.32.1
-  sdk: '>=3.8.0 <4.0.0'
+  sdk: '>=3.10.0 <4.0.0'
 
 dependencies:
   flutter:
@@ -64,7 +64,7 @@ dependencies:
   # 链接可点击
   flutter_linkify: ^6.0.0
   # 右键菜单
-  flutter_context_menu: ^0.2.0
+  flutter_context_menu: ^0.2.5
   # snackbar
   animated_snack_bar: ^0.4.0
   # 打开链接
@@ -205,7 +205,11 @@ dependencies:
   # Color picker
   flutter_colorpicker: ^1.1.0
   # 原生拖拽
-  super_drag_and_drop: ^0.9.1
+  super_drag_and_drop:
+    git:
+      url: https://github.com/aa2013/super_native_extensions
+      ref: super_drag_and_drop_0_9_1
+      path: super_drag_and_drop
   synchronized: ^3.4.0+1
   collection: any
   intl: any

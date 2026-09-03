@@ -5,17 +5,29 @@ import 'package:clipshare/shared/models/version.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_icons/simple_icons.dart';
 
+//标记是否是多窗口
+late final bool isMultiWindow;
+
 //app名称
 const String appName = 'ClipShare';
 const appPkg = 'top.coclyun.clipshare';
 const appIconSize = 17.0;
 const minVersion = AppVersion('1.5.0', '27');
 
-///Android 历史记录悬浮窗把手默认颜色
+// 历史记录分页大小
+const historyPageSize = 100;
+
+//Android 历史记录悬浮窗把手默认颜色
 const int defaultHistoryFloatHandleColor = 0x17FFFFFF;
 
-///Android 历史记录悬浮窗把手默认宽度
+//Android 历史记录悬浮窗把手默认宽度
 const int defaultHistoryFloatHandleWidth = 32;
+
+// 默认抽屉宽度
+const double defaultDrawerWidth = 400;
+
+// 弹窗统一圆角，AlertDialog 与自定义弹窗边框共用
+const double dialogCornerRadius = 20;
 
 //Windows上使用，与项目中的 windows/packaging.exe/make_config.yaml 保持一致
 const String appGuid = 'B72665DE-3DB5-B0E9-0EF9-55CCB65D3D62';

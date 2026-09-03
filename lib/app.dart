@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
@@ -70,6 +72,7 @@ class _ClipShareAppState extends ConsumerState<ClipShareApp> {
         themeMode: initialThemeMode,
         theme: lightThemeData,
         darkTheme: darkThemeData,
+        scrollBehavior: _ScrollBehavior(),
         builder: (BuildContext context, Widget? child) {
           return AppThemeSwitcher(
             child: Scaffold(
@@ -116,4 +119,15 @@ class _ClipShareAppState extends ConsumerState<ClipShareApp> {
         ? darkThemeData
         : lightThemeData;
   }
+}
+
+//解决 Windows 端 SingleChildScrollView 无法水平滚动的问题
+//https://stackoverflow.com/questions/72528980/horizontal-singlechildscrollview-not-working-inside-a-column-on-windows
+class _ScrollBehavior extends MaterialScrollBehavior {
+  // Override behavior methods like buildOverscrollIndicator and buildScrollbar
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    ...super.dragDevices,
+    PointerDeviceKind.mouse,
+  };
 }

@@ -258,6 +258,15 @@ extension StringExt on String {
   String toMd5() {
     return md5.convert(utf8.encode(this)).toString();
   }
+
+  bool get isImageFileName {
+    final ext = toLowerCase();
+    return ext.endsWith('.jpg') ||
+        ext.endsWith('.jpeg') ||
+        ext.endsWith('.png') ||
+        ext.endsWith('.gif') ||
+        ext.endsWith('.bmp');
+  }
 }
 
 extension StringNilExt on String? {

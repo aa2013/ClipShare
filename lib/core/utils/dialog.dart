@@ -1,6 +1,7 @@
 
 import 'dart:ui';
 
+import 'package:clipshare/core/widgets/dialog_frame_layout.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/utils/log.dart';
@@ -90,6 +91,46 @@ class DialogManager {
     return dlgCtl;
   }
 
+  /// 打开通用边框布局弹窗，仅用于非小屏幕。
+  ///
+  /// 头部由 [icon]/[title]/[showCloseButton] 决定，正文由 [content] 填充；
+  /// [width]/[height] 为空时由 [DialogFrameLayout] 按屏幕尺寸自适应；
+  /// [backgroundColor] 为空时取当前主题表面色；
+  /// [dismissible] 控制点击空白处是否自动关闭。
+  DialogController frame(
+    BuildContext context, {
+    IconData? icon,
+    required String title,
+    required Widget content,
+    double? width,
+    double? height,
+    bool showCloseButton = true,
+    Color? backgroundColor,
+    bool dismissible = true,
+    String? barrierLabel,
+  }) {
+    final dlgCtl = DialogController(context);
+    final future = showGeneralDialog(
+      barrierDismissible: dismissible,
+      barrierLabel: dismissible ? barrierLabel ?? '' : null,
+      context: context,
+      transitionBuilder: _dialogTransition,
+      pageBuilder: (context, animation, secondaryAnimation) => DialogFrameLayout(
+        key: dlgCtl.key,
+        icon: icon,
+        title: title,
+        content: content,
+        width: width,
+        height: height,
+        showCloseButton: showCloseButton,
+        backgroundColor: backgroundColor,
+        onClose: () => dlgCtl.close(),
+      ),
+    );
+    dlgCtl.future = future.then((value) => dlgCtl.close());
+    return dlgCtl;
+  }
+
   /// 构建提示弹窗底部按钮。
   List<Widget> _buildTipsActions(
     DialogController dlgCtl,
@@ -117,12 +158,12 @@ class DialogManager {
 
     return [
       Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           if (neutral != null)
             buildButton(neutral, TranslationKey.dialogNeutralText.tr),
-          IntrinsicWidth(
+          Expanded(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 if (cancel != null)
                   buildButton(cancel, TranslationKey.dialogCancelText.tr),

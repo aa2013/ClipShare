@@ -2,6 +2,7 @@ import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'loading.dart';
 
@@ -40,35 +41,39 @@ class _DownloadDialogState extends State<DownloadDialog> {
   bool cancel = false;
 
   Future _downloadFile(void Function(bool success) onComplete) async {
-    await dio
-        .download(
-          widget.url,
-          widget.savePath,
-          onReceiveProgress: (received, total) {
-            if (total != -1) {
-              // 计算进度百分比
-              final p = (received / total * 100);
-              setState(() {
-                progress = p.toInt();
-              });
-            }
-          },
-        )
-        .catchError((err, stack) {
-          //todo
+    try {
+      await dio.download(
+        widget.url,
+        widget.savePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            // 计算进度百分比
+            final p = (received / total * 100);
+            setState(() {
+              progress = p.toInt();
+            });
+          }
+        },
+      );
+    } catch (err, stack) {
+      //todo
+      if (!mounted) {
+        return;
+      }
+      context.pop();
+      if (!cancel) {
+        widget.onError?.call(err, stack);
+        error = true;
+      }
+    } finally {
+      if (!error) {
+        //todo
+        if (mounted) {
           Navigator.of(context).pop();
-          if (!cancel) {
-            widget.onError?.call(err, stack);
-            error = true;
-          }
-        })
-        .whenComplete(() {
-          if (!error) {
-            //todo
-            Navigator.of(context).pop();
-            onComplete(true);
-          }
-        });
+        }
+        onComplete(true);
+      }
+    }
   }
 
   @override
@@ -100,7 +105,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
                   TextButton(
                     onPressed: downloading
                         ? null
-                        : () async {
+                        : () {
                             setState(() {
                               downloading = true;
                             });
