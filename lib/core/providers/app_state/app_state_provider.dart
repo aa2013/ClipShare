@@ -65,4 +65,9 @@ class AppStateNotifier extends _$AppStateNotifier {
   void updateIgnoreAccessibility(bool value) {
     state = state.copyWith(ignoreAccessibility: value);
   }
+
+  /// 更新是否忽略 Shizuku 权限缺失提示
+  void updateIgnoreShizuku(bool value) {
+    state = state.copyWith(ignoreShizuku: value);
+  }
 }

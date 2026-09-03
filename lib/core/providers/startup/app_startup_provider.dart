@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:clipshare/core/clipboard/clipboard_service_provider.dart';
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
@@ -26,6 +27,7 @@ Future<void> appStartup(Ref ref) async {
     ref.read(localDeviceInfoProvider.future),
     ref.read(quickSettingsProvider.future),
     ref.read(preferenceSettingsProvider.future),
+    ref.read(clipboardServiceProvider.future),
   ]);
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化

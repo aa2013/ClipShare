@@ -8,9 +8,12 @@ part of 'clipboard_settings_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 读取剪贴板相关配置。
 
 @ProviderFor(clipboardSettings)
 final clipboardSettingsProvider = ClipboardSettingsProvider._();
+
+/// 读取剪贴板相关配置。
 
 final class ClipboardSettingsProvider
     extends
@@ -22,6 +25,7 @@ final class ClipboardSettingsProvider
     with
         $FutureModifier<ClipboardSettings>,
         $FutureProvider<ClipboardSettings> {
+  /// 读取剪贴板相关配置。
   ClipboardSettingsProvider._()
     : super(
         from: null,
@@ -48,4 +52,4 @@ final class ClipboardSettingsProvider
   }
 }
 
-String _$clipboardSettingsHash() => r'ecbee64e1e4acf4b9cd85986fe18a530a514a1cf';
+String _$clipboardSettingsHash() => r'4f12bf783018ae8bb14cd1eb80f8fc8b44c3fe8f';

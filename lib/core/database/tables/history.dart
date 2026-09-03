@@ -37,9 +37,3 @@ History emptyHistory({
 List<History> historyListFromJson(List<dynamic> jsonList) {
   return jsonList.map((map) => History.fromJson((map as Map).cast<String, dynamic>())).toList(growable: true);
 }
-
-/// 历史行对象的业务扩展，真实数据类由 Drift 生成。
-extension HistoryExt on History {
-  /// 深拷贝历史记录，沿用 Drift 生成的 JSON 序列化结构。
-  History copy() => History.fromJson(toJson());
-}

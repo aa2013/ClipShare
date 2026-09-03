@@ -53,6 +53,7 @@ class AppState {
     String? deviceDiscoveryStatus,
     String? dhAesKey,
     bool? ignoreAccessibility,
+    bool? ignoreShizuku,
   }) {
     return AppState(
       rulesMigrated: rulesMigrated ?? this.rulesMigrated,
@@ -63,6 +64,7 @@ class AppState {
       authenticating: authenticating ?? this.authenticating,
       deviceDiscoveryStatus: deviceDiscoveryStatus ?? this.deviceDiscoveryStatus,
       ignoreAccessibility: ignoreAccessibility ?? this.ignoreAccessibility,
+      ignoreShizuku: ignoreShizuku ?? this.ignoreShizuku,
     );
   }
 }

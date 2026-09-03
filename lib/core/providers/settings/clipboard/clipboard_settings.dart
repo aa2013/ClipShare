@@ -31,7 +31,7 @@ class ClipboardSettings {
     this.sourceRecordViaDumpsys = false,
     this.sendBroadcastOnAdd = false,
     this.isExcludeFormat = true,
-    this.recordMaxLength = 200_000,
+    this.recordMaxLength = 200000,
     this.workingMode = EnvironmentType.none,
     this.listeningWay = ClipboardListeningWay.logs,
   });
