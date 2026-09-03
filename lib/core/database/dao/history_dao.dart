@@ -240,8 +240,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 获取前 100 条历史记录。
-  Future<List<History>> getHistoriesTop100(int uid, List<String> types) {
-    final query = select(histories)..where((tbl) => tbl.uid.equals(uid));
+  Future<List<History>> getHistoriesTop100([List<String> types = const []]) {
+    final query = select(histories);
     if (types.isNotEmpty) {
       query.where((tbl) => tbl.type.isIn(types));
     }
@@ -255,8 +255,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 分页获取 100 条历史记录。
-  Future<List<History>> getHistoriesPage(int uid, int fromId, List<String> types) {
-    final query = select(histories)..where((tbl) => tbl.uid.equals(uid));
+  Future<List<History>> getHistoriesPage(int fromId, List<String> types) {
+    final query = select(histories);
     if (fromId > 0) {
       query.where((tbl) => tbl.id.isSmallerThanValue(fromId));
     }

@@ -10,7 +10,6 @@ import 'package:clipshare/shared/models/local_device_info.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:device_info_plus/device_info_plus.dart' hide BaseDeviceInfo;
-import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_device_id/persistent_device_id.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

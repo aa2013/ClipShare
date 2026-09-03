@@ -265,7 +265,7 @@ Future<Directory> _initLogsDir(String cachePath, String documentsPath) async {
 
 Future<String> _initImageStorePath(Ref ref,String androidPrivatePicturesPath) async {
   //todo 从数据库读取
-  final storePath = '';
+  const storePath = '';
   if (!Platform.isAndroid) {
     return storePath;
   }

@@ -17,7 +17,7 @@ import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:clipshare_clipboard_listener/models/clipboard_source.dart';
 import 'package:clipshare_clipboard_listener/models/notification_content_config.dart';
 
-import 'clipboard_history_event.dart';
+import '../history/history_event.dart';
 
 /// 剪贴板核心运行时服务。
 class ClipboardService with ClipboardListener {
@@ -27,10 +27,9 @@ class ClipboardService with ClipboardListener {
   final Future<AppPaths> Function() _loadAppPaths;
   final AppState Function() _readAppState;
   final Future<void> Function(bool enabled) _persistExcludeFormat;
+  final void Function(ClipboardHistoryEvent event) _onChanged;
   final Snowflake _idGenerator;
   final LocalDeviceInfo _localDeviceInfo;
-
-  final StreamController<ClipboardHistoryEvent> _eventController = StreamController<ClipboardHistoryEvent>.broadcast();
 
   bool _initialized = false;
   bool _recoveringShizukuBinderPermission = false;
@@ -42,6 +41,7 @@ class ClipboardService with ClipboardListener {
     required Future<AppPaths> Function() loadAppPaths,
     required AppState Function() readAppState,
     required Future<void> Function(bool enabled) persistExcludeFormat,
+    required void Function(ClipboardHistoryEvent event) onChanged,
     required Snowflake idGenerator,
     required LocalDeviceInfo localDeviceInfo,
   })  : _loadSettings = loadSettings,
@@ -49,10 +49,8 @@ class ClipboardService with ClipboardListener {
         _readAppState = readAppState,
         _idGenerator = idGenerator,
         _localDeviceInfo = localDeviceInfo,
+        _onChanged = onChanged,
         _persistExcludeFormat = persistExcludeFormat;
-
-  /// 剪贴板历史事件流
-  Stream<ClipboardHistoryEvent> get histories => _eventController.stream;
 
   /// 插件通知文案配置。
   static NotificationContentConfig get defaultNotificationContentConfig =>
@@ -120,7 +118,7 @@ class ClipboardService with ClipboardListener {
   ) {
     final contentType = HistoryContentType.parse(type.name);
     logger.debug(tag, 'onChange ${content.substring(0, min(content.length, 200))}');
-    _eventController.add(
+    _onChanged(
       ClipboardHistoryEvent(
         history: History(
           id: _idGenerator.nextId(),
@@ -227,6 +225,5 @@ class ClipboardService with ClipboardListener {
   /// 释放插件监听和事件流。
   void dispose() {
     clipboardManager.removeListener(this);
-    _eventController.close();
   }
 }

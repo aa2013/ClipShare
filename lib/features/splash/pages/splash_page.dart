@@ -1,6 +1,4 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
-import 'package:clipshare/core/extensions/context_extension.dart';
-import 'package:clipshare/core/providers/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/core/providers/startup/app_startup_provider.dart';
 import 'package:clipshare/routing/app_routes.dart';
 import 'package:clipshare/shared/constants/assets.dart';
