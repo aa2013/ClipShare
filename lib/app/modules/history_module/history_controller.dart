@@ -502,6 +502,10 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       logger.info(tag, "content: $logContent，dropped");
       return;
     }
+    final extracted = applyResult.result?.extractedContent;
+    if (type == HistoryContentType.text && extracted.isNotNullAndEmpty) {
+      clipboardManager.copy(ClipboardContentType.text, extracted!);
+    }
     switch (type) {
       case HistoryContentType.image:
         content = applyResult.result?.content ?? content;
@@ -523,7 +527,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       type: type.value,
       size: size,
       source: source?.id,
-      extracted: applyResult.result?.extractedContent,
+      extracted: extracted,
     );
     if (appConfig.sourceRecord || type == HistoryContentType.notification) {
       if (source != null) {
