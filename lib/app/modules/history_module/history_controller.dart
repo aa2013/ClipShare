@@ -503,7 +503,7 @@ class HistoryController extends GetxController with WidgetsBindingObserver imple
       return;
     }
     final extracted = applyResult.result?.extractedContent;
-    if (type == HistoryContentType.text && extracted.isNotNullAndEmpty) {
+    if (extracted.isNotNullAndEmpty) {
       clipboardManager.copy(ClipboardContentType.text, extracted!);
     }
     switch (type) {
