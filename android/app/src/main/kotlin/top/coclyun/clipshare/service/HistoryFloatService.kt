@@ -138,6 +138,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             fullscreenCheckHandler.postDelayed(this, FULLSCREEN_CHECK_INTERVAL_MS)
         }
     }
+    private var lastStateLog: String? = null
 
     private val tag = "HistoryFloatService"
 
@@ -151,6 +152,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(tag, "onCreate")
         savedStateRegistryController.performAttach()
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
@@ -161,6 +163,17 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
             setViewTreeLifecycleOwner(this@HistoryFloatService)
             setViewTreeSavedStateRegistryOwner(this@HistoryFloatService)
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    Log.d(this@HistoryFloatService.tag, "onViewAttachedToWindow")
+                    logState("viewAttached", true)
+                }
+
+                override fun onViewDetachedFromWindow(v: View) {
+                    Log.w(this@HistoryFloatService.tag, "onViewDetachedFromWindow")
+                    logState("viewDetached", true)
+                }
+            })
             setOnApplyWindowInsetsListener { _, insets ->
                 updateFullscreenVisibility()
                 insets
@@ -190,21 +203,30 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                 )
             }
         }
+        logState("onCreate completed", true)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(
+            tag,
+            "onStartCommand action=${intent?.action}, flags=$flags, startId=$startId, " +
+                "viewAdded=$viewAdded, attached=${if (::composeView.isInitialized) composeView.isAttachedToWindow else false}"
+        )
         lifecycleRegistry.currentState = Lifecycle.State.STARTED
         updateFloatTexts(intent)
         if (intent?.action == lockHistoryFloatLocation) {
             lockLoc = intent.getBooleanExtra("lock", false)
+            logState("lock location updated", true)
             return START_STICKY
         }
         if (intent?.action == setHistoryFloatHandleWidth) {
             handleWidth = intent.getIntExtra("width", 32)
+            logState("handle width updated", true)
             return START_STICKY
         }
         if (intent?.action == setHistoryFloatHandleColor) {
             handleColor = intent.getIntExtra("color", handleColor)
+            logState("handle color updated", true)
             return START_STICKY
         }
         if (intent?.action == setHistoryFloatHandleApplyAlphaToWholeHandle) {
@@ -212,10 +234,12 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                 EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
                 applyAlphaToWholeHandle
             )
+            logState("handle alpha mode updated", true)
             return START_STICKY
         }
         if (intent?.action == setHistoryFloatThemeMode) {
             updateThemeMode(intent)
+            logState("theme mode updated", true)
             return START_STICKY
         }
         updateThemeMode(intent)
@@ -226,14 +250,25 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             applyAlphaToWholeHandle
         ) ?: applyAlphaToWholeHandle
         showFloatWindow()
+        logState("onStartCommand completed", true)
         return START_STICKY
     }
 
     override fun onDestroy() {
+        Log.d(tag, "onDestroy")
         fullscreenCheckHandler.removeCallbacks(fullscreenCheckRunnable)
         if (viewAdded) {
-            windowManager.removeView(composeView)
-            viewAdded = false
+            logState("removeView before onDestroy", true)
+            try {
+                windowManager.removeView(composeView)
+                viewAdded = false
+                logState("removeView completed onDestroy", true)
+            } catch (e: Exception) {
+                Log.e(tag, "removeView failed onDestroy: ${e::class.java.name}: ${e.message}", e)
+                throw e
+            }
+        } else {
+            logState("onDestroy without view", true)
         }
         LocalBroadcastManager.getInstance(this).unregisterReceiver(localBroadcastReceiver)
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
@@ -242,24 +277,39 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        Log.d(
+            tag,
+            "onConfigurationChanged orientation=${newConfig.orientation}, " +
+                "uiMode=${newConfig.uiMode}, viewAdded=$viewAdded"
+        )
         refreshSystemTheme()
         updateFullscreenVisibility()
+        logState("configuration changed", true)
     }
 
     private fun setupLocalBroadcastReceiver() {
         localBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
+                Log.d(
+                    tag,
+                    "broadcast received action=${intent.action}, more=${intent.getBooleanExtra("more", false)}, " +
+                        "minHistoryId=${intent.getLongExtra("minHistoryId", 0L)}, loading=$loading, " +
+                        "historyCount=${histories.size}"
+                )
                 when (intent.action) {
                     lockHistoryFloatLocation -> {
                         lockLoc = intent.getBooleanExtra("lock", false)
+                        logState("broadcast lock location updated", true)
                     }
 
                     setHistoryFloatHandleWidth -> {
                         handleWidth = intent.getIntExtra("width", 32)
+                        logState("broadcast handle width updated", true)
                     }
 
                     setHistoryFloatHandleColor -> {
                         handleColor = intent.getIntExtra("color", handleColor)
+                        logState("broadcast handle color updated", true)
                     }
 
                     setHistoryFloatHandleApplyAlphaToWholeHandle -> {
@@ -267,10 +317,12 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                             EXTRA_APPLY_ALPHA_TO_WHOLE_HANDLE,
                             applyAlphaToWholeHandle
                         )
+                        logState("broadcast handle alpha mode updated", true)
                     }
 
                     setHistoryFloatThemeMode -> {
                         updateThemeMode(intent)
+                        logState("broadcast theme mode updated", true)
                     }
 
                     sendHistories -> {
@@ -280,6 +332,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                         if (receivedList == null) {
                             Log.d(tag, "loadHistories receivedList is null")
                             loading = false
+                            logState("history result null", true)
                             return
                         }
 
@@ -292,6 +345,12 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                                 type = map["type"] as String
                             )
                         }
+                        Log.d(
+                            tag,
+                            "history result received more=$more, listSize=${list.size}, " +
+                                "loadingBefore=$loading, historyCountBefore=${histories.size}, " +
+                                "minHistoryIdBefore=$minHistoryId, reachedHistoryEndBefore=$reachedHistoryEnd"
+                        )
 
                         if (!more) {
                             histories.clear()
@@ -302,6 +361,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                         if (list.isEmpty()) {
                             reachedHistoryEnd = true
                             loading = false
+                            logState("history result empty", true)
                             return
                         }
 
@@ -326,6 +386,7 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
                         } else {
                             loading = false
                         }
+                        logState("history result processed", true)
                     }
                 }
             }
@@ -347,7 +408,12 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
     }
 
     private fun showFloatWindow() {
+        logState("showFloatWindow requested", true)
         if (!Settings.canDrawOverlays(this) || viewAdded) {
+            Log.d(
+                tag,
+                "showFloatWindow skipped overlayPermission=${Settings.canDrawOverlays(this)}, viewAdded=$viewAdded"
+            )
             return
         }
 
@@ -362,11 +428,19 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         mainParams.flags = BASE_WINDOW_FLAGS
         mainParams.gravity = Gravity.END or Gravity.CENTER_VERTICAL
         setPos1P3()
-        windowManager.addView(composeView, mainParams)
-        viewAdded = true
+        Log.d(tag, "addView before ${windowParamsDescription()}")
+        try {
+            windowManager.addView(composeView, mainParams)
+            viewAdded = true
+            Log.d(tag, "addView completed ${windowParamsDescription()}")
+        } catch (e: Exception) {
+            Log.e(tag, "addView failed: ${e::class.java.name}: ${e.message}", e)
+            throw e
+        }
         updateFullscreenVisibility()
         fullscreenCheckHandler.removeCallbacks(fullscreenCheckRunnable)
         fullscreenCheckHandler.post(fullscreenCheckRunnable)
+        logState("showFloatWindow completed", true)
     }
 
     private fun updateFloatTexts(intent: Intent?) {
@@ -415,16 +489,21 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
 
     private fun moveHandle(dy: Float) {
         if (lockLoc || expanded || !viewAdded) {
+            Log.d(
+                tag,
+                "moveHandle skipped dy=$dy, lockLoc=$lockLoc, expanded=$expanded, viewAdded=$viewAdded"
+            )
             return
         }
         positionY += dy.toInt()
         mainParams.x = 0
         mainParams.y = positionY
-        windowManager.updateViewLayout(composeView, mainParams)
+        updateWindowLayout("moveHandle")
     }
 
     private fun unfoldView() {
         if (!viewAdded || expanded) {
+            Log.d(tag, "unfoldView skipped viewAdded=$viewAdded, expanded=$expanded")
             return
         }
         handleVisible = false
@@ -432,22 +511,30 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         mainParams.width = LayoutParams.MATCH_PARENT
         mainParams.height = LayoutParams.MATCH_PARENT
         mainParams.x = 0
-        windowManager.updateViewLayout(composeView, mainParams)
+        updateWindowLayout("unfoldView")
         composeView.post {
             expanded = true
             refreshData()
+            logState("unfoldView posted", true)
         }
+        logState("unfoldView requested", true)
     }
 
     private fun requestHideContainer() {
         if (!viewAdded || !expanded || closing) {
+            Log.d(
+                tag,
+                "requestHideContainer skipped viewAdded=$viewAdded, expanded=$expanded, closing=$closing"
+            )
             return
         }
         closing = true
+        logState("requestHideContainer", true)
     }
 
     private fun hideContainer() {
         if (!viewAdded || !expanded) {
+            Log.d(tag, "hideContainer skipped viewAdded=$viewAdded, expanded=$expanded")
             return
         }
         closing = false
@@ -457,14 +544,17 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         mainParams.height = LayoutParams.WRAP_CONTENT
         mainParams.x = 0
         mainParams.y = positionY
-        windowManager.updateViewLayout(composeView, mainParams)
+        updateWindowLayout("hideContainer")
         composeView.post {
             handleVisible = true
+            logState("hideContainer posted", true)
         }
+        logState("hideContainer requested", true)
     }
 
     private fun prepareForDrag() {
         if (!viewAdded) {
+            Log.d(tag, "prepareForDrag skipped viewAdded=$viewAdded")
             return
         }
         hiddenForDrag = true
@@ -472,11 +562,13 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         mainParams.width = LayoutParams.WRAP_CONTENT
         mainParams.height = LayoutParams.WRAP_CONTENT
         mainParams.x = 0
-        windowManager.updateViewLayout(composeView, mainParams)
+        updateWindowLayout("prepareForDrag")
+        logState("prepareForDrag", true)
     }
 
     private fun restoreAfterDrag() {
         if (!viewAdded) {
+            Log.d(tag, "restoreAfterDrag skipped viewAdded=$viewAdded")
             return
         }
         if (expanded) {
@@ -486,18 +578,26 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
             mainParams.width = LayoutParams.WRAP_CONTENT
             mainParams.height = LayoutParams.WRAP_CONTENT
         }
-        windowManager.updateViewLayout(composeView, mainParams)
+        updateWindowLayout("restoreAfterDrag")
         composeView.post {
             hiddenForDrag = false
             applyFloatVisibility()
+            logState("restoreAfterDrag posted", true)
         }
+        logState("restoreAfterDrag", true)
     }
 
     private fun refreshData(more: Boolean = false) {
         if (loading || (more && reachedHistoryEnd)) return
+        Log.d(
+            tag,
+            "refreshData more=$more, loadingBefore=$loading, historyCount=${histories.size}, " +
+                "minHistoryId=$minHistoryId, reachedHistoryEnd=$reachedHistoryEnd"
+        )
         currentLoadVisibleCount = 0
         loading = true
         requestHistories(more)
+        logState("refreshData requested", true)
     }
 
     private fun requestHistories(more: Boolean) {
@@ -515,11 +615,19 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         if (hiddenForFullscreen == isFullscreen) {
             return
         }
+        Log.d(
+            tag,
+            "fullscreen state changed from=$hiddenForFullscreen to=$isFullscreen, " +
+                "visibleFrame=$visibleDisplayFrame"
+        )
         hiddenForFullscreen = isFullscreen
         applyFloatVisibility()
+        logState("fullscreen visibility updated", true)
     }
 
     private fun applyFloatVisibility() {
+        val oldVisibility = composeView.visibility
+        val oldAlpha = composeView.alpha
         val expectedFlags = if (hiddenForFullscreen) {
             BASE_WINDOW_FLAGS or LayoutParams.FLAG_NOT_TOUCHABLE
         } else {
@@ -527,16 +635,73 @@ class HistoryFloatService : Service(), LifecycleOwner, SavedStateRegistryOwner {
         }
         if (viewAdded && mainParams.flags != expectedFlags) {
             mainParams.flags = expectedFlags
-            windowManager.updateViewLayout(composeView, mainParams)
+            updateWindowLayout("applyFloatVisibility flags")
         }
         if (hiddenForFullscreen) {
             composeView.visibility = View.VISIBLE
             composeView.alpha = 0f
+            if (oldVisibility != composeView.visibility || oldAlpha != composeView.alpha) {
+                logState("applyFloatVisibility fullscreen", true)
+            }
             return
         }
 
         composeView.alpha = 1f
         composeView.visibility = if (hiddenForDrag) View.INVISIBLE else View.VISIBLE
+        if (oldVisibility != composeView.visibility || oldAlpha != composeView.alpha) {
+            logState("applyFloatVisibility normal", true)
+        }
+    }
+
+    private fun updateWindowLayout(operation: String) {
+        Log.d(tag, "updateViewLayout before operation=$operation ${windowParamsDescription()}")
+        try {
+            windowManager.updateViewLayout(composeView, mainParams)
+            Log.d(tag, "updateViewLayout completed operation=$operation ${windowParamsDescription()}")
+        } catch (e: Exception) {
+            Log.e(
+                tag,
+                "updateViewLayout failed operation=$operation: ${e::class.java.name}: ${e.message}",
+                e
+            )
+            throw e
+        }
+    }
+
+    private fun logState(event: String, force: Boolean = false) {
+        if (!::composeView.isInitialized) {
+            Log.d(tag, "$event view not initialized, viewAdded=$viewAdded")
+            return
+        }
+        val state = buildString {
+            append("viewAdded=$viewAdded")
+            append(", attached=${composeView.isAttachedToWindow}")
+            append(", visibility=${composeView.visibility}")
+            append(", alpha=${composeView.alpha}")
+            append(", expanded=$expanded")
+            append(", closing=$closing")
+            append(", handleVisible=$handleVisible")
+            append(", hiddenForFullscreen=$hiddenForFullscreen")
+            append(", hiddenForDrag=$hiddenForDrag")
+            append(", loading=$loading")
+            append(", historyCount=${histories.size}")
+            append(", width=${mainParams.width}")
+            append(", height=${mainParams.height}")
+            append(", x=${mainParams.x}")
+            append(", y=${mainParams.y}")
+            append(", flags=${mainParams.flags}")
+        }.toString()
+        if (force || state != lastStateLog) {
+            Log.d(tag, "$event: $state")
+            lastStateLog = state
+        }
+    }
+
+    private fun windowParamsDescription(): String {
+        return "width=${mainParams.width}, height=${mainParams.height}, x=${mainParams.x}, " +
+            "y=${mainParams.y}, flags=${mainParams.flags}, gravity=${mainParams.gravity}, " +
+            "viewAdded=$viewAdded, attached=${composeView.isAttachedToWindow}, " +
+            "visibility=${composeView.visibility}, alpha=${composeView.alpha}"
     }
 
     private fun isSystemFullscreen(): Boolean {
