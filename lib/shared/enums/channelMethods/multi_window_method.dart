@@ -1,0 +1,19 @@
+enum MultiWindowMethod {
+  getHistories,
+  getAllDevices,
+  getAllTagNames,
+  getAllSources,
+  updateAllBaseData,
+  copy,
+  copyContent,
+  notify,
+  getCompatibleOnlineDevices,
+  syncFiles,
+  storeWindowPos,
+  showWindowFromHide,
+  closeWindow,
+  updateWindowSize,
+  updateHistoryTop,
+  deleteHistory,
+  updateConfig
+}
