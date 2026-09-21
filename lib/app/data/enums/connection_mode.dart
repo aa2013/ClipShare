@@ -1,1 +1,0 @@
-enum ConnectionMode { direct, forward }
