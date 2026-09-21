@@ -1,7 +1,10 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/platform/desktop/window/window_service.dart';
 import 'package:clipshare/core/settings/hotkey/hotkey_settings_provider.dart';
 import 'package:clipshare/core/settings/preference/preference_settings_provider.dart';
+import 'package:clipshare/shared/enums/config_key.dart';
+import 'package:clipshare/shared/extensions/size_extension.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'window_service_provider.g.dart';
@@ -13,12 +16,14 @@ part 'window_service_provider.g.dart';
 @Riverpod(keepAlive: true)
 Future<WindowService> windowService(Ref ref) async {
   final service = WindowService(
-    rememberWindowSize: () =>
-        ref.read(preferenceSettingsProvider).value?.rememberWindowSize ?? false,
-    takeOverWinV: () =>
-        ref.read(hotkeySettingsProvider).value?.takeOverWinV ?? false,
-    restoreWinVOnExit: () =>
-        ref.read(hotkeySettingsProvider).value?.restoreWinVOnExit ?? false,
+    rememberWindowSize: () => ref.read(preferenceSettingsProvider).value?.rememberWindowSize ?? false,
+    takeOverWinV: () => ref.read(hotkeySettingsProvider).value?.takeOverWinV ?? false,
+    restoreWinVOnExit: () => ref.read(hotkeySettingsProvider).value?.restoreWinVOnExit ?? false,
+    onWindowSizeChanged: (size) async {
+      final db = await ref.read(appDbProvider.future);
+      await db.configDao.addOrUpdate(ConfigKey.windowSize, size.str);
+      ref.invalidate(preferenceSettingsProvider);
+    },
   );
   ref.onDispose(service.dispose);
   if (isDesktop) {

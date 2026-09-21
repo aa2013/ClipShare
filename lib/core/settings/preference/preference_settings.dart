@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import 'package:clipshare/core/constants/default_settings_constants.dart';
+
 class PreferenceSettings {
   ///记住窗口大小
   final bool rememberWindowSize;
@@ -37,12 +39,15 @@ class PreferenceSettings {
   ///相同快捷键关闭
   final bool closeOnSameHotKey;
 
+  ///桌面端历史弹窗粘贴触发行为，默认双击
+  final bool clickToPaste;
+
   ///上次 Sql 编辑内容
   final String lastSqlEditContent;
 
   const PreferenceSettings({
     this.rememberWindowSize = false,
-    this.windowSize = const Size(1000, 600),
+    this.windowSize = defaultWindowSize,
     this.showOnRecentTasks = true,
     this.showMoreItemsInRow = true,
     this.useTrayFlashingForConnection = false,
@@ -53,6 +58,7 @@ class PreferenceSettings {
     this.fileSenderWindowSize,
     this.autoClosePopupOnBlur = false,
     this.closeOnSameHotKey = false,
+    this.clickToPaste = false,
     this.lastSqlEditContent = '',
   });
 }

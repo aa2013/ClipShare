@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/shared/utils/log.dart';
@@ -13,6 +14,9 @@ class WindowService with WindowListener {
   /// 是否记住上次窗口尺寸。
   final bool Function() rememberWindowSize;
 
+  /// 窗口尺寸变化。
+  final void Function(Size size) onWindowSizeChanged;
+
   /// 是否接管 Win+V。
   final bool Function() takeOverWinV;
 
@@ -23,6 +27,7 @@ class WindowService with WindowListener {
 
   WindowService({
     required this.rememberWindowSize,
+    required this.onWindowSizeChanged,
     required this.takeOverWinV,
     required this.restoreWinVOnExit,
   });
@@ -74,7 +79,7 @@ class WindowService with WindowListener {
     if (!rememberWindowSize()) {
       return;
     }
-    // 这里仅触发一次尺寸查询，后续接入持久化配置后再写回设置。
-    await windowManager.getSize();
+    final size = await windowManager.getSize();
+    onWindowSizeChanged(size);
   }
 }

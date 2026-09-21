@@ -1,6 +1,6 @@
-
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/pages/level2/settings_language_page.dart';
+import 'package:clipshare/features/settings/pages/level2/settings_preference_page.dart';
 import 'package:clipshare/features/settings/pages/settings_section_view_base.dart';
 import 'package:flutter/widgets.dart';
 
@@ -11,8 +11,8 @@ SettingsSectionView? buildSettingsSectionView(
   switch (section) {
     case SettingsSection.language:
       return SettingsLanguagePage(embedded: embedded);
-    // case SettingsSection.preference:
-    //   return SettingsPreferencePage(embedded: embedded);
+    case SettingsSection.preference:
+      return SettingsPreferencePage(embedded: embedded);
     // case SettingsSection.notification:
     //   return SettingsNotificationPage(embedded: embedded);
     // case SettingsSection.clipboard:

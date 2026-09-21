@@ -1518,6 +1518,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get closeOnSameHotKeyDesc => '默认鼠标点击窗体关闭按钮，启用后可以使用相同的快捷键打开和关闭弹窗';
 
   @override
+  String get clickToPasteTitle => '历史弹窗粘贴触发行为';
+
+  @override
+  String get clickToPasteDescSingle => '当前:单击粘贴';
+
+  @override
+  String get clickToPasteDescDouble => '当前:双击粘贴';
+
+  @override
   String get saveToAlbum => '保存至相册';
 
   @override

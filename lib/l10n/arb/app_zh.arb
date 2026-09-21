@@ -2051,6 +2051,18 @@
   "@closeOnSameHotKeyDesc": {
     "description": "translated key: closeOnSameHotKeyDesc"
   },
+  "clickToPasteTitle": "历史弹窗粘贴触发行为",
+  "@clickToPasteTitle": {
+    "description": "translated key: clickToPasteTitle"
+  },
+  "clickToPasteDescSingle": "当前:单击粘贴",
+  "@clickToPasteDescSingle": {
+    "description": "translated key: clickToPasteDescSingle"
+  },
+  "clickToPasteDescDouble": "当前:双击粘贴",
+  "@clickToPasteDescDouble": {
+    "description": "translated key: clickToPasteDescDouble"
+  },
   "saveToAlbum": "保存至相册",
   "@saveToAlbum": {
     "description": "translated key: saveToAlbum"

@@ -5,7 +5,7 @@ import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/enums/history_content_type.dart';
 import 'package:flutter/services.dart';
 
-const String defaultWindowSize = '1000x650';
+const defaultWindowSize = Size(1000, 650);
 
 final historyFloatTypes = [HistoryContentType.text.value, HistoryContentType.image.value];
 

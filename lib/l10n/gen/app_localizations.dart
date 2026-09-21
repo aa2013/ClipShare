@@ -2989,6 +2989,24 @@ abstract class AppLocalizations {
   /// **'Use the popup hotkey to both open and close it.'**
   String get closeOnSameHotKeyDesc;
 
+  /// translated key: clickToPasteTitle
+  ///
+  /// In en, this message translates to:
+  /// **'History popup paste trigger'**
+  String get clickToPasteTitle;
+
+  /// translated key: clickToPasteDescSingle
+  ///
+  /// In en, this message translates to:
+  /// **'Current: single-click'**
+  String get clickToPasteDescSingle;
+
+  /// translated key: clickToPasteDescDouble
+  ///
+  /// In en, this message translates to:
+  /// **'Current: double-click'**
+  String get clickToPasteDescDouble;
+
   /// translated key: saveToAlbum
   ///
   /// In en, this message translates to:

@@ -1579,6 +1579,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the popup hotkey to both open and close it.';
 
   @override
+  String get clickToPasteTitle => 'History popup paste trigger';
+
+  @override
+  String get clickToPasteDescSingle => 'Current: single-click';
+
+  @override
+  String get clickToPasteDescDouble => 'Current: double-click';
+
+  @override
   String get saveToAlbum => 'Save to album';
 
   @override

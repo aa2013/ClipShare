@@ -2043,6 +2043,18 @@
   "@closeOnSameHotKeyDesc": {
     "description": "translated key: closeOnSameHotKeyDesc"
   },
+  "clickToPasteTitle": "History popup paste trigger",
+  "@clickToPasteTitle": {
+    "description": "translated key: clickToPasteTitle"
+  },
+  "clickToPasteDescSingle": "Current: single-click",
+  "@clickToPasteDescSingle": {
+    "description": "translated key: clickToPasteDescSingle"
+  },
+  "clickToPasteDescDouble": "Current: double-click",
+  "@clickToPasteDescDouble": {
+    "description": "translated key: clickToPasteDescDouble"
+  },
   "saveToAlbum": "Save to album",
   "@saveToAlbum": {
     "description": "translated key: saveToAlbum"
