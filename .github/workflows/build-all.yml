@@ -110,6 +110,17 @@ jobs:
       - name: Show files
         run: ls -R artifacts
 
+      # 去除文件名中的平台后缀，避免不同平台产物重名
+      - name: Rename artifacts
+        run: |
+          cd artifacts
+          for f in *; do
+            new_name=$(echo "$f" | sed -E 's/-(windows|linux|macos)//')
+            if [ "$new_name" != "$f" ]; then
+              mv "$f" "$new_name"
+            fi
+          done
+
       # 生成 tag
       - name: Determine tag
         id: tag
