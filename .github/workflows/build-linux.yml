@@ -16,14 +16,14 @@ env:
 
 jobs:
   # ============================================================
-  # 基于 ubuntu:24.04 LTS（glibc 2.39，>= liblua.so 所需 2.38）构建 deb、rpm、AppImage。
-  # flutter_embed_lua 插件自带的预编译 liblua.so 需要 GLIBC_2.38，
-  # 低于 2.38 的发行版无法加载该库，故选用 2.38 以上的 LTS 基座。
+  # 基于 ubuntu:22.02 LTS（glibc 2.35，>= liblua.so 所需 2.34）构建 deb、rpm、AppImage。
+  # flutter_embed_lua 插件自带的预编译 liblua.so 需要 GLIBC_2.34，
+  # 低于 2.34 的发行版无法加载该库，故选用 2.34 以上的 LTS 基座。
   # ============================================================
   build-linux:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:24.04
+      image: ubuntu:22.04
 
     steps:
     - name: Verify build environment

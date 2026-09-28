@@ -11,5 +11,5 @@ path=build/ios/iphoneos
 payload=$path/Payload
 mkdir -p $payload && cp -r $path/Runner.app $payload
 cd $path || exit 1
-zip -r "clipshare-$VERSION-$BUILD_NUMBER-nosign.ipa" Payload
+zip -r "clipshare-$VERSION+$BUILD_NUMBER-nosign.ipa" Payload
 open .
