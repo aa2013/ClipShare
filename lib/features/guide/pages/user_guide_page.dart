@@ -120,23 +120,11 @@ class _UserGuidePageState extends ConsumerState<UserGuidePage> with WidgetsBindi
     guideController.goTo(index);
   }
 
-  /// 步骤清单组装完成且仍有必须完成的步骤时展示引导，否则回到主界面。
-  void _syncGuideEntry(GuideBootstrap? bootstrap) {
-    if (bootstrap == null || bootstrap.shouldRunGuide) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _gotoHome();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final bootstrap = ref.watch(guideBootstrapProvider).asData?.value;
     final guideState = ref.watch(guideControllerProvider);
-    _syncGuideEntry(bootstrap);
+    // _syncGuideEntry(bootstrap);
     return Scaffold(
       body: SafeArea(
         child: bootstrap == null ? _buildLoading() : _buildGuide(guideState),

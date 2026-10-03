@@ -1,3 +1,4 @@
+import 'package:clipshare/core/settings/forward/forward_server_status.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// 应用启动初始化状态
@@ -45,6 +46,9 @@ class AppState {
   ///应用启动初始化状态
   final AppInitStatus initStatus;
 
+  ///中转服务状态
+  final ForwardServerStatus forwardServerStatus;
+
   const AppState({
     this.rulesMigrated = false,
     this.transportServerVersion = '',
@@ -56,6 +60,7 @@ class AppState {
     this.ignoreAccessibility = false,
     this.ignoreShizuku = false,
     this.initStatus = AppInitStatus.uninitialized,
+    this.forwardServerStatus = ForwardServerStatus.disconnected,
   });
 
   AppState copyWith({
@@ -71,6 +76,7 @@ class AppState {
     bool? ignoreAccessibility,
     bool? ignoreShizuku,
     AppInitStatus? initStatus,
+    ForwardServerStatus? forwardServerStatus,
   }) {
     return AppState(
       rulesMigrated: rulesMigrated ?? this.rulesMigrated,
@@ -83,6 +89,7 @@ class AppState {
       ignoreAccessibility: ignoreAccessibility ?? this.ignoreAccessibility,
       ignoreShizuku: ignoreShizuku ?? this.ignoreShizuku,
       initStatus: initStatus ?? this.initStatus,
+      forwardServerStatus: forwardServerStatus ?? this.forwardServerStatus,
     );
   }
 }

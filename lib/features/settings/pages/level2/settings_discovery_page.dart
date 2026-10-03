@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:clipshare/core/constants/network_constants.dart' as net;
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/extensions/multi_select_dialog_extension.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
@@ -109,7 +110,13 @@ class SettingsDiscoveryPage extends SettingsSectionView {
           TranslationKey.port.tr,
           maxLines: 1,
         ),
-        description: Text(TranslationKey.discoveringSettingsPortDesc.tr),
+        description: Text(
+          TranslationKey.discoveringSettingsPortDesc.trParams(
+            {
+              'port': net.port.toString(),
+            },
+          ),
+        ),
         value: discoverySettings.port,
         action: (v) => Text(v.toString()),
         onTap: () {

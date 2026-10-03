@@ -43,11 +43,11 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     //首次启动
     if (localDeviceInfo.firstSetup) {
       // 引导步骤的组装依赖启动预加载的配置，此处等待完成后再决定落地页面。
-      final bootstrap = await ref.read(guideBootstrapProvider.future);
+      // final bootstrap = await ref.read(guideBootstrapProvider.future);
       if (!mounted || _hasNavigated) {
         return;
       }
-      shouldUserGuide = isAndroid && bootstrap.shouldRunGuide;
+      shouldUserGuide = isAndroid;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {

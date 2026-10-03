@@ -29,10 +29,6 @@ class GuideBootstrap {
     required this.completed,
   });
 
-  /// 是否仍有必须完成的步骤未完成。
-  ///
-  /// 为 false 表示所有非跳过步骤均已授权，可以直接进入首页不再展示引导。
-  bool get shouldRunGuide => steps.any((step) => !step.skippable && !(completed[step.step] ?? false));
 }
 
 /// 组装引导流程的步骤清单与初始完成状态。
@@ -94,7 +90,8 @@ class GuideBootstrapNotifier extends _$GuideBootstrapNotifier {
       return true;
     }
     try {
-      return await handler.hasPermission();
+      final result = await handler.hasPermission();
+      return result;
     } catch (err, stack) {
       logger.error(tag, err, stack);
       return false;

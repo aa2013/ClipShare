@@ -63,7 +63,13 @@ class GuideStepSpec {
   String get titleText => title.tr;
 
   /// 翻译后的说明文案。
-  String get descriptionText => description.trParams(descriptionParams);
+  String get descriptionText {
+    if (descriptionParams.isEmpty) {
+      return description.tr;
+    } else {
+      return description.trParams(descriptionParams);
+    }
+  }
 }
 
 /// 全部引导步骤的展示描述表。
@@ -87,7 +93,7 @@ const Map<GuideStep, GuideStepSpec> guideStepSpecs = {
   GuideStep.workingMode: GuideStepSpec(
     step: GuideStep.workingMode,
     title: TranslationKey.selectWorkMode,
-    description: TranslationKey.shizukuModeDesc,
+    description: TranslationKey.selectWorkMode,
     icon: Icons.developer_mode,
   ),
   GuideStep.notificationPermission: GuideStepSpec(

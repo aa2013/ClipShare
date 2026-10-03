@@ -5,6 +5,17 @@ import 'package:flutter/material.dart';
 import '../enums/settings_section.dart';
 import '../utils/settings_section_view_factory.dart';
 
+/// 设置分区内容页路由参数，go_router 通过 extra 携带目标分区与需要高亮的搜索项 id。
+class SettingsSectionRouteArgs {
+  final SettingsSection section;
+  final String? highlightedSearchId;
+
+  const SettingsSectionRouteArgs({
+    required this.section,
+    this.highlightedSearchId,
+  });
+}
+
 class SettingsSectionContentPage extends StatelessWidget {
   final SettingsSection? section;
   final bool embedded;

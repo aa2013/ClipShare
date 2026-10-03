@@ -237,6 +237,19 @@ class ClipboardService with ClipboardListener {
     );
   }
 
+  /// 按当前配置重启 Android 剪贴板监听。
+  ///
+  /// 工作环境授权变更、监听方式切换等场景都需要在旧监听失效后重新拉起，
+  /// 统一走这里以保证通知文案配置与工作模式、监听方式始终来自同一份最新配置。
+  Future<void> restartAndroidListening() async {
+    if (!isAndroid) {
+      return;
+    }
+    final settings = await _loadSettings();
+    await clipboardManager.stopListening();
+    await _startListeningOnAndroid(settings.workingMode);
+  }
+
   /// 释放插件监听和事件流。
   void dispose() {
     clipboardManager.removeListener(this);

@@ -133,7 +133,7 @@ Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
     appVersion: appVersion,
     androidOsVersion: androidOsVersion,
     localName: localName,
-    firstSetup: firstSetup,
+    firstSetup: true,//todo 临时写死
     androidIdGenerateWay: androidIdGenerateWay,
   );
 }

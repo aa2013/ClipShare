@@ -1,13 +1,15 @@
 import 'package:clipshare/core/runtime/app_state/app_state.dart';
+import 'package:clipshare/core/settings/forward/forward_server_status.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
 part 'app_state_provider.g.dart';
 
 /// 运行时配置
 @Riverpod(keepAlive: true)
 class AppStateNotifier extends _$AppStateNotifier {
   @override
-  AppState build(){
+  AppState build() {
     return const AppState();
   }
 
@@ -74,5 +76,10 @@ class AppStateNotifier extends _$AppStateNotifier {
   /// 更新是否忽略 Shizuku 权限缺失提示
   void updateIgnoreShizuku(bool value) {
     state = state.copyWith(ignoreShizuku: value);
+  }
+
+  /// 更新中转服务状态
+  void updateForwardServerStatus(ForwardServerStatus status) {
+    state = state.copyWith(forwardServerStatus: status);
   }
 }

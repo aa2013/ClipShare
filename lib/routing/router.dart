@@ -4,8 +4,10 @@ import 'package:clipshare/features/guide/pages/user_guide_page.dart';
 import 'package:clipshare/features/history/pages/preview_page.dart';
 import 'package:clipshare/features/home/pages/home_page.dart';
 import 'package:clipshare/features/rules/pages/rule_detail.dart';
+import 'package:clipshare/features/rules/pages/rules_page.dart';
 import 'package:clipshare/features/rules/pages/script_module_detail.dart';
 import 'package:clipshare/features/segment_words/pages/segment_words_page.dart';
+import 'package:clipshare/features/settings/pages/settings_section_content.dart';
 import 'package:clipshare/features/splash/pages/splash_page.dart';
 import 'package:clipshare/features/tags/pages/tag_edit_page.dart';
 import 'package:go_router/go_router.dart';
@@ -60,13 +62,16 @@ final appRouter = GoRouter(
         return TagEditPage(hisId: args.hisId);
       },
     ),
-    // 规则详情：选中项由 rulesExecutorProvider 提供，路由本身不携带参数
+    GoRoute(
+      path: AppRoutes.rules.path,
+      name: AppRoutes.rules.name,
+      builder: (context, state) => const RulesPage(),
+    ),
     GoRoute(
       path: AppRoutes.ruleDetail.path,
       name: AppRoutes.ruleDetail.name,
       builder: (context, state) => const RuleDetail(),
     ),
-    // 脚本模块详情：选中项由 rulesExecutorProvider 提供，路由本身不携带参数
     GoRoute(
       path: AppRoutes.scriptModuleDetail.path,
       name: AppRoutes.scriptModuleDetail.name,
@@ -84,6 +89,17 @@ final appRouter = GoRouter(
       path: AppRoutes.userGuide.path,
       name: AppRoutes.userGuide.name,
       builder: (context, state) => const UserGuidePage(),
+    ),
+    GoRoute(
+      path: AppRoutes.settingsSection.path,
+      name: AppRoutes.settingsSection.name,
+      builder: (context, state) {
+        final args = state.extra as SettingsSectionRouteArgs;
+        return SettingsSectionContentPage(
+          section: args.section,
+          highlightedSearchId: args.highlightedSearchId,
+        );
+      },
     ),
   ],
 );

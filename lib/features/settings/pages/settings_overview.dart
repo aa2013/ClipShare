@@ -1,10 +1,22 @@
+import 'dart:async';
+
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
+import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
+import 'package:clipshare/core/services/clipboard/android_environment_status_provider.dart';
+import 'package:clipshare/core/services/clipboard/clipboard_service_provider.dart';
+import 'package:clipshare/core/services/permission/permission_info_provider.dart';
+import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
+import 'package:clipshare/core/settings/forward/forward_settings_provider.dart';
+import 'package:clipshare/core/settings/forward/forward_way.dart';
+import 'package:clipshare/core/settings/notification/notification_settings_provider.dart';
 import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/utils/settings_section_view_factory.dart';
+import 'package:clipshare/features/settings/widgets/android_env/android_environment_status_card.dart';
+import 'package:clipshare/features/settings/widgets/android_env/clipboard_listening_way_toggle.dart';
 import 'package:clipshare/features/settings/widgets/search/settings_empty_search_tile.dart';
 import 'package:clipshare/features/settings/widgets/search/settings_search_field.dart';
 import 'package:clipshare/features/settings/widgets/search/settings_search_result_tile.dart';
@@ -12,9 +24,11 @@ import 'package:clipshare/features/settings/widgets/section/settings_section_til
 import 'package:clipshare/features/settings/widgets/settings_overview_group.dart';
 import 'package:clipshare/features/settings/widgets/theme_mode_selector.dart';
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/enums/config_key.dart';
 import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/utils/consumer_wrapper.dart';
+import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
@@ -38,7 +52,7 @@ class SettingsOverviewPage extends ConsumerStatefulWidget {
   ConsumerState<SettingsOverviewPage> createState() => _SettingsOverviewPageState();
 }
 
-class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
+class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> with WidgetsBindingObserver {
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   static const padding = EdgeInsets.fromLTRB(16, 4, 16, 8);
@@ -46,6 +60,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _searchController.addListener(() {
       setState(() {
         _query = _searchController.text;
@@ -55,8 +70,18 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// 回到前台时复查 Android 工作环境，避免从系统授权页返回后状态滞后。
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      return;
+    }
+    unawaited(ref.read(androidEnvironmentStatusProvider.notifier).refresh());
   }
 
   @override
@@ -94,10 +119,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
                       child: consumerWrapper(_buildQuickSettingsCards),
                     ),
                   ),
-                if (searching)
-                  buildSearchingResults(searching)
-                else
-                  buildSections(),
+                if (searching) buildSearchingResults(searching) else buildSections(),
               ],
             ),
           ),
@@ -128,8 +150,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   List<SettingsSection> getVisibleSections(BuildContext context) {
     return SettingsSection.values
         .where(
-          (section) =>
-              isSettingsSectionListVisible(section, context.isCompactScreen),
+          (section) => isSettingsSectionListVisible(section, context.isCompactScreen),
         )
         .toList();
   }
@@ -138,9 +159,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   List<SettingsSearchItem> _buildSearchResults(BuildContext context) {
     return _buildSettingsSearchItems(context)
         .where(
-          (item) =>
-              item.matches(_query) &&
-              isSettingsSectionAvailable(item.section, context.isCompactScreen),
+          (item) => item.matches(_query) && isSettingsSectionAvailable(item.section, context.isCompactScreen),
         )
         .toList();
   }
@@ -162,9 +181,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
 
   ///构建搜索结构
   Widget buildSearchingResults(bool searching) {
-    final searchResults = searching
-        ? _buildSearchResults(context)
-        : const <SettingsSearchItem>[];
+    final searchResults = searching ? _buildSearchResults(context) : const <SettingsSearchItem>[];
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
       sliver: Visibility(
@@ -237,65 +254,62 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   }
 
   Widget _buildStatusOverviewCards() {
-    return const SizedBox.shrink();
-    //todo
-    // return Obx(
-    //   () => SettingsOverviewGroup(
-    //     children: [
-    //       SettingsOverviewTile(
-    //         icon: Icons.admin_panel_settings_outlined,
-    //         title: TranslationKey.permissionSettingsGroupName.tr,
-    //         subtitle: _permissionSummaryText(),
-    //         tone: _permissionIssueCount() == 0 ? Colors.green : Colors.orange,
-    //         trailing: const Icon(
-    //           Icons.chevron_right_rounded,
-    //           color: Colors.blueGrey,
-    //         ),
-    //         onTap: () => widget.onSectionTap(SettingsSection.permission),
-    //         selected: widget.selectedSection == SettingsSection.permission,
-    //         visible: (isAndroid || isIOS) && _permissionIssueCount() > 0,
-    //       ),
-    //       // Keep relay status visible at the top while its detailed controls live in the relay page.
-    //       SettingsOverviewTile(
-    //         icon: Icons.cloud_sync_outlined,
-    //         title: TranslationKey.forwardSettingsGroupName.tr,
-    //         subtitle: forwardOverviewStatusText(
-    //           way: appConfig.forwardWay,
-    //           enabled: appConfig.enableForward,
-    //           status: settingsController.forwardServerStatus.value,
-    //         ),
-    //         subtitleIcon: forwardWayIcon(appConfig.forwardWay),
-    //         subtitleTooltip: forwardWayLabel(appConfig.forwardWay),
-    //         tone: forwardOverviewTone(
-    //           way: appConfig.forwardWay,
-    //           enabled: appConfig.enableForward,
-    //           status: settingsController.forwardServerStatus.value,
-    //         ),
-    //         trailing: appConfig.forwardWay == ForwardWay.none
-    //             ? const Icon(
-    //                 Icons.chevron_right_rounded,
-    //                 color: Colors.blueGrey,
-    //               )
-    //             : Row(
-    //                 mainAxisSize: MainAxisSize.min,
-    //                 children: [
-    //                   Switch(
-    //                     value: appConfig.enableForward,
-    //                     onChanged: (checked) =>
-    //                         _toggleForward(context, checked),
-    //                   ),
-    //                   const Icon(
-    //                     Icons.chevron_right_rounded,
-    //                     color: Colors.blueGrey,
-    //                   ),
-    //                 ],
-    //               ),
-    //         onTap: () => widget.onSectionTap(SettingsSection.forward),
-    //         selected: widget.selectedSection == SettingsSection.forward,
-    //       ),
-    //     ],
-    //   ),
-    // );
+    final forwardSettings = ref.watch(forwardSettingsProvider).requireValue;
+    final forwardServerStatus = ref.watch(appStateProvider.select((state) => state.forwardServerStatus));
+    return SettingsOverviewGroup(
+      children: [
+        SettingsOverviewTile(
+          icon: Icons.admin_panel_settings_outlined,
+          title: TranslationKey.permissionSettingsGroupName.tr,
+          subtitle: _permissionSummaryText(),
+          tone: _permissionIssueCount() == 0 ? Colors.green : Colors.orange,
+          trailing: const Icon(
+            Icons.chevron_right_rounded,
+            color: Colors.blueGrey,
+          ),
+          onTap: () => widget.onSectionTap(SettingsSection.permission),
+          selected: widget.selectedSection == SettingsSection.permission,
+          visible: (isAndroid || isIOS) && _permissionIssueCount() > 0,
+        ),
+        // Keep relay status visible at the top while its detailed controls live in the relay page.
+        SettingsOverviewTile(
+          icon: Icons.cloud_sync_outlined,
+          title: TranslationKey.forwardSettingsGroupName.tr,
+          subtitle: forwardOverviewStatusText(
+            way: forwardSettings.way,
+            enabled: forwardSettings.enable,
+            status: forwardServerStatus,
+          ),
+          subtitleIcon: forwardWayIcon(forwardSettings.way),
+          subtitleTooltip: forwardWayLabel(forwardSettings.way),
+          tone: forwardOverviewTone(
+            way: forwardSettings.way,
+            enabled: forwardSettings.enable,
+            status: forwardServerStatus,
+          ),
+          trailing: forwardSettings.way == ForwardWay.none
+              ? const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.blueGrey,
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Switch(
+                      value: forwardSettings.enable,
+                      onChanged: (checked) => _toggleForward(context, checked),
+                    ),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Colors.blueGrey,
+                    ),
+                  ],
+                ),
+          onTap: () => widget.onSectionTap(SettingsSection.forward),
+          selected: widget.selectedSection == SettingsSection.forward,
+        ),
+      ],
+    );
   }
 
   Widget _buildQuickSettingsCards(BuildContext context, WidgetRef ref) {
@@ -364,31 +378,36 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   }
 
   int _permissionIssueCount() {
-    return 0;
-    // var count = 0;
-    // if (isAndroid) {
-    //   if (!settingsController.hasNotifyPerm.value) count++;
-    //   if (!settingsController.hasFloatPerm.value) count++;
-    //   if (!settingsController.hasIgnoreBattery.value) count++;
-    //   if (!settingsController.hasSmsReadPerm.value) count++;
-    //   if (!settingsController.hasClipboardPerm.value) count++;
-    //   if (!settingsController.hasAccessibilityPerm.value && appConfig.sourceRecord && !appConfig.ignoreAccessibility) count++;
-    //   if ((!settingsController.hasNotificationRecordPerm.value && appConfig.enableRecordNotification) || (settingsController.hasNotificationRecordPerm.value && !appConfig.enableRecordNotification)) {
-    //     count++;
-    //   }
-    // } else if (isIOS) {
-    //   if (!settingsController.hasNotifyPerm.value) count++;
-    //   if (!settingsController.hasIOSPhotosPerm.value) count++;
-    // }
-    // return count;
+    final permissionInfo = ref.watch(permissionInfoProvider).value;
+    if (permissionInfo == null) {
+      return 0;
+    }
+    final sourceRecord = ref.watch(clipboardSettingsProvider.select((state) => state.requireValue.sourceRecord));
+    final ignoreAccessibility = ref.watch(appStateProvider.select((state) => state.ignoreAccessibility));
+    final enableRecordNotification = ref.watch(notificationSettingsProvider.select((state) => state.requireValue.enableRecordNotification));
+    var count = 0;
+    if (isAndroid) {
+      if (!permissionInfo.hasNotifyPermission) count++;
+      if (!permissionInfo.hasFloatWindowPermission) count++;
+      if (!permissionInfo.hasIgnoreBatteryPermission) count++;
+      if (!permissionInfo.hasSmsReadPermission) count++;
+      if (!permissionInfo.hasClipboardPermission) count++;
+      if (!permissionInfo.hasAccessibilityPermission && sourceRecord && !ignoreAccessibility) count++;
+      final hasNotificationRecordPermission = permissionInfo.hasNotificationRecordPermission;
+      if ((!hasNotificationRecordPermission && enableRecordNotification) || (hasNotificationRecordPermission && !enableRecordNotification)) {
+        count++;
+      }
+    } else if (isIOS) {
+      if (!permissionInfo.hasNotifyPermission) count++;
+      if (!permissionInfo.hasIOSPhotosPermission) count++;
+    }
+    return count;
   }
 
   String _permissionSummaryText() {
     final count = _permissionIssueCount();
     if (count == 0) {
-      return isAndroid || isIOS
-          ? TranslationKey.settingsOverviewPermissionNormal.tr
-          : TranslationKey.none.tr;
+      return isAndroid || isIOS ? TranslationKey.settingsOverviewPermissionNormal.tr : TranslationKey.none.tr;
     }
     return TranslationKey.settingsOverviewPermissionIssueCount.trParams({
       'count': count.toString(),
@@ -454,20 +473,23 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
     }
     final db = await ref.read(appDbProvider.future);
     await db.configDao.addOrUpdate(.appTheme, mode.name);
-    if(!context.mounted){
+    if (!context.mounted) {
       return;
     }
     var isDark = mode == ThemeMode.dark;
-    if(mode == ThemeMode.system){
+    if (mode == ThemeMode.system) {
       isDark = context.isPlatformDarkMode;
     }
-    context.updateTheme(isDark, onAnimationFinish: () {
-      //todo
-      // final currentBg = settingsController.envStatusBgColor.value;
-      // if (currentBg != null) {
-      //   settingsController.envStatusBgColor.value = settingsController.warningBgColor;
-      // }
-    });
+    context.updateTheme(
+      isDark,
+      onAnimationFinish: () {
+        //todo
+        // final currentBg = settingsController.envStatusBgColor.value;
+        // if (currentBg != null) {
+        //   settingsController.envStatusBgColor.value = settingsController.warningBgColor;
+        // }
+      },
+    );
     final androidChannel = ref.read(androidChannelProvider.notifier);
     androidChannel.setHistoryFloatThemeMode(mode);
     //todo
@@ -495,122 +517,25 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> {
   }
 
   Widget _buildAndroidEnvironmentCards() {
-    return const SizedBox.shrink();
-    //todo
-    // return Column(
-    //   children: [
-    //     Obx(() {
-    //       return EnvironmentStatusCard(
-    //         icon: Obx(() => settingsController.envStatusIcon.value),
-    //         backgroundColor: settingsController.envStatusBgColor.value,
-    //         tipContent: Obx(() => settingsController.envStatusTipContent.value),
-    //         tipDesc: Obx(() => settingsController.envStatusTipDesc.value),
-    //         action: Obx(() {
-    //           return settingsController.envStatusAction.value ?? const SizedBox.shrink();
-    //         }),
-    //         onTap: settingsController.onEnvironmentStatusCardClick,
-    //       );
-    //     }),
-    //     Obx(
-    //           () => Visibility(
-    //         visible: appConfig.workingMode == EnvironmentType.shizuku || appConfig.workingMode == EnvironmentType.root,
-    //         child: SettingHeader(
-    //           icon: const Icon(
-    //             Icons.developer_mode,
-    //             size: 17,
-    //           ),
-    //           title: TranslationKey.clipboardListeningWay.tr,
-    //           tips: Tooltip(
-    //             message: TranslationKey.clipboardListeningWayTips.tr,
-    //             child: GestureDetector(
-    //               child: const MouseRegion(
-    //                 cursor: SystemMouseCursors.click,
-    //                 child: Icon(
-    //                   Icons.info_outline,
-    //                   color: Colors.blueGrey,
-    //                   size: 15,
-    //                 ),
-    //               ),
-    //               onTap: () async {
-    //                 Global.showTipsDialog(
-    //                   context: context,
-    //                   text: TranslationKey.clipboardListeningWayTipsDetail.tr,
-    //                 );
-    //               },
-    //             ),
-    //           ),
-    //           padding: const EdgeInsets.only(bottom: 8, left: 8),
-    //         ),
-    //       ),
-    //     ),
-    //     Obx(
-    //           () => Visibility(
-    //         visible: appConfig.workingMode == EnvironmentType.shizuku || appConfig.workingMode == EnvironmentType.root,
-    //         child: Row(
-    //           children: [
-    //             Expanded(
-    //               child: Obx(
-    //                     () => ClipboardListeningWaySettingCard(
-    //                   cardMargin: const EdgeInsets.only(left: 0, right: 3),
-    //                   icon: Icons.visibility_off,
-    //                   name: ClipboardListeningWay.hiddenApi.tr,
-    //                   selected: appConfig.clipboardListeningWay == ClipboardListeningWay.hiddenApi,
-    //                   onTap: () {
-    //                     if (appConfig.clipboardListeningWay == ClipboardListeningWay.hiddenApi) {
-    //                       return;
-    //                     }
-    //                     Global.showTipsDialog(
-    //                       context: context,
-    //                       text: TranslationKey.clipboardListeningWayToggleConfirmContent.trParams({'way': ClipboardListeningWay.hiddenApi.tr}),
-    //                       showCancel: true,
-    //                       onOk: () async {
-    //                         appConfig.setClipboardListeningWay(ClipboardListeningWay.hiddenApi);
-    //                         await clipboardManager.stopListening();
-    //                         clipboardManager.startListening(
-    //                           env: appConfig.workingMode,
-    //                           way: ClipboardListeningWay.hiddenApi,
-    //                           notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
-    //                         );
-    //                       },
-    //                     );
-    //                   },
-    //                 ),
-    //               ),
-    //             ),
-    //             Expanded(
-    //               child: Obx(
-    //                     () => ClipboardListeningWaySettingCard(
-    //                   cardMargin: const EdgeInsets.only(right: 0, left: 3),
-    //                   icon: Icons.list_alt,
-    //                   name: ClipboardListeningWay.logs.tr,
-    //                   selected: appConfig.clipboardListeningWay == ClipboardListeningWay.logs,
-    //                   onTap: () {
-    //                     if (appConfig.clipboardListeningWay == ClipboardListeningWay.logs) {
-    //                       return;
-    //                     }
-    //                     Global.showTipsDialog(
-    //                       context: context,
-    //                       text: TranslationKey.clipboardListeningWayToggleConfirmContent.trParams({'way': ClipboardListeningWay.logs.tr}),
-    //                       showCancel: true,
-    //                       onOk: () async {
-    //                         appConfig.setClipboardListeningWay(ClipboardListeningWay.logs);
-    //                         await clipboardManager.stopListening();
-    //                         clipboardManager.startListening(
-    //                           env: appConfig.workingMode,
-    //                           way: ClipboardListeningWay.logs,
-    //                           notificationContentConfig: ClipboardService.defaultNotificationContentConfig,
-    //                         );
-    //                       },
-    //                     );
-    //                   },
-    //                 ),
-    //               ),
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //   ],
-    // );
+    final workingMode = ref.watch(clipboardSettingsProvider.select((state) => state.requireValue.workingMode));
+    final clipboardListeningWay = ref.watch(clipboardSettingsProvider.select((state) => state.requireValue.listeningWay));
+    Future<void> toggleListeningWay(ClipboardListeningWay listeningWay) async {
+      final db = await ref.read(appDbProvider.future);
+      await db.configDao.addOrUpdate(ConfigKey.clipboardListeningWay, listeningWay.name.toString());
+      ref.invalidate(clipboardSettingsProvider);
+      final clipboardService = await ref.read(clipboardServiceProvider.future);
+      await clipboardService.restartAndroidListening();
+    }
+
+    return Column(
+      children: [
+        const AndroidEnvironmentStatusCard(),
+        ClipboardListeningWayToggle(
+          workingMode: workingMode,
+          listeningWay: clipboardListeningWay,
+          onSelected: toggleListeningWay,
+        ),
+      ],
+    );
   }
 }

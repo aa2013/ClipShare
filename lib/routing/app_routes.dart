@@ -6,10 +6,12 @@ enum AppRoutes {
   imagePreview('/imagePreview', 'imagePreview'),
   segmentWords('/segmentWords', 'segmentWords'),
   tagEdit('/tagEdit', 'tagEdit'),
+  rules('/rules', 'rules'),
   ruleDetail('/ruleDetail', 'ruleDetail'),
   scriptModuleDetail('/scriptModuleDetail', 'scriptModuleDetail'),
   appSelection('/appSelection', 'appSelection'),
-  userGuide('/userGuide', 'userGuide');
+  userGuide('/userGuide', 'userGuide'),
+  settingsSection('/settingsSection', 'settingsSection');
 
   const AppRoutes(this.path, this.name);
 

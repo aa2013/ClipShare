@@ -24,6 +24,7 @@ class SettingHeader<T> extends StatelessWidget {
             icon,
             const SizedBox(width: 5),
             Text(title),
+            const SizedBox(width: 5),
             if (tips != null) tips!,
           ],
         ),
