@@ -1,5 +1,6 @@
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/features/app_selection/app_selection_entry.dart';
+import 'package:clipshare/features/guide/pages/user_guide_page.dart';
 import 'package:clipshare/features/history/pages/preview_page.dart';
 import 'package:clipshare/features/home/pages/home_page.dart';
 import 'package:clipshare/features/rules/pages/rule_detail.dart';
@@ -78,6 +79,11 @@ final appRouter = GoRouter(
         final args = state.extra as AppSelectionRouteArgs;
         return args.buildPage();
       },
+    ),
+    GoRoute(
+      path: AppRoutes.userGuide.path,
+      name: AppRoutes.userGuide.name,
+      builder: (context, state) => const UserGuidePage(),
     ),
   ],
 );

@@ -8,7 +8,8 @@ enum AppRoutes {
   tagEdit('/tagEdit', 'tagEdit'),
   ruleDetail('/ruleDetail', 'ruleDetail'),
   scriptModuleDetail('/scriptModuleDetail', 'scriptModuleDetail'),
-  appSelection('/appSelection', 'appSelection');
+  appSelection('/appSelection', 'appSelection'),
+  userGuide('/userGuide', 'userGuide');
 
   const AppRoutes(this.path, this.name);
 

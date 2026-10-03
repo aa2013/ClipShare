@@ -1,4 +1,5 @@
 import 'package:clipshare/features/debug/pages/debug_page.dart';
+import 'package:clipshare/features/device/pages/device_page.dart';
 import 'package:clipshare/features/history/pages/history_page.dart';
 import 'package:clipshare/features/home/pages/home_compact_page.dart';
 import 'package:clipshare/features/home/pages/home_wide_page.dart';
@@ -32,7 +33,7 @@ class _HomeState extends ConsumerState<HomePage> {
   void initState() {
     pages = [
       const HistoryPage(),
-      const Text('pages2'),
+      const DevicePage(),
       const Text('pages3'),
       const RulesPage(key: rulesPageKey),
       const SettingsPage(),
@@ -88,7 +89,7 @@ class _HomeState extends ConsumerState<HomePage> {
         pages: showPages,
         navItems: buildCompactNavItems(navItems),
       );
-    }else{
+    } else {
       showPages = pages;
       content = HomeWidePage(
         navItems: buildWideNavItems(navItems),

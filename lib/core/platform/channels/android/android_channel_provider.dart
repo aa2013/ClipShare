@@ -135,6 +135,23 @@ class AndroidChannelNotifier extends _$AndroidChannelNotifier {
     );
   }
 
+  /// 检查系统通知是否允许本应用发送。
+  Future<bool> checkNotification() async {
+    if (!isAndroid) return false;
+    return await _channel
+        .invokeMethod<bool?>(AndroidChannelMethod.checkNotification.name)
+        .then((v) => v ?? false);
+  }
+
+  /// 跳转系统通知设置页，由用户在系统页面开启通知。
+  ///
+  /// 原生 `grantNotification` 分支只负责拉起设置页，不会回调 `result.success`，
+  /// 因此这里只发起调用而不等待返回，授权结果统一由 [checkNotification] 复查。
+  void grantNotification() {
+    if (!isAndroid) return;
+    _channel.invokeMethod<void>(AndroidChannelMethod.grantNotification.name);
+  }
+
   void showKeepAliveFloatWindow() {
     if (!isAndroid) return;
     _channel.invokeMethod(

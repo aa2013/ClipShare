@@ -16,6 +16,8 @@ enum AndroidChannelMethod {
   closeKeepAliveFloatWindow,
   checkAlertWindowPermission,
   grantAlertWindowPermission,
+  checkNotification,
+  grantNotification,
   moveToBg,
   toast,
   sendNotify,

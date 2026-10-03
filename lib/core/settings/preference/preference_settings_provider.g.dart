@@ -49,4 +49,4 @@ final class PreferenceSettingsProvider
 }
 
 String _$preferenceSettingsHash() =>
-    r'1e382797a1239b7df3b7ad382d68a5706a0853a7';
+    r'fb3d43e8cda0c19c005c44c78136a51aa3497fb1';

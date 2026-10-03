@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
-import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/models/local_app_info.dart';
+import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';

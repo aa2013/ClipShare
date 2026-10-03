@@ -1,5 +1,7 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/startup/app_startup_provider.dart';
+import 'package:clipshare/features/guide/providers/guide_bootstrap_provider.dart';
 import 'package:clipshare/routing/app_routes.dart';
 import 'package:clipshare/shared/constants/assets.dart';
 import 'package:clipshare/shared/utils/log.dart';
@@ -17,9 +19,10 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
-  static const tag = '_SplashPageState';
+  static const tag = 'SplashPage';
+
   /// 标记启动成功后的跳转是否已经触发，避免监听回调重复执行页面替换。
-  bool _hasNavigatedToHome = false;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -27,21 +30,33 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     ref.listenManual<AsyncValue<void>>(appStartupProvider, _handleStartupChanged);
   }
 
-  /// 启动完成后统一切到主控制台；失败状态交给当前页面展示错误即可。
-  void _handleStartupChanged(AsyncValue<void>? previous, AsyncValue<void> next) {
+  /// 启动完成后统一切到引导页或主页面；失败状态交给当前页面展示错误即可。
+  Future<void> _handleStartupChanged(AsyncValue<void>? previous, AsyncValue<void> next) async {
     if (next case AsyncError(:final error, :final stackTrace)) {
       logger.error(tag, error, stackTrace);
     }
-    if (_hasNavigatedToHome || next is! AsyncData<void>) {
+    if (_hasNavigated || next is! AsyncData<void>) {
       return;
     }
-    //todo 如果是Android 需要跳转到引导页
-    _hasNavigatedToHome = true;
+    final localDeviceInfo = await ref.read(localDeviceInfoProvider.future);
+    var shouldUserGuide = false;
+    //首次启动
+    if (localDeviceInfo.firstSetup) {
+      // 引导步骤的组装依赖启动预加载的配置，此处等待完成后再决定落地页面。
+      final bootstrap = await ref.read(guideBootstrapProvider.future);
+      if (!mounted || _hasNavigated) {
+        return;
+      }
+      shouldUserGuide = isAndroid && bootstrap.shouldRunGuide;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }
-      context.replaceNamed(AppRoutes.home.name);
+      _hasNavigated = true;
+      context.replaceNamed(
+        shouldUserGuide ? AppRoutes.userGuide.name : AppRoutes.home.name,
+      );
     });
   }
 

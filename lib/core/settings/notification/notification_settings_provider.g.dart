@@ -49,4 +49,4 @@ final class NotificationSettingsProvider
 }
 
 String _$notificationSettingsHash() =>
-    r'3ea05621b82e30fc7757321f30f7ef78da0b52d4';
+    r'6384521f5f5c62efc346cd7e54c9ef43eeb3fef4';

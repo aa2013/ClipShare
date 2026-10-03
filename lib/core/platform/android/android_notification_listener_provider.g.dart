@@ -45,7 +45,7 @@ final class AndroidNotificationListenerNotifierProvider
 }
 
 String _$androidNotificationListenerNotifierHash() =>
-    r'0047149e5786817d811e30f3b19cfc874e9ce988';
+    r'744376218f174ff0d3fc85c959388d1fc3dd7850';
 
 abstract class _$AndroidNotificationListenerNotifier extends $Notifier<void> {
   void build();

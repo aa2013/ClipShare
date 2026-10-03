@@ -48,4 +48,4 @@ final class DiscoverySettingsProvider
   }
 }
 
-String _$discoverySettingsHash() => r'6cd4e0ca4987d984794afdec699f517166bc3cfc';
+String _$discoverySettingsHash() => r'5cbe11f67c8c38ae7d2d1bc4c16f67fdac058299';
