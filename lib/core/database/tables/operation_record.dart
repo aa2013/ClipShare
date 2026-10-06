@@ -20,7 +20,7 @@ OperationRecord newOperationRecord(
   return OperationRecord(
     id: snowflake.nextId(),
     uid: 0,
-    devId: baseDeviceInfo.id,
+    devId: baseDeviceInfo.guid,
     module: module,
     moduleEn: module.name,
     method: method,

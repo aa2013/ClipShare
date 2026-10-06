@@ -35,7 +35,7 @@ final class ClipboardSourceNotifierProvider
 }
 
 String _$clipboardSourceNotifierHash() =>
-    r'7d29bfed43da24cd07249875875029c09a7f0204';
+    r'0543c6e94171c9af04e507c510a3f687a4e920d3';
 
 abstract class _$ClipboardSourceNotifier
     extends $AsyncNotifier<ClipboardSourceState> {

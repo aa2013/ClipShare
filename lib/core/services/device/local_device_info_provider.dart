@@ -118,7 +118,7 @@ Future<LocalDeviceInfo> localDeviceInfo(Ref ref) async {
     name = localName;
   }
 
-  final baseDevInfo = BaseDeviceInfo(id: guid, name: name, type: type);
+  final baseDevInfo = BaseDeviceInfo(guid: guid, name: name, type: type);
   final device = Device(
     guid: guid,
     devName: name,

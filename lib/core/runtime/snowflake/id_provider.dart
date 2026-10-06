@@ -7,6 +7,6 @@ part 'id_provider.g.dart';
 @Riverpod(keepAlive: true)
 Snowflake id(Ref ref) {
   final localDevInfoProvider = ref.read(localDeviceInfoProvider);
-  var localDevId = localDevInfoProvider.requireValue.baseDeviceInfo.id;
+  var localDevId = localDevInfoProvider.requireValue.baseDeviceInfo.guid;
   return Snowflake(localDevId.hashCode);
 }

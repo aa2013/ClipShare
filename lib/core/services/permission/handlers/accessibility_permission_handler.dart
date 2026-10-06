@@ -1,3 +1,4 @@
+import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:flutter/material.dart';
 
 import '../permission_helper.dart';
@@ -13,6 +14,7 @@ class AccessibilityPermissionHandler extends AbstractPermissionHandler {
 
   @override
   Future<bool> hasPermission() async {
+    if (!isAndroid) return false;
     return await PermissionHelper.testAndroidAccessibilityPerm();
   }
 }

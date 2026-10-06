@@ -1,4 +1,4 @@
-extension type PlatformType(String _value) {
+extension type PlatformType(String value) {
   static final windows = PlatformType('Windows');
   static final android = PlatformType('Android');
   static final mac = PlatformType('Mac');

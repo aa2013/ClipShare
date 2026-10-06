@@ -219,8 +219,7 @@ class _ClipListViewState extends ConsumerState<ClipListView> {
       builder: (ctx, constraints) {
         final isImageMode = widget.imageMode;
         final maxWidth = isImageMode ? 200.0 : 395;
-        final preferenceSettings = ref.watch(preferenceSettingsProvider).requireValue;
-        final showMoreItems = preferenceSettings.showMoreItemsInRow;
+        final showMoreItems = ref.watch(preferenceSettingsProvider.select((state) => state.requireValue.showMoreItemsInRow));
         final isCompactScreen = context.isCompactScreen;
         final showMore = (showMoreItems && !isCompactScreen) || isImageMode;
         final count = showMore ? max(2, constraints.maxWidth ~/ maxWidth) : 1;

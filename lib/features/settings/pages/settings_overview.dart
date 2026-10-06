@@ -2,13 +2,17 @@ import 'dart:async';
 
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/database/dao/config_dao.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/clipboard/android_environment_status_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_service_provider.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
+import 'package:clipshare/core/services/transport/socket/forward/forward_server_provider.dart';
+import 'package:clipshare/core/services/transport/storage/storage_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
+import 'package:clipshare/core/settings/forward/forward_settings.dart';
 import 'package:clipshare/core/settings/forward/forward_settings_provider.dart';
 import 'package:clipshare/core/settings/forward/forward_way.dart';
 import 'package:clipshare/core/settings/notification/notification_settings_provider.dart';
@@ -28,6 +32,7 @@ import 'package:clipshare/shared/enums/config_key.dart';
 import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/utils/consumer_wrapper.dart';
+import 'package:clipshare/shared/utils/snackbar.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,6 +61,14 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
   final TextEditingController _searchController = TextEditingController();
   String _query = '';
   static const padding = EdgeInsets.fromLTRB(16, 4, 16, 8);
+
+  ForwardServerNotifier get _forwardServer => ref.read(forwardServerProvider.notifier);
+
+  StorageNotifier get _storageService => ref.read(storageProvider.notifier);
+
+  ForwardSettings get _forwardSettings => ref.read(forwardSettingsProvider).requireValue;
+
+  ConfigDao get _configDao => ref.read(appDbProvider).requireValue.configDao;
 
   @override
   void initState() {
@@ -415,45 +428,46 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
   }
 
   Future<void> _toggleForward(BuildContext context, bool checked) async {
-    //todo
-    // final useServer = appConfig.forwardWay == ForwardWay.server;
-    // if (checked && useServer && appConfig.forwardServer == null) {
-    //   Global.showSnackBarErr(
-    //     context: context,
-    //     text: TranslationKey.forwardSettingsForwardEnableRequiredText.tr,
-    //   );
-    //   return;
-    // }
-    // final useWebdav = appConfig.forwardWay == ForwardWay.webdav;
-    // if (checked && useWebdav && appConfig.webDAVConfig == null) {
-    //   Global.showSnackBarErr(
-    //     context: context,
-    //     text: TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr,
-    //   );
-    //   return;
-    // }
-    // final useS3 = appConfig.forwardWay == ForwardWay.s3;
-    // if (checked && useS3 && appConfig.s3Config == null) {
-    //   Global.showSnackBarErr(
-    //     context: context,
-    //     text: TranslationKey.forwardSettingsForwardEnableRequiredS3Text.tr,
-    //   );
-    //   return;
-    // }
-    // await appConfig.setEnableForward(checked);
-    // if (checked) {
-    //   if (useServer) {
-    //     sktService.connectForwardServer(true);
-    //   } else {
-    //     storageService.start();
-    //   }
-    // } else {
-    //   if (useServer) {
-    //     sktService.disConnectForwardServer();
-    //   } else {
-    //     storageService.stop();
-    //   }
-    // }
+    final forwardWay = _forwardSettings.way;
+    final useServer = forwardWay == .server;
+    if (checked && useServer && _forwardSettings.serverConfig == null) {
+      snackbar.error(
+        context,
+        TranslationKey.forwardSettingsForwardEnableRequiredText.tr,
+      );
+      return;
+    }
+    final useWebdav = forwardWay == .webdav;
+    if (checked && useWebdav && _forwardSettings.webdavConfig == null) {
+      snackbar.error(
+        context,
+        TranslationKey.forwardSettingsForwardEnableRequiredWebDAVText.tr,
+      );
+      return;
+    }
+    final useS3 = forwardWay == .s3;
+    if (checked && useS3 && _forwardSettings.s3Config == null) {
+      snackbar.error(
+        context,
+        TranslationKey.forwardSettingsForwardEnableRequiredS3Text.tr,
+      );
+      return;
+    }
+    await _configDao.addOrUpdate(.enableForward, checked.toString());
+    ref.invalidate(forwardSettingsProvider);
+    if (checked) {
+      if (useServer) {
+        await _forwardServer.connectForwardServer(true);
+      } else {
+        await _storageService.start();
+      }
+    } else {
+      if (useServer) {
+        await _forwardServer.disconnectForwardServer();
+      } else {
+        await _storageService.stop();
+      }
+    }
   }
 
   IconData _themeIcon(ThemeMode mode) {

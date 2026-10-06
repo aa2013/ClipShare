@@ -1,3 +1,4 @@
+import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
@@ -33,7 +34,8 @@ class FloatPermissionHandler extends AbstractPermissionHandler {
   }
 
   @override
-  Future<bool> hasPermission() {
+  Future<bool> hasPermission() async {
+    if (!isAndroid) return false;
     return _androidChannel.checkAlertWindowPermission();
   }
 

@@ -1,20 +1,40 @@
 import 'dart:convert';
 
 import 'package:clipshare/core/database/app_database.dart';
+import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/shared/enums/device_id_generate_way.dart';
 import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
 
 class BaseDeviceInfo {
-  final String id;
+  final String guid;
   final String name;
   final PlatformType type;
 
   const BaseDeviceInfo({
-    required this.id,
+    required this.guid,
     required this.name,
     required this.type,
   });
+
+  factory BaseDeviceInfo.fromJson(Map<String, dynamic> map) {
+    String guid = map['guid'];
+    String name = map['name'];
+    String type = map['type'];
+    return BaseDeviceInfo(
+      guid: guid,
+      name: name,
+      type: PlatformType(type),
+    );
+  }
+
+  factory BaseDeviceInfo.fromDevice(Device device) {
+    return BaseDeviceInfo(
+      guid: device.guid,
+      name: device.devName,
+      type: PlatformType(device.type),
+    );
+  }
 
   @override
   String toString() {
@@ -23,7 +43,7 @@ class BaseDeviceInfo {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'guid': guid,
       'name': name,
       'type': type,
     };

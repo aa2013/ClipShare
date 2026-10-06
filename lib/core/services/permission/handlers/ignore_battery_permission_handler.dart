@@ -1,3 +1,4 @@
+import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/services/permission/permission_handler_facade.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class IgnoreBatteryPermissionHandler extends AbstractPermissionHandler {
 
   @override
   Future<bool> hasPermission() async {
+    if (!isAndroid) return false;
     return Permission.ignoreBatteryOptimizations.isGranted;
   }
 }

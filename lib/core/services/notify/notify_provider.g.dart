@@ -33,7 +33,7 @@ final class NotifyNotifierProvider
   NotifyNotifier create() => NotifyNotifier();
 }
 
-String _$notifyNotifierHash() => r'bcf2006e4d8cba4283edd52ca4c424bc89d969b9';
+String _$notifyNotifierHash() => r'dbb6a922bbc6fd875da664796c76fc41e8c48a3e';
 
 abstract class _$NotifyNotifier extends $AsyncNotifier<void> {
   FutureOr<void> build();

@@ -1,13 +1,16 @@
 part of 'android_channel_provider.dart';
 
-Future<void> _onMethodCall(Ref ref, MethodCall call) async {
+Future<void> _onMethodCall(AndroidChannelNotifier notifier, Ref ref, MethodCall call) async {
   var method = AndroidChannelMethod.values.byName(call.method);
   switch (method) {
     case AndroidChannelMethod.onScreenOpened:
+      notifier._screenEvents.add(const ScreenOpenedEvent());
+      break;
     case AndroidChannelMethod.onScreenUnlocked:
+      notifier._screenEvents.add(const ScreenUnlockedEvent());
+      break;
     case AndroidChannelMethod.onScreenClosed:
-      //todo
-      // ScreenOpenedListener.inst.notify(method);
+      notifier._screenEvents.add(const ScreenClosedEvent());
       break;
     case AndroidChannelMethod.onFileOpened:
       final uri = call.arguments['uri']?.toString();
@@ -28,7 +31,7 @@ Future<void> _onMethodCall(Ref ref, MethodCall call) async {
     case AndroidChannelMethod.onSmsChanged:
       final content = call.arguments['content']!;
       final recorder = ref.read(historyRecorderProvider.notifier);
-      recorder.add(
+      recorder.emitRaw(
         RawHistoryEvent(
           history: simpleHistory(ref, HistoryContentType.sms, content),
           sync: true,

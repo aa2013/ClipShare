@@ -122,7 +122,7 @@ class SearchNotifier extends _$SearchNotifier {
 
     final self = deviceState.self;
     final devices = <Device>[self];
-    for (final dev in deviceState.list) {
+    for (final dev in deviceState.storedList) {
       if (dev.guid != self.guid) {
         devices.add(dev);
       }

@@ -5,7 +5,7 @@ import '../app_database.dart';
 export '../app_database.dart' show Device;
 
 String _selfGuid = '';
-
+String unknownDeviceName = 'unknown';
 /// 构造空设备对象，替代旧实体类的 Device.empty 构造器。
 Device emptyDevice({
   String guid = '',
@@ -30,7 +30,7 @@ Device emptyDevice({
 }
 
 /// 未知设备占位对象，避免调用方处理空设备时散落 magic value。
-Device unknownDevice() => emptyDevice(devName: 'unknown');
+Device unknownDevice() => emptyDevice(devName: unknownDeviceName);
 
 /// 设备行对象的展示和浅拷贝扩展，真实数据类由 Drift 生成。
 extension DeviceExt on Device {

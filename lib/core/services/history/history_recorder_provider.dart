@@ -7,6 +7,7 @@ import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/database/dao/history_dao.dart';
 import 'package:clipshare/core/database/dao/operation_record_dao.dart';
+import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/database/tables/operation_record.dart';
 import 'package:clipshare/core/extensions/file_extension.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
@@ -17,6 +18,8 @@ import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
+import 'package:clipshare/core/services/transport/message_sender/message_sender.dart';
+import 'package:clipshare/core/services/transport/message_sender/message_sender_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
@@ -63,6 +66,8 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
 
   ClipboardSourceNotifier get _sourceNotifier => ref.read(clipboardSourceProvider.notifier);
 
+  MessageSenderNotifier get _messageSender => ref.read(messageSenderProvider.notifier);
+
   /// 下游订阅此 Stream 获取已处理的事件
   Stream<HistoryDeltaEvent> get events => _controller.stream;
   History? _latest;
@@ -78,11 +83,11 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
     ref.onDispose(_rawEvents.close);
   }
 
-  void add(RawHistoryEvent event) {
+  void emitRaw(RawHistoryEvent event) {
     _rawEvents.add(event);
   }
 
-  void addDelta(HistoryDeltaEvent event) {
+  void emitDelta(HistoryDeltaEvent event) {
     _controller.add(event);
   }
 
@@ -221,7 +226,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
           AppInfo(
             id: _idGenerator.nextId(),
             appId: source.id,
-            devId: _self.id,
+            devId: _self.guid,
             name: source.name,
             iconB64: source.iconB64 ?? '',
           ),
@@ -243,7 +248,8 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
     if (_clipboardSettings.sendBroadcastOnAdd) {
       final androidChannel = ref.read(androidChannelProvider.notifier);
       final deviceState = await ref.read(deviceProvider.future);
-      androidChannel.sendHistoryChangedBroadcast(contentType, history.content, history.devId, deviceState.getName(history.devId));
+      final deviceName = deviceState.getStoredName(history.devId);
+      androidChannel.sendHistoryChangedBroadcast(contentType, history.content, history.devId, deviceName ?? unknownDeviceName);
     }
     var cnt = await _historyDao.add(history);
     if (cnt <= 0) {
@@ -257,12 +263,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
       final appInfo = sourceService.getAppInfoByAppId(source);
       // //若同步的数据有来源信息但是本地未缓存，则请求同步该来源信息
       if (source != null && appInfo == null) {
-        //todo
-        // DataSender.sendDataByDevId(
-        //   history.devId,
-        //   MsgType.reqAppInfo,
-        //   {"appId": source},
-        // );
+        await _messageSender.sendToDevice(history.devId, .reqAppInfo, {'appId': source});
       }
       return HistoryDeltaEvent(history: history, operation: OpMethod.add);
     }
@@ -325,7 +326,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
               AppInfo(
                 id: _idGenerator.nextId(),
                 appId: source.id,
-                devId: _self.id,
+                devId: _self.guid,
                 name: source.name,
                 iconB64: source.iconB64!,
               ),

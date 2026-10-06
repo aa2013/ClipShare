@@ -1,6 +1,7 @@
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/database/extensions/history_extension.dart';
+import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/database/tables/history.dart';
 import 'package:clipshare/core/database/tables/operation_record.dart';
 import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
@@ -289,7 +290,7 @@ class _ClipboardDetailDrawerState extends ConsumerState<ClipboardDetailDrawer> {
     return RoundedChip(
       avatar: const Icon(Icons.devices_rounded),
       label: Text(
-        deviceState.getName(history.devId),
+        deviceState.getStoredName(history.devId) ?? unknownDeviceName,
         style: const TextStyle(fontSize: 12),
       ),
     );

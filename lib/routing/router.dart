@@ -3,6 +3,7 @@ import 'package:clipshare/features/app_selection/app_selection_entry.dart';
 import 'package:clipshare/features/guide/pages/user_guide_page.dart';
 import 'package:clipshare/features/history/pages/preview_page.dart';
 import 'package:clipshare/features/home/pages/home_page.dart';
+import 'package:clipshare/features/qr_scanner/pages/qr_code_scanner_page.dart';
 import 'package:clipshare/features/rules/pages/rule_detail.dart';
 import 'package:clipshare/features/rules/pages/rules_page.dart';
 import 'package:clipshare/features/rules/pages/script_module_detail.dart';
@@ -106,6 +107,11 @@ final appRouter = GoRouter(
       path: AppRoutes.workingModeSelection.path,
       name: AppRoutes.workingModeSelection.name,
       builder: (context, state) => const WorkingModeSelectionPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.qrScanner.path,
+      name: AppRoutes.qrScanner.name,
+      builder: (context, state) => const QRCodeScannerPage(),
     ),
   ],
 );

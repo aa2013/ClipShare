@@ -10,14 +10,22 @@ import 'package:clipshare/core/platform/desktop/tray/tray_service_provider.dart'
 import 'package:clipshare/core/platform/desktop/window/window_control_provider.dart';
 import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
+import 'package:clipshare/core/runtime/network/network_change_coordinator_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_service_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
+import 'package:clipshare/core/services/notify/notify_provider.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
+import 'package:clipshare/core/services/transport/socket/direct/direct_provider.dart';
+import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
+import 'package:clipshare/core/services/transport/socket/forward/forward_server_provider.dart';
+import 'package:clipshare/core/services/transport/socket/session/reconnect_provider.dart';
+import 'package:clipshare/core/services/transport/socket/session/session_provider.dart';
+import 'package:clipshare/core/services/transport/storage/storage_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/settings/app_update/app_update_settings_provider.dart';
 import 'package:clipshare/core/settings/clean/clean_data_config_provider.dart';
@@ -54,6 +62,7 @@ Future<void> appStartup(Ref ref) async {
   final List<Refreshable<Future>> preloadFutures = [
     appPathsProvider.future,
     appDbProvider.future,
+    notifyProvider.future,
     //region settings
     deviceSettingsProvider.future,
     localDeviceInfoProvider.future,
@@ -83,6 +92,14 @@ Future<void> appStartup(Ref ref) async {
   for (var provider in preloadFutures) {
     await ref.read(provider);
   }
+
+  ref.read(directProvider);
+  ref.read(sessionProvider);
+  ref.read(reconnectProvider);
+  ref.read(forwardServerProvider);
+  ref.read(discoveryProvider);
+  ref.read(storageProvider);
+  ref.read(networkChangeCoordinatorProvider);
 
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化
@@ -135,8 +152,8 @@ void _initChannels(Ref ref) {
 Future<void> _initAndroid(Ref ref) async {
   final channel = ref.read(androidChannelProvider.notifier);
   final floatSettings = await ref.read(floatWindowSettingsProvider.future);
-  //todo
-  // await channel.setAutoReportCrashes(appConfig.enableAutoUploadCrashLogs);
+  final logSettings = await ref.read(logSettingsProvider.future);
+  await channel.setAutoReportCrashes(logSettings.enableAutoUploadCrashLogs);
   if (floatSettings.showHistoryFloat) {
     await channel.showHistoryFloatWindow();
     if (floatSettings.lockHistoryFloatLoc) {

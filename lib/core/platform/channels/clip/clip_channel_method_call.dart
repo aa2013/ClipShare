@@ -17,7 +17,7 @@ Future _onMethodCall(Ref ref, MethodCall call) async {
         if (history == null) {
           return false;
         }
-        recorder.addDelta(
+        recorder.emitDelta(
           HistoryDeltaEvent(
             history: history,
             operation: OpMethod.update,

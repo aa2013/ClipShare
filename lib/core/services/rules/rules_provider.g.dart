@@ -34,7 +34,7 @@ final class RulesExecutorNotifierProvider
 }
 
 String _$rulesExecutorNotifierHash() =>
-    r'1409bc1acf3219c34024d49ffb42138ef90b88d2';
+    r'079d09dbb6d6e152869d31815b22509d233ec7d7';
 
 abstract class _$RulesExecutorNotifier extends $AsyncNotifier<RuleState> {
   FutureOr<RuleState> build();

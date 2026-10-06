@@ -6,13 +6,12 @@ export '../app_database.dart' show OperationSync;
 OperationSync newOperationSync({
   required int opId,
   required String devId,
-  required int uid,
   String? time,
 }) {
   return OperationSync(
     opId: opId,
     devId: devId,
-    uid: uid,
+    uid: 0,
     time: time ?? DateTime.now().toString(),
   );
 }
@@ -22,7 +21,6 @@ OperationSync operationSyncFromJson(Map<String, dynamic> map) {
   return newOperationSync(
     opId: map['opId'],
     devId: map['devId'],
-    uid: map['uid'],
     time: map['time'] ?? DateTime.now().toString(),
   );
 }

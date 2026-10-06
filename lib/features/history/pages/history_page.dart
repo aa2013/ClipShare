@@ -294,7 +294,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       rowsOffset = (content.length / maxCellLength).ceil() - 1;
     }
     final deviceState = ref.read(deviceProvider).requireValue;
-    final devName = deviceState.getName(history.devId);
+    final devName = deviceState.getStoredName(history.devId);
     final size = history.sizeText;
     sheet.getRangeByName('A$rowNum:A${rowNum + rowsOffset}')
       ..merge()

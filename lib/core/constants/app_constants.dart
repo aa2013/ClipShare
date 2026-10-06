@@ -1,9 +1,7 @@
-
 import 'package:clipshare/shared/constants/assets.dart';
-import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
+import 'package:clipshare/shared/utils/crypto.dart';
 import 'package:flutter/material.dart';
-import 'package:simple_icons/simple_icons.dart';
 
 //标记是否是多窗口
 late final bool isMultiWindow;
@@ -60,35 +58,6 @@ final logoImg = Image.asset(
   height: 20,
 );
 
-//设备类型图片
-final Map<PlatformType, Icon> devTypeIcons = {
-  PlatformType.windows: const Icon(
-    Icons.laptop_windows_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.android: const Icon(
-    SimpleIcons.android,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.mac: const Icon(
-    Icons.laptop_mac_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.linux: const Icon(
-    SimpleIcons.linux,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.ios: const Icon(
-    Icons.apple_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-};
-
 //截屏路径关键字（Android）
 final List<String> screenshotKeywords = [
   'screenshot',
@@ -107,3 +76,6 @@ final List<String> screenshotKeywords = [
 ];
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final prime1 = CryptoUtil.getPrime();
+final prime2 = CryptoUtil.getPrime();

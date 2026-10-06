@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:clipshare/core/runtime/app_state/app_state.dart';
 import 'package:clipshare/core/settings/forward/forward_server_status.dart';
+import 'package:clipshare/shared/extensions/number_extension.dart';
+import 'package:clipshare/shared/utils/log.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -8,9 +12,35 @@ part 'app_state_provider.g.dart';
 /// 运行时配置
 @Riverpod(keepAlive: true)
 class AppStateNotifier extends _$AppStateNotifier {
+  static const tag = 'AppStateNotifier';
+  late StreamSubscription _networkListener;
+  Timer? _networkChangedTimer;
+  final _connectivity = Connectivity();
+
   @override
   AppState build() {
+    _networkListener = _connectivity.onConnectivityChanged.listen(_onNetworkChanged);
+    ref.onDispose(_dispose);
     return const AppState();
+  }
+
+  void _dispose() {
+    _networkListener.cancel();
+  }
+
+  void _onNetworkChanged(ConnectivityResult result) {
+    _networkChangedTimer?.cancel();
+    _networkChangedTimer = Timer(1500.ms, () {
+      logger.debug(tag, 'Network changed -> ${result.name}');
+      Future.microtask(() {
+        update(
+          state.copyWith(
+            lastNetworkType: state.currentNetworkType,
+            currentNetworkType: result,
+          ),
+        );
+      });
+    });
   }
 
   /// 批量覆盖整个运行时配置
@@ -30,7 +60,7 @@ class AppStateNotifier extends _$AppStateNotifier {
 
   /// 更新当前网络类型
   void updateNetWorkType(ConnectivityResult type) {
-    state = state.copyWith(currentNetWorkType: type);
+    state = state.copyWith(currentNetworkType: type);
   }
 
   /// 更新是否是小屏幕
@@ -55,7 +85,7 @@ class AppStateNotifier extends _$AppStateNotifier {
 
   /// 更新设备发现状态描述文本
   void updateDeviceDiscoveryStatus(String? value) {
-    state = state.copyWith(deviceDiscoveryStatus: value);
+    state = state.copyWith(deviceDiscoveryStatus: value ?? '');
   }
 
   /// 更新加密密钥

@@ -3,6 +3,7 @@ import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:clipshare/theme/app/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pinput/pinput.dart';
 
 /// 基于 [BuildContext] 的主题相关扩展。
 extension ThemeContextExtension on BuildContext {
@@ -10,6 +11,9 @@ extension ThemeContextExtension on BuildContext {
   InputDecoration get noneBorderInputDecoration => isDarkMode
       ? darkNoneBorderInputDecoration
       : lightNoneBorderInputDecoration;
+
+  /// 验证码输入框（Pinput）主题，按当前明暗模式选择。
+  PinTheme get pinInputTheme => isDarkMode ? darkPinTheme : lightPinTheme;
 
   /// 切换明暗主题并同步系统 UI 样式。
   void updateTheme(

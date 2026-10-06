@@ -1,3 +1,4 @@
+import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:flutter/cupertino.dart';
 
@@ -13,7 +14,8 @@ class ClipboardPermissionHandler extends AbstractPermissionHandler {
   }
 
   @override
-  Future<bool> hasPermission() {
+  Future<bool> hasPermission() async {
+    if (!isAndroid) return false;
     return clipboardManager.checkClipboardPermission();
   }
 }

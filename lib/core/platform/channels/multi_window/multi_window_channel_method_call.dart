@@ -24,7 +24,7 @@ Future _onMethodCall(MultiWindowChannelNotifier self, Ref ref, MethodCall call, 
         fromId != 0,
         max(fromId, 0),
       );
-      var devMap = devState.toIdNameMap();
+      var devMap = devState.toStoredIdNameMap();
       //todo
       // devMap[localDevice.baseDeviceInfo.id] = appConfig.device.displayName;
       var res = {
@@ -123,7 +123,7 @@ Future _onMethodCall(MultiWindowChannelNotifier self, Ref ref, MethodCall call, 
       if (history == null) {
         return false;
       }
-      recorder.addDelta(
+      recorder.emitDelta(
         HistoryDeltaEvent(
           history: history,
           operation: OpMethod.update,
@@ -146,7 +146,7 @@ Future _onMethodCall(MultiWindowChannelNotifier self, Ref ref, MethodCall call, 
       }
       await historyDao.deleteByCascade(id);
       final recorder = ref.read(historyRecorderProvider.notifier);
-      recorder.addDelta(
+      recorder.emitDelta(
         HistoryDeltaEvent(
           history: history,
           operation: OpMethod.delete,

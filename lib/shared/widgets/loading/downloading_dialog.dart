@@ -56,7 +56,6 @@ class _DownloadDialogState extends State<DownloadDialog> {
         },
       );
     } catch (err, stack) {
-      //todo
       if (!mounted) {
         return;
       }
@@ -67,7 +66,6 @@ class _DownloadDialogState extends State<DownloadDialog> {
       }
     } finally {
       if (!error) {
-        //todo
         if (mounted) {
           Navigator.of(context).pop();
         }
@@ -90,8 +88,7 @@ class _DownloadDialogState extends State<DownloadDialog> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      //todo
-                      Navigator.of(context).pop();
+                      context.pop();
                       try {
                         cancel = true;
                         dio.close(force: true);

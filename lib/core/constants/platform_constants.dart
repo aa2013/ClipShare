@@ -1,7 +1,8 @@
 import 'dart:io';
 
+import 'package:clipshare/shared/extensions/string_extension.dart';
+
 const windowsDirSeparate = '\\';
-const unixDirSeparate = '/';
 
 String get dirSeparate => Platform.isWindows ? windowsDirSeparate : unixDirSeparate;
 

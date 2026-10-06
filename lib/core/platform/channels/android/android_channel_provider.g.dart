@@ -42,7 +42,7 @@ final class AndroidChannelNotifierProvider
 }
 
 String _$androidChannelNotifierHash() =>
-    r'29946176f21464e7c7ae83f48ef2da1dece4978a';
+    r'e94da6bf2b6ce61a739330573735cb9d68e0437b';
 
 abstract class _$AndroidChannelNotifier extends $Notifier<void> {
   void build();

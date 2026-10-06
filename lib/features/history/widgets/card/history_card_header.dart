@@ -1,3 +1,4 @@
+import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/database/tables/history.dart';
 import 'package:clipshare/core/extensions/history_data_extension.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
@@ -78,9 +79,9 @@ class HistoryCardHeader extends ConsumerWidget {
 Widget _buildDeviceChip(History history, BuildContext context, WidgetRef ref) {
   final deviceState = ref.watch(deviceProvider);
   final devId = history.devId;
-  final devName = deviceState.requireValue.getName(devId);
+  final devName = deviceState.requireValue.getStoredName(devId);
   return Text(
-    devName,
+    devName ?? unknownDeviceName,
     style: const TextStyle(fontSize: 12),
   );
 }

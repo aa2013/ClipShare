@@ -50,7 +50,7 @@ Future<AppPaths> appPaths(Ref ref) async {
 }
 
 Future<String> _initAndroidDocumentsPath() async {
-  if (Platform.isAndroid) {
+  if (isAndroid) {
     // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/documents
     return (await getExternalStorageDirectories(
       type: StorageDirectory.documents,
@@ -61,7 +61,7 @@ Future<String> _initAndroidDocumentsPath() async {
 }
 
 Future<String> _initAndroidPrivatePicturesPath() async {
-  if (Platform.isAndroid) {
+  if (isAndroid) {
     // /storage/emulated/0/Android/data/top.coclyun.clipshare/files/pictures
     return (await getExternalStorageDirectories(
       type: StorageDirectory.pictures,
@@ -72,7 +72,7 @@ Future<String> _initAndroidPrivatePicturesPath() async {
 }
 
 Future<String> _initDocumentsPath() async {
-  if (Platform.isAndroid) {
+  if (isAndroid) {
     return '$androidDocumentsPath/ClipShare/';
   } else {
     return '${(await getApplicationDocumentsDirectory()).path}/ClipShare/';
@@ -186,7 +186,7 @@ Future<String> _initDatabasePath(
 
 Future<String> _initLuaLibDirPath() async {
   final execDirPath = File(Platform.resolvedExecutable).parent.absolute.path;
-  if (Platform.isMacOS) {
+  if (isMacOS) {
     return p.join(
       execDirPath,
       // .../Contents/MacOS
@@ -200,7 +200,7 @@ Future<String> _initLuaLibDirPath() async {
       'assets',
       'lua',
     );
-  } else if (Platform.isIOS) {
+  } else if (isIOS) {
     return p.join(
       execDirPath,
       'Frameworks',
@@ -209,7 +209,7 @@ Future<String> _initLuaLibDirPath() async {
       'assets',
       'lua',
     );
-  } else if (Platform.isAndroid) {
+  } else if (isAndroid) {
     final filesPath = await getExternalStorageDirectory();
     return p.join(filesPath!.path, 'lua');
   } else {
@@ -218,7 +218,7 @@ Future<String> _initLuaLibDirPath() async {
 }
 
 String _initUpdateDownloadPath(String documentsPath) {
-  if (Platform.isAndroid) {
+  if (isAndroid) {
     return androidDownloadPath;
   } else {
     return '$documentsPath/update';
@@ -226,7 +226,7 @@ String _initUpdateDownloadPath(String documentsPath) {
 }
 
 Future<String> _initCachePath() async {
-  if (Platform.isAndroid) {
+  if (isAndroid) {
     // /storage/emulated/0/Android/data/top.coclyun.clipshare/cache
     return (await getExternalCacheDirectories())![0].path;
   } else {
@@ -235,7 +235,7 @@ Future<String> _initCachePath() async {
 }
 
 String? _initWindowsStartupDirPath() {
-  if (Platform.isWindows) {
+  if (isWindows) {
     final username = Platform.environment['USERNAME'];
     if (username == null) {
       return null;
@@ -251,7 +251,7 @@ String? _initWindowsStartupDirPath() {
 ///初始化日志路径
 Future<Directory> _initLogsDir(String cachePath, String documentsPath) async {
   var path = '$cachePath/logs';
-  if (Platform.isWindows) {
+  if (isWindows) {
     //Windows 下如果没有权限写入默认位置则修改为document文件夹下
     path = Directory(
       '${Directory(Platform.resolvedExecutable).parent.path}/logs',
@@ -270,7 +270,7 @@ Future<Directory> _initLogsDir(String cachePath, String documentsPath) async {
 Future<String> _initImageStorePath(Ref ref,String androidPrivatePicturesPath) async {
   //todo 从数据库读取
   const storePath = '';
-  if (!Platform.isAndroid) {
+  if (!isAndroid) {
     return storePath;
   }
   if (storePath.isEmpty) {

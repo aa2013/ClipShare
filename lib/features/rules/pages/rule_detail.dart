@@ -1,4 +1,5 @@
 import 'package:clipshare/core/database/tables/app_info.dart';
+import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/core/models/local_app_info.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
@@ -44,6 +45,7 @@ const _segmentSelectedBackgroundColor = Colors.blueGrey;
 const _segmentSelectedColor = Colors.white;
 const _segmentLightBackgroundColor = Color(0xffdde1e3);
 const _segmentDarkBackgroundColor = Color(0xff2e3b42);
+
 ///endregion
 
 /// 规则详情入口页。
@@ -330,7 +332,7 @@ class _RuleDetailViewState extends ConsumerState<_RuleDetailView> {
                     setState(() {
                       selectedSourceIds.remove(appId);
                       selectedAppInfos.removeWhere(
-                            (item) => item.appId == appId,
+                        (item) => item.appId == appId,
                       );
                     });
                   },
@@ -346,19 +348,15 @@ class _RuleDetailViewState extends ConsumerState<_RuleDetailView> {
                 showAppSelection(
                   context,
                   AppSelectionRouteArgs(
-                    loadDeviceName: devState.getName,
+                    loadDeviceName: (devId) => devState.getStoredName(devId) ?? unknownDeviceName,
                     selectedIds: selectedSourceIds,
                     loadAppInfos: () async {
                       // 合并已同步来源（DB）与本机已安装应用，按 设备+包名 去重
                       // 等待来源数据加载完成后再读取，避免首次进入时来源列表为空
                       final sourceState = await ref.read(clipboardSourceProvider.future);
-                      final list = sourceState.appInfos
-                          .map((item) => LocalAppInfo.fromAppInfo(item, false))
-                          .toList();
+                      final list = sourceState.appInfos.map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
                       list.addAll(sourceState.installedApps);
-                      return list
-                          .distinct((item) => item.devId + item.appId)
-                          .toList();
+                      return list.distinct((item) => item.devId + item.appId).toList();
                     },
                     onSelectedDone: (selected) {
                       setState(() {
@@ -968,7 +966,6 @@ class _RuleDetailViewState extends ConsumerState<_RuleDetailView> {
         body: PopScope(
           canPop: !shouldSave,
           onPopInvokedWithResult: (bool didPop, dynamic result) {
-
             if (didPop) {
               rulesExecutor.updateSelectedRuleItem(null);
               return;
@@ -984,8 +981,8 @@ class _RuleDetailViewState extends ConsumerState<_RuleDetailView> {
                     rulesExecutor.updateSelectedRuleItem(null);
                     //退出页面
                     context.pop();
-                  }
-                )
+                  },
+                ),
               ),
             );
           },

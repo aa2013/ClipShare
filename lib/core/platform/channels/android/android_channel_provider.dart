@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/tables/history.dart';
+import 'package:clipshare/core/platform/channels/android/events/screen_opened_event.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
@@ -31,10 +34,15 @@ class AndroidChannelNotifier extends _$AndroidChannelNotifier {
   static const tag = 'AndroidChannelNotifier';
   late final MethodChannel _channel;
 
+  /// 屏幕事件
+  final _screenEvents = StreamController<ScreenEvent>.broadcast();
+
+  Stream<ScreenEvent> get screenEvents => _screenEvents.stream;
+
   @override
   void build() {
     _channel = const MethodChannel(channelAndroid);
-    _channel.setMethodCallHandler((call) => _onMethodCall(ref, call));
+    _channel.setMethodCallHandler((call) => _onMethodCall(this, ref, call));
   }
 
   /// 通知 Android 媒体库刷新

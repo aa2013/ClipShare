@@ -19,6 +19,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'notify_provider.g.dart';
+
 @Riverpod(keepAlive: true)
 class NotifyNotifier extends _$NotifyNotifier {
   static const tag = 'NotifyNotifier';
@@ -40,6 +41,10 @@ class NotifyNotifier extends _$NotifyNotifier {
   /// 初始化各平台通知插件，并在 Windows 上注册稳定的 Toast 应用身份与图标。
   Future<void> _initNotifications() async {
     if (_notificationReady) return;
+    if (isAndroid) {
+      _notificationReady = true;
+      return;
+    }
     const iosSettings = DarwinInitializationSettings();
 
     //region WindowsSettings

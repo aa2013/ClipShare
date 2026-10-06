@@ -12,7 +12,8 @@ enum AppRoutes {
   appSelection('/appSelection', 'appSelection'),
   userGuide('/userGuide', 'userGuide'),
   settingsSection('/settingsSection', 'settingsSection'),
-  workingModeSelection('/workingModeSelection', 'workingModeSelection');
+  workingModeSelection('/workingModeSelection', 'workingModeSelection'),
+  qrScanner('/qrScanner', 'qrScanner');
 
   const AppRoutes(this.path, this.name);
 

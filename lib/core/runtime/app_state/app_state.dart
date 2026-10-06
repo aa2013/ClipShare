@@ -21,8 +21,11 @@ class AppState {
   ///中转服务版本号
   final String transportServerVersion;
 
+  ///上次网络类型
+  final ConnectivityResult lastNetworkType;
+
   ///当前网络类型
-  final ConnectivityResult currentNetWorkType;
+  final ConnectivityResult currentNetworkType;
 
   ///是否正在选择工作模式
   final bool selectingWorkingMode;
@@ -52,7 +55,8 @@ class AppState {
   const AppState({
     this.rulesMigrated = false,
     this.transportServerVersion = '',
-    this.currentNetWorkType = ConnectivityResult.none,
+    this.lastNetworkType = ConnectivityResult.none,
+    this.currentNetworkType = ConnectivityResult.none,
     this.selectingWorkingMode = false,
     this.isEnableMultiSelectionMode = false,
     this.authenticating = false,
@@ -66,7 +70,8 @@ class AppState {
   AppState copyWith({
     bool? rulesMigrated,
     String? transportServerVersion,
-    ConnectivityResult? currentNetWorkType,
+    ConnectivityResult? lastNetworkType,
+    ConnectivityResult? currentNetworkType,
     bool? isSmallScreen,
     bool? selectingWorkingMode,
     bool? isEnableMultiSelectionMode,
@@ -81,7 +86,8 @@ class AppState {
     return AppState(
       rulesMigrated: rulesMigrated ?? this.rulesMigrated,
       transportServerVersion: transportServerVersion ?? this.transportServerVersion,
-      currentNetWorkType: currentNetWorkType ?? this.currentNetWorkType,
+      lastNetworkType: lastNetworkType ?? this.lastNetworkType,
+      currentNetworkType: currentNetworkType ?? this.currentNetworkType,
       selectingWorkingMode: selectingWorkingMode ?? this.selectingWorkingMode,
       isEnableMultiSelectionMode: isEnableMultiSelectionMode ?? this.isEnableMultiSelectionMode,
       authenticating: authenticating ?? this.authenticating,

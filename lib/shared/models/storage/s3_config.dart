@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:clipshare/shared/enums/obj_storage_type.dart';
+import '../../enums/obj_storage_type.dart';
 
 class S3Config {
   final ObjStorageType type;

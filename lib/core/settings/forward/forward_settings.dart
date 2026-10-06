@@ -1,9 +1,9 @@
 import 'package:clipshare/core/constants/url_constants.dart';
 import 'package:clipshare/core/settings/forward/forward_server_config.dart';
-import 'package:clipshare/core/settings/forward/s3_config.dart';
+import 'package:clipshare/shared/models/storage/s3_config.dart';
+import 'package:clipshare/shared/models/storage/web_dav_config.dart';
 
 import 'forward_way.dart';
-import 'web_dav_config.dart';
 
 class ForwardSettings {
   ///是否启用中转

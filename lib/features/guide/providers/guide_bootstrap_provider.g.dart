@@ -29,7 +29,7 @@ final class GuideBootstrapNotifierProvider
         argument: null,
         retry: null,
         name: r'guideBootstrapProvider',
-        isAutoDispose: false,
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -43,7 +43,7 @@ final class GuideBootstrapNotifierProvider
 }
 
 String _$guideBootstrapNotifierHash() =>
-    r'2ea6bec57246f0565a4205d1d163c6b5c6276928';
+    r'75a6ba797bdcc4ffccf5e544f3dab68271675e84';
 
 /// 组装引导流程的步骤清单与初始完成状态。
 ///

@@ -4,6 +4,7 @@ import 'package:clipshare/core/constants/network_constants.dart' as net;
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/extensions/multi_select_dialog_extension.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
+import 'package:clipshare/core/services/transport/socket/session/session_provider.dart';
 import 'package:clipshare/core/settings/discovery/discovery_settings_provider.dart';
 import 'package:clipshare/features/history/widgets/copy_icon_button.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
@@ -65,7 +66,7 @@ class SettingsDiscoveryPage extends SettingsSectionView {
               onClick: () {
                 HapticFeedback.mediumImpact();
                 Clipboard.setData(
-                  ClipboardData(text: selfDev.id),
+                  ClipboardData(text: selfDev.guid),
                 );
                 snackbar.success(
                   context,
@@ -76,7 +77,7 @@ class SettingsDiscoveryPage extends SettingsSectionView {
             ),
           ],
         ),
-        description: Text('id: ${selfDev.id}'),
+        description: Text('id: ${selfDev.guid}'),
         value: localName,
         action: (v) => Text(v),
         onTap: () {
@@ -164,8 +165,8 @@ class SettingsDiscoveryPage extends SettingsSectionView {
             await HapticFeedback.mediumImpact();
             await configDao.addOrUpdate(.allowDiscover, checked.toString());
             ref.invalidate(discoverySettingsProvider);
-            //todo
-            // sktService.disConnectAllConnections(true);
+            final sessionNotifier = ref.read(sessionProvider.notifier);
+            sessionNotifier.disconnectAllConnections(true);
           },
         ),
       ),
@@ -187,8 +188,8 @@ class SettingsDiscoveryPage extends SettingsSectionView {
             await configDao.addOrUpdate(.onlyForwardMode, checked.toString());
             ref.invalidate(discoverySettingsProvider);
             if (!checked) return;
-            //todo
-            // return sktService.disConnectAllConnections();
+            final sessionNotifier = ref.read(sessionProvider.notifier);
+            return sessionNotifier.disconnectAllConnections();
           },
         ),
         show: (v) => !kReleaseMode,
@@ -249,12 +250,11 @@ class SettingsDiscoveryPage extends SettingsSectionView {
                 final _ = str.toInt();
                 await configDao.addOrUpdate(.heartbeatInterval, str);
                 var enable = str.toInt() > 0;
+                final sessionNotifier = ref.read(sessionProvider.notifier);
                 if (enable) {
-                  //todo
-                  // sktService.startHeartbeatTest();
+                  sessionNotifier.startHeartbeatTest();
                 } else {
-                  //todo
-                  // sktService.stopHeartbeatTest();
+                  sessionNotifier.stopHeartbeatTest();
                 }
                 ref.invalidate(discoverySettingsProvider);
               },

@@ -44,7 +44,7 @@ final class SearchNotifierProvider
   }
 }
 
-String _$searchNotifierHash() => r'2201f4cbdd2c8119e7d2673f1f30ba91c6688ea7';
+String _$searchNotifierHash() => r'8da26a3ed6c0ae413842cb36bebcf34a3001a934';
 
 /// 历史搜索状态源：页面负责把它接入受控过滤器组件与列表。
 

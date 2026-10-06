@@ -22,7 +22,7 @@ Future<ClipboardService> clipboardService(Ref ref) async {
     loadAppPaths: () => ref.read(appPathsProvider.future),
     readAppState: () => ref.read(appStateProvider),
     onChanged: (event) {
-      ref.read(historyRecorderProvider.notifier).add(event);
+      ref.read(historyRecorderProvider.notifier).emitRaw(event);
     },
     persistExcludeFormat: (enabled) async {
       final db = await ref.read(appDbProvider.future);

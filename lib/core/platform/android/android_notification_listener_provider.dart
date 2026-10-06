@@ -93,7 +93,7 @@ class AndroidNotificationListenerNotifier extends _$AndroidNotificationListenerN
         logger.warn(tag, 'not found notification source info');
       }
       final recorder = ref.read(historyRecorderProvider.notifier);
-      recorder.add(
+      recorder.emitRaw(
         RawHistoryEvent(
           history: simpleHistory(ref, HistoryContentType.notification, jsonEncode(map)),
           sync: true,
