@@ -250,7 +250,7 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
     } else {
       logger.debug(tag, 'init global lib: $result');
     }
-    final global = luaGlobalFun.replaceAll('{{devId}}', baseDevInfo.id).replaceAll('{{devName}}', baseDevInfo.name).replaceAll('{{versionNumber}}', appVersion.code).replaceAll('{{versionName}}', appVersion.name).replaceAll('{{platformIsAndroid}}', '$isAndroid').replaceAll('{{platformIsLinux}}', '$isLinux').replaceAll('{{platformIsWindows}}', '$isWindows').replaceAll('{{platformIsMacOS}}', '$isMacOS').replaceAll('{{platformIsIOS}}', '$isIOS');
+    final global = luaGlobalFun.replaceAll('{{devId}}', baseDevInfo.guid).replaceAll('{{devName}}', baseDevInfo.name).replaceAll('{{versionNumber}}', appVersion.code).replaceAll('{{versionName}}', appVersion.name).replaceAll('{{platformIsAndroid}}', '$isAndroid').replaceAll('{{platformIsLinux}}', '$isLinux').replaceAll('{{platformIsWindows}}', '$isWindows').replaceAll('{{platformIsMacOS}}', '$isMacOS').replaceAll('{{platformIsIOS}}', '$isIOS');
 
     final onLuaAsyncResult = Pointer.fromFunction<LuaFunction>(_onLuaAsyncResult, 0);
     final logFunPtr = Pointer.fromFunction<LuaFunction>(_log, 0);

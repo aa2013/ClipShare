@@ -140,7 +140,7 @@ class ClipboardService with ClipboardListener {
           time: DateTime.now().toString(),
           content: content,
           type: contentType.value,
-          devId: _localDeviceInfo.baseDeviceInfo.id,
+          devId: _localDeviceInfo.baseDeviceInfo.guid,
           top: false,
           sync: false,
           size: size,

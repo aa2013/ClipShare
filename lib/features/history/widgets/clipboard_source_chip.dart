@@ -60,7 +60,7 @@ class ClipboardSourceChip extends ConsumerWidget {
   /// 打开来源选择页，仅列出来源库中本机设备展示的应用；选中后写入来源并通知列表刷新。
   Future<void> _openSourceSelection(BuildContext context, WidgetRef ref) async {
     final deviceState = ref.read(deviceProvider).value;
-    final selfId = ref.read(localDeviceInfoProvider).value?.baseDeviceInfo.id ?? '';
+    final selfId = ref.read(localDeviceInfoProvider).value?.baseDeviceInfo.guid ?? '';
     await showAppSelection(
       context,
       AppSelectionRouteArgs(

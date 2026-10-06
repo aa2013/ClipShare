@@ -65,7 +65,7 @@ class SettingsDiscoveryPage extends SettingsSectionView {
               onClick: () {
                 HapticFeedback.mediumImpact();
                 Clipboard.setData(
-                  ClipboardData(text: selfDev.id),
+                  ClipboardData(text: selfDev.guid),
                 );
                 snackbar.success(
                   context,
@@ -76,7 +76,7 @@ class SettingsDiscoveryPage extends SettingsSectionView {
             ),
           ],
         ),
-        description: Text('id: ${selfDev.id}'),
+        description: Text('id: ${selfDev.guid}'),
         value: localName,
         action: (v) => Text(v),
         onTap: () {

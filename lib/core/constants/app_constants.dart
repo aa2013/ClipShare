@@ -1,7 +1,7 @@
-
 import 'package:clipshare/shared/constants/assets.dart';
 import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
+import 'package:clipshare/shared/utils/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_icons/simple_icons.dart';
 
@@ -107,3 +107,6 @@ final List<String> screenshotKeywords = [
 ];
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+final prime1 = CryptoUtil.getPrime();
+final prime2 = CryptoUtil.getPrime();

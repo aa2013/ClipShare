@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/database/dao/device_dao.dart';
 import 'package:clipshare/core/database/tables/device.dart';
+import 'package:clipshare/core/services/device/events/device_discovery_event.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/shared/enums/transport_protocol.dart';
@@ -10,6 +13,8 @@ import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'device_pairing_confirm_result.dart';
+import 'device_registry.dart';
+import 'events/device_lifecycle_event.dart';
 
 part 'device_provider.g.dart';
 
@@ -19,6 +24,9 @@ class DeviceState {
   /// guid -> 设备
   final Map<String, Device> _devices;
 
+  /// 设备注册中心
+  final DeviceRegistry registry;
+
   /// 本机设备展示对象（未命中缓存且为本机设备时返回）
   final Device _self;
 
@@ -27,11 +35,26 @@ class DeviceState {
 
   const DeviceState({
     required Map<String, Device> devices,
+    required this.registry,
     required Device self,
     required String selfId,
-  })  : _devices = devices,
-        _self = self,
-        _selfId = selfId;
+  }) : _devices = devices,
+       _self = self,
+       _selfId = selfId;
+
+  DeviceState copyWith({
+    Map<String, Device>? devices,
+    DeviceRegistry? registry,
+    Device? self,
+    String? selfId,
+  }) {
+    return DeviceState(
+      devices: devices ?? _devices,
+      registry: registry ?? this.registry,
+      self: self ?? _self,
+      selfId: selfId ?? _selfId,
+    );
+  }
 
   /// 获取指定设备；未命中缓存时本机设备返回自身，否则返回未知设备占位
   Device getById(String id) {
@@ -45,10 +68,13 @@ class DeviceState {
   String getName(String id) => getById(id).displayName;
 
   /// 设备 id -> 展示名 映射
-  Map<String, String> toIdNameMap() => {for (final e in _devices.entries) e.key: e.value.displayName};
+  Map<String, String> toIdNameMap() => {
+    for (final e in _devices.entries) e.key: e.value.displayName,
+  };
 
   /// 已配对设备列表
-  List<Device> get pairedList => _devices.values.where((dev) => dev.isPaired).toList();
+  List<Device> get pairedList =>
+      _devices.values.where((dev) => dev.isPaired).toList();
 
   List<Device> get list => _devices.values.toList(growable: false);
 
@@ -65,7 +91,8 @@ class DeviceNotifier extends _$DeviceNotifier {
 
   DeviceDao get _deviceDao => ref.read(appDbProvider).requireValue.deviceDao;
 
-  BaseDeviceInfo get _baseDevInfo => ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo;
+  BaseDeviceInfo get _baseDevInfo =>
+      ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo;
 
   Device get _self => ref.read(localDeviceInfoProvider).requireValue.self;
 
@@ -73,10 +100,21 @@ class DeviceNotifier extends _$DeviceNotifier {
   DeviceState get _current =>
       state.value ??
       DeviceState(
-        devices: const <String, Device>{},
+        devices: const {},
+        registry: const DeviceRegistry(devProtocols: {}),
         self: _self,
-        selfId: _baseDevInfo.id,
+        selfId: _baseDevInfo.guid,
       );
+
+  ///设备连接生命周期事件
+  final _lifecycleEvents = StreamController<DeviceLifecycleEvent>.broadcast();
+
+  Stream<DeviceLifecycleEvent> get lifecycleEvents => _lifecycleEvents.stream;
+
+  ///设备发现生命周期事件
+  final _discoveryEvents = StreamController<DeviceDiscoveryEvent>.broadcast();
+
+  Stream<DeviceDiscoveryEvent> get discoveryEvents => _discoveryEvents.stream;
 
   @override
   Future<DeviceState> build() async {
@@ -85,7 +123,12 @@ class DeviceNotifier extends _$DeviceNotifier {
     for (var dev in lst) {
       devices[dev.guid] = dev;
     }
-    return DeviceState(devices: devices, self: _self, selfId: _baseDevInfo.id);
+    return DeviceState(
+      devices: devices,
+      registry: const DeviceRegistry(devProtocols: {}),
+      self: _self,
+      selfId: _baseDevInfo.guid,
+    );
   }
 
   Future<bool> _addOrUpdate(Device device) async {
@@ -103,11 +146,14 @@ class DeviceNotifier extends _$DeviceNotifier {
       final current = _current;
       // 直接更新共享 map，靠新 DeviceState 实例（identity 变化）触发 watch 刷新
       current._devices[device.guid] = device;
-      state = AsyncData(DeviceState(
-        devices: current._devices,
-        self: _self,
-        selfId: _baseDevInfo.id,
-      ));
+      state = AsyncData(
+        DeviceState(
+          devices: current._devices,
+          registry: current.registry,
+          self: _self,
+          selfId: _baseDevInfo.guid,
+        ),
+      );
     }
     return res;
   }
@@ -126,7 +172,10 @@ class DeviceNotifier extends _$DeviceNotifier {
     final nextPriority = _pairingPriority(protocol);
 
     // 手动状态用于挡住 storage 自恢复，但有效 socket 仍可用实时配对状态覆盖。
-    final previousBlocks = previous != null && (previous.priority > nextPriority || (previous.manual && !protocol.isSocket));
+    final previousBlocks =
+        previous != null &&
+        (previous.priority > nextPriority ||
+            (previous.manual && !protocol.isSocket));
     if (!manual && previousBlocks) {
       logger.info(tag, '!manual && previousBlocks');
       return DevicePairingConfirmResult(
@@ -141,7 +190,9 @@ class DeviceNotifier extends _$DeviceNotifier {
       devName: device.devName.isEmpty ? existing?.devName : device.devName,
       type: device.type.isEmpty ? existing?.type : device.type,
       address: Value(device.address ?? existing?.address ?? protocol.name),
-      internalAddress: Value(device.internalAddress ?? existing?.internalAddress),
+      internalAddress: Value(
+        device.internalAddress ?? existing?.internalAddress,
+      ),
       isPaired: nextPaired,
     );
     final changed = existing?.isPaired != nextPaired;
@@ -169,12 +220,17 @@ class DeviceNotifier extends _$DeviceNotifier {
 
   /// 设备连接断开后，移除该协议来源的运行态优先级，允许 storage 在无 socket 时恢复可信配对。
   /// [force] 为 true 时强制清除（含 manual 配对来源），用于 socket 会话关闭后允许存储接管。
-  void clearPairingSource(String devId, TransportProtocol protocol, {bool force = false}) {
+  void clearPairingSource(
+    String devId,
+    TransportProtocol protocol, {
+    bool force = false,
+  }) {
     final previous = _pairingSources[devId];
     if (previous == null) {
       return;
     }
-    if (!force && (previous.manual || previous.priority != _pairingPriority(protocol))) {
+    if (!force &&
+        (previous.manual || previous.priority != _pairingPriority(protocol))) {
       return;
     }
     _pairingSources.remove(devId);
@@ -188,14 +244,21 @@ class DeviceNotifier extends _$DeviceNotifier {
       final current = _current;
       // 直接更新共享 map，靠新 DeviceState 实例（identity 变化）触发 watch 刷新
       current._devices.remove(devId);
-      state = AsyncData(DeviceState(
-        devices: current._devices,
-        self: _self,
-        selfId: _baseDevInfo.id,
-      ));
+      state = AsyncData(current.copyWith());
     }
     return success;
   }
+
+  //region events
+  void addLifecycleEvent(DeviceLifecycleEvent event) {
+    _lifecycleEvents.add(event);
+  }
+
+  void addDiscoveryEvent(DeviceDiscoveryEvent event) {
+    _discoveryEvents.add(event);
+  }
+
+  //endregion
 }
 
 class _PairingSourceState {

@@ -11,8 +11,8 @@ part of 'guide_step_handler_provider.dart';
 /// 按步骤标识提供对应的权限处理器。
 ///
 /// 引导流程的状态查询与步骤内容共用同一份处理器来源，避免两侧各自构造导致
-/// 判定对象与实际授权对象不一致。纯信息步骤（工作模式、完成页）没有权限诉求，
-/// 返回 null 表示其完成状态不由权限决定。
+/// 判定对象与实际授权对象不一致。完成页没有完成条件，返回 null 表示其完成状态
+/// 不由处理器决定。
 
 @ProviderFor(guideStepHandler)
 final guideStepHandlerProvider = GuideStepHandlerFamily._();
@@ -20,8 +20,8 @@ final guideStepHandlerProvider = GuideStepHandlerFamily._();
 /// 按步骤标识提供对应的权限处理器。
 ///
 /// 引导流程的状态查询与步骤内容共用同一份处理器来源，避免两侧各自构造导致
-/// 判定对象与实际授权对象不一致。纯信息步骤（工作模式、完成页）没有权限诉求，
-/// 返回 null 表示其完成状态不由权限决定。
+/// 判定对象与实际授权对象不一致。完成页没有完成条件，返回 null 表示其完成状态
+/// 不由处理器决定。
 
 final class GuideStepHandlerProvider
     extends
@@ -36,15 +36,15 @@ final class GuideStepHandlerProvider
   /// 按步骤标识提供对应的权限处理器。
   ///
   /// 引导流程的状态查询与步骤内容共用同一份处理器来源，避免两侧各自构造导致
-  /// 判定对象与实际授权对象不一致。纯信息步骤（工作模式、完成页）没有权限诉求，
-  /// 返回 null 表示其完成状态不由权限决定。
+  /// 判定对象与实际授权对象不一致。完成页没有完成条件，返回 null 表示其完成状态
+  /// 不由处理器决定。
   GuideStepHandlerProvider._({
     required GuideStepHandlerFamily super.from,
     required GuideStep super.argument,
   }) : super(
          retry: null,
          name: r'guideStepHandlerProvider',
-         isAutoDispose: false,
+         isAutoDispose: true,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -82,13 +82,13 @@ final class GuideStepHandlerProvider
   }
 }
 
-String _$guideStepHandlerHash() => r'ceb94567ab7af1c02ec63e98871e2c7a7c3f7ed0';
+String _$guideStepHandlerHash() => r'5424a2055d7a159d251041d843df36d4739a4533';
 
 /// 按步骤标识提供对应的权限处理器。
 ///
 /// 引导流程的状态查询与步骤内容共用同一份处理器来源，避免两侧各自构造导致
-/// 判定对象与实际授权对象不一致。纯信息步骤（工作模式、完成页）没有权限诉求，
-/// 返回 null 表示其完成状态不由权限决定。
+/// 判定对象与实际授权对象不一致。完成页没有完成条件，返回 null 表示其完成状态
+/// 不由处理器决定。
 
 final class GuideStepHandlerFamily extends $Family
     with
@@ -102,14 +102,14 @@ final class GuideStepHandlerFamily extends $Family
         name: r'guideStepHandlerProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: false,
+        isAutoDispose: true,
       );
 
   /// 按步骤标识提供对应的权限处理器。
   ///
   /// 引导流程的状态查询与步骤内容共用同一份处理器来源，避免两侧各自构造导致
-  /// 判定对象与实际授权对象不一致。纯信息步骤（工作模式、完成页）没有权限诉求，
-  /// 返回 null 表示其完成状态不由权限决定。
+  /// 判定对象与实际授权对象不一致。完成页没有完成条件，返回 null 表示其完成状态
+  /// 不由处理器决定。
 
   GuideStepHandlerProvider call(GuideStep id) =>
       GuideStepHandlerProvider._(argument: id, from: this);

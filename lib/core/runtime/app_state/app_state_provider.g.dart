@@ -44,7 +44,7 @@ final class AppStateNotifierProvider
   }
 }
 
-String _$appStateNotifierHash() => r'c98e51ffcd4e351713cac9115fff0e9af8a053a4';
+String _$appStateNotifierHash() => r'2b03a5fd62521bead20dfe006aed183017d63db8';
 
 /// 运行时配置
 

@@ -47,7 +47,7 @@ History simpleHistory(Ref ref, HistoryContentType type, String content) {
     time: DateTime.now().toString(),
     content: content,
     type: type.value,
-    devId: localDeviceInfo.baseDeviceInfo.id,
+    devId: localDeviceInfo.baseDeviceInfo.guid,
     top: false,
     sync: false,
     size: content.length,

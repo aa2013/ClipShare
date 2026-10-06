@@ -15,9 +15,12 @@ import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
+import 'package:clipshare/core/services/notify/notify_provider.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
+import 'package:clipshare/core/services/transport/socket_provider.dart';
+import 'package:clipshare/core/services/transport/storage_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/settings/app_update/app_update_settings_provider.dart';
 import 'package:clipshare/core/settings/clean/clean_data_config_provider.dart';
@@ -54,6 +57,7 @@ Future<void> appStartup(Ref ref) async {
   final List<Refreshable<Future>> preloadFutures = [
     appPathsProvider.future,
     appDbProvider.future,
+    notifyProvider.future,
     //region settings
     deviceSettingsProvider.future,
     localDeviceInfoProvider.future,
@@ -83,6 +87,9 @@ Future<void> appStartup(Ref ref) async {
   for (var provider in preloadFutures) {
     await ref.read(provider);
   }
+
+  ref.read(socketProvider);
+  ref.read(storageProvider);
 
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化

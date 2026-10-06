@@ -139,7 +139,7 @@ class ClipboardSourceNotifier extends _$ClipboardSourceNotifier {
         isSystemApp: !userAppIds.contains(item.appPackage),
         id: 0,
         appId: item.appPackage,
-        devId: _baseDevInfo.id,
+        devId: _baseDevInfo.guid,
         name: item.appName,
         iconB64: base64Encode(item.appIcon),
       );

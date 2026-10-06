@@ -33,7 +33,7 @@ final class DeviceNotifierProvider
   DeviceNotifier create() => DeviceNotifier();
 }
 
-String _$deviceNotifierHash() => r'88036d505de51abe118e89f15ffccf6f275557ef';
+String _$deviceNotifierHash() => r'5644925972b224a691701b73d82586af28494acc';
 
 abstract class _$DeviceNotifier extends $AsyncNotifier<DeviceState> {
   FutureOr<DeviceState> build();

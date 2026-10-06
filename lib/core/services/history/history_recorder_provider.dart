@@ -221,7 +221,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
           AppInfo(
             id: _idGenerator.nextId(),
             appId: source.id,
-            devId: _self.id,
+            devId: _self.guid,
             name: source.name,
             iconB64: source.iconB64 ?? '',
           ),
@@ -325,7 +325,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
               AppInfo(
                 id: _idGenerator.nextId(),
                 appId: source.id,
-                devId: _self.id,
+                devId: _self.guid,
                 name: source.name,
                 iconB64: source.iconB64!,
               ),

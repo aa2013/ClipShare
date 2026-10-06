@@ -411,7 +411,7 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
       ],
       readsFrom: {histories, devices},
     ).get();
-    final selfId = localDevice.baseDeviceInfo.id;
+    final selfId = localDevice.baseDeviceInfo.guid;
     final selfName = localDevice.localName;
     var unknown = 0;
     return result.map((item) {

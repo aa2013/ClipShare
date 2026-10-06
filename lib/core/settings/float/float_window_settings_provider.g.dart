@@ -49,4 +49,4 @@ final class FloatWindowSettingsProvider
 }
 
 String _$floatWindowSettingsHash() =>
-    r'bac8c5de920786c3937ca63166ad3a8600f0d375';
+    r'd82e3da15ddc57f88aed72739eff35f06300499d';
