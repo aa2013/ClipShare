@@ -6,6 +6,15 @@ export '../app_database.dart' show ScriptModule;
 
 final Expando<bool> _scriptModuleNewData = Expando<bool>('scriptModuleNewData');
 
+/// 构造脚本模块同步载荷。
+/// 旧版本客户端反序列化时把 isNewData 赋给非空 bool，缺字段会直接抛错。
+Map<String, dynamic> scriptModuleToSyncPayload(ScriptModule module) {
+  return {
+    ...module.toJson(),
+    'isNewData': module.isNewData,
+  };
+}
+
 /// 从 JSON 还原脚本模块，兼容 UI 临时字段 isNewData 不落库的设计。
 ScriptModule scriptModuleFromJson(Map<String, dynamic> json) {
   final module = ScriptModule(

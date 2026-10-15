@@ -12,6 +12,25 @@ import '../app_database.dart';
 
 export '../app_database.dart' show Rule;
 
+/// 规则同步载荷。
+/// 旧版本客户端按 language/content 读取脚本字段，而 drift 生成代码使用列名
+/// scriptLanguage/scriptContent，直接透传会导致对端解析崩溃。
+Map<String, dynamic> ruleToSyncPayload(Rule rule) {
+  final payload = rule.toJson();
+  payload['language'] = payload.remove('scriptLanguage');
+  payload['content'] = payload.remove('scriptContent');
+  return payload;
+}
+
+/// 从同步载荷还原规则，兼容旧版本客户端的 language/content 字段名。
+Rule ruleFromSyncJson(Map<String, dynamic> payload) {
+  return Rule.fromJson({
+    ...payload,
+    'scriptLanguage': payload['scriptLanguage'] ?? payload['language'],
+    'scriptContent': payload['scriptContent'] ?? payload['content'],
+  });
+}
+
 /// 构造空规则占位，供缺失数据同步删除流程使用。
 Rule emptyRule() {
   return Rule(

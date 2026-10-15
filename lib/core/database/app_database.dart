@@ -89,7 +89,6 @@ class AppDatabase extends _$AppDatabase {
     driftRuntimeOptions.defaultSerializer = const AppDriftValueSerializer();
   }
 
-  /// 数据库 schema 当前版本为 v11，用于验证 History 新增字段的升级流程。
   @override
   int get schemaVersion => dbSchemaVersion;
 
