@@ -7,36 +7,8 @@ import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:simple_icons/simple_icons.dart';
 
-//设备类型图片
-final Map<PlatformType, Icon> devTypeIcons = {
-  PlatformType.windows: const Icon(
-    Icons.laptop_windows_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.android: const Icon(
-    SimpleIcons.android,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.mac: const Icon(
-    Icons.laptop_mac_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.linux: const Icon(
-    SimpleIcons.linux,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.ios: const Icon(
-    Icons.apple_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-};
+import 'device_platform_icon.dart';
 
 class DeviceCard extends StatefulWidget {
   final Device? device;
@@ -109,15 +81,9 @@ class DeviceCard extends StatefulWidget {
 
 class _DeviceCardState extends State<DeviceCard> {
   bool isEmpty = true;
-  Icon emptyIcon = const Icon(
-    Icons.laptop_windows_outlined,
-    color: Colors.grey,
-    size: 48,
-  );
+  IconData emptyIcon = Icons.laptop_windows_outlined;
   int emptyIconIdx = 0;
   Timer? timer;
-
-  IconData get currentIconData => (devTypeIcons[PlatformType(widget.device!.type)] ?? const Icon(Icons.devices_other_outlined)).icon!;
 
   bool get showConnectedAccent => !isEmpty && widget.isPaired && widget.isConnected;
 
@@ -132,7 +98,6 @@ class _DeviceCardState extends State<DeviceCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final accentColor = getDeviceAccentColor(context);
     final cardColor = theme.cardTheme.color ?? colorScheme.surface;
     return Card(
       color: cardColor,
@@ -169,7 +134,7 @@ class _DeviceCardState extends State<DeviceCard> {
                     children: [
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: buildDeviceIcon(context, accentColor, colorScheme),
+                        child: buildDeviceIcon(),
                       ),
                       SizedBox(width: compact ? 10 : 14),
                       Expanded(
@@ -189,13 +154,6 @@ class _DeviceCardState extends State<DeviceCard> {
         ),
       ),
     );
-  }
-
-  Color getDeviceAccentColor(BuildContext context) {
-    if (!showConnectedAccent) {
-      return Theme.of(context).colorScheme.onSurfaceVariant;
-    }
-    return Colors.green;
   }
 
   IconData getStatusIconData() {
@@ -230,27 +188,17 @@ class _DeviceCardState extends State<DeviceCard> {
     }
   }
 
-  Color getDeviceIconBackgroundColor(BuildContext context, ColorScheme colorScheme) {
-    if (!showConnectedAccent) {
-      return colorScheme.surfaceContainerHighest.withValues(alpha: 0.64);
+  /// 构建设备平台图标
+  Widget buildDeviceIcon() {
+    if (isEmpty) {
+      return DevicePlatformIcon(
+        iconData: emptyIcon,
+        isConnected: false,
+      );
     }
-    return Colors.green.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.14);
-  }
-
-  Widget buildDeviceIcon(BuildContext context, Color accentColor, ColorScheme colorScheme) {
-    return Container(
-      width: 38,
-      height: 38,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: getDeviceIconBackgroundColor(context, colorScheme),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Icon(
-        isEmpty ? emptyIcon.icon ?? Icons.devices_other_outlined : currentIconData,
-        color: accentColor,
-        size: 21,
-      ),
+    return DevicePlatformIcon(
+      platform: PlatformType(widget.device!.type),
+      isConnected: showConnectedAccent,
     );
   }
 
@@ -419,9 +367,9 @@ class _DeviceCardState extends State<DeviceCard> {
   }
 
   void setTimer() {
+    final platforms = devicePlatformIconData.keys.toList(growable: false);
     timer = Timer.periodic(1200.ms, (timer) {
-      final key = devTypeIcons.keys.elementAt(emptyIconIdx % devTypeIcons.length);
-      emptyIcon = devTypeIcons[key]!;
+      emptyIcon = devicePlatformIconData[platforms[emptyIconIdx % platforms.length]]!;
       emptyIconIdx++;
       setState(() {});
     });

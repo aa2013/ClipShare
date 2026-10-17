@@ -85,6 +85,11 @@ class DeviceState {
     );
   }
 
+  /// 判定是否已经存储该设备
+  bool hasStored(String id){
+    return getStoredById(id) != null;
+  }
+
   /// 获取指定设备；未命中缓存时本机设备返回自身，否则返回未知设备占位
   Device? getStoredById(String id) {
     if (_storedDevices.containsKey(id)) {
@@ -193,7 +198,8 @@ class DeviceNotifier extends _$DeviceNotifier {
     if (event is DeviceConnected) {
       final id = event.device.guid;
       //未存储该设备
-      if (!_storedDevices.containsKey(id)) {
+      final storedDevice = _storedDevices[id];
+      if (storedDevice == null || !storedDevice.isPaired) {
         _discoveryDevices[id] = event.device;
       }
     } else if (event is DeviceDisconnected) {

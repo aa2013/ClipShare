@@ -27,15 +27,17 @@ import 'package:clipshare/core/settings/sync/sync_settings_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/enums/transport_protocol.dart';
 import 'package:clipshare/shared/exceptions/device_not_connected_exception.dart';
+import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/crypto.dart';
+import 'package:clipshare/shared/utils/dialog.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:clipshare/shared/utils/parallerl_task.dart';
+import 'package:clipshare/shared/utils/snackbar.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../client/socket/secure_socket_client.dart';
@@ -43,6 +45,7 @@ import '../../enums/msg_type.dart';
 import '../../models/message_data.dart';
 
 part 'session_message_handler.dart';
+
 part 'session_provider.g.dart';
 
 /// 设备会话的公开入口。
@@ -55,8 +58,9 @@ class SessionNotifier extends _$SessionNotifier implements MessageSender {
   bool _disposed = false;
   final Map<String, Future<bool>> _inFlightConnectionRequests = {};
   final Set<String> _pendingPairingAddresses = {};
-  bool _pairing = false;
-  int? _pairingNotifyId;
+
+  /// 每个发起配对请求的设备的弹窗与通知状态，devId -> 请求状态。
+  final Map<String, _PairingRequestState> _pairingRequests = {};
 
   TransportHeartbeatNotifier get _heartbeatNotifier => ref.read(transportHeartbeatProvider.notifier);
 
@@ -371,7 +375,19 @@ class SessionNotifier extends _$SessionNotifier implements MessageSender {
         return false;
       }
     }
-    sessions.put(DeviceSocketSession(dev: dev, socket: client, isPaired: client.isPaired, minVersion: client.minVersion, version: client.version));
+    sessions.put(
+      DeviceSocketSession(
+        dev: dev,
+        socket: client,
+        isPaired: client.isPaired,
+        minVersion: client.minVersion,
+        version: client.version,
+      ),
+    );
+    // 如果保存了但是实际结果是未配对状态则本地忘记设备
+    if (!client.isPaired && _deviceState.hasStored(dev.guid)) {
+      await forgetDevice(dev);
+    }
     _reconnectNotifier.cancelReconnect(dev.guid);
     await onDeviceConnected(dev, client, client.minVersion, client.version);
     if (client.isPaired) {
@@ -460,17 +476,13 @@ class SessionNotifier extends _$SessionNotifier implements MessageSender {
   }
 
   /// 清理取消配对状态和系统通知。
-  void onPairingCanceled(BaseDeviceInfo dev) {
+  Future<void> onPairingCanceled(BaseDeviceInfo dev) async {
     logger.debug(tag, '${dev.name} cancelPairing');
-    if (_pairingNotifyId != null) {
-      _notifyNotifier.cancel('dev-pairing-${dev.guid}', _pairingNotifyId!);
-    }
-    _pairing = false;
-    _pairingNotifyId = null;
+    await _closePairingRequest(dev.guid);
     _deviceNotifier.emitLifecycleEvent(DevicePairingCanceled(dev));
   }
 
-  /// 忘记设备并同步本地配对状态。
+  /// 忘记设备并同步本地配对状态(仅修改本地)。
   Future<void> forgetDevice(BaseDeviceInfo dev, {bool updatePairingState = true}) async {
     logger.debug(tag, '${dev.name} forget');
     sessions.get(dev.guid)?.isPaired = false;
@@ -496,17 +508,49 @@ class SessionNotifier extends _$SessionNotifier implements MessageSender {
     _deviceNotifier.emitLifecycleEvent(DeviceForgotten(dev));
   }
 
-  /// 取消当前配对弹窗
-  void cancelPairing(BaseDeviceInfo dev) {
-    if (!_pairing) return;
-    _deviceParingCodeNotifier.removeCode(dev.guid);
-    navigatorKey.currentContext?.pop();
-    sendData(dev, .cancelPairing, {}, false);
-    if (_pairingNotifyId != null) {
-      _notifyNotifier.cancel('dev-pairing-${dev.guid}', _pairingNotifyId!);
+  /// 关闭并清理指定设备的配对请求资源。
+  ///
+  /// 弹窗、通知、超时定时器三者统一在此一起撤销
+  Future<bool> _closePairingRequest(String devId) async {
+    final request = _pairingRequests.remove(devId);
+    if (request == null) {
+      return false;
     }
-    _pairing = false;
-    _pairingNotifyId = null;
+    _revokePairingNotify(request);
+    request.dialogTimeoutTimer?.cancel();
+    request.dialogTimeoutTimer = null;
+    return request.dialogCtl.close();
+  }
+
+  /// 撤销配对码系统通知并把请求态中的通知 id 置空。
+  ///
+  /// 撤销动作配合关闭弹窗一起进行（即通过 [_closePairingRequest]），
+  void _revokePairingNotify(_PairingRequestState request) {
+    final notifyId = request.notifyId;
+    if (notifyId == null) {
+      return;
+    }
+    request.notifyId = null;
+    _notifyNotifier.cancel('dev-pairing-${request.devId}', notifyId);
+  }
+
+  /// 取消该设备的配对：清理本机请求态（如有）并告知对端。
+  ///
+  /// 双角色语义：
+  /// - 被请求方调用（本机存在请求态）：清理验证码、弹窗、通知，再向对端发送取消；
+  /// - 请求方调用（本机无请求态，等待输入阶段）：仅向对端发送取消消息。
+  /// 取消消息发送失败（会话已断）仅记录日志，对端由自身的弹窗超时兜底回收。
+  Future<void> cancelPairing(BaseDeviceInfo dev) async {
+    final hasRequest = _pairingRequests.containsKey(dev.guid);
+    if (hasRequest) {
+      _deviceParingCodeNotifier.removeCode(dev.guid);
+      await _closePairingRequest(dev.guid);
+    }
+    try {
+      await sendData(dev, .cancelPairing, {}, false);
+    } catch (err) {
+      logger.debug(tag, 'send cancelPairing failed. device=${dev.name}, error=$err');
+    }
   }
 
   /// 记录连接成功后的地址、在线状态和设备生命周期事件。
@@ -546,4 +590,25 @@ class SessionNotifier extends _$SessionNotifier implements MessageSender {
     );
     await session.socket.send(msg.toJson());
   }
+}
+
+/// 单个设备的配对请求运行态：本机展示的弹窗控制器与携带验证码的通知 id。
+class _PairingRequestState {
+  /// 发起配对请求的设备 id，用于撤销通知时拼接 key。
+  final String devId;
+
+  /// 本机展示配对请求弹窗的控制器。
+  final DialogController dialogCtl;
+
+  /// 撤销验证码系统通知所需的 id，可能为空（通知失败时）。
+  int? notifyId;
+
+  /// 配对码有效期定时器，到点关闭弹窗并撤销通知。
+  Timer? dialogTimeoutTimer;
+
+  _PairingRequestState({
+    required this.devId,
+    required this.dialogCtl,
+    this.notifyId,
+  });
 }

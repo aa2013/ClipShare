@@ -1,13 +1,16 @@
+import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/shared/models/dialog_actions.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 调试页：仅 debug 构建可见，用于手动验证各类组件与弹窗。
-class DebugPage extends StatelessWidget {
+class DebugPage extends ConsumerWidget {
   const DebugPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: Center(
         child: Column(
@@ -35,10 +38,26 @@ class DebugPage extends StatelessWidget {
               icon: const Icon(Icons.aspect_ratio),
               label: const Text('自定义尺寸 / 禁止空白关闭 / 隐藏关闭按钮'),
             ),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: () => _clearAllDevices(ref),
+              icon: const Icon(Icons.delete_forever),
+              label: const Text('清除所有设备'),
+            ),
+
           ],
         ),
       ),
     );
+  }
+
+  /// 直接执行 SQL 删除设备表全部数据，前提是本地 DB 已打开。
+  /// 仅用于开发阶段快速调整数据，不走配对/清理业务逻辑。
+  Future<void> _clearAllDevices(WidgetRef ref) async {
+    final db = ref.read(appDbProvider).requireValue;
+    await db.deviceDao.removeAll();
+    // 直接删表绕过了 DeviceNotifier 的内存态，重建 provider 重新从表加载。
+    ref.invalidate(deviceProvider);
   }
 
   /// 构建弹窗底部按钮组示例。
