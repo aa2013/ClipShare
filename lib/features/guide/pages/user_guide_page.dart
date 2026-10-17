@@ -72,7 +72,7 @@ class _UserGuidePageState extends ConsumerState<UserGuidePage> with WidgetsBindi
     }
     _hasNavigatedToHome = true;
     final configDao = ref.read(appDbProvider).requireValue.configDao;
-    await configDao.addOrUpdate(ConfigKey.firstStartup, true.toString());
+    await configDao.addOrUpdate(ConfigKey.firstStartup, false.toString());
     ref.invalidate(localDeviceInfoProvider);
     if (mounted) {
       context.goNamed(AppRoutes.home.name);

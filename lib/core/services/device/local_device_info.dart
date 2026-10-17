@@ -63,13 +63,13 @@ class LocalDeviceInfo {
   ///本机设备名称
   final String localName;
 
-  ///是否是首次启动（一次性确定后固定，不随配置变化）
+  ///是否是首次启动
   final bool firstSetup;
 
-  ///Android id 生成方式（一次性确定后固定，不随配置变化）
+  ///Android id 生成方式
   final DeviceIdGenerateWay androidIdGenerateWay;
 
-  ///Android id 生成方式（一次性确定后固定，不随配置变化）
+  ///Android id 生成方式
   final Device self;
 
   const LocalDeviceInfo({

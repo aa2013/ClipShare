@@ -161,6 +161,28 @@
   "@devicePageReconnect": {
     "description": "translated key: devicePageReconnect"
   },
+  "devicePageReconnecting": "Reconnecting",
+  "@devicePageReconnecting": {
+    "description": "translated key: devicePageReconnecting"
+  },
+  "deviceReconnectSuccess": "Reconnected to {devName}",
+  "@deviceReconnectSuccess": {
+    "description": "translated key: deviceReconnectSuccess",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceReconnectFailed": "Failed to reconnect to {devName}",
+  "@deviceReconnectFailed": {
+    "description": "translated key: deviceReconnectFailed",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
   "devicePageUnpairedDialogContent": "Do you want to unpair?",
   "@devicePageUnpairedDialogContent": {
     "description": "translated key: devicePageUnpairedDialogContent"

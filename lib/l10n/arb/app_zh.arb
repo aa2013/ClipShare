@@ -161,6 +161,28 @@
   "@devicePageReconnect": {
     "description": "translated key: devicePageReconnect"
   },
+  "devicePageReconnecting": "重连中",
+  "@devicePageReconnecting": {
+    "description": "translated key: devicePageReconnecting"
+  },
+  "deviceReconnectSuccess": "已成功重连 {devName}",
+  "@deviceReconnectSuccess": {
+    "description": "translated key: deviceReconnectSuccess",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceReconnectFailed": "{devName} 重连失败",
+  "@deviceReconnectFailed": {
+    "description": "translated key: deviceReconnectFailed",
+    "placeholders": {
+      "devName": {
+        "type": "String"
+      }
+    }
+  },
   "devicePageUnpairedDialogContent": "是否要取消配对？",
   "@devicePageUnpairedDialogContent": {
     "description": "translated key: devicePageUnpairedDialogContent"

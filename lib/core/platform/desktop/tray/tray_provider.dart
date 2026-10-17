@@ -2,93 +2,114 @@ import 'dart:async';
 
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/platform/desktop/window/window_service.dart';
+import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
+import 'package:clipshare/core/services/device/device_provider.dart';
+import 'package:clipshare/core/services/device/events/device_lifecycle_event.dart';
+import 'package:clipshare/core/settings/hotkey/hotkey_settings.dart';
+import 'package:clipshare/core/settings/hotkey/hotkey_settings_provider.dart';
+import 'package:clipshare/l10n/l10n_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/constants/assets.dart';
+import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tray_manager/tray_manager.dart';
 
+part 'tray_provider.g.dart';
+
 /// 桌面端系统托盘服务。
-class TrayService with TrayListener/* todo , DevAliveListener*/ {
-  static const tag = 'TrayService';
+@Riverpod(keepAlive: true)
+class TrayNotifier extends _$TrayNotifier with TrayListener {
+  static const tag = 'TrayNotifier';
+
   /// 托盘菜单项 key：显示主窗口
   static const menuKeyShowWindow = 'show_window';
 
   /// 托盘菜单项 key：退出应用
   static const menuKeyExitApp = 'exit_app';
 
-  /// "显示主窗口"热键配置取值器（每次读取最新值）
-  final String Function() showHotKeys;
+  HotkeySettings get _hotKeySettings => ref.read(hotkeySettingsProvider).requireValue;
 
-  /// "退出应用"热键配置取值器（每次读取最新值）
-  final String Function() exitHotKeys;
+  WindowService get _windowService => ref.read(windowServiceProvider).requireValue;
 
-  /// "显示主窗口"动作实现
-  final Future<void> Function() doShowWindow;
+  DeviceState get _deviceState => ref.read(deviceProvider).requireValue;
 
-  /// "退出应用"动作实现
-  final Future<void> Function() doExitApp;
+  DeviceNotifier get _deviceNotifier => ref.read(deviceProvider.notifier);
 
+  bool _initialized = false;
   bool _trayClick = false;
   bool _flashing = false;
+  Timer? _tooltipTimer;
+  StreamSubscription<DeviceLifecycleEvent>? _deviceLifecycleSubscription;
 
   String get _warningIconPath {
-    if(isWindows){
+    if (isWindows) {
       return logoWarnIcoPath;
     }
     return logoWarnPngPath;
   }
 
   String get _normalIconPath {
-    if(isWindows){
+    if (isWindows) {
       return logoIcoPath;
     }
     return logoPngPath;
   }
 
-  bool _initialized = false;
+  @override
+  Future<void> build() async {
+    ref.onDispose(_dispose);
+    if (!isDesktop) {
+      return;
+    }
+    await _init();
+    ref.listen(
+      hotkeySettingsProvider,
+      (previous, next) => updateTrayMenus(),
+    );
+    ref.listen(uiLocaleProvider, (previous, next) => updateTrayMenus());
+  }
 
-  TrayService({
-    required this.showHotKeys,
-    required this.exitHotKeys,
-    required this.doShowWindow,
-    required this.doExitApp,
-  });
-
-  /// 初始化托盘（幂等）：完成监听注册等框架接线。
-  Future<void> init() async {
+  /// 初始化托盘
+  Future<void> _init() async {
     if (_initialized) {
       return;
     }
     await setToolTip(appName);
     await _resetIcon();
     await updateTrayMenus();
-    //TODO
-    // connRegService.addDevAliveListener(this);
+    _deviceLifecycleSubscription = _deviceNotifier.lifecycleEvents.listen(_watchDevAlive);
     trayManager.addListener(this);
     _initialized = true;
   }
 
+  void _watchDevAlive(DeviceLifecycleEvent event) {
+    _tooltipTimer?.cancel();
+    _tooltipTimer = Timer(1.s, (){
+      _updateDevAliveTooltip(appName);
+    });
+  }
+
+
   Future<void> _resetIcon() async {
     String iconPath = _warningIconPath;
-    try{
-      //todo
-      // final devController = Get.find<DeviceController>();
-      final onlineList = [];//devController.onlineAndPairedList;
-      if(onlineList.isNotEmpty){
+    try {
+      final onlineList = _deviceState.onlineAndPairedList;
+      if (onlineList.isNotEmpty) {
         iconPath = _normalIconPath;
       }
-    }catch(_){
+    } catch (_) {
       //ignored
     }
-    await trayManager.setIcon(
-        id: isLinux ? appName : null,
-        iconPath
-    );
+    await trayManager.setIcon(id: isLinux ? appName : null, iconPath);
     await setToolTip(appName);
   }
-  /// 释放托盘监听；防抖定时器清理随 tooltip 逻辑一并迁移。
-  void dispose() {
+
+  /// 释放托盘监听
+  void _dispose() {
     trayManager.removeListener(this);
+    _deviceLifecycleSubscription?.cancel();
   }
 
   /// 设置托盘 tooltip。
@@ -102,22 +123,19 @@ class TrayService with TrayListener/* todo , DevAliveListener*/ {
   }
 
   /// 依据当前热键配置重建托盘右键菜单。
-  ///
-  /// 由 provider 在热键配置/语言变化时自动触发，外部无需手动调用；
-  /// 系统级热键注册职责不属于本服务（归热键模块）。
   Future<void> updateTrayMenus() async {
-    final showMainWindowKeys = showHotKeys();
-    final exitAppKeys = exitHotKeys();
-    var showWindowLabel = _menuLabel(TranslationKey.showMainWindow.tr, _hotKeyDesc(showMainWindowKeys));
-    var exitAppLabel = _menuLabel(TranslationKey.exitApp.tr, _hotKeyDesc(exitAppKeys));
+    final showHotKeys = _hotKeySettings.showMainWindows;
+    final exitHotKeys = _hotKeySettings.exitAppHotKeys;
+    var showWindowLabel = _menuLabel(TranslationKey.showMainWindow.tr, _hotKeyDesc(showHotKeys));
+    var exitAppLabel = _menuLabel(TranslationKey.exitApp.tr, _hotKeyDesc(exitHotKeys));
     List<MenuItem> items = [
       MenuItem(
-        key: 'show_window',
+        key: menuKeyShowWindow,
         label: showWindowLabel,
       ),
       MenuItem.separator(),
       MenuItem(
-        key: 'exit_app',
+        key: menuKeyExitApp,
         label: exitAppLabel,
       ),
     ];
@@ -216,12 +234,12 @@ class TrayService with TrayListener/* todo , DevAliveListener*/ {
   }
 
   Future<void> _updateDevAliveTooltip(String firstContent) async {
-    // final devController = Get.find<DeviceController>();
-    final onlineList = [];// todo devController.onlineList;
+    final onlineList = _deviceState.onlineList;
+    final pairedDevIds = _deviceState.pairedList.map((device)=>device.guid).toSet();
     var pairedCnt = 0;
     var unpairedCnt = 0;
-    for (var dev in onlineList) {
-      if (dev.isPaired) {
+    for (var device in onlineList) {
+      if (pairedDevIds.contains(device.guid)) {
         pairedCnt++;
       } else {
         unpairedCnt++;
@@ -243,12 +261,12 @@ class TrayService with TrayListener/* todo , DevAliveListener*/ {
 
   /// 显示主窗口并聚焦。
   Future<void> showWindow() async {
-    await doShowWindow();
+    await _windowService.showApp();
   }
 
   /// 退出应用。
   Future<void> exitApp() async {
-    await doExitApp();
+    await _windowService.exitApp();
   }
 
   @override
@@ -256,7 +274,7 @@ class TrayService with TrayListener/* todo , DevAliveListener*/ {
     //记录是否双击，如果点击了一次，设置trayClick为true，再次点击时验证
     if (_trayClick) {
       _trayClick = false;
-      unawaited(doShowWindow());
+      unawaited(showWindow());
       return;
     }
     _trayClick = true;
@@ -269,10 +287,10 @@ class TrayService with TrayListener/* todo , DevAliveListener*/ {
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
     switch (menuItem.key) {
-      case 'show_window':
+      case menuKeyShowWindow:
         showWindow();
         break;
-      case 'exit_app':
+      case menuKeyExitApp:
         exitApp();
         break;
     }

@@ -5,7 +5,6 @@ import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/database/tables/device.dart';
-import 'package:clipshare/core/extensions/context_extension.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/events/device_discovery_event.dart';
@@ -46,10 +45,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:pinput/pinput.dart';
 
 import '../widgets/add_device_dialog.dart';
 import '../widgets/device_card.dart';
+import '../widgets/device_platform_icon.dart';
+import '../widgets/pairing_pin_dialog.dart';
 
 class DevicePage extends ConsumerStatefulWidget {
   const DevicePage({super.key});
@@ -65,6 +65,8 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
   late Animation<double> animation;
   StreamSubscription<DeviceDiscoveryEvent>? _discoveryEventsSubscription;
   DeviceNotifier get deviceNotifier => ref.read(deviceProvider.notifier);
+  SessionNotifier get sessionNotifier => ref.read(sessionProvider.notifier);
+  DeviceState get deviceState => ref.read(deviceProvider).requireValue;
 
   @override
   void initState() {
@@ -72,8 +74,7 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
       vsync: this,
       duration: 4.s,
     );
-    //初始化自动启动动画，否则启动时的设备发现无动画，在设备发现停止后动画也会自动停止
-    rotationController.repeat();
+
     setRotationAnimation();
     // 通过设备发现生命周期事件驱动动画，避免页面状态与发现令牌状态分叉。
     _discoveryEventsSubscription = deviceNotifier.discoveryEvents.listen(_onDiscoveryEvent);
@@ -240,7 +241,7 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
                     message: TranslationKey.devicePageManuallyTooltip.tr,
                     child: IconButton(
                       onPressed: () {
-                        dialogManager.open(context, const AddDeviceDialog());
+                        dialogManager.open(context, const AddDeviceDialog(), dismissible: false);
                       },
                       icon: const Icon(
                         Icons.add,
@@ -335,6 +336,8 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
     }
     final selfVersion = ref.read(localDeviceInfoProvider).requireValue.appVersion;
     final registry = deviceState.registry;
+    final reconnectingGuids = ref.watch(reconnectProvider);
+    final connectingGuids = ref.watch(deviceConnectingProvider);
     final cards = filteredDevices
         .map((device) {
           final protocol = registry.getProtocol(device.guid) ?? .direct;
@@ -347,6 +350,8 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
             minVersion: registry.getMinVersion(device.guid),
             selfVersion: selfVersion,
             selfMinVersion: minVersion,
+            isReconnecting: reconnectingGuids.contains(device.guid),
+            isConnecting: connectingGuids.contains(device.guid),
             onTap: (value, connected) => _onDeviceCardTap(value, connected, protocol),
             onLongPress: (value, connected) => _onDeviceCardLongPress(value, connected, protocol),
             onRenameButtonClicked: (value) => _showRenameDialog(context, value),
@@ -373,7 +378,6 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
         onRenameButtonClicked: (_) {},
       );
     }
-    final deviceState = ref.read(deviceProvider).requireValue;
     final cards = discoveryList
         .map((devInfo) {
           final storedDevice = deviceState.getStoredById(devInfo.guid);
@@ -441,45 +445,20 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
     }
   }
 
-  /// 保存设备自定义名称，并刷新 Riverpod 设备状态。
+  /// 保存设备自定义名称，并刷新 Riverpod 设备状态
   Future<void> _showRenameDialog(BuildContext context, Device device) async {
-    final textController = TextEditingController(text: device.customName ?? '');
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(TranslationKey.rename.tr),
-        content: SizedBox(
-          width: 300,
-          child: TextField(
-            autofocus: true,
-            controller: textController,
-            decoration: InputDecoration(
-              label: Text(TranslationKey.pleaseInput.tr),
-              border: const OutlineInputBorder(),
-            ),
-          ),
+    DialogController? dlgCtl;
+    dlgCtl = dialogManager.open(
+      context,
+      _DeviceRenameDialog(
+        device: device,
+        onClose: () => dlgCtl?.close(),
+        onSave: (name) => deviceNotifier.addOrUpdate(
+          device.copyWith(customName: Value(name)),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(TranslationKey.dialogCancelText.tr),
-          ),
-          TextButton(
-            onPressed: () async {
-              final name = textController.text.trim();
-              final success = await deviceNotifier.addOrUpdate(
-                    device.copyWith(customName: Value(name)),
-                  );
-              if (success && dialogContext.mounted) {
-                Navigator.pop(dialogContext);
-              }
-            },
-            child: Text(TranslationKey.save.tr),
-          ),
-        ],
       ),
     );
-    textController.dispose();
+    await dlgCtl.future;
   }
 
   /// 桌面端点击设备卡片时显示操作面板。
@@ -514,11 +493,12 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          (devTypeIcons[PlatformType(device.type)] ?? const Icon(Icons.devices_other_outlined)).icon,
-                          color: isConnected ? Colors.lightBlue : Colors.grey,
-                          size: 48,
+                        DevicePlatformIcon(
+                          platform: PlatformType(device.type),
+                          isConnected: isConnected,
+                          size: 58,
                         ),
+                        const SizedBox(width: 10),
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -545,16 +525,16 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
                       Expanded(
                         child: _detailAction(
                           icon: isConnected ? Icons.link_off : Icons.link,
-                          label: isConnected ? TranslationKey.disconnected.tr : TranslationKey.directConnect.tr,
+                          label: isConnected ? TranslationKey.devicePageDisconnect.tr : TranslationKey.devicePageReconnect.tr,
                           onTap: () async {
                             if (isConnected) {
                               if (protocol.isSocket) {
-                                await ref.read(sessionProvider.notifier).disconnectDevice(baseInfo, true);
+                                await sessionNotifier.disconnectDevice(baseInfo, true);
                               } else {
                                 storage.disconnectDevice(device.guid);
                               }
                             } else if (protocol.isSocket) {
-                              await ref.read(reconnectProvider.notifier).reconnectOnce(device.guid);
+                              unawaited(_reconnectWithFeedback(device));
                             } else {
                               storage.connectDevice(device.guid);
                             }
@@ -570,7 +550,15 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
                             final confirmed = await _confirmForget(sheetContext);
                             if (!confirmed) return;
                             if (protocol.isSocket) {
-                              await ref.read(sessionProvider.notifier).forgetDevice(baseInfo);
+                              await sessionNotifier.forgetDevice(baseInfo);
+                              // 设备在线时通知对端同步解除配对，避免对端仍显示为已配对
+                              if (isConnected) {
+                                try {
+                                  await sessionNotifier.sendData(baseInfo, MsgType.forgetDev, {});
+                                } catch (err, stack) {
+                                  logger.debug(tag, 'send forgetDev failed. device=${baseInfo.guid}, $err $stack');
+                                }
+                              }
                             } else {
                               await deviceNotifier.confirmPairingState(
                                 device: device,
@@ -591,7 +579,7 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
                             label: TranslationKey.syncData.tr,
                             onTap: () {
                               snackbar.success(context, TranslationKey.syncingData.tr);
-                              ref.read(sessionProvider.notifier).requestMissingData(device.guid);
+                              sessionNotifier.requestMissingData(device.guid);
                               Navigator.pop(sheetContext);
                             },
                           ),
@@ -607,6 +595,31 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
     );
   }
 
+  /// 异步执行一次手动重连，完成后按连接状态提示成功或失败
+  Future<void> _reconnectWithFeedback(Device device) async {
+    final reconnectNotifier = ref.read(reconnectProvider.notifier);
+    await reconnectNotifier.reconnectOnce(device.guid);
+    if (!mounted) {
+      return;
+    }
+    final registry = deviceState.registry;
+    if (registry.getProtocol(device.guid) != null) {
+      snackbar.success(
+        context,
+        TranslationKey.deviceReconnectSuccess.trParams({
+          'devName': device.displayName,
+        }),
+      );
+    } else {
+      snackbar.error(
+        context,
+        TranslationKey.deviceReconnectFailed.trParams({
+          'devName': device.displayName,
+        }),
+      );
+    }
+  }
+
   /// 构造详情面板中的统一操作按钮。
   Widget _detailAction({required IconData icon, required String label, required VoidCallback onTap}) {
     return InkWell(
@@ -619,10 +632,10 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
     );
   }
 
-  /// 显示取消配对确认框。
+  /// 显示取消配对确认框
   Future<bool> _confirmForget(BuildContext context) async {
     var confirmed = false;
-    await dialogManager.tips(
+    final dialog = await dialogManager.tips(
       context,
       text: TranslationKey.devicePageUnpairedDialogContent.tr,
       actions: DialogActions(
@@ -630,102 +643,51 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
         confirm: DialogAction(onPressed: () => confirmed = true),
       ),
     );
+    await dialog?.future;
     return confirmed;
   }
 
   /// 向发现设备发起配对请求并显示六位验证码输入框。
-  /// 发起配对并在验证码提交后等待服务层的配对状态事件。
+  /// 配对结果由弹窗自身监听生命周期事件处理：成功关闭弹窗，失败清空重输。
   Future<void> _requestPairing(BaseDeviceInfo device, BuildContext context) async {
-    final sessions = ref.read(sessionProvider.notifier);
-    final pairingEvents = deviceNotifier.lifecycleEvents;
+    final sessions = sessionNotifier;
     await sessions.sendData(device, MsgType.reqPairing, {}, false);
-    if (!context.mounted) return;
-
-    final pinController = TextEditingController();
-    var submitting = false;
-    var pairingFailed = false;
-    var showTimeout = false;
-    Timer? timeoutTimer;
-    final pairingSubscription = pairingEvents.where((event) => event is DevicePaired && event.device.guid == device.guid).listen((event) {
-      if (!context.mounted) return;
-      final paired = (event as DevicePaired).result;
-      Navigator.of(context, rootNavigator: true).maybePop();
-      if (!paired) {
-        snackbar.error(context, TranslationKey.devicePagePairingErrorText.tr);
-      }
-    });
-
-    void submit(StateSetter setState) {
-      if (pinController.text.length != 6 || submitting) return;
-      setState(() {
-        submitting = true;
-        pairingFailed = false;
-        showTimeout = false;
-      });
-      sessions.sendData(
-        device,
-        MsgType.pairing,
-        {'code': CryptoUtil.toMD5(pinController.text)},
-        false,
-      );
-      timeoutTimer?.cancel();
-      timeoutTimer = Timer(5.s, () {
-        if (context.mounted) {
-          setState(() {
-            submitting = false;
-            showTimeout = true;
-          });
-        }
-      });
+    if (!context.mounted) {
+      return;
     }
 
-    try {
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: Text(TranslationKey.devicePagePairingDialogTitle.tr),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Pinput(
-                  length: 6,
-                  controller: pinController,
-                  autofocus: true,
-                  defaultPinTheme: context.pinInputTheme,
-                  onChanged: (_) => setState(() {}),
-                  onSubmitted: (_) => submit(setState),
-                ),
-                if (showTimeout || pairingFailed)
-                  Text(
-                    showTimeout ? TranslationKey.devicePagePairingTimeoutText.tr : TranslationKey.devicePagePairingErrorText.tr,
-                    style: const TextStyle(color: Colors.redAccent),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: submitting
-                    ? null
-                    : () {
-                        ref.read(sessionProvider.notifier).cancelPairing(device);
-                        Navigator.pop(dialogContext);
-                      },
-                child: Text(TranslationKey.dialogCancelText.tr),
-              ),
-              TextButton(
-                onPressed: pinController.text.length == 6 && !submitting ? () => submit(setState) : null,
-                child: submitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(TranslationKey.devicePagePairingDialogConfirmText.tr),
-              ),
-            ],
-          ),
+    DialogController? dlgCtl;
+    dlgCtl = dialogManager.open(
+      context,
+      PairingPinDialog(
+        onClose: () => dlgCtl?.close(),
+        pairingResults: deviceNotifier.lifecycleEvents
+            .where((event) {
+              if (event is! DevicePaired) {
+                return false;
+              }
+              return event.device.guid == device.guid;
+            })
+            .cast<DevicePaired>(),
+        cancelSignal: deviceNotifier.lifecycleEvents
+            .where((event) {
+              if (event is! DevicePairingCanceled) {
+                return false;
+              }
+              return event.device.guid == device.guid;
+            })
+            .cast<DevicePairingCanceled>(),
+        onSendCode: (code) => sessions.sendData(
+          device,
+          MsgType.pairing,
+          {'code': CryptoUtil.toMD5(code)},
+          false,
         ),
-      );
-    } finally {
-      timeoutTimer?.cancel();
-      await pairingSubscription.cancel();
-      pinController.dispose();
-    }
+        onCancel: () => sessions.cancelPairing(device),
+      ),
+      dismissible: false,
+    );
+    await dlgCtl.future;
   }
 
   @override
@@ -733,5 +695,82 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
     _discoveryEventsSubscription?.cancel();
     rotationController.dispose();
     super.dispose();
+  }
+}
+
+/// 设备重命名弹窗：自身管理输入控制器，保存成功后才关闭。
+class _DeviceRenameDialog extends StatefulWidget {
+  final Device device;
+
+  /// 保存自定义名称，返回是否保存成功。
+  final Future<bool> Function(String name) onSave;
+
+  /// 关闭弹窗回调
+  final VoidCallback onClose;
+
+  const _DeviceRenameDialog({
+    required this.device,
+    required this.onSave,
+    required this.onClose,
+  });
+
+  @override
+  State<_DeviceRenameDialog> createState() => _DeviceRenameDialogState();
+}
+
+class _DeviceRenameDialogState extends State<_DeviceRenameDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.device.customName ?? '',
+  );
+
+  /// 保存请求进行中，期间禁止重复提交与取消。
+  var _saving = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  /// 保存自定义名称；保存成功前保持弹窗打开。
+  Future<void> _save() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    final success = await widget.onSave.call(_controller.text.trim());
+    if (success && context.mounted) {
+      widget.onClose();
+    } else {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(TranslationKey.rename.tr),
+      content: SizedBox(
+        width: 300,
+        child: TextField(
+          autofocus: true,
+          controller: _controller,
+          decoration: InputDecoration(
+            label: Text(TranslationKey.pleaseInput.tr),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _saving ? null : widget.onClose,
+          child: Text(TranslationKey.dialogCancelText.tr),
+        ),
+        TextButton(
+          onPressed: _saving ? null : _save,
+          child: Text(TranslationKey.save.tr),
+        ),
+      ],
+    );
   }
 }

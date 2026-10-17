@@ -140,6 +140,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get devicePageReconnect => 'Reconnect';
 
   @override
+  String get devicePageReconnecting => 'Reconnecting';
+
+  @override
+  String deviceReconnectSuccess(String devName) {
+    return 'Reconnected to $devName';
+  }
+
+  @override
+  String deviceReconnectFailed(String devName) {
+    return 'Failed to reconnect to $devName';
+  }
+
+  @override
   String get devicePageUnpairedDialogContent => 'Do you want to unpair?';
 
   @override

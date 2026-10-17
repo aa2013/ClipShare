@@ -85,6 +85,11 @@ class DeviceState {
     );
   }
 
+  /// 判定是否已经存储该设备
+  bool hasStored(String id){
+    return getStoredById(id) != null;
+  }
+
   /// 获取指定设备；未命中缓存时本机设备返回自身，否则返回未知设备占位
   Device? getStoredById(String id) {
     if (_storedDevices.containsKey(id)) {
@@ -137,14 +142,12 @@ class DeviceNotifier extends _$DeviceNotifier {
   @override
   Future<DeviceState> build() async {
     final lst = await _deviceDao.getAllDevices();
-    final devices = <String, Device>{};
-    for (var dev in lst) {
-      devices[dev.guid] = dev;
-    }
+    _storedDevices.clear();
+    _storedDevices.addEntries(lst.map((dev) => MapEntry(dev.guid, dev)));
     return DeviceState(
-      storedDevices: devices,
+      storedDevices: _storedDevices,
       discoveryDevices: _discoveryDevices,
-      registry: DeviceRegistry(),
+      registry: _registry,
       self: _self,
       selfId: _baseDevInfo.guid,
     );
@@ -195,14 +198,22 @@ class DeviceNotifier extends _$DeviceNotifier {
     if (event is DeviceConnected) {
       final id = event.device.guid;
       //未存储该设备
-      if (!_storedDevices.containsKey(id)) {
+      final storedDevice = _storedDevices[id];
+      if (storedDevice == null || !storedDevice.isPaired) {
         _discoveryDevices[id] = event.device;
       }
     } else if (event is DeviceDisconnected) {
       final id = event.deviceId;
       _discoveryDevices.remove(id);
+    } else if (event is DeviceForgotten) {
+      final id = event.device.guid;
+      // 设备仍在线且为 socket 协议时移入发现列表，允许重新配对
+      if (_registry.getProtocol(id)?.isSocket ?? false) {
+        _discoveryDevices[id] = event.device;
+      }
     }
     _lifecycleEvents.add(event);
+    _updateState();
   }
 
   void emitDiscoveryEvent(DeviceDiscoveryEvent event) {

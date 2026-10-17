@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clipshare/shared/exceptions/device_connect_exception.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:clipshare/shared/utils/parallerl_task.dart';
 
@@ -223,11 +224,18 @@ class _DeviceConnectionWorker {
             success = await processor(request);
           }
         } catch (error, stackTrace) {
-          logger.error(
-            DeviceConnectionQueue.tag,
-            'Device connection request failed. key=$key, request=${request.description}, error=$error',
-            stackTrace,
-          );
+          if (error is DeviceConnectException) {
+            logger.debug(
+              DeviceConnectionQueue.tag,
+              'request=${request.description}, error=${error.message}',
+            );
+          } else {
+            logger.error(
+              DeviceConnectionQueue.tag,
+              'Device connection request failed. key=$key, request=${request.description}, error=$error',
+              stackTrace,
+            );
+          }
         } finally {
           request.complete(success);
           _pendingCount--;

@@ -43,6 +43,8 @@ class DialogManager {
   }
 
   /// 打开一个自定义 widget 的通用弹窗。
+  ///
+  /// [dismissible] 控制点击空白处或按返回键是否关闭弹窗。
   DialogController open(
     BuildContext context,
     Widget widget, {
@@ -55,7 +57,8 @@ class DialogManager {
       barrierLabel: dismissible ? barrierLabel ?? '' : null,
       context: context,
       transitionBuilder: _dialogTransition,
-      pageBuilder: (context, animation, secondaryAnimation) => Container(
+      pageBuilder: (context, animation, secondaryAnimation) => PopScope(
+        canPop: dismissible,
         key: dlgCtl.key,
         child: widget,
       ),
@@ -70,7 +73,7 @@ class DialogManager {
   /// [width]/[height] 为空时由 [DialogFrameLayout] 按屏幕尺寸自适应；
   /// [backgroundColor] 为空时取当前主题表面色；[footer] 为底部通用内容；
   /// [actions] 为底部按钮组（neutral 左、cancel/confirm 右），与 [footer] 可共存；
-  /// [scrollable] 控制正文是否由边框包裹滚动；[dismissible] 控制点击空白处是否自动关闭。
+  /// [scrollable] 控制正文是否由边框包裹滚动；[dismissible] 控制点击空白处或按返回键是否自动关闭。
   DialogController frame(
     BuildContext context, {
     IconData? icon,
@@ -93,20 +96,23 @@ class DialogManager {
       barrierLabel: dismissible ? barrierLabel ?? '' : null,
       context: context,
       transitionBuilder: _dialogTransition,
-      pageBuilder: (context, animation, secondaryAnimation) => DialogFrameLayout(
+      pageBuilder: (context, animation, secondaryAnimation) => PopScope(
+        canPop: dismissible,
         key: dlgCtl.key,
-        icon: icon,
-        title: title,
-        content: content,
-        width: width,
-        height: height,
-        showCloseButton: showCloseButton,
-        backgroundColor: backgroundColor,
-        footer: footer,
-        actions: actions,
-        scrollable: scrollable,
-        autoDismiss: autoDismiss,
-        onClose: () => dlgCtl.close(),
+        child: DialogFrameLayout(
+          icon: icon,
+          title: title,
+          content: content,
+          width: width,
+          height: height,
+          showCloseButton: showCloseButton,
+          backgroundColor: backgroundColor,
+          footer: footer,
+          actions: actions,
+          scrollable: scrollable,
+          autoDismiss: autoDismiss,
+          onClose: () => dlgCtl.close(),
+        ),
       ),
     );
     dlgCtl.future = future.then((value) => dlgCtl.close());
@@ -269,6 +275,7 @@ class DialogManager {
     final dlgCtl = DialogController(context);
     final feature = showGeneralDialog(
       context: context,
+      barrierDismissible: false,
       barrierLabel: TranslationKey.downloading.tr,
       transitionBuilder: _dialogTransition,
       pageBuilder: (context, animation, secondaryAnimation) {

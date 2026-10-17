@@ -1,5 +1,4 @@
 import 'package:clipshare/core/services/device/device_provider.dart';
-import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/transport/enums/msg_type.dart';
 import 'package:clipshare/core/services/transport/message_sender/message_sender.dart';
 import 'package:clipshare/core/services/transport/socket/session/session_provider.dart';

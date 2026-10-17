@@ -41,7 +41,6 @@ class _AddDeviceDialogState extends ConsumerState<AddDeviceDialog> {
 
   DirectNotifier get sktService => ref.read(directProvider.notifier);
   bool forwardMode = false;
-  Map<String, dynamic> _connectData = {};
   bool forwardConnected = false;
 
   void attemptConnect(QRDeviceConnectionInfo result) async {
@@ -250,15 +249,8 @@ class _AddDeviceDialogState extends ConsumerState<AddDeviceDialog> {
           child: Row(
             children: [
               TextButton(
-                onPressed: () {
-                  if (_connecting) {
-                    _connectData['stop'] = true;
-                    _connecting = false;
-                    setState(() {});
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
+                // 连接中禁用取消，等待超时或连接结果
+                onPressed: _connecting ? null : () => Navigator.pop(context),
                 child: Text(TranslationKey.dialogCancelText.tr),
               ),
               const SizedBox(
@@ -271,10 +263,6 @@ class _AddDeviceDialogState extends ConsumerState<AddDeviceDialog> {
                         // 194512ad29c18d3bdb4f86f30b257
                         setState(() {
                           _connectErr = false;
-                          _connectData = {
-                            'stop': false,
-                            'custom': true,
-                          };
                         });
                         if (forwardMode) {
                           if (_forwardIdEditor.text == '') {
@@ -302,37 +290,37 @@ class _AddDeviceDialogState extends ConsumerState<AddDeviceDialog> {
                           _connecting = true;
                         });
                         if (forwardMode) {
-                          //尝试中转连接
-                          bool success = await ref.read(forwardServerProvider.notifier).connectDevice(_forwardIdEditor.text);
-                          if (success) {
-                            if (context.mounted) {
-                              context.pop();
-                            }
+                          //尝试中转连接，失败时保持弹窗并提示
+                          final success = await ref.read(forwardServerProvider.notifier).connectDevice(_forwardIdEditor.text);
+                          if (!context.mounted) {
                             return;
                           }
+                          if (success) {
+                            context.pop();
+                          } else {
+                            setState(() {
+                              _connectErr = true;
+                              _connecting = false;
+                            });
+                          }
                         } else {
-                          sktService.connect(
-                                _ipEditor.text,
-                                port: int.parse(_portEditor.text),
-                                onErr: (err) {
-                                  logger.debug(tag, err);
-                                  if (_connecting) {
-                                    setState(() {
-                                      _connectErr = true;
-                                      _connecting = false;
-                                    });
-                                  }
-                                },
-                                data: _connectData,
-                              )
-                              .then((val) {
-                                if (_connectErr || _connectData['stop']) {
-                                  return;
-                                }
-                                if (context.mounted) {
-                                  context.pop();
-                                }
-                              });
+                          // 直连失败由返回值判定；onErr 只在异常路径触发，不能作为唯一依据
+                          final success = await sktService.connect(
+                            _ipEditor.text,
+                            port: int.parse(_portEditor.text),
+                            onErr: (err) => logger.debug(tag, err),
+                          );
+                          if (!context.mounted) {
+                            return;
+                          }
+                          if (success) {
+                            context.pop();
+                          } else {
+                            setState(() {
+                              _connectErr = true;
+                              _connecting = false;
+                            });
+                          }
                         }
                       },
                 child: _connecting

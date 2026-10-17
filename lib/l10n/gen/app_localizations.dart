@@ -332,6 +332,24 @@ abstract class AppLocalizations {
   /// **'Reconnect'**
   String get devicePageReconnect;
 
+  /// translated key: devicePageReconnecting
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting'**
+  String get devicePageReconnecting;
+
+  /// translated key: deviceReconnectSuccess
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnected to {devName}'**
+  String deviceReconnectSuccess(String devName);
+
+  /// translated key: deviceReconnectFailed
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to reconnect to {devName}'**
+  String deviceReconnectFailed(String devName);
+
   /// translated key: devicePageUnpairedDialogContent
   ///
   /// In en, this message translates to:

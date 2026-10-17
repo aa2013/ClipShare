@@ -6,7 +6,7 @@ import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
 import 'package:clipshare/core/platform/channels/clip/clip_channel_provider.dart';
 import 'package:clipshare/core/platform/channels/multi_window/multi_window_channel_provider.dart';
-import 'package:clipshare/core/platform/desktop/tray/tray_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/tray/tray_provider.dart';
 import 'package:clipshare/core/platform/desktop/window/window_control_provider.dart';
 import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
@@ -103,9 +103,9 @@ Future<void> appStartup(Ref ref) async {
 
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化
-    ref.read(windowServiceProvider);
+    await ref.read(windowServiceProvider.future);
     // 托盘服务
-    ref.read(trayServiceProvider);
+    await ref.read(trayProvider.future);
     // 窗口管理
     await _initWindowsManager(ref);
   }

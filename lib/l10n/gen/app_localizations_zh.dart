@@ -132,6 +132,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get devicePageReconnect => '重新连接';
 
   @override
+  String get devicePageReconnecting => '重连中';
+
+  @override
+  String deviceReconnectSuccess(String devName) {
+    return '已成功重连 $devName';
+  }
+
+  @override
+  String deviceReconnectFailed(String devName) {
+    return '$devName 重连失败';
+  }
+
+  @override
   String get devicePageUnpairedDialogContent => '是否要取消配对？';
 
   @override

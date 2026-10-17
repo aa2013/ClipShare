@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:clipshare/core/database/tables/device.dart';
-import 'package:clipshare/core/platform/desktop/tray/tray_service.dart';
-import 'package:clipshare/core/platform/desktop/tray/tray_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/tray/tray_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
 import 'package:clipshare/core/settings/notification/notification_settings.dart';
@@ -32,7 +31,7 @@ class DeviceConnectionNotifyNotifier extends _$DeviceConnectionNotifyNotifier {
 
   DeviceState get _devState => ref.read(deviceProvider).requireValue;
 
-  TrayService get _trayService => ref.read(trayServiceProvider).requireValue;
+  TrayNotifier get _trayNotifier => ref.read(trayProvider.notifier);
 
 
   @override
@@ -66,7 +65,7 @@ class DeviceConnectionNotifyNotifier extends _$DeviceConnectionNotifyNotifier {
           content: notifyContent,
         );
       } else {
-        await _trayService.flashTrayNormal(notifyContent);
+        await _trayNotifier.flashTrayNormal(notifyContent);
       }
       if (notifyId != null) {
         Future.delayed(2.s, () {
@@ -97,7 +96,7 @@ class DeviceConnectionNotifyNotifier extends _$DeviceConnectionNotifyNotifier {
           content: notifyContent,
         );
       } else {
-        await _trayService.flashTrayWarning(notifyContent);
+        await _trayNotifier.flashTrayWarning(notifyContent);
       }
       if (notifyId != null) {
         Future.delayed(2.s, () {

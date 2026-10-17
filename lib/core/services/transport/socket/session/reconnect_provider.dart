@@ -36,8 +36,10 @@ class ReconnectNotifier extends _$ReconnectNotifier {
   DirectNotifier get _directNotifier => ref.read(directProvider.notifier);
 
   @override
-  void build() {
+  Set<String> build() {
     ref.onDispose(_dispose);
+    // 正在执行重连任务的设备 guid 集合，供界面展示"重连中"标记。
+    return const <String>{};
   }
 
   void _dispose() {
@@ -50,7 +52,7 @@ class ReconnectNotifier extends _$ReconnectNotifier {
   /// 执行一次重连。
   Future<void> reconnectOnce(String guid) => attemptReconnect(guid, true);
 
-  /// 为单个设备启动唯一重连循环。
+  /// 为单个设备启动重连循环。
   Future<void> attemptReconnect(String guid, [bool once = false]) async {
     final running = _reconnectTasks[guid];
     if (running != null) return running;
@@ -65,15 +67,31 @@ class ReconnectNotifier extends _$ReconnectNotifier {
       if (identical(_reconnectTokenSources[guid], source)) {
         _reconnectTokenSources.remove(guid);
       }
+      _removeReconnecting(guid);
     });
     _reconnectTasks[guid] = task;
+    _addReconnecting(guid);
     return task;
+  }
+
+  /// 将设备加入重连中集合并通知界面刷新。
+  void _addReconnecting(String guid) {
+    if (_disposed || state.contains(guid)) {
+      return;
+    }
+    state = {...state, guid};
+  }
+
+  /// 将设备移出重连中集合
+  void _removeReconnecting(String guid) {
+    if (_disposed || !state.contains(guid)) {
+      return;
+    }
+    state = state.where((item) => item != guid).toSet();
   }
 
   /// 按内网优先、中转兜底的顺序执行重连。
   Future<void> _runReconnectLoop(String guid, CancelToken token, bool once) async {
-    final dev = await _deviceDao.getById(guid);
-    if (dev == null) return;
     final deadline = DateTime.now().add(once ? Duration.zero : net.socketReconnectWindow);
     var attempted = false;
     while (!token.isCanceled && !_disposed && (once ? !attempted : DateTime.now().isBefore(deadline))) {
@@ -81,6 +99,11 @@ class ReconnectNotifier extends _$ReconnectNotifier {
         await Future.delayed(net.socketReconnectInterval);
       }
       if (token.isCanceled || _disposed) {
+        return;
+      }
+      final device = _deviceState.getStoredById(guid);
+      // 设备已被取消配对时停止重连
+      if (device == null || !device.isPaired) {
         return;
       }
       final protocol = _deviceState.registry.getProtocol(guid);
@@ -96,7 +119,7 @@ class ReconnectNotifier extends _$ReconnectNotifier {
       }
       try {
         var connected = false;
-        final address = dev.internalAddress;
+        final address = device.internalAddress;
         if (address != null) {
           final parts = address.split(':');
           if (parts.length == 2) {

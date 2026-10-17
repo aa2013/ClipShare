@@ -15,7 +15,7 @@ final reconnectProvider = ReconnectNotifierProvider._();
 
 /// 独立维护每台设备的重连任务和重连窗口。
 final class ReconnectNotifierProvider
-    extends $NotifierProvider<ReconnectNotifier, void> {
+    extends $NotifierProvider<ReconnectNotifier, Set<String>> {
   /// 独立维护每台设备的重连任务和重连窗口。
   ReconnectNotifierProvider._()
     : super(
@@ -36,29 +36,29 @@ final class ReconnectNotifierProvider
   ReconnectNotifier create() => ReconnectNotifier();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
+  Override overrideWithValue(Set<String> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
+      providerOverride: $SyncValueProvider<Set<String>>(value),
     );
   }
 }
 
-String _$reconnectNotifierHash() => r'834a05ae40da379282ed96008496b18bfa980c9f';
+String _$reconnectNotifierHash() => r'a80e494d6b30279e051dc59416004548fd58bf10';
 
 /// 独立维护每台设备的重连任务和重连窗口。
 
-abstract class _$ReconnectNotifier extends $Notifier<void> {
-  void build();
+abstract class _$ReconnectNotifier extends $Notifier<Set<String>> {
+  Set<String> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<void, void>;
+    final ref = this.ref as $Ref<Set<String>, Set<String>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
+              AnyNotifier<Set<String>, Set<String>>,
+              Set<String>,
               Object?,
               Object?
             >;

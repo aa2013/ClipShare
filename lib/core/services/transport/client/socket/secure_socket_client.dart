@@ -6,6 +6,7 @@ import 'package:clipshare/core/constants/network_constants.dart';
 import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/transport/enums/msg_type.dart';
+import 'package:clipshare/shared/exceptions/device_connect_exception.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/crypto.dart';
@@ -175,7 +176,7 @@ class SecureSocketClient {
     );
     if (cancelToken?.isCanceled ?? false) {
       socket.destroy();
-      throw SocketException('Socket connection canceled after connected: $ip:$port');
+      throw DeviceConnectException('Socket connection canceled after connected: $ip:$port');
     }
     final client = SecureSocketClient.fromSocket(
       socket: socket,
@@ -292,13 +293,13 @@ class SecureSocketClient {
     try {
       if (cancelToken?.isCanceled ?? false) {
         connectionTask.cancel();
-        throw SocketException('Socket connection canceled: $ip:$port');
+        throw DeviceConnectException('Socket connection canceled: $ip:$port');
       }
       return await connectionTask.socket.timeout(
         socketConnectTimeout,
         onTimeout: () {
           connectionTask.cancel();
-          throw SocketException('Socket connection timed out: $ip:$port');
+          throw DeviceConnectException('Socket connection timed out: $ip:$port');
         },
       );
     } catch (_) {
@@ -740,7 +741,7 @@ class SecureSocketClient {
       if (error != null) {
         _readyCompleter.completeError(error);
       } else {
-        _readyCompleter.completeError(const SocketException('Socket closed before ready.'));
+        _readyCompleter.completeError(const DeviceConnectException('Socket closed before ready.'));
       }
     }
     try {

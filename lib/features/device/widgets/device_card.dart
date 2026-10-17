@@ -7,36 +7,8 @@ import 'package:clipshare/shared/extensions/platform_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:simple_icons/simple_icons.dart';
 
-//设备类型图片
-final Map<PlatformType, Icon> devTypeIcons = {
-  PlatformType.windows: const Icon(
-    Icons.laptop_windows_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.android: const Icon(
-    SimpleIcons.android,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.mac: const Icon(
-    Icons.laptop_mac_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.linux: const Icon(
-    SimpleIcons.linux,
-    color: Colors.grey,
-    size: 48,
-  ),
-  PlatformType.ios: const Icon(
-    Icons.apple_outlined,
-    color: Colors.grey,
-    size: 48,
-  ),
-};
+import 'device_platform_icon.dart';
 
 class DeviceCard extends StatefulWidget {
   final Device? device;
@@ -45,6 +17,12 @@ class DeviceCard extends StatefulWidget {
   final ValueChanged<Device> onRenameButtonClicked;
   final bool isPaired;
   final bool isConnected;
+
+  /// 是否正在重连；仅已配对卡片会在平台标记右侧展示"重连中"徽标。
+  final bool isReconnecting;
+
+  /// 是否正在建立连接；仅已配对卡片在非重连场景展示"连接中"徽标。
+  final bool isConnecting;
   final AppVersion? minVersion;
   final AppVersion? targetVersion;
   final AppVersion selfVersion;
@@ -64,6 +42,8 @@ class DeviceCard extends StatefulWidget {
     required this.selfVersion,
     required this.selfMinVersion,
     required this.protocol,
+    this.isReconnecting = false,
+    this.isConnecting = false,
   });
 
   bool get isVersionCompatible {
@@ -89,6 +69,8 @@ class DeviceCard extends StatefulWidget {
     AppVersion? selfVersion,
     AppVersion? selfMinVersion,
     TransportProtocol? protocol,
+    bool? isReconnecting,
+    bool? isConnecting,
   }) {
     final connected = isConnected ?? this.isConnected;
     return DeviceCard(
@@ -103,21 +85,17 @@ class DeviceCard extends StatefulWidget {
       selfVersion: selfVersion ?? this.selfVersion,
       selfMinVersion: selfMinVersion ?? this.selfMinVersion,
       protocol: protocol ?? this.protocol,
+      isReconnecting: isReconnecting ?? this.isReconnecting,
+      isConnecting: isConnecting ?? this.isConnecting,
     );
   }
 }
 
 class _DeviceCardState extends State<DeviceCard> {
   bool isEmpty = true;
-  Icon emptyIcon = const Icon(
-    Icons.laptop_windows_outlined,
-    color: Colors.grey,
-    size: 48,
-  );
+  IconData emptyIcon = Icons.laptop_windows_outlined;
   int emptyIconIdx = 0;
   Timer? timer;
-
-  IconData get currentIconData => (devTypeIcons[PlatformType(widget.device!.type)] ?? const Icon(Icons.devices_other_outlined)).icon!;
 
   bool get showConnectedAccent => !isEmpty && widget.isPaired && widget.isConnected;
 
@@ -132,7 +110,6 @@ class _DeviceCardState extends State<DeviceCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final accentColor = getDeviceAccentColor(context);
     final cardColor = theme.cardTheme.color ?? colorScheme.surface;
     return Card(
       color: cardColor,
@@ -169,7 +146,7 @@ class _DeviceCardState extends State<DeviceCard> {
                     children: [
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: buildDeviceIcon(context, accentColor, colorScheme),
+                        child: buildDeviceIcon(),
                       ),
                       SizedBox(width: compact ? 10 : 14),
                       Expanded(
@@ -189,13 +166,6 @@ class _DeviceCardState extends State<DeviceCard> {
         ),
       ),
     );
-  }
-
-  Color getDeviceAccentColor(BuildContext context) {
-    if (!showConnectedAccent) {
-      return Theme.of(context).colorScheme.onSurfaceVariant;
-    }
-    return Colors.green;
   }
 
   IconData getStatusIconData() {
@@ -230,27 +200,17 @@ class _DeviceCardState extends State<DeviceCard> {
     }
   }
 
-  Color getDeviceIconBackgroundColor(BuildContext context, ColorScheme colorScheme) {
-    if (!showConnectedAccent) {
-      return colorScheme.surfaceContainerHighest.withValues(alpha: 0.64);
+  /// 构建设备平台图标
+  Widget buildDeviceIcon() {
+    if (isEmpty) {
+      return DevicePlatformIcon(
+        iconData: emptyIcon,
+        isConnected: false,
+      );
     }
-    return Colors.green.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.20 : 0.14);
-  }
-
-  Widget buildDeviceIcon(BuildContext context, Color accentColor, ColorScheme colorScheme) {
-    return Container(
-      width: 38,
-      height: 38,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: getDeviceIconBackgroundColor(context, colorScheme),
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Icon(
-        isEmpty ? emptyIcon.icon ?? Icons.devices_other_outlined : currentIconData,
-        color: accentColor,
-        size: 21,
-      ),
+    return DevicePlatformIcon(
+      platform: PlatformType(widget.device!.type),
+      isConnected: showConnectedAccent,
     );
   }
 
@@ -318,6 +278,18 @@ class _DeviceCardState extends State<DeviceCard> {
   List<Widget> buildTagChips(ColorScheme colorScheme) {
     return [
       buildTagChip(isEmpty ? '    ' : widget.device!.type, colorScheme),
+      // 仅已配对卡片在平台标记右侧展示"重连中/连接中"徽标，'重连中' 优先。
+      if (widget.isPaired && !widget.isConnected)
+        if (widget.isReconnecting)
+          _SpinningBadge(
+            colorScheme: colorScheme,
+            label: TranslationKey.devicePageReconnecting.tr,
+          )
+        else if (widget.isConnecting)
+          _SpinningBadge(
+            colorScheme: colorScheme,
+            label: TranslationKey.connecting.tr,
+          ),
       // if (widget.isSelf) buildTagChip(TranslationKey.selfDeviceName.tr, colorScheme),
       if (!widget.isVersionCompatible)
         Row(
@@ -419,9 +391,9 @@ class _DeviceCardState extends State<DeviceCard> {
   }
 
   void setTimer() {
+    final platforms = devicePlatformIconData.keys.toList(growable: false);
     timer = Timer.periodic(1200.ms, (timer) {
-      final key = devTypeIcons.keys.elementAt(emptyIconIdx % devTypeIcons.length);
-      emptyIcon = devTypeIcons[key]!;
+      emptyIcon = devicePlatformIconData[platforms[emptyIconIdx % platforms.length]]!;
       emptyIconIdx++;
       setState(() {});
     });
@@ -440,5 +412,67 @@ class _DeviceCardState extends State<DeviceCard> {
   void dispose() {
     timer?.cancel();
     super.dispose();
+  }
+}
+
+/// "连接中/重连中"徽标
+class _SpinningBadge extends StatefulWidget {
+  final ColorScheme colorScheme;
+
+  /// 徽标文案
+  final String label;
+
+  const _SpinningBadge({required this.colorScheme, required this.label});
+
+  @override
+  State<StatefulWidget> createState() => _SpinningBadgeState();
+}
+
+class _SpinningBadgeState extends State<_SpinningBadge> with SingleTickerProviderStateMixin {
+  late final _rotationController = AnimationController(
+    vsync: this,
+    duration: 3.s,
+  )..repeat();
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = widget.colorScheme;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.64),
+        borderRadius: BorderRadius.circular(11),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RotationTransition(
+              turns: _rotationController,
+              child: Icon(
+                Icons.sync,
+                size: 11,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 3),
+            Text(
+              widget.label,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 11,
+                height: 1,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

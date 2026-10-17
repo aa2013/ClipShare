@@ -21,9 +21,9 @@ import 'package:clipshare/core/services/device/events/device_lifecycle_event.dar
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/transport/message_sender/message_sender.dart';
+import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
 import 'package:clipshare/core/services/transport/socket/session/reconnect_provider.dart';
 import 'package:clipshare/core/services/transport/socket/session/session_provider.dart';
-import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
 import 'package:clipshare/core/settings/discovery/discovery_settings.dart';
 import 'package:clipshare/core/settings/discovery/discovery_settings_provider.dart';
 import 'package:clipshare/core/settings/forward/forward_server_status.dart';
