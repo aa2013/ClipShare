@@ -137,14 +137,12 @@ class DeviceNotifier extends _$DeviceNotifier {
   @override
   Future<DeviceState> build() async {
     final lst = await _deviceDao.getAllDevices();
-    final devices = <String, Device>{};
-    for (var dev in lst) {
-      devices[dev.guid] = dev;
-    }
+    _storedDevices.clear();
+    _storedDevices.addEntries(lst.map((dev) => MapEntry(dev.guid, dev)));
     return DeviceState(
-      storedDevices: devices,
+      storedDevices: _storedDevices,
       discoveryDevices: _discoveryDevices,
-      registry: DeviceRegistry(),
+      registry: _registry,
       self: _self,
       selfId: _baseDevInfo.guid,
     );
@@ -203,6 +201,7 @@ class DeviceNotifier extends _$DeviceNotifier {
       _discoveryDevices.remove(id);
     }
     _lifecycleEvents.add(event);
+    _updateState();
   }
 
   void emitDiscoveryEvent(DeviceDiscoveryEvent event) {

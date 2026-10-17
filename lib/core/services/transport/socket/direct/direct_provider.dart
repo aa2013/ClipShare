@@ -14,12 +14,10 @@ import 'package:clipshare/core/settings/device/device_settings.dart';
 import 'package:clipshare/core/settings/device/device_settings_provider.dart';
 import 'package:clipshare/core/settings/discovery/discovery_settings.dart';
 import 'package:clipshare/core/settings/discovery/discovery_settings_provider.dart';
-import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/utils/crypto.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:clipshare/shared/utils/network_util.dart';
 import 'package:clipshare/shared/utils/parallerl_task.dart';
-import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../client/socket/secure_socket_client.dart';
@@ -194,7 +192,14 @@ class DirectNotifier extends _$DirectNotifier {
     );
     try {
       var b64Data = CryptoUtil.base64EncodeStr('${msg.toJsonStr()}\n');
-      var multicasts = await _getSockets(net.multicastGroup);
+      // 发送为瞬时操作，临时使用绑定随机端口的组播 socket 发送后立即关闭；
+      // 仅指定出接口，无需加入组播组。
+      var multicasts = await NetworkUtil.bindMulticastSockets(
+        net.multicastGroup,
+        0,
+        noDiscoveryIfs: _discoverySettings.noDiscoveryIfs,
+        joinGroup: false,
+      );
       for (var multicast in multicasts) {
         multicast.send(
           utf8.encode(b64Data),
@@ -206,30 +211,5 @@ class DirectNotifier extends _$DirectNotifier {
     } catch (e, stacktrace) {
       logger.debug(tag, '$e $stacktrace');
     }
-  }
-
-  Future<List<RawDatagramSocket>> _getSockets(
-    String multicastGroup, [
-    int port = 0,
-  ]) async {
-    const ipv4Type = InternetAddressType.IPv4;
-    final interfaces = (await NetworkUtil.listInterfaces()).where((itf) => !_discoverySettings.noDiscoveryIfs.contains(itf.name)).where((itf) => itf.addresses.any((addr) => addr.type == ipv4Type));
-
-    final sockets = <RawDatagramSocket>[];
-
-    for (final interface in interfaces) {
-      try {
-        // 获取对应的IPv4地址
-        final localAddr = interface.addresses.firstWhere((addr) => addr.type == ipv4Type);
-        // 绑定到特定网卡和端口
-        final socket = await RawDatagramSocket.bind(localAddr, port);
-        // 加入多播组
-        socket.joinMulticast(InternetAddress(multicastGroup), interface);
-        sockets.add(socket);
-      } catch (e, stack) {
-        logger.error(tag, 'Failed to bind to ${interface.name}: $e', stack);
-      }
-    }
-    return sockets;
   }
 }

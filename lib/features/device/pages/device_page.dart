@@ -72,8 +72,7 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
       vsync: this,
       duration: 4.s,
     );
-    //初始化自动启动动画，否则启动时的设备发现无动画，在设备发现停止后动画也会自动停止
-    rotationController.repeat();
+
     setRotationAnimation();
     // 通过设备发现生命周期事件驱动动画，避免页面状态与发现令牌状态分叉。
     _discoveryEventsSubscription = deviceNotifier.discoveryEvents.listen(_onDiscoveryEvent);

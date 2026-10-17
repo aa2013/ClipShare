@@ -1,3 +1,4 @@
+import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
 import 'package:clipshare/features/debug/pages/debug_page.dart';
 import 'package:clipshare/features/device/pages/device_page.dart';
 import 'package:clipshare/features/history/pages/history_page.dart';
@@ -42,6 +43,10 @@ class _HomeState extends ConsumerState<HomePage> {
       pages.add(const DebugPage());
       return true;
     }());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final discoveryNotifier = ref.read(discoveryProvider.notifier);
+      discoveryNotifier.restartDiscoveryDevices();
+    });
     super.initState();
   }
 

@@ -22,7 +22,6 @@ import 'package:clipshare/shared/utils/crypto.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:clipshare/shared/utils/network_util.dart';
 import 'package:clipshare/shared/utils/parallerl_task.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -60,6 +59,11 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
   @override
   bool build() {
     ref.onDispose(_dispose);
+    // 组播监听与应用同生命周期常驻；发现设置变化时重建监听。
+    unawaited(Future.microtask(_ensureMulticastListener));
+    ref.listen(discoverySettingsProvider, (_, next) {
+      next.whenData((_) => unawaited(_ensureMulticastListener()));
+    });
     return false;
   }
 
@@ -82,9 +86,7 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     _tokenSource = CancelTokenSource();
     final token = _tokenSource.token;
     try {
-      if (!_discoverySettings.onlyForwardMode) {
-        await _startListenMulticast();
-      }
+      await _ensureMulticastListener();
       //连接已配对设备
       appStateNotifier.updateDeviceDiscoveryStatus(TranslationKey.deviceDiscoveryStatusViaPaired.tr);
       final paired = _discoverySettings.onlyForwardMode ? <Future<void> Function()>[] : await _pairedDiscovering(token);
@@ -108,8 +110,6 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     } finally {
       if (identical(_tokenSource.token, token)) {
         state = false;
-        //todo 这里应该不关闭组播监听
-        _closeMulticastSockets();
       }
       //设备发现流程结束
       appStateNotifier.updateDeviceDiscoveryStatus(null);
@@ -117,11 +117,10 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     }
   }
 
-  /// 停止发现并释放组播 socket 及全部未完成任务。
+  /// 停止发现并取消全部未完成任务
   Future<void> stopDiscoveryDevices([bool restart = false]) async {
     _tokenSource.cancel();
     _broadcastTasks.clear();
-    _closeMulticastSockets();
     state = false;
     if (!restart) {
       final appStateNotifier = ref.read(appStateProvider.notifier);
@@ -136,10 +135,28 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     await startDiscoveryDevices(restart: true);
   }
 
-  //监听组播消息
-  Future<void> _startListenMulticast() async {
+  /// 正在进行的监听重建任务，避免并发触发导致 socket 重复绑定或泄漏。
+  Future<void>? _ensureMulticastTask;
+
+  /// 确保组播监听与最新设置一致：全部关闭现役监听后按当前设置重建；
+  /// 仅中转模式下只关不建。
+  /// [startDiscoveryDevices] 每轮开始、应用启动和设置变化时都会触发，
+  /// 重建耗时很短且对被动监听低频场景无实际影响。
+  Future<void> _ensureMulticastListener() {
+    return _ensureMulticastTask ??= _rebuildMulticastListener().whenComplete(() => _ensureMulticastTask = null);
+  }
+
+  /// 全关全建组播监听
+  Future<void> _rebuildMulticastListener() async {
     _closeMulticastSockets();
-    _multicastSockets = await _getMulticastSockets(net.multicastGroup, _discoverySettings.port);
+    if (_discoverySettings.onlyForwardMode) {
+      return;
+    }
+    _multicastSockets = await NetworkUtil.bindMulticastSockets(
+      net.multicastGroup,
+      _discoverySettings.port,
+      noDiscoveryIfs: _discoverySettings.noDiscoveryIfs,
+    );
     for (final socket in _multicastSockets) {
       socket.listen((_) {
         final datagram = socket.receive();
@@ -175,11 +192,12 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     if (port == null) {
       return;
     }
+    // 被动广播连接不使用发现轮次的取消令牌：
+    // 用户手动停止发现后轮次令牌已失效，被动发现仍应可自动连接。
     await _directNotifier.connect(
       datagram.address.address,
       port: port,
       targetDevId: msg.send.guid,
-      cancelToken: _tokenSource.token,
     );
   }
 
@@ -272,22 +290,5 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
       socket.close();
     }
     _multicastSockets = [];
-  }
-
-  Future<List<RawDatagramSocket>> _getMulticastSockets(String group, [int port = 0]) async {
-    final interfaces = (await NetworkUtil.listInterfaces()).where((item) => !_discoverySettings.noDiscoveryIfs.contains(item.name));
-    final result = <RawDatagramSocket>[];
-    for (final interface in interfaces) {
-      final address = interface.addresses.where((item) => item.type == InternetAddressType.IPv4).firstOrNull;
-      if (address == null) continue;
-      try {
-        final socket = await RawDatagramSocket.bind(address, port);
-        socket.joinMulticast(InternetAddress(group), interface);
-        result.add(socket);
-      } catch (error, stackTrace) {
-        logger.debug(_tag, 'Failed to bind multicast socket: $error $stackTrace');
-      }
-    }
-    return result;
   }
 }
