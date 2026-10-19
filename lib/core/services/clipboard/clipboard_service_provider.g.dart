@@ -10,44 +10,50 @@ part of 'clipboard_service_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// 剪贴板核心服务
 
-@ProviderFor(clipboardService)
-final clipboardServiceProvider = ClipboardServiceProvider._();
+@ProviderFor(ClipboardNotifier)
+final clipboardProvider = ClipboardNotifierProvider._();
 
 /// 剪贴板核心服务
-
-final class ClipboardServiceProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<ClipboardService>,
-          ClipboardService,
-          FutureOr<ClipboardService>
-        >
-    with $FutureModifier<ClipboardService>, $FutureProvider<ClipboardService> {
+final class ClipboardNotifierProvider
+    extends $AsyncNotifierProvider<ClipboardNotifier, void> {
   /// 剪贴板核心服务
-  ClipboardServiceProvider._()
+  ClipboardNotifierProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'clipboardServiceProvider',
+        name: r'clipboardProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$clipboardServiceHash();
+  String debugGetCreateSourceHash() => _$clipboardNotifierHash();
 
   @$internal
   @override
-  $FutureProviderElement<ClipboardService> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<ClipboardService> create(Ref ref) {
-    return clipboardService(ref);
-  }
+  ClipboardNotifier create() => ClipboardNotifier();
 }
 
-String _$clipboardServiceHash() => r'46e244359cac8c1dd1299d448f787ba6c579222f';
+String _$clipboardNotifierHash() => r'fd39835769603b3f9306e8dad8b632978871781e';
+
+/// 剪贴板核心服务
+
+abstract class _$ClipboardNotifier extends $AsyncNotifier<void> {
+  FutureOr<void> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<void>, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<void>, void>,
+              AsyncValue<void>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

@@ -22,6 +22,7 @@ import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
 import 'package:clipshare/core/services/permission/permission_helper.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/enums/config_key.dart';
@@ -76,6 +77,8 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
   ScriptModuleDao get _scriptModuleDao => ref.read(appDbProvider).requireValue.scriptModuleDao;
 
   OperationRecordDao get _opRecordDao => ref.read(appDbProvider).requireValue.operationRecordDao;
+
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
 
   Snowflake get _idGenerator => ref.read(idProvider);
 
@@ -477,15 +480,15 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
       await _opRecordDao.deleteByDataWithCascade(updateData.id.toString());
     }
     for (var saveData in [...saveList, ...updateList]) {
-      await _opRecordDao.addAndNotify(
-        newOperationRecord(
-          _idGenerator,
-          _localDevInfo.baseDeviceInfo,
-          Module.rule,
-          OpMethod.add,
-          saveData.id,
-        ),
+      final opRecord = newOperationRecord(
+        _idGenerator,
+        _localDevInfo.baseDeviceInfo,
+        Module.rule,
+        OpMethod.add,
+        saveData.id,
       );
+      await _opRecordDao.add(opRecord);
+      await _syncPushNotifier.pushRecord(opRecord);
     }
     //保存成功
     _updateState();
@@ -523,15 +526,15 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
       );
       //同步数据
       await _opRecordDao.deleteByDataWithCascade(newRule.id.toString());
-      await _opRecordDao.addAndNotify(
-        newOperationRecord(
-          _idGenerator,
-          _localDevInfo.baseDeviceInfo,
-          Module.rule,
-          OpMethod.add,
-          newRule.id,
-        ),
+      final opRecord = newOperationRecord(
+        _idGenerator,
+        _localDevInfo.baseDeviceInfo,
+        Module.rule,
+        OpMethod.add,
+        newRule.id,
       );
+      await _opRecordDao.add(opRecord);
+      await _syncPushNotifier.pushRecord(opRecord);
       _updateState();
       return true;
     } catch (err, stack) {
@@ -573,15 +576,15 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
       logger.debug(tag, 'load module(${module.moduleName}): $result');
       //同步数据
       await _opRecordDao.deleteByDataWithCascade(module.moduleName);
-      await _opRecordDao.addAndNotify(
-        newOperationRecord(
-          _idGenerator,
-          _localDevInfo.baseDeviceInfo,
-          Module.scriptModule,
-          OpMethod.add,
-          module.moduleName,
-        ),
+      final opRecord = newOperationRecord(
+        _idGenerator,
+        _localDevInfo.baseDeviceInfo,
+        Module.scriptModule,
+        OpMethod.add,
+        module.moduleName,
       );
+      await _opRecordDao.add(opRecord);
+      await _syncPushNotifier.pushRecord(opRecord);
       _updateState();
       return true;
     } catch (err, stack) {
@@ -1060,15 +1063,15 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
     if (rules.isNotEmpty) {
       await _ruleDao.addRules(rules);
       for (var newRule in rules) {
-        await _opRecordDao.addAndNotify(
-          newOperationRecord(
-            _idGenerator,
-            _localDevInfo.baseDeviceInfo,
-            Module.rule,
-            OpMethod.add,
-            newRule.id,
-          ),
+        final opRecord = newOperationRecord(
+          _idGenerator,
+          _localDevInfo.baseDeviceInfo,
+          Module.rule,
+          OpMethod.add,
+          newRule.id,
         );
+        await _opRecordDao.add(opRecord);
+        await _syncPushNotifier.pushRecord(opRecord);
       }
     }
   }

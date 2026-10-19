@@ -108,7 +108,7 @@ class AndroidEnvironmentStatusNotifier extends _$AndroidEnvironmentStatusNotifie
       return;
     }
     await clipboardManager.requestPermission(current.workingMode);
-    final clipboardService = await ref.read(clipboardServiceProvider.future);
+    final clipboardService = ref.read(clipboardProvider.notifier);
     await clipboardService.restartAndroidListening();
     await refresh();
   }

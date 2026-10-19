@@ -141,7 +141,7 @@ class _WorkingModeSelectionPageState extends ConsumerState<WorkingModeSelectionP
       await clipboardManager.stopListening();
       return;
     }
-    final clipboardService = await ref.read(clipboardServiceProvider.future);
+    final clipboardService = ref.read(clipboardProvider.notifier);
     await clipboardService.restartAndroidListening();
   }
 }

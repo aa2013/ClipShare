@@ -21,16 +21,6 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
     );
   }
 
-  /// 添加操作记录并发送通知设备更改。
-  Future<int> addAndNotify(OperationRecord record) async {
-    final cnt = await add(record);
-    if (cnt == 0) return cnt;
-    //todo
-    // final result = await MissingDataSyncHandler.process(record);
-    // await DataSender.sendData2All(MsgType.sync, result.result);
-    return cnt;
-  }
-
   /// 获取某用户某设备的未同步记录，保留 SQLite 时间函数以兼容旧同步窗口逻辑。
   Future<List<OperationRecord>> getSyncRecord(
     int uid,

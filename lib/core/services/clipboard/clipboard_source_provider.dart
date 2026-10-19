@@ -11,6 +11,7 @@ import 'package:clipshare/core/models/local_app_info.dart';
 import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 import 'package:clipshare/shared/utils/snowflake.dart';
@@ -78,6 +79,8 @@ class ClipboardSourceNotifier extends _$ClipboardSourceNotifier {
   AppInfoDao get _appInfoDao => ref.read(appDbProvider).requireValue.appInfoDao;
 
   OperationRecordDao get _opRecordDao => ref.read(appDbProvider).requireValue.operationRecordDao;
+
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
 
   Snowflake get _snowflake => ref.read(idProvider);
 
@@ -200,15 +203,15 @@ class ClipboardSourceNotifier extends _$ClipboardSourceNotifier {
     }
     // 通知其他设备同步数据
     final opMethod = data == null ? OpMethod.add : OpMethod.update;
-    await _opRecordDao.addAndNotify(
-      newOperationRecord(
-        _snowflake,
-        _baseDevInfo,
-        Module.appInfo,
-        opMethod,
-        savedAppInfo.id,
-      ),
+    final opRecord = newOperationRecord(
+      _snowflake,
+      _baseDevInfo,
+      Module.appInfo,
+      opMethod,
+      savedAppInfo.id,
     );
+    await _opRecordDao.add(opRecord);
+    await _syncPushNotifier.pushRecord(opRecord);
     return success;
   }
 

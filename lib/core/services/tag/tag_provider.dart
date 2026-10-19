@@ -6,6 +6,7 @@ import 'package:clipshare/core/database/tables/operation_record.dart';
 import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 import 'package:clipshare/shared/utils/snowflake.dart';
@@ -50,6 +51,8 @@ class TagNotifier extends _$TagNotifier {
 
   OperationRecordDao get _opRecordDao => ref.read(appDbProvider).requireValue.operationRecordDao;
 
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
+
   /// 当前标签数据基准（state 尚未就绪时返回空数据）
   TagState get _current =>
       state.value ??
@@ -90,7 +93,8 @@ class TagNotifier extends _$TagNotifier {
       tag.id.toString(),
     );
     //添加操作记录
-    await _opRecordDao.addAndNotify(opRecord);
+    await _opRecordDao.add(opRecord);
+    await _syncPushNotifier.pushRecord(opRecord);
 
     // 更新引用计数，计数为 0 时移除该标签键
     final countMap = current._tagNameCount;
@@ -125,7 +129,8 @@ class TagNotifier extends _$TagNotifier {
         tag.id.toString(),
       );
       //添加操作记录
-      await _opRecordDao.addAndNotify(opRecord);
+      await _opRecordDao.add(opRecord);
+      await _syncPushNotifier.pushRecord(opRecord);
       // 写库成功才更新引用计数
       final countMap = current._tagNameCount;
       countMap[tag.tagName] = (countMap[tag.tagName] ?? 0) + 1;

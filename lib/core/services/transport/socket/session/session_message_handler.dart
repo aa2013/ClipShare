@@ -28,6 +28,8 @@ void _onSyncMsg(SessionNotifier self, MessageData msg) {
       'key=${msg.key.name}, data=${jsonEncode(msg.data)}',
     );
   }
+  //todo parse oprecord
+
   //todo 筛选某个模块的同步处理器
   // var lst = getListeners(module);
   // if (isReceivedSync) {

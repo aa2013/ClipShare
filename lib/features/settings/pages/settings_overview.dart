@@ -537,7 +537,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
       final db = await ref.read(appDbProvider.future);
       await db.configDao.addOrUpdate(ConfigKey.clipboardListeningWay, listeningWay.name.toString());
       ref.invalidate(clipboardSettingsProvider);
-      final clipboardService = await ref.read(clipboardServiceProvider.future);
+      final clipboardService = ref.read(clipboardProvider.notifier);
       await clipboardService.restartAndroidListening();
     }
 

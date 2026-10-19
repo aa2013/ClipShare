@@ -14,6 +14,7 @@ import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/core/settings/preference/preference_settings_provider.dart';
 import 'package:clipshare/shared/enums/config_key.dart';
 import 'package:clipshare/shared/enums/multi_window/multi_window_config.dart';
@@ -45,6 +46,9 @@ class MultiWindowChannelNotifier extends _$MultiWindowChannelNotifier {
   final _hideWindowIds = <int>{};
   WindowController? _historyWindow;
   WindowController? _onlineDevicesWindow;
+
+  /// 操作记录推送器，用于把本地操作记录同步给其他设备
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
 
   @override
   void build() {

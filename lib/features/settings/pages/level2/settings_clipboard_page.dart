@@ -289,7 +289,7 @@ class SettingsClipboardPage extends SettingsSectionView {
               }
               await HapticFeedback.mediumImpact();
               await configDao.addOrUpdate(.excludeFormat, checked.toString());
-              final clipboardService = ref.read(clipboardServiceProvider).requireValue;
+              final clipboardService = ref.read(clipboardProvider.notifier);
               await clipboardService.setExcludeFormat(checked);
             },
           );

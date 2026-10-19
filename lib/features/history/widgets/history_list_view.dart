@@ -16,6 +16,7 @@ import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/core/settings/preference/preference_settings_provider.dart';
 import 'package:clipshare/features/history/enums/history_card_menu_action.dart';
 import 'package:clipshare/features/history/pages/clipboard_detail_drawer.dart';
@@ -91,6 +92,8 @@ class _ClipListViewState extends ConsumerState<ClipListView> {
   Snowflake get _idGenerator => ref.read(idProvider);
 
   BaseDeviceInfo get _self => ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo;
+
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
 
   bool get selectMode => _selectionController.enabled;
 
@@ -383,7 +386,8 @@ class _ClipListViewState extends ConsumerState<ClipListView> {
       OpMethod.update,
       id,
     );
-    await db.operationRecordDao.addAndNotify(opRecord);
+    await db.operationRecordDao.add(opRecord);
+    await _syncPushNotifier.pushRecord(opRecord);
     ref.read(historiesProvider.notifier).addDelta(
         HistoryDeltaEvent(
           history: history.copyWith(top: isTop),
@@ -482,7 +486,8 @@ class _ClipListViewState extends ConsumerState<ClipListView> {
           OpMethod.delete,
           history.id,
         );
-        await db.operationRecordDao.addAndNotify(opRecord);
+        await db.operationRecordDao.add(opRecord);
+        await _syncPushNotifier.pushRecord(opRecord);
       }
       if (deleteFile && (history.isImage || history.isFile)) {
         final path = history.content;

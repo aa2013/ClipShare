@@ -19,6 +19,8 @@ import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
 import 'package:clipshare/core/services/transport/message_sender/message_sender_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/message_sync_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
@@ -66,6 +68,8 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
   ClipboardSourceNotifier get _sourceNotifier => ref.read(clipboardSourceProvider.notifier);
 
   MessageSenderNotifier get _messageSender => ref.read(messageSenderProvider.notifier);
+
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
 
   /// 下游订阅此 Stream 获取已处理的事件
   Stream<HistoryDeltaEvent> get events => _controller.stream;
@@ -275,8 +279,8 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
       history.id.toString(),
     );
     final syncDisabled = applyResult?.isSyncDisabled ?? false;
+    await _opRecordDao.add(opRecord);
     if(syncDisabled){
-      await _opRecordDao.add(opRecord);
       return HistoryDeltaEvent(history: history, operation: OpMethod.add);
     }
     // 不发送通知
@@ -284,7 +288,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
       return HistoryDeltaEvent(history: history, operation: OpMethod.add);
     }
     //允许同步且通知
-    await _opRecordDao.addAndNotify(opRecord);
+    await _syncPushNotifier.pushRecord(opRecord);
     final forwardSettings = await ref.read(forwardSettingsProvider.future);
     //若启用存储同步, 检查是否同步成功
     if (forwardSettings.enableStorageSync) {
@@ -336,6 +340,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
               source.id,
               _idGenerator,
               _self,
+              _syncPushNotifier,
             );
             final event = HistoryDeltaEvent(history: history, operation: OpMethod.update);
             _controller.add(event);

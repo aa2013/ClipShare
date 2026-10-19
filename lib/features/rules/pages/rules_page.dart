@@ -6,6 +6,7 @@ import 'package:clipshare/core/database/tables/script_module.dart';
 import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/features/rules/pages/rule_list_view.dart';
 import 'package:clipshare/features/rules/pages/script_module_detail.dart';
 import 'package:clipshare/l10n/translation_key.dart';
@@ -115,6 +116,7 @@ class RulesPage extends ConsumerWidget {
       final ruleDao = ref.read(appDbProvider).requireValue.ruleDao;
       final scriptModuleDao = ref.read(appDbProvider).requireValue.scriptModuleDao;
       final opRecordDao = ref.read(appDbProvider).requireValue.operationRecordDao;
+      final syncPushNotifier = ref.read(syncPushProvider.notifier);
 
       return RuleListView(
         rules: ruleState.rules,
@@ -204,13 +206,15 @@ class RulesPage extends ConsumerWidget {
             } else {
               //同步数据
               await opRecordDao.deleteByDataWithCascade(rule.id.toString());
-              await opRecordDao.addAndNotify(newOperationRecord(
-                  snowflake,
-                  baseDevInfo,
-                  Module.rule,
-                  OpMethod.delete,
-                  rule.id,
-              ));
+              final opRecord = newOperationRecord(
+                snowflake,
+                baseDevInfo,
+                Module.rule,
+                OpMethod.delete,
+                rule.id,
+              );
+              await opRecordDao.add(opRecord);
+              await syncPushNotifier.pushRecord(opRecord);
             }
           }
           if (replayItems.isNotEmpty) {
@@ -293,15 +297,15 @@ class RulesPage extends ConsumerWidget {
             }
             //同步数据
             await opRecordDao.deleteByDataWithCascade(lib.moduleName);
-            await opRecordDao.addAndNotify(
-              newOperationRecord(
-                snowflake,
-                baseDevInfo,
-                Module.scriptModule,
-                OpMethod.delete,
-                lib.moduleName,
-              ),
+            final opRecord = newOperationRecord(
+              snowflake,
+              baseDevInfo,
+              Module.scriptModule,
+              OpMethod.delete,
+              lib.moduleName,
             );
+            await opRecordDao.add(opRecord);
+            await syncPushNotifier.pushRecord(opRecord);
             if (context.mounted) {
               snackbar.success(context, TranslationKey.deleteSuccess.tr);
             }

@@ -84,7 +84,7 @@ Future<void> appStartup(Ref ref) async {
     deviceProvider.future,
     clipboardSourceProvider.future,
     rulesExecutorProvider.future,
-    clipboardServiceProvider.future,
+    clipboardProvider.future,
     historyRecorderProvider.future,
     permissionInfoProvider.future,
   ];

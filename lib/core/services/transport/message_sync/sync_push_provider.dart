@@ -52,7 +52,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   /// 按模块把操作记录补全为完整同步载荷。
   /// 实体已被删除且操作本身不是删除时，[SyncPayload.shouldRemove] 为 true，
   /// 调用方应清理该本地记录而不是继续发送。
-  Future<SyncPayload> buildPayload(OperationRecord record) async {
+  Future<SyncPayload> _buildPayload(OperationRecord record) async {
     final Future<bool> Function(OperationRecord, Map<String, dynamic>) processFunc;
     switch (record.module) {
       case Module.device:
@@ -205,7 +205,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
 
   /// 推送单条操作记录到所有在线设备。
   Future<void> pushRecord(OperationRecord record) async {
-    final payload = await buildPayload(record);
+    final payload = await _buildPayload(record);
     if (payload.shouldRemove) {
       await _db.operationRecordDao.deleteByIds([record.id]);
       return;
@@ -235,7 +235,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
     ];
     for (var i = 0; i < pending.length; i++) {
       final record = pending[i];
-      final payload = await buildPayload(record);
+      final payload = await _buildPayload(record);
       if (payload.shouldRemove) {
         await _db.operationRecordDao.deleteByIds([record.id]);
         continue;

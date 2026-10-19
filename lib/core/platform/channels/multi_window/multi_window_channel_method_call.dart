@@ -136,7 +136,8 @@ Future _onMethodCall(MultiWindowChannelNotifier self, Ref ref, MethodCall call, 
         OpMethod.update,
         id,
       );
-      await opRecordDao.addAndNotify(opRecord);
+      await opRecordDao.add(opRecord);
+      await self._syncPushNotifier.pushRecord(opRecord);
       break;
     case MultiWindowMethod.deleteHistory:
       final id = args['id'] as int;
@@ -161,7 +162,8 @@ Future _onMethodCall(MultiWindowChannelNotifier self, Ref ref, MethodCall call, 
         id,
       );
       //通知其他设备
-      await opRecordDao.addAndNotify(opRecord);
+      await opRecordDao.add(opRecord);
+      await self._syncPushNotifier.pushRecord(opRecord);
       break;
     case MultiWindowMethod.setHistoryPinned:
       //子窗口置顶状态同步（运行期，不持久化）：置顶时点击外部不自动关闭弹窗

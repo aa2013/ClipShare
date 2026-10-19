@@ -2,6 +2,7 @@ import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_tables.dart';
 import 'package:clipshare/core/database/tables/operation_record.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 import 'package:clipshare/shared/models/search_filter.dart';
@@ -184,24 +185,28 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
 
   /// 更新历史记录来源并通知设备。
   Future<bool> updateHistorySourceAndNotify(
-      int id,
-      String source,
-      Snowflake snowflake,
-      BaseDeviceInfo baseDeviceInfo,
+    int id,
+    String source,
+    Snowflake snowflake,
+    BaseDeviceInfo baseDeviceInfo,
+    SyncPushNotifier syncPushNotifier,
   ) async {
     var cnt = await updateHistorySource(id, source);
     if ((cnt ?? 0) > 0) {
       await attachedDatabase.operationRecordDao.deleteHistorySourceRecords(id, Module.historySource.moduleName);
-      cnt = await attachedDatabase.operationRecordDao.addAndNotify(
-        newOperationRecord(
-          snowflake,
-          baseDeviceInfo,
-          Module.historySource,
-          OpMethod.update,
-          id.toString(),
-        ),
+      final opRecord = newOperationRecord(
+        snowflake,
+        baseDeviceInfo,
+        Module.historySource,
+        OpMethod.update,
+        id.toString(),
       );
-      return cnt > 0;
+      cnt = await attachedDatabase.operationRecordDao.add(opRecord);
+      final success = cnt > 0;
+      if (success) {
+        await syncPushNotifier.pushRecord(opRecord);
+      }
+      return success;
     }
     return false;
   }
@@ -215,23 +220,27 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
 
   /// 删除历史记录来源并通知，调用方记得删除未使用的来源信息。
   Future<bool> clearHistorySourceAndNotify(
-      int id,
-      Snowflake snowflake,
-      BaseDeviceInfo baseDeviceInfo,
+    int id,
+    Snowflake snowflake,
+    BaseDeviceInfo baseDeviceInfo,
+    SyncPushNotifier syncPushNotifier,
   ) async {
     var cnt = await clearHistorySource(id);
     if ((cnt ?? 0) > 0) {
       await attachedDatabase.operationRecordDao.deleteHistorySourceRecords(id, Module.historySource.moduleName);
-      cnt = await attachedDatabase.operationRecordDao.addAndNotify(
-        newOperationRecord(
-          snowflake,
-          baseDeviceInfo,
-          Module.historySource,
-          OpMethod.delete,
-          id.toString(),
-        ),
+      final opRecord = newOperationRecord(
+        snowflake,
+        baseDeviceInfo,
+        Module.historySource,
+        OpMethod.delete,
+        id.toString(),
       );
-      return cnt > 0;
+      cnt = await attachedDatabase.operationRecordDao.add(opRecord);
+      final success = cnt > 0;
+      if (success) {
+        await syncPushNotifier.pushRecord(opRecord);
+      }
+      return success;
     }
     return false;
   }

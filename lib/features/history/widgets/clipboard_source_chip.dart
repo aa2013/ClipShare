@@ -8,6 +8,7 @@ import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/features/app_selection/app_selection_entry.dart';
 import 'package:clipshare/features/history/providers/history_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
@@ -68,10 +69,7 @@ class ClipboardSourceChip extends ConsumerWidget {
         loadDeviceName: (devId) => deviceState?.getStoredName(devId) ?? TranslationKey.unknown.tr,
         loadAppInfos: () async {
           final sourceState = ref.read(clipboardSourceProvider).value;
-          final list = (sourceState?.appInfos ?? <AppInfo>[])
-              .where((item) => item.devId == selfId)
-              .map((item) => LocalAppInfo.fromAppInfo(item, false))
-              .toList();
+          final list = (sourceState?.appInfos ?? <AppInfo>[]).where((item) => item.devId == selfId).map((item) => LocalAppInfo.fromAppInfo(item, false)).toList();
           return list;
         },
         onSelectedDone: (selected) async {
@@ -82,17 +80,21 @@ class ClipboardSourceChip extends ConsumerWidget {
           final id = history.id;
           final db = await ref.read(appDbProvider.future);
           final self = ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo;
+          final syncPushNotifier = ref.read(syncPushProvider.notifier);
           final success = await db.historyDao.updateHistorySourceAndNotify(
             id,
             appInfo.appId,
             ref.read(idProvider),
             self,
+            syncPushNotifier,
           );
           if (!context.mounted) return;
           if (success) {
             // 同步更新列表内存中的来源并通知刷新
             final updated = history.copyWith(source: Value(appInfo.appId));
-            ref.read(historiesProvider.notifier).addDelta(
+            ref
+                .read(historiesProvider.notifier)
+                .addDelta(
                   HistoryDeltaEvent(
                     history: updated,
                     operation: OpMethod.update,
@@ -132,13 +134,16 @@ class ClipboardSourceChip extends ConsumerWidget {
     final id = history.id;
     final db = await ref.read(appDbProvider.future);
     final self = ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo;
+    final syncPushNotifier = ref.read(syncPushProvider.notifier);
     final success = await db.historyDao.clearHistorySourceAndNotify(
       id,
       ref.read(idProvider),
       self,
+      syncPushNotifier,
     );
     if (success) {
-      ref.read(historiesProvider.notifier)
+      ref
+          .read(historiesProvider.notifier)
           .addDelta(
             HistoryDeltaEvent(
               history: history.copyWith(source: const Value<String?>(null)),

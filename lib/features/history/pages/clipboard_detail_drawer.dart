@@ -9,6 +9,7 @@ import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/features/history/providers/history_provider.dart';
 import 'package:clipshare/features/history/widgets/card/history_tag_row.dart';
 import 'package:clipshare/features/history/widgets/clipboard_source_chip.dart';
@@ -59,6 +60,8 @@ class _ClipboardDetailDrawerState extends ConsumerState<ClipboardDetailDrawer> {
   Snowflake get idGenerator => ref.read(idProvider);
 
   BaseDeviceInfo get self => ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo;
+
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
 
   @override
   void initState() {
@@ -318,7 +321,8 @@ class _ClipboardDetailDrawerState extends ConsumerState<ClipboardDetailDrawer> {
         OpMethod.update,
         history.id.toString(),
       );
-      await db.operationRecordDao.addAndNotify(opRecord);
+      await db.operationRecordDao.add(opRecord);
+      await _syncPushNotifier.pushRecord(opRecord);
       if (!mounted) {
         return;
       }
