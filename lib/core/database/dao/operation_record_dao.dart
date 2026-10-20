@@ -23,7 +23,6 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
 
   /// 获取某用户某设备的未同步记录，保留 SQLite 时间函数以兼容旧同步窗口逻辑。
   Future<List<OperationRecord>> getSyncRecord(
-    int uid,
     String toDevId,
     String fromDevId,
     int syncOutdateLimitTimeSeconds,
@@ -44,7 +43,7 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
       order by case when module='App信息' then 1 else 0 end desc, id desc
       """,
       variables: [
-        Variable.withInt(uid),
+        Variable.withInt(0),
         Variable.withString(toDevId),
         Variable.withString(fromDevId),
         Variable.withInt(syncOutdateLimitTimeSeconds),
@@ -171,51 +170,6 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
   /// 根据操作记录主键查询。
   Future<OperationRecord?> getById(int id) {
     return (select(operationRecords)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
-  }
-
-  /// 重新同步历史内容、标签和来源信息。
-  Future<void> resyncData(int historyId) async {
-    final history = await attachedDatabase.historyDao.getById(historyId);
-    if (history == null) {
-      logger.warn(tag, 'History is null: $historyId');
-      return;
-    }
-    //todo
-    // var opRecord = newOperationRecord(
-    //   Module.history,
-    //   OpMethod.add,
-    //   historyId.toString(),
-    // );
-    // var result = await MissingDataSyncHandler.process(opRecord);
-    // await DataSender.sendData2All(MsgType.sync, result.result);
-    //
-    // final tags = await attachedDatabase.historyTagDao.getAllByHisId(historyId);
-    // for (var tag in tags) {
-    //   opRecord = newOperationRecord(
-    //     Module.tag,
-    //     OpMethod.add,
-    //     tag.id.toString(),
-    //   );
-    //   result = await MissingDataSyncHandler.process(opRecord);
-    //   await DataSender.sendData2All(MsgType.sync, result.result);
-    // }
-    //
-    // if (history.source != null) {
-    //   final devId = history.devId;
-    //   final sourceService = Get.find<ClipboardSourceService>();
-    //   final appInfo = sourceService.appInfos.where((item) => item.devId == devId && history.source == item.appId).firstOrNull;
-    //   if (appInfo == null) {
-    //     logger.warn(tag, 'AppInfo is null source = ${history.source}');
-    //     return;
-    //   }
-    //   opRecord = newOperationRecord(
-    //     Module.appInfo,
-    //     OpMethod.add,
-    //     appInfo.id,
-    //   );
-    //   result = await MissingDataSyncHandler.process(opRecord);
-    //   await DataSender.sendData2All(MsgType.sync, result.result);
-    // }
   }
 
   /// 将操作记录领域对象转换为 Drift 写入对象，显式保留旧雪花 id。

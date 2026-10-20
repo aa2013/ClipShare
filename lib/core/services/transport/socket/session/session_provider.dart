@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+
 import 'dart:math';
 
 import 'package:clipshare/core/constants/app_constants.dart';
@@ -18,6 +18,8 @@ import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/transport/heartbeat/transport_heartbeat_provider.dart';
 import 'package:clipshare/core/services/transport/message_sender/message_sender.dart';
 import 'package:clipshare/core/services/transport/message_sender/message_sender_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_receive_dispatcher_provider.dart';
 import 'package:clipshare/core/services/transport/socket/forward/forward_server_provider.dart';
 import 'package:clipshare/core/services/transport/socket/session/device_connection_queue.dart';
 import 'package:clipshare/core/services/transport/socket/session/device_socket_session_store.dart';
@@ -25,12 +27,12 @@ import 'package:clipshare/core/services/transport/socket/session/reconnect_provi
 import 'package:clipshare/core/settings/sync/sync_settings.dart';
 import 'package:clipshare/core/settings/sync/sync_settings_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/shared/enums/sync_source.dart';
 import 'package:clipshare/shared/enums/transport_protocol.dart';
 import 'package:clipshare/shared/exceptions/device_connect_exception.dart';
 import 'package:clipshare/shared/exceptions/device_not_connected_exception.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
-import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/crypto.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
@@ -263,41 +265,41 @@ class SessionNotifier extends _$SessionNotifier implements MessageSender {
     logger.debug(tag, '${dev.name} ${msg.key}');
     final address = _pendingPairingAddresses.firstWhereOrNull((ip) => ip.split(':')[0] == client.ip);
     switch (msg.key) {
-      case MsgType.disConnect:
+      case .disConnect:
         await closeSession(dev.guid, client, reason: 'remote disconnect', autoReconnect: false);
         break;
-      case MsgType.forgetDev:
+      case .forgetDev:
         await forgetDevice(dev);
         break;
-      case MsgType.ackSync:
-      case MsgType.sync:
-        _onSyncMsg(this, msg);
+      case .ackSync:
+      case .sync:
+        _onSyncMsg(ref, msg, SyncSource.direct);
         break;
-      case MsgType.missingData:
-        _onMissingData(this, msg);
+      case .missingData:
+        _onMissingData(ref, msg);
         break;
-      case MsgType.reqMissingData:
-        _onRequestMissingData(this, msg);
+      case .reqMissingData:
+        await _onRequestMissingData(ref, msg);
         break;
-      case MsgType.reqAppInfo:
+      case .reqAppInfo:
         await _onRequestAppInfo(this, ref, msg);
         break;
-      case MsgType.appInfo:
+      case .appInfo:
         await _onReceiveAppInfo(this, ref, msg);
         break;
-      case MsgType.reqPairing:
+      case .reqPairing:
         await _requestPairingDevice(this, msg);
         break;
-      case MsgType.pairing:
+      case .pairing:
         await _onDevicePairing(this, msg, address);
         break;
-      case MsgType.paired:
+      case .paired:
         await _onDevicePaired(this, msg, address);
         break;
-      case MsgType.cancelPairing:
+      case .cancelPairing:
         _onDevicePairingCanceled(this, msg);
         break;
-      case MsgType.file:
+      case .file:
         //todo
         // String ip = client.ip;
         // int port = msg.data['port'];

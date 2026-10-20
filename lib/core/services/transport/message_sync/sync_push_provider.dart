@@ -3,6 +3,13 @@ import 'dart:io';
 
 import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/database/dao/app_info_dao.dart';
+import 'package:clipshare/core/database/dao/device_dao.dart';
+import 'package:clipshare/core/database/dao/history_dao.dart';
+import 'package:clipshare/core/database/dao/history_tag_dao.dart';
+import 'package:clipshare/core/database/dao/operation_record_dao.dart';
+import 'package:clipshare/core/database/dao/rule_dao.dart';
+import 'package:clipshare/core/database/dao/script_module_dao.dart';
 import 'package:clipshare/core/database/extensions/history_extension.dart';
 import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/database/tables/history.dart';
@@ -39,6 +46,20 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   final _timeZoneOffsetSeconds = DateTime.now().timeZoneOffset.inSeconds;
 
   AppDatabase get _db => ref.read(appDbProvider).requireValue;
+
+  OperationRecordDao get _opRecordDao => _db.operationRecordDao;
+
+  HistoryDao get _historyDao => _db.historyDao;
+
+  HistoryTagDao get _historyTagDao => _db.historyTagDao;
+
+  DeviceDao get _deviceDao => _db.deviceDao;
+
+  RuleDao get _ruleDao => _db.ruleDao;
+
+  ScriptModuleDao get _scriptModuleDao => _db.scriptModuleDao;
+
+  AppInfoDao get _appInfoDao => _db.appInfoDao;
 
   MessageSenderNotifier get _messageSender => ref.read(messageSenderProvider.notifier);
 
@@ -89,7 +110,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
 
   Future<bool> _processDevicePayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
-    final device = await _db.deviceDao.getById(record.data);
+    final device = await _deviceDao.getById(record.data);
     if (device == null) {
       if (record.method == OpMethod.delete) {
         payload['data'] = emptyDevice(guid: record.data).toJson();
@@ -105,7 +126,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   Future<bool> _processTagPayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
     final id = int.parse(record.data);
-    final tag = await _db.historyTagDao.getById(id);
+    final tag = await _historyTagDao.getById(id);
     if (tag == null) {
       if (record.method == OpMethod.delete) {
         payload['data'] = emptyHistoryTag(id: id).toJson();
@@ -121,7 +142,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   Future<bool> _processHistoryPayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
     final id = int.parse(record.data);
-    final history = await _db.historyDao.getById(id);
+    final history = await _historyDao.getById(id);
     if (history == null) {
       if (record.method == OpMethod.delete) {
         payload['data'] = emptyHistory(id: id).toJson();
@@ -142,7 +163,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   Future<bool> _processHistoryTopOrSourcePayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
     final id = int.parse(record.data);
-    final history = await _db.historyDao.getById(id);
+    final history = await _historyDao.getById(id);
     if (history == null) {
       if (record.method == OpMethod.delete) {
         payload['data'] = emptyHistory(id: id).toJson();
@@ -159,7 +180,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   Future<bool> _processRulePayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
     final id = int.parse(record.data);
-    final rule = await _db.ruleDao.getById(id);
+    final rule = await _ruleDao.getById(id);
     if (rule == null) {
       if (record.method == OpMethod.delete) {
         payload['data'] = ruleToSyncPayload(emptyRule().copyWith(id: id));
@@ -174,7 +195,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
 
   Future<bool> _processScriptModulePayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
-    final module = await _db.scriptModuleDao.getByName(record.data);
+    final module = await _scriptModuleDao.getByName(record.data);
     if (module == null) {
       if (record.method == OpMethod.delete) {
         payload['data'] = scriptModuleToSyncPayload(
@@ -191,7 +212,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
 
   Future<bool> _processAppInfoPayload(OperationRecord record, Map<String, dynamic> payload) async {
     var shouldRemove = false;
-    final appInfo = await _db.appInfoDao.getById(int.parse(record.data));
+    final appInfo = await _appInfoDao.getById(int.parse(record.data));
     if (appInfo == null) {
       shouldRemove = true;
     } else {
@@ -207,7 +228,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
   Future<void> pushRecord(OperationRecord record) async {
     final payload = await _buildPayload(record);
     if (payload.shouldRemove) {
-      await _db.operationRecordDao.deleteByIds([record.id]);
+      await _opRecordDao.deleteByIds([record.id]);
       return;
     }
     await _messageSender.sendToAll(MsgType.sync, payload.data);
@@ -221,8 +242,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
     required List<String> syncedAppIds,
   }) async {
     final syncOutdateLimitTime = ref.read(syncSettingsProvider).requireValue.syncOutdateLimitTime;
-    final records = await _db.operationRecordDao.getSyncRecord(
-      0,
+    final records = await _opRecordDao.getSyncRecord(
       targetDev.guid,
       fromDevId,
       syncOutdateLimitTime,
@@ -237,7 +257,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
       final record = pending[i];
       final payload = await _buildPayload(record);
       if (payload.shouldRemove) {
-        await _db.operationRecordDao.deleteByIds([record.id]);
+        await _opRecordDao.deleteByIds([record.id]);
         continue;
       }
       await _messageSender.sendToDevice(targetDev.guid, MsgType.missingData, {
@@ -261,7 +281,7 @@ class SyncPushNotifier extends _$SyncPushNotifier {
     }
     payload['content'] = {
       'fileName': file.fileName,
-      'data': file.readAsBytesSync(),
+      'data': await file.readAsBytes(),
     };
     return payload;
   }

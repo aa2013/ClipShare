@@ -61,7 +61,7 @@ class DeviceSyncEvent extends MessageSyncEvent {
   });
 }
 
-/// 历史记录同步（text/richText/sms/file）
+/// 历史记录同步（text/sms/file）
 class HistorySyncEvent extends MessageSyncEvent {
   final History history;
 
@@ -96,11 +96,11 @@ class HistoryImageSyncEvent extends HistorySyncEvent {
 /// 通知类历史记录同步, history 对象 content 已置空
 class HistoryNotificationSyncEvent extends HistorySyncEvent {
 
-  final String pkg;
+  final String? pkg;
 
-  final String title;
+  final String? title;
 
-  final String content;
+  final String? content;
 
   const HistoryNotificationSyncEvent({
     required super.sender,

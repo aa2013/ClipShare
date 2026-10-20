@@ -46,6 +46,10 @@ class MessageData {
     };
   }
 
+  MessageData copy(){
+    return MessageData.fromJson(toJson());
+  }
+
   @override
   String toString() {
     return toJsonStr();

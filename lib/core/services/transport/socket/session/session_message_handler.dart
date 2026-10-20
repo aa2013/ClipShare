@@ -2,87 +2,34 @@ part of 'session_provider.dart';
 
 const sessionTag = 'SessionNotifier';
 
-/// 读取同步消息的原始操作 id，只有能定位发送端 OperationRecord 时才允许公共层回 ACK。
-int? _syncAckOpId(MessageData msg) {
-  final id = msg.data['id'];
-  if (id is int) {
-    return id;
+/// 数据同步处理：协议解析交给分发层
+void _onSyncMsg(Ref ref, MessageData msg, SyncSource source) {
+  final dispatcher = ref.read(syncReceiveDispatcherProvider.notifier);
+  if (msg.key == .ackSync) {
+    dispatcher.handleAckSync(msg);
+    return;
   }
-  if (id is String) {
-    return int.tryParse(id);
-  }
-  return null;
+  dispatcher.handleSync(msg, source: source);
 }
 
-///数据同步处理
-void _onSyncMsg(SessionNotifier self, MessageData msg) {
-  Module module = Module.getValue(msg.data['module']);
-  logger.debug(sessionTag, 'module ${module.moduleName}');
-  final opId = _syncAckOpId(msg);
-  final isReceivedSync = msg.key == MsgType.sync || msg.key == MsgType.missingData;
-  final shouldAckReceivedSync = isReceivedSync && opId != null && module != Module.unknown;
-  if (isReceivedSync && !shouldAckReceivedSync) {
-    logger.warn(
-      sessionTag,
-      'skip sync ack because message is not recognizable. '
-      'key=${msg.key.name}, data=${jsonEncode(msg.data)}',
-    );
-  }
-  //todo parse oprecord
-
-  //todo 筛选某个模块的同步处理器
-  // var lst = getListeners(module);
-  // if (isReceivedSync) {
-  //   dbService.execSequentially(() async {
-  //     for (var listener in lst) {
-  //       try {
-  //         await listener.onSync(msg);
-  //       } catch (err, stack) {
-  //         logger.error(tag, err, stack);
-  //       }
-  //     }
-  //     if (shouldAckReceivedSync) {
-  //       await AckSyncSender.send(
-  //         msg.send,
-  //         opId,
-  //         {
-  //           'id': opId,
-  //           'module': module.moduleName,
-  //         },
-  //       );
-  //     }
-  //   });
-  //   return;
-  // }
-  // for (var listener in lst) {
-  //   switch (msg.key) {
-  //     case MsgType.ackSync:
-  //       dbService.execSequentially(() => listener.ackSync(msg));
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // }
-}
-
-///缺失数据同步
-void _onMissingData(SessionNotifier self, MessageData msg) {
-  var copyMsg = MessageData.fromJson(msg.toJson());
-  var data = msg.data['data'] as Map<dynamic, dynamic>;
+/// 缺失数据同步：剥掉批量补数的进度外壳后按普通同步消息处理。
+void _onMissingData(Ref ref, MessageData msg) {
+  final copyMsg = msg.copy();
+  final data = msg.data['data'] as Map<dynamic, dynamic>;
   copyMsg.data = data.cast<String, dynamic>();
-  final total = msg.data['total'];
-  int seq = msg.data['seq'];
-  //todo
-  // final syncProgressService = Get.find<HistorySyncProgressService>();
-  // syncProgressService.addProgress(copyMsg.send.guid, copyMsg.data, seq, total, false);
-  _onSyncMsg(self, copyMsg);
+  //todo 汇总 total/seq 推进补数进度
+  _onSyncMsg(ref, copyMsg, SyncSource.missingData);
 }
 
-///请求缺失数据
-void _onRequestMissingData(SessionNotifier self, MessageData msg) {
-  var syncedAppIds = ((msg.data['appIds'] ?? []) as List<dynamic>).cast<String>();
-  //todo
-  // MissingDataSyncHandler.sendMissingData(dev, _self.guid, syncedAppIds);
+/// 请求缺失数据：把本机尚未同步到请求方的操作记录补推过去。
+Future<void> _onRequestMissingData(Ref ref, MessageData msg) async {
+  final syncedAppIds = ((msg.data['appIds'] ?? []) as List<dynamic>).cast<String>();
+  final localDevId = ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo.guid;
+  await ref.read(syncPushProvider.notifier).sendMissingData(
+    targetDev: msg.send,
+    fromDevId: localDevId,
+    syncedAppIds: syncedAppIds,
+  );
 }
 
 /// 请求app信息

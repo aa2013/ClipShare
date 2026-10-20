@@ -16,10 +16,13 @@ import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
+import 'package:clipshare/core/services/history/history_sync_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/ack_sync_consumer_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_receive_dispatcher_provider.dart';
 import 'package:clipshare/core/services/transport/socket/direct/direct_provider.dart';
 import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
 import 'package:clipshare/core/services/transport/socket/forward/forward_server_provider.dart';
@@ -100,6 +103,10 @@ Future<void> appStartup(Ref ref) async {
   ref.read(discoveryProvider);
   ref.read(storageProvider);
   ref.read(networkChangeCoordinatorProvider);
+  // 数据同步处理分发
+  ref.read(syncReceiveDispatcherProvider);
+  ref.read(historySyncProvider);
+  ref.read(ackSyncConsumerProvider);
 
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化

@@ -42,7 +42,7 @@ final class MessageSyncNotifierProvider
 }
 
 String _$messageSyncNotifierHash() =>
-    r'fc335020c43e5557b2c7f3672b905c943116eac3';
+    r'b1ad3c89f8f044d3dfd8a99d5d4f5dadcf41f876';
 
 abstract class _$MessageSyncNotifier extends $Notifier<void> {
   void build();
