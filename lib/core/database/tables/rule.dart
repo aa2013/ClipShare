@@ -22,7 +22,7 @@ Map<String, dynamic> ruleToSyncPayload(Rule rule) {
   return payload;
 }
 
-/// 从同步载荷还原规则，兼容旧版本客户端的 language/content 字段名。
+/// 从同步载荷还原规则，兼容 language/content 字段名。
 Rule ruleFromSyncJson(Map<String, dynamic> payload) {
   return Rule.fromJson({
     ...payload,

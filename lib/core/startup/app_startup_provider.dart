@@ -11,17 +11,23 @@ import 'package:clipshare/core/platform/desktop/window/window_control_provider.d
 import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/runtime/network/network_change_coordinator_provider.dart';
+import 'package:clipshare/core/services/clipboard/app_info_sync_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_service_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
+import 'package:clipshare/core/services/device/device_sync_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
 import 'package:clipshare/core/services/history/history_sync_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
+import 'package:clipshare/core/services/rules/rule_sync_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
+import 'package:clipshare/core/services/rules/script_module_sync_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
+import 'package:clipshare/core/services/tag/tag_sync_provider.dart';
 import 'package:clipshare/core/services/transport/message_sync/ack_sync_consumer_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/message_sync_provider.dart';
 import 'package:clipshare/core/services/transport/message_sync/sync_receive_dispatcher_provider.dart';
 import 'package:clipshare/core/services/transport/socket/direct/direct_provider.dart';
 import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
@@ -96,6 +102,18 @@ Future<void> appStartup(Ref ref) async {
     await ref.read(provider);
   }
 
+  // 数据同步接收先于传输服务订阅，避免启动期消息在无监听者时被丢弃
+  ref.read(messageSyncProvider);
+  ref.read(syncReceiveDispatcherProvider);
+  ref.read(ackSyncConsumerProvider);
+  ref.read(historySyncProvider);
+  ref.read(tagSyncProvider);
+  ref.read(deviceSyncProvider);
+  ref.read(appInfoSyncProvider);
+  ref.read(ruleSyncProvider);
+  ref.read(scriptModuleSyncProvider);
+
+  //传输服务相关
   ref.read(directProvider);
   ref.read(sessionProvider);
   ref.read(reconnectProvider);
@@ -103,10 +121,6 @@ Future<void> appStartup(Ref ref) async {
   ref.read(discoveryProvider);
   ref.read(storageProvider);
   ref.read(networkChangeCoordinatorProvider);
-  // 数据同步处理分发
-  ref.read(syncReceiveDispatcherProvider);
-  ref.read(historySyncProvider);
-  ref.read(ackSyncConsumerProvider);
 
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化

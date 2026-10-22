@@ -169,6 +169,11 @@ class AppDatabase extends _$AppDatabase {
         )
       """);
     }
+    if (from < 7 && await _hasTable('History')) {
+      // 旧 floor 迁移 6->7 会建立这两个索引，直接升级到当前版本时需幂等补齐
+      await customStatement('CREATE INDEX IF NOT EXISTS index_History_devId ON History (devId)');
+      await customStatement('CREATE INDEX IF NOT EXISTS index_History_devId_source ON History (devId, source)');
+    }
     if (from < 8 && !await hasColumn('Device', 'internalAddress')) {
       await customStatement('ALTER TABLE `Device` ADD COLUMN `internalAddress` TEXT');
     }

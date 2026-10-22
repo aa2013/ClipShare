@@ -70,7 +70,7 @@ class TagNotifier extends _$TagNotifier {
     return TagState(tagsByHisId: tagsByHisId, tagNameCount: tagNameCount);
   }
 
-  Future<void> _remove(HistoryTag tag, [bool notify = true]) async {
+  Future<void> _remove(HistoryTag tag, {required bool notifyPeers}) async {
     await _historyTagDao.removeById(tag.id);
 
     final current = _current;
@@ -85,17 +85,6 @@ class TagNotifier extends _$TagNotifier {
       }
     }
 
-    var opRecord = newOperationRecord(
-      _snowflake,
-      _baseDevInfo,
-      Module.tag,
-      OpMethod.delete,
-      tag.id.toString(),
-    );
-    //添加操作记录
-    await _opRecordDao.add(opRecord);
-    await _syncPushNotifier.pushRecord(opRecord);
-
     // 更新引用计数，计数为 0 时移除该标签键
     final countMap = current._tagNameCount;
     if ((countMap[tag.tagName] ?? 0) == 1) {
@@ -104,73 +93,102 @@ class TagNotifier extends _$TagNotifier {
       countMap[tag.tagName] = countMap[tag.tagName]! - 1;
     }
 
-    // 构造新的 TagState 实例（identity 变化），通知所有 watch 方刷新
+    if (notifyPeers) {
+      final opRecord = newOperationRecord(
+        _snowflake,
+        _baseDevInfo,
+        Module.tag,
+        OpMethod.delete,
+        tag.id.toString(),
+      );
+      // 添加操作记录
+      await _opRecordDao.add(opRecord);
+      await _syncPushNotifier.pushRecord(opRecord);
+    }
     state = AsyncData(TagState(tagsByHisId: tags, tagNameCount: countMap));
   }
 
-  Future<bool> _add(HistoryTag tag, [bool notify = true]) async {
+  /// 应用标签新增；[notifyPeers] 为 false 时不生成并推送操作记录。
+  Future<bool> _add(HistoryTag tag, {required bool notifyPeers}) async {
     final current = _current;
-    // 已存在相同标签则直接返回
-    if (current.getTagList(tag.hisId).contains(tag.tagName)) {
+    final existed = current.getTagList(tag.hisId).contains(tag.tagName);
+    // 本机重复新增时 不落库、不推送
+    if (notifyPeers && existed) {
       return false;
     }
 
-    var res = false;
-    if (notify) {
-      res = await _historyTagDao.add(tag) > 0;
-      if (!res) {
-        return false;
-      }
-      var opRecord = newOperationRecord(
+    final inserted = await _historyTagDao.add(tag) > 0;
+    // 唯一索引冲突时插入返回 0，但记录可能已存在，仍视为成功
+    final persisted = inserted || await _historyTagDao.get(tag.hisId, tag.tagName) != null;
+    if (!persisted) {
+      return false;
+    }
+    // 远端重复新增忽略
+    if (existed) {
+      return true;
+    }
+
+    // 更新标签映射与引用计数
+    current._tagsByHisId.putIfAbsent(tag.hisId, () => <String>{}).add(tag.tagName);
+    final countMap = current._tagNameCount;
+    countMap[tag.tagName] = (countMap[tag.tagName] ?? 0) + 1;
+
+    if (notifyPeers) {
+      final opRecord = newOperationRecord(
         _snowflake,
         _baseDevInfo,
         Module.tag,
         OpMethod.add,
         tag.id.toString(),
       );
-      //添加操作记录
+      // 添加操作记录
       await _opRecordDao.add(opRecord);
       await _syncPushNotifier.pushRecord(opRecord);
-      // 写库成功才更新引用计数
-      final countMap = current._tagNameCount;
-      countMap[tag.tagName] = (countMap[tag.tagName] ?? 0) + 1;
     }
 
-    // 更新标签映射（notify=true 成功，或 notify=false 仅内存更新）
-    current._tagsByHisId.putIfAbsent(tag.hisId, () => <String>{}).add(tag.tagName);
-
-    // 构造新的 TagState 实例（identity 变化），通知所有 watch 方刷新
     state = AsyncData(TagState(
       tagsByHisId: current._tagsByHisId,
       tagNameCount: current._tagNameCount,
     ));
-    return res;
+    return true;
   }
 
   ///添加
-  Future<bool> add(HistoryTag tag, [bool notify = true]) async {
-    return await _add(tag, notify);
+  Future<bool> add(HistoryTag tag) async {
+    return _add(tag, notifyPeers: true);
   }
 
   ///批量添加
-  Future<void> addList(Iterable<HistoryTag> tags, [bool notify = true]) async {
+  Future<void> addList(Iterable<HistoryTag> tags) async {
     for (var tag in tags) {
-      await _add(tag, notify);
+      await _add(tag, notifyPeers: true);
     }
   }
 
   ///删除 tag
-  Future<void> remove(HistoryTag tag, [bool notify = true]) async {
-    await _remove(tag, notify);
+  Future<void> remove(HistoryTag tag) async {
+    await _remove(tag, notifyPeers: true);
   }
 
   ///批量删除
-  Future<void> removeList(
-    Iterable<HistoryTag> tags, [
-    bool notify = true,
-  ]) async {
+  Future<void> removeList(Iterable<HistoryTag> tags) async {
     for (var tag in tags) {
-      await _remove(tag, notify);
+      await _remove(tag, notifyPeers: true);
     }
+  }
+
+  /// 应用远端新增的标签，不生成、不推送操作记录。
+  Future<bool> applyRemoteAdd(HistoryTag tag) {
+    return _add(tag, notifyPeers: false);
+  }
+
+  /// 应用远端删除的标签，不生成、不推送操作记录。
+  Future<bool> applyRemoteRemove(HistoryTag tag) async {
+    final local = await _historyTagDao.getById(tag.id);
+    if (local == null) {
+      return true;
+    }
+    await _remove(local, notifyPeers: false);
+    return true;
   }
 }

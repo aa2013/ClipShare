@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/shared/enums/sync_source.dart';
+import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 
 /// 数据同步事件。
@@ -21,6 +22,9 @@ sealed class MessageSyncEvent {
 
   ///同步来源
   final SyncSource source;
+
+  /// 事件所属同步模块
+  Module get module;
 
   const MessageSyncEvent({
     required this.sender,
@@ -44,12 +48,18 @@ sealed class MessageAckSyncEvent {
   /// 被确认的发送端 OperationRecord.id
   final int opId;
 
+  /// 确认事件所属同步模块
+  Module get module;
+
   const MessageAckSyncEvent({required this.sender, required this.opId});
 }
 
 /// 设备元数据同步
 class DeviceSyncEvent extends MessageSyncEvent {
   final Device device;
+
+  @override
+  Module get module => Module.device;
 
   const DeviceSyncEvent({
     required super.sender,
@@ -64,6 +74,9 @@ class DeviceSyncEvent extends MessageSyncEvent {
 /// 历史记录同步（text/sms/file）
 class HistorySyncEvent extends MessageSyncEvent {
   final History history;
+
+  @override
+  Module get module => Module.history;
 
   const HistorySyncEvent({
     required super.sender,
@@ -121,6 +134,9 @@ class HistoryTopSyncEvent extends MessageSyncEvent {
 
   final bool top;
 
+  @override
+  Module get module => Module.historyTop;
+
   const HistoryTopSyncEvent({
     required super.sender,
     required super.method,
@@ -138,6 +154,9 @@ class HistorySourceSyncEvent extends MessageSyncEvent {
 
   final String? sourceAppId;
 
+  @override
+  Module get module => Module.historySource;
+
   const HistorySourceSyncEvent({
     required super.sender,
     required super.method,
@@ -153,6 +172,9 @@ class HistorySourceSyncEvent extends MessageSyncEvent {
 class HistoryTagSyncEvent extends MessageSyncEvent {
   final HistoryTag tag;
 
+  @override
+  Module get module => Module.tag;
+
   const HistoryTagSyncEvent({
     required super.sender,
     required super.method,
@@ -166,6 +188,9 @@ class HistoryTagSyncEvent extends MessageSyncEvent {
 /// App 来源信息同步
 class AppInfoSyncEvent extends MessageSyncEvent {
   final AppInfo appInfo;
+
+  @override
+  Module get module => Module.appInfo;
 
   const AppInfoSyncEvent({
     required super.sender,
@@ -181,6 +206,9 @@ class AppInfoSyncEvent extends MessageSyncEvent {
 class RuleSyncEvent extends MessageSyncEvent {
   final Rule rule;
 
+  @override
+  Module get module => Module.rule;
+
   const RuleSyncEvent({
     required super.sender,
     required super.method,
@@ -195,6 +223,9 @@ class RuleSyncEvent extends MessageSyncEvent {
 class ScriptModuleSyncEvent extends MessageSyncEvent {
   final ScriptModule scriptModule;
 
+  @override
+  Module get module => Module.scriptModule;
+
   const ScriptModuleSyncEvent({
     required super.sender,
     required super.method,
@@ -207,40 +238,92 @@ class ScriptModuleSyncEvent extends MessageSyncEvent {
 
 /// 设备模块 ack
 class DeviceAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.device;
+
   const DeviceAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// 历史记录模块 ack（图片、通知载荷同属 history 模块）
 class HistoryAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.history;
+
   const HistoryAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// 历史记录置顶模块 ack
 class HistoryTopAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.historyTop;
+
   const HistoryTopAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// 历史记录来源模块 ack
 class HistorySourceAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.historySource;
+
   const HistorySourceAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// 标签模块 ack
 class HistoryTagAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.tag;
+
   const HistoryTagAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// App 来源信息模块 ack
 class AppInfoAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.appInfo;
+
   const AppInfoAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// 规则模块 ack
 class RuleAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.rule;
+
   const RuleAckSyncEvent({required super.sender, required super.opId});
 }
 
 /// 脚本模块模块 ack
 class ScriptModuleAckSyncEvent extends MessageAckSyncEvent {
+  @override
+  Module get module => Module.scriptModule;
+
   const ScriptModuleAckSyncEvent({required super.sender, required super.opId});
+}
+
+/// 按模块构造对应的确认事件。
+///
+/// `unknown` 与已废弃的 `rules` 模块不参与当前同步协议，返回 null。
+MessageAckSyncEvent? ackEventOfModule(
+  Module module, {
+  required BaseDeviceInfo sender,
+  required int opId,
+}) => switch (module) {
+  Module.device => DeviceAckSyncEvent(sender: sender, opId: opId),
+  Module.history => HistoryAckSyncEvent(sender: sender, opId: opId),
+  Module.historyTop => HistoryTopAckSyncEvent(sender: sender, opId: opId),
+  Module.historySource => HistorySourceAckSyncEvent(sender: sender, opId: opId),
+  Module.tag => HistoryTagAckSyncEvent(sender: sender, opId: opId),
+  Module.appInfo => AppInfoAckSyncEvent(sender: sender, opId: opId),
+  Module.rule => RuleAckSyncEvent(sender: sender, opId: opId),
+  Module.scriptModule => ScriptModuleAckSyncEvent(sender: sender, opId: opId),
+  Module.unknown || Module.rules => null,
+};
+
+/// 根据已应用的同步事件构造待回传的确认事件。
+MessageAckSyncEvent? ackEventFor(MessageSyncEvent event) {
+  return ackEventOfModule(
+    event.module,
+    sender: event.sender,
+    opId: event.opId,
+  );
 }

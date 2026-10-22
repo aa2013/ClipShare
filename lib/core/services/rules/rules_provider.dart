@@ -429,7 +429,6 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
       if (_scriptModules[i].moduleName == lib.moduleName) {
         _scriptModules[i] = lib;
         exists = true;
-        _updateState();
         break;
       }
     }
@@ -438,6 +437,29 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
     }
     final result = loadLuaModules(lib);
     logger.debug(tag, 'load lib(${lib.moduleName}): $result');
+    _updateState();
+  }
+
+  /// 移除指定规则，并同步清理内存中的 Lua 用户函数。
+  void removeRule(int id) {
+    final index = _rules.indexWhere((e) => e.id == id);
+    if (index < 0) {
+      return;
+    }
+    _rules.removeAt(index);
+    removeLuaUserFun(id.toString());
+    _updateState();
+    unawaited(ensureSmsSyncReady());
+  }
+
+  /// 移除指定脚本模块并刷新状态。
+  void removeScriptModule(String moduleName) {
+    final index = _scriptModules.indexWhere((e) => e.moduleName == moduleName);
+    if (index < 0) {
+      return;
+    }
+    _scriptModules.removeAt(index);
+    _updateState();
   }
 
   Future<void> saveRules() async {

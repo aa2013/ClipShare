@@ -155,3 +155,19 @@ if (success) {
 
 
 # 6. 提交与PR规范
+
+执行 dart run build_runner build 生成riverpod代码的时候，使用过滤器仅生成指定的文件而不是所有都生成，如果误生成了其他的代码，请回滚
+
+如果有某个对象的字段多次使用应该把他提取出一个新变量，例如
+
+    if (event.method != .update && event.method != .delete) {
+      return false;
+    }
+应该改成 
+
+    final method = event.method;
+    if (method != .update && method != .delete) {
+      return false;
+    }
+
+ref.read(xxx) 在provider里面都提成内部getter

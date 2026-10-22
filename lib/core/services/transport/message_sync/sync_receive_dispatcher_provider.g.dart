@@ -8,24 +8,21 @@ part of 'sync_receive_dispatcher_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 同步消息接收分发层。
+/// 同步消息接收分发层
 ///
-/// 只负责把网络载荷解析为强类型事件并投递到事件流，
-/// 不执行业务处理、不发送确认；确认由模块处理成功后统一收口。
+/// 负责把载荷解析为强类型事件并投递到事件流
 
 @ProviderFor(SyncReceiveDispatcher)
 final syncReceiveDispatcherProvider = SyncReceiveDispatcherProvider._();
 
-/// 同步消息接收分发层。
+/// 同步消息接收分发层
 ///
-/// 只负责把网络载荷解析为强类型事件并投递到事件流，
-/// 不执行业务处理、不发送确认；确认由模块处理成功后统一收口。
+/// 负责把载荷解析为强类型事件并投递到事件流
 final class SyncReceiveDispatcherProvider
     extends $NotifierProvider<SyncReceiveDispatcher, void> {
-  /// 同步消息接收分发层。
+  /// 同步消息接收分发层
   ///
-  /// 只负责把网络载荷解析为强类型事件并投递到事件流，
-  /// 不执行业务处理、不发送确认；确认由模块处理成功后统一收口。
+  /// 负责把载荷解析为强类型事件并投递到事件流
   SyncReceiveDispatcherProvider._()
     : super(
         from: null,
@@ -54,12 +51,11 @@ final class SyncReceiveDispatcherProvider
 }
 
 String _$syncReceiveDispatcherHash() =>
-    r'93cb98f4144524aa407c7bf92b62640ae2da804e';
+    r'e6626bb3bbedf9ba1aa5db81cfbad5a4d374d43d';
 
-/// 同步消息接收分发层。
+/// 同步消息接收分发层
 ///
-/// 只负责把网络载荷解析为强类型事件并投递到事件流，
-/// 不执行业务处理、不发送确认；确认由模块处理成功后统一收口。
+/// 负责把载荷解析为强类型事件并投递到事件流
 
 abstract class _$SyncReceiveDispatcher extends $Notifier<void> {
   void build();

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clipshare/shared/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'message_sync_event.dart';
@@ -8,6 +9,8 @@ part 'message_sync_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class MessageSyncNotifier extends _$MessageSyncNotifier {
+  static const tag = 'MessageSyncNotifier';
+
   final _syncEvents = StreamController<MessageSyncEvent>.broadcast();
   final _ackSyncEvents = StreamController<MessageAckSyncEvent>.broadcast();
   final _pendingAckEvents = StreamController<MessageAckSyncEvent>.broadcast();
@@ -27,7 +30,15 @@ class MessageSyncNotifier extends _$MessageSyncNotifier {
 
   void emitAckSync(MessageAckSyncEvent event) => _ackSyncEvents.add(event);
 
-  void emitPendingAck(MessageAckSyncEvent event) => _pendingAckEvents.add(event);
+  /// 按模块生成并投递待发送的确认事件。
+  void emitPendingAckFor(MessageSyncEvent event) {
+    final ackEvent = ackEventFor(event);
+    if (ackEvent == null) {
+      logger.warn(tag, 'no ack event for module=${event.module.name}');
+      return;
+    }
+    _pendingAckEvents.add(ackEvent);
+  }
 
   @override
   void build() {

@@ -1,12 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:clipshare/core/database/app_database.dart';
-import 'package:clipshare/core/database/extensions/history_extension.dart';
-import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/transport/message_sync/message_sync_event.dart';
 import 'package:clipshare/shared/enums/history_content_type.dart';
-import 'package:clipshare/shared/enums/sync_source.dart';
-import 'package:clipshare/shared/models/op_method.dart';
 
 import 'sync_payload_context.dart';
 
@@ -63,6 +59,28 @@ MessageSyncEvent? parseHistorySyncPayload(SyncPayloadContext context) {
     time: context.time,
     source: context.source,
     history: History.fromJson(payload),
+  );
+}
+
+/// 解析历史记录来源同步载荷。
+MessageSyncEvent? parseHistorySourceSyncPayload(SyncPayloadContext context) {
+  final payload = context.data;
+  if (payload.isEmpty) {
+    return null;
+  }
+  final id = payload['id'];
+  final source = payload['source'];
+  if (id is! int || (source != null && source is! String)) {
+    return null;
+  }
+  return HistorySourceSyncEvent(
+    sender: context.sender,
+    method: context.method,
+    opId: context.opId,
+    time: context.time,
+    source: context.source,
+    historyId: id,
+    sourceAppId: source as String?,
   );
 }
 

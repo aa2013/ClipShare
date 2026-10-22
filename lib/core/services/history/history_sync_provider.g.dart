@@ -8,15 +8,15 @@ part of 'history_sync_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// 接收对端下发的历史记录同步事件，落库成功后回确认。
+/// 历史记录同步处理器
 
 @ProviderFor(HistorySyncNotifier)
 final historySyncProvider = HistorySyncNotifierProvider._();
 
-/// 接收对端下发的历史记录同步事件，落库成功后回确认。
+/// 历史记录同步处理器
 final class HistorySyncNotifierProvider
     extends $NotifierProvider<HistorySyncNotifier, void> {
-  /// 接收对端下发的历史记录同步事件，落库成功后回确认。
+  /// 历史记录同步处理器
   HistorySyncNotifierProvider._()
     : super(
         from: null,
@@ -45,9 +45,9 @@ final class HistorySyncNotifierProvider
 }
 
 String _$historySyncNotifierHash() =>
-    r'812399821eaa7fa4533f1891eee87c04a32c5516';
+    r'db82ee4fa60c2b4c5fa9b8eb3a3759182c98d78c';
 
-/// 接收对端下发的历史记录同步事件，落库成功后回确认。
+/// 历史记录同步处理器
 
 abstract class _$HistorySyncNotifier extends $Notifier<void> {
   void build();

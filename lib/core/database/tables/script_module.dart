@@ -15,7 +15,7 @@ Map<String, dynamic> scriptModuleToSyncPayload(ScriptModule module) {
   };
 }
 
-/// 从 JSON 还原脚本模块，兼容 UI 临时字段 isNewData 不落库的设计。
+/// 从 JSON 还原脚本模块，兼容 isNewData 不落库的设计
 ScriptModule scriptModuleFromJson(Map<String, dynamic> json) {
   final module = ScriptModule(
     moduleName: json['moduleName'],

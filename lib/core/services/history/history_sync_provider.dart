@@ -2,19 +2,37 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/database/dao/app_info_dao.dart';
 import 'package:clipshare/core/database/dao/history_dao.dart';
+import 'package:clipshare/core/database/dao/history_tag_dao.dart';
 import 'package:clipshare/core/database/dao/operation_record_dao.dart';
 import 'package:clipshare/core/database/tables/history.dart';
+import 'package:clipshare/core/database/tables/operation_record.dart';
+import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
+import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
+import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
+import 'package:clipshare/core/services/device/local_device_info.dart';
+import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
+import 'package:clipshare/core/services/permission/permission_helper.dart';
 import 'package:clipshare/core/services/transport/message_sync/message_sync_event.dart';
 import 'package:clipshare/core/services/transport/message_sync/message_sync_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
+import 'package:clipshare/core/settings/app_paths/app_paths.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
+import 'package:clipshare/core/settings/sync/sync_settings.dart';
+import 'package:clipshare/core/settings/sync/sync_settings_provider.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
+import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
+import 'package:clipshare/shared/utils/file_util.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/snowflake.dart';
+import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'history_sync_provider.g.dart';
@@ -24,6 +42,8 @@ part 'history_sync_provider.g.dart';
 class HistorySyncNotifier extends _$HistorySyncNotifier {
   static const tag = 'HistorySyncNotifier';
 
+  final _imageSaver = ImageGallerySaver();
+
   MessageSyncNotifier get _syncNotifier => ref.read(messageSyncProvider.notifier);
 
   HistoryRecorderNotifier get _recorder => ref.read(historyRecorderProvider.notifier);
@@ -31,6 +51,26 @@ class HistorySyncNotifier extends _$HistorySyncNotifier {
   HistoryDao get _historyDao => ref.read(appDbProvider).requireValue.historyDao;
 
   OperationRecordDao get _opRecordDao => ref.read(appDbProvider).requireValue.operationRecordDao;
+
+  HistoryTagDao get _historyTagDao => ref.read(appDbProvider).requireValue.historyTagDao;
+
+  AppInfoDao get _appInfoDao => ref.read(appDbProvider).requireValue.appInfoDao;
+
+  ClipboardSourceNotifier get _sourceNotifier => ref.read(clipboardSourceProvider.notifier);
+
+  SyncPushNotifier get _syncPushNotifier => ref.read(syncPushProvider.notifier);
+
+  Snowflake get _idGenerator => ref.read(idProvider);
+
+  LocalDeviceInfo get _localDeviceInfo => ref.read(localDeviceInfoProvider).requireValue;
+
+  SyncSettings get _syncSettings => ref.read(syncSettingsProvider).requireValue;
+
+  AndroidChannelNotifier get _androidChannel => ref.read(androidChannelProvider.notifier);
+
+  AppPaths get _appPaths => ref.read(appPathsProvider).requireValue;
+
+  BaseDeviceInfo get _baseDevInfo => _localDeviceInfo.baseDeviceInfo;
 
   @override
   void build() {
@@ -86,18 +126,15 @@ class HistorySyncNotifier extends _$HistorySyncNotifier {
           success = await _applyHistoryEvent(event);
         } else if (event is HistoryTopSyncEvent) {
           success = await _applyHistoryTopEvent(event);
+        } else if (event is HistorySourceSyncEvent) {
+          success = await _applyHistorySourceEvent(event);
         } else {
           continue;
         }
         if (!success) {
           continue;
         }
-        _syncNotifier.emitPendingAck(
-          HistoryAckSyncEvent(
-            sender: event.sender,
-            opId: event.opId,
-          ),
-        );
+        _syncNotifier.emitPendingAckFor(event);
       } catch (err, stack) {
         logger.error(tag, err, stack);
       }
@@ -117,7 +154,7 @@ class HistorySyncNotifier extends _$HistorySyncNotifier {
 
     ///图片类型
     if (event is HistoryImageSyncEvent) {
-      final localPath = await _saveImage(event.opId, event.fileName, event.data);
+      final localPath = await _saveImage(event.fileName, event.data);
       history = history.copyWith(content: localPath);
     }
     history = history.copyWith(sync: true);
@@ -152,68 +189,116 @@ class HistorySyncNotifier extends _$HistorySyncNotifier {
     return success;
   }
 
+  /// 处理历史记录来源事件。
+  Future<bool> _applyHistorySourceEvent(HistorySourceSyncEvent event) async {
+    final method = event.method;
+    if (method != .update && method != .delete) {
+      return false;
+    }
+    final id = event.historyId;
+    final history = await _historyDao.getById(id);
+    if (history == null) {
+      //源不存在，避免反复补推，强制忽略
+      return true;
+    }
+    final sourceAppId = event.sourceAppId;
+    final int? affectedRows;
+    if (event.method == .delete || sourceAppId == null || sourceAppId.isEmpty) {
+      affectedRows = await _historyDao.clearHistorySource(id);
+    } else {
+      affectedRows = await _historyDao.updateHistorySource(id, sourceAppId);
+    }
+    if ((affectedRows ?? 0) <= 0) {
+      return false;
+    }
+    await _sourceNotifier.removeNotUsed();
+    final updated = await _historyDao.getById(id);
+    if (updated != null) {
+      _emitDelta(updated, .update);
+    }
+    return true;
+  }
+
   /// 落库后通知历史列表增量刷新
   void _emitDelta(History history, OpMethod operation) {
     _recorder.emitDelta(
-      HistoryDeltaEvent(history: history, operation: operation),
+      HistoryDeltaEvent(
+        history: history,
+        operation: operation,
+      ),
     );
   }
 
-  /// 把内嵌图片字节写入本机图片目录，返回本地路径。
-  Future<String> _saveImage(int opId, String fileName, Uint8List data) async {
-    final appPaths = await ref.read(appPathsProvider.future);
-    final dir = isAndroid ? appPaths.androidPrivatePicturesPath : appPaths.screenShotStorePath;
-    //todo 使用dev版本的实现
-    // 发送端文件名可能带路径或重名，只保留末段并用操作 id 去重
-    final safeName = '${opId}_${fileName.split(RegExp(r'[\\/]')).last}';
+  /// 把内嵌图片字节写入本机图片目录，返回本地路径
+  Future<String> _saveImage(String fileName, Uint8List data) async {
+    //todo 后续这里需要再审查一遍优化项
+    final saveToPictures = _syncSettings.saveToPictures;
+    final safeName = FileUtil.sanitizeReceivedFileName(fileName.split(RegExp(r'[\\/]')).last);
+    var dir = _appPaths.fileStorePath;
+    if (isAndroid) {
+      dir = saveToPictures ? '$androidPicturesPath/$appName' : _appPaths.imageStorePath;
+      final osVersion = _localDeviceInfo.androidOsVersion;
+      final rootStorePath = _appPaths.rootStorePath;
+      if (!await PermissionHelper.testAndroidStoragePerm(rootStorePath, osVersion, dir)) {
+        await PermissionHelper.reqAndroidStoragePerm(rootStorePath, osVersion, dir);
+      }
+    } else if (isIOS && saveToPictures) {
+      if (await PermissionHelper.checkIOSPhotoPermission()) {
+        await _imageSaver.saveImage(data);
+      } else {
+        logger.warn(tag, 'no photo permission, skip saving image to album');
+      }
+    }
     final file = File('$dir${Platform.pathSeparator}$safeName');
     await file.parent.create(recursive: true);
-    await file.writeAsBytes(data, flush: true);
+    if (!await file.exists()) {
+      await file.writeAsBytes(data, flush: true);
+      if (isAndroid && saveToPictures) {
+        _androidChannel.notifyMediaScan(file.path);
+      }
+    }
     return file.path;
   }
 
-  /// 重新同步历史内容、标签和来源信息。
+  /// 重新同步历史内容、标签和来源信息
   Future<void> resync(int historyId) async {
     final history = await _historyDao.getById(historyId);
     if (history == null) {
       logger.warn(tag, 'History is null: $historyId');
       return;
     }
-    //todo
-    // var opRecord = newOperationRecord(
-    //   Module.history,
-    //   OpMethod.add,
-    //   historyId.toString(),
-    // );
-    // var result = await MissingDataSyncHandler.process(opRecord);
-    // await DataSender.sendData2All(MsgType.sync, result.result);
-    //
-    // final tags = await attachedDatabase.historyTagDao.getAllByHisId(historyId);
-    // for (var tag in tags) {
-    //   opRecord = newOperationRecord(
-    //     Module.tag,
-    //     OpMethod.add,
-    //     tag.id.toString(),
-    //   );
-    //   result = await MissingDataSyncHandler.process(opRecord);
-    //   await DataSender.sendData2All(MsgType.sync, result.result);
-    // }
-    //
-    // if (history.source != null) {
-    //   final devId = history.devId;
-    //   final sourceService = Get.find<ClipboardSourceService>();
-    //   final appInfo = sourceService.appInfos.where((item) => item.devId == devId && history.source == item.appId).firstOrNull;
-    //   if (appInfo == null) {
-    //     logger.warn(tag, 'AppInfo is null source = ${history.source}');
-    //     return;
-    //   }
-    //   opRecord = newOperationRecord(
-    //     Module.appInfo,
-    //     OpMethod.add,
-    //     appInfo.id,
-    //   );
-    //   result = await MissingDataSyncHandler.process(opRecord);
-    //   await DataSender.sendData2All(MsgType.sync, result.result);
-    // }
+    // 历史内容
+    await _pushResyncEntity(.history, historyId);
+
+    // 标签
+    final tags = await _historyTagDao.getAllByHisId(historyId);
+    for (final tag in tags) {
+      await _pushResyncEntity(.tag, tag.id);
+    }
+
+    // 来源信息
+    final source = history.source;
+    if (source == null || source.isEmpty) {
+      return;
+    }
+    final appInfo = await _appInfoDao.getByUniqueIndex(history.devId, source);
+    if (appInfo == null) {
+      logger.warn(tag, 'AppInfo is null, historyId = $historyId, source = $source');
+      return;
+    }
+    await _pushResyncEntity(.appInfo, appInfo.id);
+  }
+
+  /// 创建并持久化操作记录后推送，确保 ack 和后续补数可追踪。
+  Future<void> _pushResyncEntity(Module module, Object data) async {
+    final record = newOperationRecord(
+      _idGenerator,
+      _baseDevInfo,
+      module,
+      OpMethod.add,
+      data,
+    );
+    await _opRecordDao.add(record);
+    await _syncPushNotifier.pushRecord(record);
   }
 }

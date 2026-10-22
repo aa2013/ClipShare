@@ -1,7 +1,13 @@
-import 'package:clipshare/core/services/device/local_device_info.dart';
+import 'dart:convert';
+
 import 'package:clipshare/core/services/transport/message_sync/message_sync_event.dart';
 import 'package:clipshare/core/services/transport/message_sync/message_sync_provider.dart';
+import 'package:clipshare/core/services/transport/message_sync/parser/app_info_sync_payload_parser.dart';
+import 'package:clipshare/core/services/transport/message_sync/parser/device_sync_payload_parser.dart';
 import 'package:clipshare/core/services/transport/message_sync/parser/history_sync_payload_parser.dart';
+import 'package:clipshare/core/services/transport/message_sync/parser/rule_sync_payload_parser.dart';
+import 'package:clipshare/core/services/transport/message_sync/parser/script_module_sync_payload_parser.dart';
+import 'package:clipshare/core/services/transport/message_sync/parser/tag_sync_payload_parser.dart';
 import 'package:clipshare/core/services/transport/models/message_data.dart';
 import 'package:clipshare/shared/enums/sync_source.dart';
 import 'package:clipshare/shared/models/module.dart';
@@ -12,6 +18,35 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'parser/sync_payload_context.dart';
 
 part 'sync_receive_dispatcher_provider.g.dart';
+
+/// 把同步实体载荷统一转换为 Map。
+Map<String, dynamic> normalizeSyncEntityData(
+  Object? rawData, {
+  required Module module,
+  required int opId,
+}) {
+  if (rawData is Map) {
+    return rawData.cast<String, dynamic>();
+  }
+  if (rawData is String && rawData.isNotEmpty) {
+    try {
+      final decoded = jsonDecode(rawData);
+      if (decoded is Map) {
+        return decoded.cast<String, dynamic>();
+      }
+      logger.warn(
+        SyncReceiveDispatcher.tag,
+        'sync data is not a json object. module=${module.name}, opId=$opId',
+      );
+    } catch (err) {
+      logger.warn(
+        SyncReceiveDispatcher.tag,
+        'sync data json decode failed. module=${module.name}, opId=$opId, err=$err',
+      );
+    }
+  }
+  return const <String, dynamic>{};
+}
 
 /// 同步消息接收分发层
 ///
@@ -27,9 +62,14 @@ class SyncReceiveDispatcher extends _$SyncReceiveDispatcher {
 
   @override
   void build() {
+    _parsers[.device] = parseDeviceSyncPayload;
     _parsers[.history] = parseHistorySyncPayload;
     _parsers[.historyTop] = parseHistoryTopSyncPayload;
-    //todo 后续新模块需要在此加入
+    _parsers[.historySource] = parseHistorySourceSyncPayload;
+    _parsers[.tag] = parseTagSyncPayload;
+    _parsers[.appInfo] = parseAppInfoSyncPayload;
+    _parsers[.rule] = parseRuleSyncPayload;
+    _parsers[.scriptModule] = parseScriptModuleSyncPayload;
   }
 
   /// 解析 sync / missingData 载荷并投递事件。
@@ -61,7 +101,7 @@ class SyncReceiveDispatcher extends _$SyncReceiveDispatcher {
         opId: opId,
         time: payload['time']?.toString() ?? '',
         source: source,
-        data: rawData is Map ? rawData.cast<String, dynamic>() : const <String, dynamic>{},
+        data: normalizeSyncEntityData(rawData, module: module, opId: opId),
       ),
     );
     if (event == null) {
@@ -81,7 +121,7 @@ class SyncReceiveDispatcher extends _$SyncReceiveDispatcher {
       logger.warn(tag, 'skip unrecognizable ack message. device=$device, module=${msg.data['module']}, opId=$opId');
       return;
     }
-    final event = _ackEventOf(module, sender, opId);
+    final event = ackEventOfModule(module, sender: sender, opId: opId);
     if (event == null) {
       logger.debug(tag, 'skip ack message for unsupported module. module=${module.name}');
       return;
@@ -99,20 +139,5 @@ class SyncReceiveDispatcher extends _$SyncReceiveDispatcher {
       return int.tryParse(id);
     }
     return null;
-  }
-
-  /// 按模块构造对应的确认事件。
-  MessageAckSyncEvent? _ackEventOf(Module module, BaseDeviceInfo sender, int opId) {
-    return switch (module) {
-      .device => DeviceAckSyncEvent(sender: sender, opId: opId),
-      .history => HistoryAckSyncEvent(sender: sender, opId: opId),
-      .historyTop => HistoryTopAckSyncEvent(sender: sender, opId: opId),
-      .historySource => HistorySourceAckSyncEvent(sender: sender, opId: opId),
-      .tag => HistoryTagAckSyncEvent(sender: sender, opId: opId),
-      .appInfo => AppInfoAckSyncEvent(sender: sender, opId: opId),
-      .rule => RuleAckSyncEvent(sender: sender, opId: opId),
-      .scriptModule => ScriptModuleAckSyncEvent(sender: sender, opId: opId),
-      .unknown || .rules => null,
-    };
   }
 }
