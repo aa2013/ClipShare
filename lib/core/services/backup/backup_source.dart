@@ -1,0 +1,22 @@
+import 'package:clipshare/l10n/translation_key.dart';
+
+/// 备份文件存储位置
+enum BackupSource {
+  unknown,
+  local,
+  s3,
+  webdav;
+
+  String get tr {
+    switch (this) {
+      case BackupSource.local:
+        return TranslationKey.local.tr;
+      case BackupSource.s3:
+        return TranslationKey.s3.tr;
+      case BackupSource.webdav:
+        return 'WebDAV';
+      case BackupSource.unknown:
+        return TranslationKey.unknown.tr;
+    }
+  }
+}

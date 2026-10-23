@@ -136,7 +136,8 @@ class SettingsClipboardPage extends SettingsSectionView {
                     neutral: DialogAction(
                       text: TranslationKey.notNow.tr,
                       onPressed: () {
-                        ref.read(appStateProvider.notifier).updateIgnoreAccessibility(true);
+                        final appState = ref.read(appStateProvider.notifier);
+                        appState.updateIgnoreAccessibility(true);
                       },
                     ),
                   ),

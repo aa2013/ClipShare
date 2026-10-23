@@ -3,12 +3,14 @@ import 'dart:ui';
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/platform/android/screenshot_detect_provider.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
 import 'package:clipshare/core/platform/channels/clip/clip_channel_provider.dart';
 import 'package:clipshare/core/platform/channels/multi_window/multi_window_channel_provider.dart';
+import 'package:clipshare/core/platform/desktop/hotkey/hot_key_provider.dart';
 import 'package:clipshare/core/platform/desktop/tray/tray_provider.dart';
 import 'package:clipshare/core/platform/desktop/window/window_control_provider.dart';
-import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/runtime/network/network_change_coordinator_provider.dart';
 import 'package:clipshare/core/services/clipboard/app_info_sync_provider.dart';
@@ -17,6 +19,7 @@ import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/device_sync_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
+import 'package:clipshare/core/services/history/data_cleanup_provider.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
 import 'package:clipshare/core/services/history/history_sync_provider.dart';
 import 'package:clipshare/core/services/notify/notify_provider.dart';
@@ -37,8 +40,8 @@ import 'package:clipshare/core/services/transport/socket/session/session_provide
 import 'package:clipshare/core/services/transport/storage/storage_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/settings/app_update/app_update_settings_provider.dart';
-import 'package:clipshare/core/settings/clean/clean_data_config_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
+import 'package:clipshare/core/settings/data_cleanup/data_cleanup_config_provider.dart';
 import 'package:clipshare/core/settings/device/device_settings_provider.dart';
 import 'package:clipshare/core/settings/discovery/discovery_settings_provider.dart';
 import 'package:clipshare/core/settings/float/float_window_settings_provider.dart';
@@ -77,7 +80,7 @@ Future<void> appStartup(Ref ref) async {
     localDeviceInfoProvider.future,
     quickSettingsProvider.future,
     preferenceSettingsProvider.future,
-    cleanDataConfigProvider.future,
+    dataCleanupConfigProvider.future,
     syncSettingsProvider.future,
     appUpdateSettingsProvider.future,
     securitySettingsProvider.future,
@@ -113,6 +116,9 @@ Future<void> appStartup(Ref ref) async {
   ref.read(ruleSyncProvider);
   ref.read(scriptModuleSyncProvider);
 
+  // 数据清理服务
+  ref.read(dataCleanupProvider);
+
   //传输服务相关
   ref.read(directProvider);
   ref.read(sessionProvider);
@@ -124,7 +130,9 @@ Future<void> appStartup(Ref ref) async {
 
   if (isDesktop) {
     // 窗口服务管理，需先于托盘初始化
-    await ref.read(windowServiceProvider.future);
+    await ref.read(windowProvider.future);
+    // 热键服务，注册热键需先于托盘
+    await ref.read(hotKeyProvider.future);
     // 托盘服务
     await ref.read(trayProvider.future);
     // 窗口管理
@@ -150,7 +158,8 @@ Future<void> _initWindowsManager(Ref ref) async {
     titleBarStyle: TitleBarStyle.hidden,
   );
   final startMini = await ref.read(startMiniProvider.future);
-  await ref.read(windowControlProvider.notifier).syncWindowState();
+  final windowControl = ref.read(windowControlProvider.notifier);
+  await windowControl.syncWindowState();
   return windowManager.waitUntilReadyToShow(windowOptions, () async {
     if (!startMini) {
       //非最小化启动
@@ -186,4 +195,7 @@ Future<void> _initAndroid(Ref ref) async {
   if (floatSettings.enhanceBackgroundKeepAlive) {
     await channel.showKeepAliveFloatWindow();
   }
+  //截图自动复制监听，是否实际开启由同步设置 autoCopyImageAfterScreenShot 控制
+  final screenshotDetector = ref.read(screenshotDetectProvider.notifier);
+  screenshotDetector.startListenScreenshot();
 }

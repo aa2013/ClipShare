@@ -21,6 +21,10 @@ class DialogManager {
   static final _displayingDialogs = <String>{};
   static final _dialogDisplayLock = Lock(); // 创建互斥锁
 
+  /// 提示弹窗抑制判定：返回 true 时提示弹窗直接取消。
+  /// 由应用锁功能注册，验证期间避免弹窗遮挡验证页。
+  static bool Function()? suppressTips;
+
   /// 公共的弹窗进出场过渡：毛玻璃模糊 + 淡入淡出，各弹窗统一复用。
   static Widget _dialogTransition(
     BuildContext context,
@@ -159,6 +163,11 @@ class DialogManager {
       }
     });
     if (cancelDisplay || !context.mounted) {
+      return null;
+    }
+    // 验证期间不弹提示，避免提示弹窗遮挡验证页
+    if (suppressTips?.call() == true) {
+      logger.warn(tag, 'cancel show tips dialog because of authenticating');
       return null;
     }
     title = title ?? TranslationKey.tips.tr;

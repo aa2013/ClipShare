@@ -22,7 +22,7 @@ class SyncSettings {
     this.reCopyOnScreenUnlocked = false,
     this.saveToPictures = false,
     this.autoCopyImageAfterSync = false,
-    this.autoCopyImageAfterScreenShot = false,
+    this.autoCopyImageAfterScreenShot = true,
     this.syncOutdateLimitTime = 0,
   });
 }

@@ -142,9 +142,12 @@ class StorageNotifier extends _$StorageNotifier
 
   TransportHeartbeatNotifier get _heartbeatNotifier => ref.read(transportHeartbeatProvider.notifier);
 
+  ReconnectNotifier get _reconnect => ref.read(reconnectProvider.notifier);
+
   DiscoverySettings get _discoverySettings => ref.read(discoverySettingsProvider).requireValue;
 
   ForwardSettings get _forwardSettings => ref.read(forwardSettingsProvider).requireValue;
+
   SyncSettings get _syncSettings => ref.read(syncSettingsProvider).requireValue;
 
   LocalDeviceInfo get _localDeviceInfo => ref.read(localDeviceInfoProvider).requireValue;
@@ -1574,7 +1577,7 @@ class StorageNotifier extends _$StorageNotifier
         minVersion,
       );
       // 存储接管后取消同设备 socket 重连循环，避免继续空转重试。
-      ref.read(reconnectProvider.notifier).cancelReconnect(devId);
+      _reconnect.cancelReconnect(devId);
     } catch (err, stack) {
       logger.error(tag, err, stack);
     }

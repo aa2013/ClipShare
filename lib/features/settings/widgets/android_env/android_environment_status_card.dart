@@ -39,7 +39,10 @@ class AndroidEnvironmentStatusCard extends ConsumerWidget {
       tipContent: _buildTipContent(context, status),
       tipDesc: _buildTipDesc(context, status, androidOsVersion),
       action: _buildAction(context),
-      onTap: () => ref.read(androidEnvironmentStatusProvider.notifier).recover(),
+      onTap: () {
+        final androidEnvStatus = ref.read(androidEnvironmentStatusProvider.notifier);
+        androidEnvStatus.recover();
+      },
     );
   }
 

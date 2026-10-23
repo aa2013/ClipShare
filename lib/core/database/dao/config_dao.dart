@@ -13,20 +13,20 @@ class ConfigDao extends DatabaseAccessor<AppDatabase> with _$ConfigDaoMixin {
 
   static const tag = 'ConfigDao';
 
-  /// 获取指定用户的全部配置项。
-  Future<List<Config>> getAllConfigs(int uid) {
-    return (select(configs)..where((tbl) => tbl.uid.equals(uid))).get();
+  /// 获取全部配置项。
+  Future<List<Config>> getAllConfigs() {
+    return select(configs).get();
   }
 
-  /// 获取指定配置值，旧配置表以 key 为主键并保留 uid 过滤。
-  Future<String?> getConfig(String key, int uid) async {
-    final row = await (select(configs)..where((tbl) => tbl.key.equals(key) & tbl.uid.equals(uid))).getSingleOrNull();
+  /// 获取指定配置值，旧配置表以 key 为主键。
+  Future<String?> getConfig(String key) async {
+    final row = await (select(configs)..where((tbl) => tbl.key.equals(key))).getSingleOrNull();
     return row?.value;
   }
 
   /// 按配置枚举读取并转换类型，保持旧服务层默认值语义。
   Future<T> getConfigByKey<T>(ConfigKey key, T defValue, {T Function(String value)? convert}) async {
-    final value = await getConfig(key.name, 0);
+    final value = await getConfig(key.name);
     if (value == null) {
       return defValue;
     }
@@ -77,9 +77,9 @@ class ConfigDao extends DatabaseAccessor<AppDatabase> with _$ConfigDaoMixin {
     return (delete(configs)..where((tbl) => tbl.key.equals(config.key))).go();
   }
 
-  /// 根据 key 和 uid 删除配置，避免误删未来可能恢复的多用户配置。
-  Future<void> removeByKey(String key, int uid) async {
-    await (delete(configs)..where((tbl) => tbl.key.equals(key) & tbl.uid.equals(uid))).go();
+  /// 根据 key 删除配置。
+  Future<void> removeByKey(String key) async {
+    await (delete(configs)..where((tbl) => tbl.key.equals(key))).go();
   }
 
   /// 添加或更新配置信息，保留原 add/update 二段式语义。

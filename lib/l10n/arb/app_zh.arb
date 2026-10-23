@@ -1802,9 +1802,9 @@
   "@forwardServerNotConnected": {
     "description": "translated key: forwardServerNotConnected"
   },
-  "cleanData": "数据清理",
-  "@cleanData": {
-    "description": "translated key: cleanData"
+  "dataCleanup": "数据清理",
+  "@dataCleanup": {
+    "description": "translated key: dataCleanup"
   },
   "syncSettingsAutoCopyScreenShotTitle": "自动复制截图",
   "@syncSettingsAutoCopyScreenShotTitle": {
@@ -3971,9 +3971,9 @@
   "@settingsSectionSyncSubtitle": {
     "description": "translated key: settingsSectionSyncSubtitle"
   },
-  "settingsSectionCleanDataSubtitle": "清理历史数据与记录",
-  "@settingsSectionCleanDataSubtitle": {
-    "description": "translated key: settingsSectionCleanDataSubtitle"
+  "settingsSectionDataCleanupSubtitle": "清理历史数据与记录",
+  "@settingsSectionDataCleanupSubtitle": {
+    "description": "translated key: settingsSectionDataCleanupSubtitle"
   },
   "settingsSectionRulesSubtitle": "规则与脚本",
   "@settingsSectionRulesSubtitle": {

@@ -12,8 +12,14 @@ enum AppRoutes {
   appSelection('/appSelection', 'appSelection'),
   userGuide('/userGuide', 'userGuide'),
   settingsSection('/settingsSection', 'settingsSection'),
+  authentication('/authentication', 'authentication'),
   workingModeSelection('/workingModeSelection', 'workingModeSelection'),
-  qrScanner('/qrScanner', 'qrScanner');
+  qrScanner('/qrScanner', 'qrScanner'),
+  logs('/logs', 'logs'),
+  logDetail('/logDetail', 'logDetail'),
+  dbEditor('/dbEditor', 'dbEditor'),
+  licenses('/licenses', 'licenses'),
+  updateLog('/updateLog', 'updateLog');
 
   const AppRoutes(this.path, this.name);
 

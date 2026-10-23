@@ -389,11 +389,12 @@ class _ClipListViewState extends ConsumerState<ClipListView> {
     );
     await db.operationRecordDao.add(opRecord);
     await _syncPushNotifier.pushRecord(opRecord);
-    ref.read(historiesProvider.notifier).addDelta(
-        HistoryDeltaEvent(
-          history: history.copyWith(top: isTop),
-          operation: OpMethod.update,
-        ),
+    final histories = ref.read(historiesProvider.notifier);
+    histories.addDelta(
+      HistoryDeltaEvent(
+        history: history.copyWith(top: isTop),
+        operation: OpMethod.update,
+      ),
     );
   }
 
@@ -467,18 +468,19 @@ class _ClipListViewState extends ConsumerState<ClipListView> {
       await db.historyDao.deleteByCascade(history.id);
       // 删除后清理无历史引用的来源数据
       try {
-        await ref.read(clipboardSourceProvider.notifier).removeNotUsed();
+        final clipboardSource = ref.read(clipboardSourceProvider.notifier);
+        await clipboardSource.removeNotUsed();
       } catch (err, stack) {
         logger.error(tag, err, stack);
       }
       // 通知事件流，让列表移除该记录
-      ref.read(historiesProvider.notifier)
-          .addDelta(
-            HistoryDeltaEvent(
-              history: history,
-              operation: OpMethod.delete,
-            ),
-          );
+      final histories = ref.read(historiesProvider.notifier);
+      histories.addDelta(
+        HistoryDeltaEvent(
+          history: history,
+          operation: OpMethod.delete,
+        ),
+      );
       if (!onlyDeleteLocal) {
         final opRecord = newOperationRecord(
           _idGenerator,

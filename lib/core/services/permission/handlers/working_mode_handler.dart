@@ -14,9 +14,6 @@ import 'abstract_permission_handler.dart';
 /// 既是合法选择（忽略模式）也是未配置时的默认值，只有记录是否存在
 /// 能区分「尚未选择」与「主动选择忽略」。
 class WorkingModeHandler extends AbstractPermissionHandler {
-  /// 配置表沿用单用户约定，uid 固定为 0。
-  static const int configUid = 0;
-
   final ConfigDao _configDao;
 
   WorkingModeHandler(this._configDao);
@@ -29,7 +26,6 @@ class WorkingModeHandler extends AbstractPermissionHandler {
   Future<bool> hasPermission() async {
     final raw = await _configDao.getConfig(
       ConfigKey.workingMode.name,
-      configUid,
     );
     if (raw == null) {
       return false;

@@ -190,10 +190,11 @@ class _ScriptModuleDetailState extends ConsumerState<_ScriptModuleDetailView> {
 
   Future<void> saveData(ScriptModule newLib) async {
     final result = await validate(newLib);
+    if (!mounted) {
+      return;
+    }
     if (result != null) {
-      if (context.mounted) {
-        snackbar.warn(context, result);
-      }
+      snackbar.warn(context, result);
       return;
     }
     final success = await rulesExecutor.saveScriptModule(widget.module, newLib);

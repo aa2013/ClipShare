@@ -59,9 +59,9 @@ enum SettingsSection {
     icon: Icons.sync_rounded,
   ),
   // 清理数据独立成设置分区，顺序位于同步与备份恢复之间。
-  cleanData(
-    titleKey: TranslationKey.cleanData,
-    subtitleKey: TranslationKey.settingsSectionCleanDataSubtitle,
+  dataCleanup(
+    titleKey: TranslationKey.dataCleanup,
+    subtitleKey: TranslationKey.settingsSectionDataCleanupSubtitle,
     icon: Icons.cleaning_services_outlined,
   ),
   rules(

@@ -1907,9 +1907,9 @@
   "@forwardServerNotConnected": {
     "description": "translated key: forwardServerNotConnected"
   },
-  "cleanData": "Clean Data",
-  "@cleanData": {
-    "description": "translated key: cleanData"
+  "dataCleanup": "Clean Data",
+  "@dataCleanup": {
+    "description": "translated key: dataCleanup"
   },
   "syncSettingsAutoCopyScreenShotTitle": "Auto-copy Screenshots",
   "@syncSettingsAutoCopyScreenShotTitle": {
@@ -3971,9 +3971,9 @@
   "@settingsSectionSyncSubtitle": {
     "description": "translated key: settingsSectionSyncSubtitle"
   },
-  "settingsSectionCleanDataSubtitle": "Clean history and records",
-  "@settingsSectionCleanDataSubtitle": {
-    "description": "translated key: settingsSectionCleanDataSubtitle"
+  "settingsSectionDataCleanupSubtitle": "Clean history and records",
+  "@settingsSectionDataCleanupSubtitle": {
+    "description": "translated key: settingsSectionDataCleanupSubtitle"
   },
   "settingsSectionRulesSubtitle": "Rules & scripts",
   "@settingsSectionRulesSubtitle": {

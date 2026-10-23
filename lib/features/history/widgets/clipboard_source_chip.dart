@@ -151,7 +151,8 @@ class ClipboardSourceChip extends ConsumerWidget {
             ),
           );
       // 移除未使用的剪贴板来源信息
-      await ref.read(clipboardSourceProvider.notifier).removeNotUsed();
+      final clipboardSource = ref.read(clipboardSourceProvider.notifier);
+      await clipboardSource.removeNotUsed();
       if (context.mounted) {
         snackbar.success(context, TranslationKey.clearSuccess.tr);
       }

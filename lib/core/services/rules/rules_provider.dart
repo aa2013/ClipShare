@@ -84,6 +84,8 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
 
   LocalDeviceInfo get _localDevInfo => ref.read(localDeviceInfoProvider).requireValue;
 
+  AndroidChannelNotifier get _androidChannel => ref.read(androidChannelProvider.notifier);
+
   //规则是否已迁移到1.5.0
   final LuaRuntime _lua = LuaRuntime();
   final _loadedLuaFun = <String, int>{};
@@ -113,11 +115,11 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
       return false;
     }
     if (!enableSmsSync) {
-      await ref.read(androidChannelProvider.notifier).stopSmsListen();
+      await _androidChannel.stopSmsListen();
       return false;
     }
     if (await PermissionHelper.testAndroidReadSms()) {
-      await ref.read(androidChannelProvider.notifier).startSmsListen();
+      await _androidChannel.startSmsListen();
       return true;
     }
     if (requestPermission || showDialog) {
@@ -143,11 +145,11 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
     }
     _requestingSmsPermission = true;
     try {
-      final context = navigatorKey.currentContext;
-      if (showDialog && context == null) {
-        return false;
-      }
       if (showDialog) {
+        final context = navigatorKey.currentContext;
+        if (context == null || !context.mounted) {
+          return false;
+        }
         final completer = Completer<bool>();
         void completeRequest(bool value) {
           if (!completer.isCompleted) {
@@ -156,7 +158,7 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
         }
 
         final dialog = await dialogManager.tips(
-          context!,
+          context,
           text: promptText ?? TranslationKey.permissionSettingsSmsDesc.tr,
           actions: DialogActions(
             confirm: DialogAction(

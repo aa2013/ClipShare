@@ -112,18 +112,17 @@ class HistoryTagDao extends DatabaseAccessor<AppDatabase> with _$HistoryTagDaoMi
   }
 
   /// 查询各个标签的引用数量，月份聚合依赖 SQLite strftime。
-  Future<List<HistoryTagCnt>> getHistoryTagCnt(int uid, String startMonth, String endMonth) async {
+  Future<List<HistoryTagCnt>> getHistoryTagCnt(String startMonth, String endMonth) async {
     final result = await customSelect(
       '''
       select tagName, count(1) as cnt
       from HistoryTag ht
       join History h
-      on h.id = ht.hisId and h.uid = ?1
-      and strftime('%Y-%m', time) between ?2 and ?3
+      on h.id = ht.hisId
+      and strftime('%Y-%m', time) between ?1 and ?2
       group by tagName
       ''',
       variables: [
-        Variable.withInt(uid),
         Variable.withString(startMonth),
         Variable.withString(endMonth),
       ],

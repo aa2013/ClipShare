@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
-import 'package:clipshare/core/platform/desktop/window/window_service.dart';
-import 'package:clipshare/core/platform/desktop/window/window_service_provider.dart';
+import 'package:clipshare/core/platform/desktop/hotkey/hot_key_provider.dart';
+import 'package:clipshare/core/platform/desktop/window/window_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/events/device_lifecycle_event.dart';
 import 'package:clipshare/core/settings/hotkey/hotkey_settings.dart';
@@ -11,7 +11,9 @@ import 'package:clipshare/core/settings/hotkey/hotkey_settings_provider.dart';
 import 'package:clipshare/l10n/l10n_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/constants/assets.dart';
+import 'package:clipshare/shared/extensions/keyboard_key_extension.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
+import 'package:clipshare/shared/utils/hotkey_util.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -31,11 +33,13 @@ class TrayNotifier extends _$TrayNotifier with TrayListener {
 
   HotkeySettings get _hotKeySettings => ref.read(hotkeySettingsProvider).requireValue;
 
-  WindowService get _windowService => ref.read(windowServiceProvider).requireValue;
+  WindowNotifier get _windowService => ref.read(windowProvider.notifier);
 
   DeviceState get _deviceState => ref.read(deviceProvider).requireValue;
 
   DeviceNotifier get _deviceNotifier => ref.read(deviceProvider.notifier);
+
+  HotKeyNotifier get _hotKeyService => ref.read(hotKeyProvider.notifier);
 
   bool _initialized = false;
   bool _trayClick = false;
@@ -122,8 +126,9 @@ class TrayNotifier extends _$TrayNotifier with TrayListener {
     }
   }
 
-  /// 依据当前热键配置重建托盘右键菜单。
-  Future<void> updateTrayMenus() async {
+  /// 重建托盘右键菜单
+  /// [registerKey] 为 true 时同时注册显示主窗口与退出程序热键。
+  Future<void> updateTrayMenus([bool registerKey = true]) async {
     final showHotKeys = _hotKeySettings.showMainWindows;
     final exitHotKeys = _hotKeySettings.exitAppHotKeys;
     var showWindowLabel = _menuLabel(TranslationKey.showMainWindow.tr, _hotKeyDesc(showHotKeys));
@@ -140,33 +145,31 @@ class TrayNotifier extends _$TrayNotifier with TrayListener {
       ),
     ];
     await trayManager.setContextMenu(Menu(items: items));
-    //todo
-    // if (registerKey) {
-    //   try {
-    //     if (showMainWindowKeys.isNotEmpty) {
-    //       await AppHotKeyHandler.registerShowMainWindow(AppHotKeyHandler.toSystemHotKey(showMainWindowKeys));
-    //     }
-    //   } catch (err, stack) {
-    //     logger.error(tag, err, stack);
-    //   }
-    //   try {
-    //     if (exitAppKeys.isNotEmpty) {
-    //       await AppHotKeyHandler.registerExitApp(AppHotKeyHandler.toSystemHotKey(exitAppKeys));
-    //     }
-    //   } catch (err, stack) {
-    //     logger.error(tag, err, stack);
-    //   }
-    // }
+    if (registerKey) {
+      try {
+        if (showHotKeys.isNotEmpty) {
+          await _hotKeyService.registerShowMainWindow(toSystemHotKey(showHotKeys));
+        }
+      } catch (err, stack) {
+        logger.error(tag, err, stack);
+      }
+      try {
+        if (exitHotKeys.isNotEmpty) {
+          await _hotKeyService.registerExitApp(toSystemHotKey(exitHotKeys));
+        }
+      } catch (err, stack) {
+        logger.error(tag, err, stack);
+      }
+    }
   }
 
+  /// 热键码串转换为展示文本，转换失败时返回空串。
   String _hotKeyDesc(String keyCodes) {
     if (keyCodes.isEmpty) {
       return '';
     }
     try {
-      //todo
-      // return AppHotKeyHandler.toSystemHotKey(keyCodes).desc;
-      return '';
+      return toSystemHotKey(keyCodes).desc;
     } catch (err, stack) {
       logger.error(tag, err, stack);
       return '';

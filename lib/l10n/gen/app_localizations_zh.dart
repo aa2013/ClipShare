@@ -1413,7 +1413,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forwardServerNotConnected => '未连接中转服务器';
 
   @override
-  String get cleanData => '数据清理';
+  String get dataCleanup => '数据清理';
 
   @override
   String get syncSettingsAutoCopyScreenShotTitle => '自动复制截图';
@@ -2973,7 +2973,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsSectionSyncSubtitle => '同步与保存';
 
   @override
-  String get settingsSectionCleanDataSubtitle => '清理历史数据与记录';
+  String get settingsSectionDataCleanupSubtitle => '清理历史数据与记录';
 
   @override
   String get settingsSectionRulesSubtitle => '规则与脚本';

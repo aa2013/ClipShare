@@ -29,8 +29,8 @@ Future<AbstractPermissionHandler?> guideStepHandler(Ref ref, GuideStep id) async
     ),
     GuideStep.batteryOptimization => IgnoreBatteryPermissionHandler(),
     GuideStep.storagePermission => AndroidStoragePermissionHandler(
-      (await ref.watch(appPathsProvider.future)).rootStorePath,
-      (await ref.watch(localDeviceInfoProvider.future)).androidOsVersion,
+      (await ref.read(appPathsProvider.future)).rootStorePath,
+      (await ref.read(localDeviceInfoProvider.future)).androidOsVersion,
     ),
     GuideStep.workingMode => WorkingModeHandler(
       (await ref.watch(appDbProvider.future)).configDao,

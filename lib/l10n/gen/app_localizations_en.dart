@@ -1469,7 +1469,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get forwardServerNotConnected => 'Not connected to the forward server';
 
   @override
-  String get cleanData => 'Clean Data';
+  String get dataCleanup => 'Clean Data';
 
   @override
   String get syncSettingsAutoCopyScreenShotTitle => 'Auto-copy Screenshots';
@@ -3094,7 +3094,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionSyncSubtitle => 'History saving';
 
   @override
-  String get settingsSectionCleanDataSubtitle => 'Clean history and records';
+  String get settingsSectionDataCleanupSubtitle => 'Clean history and records';
 
   @override
   String get settingsSectionRulesSubtitle => 'Rules & scripts';

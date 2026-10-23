@@ -1,8 +1,14 @@
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/features/app_selection/app_selection_entry.dart';
+import 'package:clipshare/features/auth/models/authentication_route_args.dart';
+import 'package:clipshare/features/auth/pages/authentication_page.dart';
+import 'package:clipshare/features/db_editor/pages/db_editor_page.dart';
 import 'package:clipshare/features/guide/pages/user_guide_page.dart';
 import 'package:clipshare/features/history/pages/preview_page.dart';
 import 'package:clipshare/features/home/pages/home_page.dart';
+import 'package:clipshare/features/licenses/pages/licenses_page.dart';
+import 'package:clipshare/features/logs/pages/log_detail_page.dart';
+import 'package:clipshare/features/logs/pages/log_page.dart';
 import 'package:clipshare/features/qr_scanner/pages/qr_code_scanner_page.dart';
 import 'package:clipshare/features/rules/pages/rule_detail.dart';
 import 'package:clipshare/features/rules/pages/rules_page.dart';
@@ -11,6 +17,7 @@ import 'package:clipshare/features/segment_words/pages/segment_words_page.dart';
 import 'package:clipshare/features/settings/pages/settings_section_content.dart';
 import 'package:clipshare/features/splash/pages/splash_page.dart';
 import 'package:clipshare/features/tags/pages/tag_edit_page.dart';
+import 'package:clipshare/features/update_log/pages/update_log_page.dart';
 import 'package:clipshare/features/working_mode_selection/pages/working_mode_selection_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -104,6 +111,14 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: AppRoutes.authentication.path,
+      name: AppRoutes.authentication.name,
+      builder: (context, state) {
+        final args = state.extra as AuthenticationRouteArgs;
+        return AuthenticationPage(args: args);
+      },
+    ),
+    GoRoute(
       path: AppRoutes.workingModeSelection.path,
       name: AppRoutes.workingModeSelection.name,
       builder: (context, state) => const WorkingModeSelectionPage(),
@@ -112,6 +127,34 @@ final appRouter = GoRouter(
       path: AppRoutes.qrScanner.path,
       name: AppRoutes.qrScanner.name,
       builder: (context, state) => const QRCodeScannerPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.logs.path,
+      name: AppRoutes.logs.name,
+      builder: (context, state) => const LogPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.logDetail.path,
+      name: AppRoutes.logDetail.name,
+      builder: (context, state) {
+        final args = state.extra as LogDetailRouteArgs;
+        return LogDetailPage(file: args.file);
+      },
+    ),
+    GoRoute(
+      path: AppRoutes.dbEditor.path,
+      name: AppRoutes.dbEditor.name,
+      builder: (context, state) => const DbEditorPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.licenses.path,
+      name: AppRoutes.licenses.name,
+      builder: (context, state) => const LicensesPage(),
+    ),
+    GoRoute(
+      path: AppRoutes.updateLog.path,
+      name: AppRoutes.updateLog.name,
+      builder: (context, state) => const UpdateLogPage(),
     ),
   ],
 );

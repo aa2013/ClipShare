@@ -53,6 +53,7 @@ class WorkingModeGuideBody extends ConsumerWidget {
       (selected ?? EnvironmentType.none).name,
     );
     ref.invalidate(clipboardSettingsProvider);
-    await ref.read(guideControllerProvider.notifier).refreshCurrent();
+    final guideController = ref.read(guideControllerProvider.notifier);
+    await guideController.refreshCurrent();
   }
 }

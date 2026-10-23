@@ -2,7 +2,6 @@ import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_tables.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
-import 'package:clipshare/shared/utils/log.dart';
 import 'package:drift/drift.dart';
 
 part 'operation_record_dao.g.dart';
@@ -21,7 +20,7 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
     );
   }
 
-  /// 获取某用户某设备的未同步记录，保留 SQLite 时间函数以兼容旧同步窗口逻辑。
+  /// 获取某设备的未同步记录，保留 SQLite 时间函数以兼容旧同步窗口逻辑。
   Future<List<OperationRecord>> getSyncRecord(
     String toDevId,
     String fromDevId,
@@ -33,17 +32,16 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
       select * from OperationRecord record
       where not exists (
         select 1 from OperationSync opsync
-        where opsync.uid = ?1 and opsync.devId = ?2 and opsync.opId = record.id
-      ) and devId = ?3
+        where opsync.devId = ?1 and opsync.opId = record.id
+      ) and devId = ?2
       and (
-        ?4 <= 0
+        ?3 <= 0
         or
-        (strftime('%s', 'now') + ?5 - strftime('%s', record.time)) <= ?4
+        (strftime('%s', 'now') + ?4 - strftime('%s', record.time)) <= ?3
       )
       order by case when module='App信息' then 1 else 0 end desc, id desc
       """,
       variables: [
-        Variable.withInt(0),
         Variable.withString(toDevId),
         Variable.withString(fromDevId),
         Variable.withInt(syncOutdateLimitTimeSeconds),
@@ -53,9 +51,9 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
     ).map((row) => operationRecords.map(row.data)).get();
   }
 
-  /// 删除当前用户的所有操作记录。
-  Future<int?> removeAll(int uid) {
-    return (delete(operationRecords)..where((tbl) => tbl.uid.equals(uid))).go();
+  /// 删除所有操作记录。
+  Future<int?> removeAll() {
+    return delete(operationRecords).go();
   }
 
   /// 根据 id 批量删除记录。
@@ -72,10 +70,10 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
   }
 
   /// 查询某模块某方法中关联指定 data id 的最新操作记录。
-  Future<OperationRecord?> getByDataId(int id, String module, String opMethod, int uid) {
+  Future<OperationRecord?> getByDataId(int id, String module, String opMethod) {
     return (select(operationRecords)
           ..where(
-            (tbl) => tbl.uid.equals(uid) & tbl.module.equalsValue(Module.getValue(module)) & tbl.method.equalsValue(OpMethod.getValue(opMethod)) & tbl.data.equals(id.toString()),
+            (tbl) => tbl.module.equalsValue(Module.getValue(module)) & tbl.method.equalsValue(OpMethod.getValue(opMethod)) & tbl.data.equals(id.toString()),
           )
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.id)])
           ..limit(1))
@@ -92,16 +90,15 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
   }
 
   /// 删除指定模块的同步记录。
-  Future<int?> removeByModule(String module, int uid) {
-    return (delete(operationRecords)..where((tbl) => tbl.uid.equals(uid) & tbl.module.equalsValue(Module.getValue(module)))).go();
+  Future<int?> removeByModule(String module) {
+    return (delete(operationRecords)..where((tbl) => tbl.module.equalsValue(Module.getValue(module)))).go();
   }
 
   /// 删除指定规则的操作记录，Android 旧实现不能依赖 json_extract，继续使用 substr 兼容。
-  Future<int?> removeRuleRecord(String rule, int uid) {
+  Future<int?> removeRuleRecord(String rule) {
     return customUpdate(
-      r"delete from OperationRecord where uid = ?1 and module = '规则设置' and substr(data,instr(data,':') + 2,instr(data,',') - 3 - instr(data,':')) = ?2",
+      r"delete from OperationRecord where module = '规则设置' and substr(data,instr(data,':') + 2,instr(data,',') - 3 - instr(data,':')) = ?1",
       variables: [
-        Variable.withInt(uid),
         Variable.withString(rule),
       ],
       updates: {operationRecords},
@@ -109,9 +106,9 @@ class OperationRecordDao extends DatabaseAccessor<AppDatabase> with _$OperationR
   }
 
   /// 删除指定设备的操作记录。
-  Future<int?> removeByDevIds(int uid, List<String> devIds) {
+  Future<int?> removeByDevIds(List<String> devIds) {
     if (devIds.isEmpty) return Future.value(0);
-    return (delete(operationRecords)..where((tbl) => tbl.uid.equals(uid) & tbl.devId.isIn(devIds))).go();
+    return (delete(operationRecords)..where((tbl) => tbl.devId.isIn(devIds))).go();
   }
 
   /// 根据 data（主键）删除操作记录。

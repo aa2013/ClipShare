@@ -140,6 +140,9 @@ class NotifyNotifier extends _$NotifyNotifier {
   /// Windows Toast 使用 AUMID 作为应用身份，开发版独立注册以避免污染正式安装版图标。
   String get _windowsAppUserModelId => kReleaseMode ? windowsAppUserModelId : windowsDevAppUserModelId;
 
+  /// Android 平台通道，用于发送与取消系统通知。
+  AndroidChannelNotifier get _androidChannel => ref.read(androidChannelProvider.notifier);
+
   /// 解析 Windows AUMID 应用身份图标路径；该图标不是单条通知里的 appLogoOverride 图片。
   String? _windowsNotificationIconPath(String assetPath) {
     if (!isWindows) {
@@ -167,8 +170,7 @@ class NotifyNotifier extends _$NotifyNotifier {
       title = appName;
     }
     if (isAndroid) {
-      final androidChannel = ref.read(androidChannelProvider.notifier);
-      notifyId = await androidChannel.sendNotify(title, content);
+      notifyId = await _androidChannel.sendNotify(title, content);
       // Android 通知点击由原生通过 notifyId 回传，这里先保存载荷与 id 的关联以便统一分发。
       if (notifyId != null && payload != null) {
         _payloadById[notifyId] = payload;
@@ -241,8 +243,7 @@ class NotifyNotifier extends _$NotifyNotifier {
       return;
     }
     if (isAndroid) {
-      final androidChannel = ref.read(androidChannelProvider.notifier);
-      androidChannel.cancelNotify(notifyId);
+      _androidChannel.cancelNotify(notifyId);
     } else {
       _notification.cancel(notifyId);
     }
@@ -261,10 +262,9 @@ class NotifyNotifier extends _$NotifyNotifier {
     var last = ids.last;
     _notifyIds[key] = [last];
     ids = ids..removeLast();
-    final androidChannel = ref.read(androidChannelProvider.notifier);
     for (var id in ids) {
       if (isAndroid) {
-        androidChannel.cancelNotify(id);
+        _androidChannel.cancelNotify(id);
       } else {
         _notification.cancel(id);
       }
@@ -277,10 +277,9 @@ class NotifyNotifier extends _$NotifyNotifier {
       return;
     }
     var ids = _notifyIds[key]!;
-    final androidChannel = ref.read(androidChannelProvider.notifier);
     for (var id in ids) {
       if (isAndroid) {
-        androidChannel.cancelNotify(id);
+        _androidChannel.cancelNotify(id);
       } else {
         _notification.cancel(id);
       }

@@ -19,7 +19,6 @@ import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/tag/tag_provider.dart';
 import 'package:clipshare/core/services/transport/message_sender/message_sender_provider.dart';
-import 'package:clipshare/core/services/transport/message_sync/message_sync_provider.dart';
 import 'package:clipshare/core/services/transport/message_sync/sync_push_provider.dart';
 import 'package:clipshare/core/settings/app_paths/app_paths_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings.dart';

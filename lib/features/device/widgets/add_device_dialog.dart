@@ -62,10 +62,11 @@ class _AddDeviceDialogState extends ConsumerState<AddDeviceDialog> {
       }
     }
     //本地连接失败，尝试中转连接
-    final forwardHost = ref.read(forwardServerProvider.notifier).forwardServerHost;
-    final forwardPort = ref.read(forwardServerProvider.notifier).forwardServerPort;
+    final forwardServer = ref.read(forwardServerProvider.notifier);
+    final forwardHost = forwardServer.forwardServerHost;
+    final forwardPort = forwardServer.forwardServerPort;
     if (forwardHost != null && forwardPort != null) {
-      bool success = await ref.read(forwardServerProvider.notifier).connectDevice(result.id);
+      bool success = await forwardServer.connectDevice(result.id);
       if (success) {
         if (mounted) {
           context.pop();
@@ -291,7 +292,8 @@ class _AddDeviceDialogState extends ConsumerState<AddDeviceDialog> {
                         });
                         if (forwardMode) {
                           //尝试中转连接，失败时保持弹窗并提示
-                          final success = await ref.read(forwardServerProvider.notifier).connectDevice(_forwardIdEditor.text);
+                          final forwardServer = ref.read(forwardServerProvider.notifier);
+                          final success = await forwardServer.connectDevice(_forwardIdEditor.text);
                           if (!context.mounted) {
                             return;
                           }

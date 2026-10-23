@@ -24,8 +24,10 @@ void _onMissingData(Ref ref, MessageData msg) {
 /// 请求缺失数据：把本机尚未同步到请求方的操作记录补推过去。
 Future<void> _onRequestMissingData(Ref ref, MessageData msg) async {
   final syncedAppIds = ((msg.data['appIds'] ?? []) as List<dynamic>).cast<String>();
-  final localDevId = ref.read(localDeviceInfoProvider).requireValue.baseDeviceInfo.guid;
-  await ref.read(syncPushProvider.notifier).sendMissingData(
+  final localDeviceInfo = ref.read(localDeviceInfoProvider).requireValue;
+  final localDevId = localDeviceInfo.baseDeviceInfo.guid;
+  final syncPush = ref.read(syncPushProvider.notifier);
+  await syncPush.sendMissingData(
     targetDev: msg.send,
     fromDevId: localDevId,
     syncedAppIds: syncedAppIds,

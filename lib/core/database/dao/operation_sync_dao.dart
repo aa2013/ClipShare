@@ -21,21 +21,21 @@ class OperationSyncDao extends DatabaseAccessor<AppDatabase> with _$OperationSyn
     );
   }
 
-  /// 删除当前用户的所有操作同步记录。
-  Future<int?> removeAll(int uid) {
-    return (delete(operationSyncs)..where((tbl) => tbl.uid.equals(uid))).go();
+  /// 删除所有操作同步记录。
+  Future<int?> removeAll() {
+    return delete(operationSyncs).go();
   }
 
-  /// 按操作记录 id 批量删除当前用户同步记录。
-  Future<int?> deleteByIds(int uid, List<int> ids) {
+  /// 按操作记录 id 批量删除同步记录。
+  Future<int?> deleteByIds(List<int> ids) {
     if (ids.isEmpty) return Future.value(0);
-    return (delete(operationSyncs)..where((tbl) => tbl.uid.equals(uid) & tbl.opId.isIn(ids))).go();
+    return (delete(operationSyncs)..where((tbl) => tbl.opId.isIn(ids))).go();
   }
 
   /// 删除指定设备的同步记录。
-  Future<int?> deleteByDevIds(int uid, List<String> devIds) {
+  Future<int?> deleteByDevIds(List<String> devIds) {
     if (devIds.isEmpty) return Future.value(0);
-    return (delete(operationSyncs)..where((tbl) => tbl.uid.equals(uid) & tbl.devId.isIn(devIds))).go();
+    return (delete(operationSyncs)..where((tbl) => tbl.devId.isIn(devIds))).go();
   }
 
   /// 重置设备所有历史记录为未同步。

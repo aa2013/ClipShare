@@ -221,10 +221,11 @@ class _DevicePageState extends ConsumerState<DevicePage> with TickerProviderStat
                   IconButton(
                     tooltip: TranslationKey.devicePageRediscoverTooltip.tr,
                     onPressed: () {
+                      final discovery = ref.read(discoveryProvider.notifier);
                       if (discovering) {
-                        ref.read(discoveryProvider.notifier).restartDiscoveryDevices();
+                        discovery.restartDiscoveryDevices();
                       } else {
-                        ref.read(discoveryProvider.notifier).startDiscoveryDevices(manual: true);
+                        discovery.startDiscoveryDevices(manual: true);
                       }
                     },
                     icon: ExcludeSemantics(

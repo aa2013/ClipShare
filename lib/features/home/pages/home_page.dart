@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:clipshare/core/services/transport/socket/discovery/discovery_provider.dart';
+import 'package:clipshare/features/auth/providers/app_lock_provider.dart';
 import 'package:clipshare/features/debug/pages/debug_page.dart';
 import 'package:clipshare/features/device/pages/device_page.dart';
 import 'package:clipshare/features/history/pages/history_page.dart';
@@ -46,6 +49,9 @@ class _HomeState extends ConsumerState<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final discoveryNotifier = ref.read(discoveryProvider.notifier);
       discoveryNotifier.restartDiscoveryDevices();
+      // 应用锁：实例化以注册生命周期/亮屏重验监听并同步防截屏状态，随后按配置触发启动锁
+      final appLock = ref.read(appLockProvider.notifier);
+      unawaited(appLock.maybeLockOnStartup());
     });
     super.initState();
   }

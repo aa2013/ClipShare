@@ -94,7 +94,8 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
     if (state != AppLifecycleState.resumed) {
       return;
     }
-    unawaited(ref.read(androidEnvironmentStatusProvider.notifier).refresh());
+    final androidEnvStatus = ref.read(androidEnvironmentStatusProvider.notifier);
+    unawaited(androidEnvStatus.refresh());
   }
 
   @override

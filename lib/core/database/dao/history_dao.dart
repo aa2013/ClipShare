@@ -95,7 +95,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
 
   /// 根据清理过滤器统计数量。
   Future<int?> count(
-    int uid,
     List<String> types,
     List<String> tags,
     List<String> devIds,
@@ -106,7 +105,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   ) async {
     final countExp = countAll();
     final query = selectOnly(histories)..addColumns([countExp]);
-    query.where(histories.uid.equals(uid));
     if (startTime.isNotEmpty && endTime.isNotEmpty) {
       query.where(histories.time.isBiggerOrEqualValue('$startTime 00:00:00') & histories.time.isSmallerOrEqualValue('$endTime 23:59:59.999999'));
     }
@@ -134,7 +132,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
 
   /// 根据清理过滤器获取历史数据。
   Future<List<History>> getHistoriesWithFileContent(
-    int uid,
     List<String> types,
     List<String> tags,
     List<String> devIds,
@@ -144,7 +141,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
     bool saveTop,
   ) {
     final query = select(histories);
-    query.where((tbl) => tbl.uid.equals(uid));
     if (startTime.isNotEmpty && endTime.isNotEmpty) {
       query.where(
         (tbl) => tbl.time.isBiggerOrEqualValue('$startTime 00:00:00') & tbl.time.isSmallerOrEqualValue('$endTime 23:59:59.999999'),
@@ -172,8 +168,8 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 根据设备 id 统计数量。
-  Future<int> countByDevId(String devId, int uid) {
-    return count(uid, [], [], [devId], [], '', '', false).then((res) => res ?? 0);
+  Future<int> countByDevId(String devId) {
+    return count([], [], [devId], [], '', '', false).then((res) => res ?? 0);
   }
 
   /// 更新历史记录来源。
@@ -297,18 +293,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
     return into(histories).insertOnConflictUpdate(_companion(history));
   }
 
-  /// 将本地记录转换到某个用户。
-  Future<int?> transformLocalToUser(int uid) {
-    return (update(histories)..where((tbl) => tbl.uid.equals(0))).write(
-      HistoriesCompanion(uid: Value(uid)),
-    );
-  }
-
-  /// 删除本地用户历史记录。
-  Future<int?> removeAllLocalHistories() {
-    return (delete(histories)..where((tbl) => tbl.uid.equals(0))).go();
-  }
-
   /// 根据 id 获取记录。
   Future<History?> getById(int id) {
     return (select(histories)..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
@@ -328,9 +312,9 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 获取所有文件历史。
-  Future<List<History>> getFiles(int uid) {
+  Future<List<History>> getFiles() {
     return (select(histories)
-          ..where((tbl) => tbl.uid.equals(uid) & tbl.type.equals('File'))
+          ..where((tbl) => tbl.type.equals('File'))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.id)]))
         .get();
   }
@@ -341,9 +325,9 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 根据 id 批量删除历史记录。
-  Future<int?> deleteByIds(List<int> ids, int uid) {
+  Future<int?> deleteByIds(List<int> ids) {
     if (ids.isEmpty) return Future.value(0);
-    return (delete(histories)..where((tbl) => tbl.uid.equals(uid) & tbl.id.isIn(ids))).go();
+    return (delete(histories)..where((tbl) => tbl.id.isIn(ids))).go();
   }
 
   /// 级联删除历史、标签、同步记录
@@ -365,18 +349,16 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
   }
 
   /// 查询历史记录中的不同类型数量，月份聚合依赖 SQLite strftime。
-  Future<List<HistoryTypeCnt>> getHistoryTypeCnt(int uid, String startMonth, String endMonth) async {
+  Future<List<HistoryTypeCnt>> getHistoryTypeCnt(String startMonth, String endMonth) async {
     final result = await customSelect(
       """
       select type, count(1) cnt, strftime('%Y-%m', time) as month
       from History
-      where uid = ?1
-      and strftime('%Y-%m', time) between ?2 and ?3
+      where strftime('%Y-%m', time) between ?1 and ?2
       group by strftime('%Y-%m', time), type
       order by strftime('%Y-%m', time)
       """,
       variables: [
-        Variable.withInt(uid),
         Variable.withString(startMonth),
         Variable.withString(endMonth),
       ],
@@ -395,7 +377,6 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
 
   /// 查询历史记录中不同设备的历史数量，月份聚合依赖 SQLite strftime。
   Future<List<HistoryCntForDevice>> getHistoryCntForDevice(
-    int uid,
     String startMonth,
     String endMonth,
     LocalDeviceInfo localDevice,
@@ -408,13 +389,11 @@ class HistoryDao extends DatabaseAccessor<AppDatabase> with _$HistoryDaoMixin {
         count(*) as cnt,
         strftime('%Y-%m', time) as month
       from history
-      where uid = ?1
-      and strftime('%Y-%m', time) between ?2 and ?3
+      where strftime('%Y-%m', time) between ?1 and ?2
       group by strftime('%Y-%m', time), devId
       order by strftime('%Y-%m', time)
       """,
       variables: [
-        Variable.withInt(uid),
         Variable.withString(startMonth),
         Variable.withString(endMonth),
       ],

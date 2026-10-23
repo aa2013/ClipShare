@@ -96,7 +96,7 @@ class AndroidNotificationListenerNotifier extends _$AndroidNotificationListenerN
       recorder.emitRaw(
         RawHistoryEvent(
           history: simpleHistory(ref, HistoryContentType.notification, jsonEncode(map)),
-          sync: true,
+          sync: false,
           source: source,
         ),
       );

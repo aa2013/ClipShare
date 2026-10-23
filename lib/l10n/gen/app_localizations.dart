@@ -2785,11 +2785,11 @@ abstract class AppLocalizations {
   /// **'Not connected to the forward server'**
   String get forwardServerNotConnected;
 
-  /// translated key: cleanData
+  /// translated key: dataCleanup
   ///
   /// In en, this message translates to:
   /// **'Clean Data'**
-  String get cleanData;
+  String get dataCleanup;
 
   /// translated key: syncSettingsAutoCopyScreenShotTitle
   ///
@@ -5801,11 +5801,11 @@ abstract class AppLocalizations {
   /// **'History saving'**
   String get settingsSectionSyncSubtitle;
 
-  /// translated key: settingsSectionCleanDataSubtitle
+  /// translated key: settingsSectionDataCleanupSubtitle
   ///
   /// In en, this message translates to:
   /// **'Clean history and records'**
-  String get settingsSectionCleanDataSubtitle;
+  String get settingsSectionDataCleanupSubtitle;
 
   /// translated key: settingsSectionRulesSubtitle
   ///
