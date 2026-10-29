@@ -1,0 +1,21 @@
+/// 桌面多窗口 MethodChannel 方法名。
+enum MultiWindowMethod {
+  getHistories,
+  getAllDevices,
+  getAllTagNames,
+  getAllSources,
+  updateAllBaseData,
+  copy,
+  copyContent,
+  notify,
+  getCompatibleOnlineDevices,
+  syncFiles,
+  storeWindowPos,
+  showWindowFromHide,
+  closeWindow,
+  updateWindowSize,
+  updateHistoryTop,
+  deleteHistory,
+  updateConfig,
+  setHistoryPinned,
+}

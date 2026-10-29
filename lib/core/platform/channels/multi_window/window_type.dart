@@ -1,0 +1,17 @@
+import 'package:clipshare/shared/utils/log.dart';
+
+enum WindowType {
+  history,
+  fileSender,
+  unknown;
+
+  static WindowType parse(String value) {
+    return WindowType.values.firstWhere(
+      (e) => e.name.toLowerCase() == value.toLowerCase(),
+      orElse: () {
+        logger.debug('WindowType', "key '$value' unknown");
+        throw Exception('Unknown WindowType value: $value');
+      },
+    );
+  }
+}

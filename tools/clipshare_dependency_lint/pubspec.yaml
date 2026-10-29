@@ -7,9 +7,10 @@ environment:
   sdk: '>=3.9.0 <4.0.0'
 
 dependencies:
-  # 版本须与项目 Flutter 内置分析服务器保持一致（Dart 3.11 / analyzer 9.0.0）。
-  analysis_server_plugin: 0.3.4
-  analyzer: ^9.0.0
+  # 版本须与项目 Flutter 内置分析服务器保持一致
+  # 分析服务器会以自身要求的 analysis_server_plugin 版本反查本插件；版本不匹配时插件会被静默跳过，规则不生效。
+  analysis_server_plugin: 0.3.14
+  analyzer: ^12.1.0
 
 dev_dependencies:
   path: ^1.9.0
