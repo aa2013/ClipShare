@@ -1,0 +1,232 @@
+# 1. 项目概览
+
+> todo
+
+# 2. 环境与命令
+
+> todo
+
+# 3. 开发原则
+
+
+## 3.1 理解优先
+
+* 修改代码前必须先理解现有实现。
+* 优先分析调用链、影响范围和上下文。
+* 不要在未理解业务和代码的情况下进行大范围重构。
+* 遇到同名方法、重载、接口实现时，必须确认实际调用路径。
+
+## 3.2 优先复用
+
+* 优先复用已有接口、方法、组件和工具。
+* 不允许随意创造新的接口或重复实现已有逻辑。
+* 项目中存在可复用实现时，必须优先复用。
+
+## 3.3 配套修改完整
+
+* 修改代码时必须结合上下文分析影响范围。
+* 不允许遗漏相关配置、调用方、测试、文档、常量等配套修改。
+
+# 4. 代码风格与规范
+
+## 4.1 注释要求
+
+所有新增或修改的代码必须添加适当的注释
+
+### 必须添加的注释
+
+* 新增方法
+* 实质修改的方法
+* 复杂逻辑
+* 业务规则
+* 边界条件
+* 非显而易见的实现
+* 外部系统限制
+* 长期存在的不变量
+
+简单私有辅助方法也需要说明：
+
+* 方法用途
+* 关键参数
+
+### 禁止添加的注释
+
+不要添加：
+
+* 本次修改原因
+* 词语解释
+* 显而易见的代码行为
+* 无意义注释，例如：
+    * 给变量赋值
+    * 调用方法
+    * 判断是否为空
+
+如果可以通过：
+
+* 更好的命名
+* 更好的结构
+* 更好的文案
+
+解决歧义，应优先修改代码，而不是增加注释。
+
+### 严禁废话注释
+
+修改或重构方法时，不得写入修改/重构原由，保持注释的整洁、简洁、专一、单调：
+
+* 不写"本次改为……""重构为……""原先是……"等版本叙述。
+* 不写"为什么这样改""为了修复……"等变更动机。
+* 注释只描述代码当前的用途与行为，不描述它过去或未来的样子。
+* 只写有长期维护价值的注释，不要写仅短期/短视的注释显得为了注释而注释
+
+## 4.2 常量要求
+
+对于多次使用且有业务意义的字面量，必须提取为常量。
+
+包括：
+* 数字
+* 字符串
+* 业务编码
+* 状态值
+
+禁止出现重复的 Magic Number / Magic String。
+
+## 4.3 格式化
+
+**禁止执行：**
+
+```bash
+dart format
+```
+
+因为 dart 自带的格式化在长代码下会格式化的十分丑陋
+
+## 4.4 代码风格
+
+### 4.4.1 链式调用对齐 
+
+对于链式调用，应该为后续每一个链式方法换行并对齐：
+
+```dart
+final list = originList.where((item) => item.ok)
+              .map((item) => item.toInt())
+              .where((item) => item > 0);
+```
+
+### 4.4.2 短调用优先 
+
+对于较长的调用，应该提前抽取为变量，不要在一行内有过长的调用链：
+
+```dart
+// 不要这样：
+// final result = variable.someFunction().requireValue.field;
+// 应该这样：
+final xxx = variable.someFunction();
+final value = xxx.requireValue;
+final field = value.field;//或者 final field = xxx.requireValue.field;
+
+```
+
+### 4.4.3 禁止同行写法
+
+**每一个 if 块** 不能单行与 if 同行，必须使用单独的块换行，例如
+
+**不要**
+```dart
+if (success) return;
+```
+**必须**
+```dart
+if (success) {
+  return;
+}
+```
+
+### 4.4.4 build_runner 原则
+
+执行 dart run build_runner build 生成riverpod代码的时候，使用过滤器仅生成指定的文件而不是所有都生成，如果误生成了其他的代码，请回滚
+
+### 4.4.5 简化字段调用
+
+如果有某个对象的字段多次使用应该把他提取出一个新变量，例如
+
+```dart
+if (event.method != .update && event.method != .delete) {
+  return false;
+}
+```
+
+应该改成
+
+```dart
+final method = event.method;
+if (method != .update && method != .delete) {
+  return false;
+}
+```
+### 4.4.6 riverpod 提取内部getter
+
+provider/notifier 类内的 ref.read(xxx) 一律提成内部getter，单次使用也要提，类内已有 getter 区的追加到该区
+
+```dart
+AndroidChannelNotifier get _androidChannel => ref.read(androidChannelProvider.notifier);
+```
+
+边界：
+
+* provider/notifier 类内：一律内部getter
+* 函数式 provider / 顶层函数：无法提类getter，用局部变量；同一方法内多处使用时合并提取到分支外层（ref.read 无副作用，提前读取等价）
+* Widget/State 回调：回调内提取局部变量，先取变量再调用
+
+允许形式（read 后单跳）：
+
+```dart
+final x = ref.read(p).requireValue.field;
+await ref.read(p.future);
+final language = ref.watch(languageProvider).when(...);
+```
+
+违规形式（read 后两跳及以上，禁止出现）：
+
+```dart
+ref.read(p.notifier).someMethod();
+ref.read(p).requireValue.a.b;
+```
+
+### 4.4.7 调用替换
+
+Platform.isXXXX 统一替换为 core/constants/platform_constants.dart 中的getter
+
+## 4.5 模型与枚举归属规范
+
+**分层依赖方向**（lint 强制）：`features → core → shared`，禁止反向依赖。
+
+**归属规则**（按顺序判断，命中即停）：
+
++ **默认跟随领域**：模型/枚举只被一个领域消费时，放该领域目录内（core 服务域：`core/services/<域>/`；UI 独有：`features/<feature>/`）。
++ **下沉 shared 仅限跨域共用**：被 ≥2 个领域共用、构成公共领域词汇、明显与业务无关的通用项时，才放 `shared/enums/`、`shared/models/`。
++ **先领域内，后下沉**：出现第二个消费域时再迁移下沉，迁移时保持原位置 re-export 或一次性改完引用。
+
+**目录组织**：领域内模型/枚举放 `enums/`、`models/`、`utils`、`constants`、`extensions` 子目录，不在领域根目录平铺；一个类型一个文件
+
+# 5. 测试说明
+
+执行测试遵循**最小必要原则**：
+
+* 优先运行与修改范围相关的测试。
+* 不随意执行耗时过长或影响较大的全量任务。
+* 若无法执行测试，应明确说明原因。
+* 若无法编写相关测试用例，例如无法注入测试环境应该明确说明原因等待开发者审查或调整代码结构。
+
+测试底线：
+* 一切测试必须以事实为准为事实服务。
+* 不得跳过必要验证。
+* 不得修改测试以掩盖真实缺陷。
+* 不得为了通过测试而刻意在生产代码中写入测试相关白名单条件判定。
+* 不得为了通过测试而刻意在生产代码中引入专为测试的代码。
+* 不得为了减少麻烦而刻意忽略某些条件以降低测试覆盖。
+* 除了必须由用户操作以观测现象的功能，原则上每个功能都必须有明确的测试覆盖。
+
+
+# 6. 提交规范
+新增文件后自动 `git add`
+提交信息格式：新增/修复/优化 xxxxx

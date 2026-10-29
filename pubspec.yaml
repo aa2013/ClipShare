@@ -86,6 +86,8 @@ dependencies:
   screen_retriever: ^0.2.0
   # 提供一种平台无关的方式以一致的方式访问设备的文件位置系统
   path_provider: ^2.1.2
+  # 平台无关的路径拼接与归一化
+  path: ^1.9.1
   # 文件打开（解决 Android13 权限问题）
   open_file_plus:
     git: # 解决 flutter 3.29 PluginRegistry.Registrar 不支持的问题
@@ -107,7 +109,7 @@ dependencies:
   # material 图标库
   flutter_material_design_icons: ^3.0.0+7447
   # 品牌图标库，material图标库将在 v8 版本移除所有品牌图标
-  simple_icons: ^14.6.1
+  simple_icons: ^16.23.0
   # 本地身份认证
   local_auth: ^2.2.0
   # 接受其他应用的分享操作
@@ -124,7 +126,7 @@ dependencies:
   # 主题切换动画
   animated_theme_switcher: ^2.0.8
   # 大文本编辑器
-  re_editor: ^0.8.0
+  re_editor: ^0.10.0
   # http请求
   http: ^1.2.2
   stream_channel: ^2.1.4
@@ -183,7 +185,7 @@ dependencies:
     git:
       url: https://github.com/aa2013/webdav_plus.git
       ref: custom-user-agent
-  dart_aliyun_oss: ^1.4.0
+  dart_aliyun_oss: ^1.4.3
   minio:
     git:
       url: https://github.com/aa2013/minio-dart
