@@ -1,5 +1,6 @@
 allprojects {
-    ext.kotlin_version = '2.1.0'
+    // 子项目使用与 settings.gradle 中 Kotlin 插件一致的版本。
+    ext.kotlin_version = '2.2.20'
     repositories {
         google()
         mavenCentral()

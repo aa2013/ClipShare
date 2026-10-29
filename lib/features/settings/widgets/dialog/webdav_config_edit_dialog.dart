@@ -1,0 +1,468 @@
+import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/constants/regex_constants.dart';
+import 'package:clipshare/core/services/permission/permission_handler_facade.dart';
+import 'package:clipshare/core/services/permission/permission_helper.dart';
+import 'package:clipshare/core/services/transport/extensions/storage_config_extension.dart';
+import 'package:clipshare/l10n/translation_key.dart';
+import 'package:clipshare/routing/app_routes.dart';
+import 'package:clipshare/shared/extensions/string_extension.dart';
+import 'package:clipshare/shared/models/dialog_actions.dart';
+import 'package:clipshare/shared/models/storage/web_dav_config.dart';
+import 'package:clipshare/shared/utils/dialog.dart';
+import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/widgets/file_browser.dart';
+import 'package:clipshare/shared/widgets/loading/loading.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+class WebDAVConfigEditDialog extends StatefulWidget {
+  final void Function(WebDAVConfig config) onOk;
+  final WebDAVConfig? initValue;
+
+  const WebDAVConfigEditDialog({
+    super.key,
+    this.initValue,
+    required this.onOk,
+  });
+
+  @override
+  State<StatefulWidget> createState() => _WebDAVConfigEditDialogState();
+}
+
+class _WebDAVConfigEditDialogState extends State<WebDAVConfigEditDialog> {
+  static const tag = 'WebDAVConfigEditDialog';
+  final nameEditor = TextEditingController();
+  final serverEditor = TextEditingController();
+  final usernameEditor = TextEditingController();
+  final passwordEditor = TextEditingController();
+  final baseDirEditor = TextEditingController(text: '/');
+  final uaEditor = TextEditingController();
+
+  bool _obscurePassword = true;
+  String? nameErrText;
+  String? serverErrText;
+  String? usernameErrText;
+  String? passwordErrText;
+  String? baseDirErrText;
+  bool testingConnection = false;
+
+  WebDAVConfig get config => WebDAVConfig(
+    displayName: nameEditor.text,
+    server: serverEditor.text,
+    username: usernameEditor.text,
+    password: passwordEditor.text,
+    baseDir: baseDirEditor.text,
+    userAgent: uaEditor.text.isNotEmpty ? uaEditor.text : null,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initValue != null) {
+      reset(widget.initValue!);
+    }
+  }
+
+  void reset(WebDAVConfig config) {
+    nameEditor.text = config.displayName;
+    serverEditor.text = config.server;
+    usernameEditor.text = config.username;
+    passwordEditor.text = config.password;
+    baseDirEditor.text = config.baseDir;
+    uaEditor.text = config.userAgent ?? '';
+  }
+
+  bool validateNameEditor() {
+    bool isValid;
+    if (nameEditor.text.isEmpty) {
+      nameErrText = TranslationKey.nameRequired.tr;
+      isValid = false;
+    } else {
+      nameErrText = null;
+      isValid = true;
+    }
+    setState(() {});
+    return isValid;
+  }
+
+  bool validateServerEditor() {
+    bool isValid;
+    if (serverEditor.text.isEmpty) {
+      serverErrText = TranslationKey.webdavServerUrlRequired.tr;
+      isValid = false;
+    } else if (!serverEditor.text.startsWith('http://') && !serverEditor.text.startsWith('https://')) {
+      serverErrText = TranslationKey.webdavUrlMustStartWithHttp.tr;
+      isValid = false;
+    } else if (!serverEditor.text.matchRegExp(httpUrlRegex)) {
+      serverErrText = TranslationKey.pleaseInputCorrectURL.tr;
+      isValid = false;
+    } else {
+      serverErrText = null;
+      isValid = true;
+    }
+    setState(() {});
+    return isValid;
+  }
+
+  bool validateUsernameEditor() {
+    bool isValid;
+    if (usernameEditor.text.isEmpty) {
+      usernameErrText = TranslationKey.usernameRequired.tr;
+      isValid = false;
+    } else {
+      usernameErrText = null;
+      isValid = true;
+    }
+    setState(() {});
+    return isValid;
+  }
+
+  bool validatePasswordEditor() {
+    bool isValid;
+    if (passwordEditor.text.isEmpty) {
+      passwordErrText = TranslationKey.passwordRequired.tr;
+      isValid = false;
+    } else {
+      passwordErrText = null;
+      isValid = true;
+    }
+    setState(() {});
+    return isValid;
+  }
+
+  bool validateBaseDirEditor() {
+    bool isValid;
+    if (baseDirEditor.text.isEmpty) {
+      baseDirErrText = TranslationKey.baseDirectoryRequired.tr;
+      isValid = false;
+    } else if (!baseDirEditor.text.startsWith('/')) {
+      baseDirErrText = TranslationKey.baseDirectoryMustStartWithSlash.tr;
+      isValid = false;
+    } else {
+      baseDirErrText = null;
+      isValid = true;
+    }
+    setState(() {});
+    return isValid;
+  }
+
+  bool validateFields([bool verifyBaseDir = true]) {
+    final isNameValid = validateNameEditor();
+    final isServerValid = validateServerEditor();
+    final isUsernameValid = validateUsernameEditor();
+    final isPasswordValid = validatePasswordEditor();
+    final isBaseDirValid = !verifyBaseDir || validateBaseDirEditor();
+
+    return isNameValid && isServerValid && isUsernameValid && isPasswordValid && isBaseDirValid;
+  }
+
+  Future<void> _testConnection() async {
+    if (validateFields(false)) {
+      setState(() {
+        testingConnection = true;
+      });
+      final exception = await config.toClient().testConnect();
+      if (!mounted) {
+        return;
+      }
+      if (!testingConnection) {
+        return;
+      }
+      setState(() {
+        testingConnection = false;
+      });
+      if (exception != null) {
+        await dialogManager.tips( context, text: '${exception.err}, ${exception.stackTrace}', title: TranslationKey.connectFailed.tr);
+      } else {
+        await dialogManager.tips( context, text: TranslationKey.connectSuccess.tr, title: TranslationKey.connectSuccess.tr);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      fontWeight: FontWeight.w400,
+      color: theme.colorScheme.onSurface.withOpacity(0.8),
+    );
+    return SafeArea(
+      child: AlertDialog(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(TranslationKey.configureWebDAVServer.tr),
+            if (isMobile)
+              Tooltip(
+                message: TranslationKey.scan.tr,
+                child: IconButton(
+                  onPressed: testingConnection
+                      ? null
+                      : () async {
+                          var hasPerm = await PermissionHelper.testCameraPerm();
+                          if (!hasPerm) {
+                            await PermissionHelper.reqCameraPerm();
+                            hasPerm = await PermissionHelper.testCameraPerm();
+                            if (!hasPerm) {
+                              if (!context.mounted) {
+                                return;
+                              }
+                              await dialogManager.tips(
+                                context,
+                                text: TranslationKey.noCameraPermission.tr,
+                                actions: const DialogActions(
+                                  confirm: DialogAction(
+                                    onPressed: openAppSettings
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+                          }
+                          if (!context.mounted) {
+                            return;
+                          }
+                          final json = await context.pushNamed<Map<String, dynamic>>(AppRoutes.qrScanner.name);
+                          if (!context.mounted) {
+                            return;
+                          }
+                          try {
+                            if (json != null) {
+                              final result = WebDAVConfig.fromJson(json);
+                              setState(() {
+                                reset(result);
+                              });
+                            } else {
+                              dialogManager.tips( context, text: TranslationKey.qrCodeScanError.tr);
+                              logger.warn(tag, 'scan result is null');
+                            }
+                          } catch (err, stack) {
+                            logger.error(tag, err, stack);
+                            if (!context.mounted) {
+                              return;
+                            }
+                            dialogManager.tips( context, text: TranslationKey.qrCodeScanError.tr);
+                          }
+                        },
+                  icon: const Icon(
+                    Icons.qr_code_scanner,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        content: SizedBox(
+          width: 350,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.configName.tr,
+                    errorText: nameErrText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (v) {
+                    validateNameEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: serverEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.serverUrl.tr,
+                    hintText: 'https://example.com/webdav',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    errorText: serverErrText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (v) {
+                    validateServerEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: usernameEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.username.tr,
+                    errorText: usernameErrText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (v) {
+                    validateUsernameEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: passwordEditor,
+                  enabled: !testingConnection,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: TranslationKey.password.tr,
+                    errorText: passwordErrText,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  onChanged: (v) {
+                    validatePasswordEditor();
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                //user-agent
+                TextField(
+                  controller: uaEditor,
+                  enabled: !testingConnection,
+                  decoration: InputDecoration(
+                    labelText: 'User-Agent (${TranslationKey.optional.tr})',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: Tooltip(
+                        message: TranslationKey.readonly.tr,
+                        child: TextField(
+                          controller: baseDirEditor,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: TranslationKey.storagePath.tr,
+                            hintText: TranslationKey.storagePathHint.tr,
+                            hintStyle: TextStyle(color: Colors.grey[400]),
+                            errorText: baseDirErrText,
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: testingConnection
+                          ? null
+                          : () {
+                              DialogController? dialog;
+                              String selectedPath = baseDirEditor.text;
+                              dialog = dialogManager.open(
+                                context,
+                                SafeArea(
+                                  child: AlertDialog(
+                                    title: Text(TranslationKey.selectStoragePath.tr),
+                                    content: SizedBox(
+                                      width: 350,
+                                      child: FileBrowser(
+                                        onLoadFiles: (String path) async {
+                                          selectedPath = path.unixPath;
+                                          final tempConfig = config.copyWith(baseDir: unixDirSeparate);
+                                          final list = await tempConfig.toClient().list(path: path);
+                                          return list.where((item) => item.isDir).map((item) => FileItem(name: item.name, isDirectory: true, fullPath: item.path)).toList();
+                                        },
+                                        onCreateDirectory: (current, name) {
+                                          final tempConfig = config.copyWith(baseDir: unixDirSeparate);
+                                          final client = tempConfig.toClient();
+                                          return client.createDirectory('$current/$name/');
+                                        },
+                                        shouldShowUpLevel: (path) => path != unixDirSeparate || path.isNullOrEmpty,
+                                        initialPath: unixDirSeparate,
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => dialog?.close(),
+                                        child: Text(TranslationKey.dialogCancelText.tr),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          baseDirEditor.text = selectedPath;
+                                          dialog?.close();
+                                          validateFields();
+                                        },
+                                        child: Text(TranslationKey.dialogConfirmText.tr),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                      child: Text(TranslationKey.selection.tr),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+                Text(
+                  TranslationKey.storagePathTips.tr,
+                  style: textStyle,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          Row(
+            children: [
+              Visibility(
+                visible: testingConnection,
+                replacement: TextButton(
+                  onPressed: _testConnection,
+                  child: Text(TranslationKey.checkConnection.tr),
+                ),
+                child: const Loading(),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        if (testingConnection) {
+                          setState(() {
+                            testingConnection = false;
+                          });
+                          return;
+                        }
+                        Navigator.of(context).pop();
+                      },
+                      child: Text(TranslationKey.dialogCancelText.tr),
+                    ),
+                    TextButton(
+                      onPressed: testingConnection
+                          ? null
+                          : () {
+                              if (validateFields()) {
+                                widget.onOk(config);
+                                Navigator.of(context).pop();
+                              }
+                            },
+
+                      child: Text(TranslationKey.save.tr),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

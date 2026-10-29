@@ -370,6 +370,7 @@ class MyApplication : Application() {
                 //授权通知权限
                 "grantNotification" -> {
                     requestNotificationPermission()
+                    result.success(null)
                 }
                 //检查电池优化
                 "checkIgnoreBattery" -> {
@@ -378,10 +379,12 @@ class MyApplication : Application() {
                 //请求忽略电池优化
                 "requestIgnoreBattery" -> {
                     requestIgnoreBatteryOptimizations()
+                    result.success(null)
                 }
                 //将应用置于后台
                 "moveToBg" -> {
                     mainActivity?.moveTaskToBack(true)
+                    result.success(null)
                 }
                 //发送通知
                 "sendNotify" -> {
@@ -439,6 +442,7 @@ class MyApplication : Application() {
                             )
                         })
                     }
+                    result.success(null)
                 }
                 // 同步运行中的历史悬浮窗主题，不影响悬浮窗开关状态。
                 "setHistoryFloatThemeMode" -> {
@@ -452,11 +456,13 @@ class MyApplication : Application() {
                             putExtra(HistoryFloatService.EXTRA_FLOAT_THEME_MODE, themeMode)
                         })
                     }
+                    result.success(null)
                 }
                 "showKeepAliveFloatWindow" -> {
                     if (Settings.canDrawOverlays(this) && !isServiceRunning(this, KeepAliveFloatService::class.java)) {
                         startService(Intent(this, KeepAliveFloatService::class.java))
                     }
+                    result.success(null)
                 }
                 "setHistoryFloatHandleWidth" -> {
                     val width = (args["width"] as? Number)?.toInt() ?: 32
@@ -469,6 +475,7 @@ class MyApplication : Application() {
                             putExtra("width", width)
                         })
                     }
+                    result.success(null)
                 }
                 "setHistoryFloatHandleColor" -> {
                     val color = (args["color"] as? Number)?.toInt() ?: defaultHistoryFloatHandleColor
@@ -481,6 +488,7 @@ class MyApplication : Application() {
                             putExtra("color", color)
                         })
                     }
+                    result.success(null)
                 }
                 "setHistoryFloatHandleApplyAlphaToWholeHandle" -> {
                     val applyAlphaToWholeHandle =
@@ -501,13 +509,15 @@ class MyApplication : Application() {
                             )
                         })
                     }
+                    result.success(null)
                 }
                 "closeKeepAliveFloatWindow" -> {
                     stopService(Intent(this, KeepAliveFloatService::class.java))
+                    result.success(null)
                 }
                 //锁定悬浮窗位置
                 "lockHistoryFloatLoc" -> {
-                    val lockLoc = args["loc"] as Boolean
+                    val lockLoc = args["loc"] as? Boolean ?: false
                     val intent = Intent(lockHistoryFloatLocation)
                     intent.putExtra("lock", lockLoc)
                     LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
@@ -517,10 +527,12 @@ class MyApplication : Application() {
                             putExtra("lock", lockLoc)
                         })
                     }
+                    result.success(null)
                 }
                 //关闭历史浮窗
                 "closeHistoryFloatWindow" -> {
                     stopService(Intent(this, HistoryFloatService::class.java))
+                    result.success(null)
                 }
                 //提示
                 "toast" -> {
@@ -580,14 +592,17 @@ class MyApplication : Application() {
                     ) { path, uri ->
                         Log.i(TAG, "initAndroidChannel: MediaScanner Completed")
                     }
+                    result.success(null)
                 }
                 //开启短信监听
                 "startSmsListen" -> {
                     registerSmsObserver()
+                    result.success(null)
                 }
                 //停止短信监听
                 "stopSmsListen" -> {
                     unRegisterSmsObserver()
+                    result.success(null)
                 }
                 //是否显示在后台任务卡片
                 "showOnRecentTasks" -> {
@@ -622,6 +637,8 @@ class MyApplication : Application() {
                     sendBroadcast(intent)
                     result.success(null)
                 }
+                // 未识别的方法必须显式应答，否则 Dart 侧 invokeMethod 的 Future 永不完成
+                else -> result.notImplemented()
             }
         }
     }

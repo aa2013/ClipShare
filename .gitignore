@@ -52,3 +52,5 @@ app.*.map.json
 .codegraph/
 .codegraph-*/
 test/app/handlers/storage/remote_storage_integration.config.json
+.opencode
+.zcode
