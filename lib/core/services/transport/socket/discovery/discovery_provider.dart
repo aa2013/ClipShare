@@ -5,6 +5,8 @@ import 'dart:io';
 import 'package:clipshare/core/constants/network_constants.dart' as net;
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/database/dao/device_dao.dart';
+import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
+import 'package:clipshare/core/platform/channels/android/events/screen_opened_event.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/events/device_discovery_event.dart';
@@ -58,9 +60,15 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
 
   DeviceDao get _deviceDao => ref.read(appDbProvider).requireValue.deviceDao;
 
+  AndroidChannelNotifier get _androidChannel => ref.read(androidChannelProvider.notifier);
+
+  /// 屏幕事件订阅，用于在亮屏时触发设备发现
+  StreamSubscription<ScreenEvent>? _screenEventsSubscription;
+
   @override
   bool build() {
     ref.onDispose(_dispose);
+    _screenEventsSubscription = _androidChannel.screenEvents.listen(_onScreenEvent);
     // 组播监听与应用同生命周期常驻；发现设置变化时重建监听。
     unawaited(Future.microtask(_ensureMulticastListener));
     ref.listen(discoverySettingsProvider, (_, next) {
@@ -71,7 +79,17 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
 
   void _dispose() {
     _tokenSource.cancel();
+    _screenEventsSubscription?.cancel();
     _closeMulticastSockets();
+  }
+
+  /// 处理屏幕事件：亮屏时按设置触发一次设备发现
+  void _onScreenEvent(ScreenEvent event) {
+    if (event is! ScreenOpenedEvent) {
+      return;
+    }
+    final scan = _discoverySettings.enableAutoSyncOnScreenOpened;
+    unawaited(startDiscoveryDevices(scan: scan));
   }
 
   /// 启动设备发现流程。
