@@ -23,6 +23,9 @@ class TransportHeartbeatNotifier extends _$TransportHeartbeatNotifier /*GetxServ
   bool _screenOpened = true;
   bool _screenOffAutoClosed = false;
 
+  /// 最近一次已应用的心跳间隔，用于过滤无关的发现配置变更。
+  int? _appliedHeartbeatInterval;
+
   /// 屏幕状态订阅事件流
   StreamSubscription<ScreenEvent>? _screenEventsSubscription;
 
@@ -32,10 +35,21 @@ class TransportHeartbeatNotifier extends _$TransportHeartbeatNotifier /*GetxServ
 
   DiscoverySettings get _discoverySettings => ref.read(discoverySettingsProvider).requireValue;
 
+  AndroidChannelNotifier get _androidChannel => ref.read(androidChannelProvider.notifier);
+
   @override
   void build() {
-    final androidChannelNotifier = ref.read(androidChannelProvider.notifier);
-    _screenEventsSubscription = androidChannelNotifier.screenEvents.listen(_onScreenEvent);
+    _screenEventsSubscription = _androidChannel.screenEvents.listen(_onScreenEvent);
+
+    _appliedHeartbeatInterval = _discoverySettings.heartbeatInterval;
+    // 仅心跳间隔变化时重建已注册任务的定时器
+    ref.listen(discoverySettingsProvider, (_, next) {
+      final settings = next.asData?.value;
+      if (settings == null) {
+        return;
+      }
+      _applyHeartbeatInterval(settings);
+    });
     ref.onDispose(_dispose);
   }
 
@@ -64,7 +78,7 @@ class TransportHeartbeatNotifier extends _$TransportHeartbeatNotifier /*GetxServ
       logger.warn(tag, 'heartbeat task not found. name=$name');
       return;
     }
-    final devSettings = ref.read(discoverySettingsProvider).requireValue;
+    final devSettings = _discoverySettings;
     _timers.remove(name)?.cancel();
     if (!_screenOpened && devSettings.autoCloseConnAfterScreenOff && _screenOffAutoClosed) {
       logger.debug(tag, 'skip heartbeat start because screen auto close already reached. name=$name');
@@ -78,9 +92,35 @@ class TransportHeartbeatNotifier extends _$TransportHeartbeatNotifier /*GetxServ
       logger.debug(tag, 'heartbeat timer disabled by config. name=$name');
       return;
     }
-    _timers[name] = Timer.periodic(interval.s, (_) {
+    _scheduleTimer(task, interval);
+  }
+
+  /// 按指定间隔为任务创建周期定时器，重复创建会先取消旧定时器。
+  void _scheduleTimer(TransportHeartbeatTask task, int interval) {
+    _timers.remove(task.name)?.cancel();
+    _timers[task.name] = Timer.periodic(interval.s, (_) {
       unawaited(_runTask(task, trigger: TransportHeartbeatTrigger.timer));
     });
+  }
+
+  /// 按最新配置重建已注册任务的定时器。
+  ///
+  /// 仅心跳间隔变化时处理；间隔关闭或任务当前不应运行时仅取消定时器，
+  /// 任务保持注册以便后续重新开启，需要运行时复用 [start] 以继承息屏自动断开的保护。
+  void _applyHeartbeatInterval(DiscoverySettings settings) {
+    final interval = settings.heartbeatInterval;
+    if (interval == _appliedHeartbeatInterval) {
+      return;
+    }
+    _appliedHeartbeatInterval = interval;
+    for (final task in _tasks.values) {
+      final enabled = interval > 0 && task.shouldRun();
+      if (!enabled) {
+        _timers.remove(task.name)?.cancel();
+        continue;
+      }
+      start(task.name, immediately: false);
+    }
   }
 
   /// 停止指定心跳任务，并按停止原因执行任务自身的停止回调。

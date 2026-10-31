@@ -241,21 +241,14 @@ class SettingsDiscoveryPage extends SettingsSectionView {
               labelText: TranslationKey.discoveringSettingsModifyHeartbeatDialogInputLabel.tr,
               initStr: "${discoverySettings.heartbeatInterval <= 0 ? '' : discoverySettings.heartbeatInterval}",
               verify: (str) {
-                var port = int.tryParse(str);
-                if (port == null) return false;
-                return true;
+                final value = int.tryParse(str);
+                return value != null;
               },
               errorText: TranslationKey.discoveringSettingsModifyHeartbeatDialogInputErrorText.tr,
               onOk: (str) async {
-                final _ = str.toInt();
-                await configDao.addOrUpdate(.heartbeatInterval, str);
-                var enable = str.toInt() > 0;
-                final sessionNotifier = ref.read(sessionProvider.notifier);
-                if (enable) {
-                  sessionNotifier.startHeartbeatTest();
-                } else {
-                  sessionNotifier.stopHeartbeatTest();
-                }
+                final interval = str.toInt();
+                await configDao.addOrUpdate(.heartbeatInterval, interval.toString());
+                // 配置变更由心跳服务统一监听并重建定时器
                 ref.invalidate(discoverySettingsProvider);
               },
             ),
