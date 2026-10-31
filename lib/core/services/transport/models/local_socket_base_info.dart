@@ -10,7 +10,6 @@ class LocalSocketBaseInfo {
   final int localListenPort;
   final AppVersion localVersion;
   final AppVersion minVersion;
-  final bool allowDiscover;
 
   LocalSocketBaseInfo({
     required this.cryptoConfig,
@@ -18,6 +17,5 @@ class LocalSocketBaseInfo {
     required this.localListenPort,
     required this.localVersion,
     required this.minVersion,
-    required this.allowDiscover,
   });
 }

@@ -355,6 +355,7 @@ class ForwardServerNotifier extends _$ForwardServerNotifier {
         ip: forwardServerHost!,
         port: forwardServerPort!,
         localBaseInfo: direct.localBaseInfo,
+        allowUnpairedConnection: direct.allowUnpairedConnection,
         loadDevice: direct.loadDevice,
         targetDevId: devId,
         selfDevId: _self.guid,

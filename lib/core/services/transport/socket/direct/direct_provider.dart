@@ -54,11 +54,13 @@ class DirectNotifier extends _$DirectNotifier {
     localListenPort: _discoverySettings.port,
     localVersion: _localDeviceInfo.appVersion,
     minVersion: minVersion,
-    allowDiscover: _discoverySettings.allowDiscovery,
   );
 
   /// 提供给 ForwardNotifier 的握手参数和消息回调，不维护中转状态。
   LocalSocketBaseInfo get localBaseInfo => _localBaseInfo;
+
+  /// 是否允许未配对设备接入本机。
+  bool allowUnpairedConnection() => _discoverySettings.allowDiscovery;
 
   SessionNotifier get _sessionNotifier => ref.read(sessionProvider.notifier);
 
@@ -86,6 +88,7 @@ class DirectNotifier extends _$DirectNotifier {
       ip: '0.0.0.0',
       port: _discoverySettings.port,
       baseInfo: _localBaseInfo,
+      allowUnpairedConnection: allowUnpairedConnection,
       loadDevice: _loadDevice,
       onConnected: (ip, port) {
         logger.debug(
@@ -155,6 +158,7 @@ class DirectNotifier extends _$DirectNotifier {
             sourceAddress: sourceAddress,
             port: port!,
             localBaseInfo: _localBaseInfo,
+            allowUnpairedConnection: allowUnpairedConnection,
             loadDevice: _loadDevice,
             onMessage: (client, json) {
               final msg = MessageData.fromJson(json);

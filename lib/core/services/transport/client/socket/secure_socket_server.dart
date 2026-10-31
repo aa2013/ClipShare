@@ -14,6 +14,7 @@ class SecureSocketServer {
   final int port;
   late final ServerSocket _server;
   late final LocalSocketBaseInfo _baseInfo;
+  late final bool Function() _allowUnpairedConnection;
   late final Device? Function(String guid) _loadDevice;
   late final void Function(String ip, int port) _onConnected;
   late final void Function(SecureSocketClient client, Map<String, dynamic> data) _onMessage;
@@ -45,6 +46,7 @@ class SecureSocketServer {
     required String ip,
     required int port,
     required LocalSocketBaseInfo baseInfo,
+    required bool Function() allowUnpairedConnection,
     required Device? Function(String guid) loadDevice,
     required void Function(String ip, int port) onConnected,
     required void Function(SecureSocketClient client, Map<String, dynamic> data) onMessage,
@@ -57,6 +59,7 @@ class SecureSocketServer {
   }) async {
     final server = SecureSocketServer._private(ip, port);
     server._baseInfo = baseInfo;
+    server._allowUnpairedConnection = allowUnpairedConnection;
     server._loadDevice = loadDevice;
     server._server = await ServerSocket.bind(ip, port, shared: true);
     server._onMessage = onMessage;
@@ -97,6 +100,7 @@ class SecureSocketServer {
     client = SecureSocketClient.fromSocket(
       socket: socket,
       localBaseInfo: _baseInfo,
+      allowUnpairedConnection: _allowUnpairedConnection,
       onMessage: _onMessage,
       loadDevice: _loadDevice,
       onDone: (closedClient) {

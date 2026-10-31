@@ -7,6 +7,8 @@ import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/transport/enums/msg_type.dart';
 import 'package:clipshare/shared/exceptions/device_connect_exception.dart';
+import 'package:clipshare/shared/exceptions/socket_handshake_exception.dart';
+import 'package:clipshare/shared/exceptions/unpaired_device_rejected_exception.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/models/version.dart';
 import 'package:clipshare/shared/utils/crypto.dart';
@@ -38,6 +40,9 @@ class SecureSocketClient {
 
   ///本机基础信息
   late LocalSocketBaseInfo _baseInfo;
+
+  /// 未配对设备接入本机的准入策略，握手阶段调用。
+  late final bool Function() _allowUnpairedConnection;
 
   /// 底层 TCP Socket，只能由本类关闭和销毁。
   late final Socket _socket;
@@ -156,6 +161,7 @@ class SecureSocketClient {
     required String ip,
     required int port,
     required LocalSocketBaseInfo localBaseInfo,
+    required bool Function() allowUnpairedConnection,
     required Device? Function(String guid) loadDevice,
     String? sourceAddress,
     ConnectionMode connectionMode = ConnectionMode.direct,
@@ -182,6 +188,7 @@ class SecureSocketClient {
       socket: socket,
       loadDevice: loadDevice,
       localBaseInfo: localBaseInfo,
+      allowUnpairedConnection: allowUnpairedConnection,
       connectionMode: connectionMode,
       targetDevId: targetDevId,
       selfDevId: selfDevId,
@@ -212,6 +219,7 @@ class SecureSocketClient {
   factory SecureSocketClient.fromSocket({
     required Socket socket,
     required LocalSocketBaseInfo localBaseInfo,
+    required bool Function() allowUnpairedConnection,
     required Device? Function(String guid) loadDevice,
     ConnectionMode connectionMode = ConnectionMode.direct,
     String? targetDevId,
@@ -236,6 +244,7 @@ class SecureSocketClient {
     }
     client._loadDevice = loadDevice;
     client._baseInfo = localBaseInfo;
+    client._allowUnpairedConnection = allowUnpairedConnection;
     client._connectionMode = connectionMode;
     client._selfDevId = selfDevId;
     client._onConnected = onConnected;
@@ -416,7 +425,7 @@ class SecureSocketClient {
         await _handlePairedStatusMessage(message);
         break;
       default:
-        throw StateError('Unsupported message before Socket ready: ${message.key.name}');
+        throw SocketHandshakeException('Unsupported message before Socket ready: ${message.key.name}');
     }
   }
 
@@ -424,13 +433,13 @@ class SecureSocketClient {
     final remoteDev = message.send;
     final localBaseDevInfo = _baseInfo.baseDeviceInfo;
     if (remoteDev.guid == localBaseDevInfo.guid) {
-      throw StateError('Cannot connect to self.');
+      throw const SocketHandshakeException('Cannot connect to self.');
     }
 
     final localDevice = _loadDevice(remoteDev.guid);
     final localIsPaired = localDevice?.isPaired ?? false;
-    if (!_baseInfo.allowDiscover && !localIsPaired) {
-      throw StateError('Unpaired device discovery is disabled.');
+    if (!localIsPaired && !_allowUnpairedConnection()) {
+      throw UnpairedDeviceRejectedException(remoteDev.guid);
     }
     _devInfo = remoteDev;
     await _sendPairingState(remoteDev);
@@ -591,7 +600,7 @@ class SecureSocketClient {
       await _setCryptoReady();
       return;
     }
-    throw FormatException('Unknown DH sequence: $seq');
+    throw SocketHandshakeException('Unknown DH sequence: $seq');
   }
 
   Future<void> _setCryptoReady() async {
