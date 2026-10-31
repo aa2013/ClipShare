@@ -177,6 +177,7 @@ dependencies:
   notification_listener_service:
     git:
       url: https://github.com/aa2013/notification_listener_service
+      ref: 44a6dffb
   # zip
   zip_flutter:
     git:
