@@ -162,12 +162,19 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     for (final socket in _multicastSockets) {
       socket.listen((_) {
         final datagram = socket.receive();
-        if (datagram == null) return;
+        if (datagram == null) {
+          return;
+        }
+        logger.debug(_tag, 'receive socket from multicast: ${datagram.address.address}:${datagram.port}');
         try {
           final json = jsonDecode(CryptoUtil.base64DecodeStr(utf8.decode(datagram.data))) as Map<String, dynamic>;
           final msg = MessageData.fromJson(json);
-          if (msg.send.guid == _self.guid) return;
-          if (msg.key == MsgType.broadcastInfo) _runSingleBroadcastCandidate(msg, datagram);
+          if (msg.send.guid == _self.guid) {
+            return;
+          }
+          if (msg.key == .broadcastInfo) {
+            _runSingleBroadcastCandidate(msg, datagram);
+          }
         } catch (error, stackTrace) {
           logger.debug(_tag, 'Invalid multicast discovery message: $error $stackTrace');
         }

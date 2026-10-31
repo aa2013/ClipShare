@@ -12,27 +12,69 @@ class NetworkUtil {
     return NetworkInterface.list().then((interfaces) => interfaces.where((itf) => !itf.name.contains('rmnet_data')).toList());
   }
 
-  /// 枚举可用网卡（排除 [noDiscoveryIfs]），为每个 IPv4 地址绑定 [port]。
-  /// [joinGroup] 为 true 时加入 [multicastGroup] 组播组用于接收广播；
-  /// 为 false 时仅用于发送（指定出接口），不加入组播组。
-  /// 绑定失败的网卡记日志后跳过。
+  /// 枚举可用网卡（排除 [noDiscoveryIfs]），构建组播收发 socket。
+  /// [joinGroup] 为 true 时构建接收 socket：绑定通配地址，并在每张网卡上加入 [multicastGroup] 组播组；
+  /// 为 false 时构建发送 socket：为每张网卡的 IPv4 地址绑定 [port]，用于指定出接口发送。
+  /// 接收端必须绑定通配地址：Linux/Android 上绑定具体网卡地址的 socket 收不到目的地址为组播组的报文，
+  /// 出接口由 [joinMulticast] 的网卡参数决定。
   static Future<List<RawDatagramSocket>> bindMulticastSockets(
     String multicastGroup,
     int port, {
     required List<String> noDiscoveryIfs,
     bool joinGroup = true,
   }) async {
+    final interfaces = (await listInterfaces()).where((item) => !noDiscoveryIfs.contains(item.name)).toList();
+    if (joinGroup) {
+      return _bindMulticastReceiver(multicastGroup, port, interfaces);
+    }
+    return _bindMulticastSenders(port, interfaces);
+  }
+
+  /// 绑定一个通配地址的组播接收 socket，并在每张有 IPv4 地址的网卡上加入组播组
+  static Future<List<RawDatagramSocket>> _bindMulticastReceiver(
+    String multicastGroup,
+    int port,
+    List<NetworkInterface> interfaces,
+  ) async {
     const ipv4Type = InternetAddressType.IPv4;
-    final interfaces = (await listInterfaces()).where((item) => !noDiscoveryIfs.contains(item.name));
+    final sockets = <RawDatagramSocket>[];
+    final RawDatagramSocket socket;
+    try {
+      socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, port);
+      // 关闭本机组播回环。
+      socket.multicastLoopback = false;
+    } catch (error, stackTrace) {
+      logger.debug(_multicastTag, 'Failed to bind multicast receiver on port $port: $error $stackTrace');
+      return sockets;
+    }
+    for (final interface in interfaces) {
+      final hasIpv4 = interface.addresses.any((item) => item.type == ipv4Type);
+      if (!hasIpv4) {
+        continue;
+      }
+      try {
+        socket.joinMulticast(InternetAddress(multicastGroup), interface);
+      } catch (error, stackTrace) {
+        logger.debug(_multicastTag, 'Failed to join multicast group on ${interface.name}: $error $stackTrace');
+      }
+    }
+    sockets.add(socket);
+    return sockets;
+  }
+
+  /// 为每张网卡的 IPv4 地址绑定一个发送 socket，用于指定组播出接口。
+  static Future<List<RawDatagramSocket>> _bindMulticastSenders(int port, List<NetworkInterface> interfaces) async {
+    const ipv4Type = InternetAddressType.IPv4;
     final sockets = <RawDatagramSocket>[];
     for (final interface in interfaces) {
       final address = interface.addresses.where((item) => item.type == ipv4Type).firstOrNull;
-      if (address == null) continue;
+      if (address == null) {
+        continue;
+      }
       try {
         final socket = await RawDatagramSocket.bind(address, port);
-        if (joinGroup) {
-          socket.joinMulticast(InternetAddress(multicastGroup), interface);
-        }
+        // 在发送端关闭本机组播回环。
+        socket.multicastLoopback = false;
         sockets.add(socket);
       } catch (error, stackTrace) {
         logger.debug(_multicastTag, 'Failed to bind multicast socket on ${interface.name}: $error $stackTrace');

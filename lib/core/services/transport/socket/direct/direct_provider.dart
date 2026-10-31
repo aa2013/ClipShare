@@ -205,12 +205,17 @@ class DirectNotifier extends _$DirectNotifier {
         joinGroup: false,
       );
       for (var multicast in multicasts) {
-        multicast.send(
-          utf8.encode(b64Data),
-          InternetAddress(net.multicastGroup),
-          _discoverySettings.port,
-        );
-        multicast.close();
+        try {
+          multicast.send(
+            utf8.encode(b64Data),
+            InternetAddress(net.multicastGroup),
+            _discoverySettings.port,
+          );
+        } catch (e, stacktrace) {
+          logger.debug(tag, 'Failed to send multicast on ${multicast.address.address}: $e $stacktrace');
+        } finally {
+          multicast.close();
+        }
       }
     } catch (e, stacktrace) {
       logger.debug(tag, '$e $stacktrace');
