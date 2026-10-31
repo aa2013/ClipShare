@@ -128,7 +128,8 @@ class _WorkingModeSelectionPageState extends ConsumerState<WorkingModeSelectionP
     }
     final configDao = ref.read(appDbProvider).requireValue.configDao;
     await configDao.addOrUpdate(ConfigKey.workingMode, selected.name);
-    ref.invalidate(clipboardSettingsProvider);
+    //等待配置重新加载完成，确保重启监听使用切换后的工作模式
+    final _ = await ref.refresh(clipboardSettingsProvider.future);
     await _applyListening(selected);
     if (mounted) {
       context.pop();

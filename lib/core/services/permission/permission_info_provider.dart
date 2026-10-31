@@ -3,7 +3,6 @@ import 'package:clipshare/core/services/permission/handlers/accessibility_permis
 import 'package:clipshare/core/services/permission/handlers/notification_record_permission_handler.dart';
 import 'package:clipshare/core/services/permission/handlers/sms_permission_handler.dart';
 import 'package:clipshare/core/services/permission/permission_info.dart';
-import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:flutter/widgets.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -46,8 +45,7 @@ class PermissionInfoNotifier extends _$PermissionInfoNotifier with WidgetsBindin
     final androidChannel = ref.read(androidChannelProvider.notifier);
     _notifyHandler = NotifyPermissionHandler(androidChannel);
     _floatHandler = FloatPermissionHandler(androidChannel);
-    final rulesExecutor = ref.read(rulesExecutorProvider.notifier);
-    _smsHandler = SmsPermissionHandler(rulesExecutor);
+    _smsHandler = SmsPermissionHandler();
     WidgetsBinding.instance.addObserver(this);
     ref.onDispose(_onDispose);
     return await _updatePermissionInfo();
@@ -102,6 +100,10 @@ class PermissionInfoNotifier extends _$PermissionInfoNotifier with WidgetsBindin
 
   Future<void> requestAccessibilityPermission(BuildContext context) {
     return _accessibilityHandler.request(context);
+  }
+
+  Future<void> requestSmsPermission(BuildContext context) {
+    return _smsHandler.request(context);
   }
 
   Future<void> requestIosPhotosPermission(BuildContext context) {

@@ -1,10 +1,11 @@
-import 'dart:io';
-
+import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/permission/permission_handler_facade.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
+import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
 import 'package:clipshare/core/settings/notification/notification_settings_provider.dart';
+import 'package:clipshare/core/settings/sync/sync_settings_provider.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/widgets/card/setting_card.dart';
 import 'package:clipshare/features/settings/widgets/card/setting_card_group.dart';
@@ -41,6 +42,10 @@ class SettingsPermissionPage extends SettingsSectionView {
     var permissionInfo = ref.watch(permissionInfoProvider).requireValue;
     final permissionHandler = ref.watch(permissionInfoProvider.notifier);
     final enableRecordNotification = ref.watch(notificationSettingsProvider.select((state) => state.requireValue.enableRecordNotification));
+    //短信权限只在启用短信规则后才有意义，规则状态实时订阅，避免使用旧的权限快照
+    final enableSmsRules = ref.watch(rulesExecutorProvider.select((state) => state.requireValue.enableSmsSync));
+    //iOS 相册权限只服务于保存图片到相册功能
+    final saveToPictures = ref.watch(syncSettingsProvider.select((state) => state.requireValue.saveToPictures));
     final clipboardSettings = ref.watch(clipboardSettingsProvider).requireValue;
     final workingMode = clipboardSettings.workingMode;
     final ignoreAccessibility = ref.watch(appStateProvider.select((state) => state.ignoreAccessibility));
@@ -51,16 +56,16 @@ class SettingsPermissionPage extends SettingsSectionView {
           TranslationKey.permissionSettingsNotificationDesc,
         ],
         title: Text(TranslationKey.permissionSettingsNotificationTitle.tr),
-        description: Platform.isAndroid ? Text(TranslationKey.permissionSettingsNotificationDesc.tr) : null,
+        description: isAndroid ? Text(TranslationKey.permissionSettingsNotificationDesc.tr) : null,
         value: permissionInfo.hasNotifyPermission,
         action: (val) => Icon(
           val ? Icons.check_circle : Icons.help,
           color: val ? Colors.green : Colors.orange,
         ),
-        show: (v) => (Platform.isAndroid || Platform.isIOS) && !v,
+        show: (v) => (isAndroid || isIOS) && !v,
         onTap: () {
           if (!permissionInfo.hasNotifyPermission) {
-            if (Platform.isIOS) {
+            if (isIOS) {
               openAppSettings();
             } else {
               permissionHandler.requestNotificationPermission(context);
@@ -80,7 +85,7 @@ class SettingsPermissionPage extends SettingsSectionView {
           val ? Icons.check_circle : Icons.help,
           color: val ? Colors.green : Colors.orange,
         ),
-        show: (v) => Platform.isAndroid && !v,
+        show: (v) => isAndroid && !v,
         onTap: () {
           if (!permissionInfo.hasFloatWindowPermission) {
             permissionHandler.requestFloatWindowPermission(context);
@@ -99,7 +104,7 @@ class SettingsPermissionPage extends SettingsSectionView {
           val ? Icons.check_circle : Icons.help,
           color: val ? Colors.green : Colors.orange,
         ),
-        show: (v) => Platform.isAndroid && !v,
+        show: (v) => isAndroid && !v,
         onTap: () {
           if (!permissionInfo.hasIgnoreBatteryPermission) {
             permissionHandler.requestIgnoreBatteryPermission(context);
@@ -118,7 +123,15 @@ class SettingsPermissionPage extends SettingsSectionView {
           val ? Icons.check_circle : Icons.help,
           color: val ? Colors.green : Colors.orange,
         ),
-        show: (v) => Platform.isAndroid && !v,
+        show: (v) => isAndroid && enableSmsRules && !v,
+        onTap: () async {
+          await permissionHandler.requestSmsPermission(context);
+          //授权结束后由规则执行器复查权限与规则，满足条件才启动短信监听
+          final rulesExecutor = ref.read(rulesExecutorProvider.notifier);
+          await rulesExecutor.ensureSmsSyncReady();
+          //刷新权限快照，驱动卡片显隐
+          ref.invalidate(permissionInfoProvider);
+        },
       ),
       SettingCard(
         searchKeys: const [
@@ -132,7 +145,7 @@ class SettingsPermissionPage extends SettingsSectionView {
           Icons.help,
           color: Colors.orange,
         ),
-        show: (v) => Platform.isAndroid && v,
+        show: (v) => isAndroid && v,
         onTap: () async {
           await permissionHandler.requestAccessibilityPermission(context);
           //自动写入 secure settings 后系统服务列表可能稍后才同步，等待后再复查一次
@@ -152,7 +165,7 @@ class SettingsPermissionPage extends SettingsSectionView {
           Icons.help,
           color: Colors.orange,
         ),
-        show: (v) => Platform.isAndroid && v,
+        show: (v) => isAndroid && v,
         onTap: () {
           NotificationListenerService.requestPermission();
         },
@@ -169,7 +182,7 @@ class SettingsPermissionPage extends SettingsSectionView {
           val ? Icons.check_circle : Icons.help,
           color: val ? Colors.green : Colors.orange,
         ),
-        show: (v) => Platform.isIOS && !v,
+        show: (v) => isIOS && saveToPictures && !v,
         onTap: () {
           if (!permissionInfo.hasIOSPhotosPermission) {
             permissionHandler.requestIosPhotosPermission(context);
@@ -188,7 +201,7 @@ class SettingsPermissionPage extends SettingsSectionView {
           Icons.help,
           color: Colors.orange,
         ),
-        show: (v) => Platform.isAndroid && !v,
+        show: (v) => isAndroid && !v,
         onTap: () async {
           final isValidWorkingMode = workingMode == .shizuku || workingMode == .root;
           if (!isValidWorkingMode) {

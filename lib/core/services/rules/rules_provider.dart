@@ -102,10 +102,7 @@ class RulesExecutorNotifier extends _$RulesExecutorNotifier {
   ScriptModule? _selectedLuaModuleItem;
   bool _activeItemChanged = false;
 
-  bool get enableSmsSync {
-    final smsRules = _rules.where((e) => e.trigger == RuleTrigger.onSms && e.enabled);
-    return smsRules.isNotEmpty;
-  }
+  bool get enableSmsSync => RuleState.hasEnabledSmsRule(_rules);
 
   //region 短信同步
 

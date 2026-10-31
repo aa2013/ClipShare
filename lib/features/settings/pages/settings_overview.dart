@@ -9,6 +9,7 @@ import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/clipboard/android_environment_status_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_service_provider.dart';
 import 'package:clipshare/core/services/permission/permission_info_provider.dart';
+import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/services/transport/socket/forward/forward_server_provider.dart';
 import 'package:clipshare/core/services/transport/storage/storage_provider.dart';
 import 'package:clipshare/core/settings/clipboard/clipboard_settings_provider.dart';
@@ -17,6 +18,7 @@ import 'package:clipshare/core/settings/forward/forward_settings_provider.dart';
 import 'package:clipshare/core/settings/forward/forward_way.dart';
 import 'package:clipshare/core/settings/notification/notification_settings_provider.dart';
 import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
+import 'package:clipshare/core/settings/sync/sync_settings_provider.dart';
 import 'package:clipshare/features/settings/enums/settings_section.dart';
 import 'package:clipshare/features/settings/utils/settings_section_view_factory.dart';
 import 'package:clipshare/features/settings/widgets/android_env/android_environment_status_card.dart';
@@ -399,12 +401,16 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
     final sourceRecord = ref.watch(clipboardSettingsProvider.select((state) => state.requireValue.sourceRecord));
     final ignoreAccessibility = ref.watch(appStateProvider.select((state) => state.ignoreAccessibility));
     final enableRecordNotification = ref.watch(notificationSettingsProvider.select((state) => state.requireValue.enableRecordNotification));
+    //短信权限只在启用短信规则后才有意义，规则状态实时订阅，避免使用旧的权限快照
+    final enableSmsRules = ref.watch(rulesExecutorProvider.select((state) => state.value?.enableSmsSync ?? false));
+    //iOS 相册权限只服务于保存图片到相册功能
+    final saveToPictures = ref.watch(syncSettingsProvider.select((state) => state.requireValue.saveToPictures));
     var count = 0;
     if (isAndroid) {
       if (!permissionInfo.hasNotifyPermission) count++;
       if (!permissionInfo.hasFloatWindowPermission) count++;
       if (!permissionInfo.hasIgnoreBatteryPermission) count++;
-      if (!permissionInfo.hasSmsReadPermission) count++;
+      if (enableSmsRules && !permissionInfo.hasSmsReadPermission) count++;
       if (!permissionInfo.hasClipboardPermission) count++;
       if (!permissionInfo.hasAccessibilityPermission && sourceRecord && !ignoreAccessibility) count++;
       final hasNotificationRecordPermission = permissionInfo.hasNotificationRecordPermission;
@@ -413,7 +419,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
       }
     } else if (isIOS) {
       if (!permissionInfo.hasNotifyPermission) count++;
-      if (!permissionInfo.hasIOSPhotosPermission) count++;
+      if (saveToPictures && !permissionInfo.hasIOSPhotosPermission) count++;
     }
     return count;
   }
@@ -536,8 +542,9 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
     final clipboardListeningWay = ref.watch(clipboardSettingsProvider.select((state) => state.requireValue.listeningWay));
     Future<void> toggleListeningWay(ClipboardListeningWay listeningWay) async {
       final db = await ref.read(appDbProvider.future);
-      await db.configDao.addOrUpdate(ConfigKey.clipboardListeningWay, listeningWay.name.toString());
-      ref.invalidate(clipboardSettingsProvider);
+      await db.configDao.addOrUpdate(ConfigKey.clipboardListeningWay, listeningWay.name);
+      //等待配置重新加载完成，确保按切换后的方式重启监听
+      final _ = await ref.refresh(clipboardSettingsProvider.future);
       final clipboardService = ref.read(clipboardProvider.notifier);
       await clipboardService.restartAndroidListening();
     }
