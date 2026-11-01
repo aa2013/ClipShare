@@ -143,6 +143,10 @@ class SettingsFloatWindowPage extends SettingsSectionView {
           onChanged: (checked) async {
             if (checked) {
               await androidChannel.showHistoryFloatWindow();
+              // 悬浮窗服务每次显示都会重建实例，需按当前配置重新应用位置锁定。
+              await androidChannel.lockHistoryFloatLoc(
+                floatWindowSettings.lockHistoryFloatLoc,
+              );
             } else {
               await androidChannel.closeHistoryFloatWindow();
             }

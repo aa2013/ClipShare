@@ -13,7 +13,7 @@ Future<FloatWindowSettings> floatWindowSettings(Ref ref) async {
   return FloatWindowSettings(
     enhanceBackgroundKeepAlive: await configDao.getConfigByKey(ConfigKey.enhanceBackgroundKeepAlive, false),
     showHistoryFloat: await configDao.getConfigByKey(ConfigKey.showHistoryFloat, false),
-    lockHistoryFloatLoc: await configDao.getConfigByKey(ConfigKey.lockHistoryFloatLoc, true),
+    lockHistoryFloatLoc: await configDao.getConfigByKey(ConfigKey.lockHistoryFloatLoc, false),
     historyFloatHandleWidth: await configDao.getConfigByKey(ConfigKey.historyFloatHandleWidth, 32),
     historyFloatHandleColor: await configDao.getConfigByKey(
       ConfigKey.historyFloatHandleColor,
