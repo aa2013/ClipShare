@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:clipshare/core/runtime/app_state/app_state.dart';
+import 'package:clipshare/core/services/transport/events/forward_status_event_provider.dart';
 import 'package:clipshare/core/settings/forward/forward_server_status.dart';
 import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/utils/log.dart';
@@ -14,18 +15,27 @@ part 'app_state_provider.g.dart';
 class AppStateNotifier extends _$AppStateNotifier {
   static const tag = 'AppStateNotifier';
   late StreamSubscription _networkListener;
+
+  /// 中转状态广播订阅
+  late StreamSubscription<ForwardServerStatus> _forwardStatusListener;
+
   Timer? _networkChangedTimer;
   final _connectivity = Connectivity();
+
+  ForwardStatusEventNotifier get _forwardStatusEventNotifier => ref.read(forwardStatusEventProvider.notifier);
 
   @override
   AppState build() {
     _networkListener = _connectivity.onConnectivityChanged.listen(_onNetworkChanged);
+    final forwardStatusEvents = _forwardStatusEventNotifier.forwardStatusEvents;
+    _forwardStatusListener = forwardStatusEvents.listen(updateForwardServerStatus);
     ref.onDispose(_dispose);
     return const AppState();
   }
 
   void _dispose() {
     _networkListener.cancel();
+    _forwardStatusListener.cancel();
   }
 
   void _onNetworkChanged(ConnectivityResult result) {

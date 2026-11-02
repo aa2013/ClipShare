@@ -128,7 +128,7 @@ class SettingsForwardPage extends SettingsSectionView {
               MenuItem(
                 label: forwardWayLabel(ForwardWay.server),
                 icon: forwardWayIcon(ForwardWay.server),
-                enabled: v != ForwardWay.server,
+                enabled: v != .server,
                 onSelected: () async {
                   Future<void> setup() async {
                     await _setForwardWay(ref, .server);
@@ -147,7 +147,7 @@ class SettingsForwardPage extends SettingsSectionView {
               MenuItem(
                 label: forwardWayLabel(ForwardWay.webdav),
                 icon: forwardWayIcon(ForwardWay.webdav),
-                enabled: v != ForwardWay.webdav,
+                enabled: v != .webdav,
                 onSelected: () {
                   Future<void> setup() async {
                     final shouldDisableForRootPath = forwardSettings.enable
@@ -176,7 +176,7 @@ class SettingsForwardPage extends SettingsSectionView {
               MenuItem(
                 label: forwardWayLabel(ForwardWay.s3),
                 icon: forwardWayIcon(ForwardWay.s3),
-                enabled: v != ForwardWay.s3,
+                enabled: v != .s3,
                 onSelected: () async {
                   Future<void> setup() async {
                     final shouldDisableForRootPath = forwardSettings.enable
@@ -205,7 +205,7 @@ class SettingsForwardPage extends SettingsSectionView {
               MenuItem(
                 label: forwardWayLabel(ForwardWay.none),
                 icon: forwardWayIcon(ForwardWay.none),
-                enabled: v != ForwardWay.none,
+                enabled: v != .none,
                 onSelected: () async {
                   Future<void> setup() async {
                     await _setEnableForward(ref, false);
@@ -231,7 +231,7 @@ class SettingsForwardPage extends SettingsSectionView {
         },
       ),
       //服务状态/通知服务配置
-      if (forwardSettings.way != ForwardWay.none)
+      if (forwardSettings.way != .none)
         SettingCard(
           searchKeys: const [
             TranslationKey.forwardServerStatus,
@@ -310,7 +310,7 @@ class SettingsForwardPage extends SettingsSectionView {
           },
         ),
       //是否启用中转服务
-      if (forwardSettings.way != ForwardWay.none)
+      if (forwardSettings.way != .none)
         SettingCard(
           searchKeys: const [
             TranslationKey.forwardSettingsForwardTitle,
@@ -361,7 +361,7 @@ class SettingsForwardPage extends SettingsSectionView {
                   );
                   return;
                 }
-                final useWebdav = forwardSettings.way == ForwardWay.webdav;
+                final useWebdav = forwardSettings.way == .webdav;
                 if (useWebdav && forwardSettings.webdavConfig == null) {
                   snackbar.error(
                     context,
@@ -369,7 +369,7 @@ class SettingsForwardPage extends SettingsSectionView {
                   );
                   return;
                 }
-                final useS3 = forwardSettings.way == ForwardWay.s3;
+                final useS3 = forwardSettings.way == .s3;
                 if (useS3 && forwardSettings.s3Config == null) {
                   snackbar.error(
                     context,
@@ -392,7 +392,7 @@ class SettingsForwardPage extends SettingsSectionView {
                   if (useServer) {
                     await forwardServer.disConnectForwardServer();
                   } else {
-                    storageService.stop();
+                    await storageService.stop();
                   }
                 }
               },
@@ -596,7 +596,8 @@ class SettingsForwardPage extends SettingsSectionView {
   Future<void> _setEnableForward(WidgetRef ref, bool enable) async {
     final configDao = ref.read(appDbProvider).requireValue.configDao;
     await configDao.addOrUpdate(.enableForward, enable.toString());
-    ref.invalidate(forwardSettingsProvider);
+    //刷新值，否则别的地方（非UI）可能拿到旧值
+    final _ = await ref.refresh(forwardSettingsProvider.future);
   }
 
   Future<void> _setForwardWay(WidgetRef ref, ForwardWay way) async {

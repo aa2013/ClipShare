@@ -30,7 +30,7 @@ class SettingsPage extends StatelessWidget {
     SettingsSection section, {
     String? highlightedSearchId,
   }) {
-    if (section == SettingsSection.rules) {
+    if (section == .rules) {
       context.pushNamed(AppRoutes.rules.name);
       return;
     }

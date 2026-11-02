@@ -97,14 +97,16 @@ class ForwardServerNotifier extends _$ForwardServerNotifier {
 
   @override
   bool build() {
-    ref.onDispose(() {
-      _disposed = true;
-      _forwardConnectTokenSource?.cancel();
-      _forwardReconnectTimer?.cancel();
-      _stopJudgeForwardClientAlive();
-      unawaited(disconnectForwardServer());
-    });
+    ref.onDispose(_dispose);
     return false;
+  }
+
+  void _dispose(){
+    _disposed = true;
+    _forwardConnectTokenSource?.cancel();
+    _forwardReconnectTimer?.cancel();
+    _stopJudgeForwardClientAlive();
+    unawaited(disconnectForwardServer());
   }
 
   /// 根据已保存设备生成中转连接候选

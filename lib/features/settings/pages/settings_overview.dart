@@ -283,8 +283,8 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
             Icons.chevron_right_rounded,
             color: Colors.blueGrey,
           ),
-          onTap: () => widget.onSectionTap(SettingsSection.permission),
-          selected: widget.selectedSection == SettingsSection.permission,
+          onTap: () => widget.onSectionTap(.permission),
+          selected: widget.selectedSection == .permission,
           visible: (isAndroid || isIOS) && _permissionIssueCount() > 0,
         ),
         // Keep relay status visible at the top while its detailed controls live in the relay page.
@@ -303,7 +303,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
             enabled: forwardSettings.enable,
             status: forwardServerStatus,
           ),
-          trailing: forwardSettings.way == ForwardWay.none
+          trailing: forwardSettings.way == .none
               ? const Icon(
                   Icons.chevron_right_rounded,
                   color: Colors.blueGrey,
@@ -321,8 +321,8 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
                     ),
                   ],
                 ),
-          onTap: () => widget.onSectionTap(SettingsSection.forward),
-          selected: widget.selectedSection == SettingsSection.forward,
+          onTap: () => widget.onSectionTap(.forward),
+          selected: widget.selectedSection == .forward,
         ),
       ],
     );
@@ -386,8 +386,8 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
             Icons.chevron_right_rounded,
             color: Colors.blueGrey,
           ),
-          onTap: () => widget.onSectionTap(SettingsSection.language),
-          selected: widget.selectedSection == SettingsSection.language,
+          onTap: () => widget.onSectionTap(.language),
+          selected: widget.selectedSection == .language,
         ),
       ],
     );
@@ -461,7 +461,7 @@ class _SettingsOverviewPageState extends ConsumerState<SettingsOverviewPage> wit
       return;
     }
     await _configDao.addOrUpdate(.enableForward, checked.toString());
-    ref.invalidate(forwardSettingsProvider);
+    final _ = await ref.refresh(forwardSettingsProvider.future);
     if (checked) {
       if (useServer) {
         await _forwardServer.connectForwardServer(true);
