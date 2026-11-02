@@ -204,6 +204,11 @@ class _ForwardServerEditDialogState extends ConsumerState<ForwardServerEditDialo
             }
           }
         }
+        if (mounted) {
+          setState(() {
+            detecting = false;
+          });
+        }
         client.close();
       },
       onError: (err, client) {
@@ -398,7 +403,7 @@ class _ForwardServerEditDialogState extends ConsumerState<ForwardServerEditDialo
               if (serverVersion.isNotEmpty)
                 Padding(
                   padding: 16.insetL,
-                  child: Text('V${TranslationKey.version.tr}: $serverVersion'),
+                  child: Text('${TranslationKey.version.tr}: $serverVersion'),
                 ),
             ],
           ),
