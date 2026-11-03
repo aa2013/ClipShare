@@ -6,6 +6,7 @@ import 'package:clipshare/shared/models/exception_info.dart';
 import 'package:clipshare/shared/models/storage/s3_config.dart';
 import 'package:clipshare/shared/models/storage/storage_item.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/parallerl_task.dart';
 import 'package:minio/minio.dart';
 import 'storage_client.dart';
 
@@ -146,31 +147,42 @@ class S3Client extends StorageClient {
     }
   }
 
+  /// 下载文件到本地，取消令牌触发时中止本次下载请求。
   @override
   Future<bool> downloadFile(
     String path,
     String localPath, {
     StorageProgressFunc? onProgress,
     bool isLocalDir = false,
+    CancelToken? cancelToken,
   }) async {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
+    // 中止信号由取消令牌驱动，abortTrigger 完成时插件会断开本次下载请求
+    final abortTrigger = Completer<void>();
+    final registration = cancelToken?.register(() {
+      if (!abortTrigger.isCompleted) {
+        abortTrigger.complete();
+      }
+    });
     try {
       StorageClient.recordClientInvoke('downloadFile', path: path);
       final props = await _client.statObject(_config.bucketName, filePath);
       final totalSize = props.size!;
       var count = 0;
-      StorageClient.recordClientInvoke('downloadFile', path: path);
-      final stream = (await _client.getObject(_config.bucketName, filePath))
-          .transform(
-            StreamTransformer<List<int>, List<int>>.fromHandlers(
-              handleData: (dataChunk, sink) {
-                count += dataChunk.length;
-                onProgress?.call(count, totalSize);
-                sink.add(dataChunk);
-              },
-            ),
-          );
+      final stream = (await _client.getObject(
+        _config.bucketName,
+        filePath,
+        abortTrigger: cancelToken == null ? null : abortTrigger.future,
+      )).transform(
+        StreamTransformer<List<int>, List<int>>.fromHandlers(
+          handleData: (dataChunk, sink) {
+            count += dataChunk.length;
+            onProgress?.call(count, totalSize);
+            sink.add(dataChunk);
+          },
+        ),
+      );
       if (isLocalDir) {
         await Directory(localPath).create(recursive: true);
         if (!localPath.endsWith('/')) {
@@ -180,16 +192,26 @@ class S3Client extends StorageClient {
       }
       final file = File(localPath);
       final writer = file.openWrite();
-      await writer.addStream(stream);
-      await writer.close();
+      try {
+        await writer.addStream(stream);
+      } finally {
+        // 下载中断时同样关闭句柄，避免半成品文件被占用而无法删除
+        await writer.close();
+      }
       return true;
     } catch (err, stack) {
+      if (cancelToken?.isCanceled ?? false) {
+        // 取消不是故障，不记录错误日志
+        return false;
+      }
       _logStorageError('downloadFile', err, stack, <String, Object?>{
         'path': path,
         'localPath': localPath,
         'isLocalDir': isLocalDir,
       });
       return false;
+    } finally {
+      registration?.dispose();
     }
   }
 
@@ -207,8 +229,7 @@ class S3Client extends StorageClient {
         StorageClient.recordClientInvoke('isDirectory', path: path);
         final items = await _client.listAllObjectsV2(_config.bucketName, prefix: dirPath);
         final hasDirectoryMarker = items.objects.any((item) => item.key == dirPath);
-        final hasChildren = items.objects.any((item) => item.key?.startsWith(dirPath) ?? false) ||
-            items.prefixes.any((prefix) => prefix.startsWith(dirPath));
+        final hasChildren = items.objects.any((item) => item.key?.startsWith(dirPath) ?? false) || items.prefixes.any((prefix) => prefix.startsWith(dirPath));
         if (hasDirectoryMarker || hasChildren) {
           return true;
         }
@@ -341,18 +362,31 @@ class S3Client extends StorageClient {
     }
   }
 
+  /// 上传本地文件，取消令牌触发时让上传流以取消错误结束。
+  ///
+  /// minio 的分片边界由库内部决定，取消只能在请求层停止继续读取源文件，
+  /// 已开始的 part 上传需要自行跑完。
+  /// 上传本地文件，取消令牌触发时中止本次上传请求。
   @override
   Future<bool> uploadFile(
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    CancelToken? cancelToken,
   }) async {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
+    // 中止信号由取消令牌驱动，abortTrigger 完成时插件会断开本次上传请求
+    final abortTrigger = Completer<void>();
+    final registration = cancelToken?.register(() {
+      if (!abortTrigger.isCompleted) {
+        abortTrigger.complete();
+      }
+    });
     try {
       final file = File(localFilePath);
       final totalSize = await file.length();
-      final reader = file.openRead().map((chunk) => Uint8List.fromList(chunk));
+      final reader = file.openRead().map(Uint8List.fromList);
       StorageClient.recordClientInvoke('uploadFile', path: path);
       await _client.putObject(
         _config.bucketName,
@@ -360,15 +394,22 @@ class S3Client extends StorageClient {
         reader,
         size: totalSize,
         onProgress: (count) => onProgress?.call(count, totalSize),
+        abortTrigger: cancelToken == null ? null : abortTrigger.future,
       );
       return true;
     } catch (err, stack) {
+      if (cancelToken?.isCanceled ?? false) {
+        // 取消不是故障，不记录错误日志
+        return false;
+      }
       _logStorageError('uploadFile', err, stack, <String, Object?>{
         'path': path,
         'localFilePath': localFilePath,
         'objectKey': filePath,
       });
       return false;
+    } finally {
+      registration?.dispose();
     }
   }
 }

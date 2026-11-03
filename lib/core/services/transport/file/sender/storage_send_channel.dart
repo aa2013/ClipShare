@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -5,6 +6,7 @@ import 'package:clipshare/core/services/transport/client/storage/storage_client.
 import 'package:clipshare/core/services/transport/file/models/protocol/storage_file_info.dart';
 import 'package:clipshare/core/services/transport/file/sender/file_send_channel.dart';
 import 'package:clipshare/core/services/transport/storage/storage_ws_service.dart';
+import 'package:clipshare/shared/extensions/cancellable_extension.dart';
 import 'package:clipshare/shared/extensions/time_extension.dart';
 import 'package:clipshare/shared/models/websocket/ws_msg_data.dart';
 import 'package:clipshare/shared/models/websocket/ws_msg_type.dart';
@@ -51,6 +53,7 @@ class StorageSendChannel {
     // content uri 源先复制到缓存目录再上传，避免整读进内存
     var sourcePath = task.localPath;
     String? cachedUriFile;
+    Future<bool>? uploadFuture;
     if (task.isUri) {
       cachedUriFile = await uriFileReader.copyFileFromUri(task.localPath, cachePath);
       if (cachedUriFile == null) {
@@ -62,15 +65,16 @@ class StorageSendChannel {
       if (!await client.createDirectory(filesDir)) {
         throw Exception('create storage dir failed: $filesDir');
       }
-      final uploaded = await client.uploadFile(
+      uploadFuture = client.uploadFile(
         storageFilePath,
         sourcePath,
-        onProgress: (count, total) {
-          if (cancelToken.isCanceled) {
-            throw const FileTransferCanceledException();
-          }
-          job.onProgress(count);
-        },
+        cancelToken: cancelToken,
+        onProgress: (count, _) => job.onProgress(count),
+      );
+      // 上传流的取消由各存储客户端处理，这里保证取消时不再等待上传收尾
+      final uploaded = await uploadFuture.orCancel(
+        cancelToken,
+        cancelError: () => const FileTransferCanceledException(),
       );
       if (cancelToken.isCanceled) {
         throw const FileTransferCanceledException();
@@ -86,8 +90,34 @@ class StorageSendChannel {
       }
       wsService.send(WsMsgData(WsMsgType.syncFile, '$today:$selfDevId:${task.fileId}', job.device.guid));
     } finally {
-      await _deleteTempUriFile(cachedUriFile);
+      _scheduleTempUriFileCleanup(cachedUriFile, uploadFuture);
     }
+  }
+
+  /// 安排清理 content uri 源的临时缓存文件。
+  ///
+  /// 上传已开始时挂到上传结束之后执行，避免取消后与仍在读取该文件的上传产生竞态；
+  /// 清理不阻塞发送收口。
+  void _scheduleTempUriFileCleanup(String? path, Future<bool>? uploadFuture) {
+    if (path == null) {
+      return;
+    }
+    final pending = uploadFuture;
+    if (pending == null) {
+      unawaited(_deleteTempUriFile(path));
+      return;
+    }
+    unawaited(_deleteTempUriFileAfterUpload(pending, path));
+  }
+
+  /// 等待上传结束（成功、失败或取消）后再删除临时文件。
+  Future<void> _deleteTempUriFileAfterUpload(Future<bool> uploadFuture, String path) async {
+    try {
+      await uploadFuture;
+    } catch (_) {
+      // 上传失败或被取消时同样需要清理临时文件
+    }
+    await _deleteTempUriFile(path);
   }
 
   /// 清理 content uri 源的临时缓存文件

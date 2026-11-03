@@ -29,6 +29,7 @@ import 'package:clipshare/shared/enums/history_content_type.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/utils/file_util.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/parallerl_task.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'file_receiver_provider.g.dart';
@@ -36,11 +37,14 @@ part 'file_receiver_provider.g.dart';
 /// 接收完成通知的 key 前缀，点击通知后打开对应文件
 const _receivedFileNotifyKeyPrefix = 'receive-file';
 
-/// 进行中的接收会话：持有文件流写句柄与取消标记，终止时由 [FileReceiverNotifier.abortTask] 中断清理
+/// 进行中的接收会话：持有文件流写句柄与取消入口，终止时由 [FileReceiverNotifier.abortTask] 中断清理
 class _ReceiveSession {
   final Socket? socket;
   final IOSink? sink;
   final String localPath;
+
+  /// 取消入口：存储中转下载把它交给存储客户端，直连接收靠 socket 断开
+  final CancelTokenSource cancelSource = CancelTokenSource();
 
   /// 终止标记，文件流侧轮询到该标记后停止处理
   bool canceled = false;
@@ -157,9 +161,10 @@ class FileReceiverNotifier extends _$FileReceiverNotifier {
       final downloaded = await client.downloadFile(
         storageFilePath,
         localPath,
+        cancelToken: session.cancelSource.token,
         onProgress: (count, total) {
           if (session.canceled) {
-            throw const FileTransferCanceledException();
+            return;
           }
           _board.updateReceiveProgress(taskId, count);
         },
@@ -192,7 +197,8 @@ class FileReceiverNotifier extends _$FileReceiverNotifier {
 
   //endregion
 
-  /// 终止接收任务：中断文件流、删除半成品并标记取消
+  /// 终止接收任务：中断文件流或存储下载并标记取消。
+  /// 半成品文件由接收流程的收尾逻辑删除，避免与仍在写入的下载产生竞态。
   Future<void> abortTask(String taskId) async {
     final session = _activeReceives.remove(taskId);
     if (session == null) {
@@ -200,7 +206,7 @@ class FileReceiverNotifier extends _$FileReceiverNotifier {
     }
     session.canceled = true;
     session.socket?.destroy();
-    await _discardPartialFile(session.localPath);
+    session.cancelSource.cancel();
     _board.cancelReceiveTask(taskId);
   }
 

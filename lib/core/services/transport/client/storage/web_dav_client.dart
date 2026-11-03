@@ -7,6 +7,7 @@ import 'package:clipshare/shared/models/exception_info.dart';
 import 'package:clipshare/shared/models/storage/storage_item.dart';
 import 'package:clipshare/shared/models/storage/web_dav_config.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/parallerl_task.dart';
 import 'package:webdav_plus/webdav_plus.dart';
 
 import 'storage_client.dart';
@@ -371,11 +372,13 @@ class WebDAVClient extends StorageClient {
     );
   }
 
+  /// 上传文件；取消令牌触发时中止本次上传并断开连接。
   @override
   Future<bool> uploadFile(
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    CancelToken? cancelToken,
   }) async {
     path = path.unixPath;
     try {
@@ -385,9 +388,29 @@ class WebDAVClient extends StorageClient {
       }
       final filePath = _toClientPath(path, isDirectory: false);
       StorageClient.recordClientInvoke('uploadFile', path: path);
-      await _client.putFileStream(filePath, file, onProgress: onProgress);
-      return true;
+      // 中止信号由取消令牌驱动，abortTrigger 完成时插件会断开本次上传连接
+      final abortTrigger = Completer<void>();
+      final registration = cancelToken?.register(() {
+        if (!abortTrigger.isCompleted) {
+          abortTrigger.complete();
+        }
+      });
+      try {
+        await _client.putFileStream(
+          filePath,
+          file,
+          onProgress: onProgress,
+          abortTrigger: cancelToken == null ? null : abortTrigger.future,
+        );
+        return true;
+      } finally {
+        registration?.dispose();
+      }
     } catch (err, stack) {
+      if (cancelToken?.isCanceled ?? false) {
+        // 取消不是故障，不记录错误日志
+        return false;
+      }
       _logStorageError('uploadFile', err, stack, <String, Object?>{
         'path': path,
         'localFilePath': localFilePath,
@@ -402,6 +425,7 @@ class WebDAVClient extends StorageClient {
     String localPath, {
     StorageProgressFunc? onProgress,
     bool isLocalDir = false,
+    CancelToken? cancelToken,
   }) async {
     path = path.unixPath;
     try {
@@ -422,9 +446,29 @@ class WebDAVClient extends StorageClient {
       }
       await localDir.create(recursive: true);
       StorageClient.recordClientInvoke('downloadFile', path: path);
-      await _client.downloadToFile(filePath, localPath, onProgress: onProgress);
-      return true;
+      // 中止信号由取消令牌驱动，abortTrigger 完成时插件会断开本次下载连接
+      final abortTrigger = Completer<void>();
+      final registration = cancelToken?.register(() {
+        if (!abortTrigger.isCompleted) {
+          abortTrigger.complete();
+        }
+      });
+      try {
+        await _client.downloadToFile(
+          filePath,
+          localPath,
+          onProgress: onProgress,
+          abortTrigger: cancelToken == null ? null : abortTrigger.future,
+        );
+        return true;
+      } finally {
+        registration?.dispose();
+      }
     } catch (err, stack) {
+      if (cancelToken?.isCanceled ?? false) {
+        // 取消不是故障，不记录错误日志
+        return false;
+      }
       _logStorageError('downloadFile', err, stack, <String, Object?>{
         'path': path,
         'localPath': localPath,

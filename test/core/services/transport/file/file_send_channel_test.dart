@@ -13,7 +13,7 @@ Stream<List<int>> _byteStream(List<List<int>> chunks) async* {
 
 void main() {
   group('trackFileStream', () {
-    test('统计累计进度并透传字节', () async {
+    test('accumulates progress and passes bytes through', () async {
       final source = _byteStream([
         [1, 2, 3],
         [4, 5],
@@ -32,7 +32,7 @@ void main() {
       expect(progress, [3, 5]);
     });
 
-    test('取消令牌生效后流以取消异常结束且不再透传', () async {
+    test('ends the stream right after cancel without new data events', () async {
       final controller = StreamController<List<int>>();
       final tokenSource = CancelTokenSource();
       final progress = <int>[];
@@ -41,20 +41,48 @@ void main() {
         cancelToken: tokenSource.token,
         onProgress: progress.add,
       );
-      final done = expectLater(tracked.drain<void>(), throwsA(isA<FileTransferCanceledException>()));
+      final received = <List<int>>[];
+      final errors = <Object>[];
+      final done = Completer<void>();
+      tracked.listen(
+        received.add,
+        onError: errors.add,
+        onDone: () {
+          if (!done.isCompleted) {
+            done.complete();
+          }
+        },
+      );
       controller.add([1, 1, 1]);
       await Future<void>.delayed(Duration.zero);
+
       tokenSource.cancel();
-      //取消后需要新的数据事件触发检查才会中断
-      controller.add([2, 2]);
-      await controller.close();
-      await done;
+      await done.future;
+
+      expect(received, [
+        [1, 1, 1],
+      ]);
+      expect(errors.single, isA<FileTransferCanceledException>());
       expect(progress, [3]);
+      await controller.close();
+    });
+
+    test('passes bytes through when progress is omitted', () async {
+      final source = _byteStream([
+        [1, 2],
+        [3],
+      ]);
+      final received = <int>[];
+      final tracked = trackFileStream(source, cancelToken: CancelToken());
+      await for (final chunk in tracked) {
+        received.addAll(chunk);
+      }
+      expect(received, [1, 2, 3]);
     });
   });
 
   group('openSendSourceStream', () {
-    test('本地文件按字节流读取', () async {
+    test('reads local file as byte stream', () async {
       final tempDir = await Directory.systemTemp.createTemp('clipshare_file_test');
       final file = File('${tempDir.path}/a.bin');
       await file.writeAsBytes([7, 8, 9]);

@@ -185,12 +185,12 @@ dependencies:
   webdav_plus:
     git:
       url: https://github.com/aa2013/webdav_plus.git
-      ref: custom-user-agent
+      ref: cancelable
   dart_aliyun_oss: ^1.4.3
   minio:
     git:
       url: https://github.com/aa2013/minio-dart
-      ref: custom-user-agent
+      ref: feat-cancelable
   # Android/IOS deviceId generator
   persistent_device_id: ^1.1.0
   # 滑动操作

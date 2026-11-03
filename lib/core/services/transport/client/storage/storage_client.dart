@@ -4,6 +4,7 @@ import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/models/exception_info.dart';
 import 'package:clipshare/shared/models/storage/storage_item.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/parallerl_task.dart';
 
 /// 存储操作进度回调函数类型
 /// [count] 表示当前已处理的量（已传输的字节数）
@@ -157,10 +158,13 @@ abstract class StorageClient {
   /// [path] - 目标存储路径
   /// [localFilePath] - 本地文件路径
   /// [onProgress] - 可选进度回调
+  /// [cancelToken] - 可选取消令牌，触发时尽快中断上传并返回 false（不记错误日志），
+  /// 由调用方按令牌状态统一收口为取消
   Future<bool> uploadFile(
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    CancelToken? cancelToken,
   });
 
   /// 下载文件到本地
@@ -169,11 +173,14 @@ abstract class StorageClient {
   /// [localPath] - 本地目标路径
   /// [onProgress] - 可选进度回调
   /// [isLocalDir] - 本地路径是否为目录（默认为false）
+  /// [cancelToken] - 可选取消令牌，触发时尽快中断下载并返回 false（不记错误日志），
+  /// 由调用方按令牌状态统一收口为取消
   Future<bool> downloadFile(
     String path,
     String localPath, {
     StorageProgressFunc? onProgress,
     bool isLocalDir = false,
+    CancelToken? cancelToken,
   });
 
   /// 读取文件内容为字节数组

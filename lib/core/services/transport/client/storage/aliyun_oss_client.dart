@@ -5,8 +5,10 @@ import 'package:clipshare/shared/models/exception_info.dart';
 import 'package:clipshare/shared/models/storage/s3_config.dart';
 import 'package:clipshare/shared/models/storage/storage_item.dart';
 import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/parallerl_task.dart';
 import 'package:dart_aliyun_oss/dart_aliyun_oss.dart';
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio show CancelToken;
+import 'package:dio/dio.dart' hide CancelToken;
 import 'storage_client.dart';
 
 ///添加的Object大小不能超过 5 GB。
@@ -147,20 +149,27 @@ class AliyunOssClient extends StorageClient {
     }
   }
 
+  /// 下载文件到本地，取消令牌通过 dio 的取消令牌真正中断下载请求。
   @override
   Future<bool> downloadFile(
     String path,
     String localPath, {
     StorageProgressFunc? onProgress,
     bool isLocalDir = false,
+    CancelToken? cancelToken,
   }) async {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
+    final dioCancelToken = dio.CancelToken();
+    final registration = cancelToken?.register(dioCancelToken.cancel);
     try {
       StorageClient.recordClientInvoke('downloadFile', path: path);
       final resp = (await _client.getObjectStream(
         filePath,
-        params: OSSRequestParams(onReceiveProgress: onProgress),
+        params: OSSRequestParams(
+          cancelToken: dioCancelToken,
+          onReceiveProgress: onProgress,
+        ),
       ));
       if (isLocalDir) {
         await Directory(localPath).create(recursive: true);
@@ -168,16 +177,26 @@ class AliyunOssClient extends StorageClient {
       }
       final file = File(localPath);
       final writer = file.openWrite();
-      await writer.addStream(resp.data!);
-      await writer.close();
+      try {
+        await writer.addStream(resp.data!);
+      } finally {
+        // 下载中断时同样关闭句柄，避免半成品文件被占用而无法删除
+        await writer.close();
+      }
       return true;
     } catch (err, stack) {
+      if (cancelToken?.isCanceled ?? false) {
+        // 取消不是故障，不记录错误日志
+        return false;
+      }
       _logStorageError('downloadFile', err, stack, <String, Object?>{
         'path': path,
         'localPath': localPath,
         'isLocalDir': isLocalDir,
       });
       return false;
+    } finally {
+      registration?.dispose();
     }
   }
 
@@ -347,24 +366,36 @@ class AliyunOssClient extends StorageClient {
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    CancelToken? cancelToken,
   }) async {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);
+    final dioCancelToken = dio.CancelToken();
+    final registration = cancelToken?.register(dioCancelToken.cancel);
     try {
       StorageClient.recordClientInvoke('uploadFile', path: path);
       final resp = await _client.putObject(
         File(localFilePath),
         filePath,
-        params: OSSRequestParams(onSendProgress: onProgress),
+        params: OSSRequestParams(
+          cancelToken: dioCancelToken,
+          onSendProgress: onProgress,
+        ),
       );
       return _responseIsOk(resp);
     } catch (err, stack) {
+      if (cancelToken?.isCanceled ?? false) {
+        // 取消不是故障，不记录错误日志
+        return false;
+      }
       _logStorageError('uploadFile', err, stack, <String, Object?>{
         'path': path,
         'localFilePath': localFilePath,
         'objectKey': filePath,
       });
       return false;
+    } finally {
+      registration?.dispose();
     }
   }
 }
