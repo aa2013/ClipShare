@@ -496,6 +496,7 @@ class SettingsForwardPage extends SettingsSectionView {
                             _showRootPathForwardWarn(context);
                           }
                           await configDao.addOrUpdate(.webdavConfig, jsonEncode(config));
+                          final _ = await ref.refresh(forwardSettingsProvider.future);
                           if (forwardSettings.enable) {
                             if (shouldDisableForRootPath) {
                               await _disableStorageForwardForRootPath(ref);
@@ -559,6 +560,7 @@ class SettingsForwardPage extends SettingsSectionView {
                             _showRootPathForwardWarn(context);
                           }
                           await configDao.addOrUpdate(.s3Config, jsonEncode(config));
+                          final _ = await ref.refresh(forwardSettingsProvider.future);
                           if (forwardSettings.enable) {
                             if (shouldDisableForRootPath) {
                               await _disableStorageForwardForRootPath(ref);
