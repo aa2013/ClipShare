@@ -107,20 +107,22 @@ class DiscoveryNotifier extends _$DiscoveryNotifier {
     final token = _tokenSource.token;
     try {
       await _ensureMulticastListener();
+      await _forwardServerNotifier.connectForwardServer();
+      final onlyForwardMode = _discoverySettings.onlyForwardMode;
       //连接已配对设备
       appStateNotifier.updateDeviceDiscoveryStatus(TranslationKey.deviceDiscoveryStatusViaPaired.tr);
-      final paired = _discoverySettings.onlyForwardMode ? <Future<void> Function()>[] : await _pairedDiscovering(token);
+      final paired = onlyForwardMode ? <Future<void> Function()>[] : await _pairedDiscovering(token);
       await ParallelTask(tasks: paired, maxParallelCnt: _maxParallelCount, token: token).run();
       if (token.isCanceled) return;
       //广播发现
       appStateNotifier.updateDeviceDiscoveryStatus(TranslationKey.deviceDiscoveryStatusViaBroadcast.tr);
       final mobile = appState.currentNetworkType == .mobile && !kIsWeb;
-      final broadcasts = mobile || !scan ? <Future<void> Function()>[] : _multicastDiscovering(token);
+      final broadcasts = mobile || !scan || onlyForwardMode ? <Future<void> Function()>[] : _multicastDiscovering(token);
       await ParallelTask(tasks: broadcasts, maxParallelCnt: 1, token: token).run();
       if (token.isCanceled) return;
       //子网扫描
       appStateNotifier.updateDeviceDiscoveryStatus(TranslationKey.deviceDiscoveryStatusViaScan.tr);
-      final subnet = mobile || !scan || _discoverySettings.onlyForwardMode ? <Future<void> Function()>[] : await _subNetDiscovering(token, manual);
+      final subnet = mobile || !scan || onlyForwardMode ? <Future<void> Function()>[] : await _subNetDiscovering(token, manual);
       await ParallelTask(tasks: subnet, maxParallelCnt: _maxParallelCount, token: token).run();
       if (token.isCanceled) return;
       //中转服务发现

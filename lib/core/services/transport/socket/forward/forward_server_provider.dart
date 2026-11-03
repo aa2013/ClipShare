@@ -137,7 +137,7 @@ class ForwardServerNotifier extends _$ForwardServerNotifier {
   void stopHeartbeatWatch() => _stopJudgeForwardClientAlive();
 
   /// 连接中转服务
-  Future<void> connectForwardServer([bool startDiscovery = false]) async {
+  Future<void> connectForwardServer([bool discovery = false]) async {
     if (_disposed) {
       return;
     }
@@ -148,7 +148,7 @@ class ForwardServerNotifier extends _$ForwardServerNotifier {
       return Future.value();
     }
     if (_forwardClient != null) {
-      if (startDiscovery) {
+      if (discovery) {
         unawaited(_runForwardDiscoveryOnce());
       }
       final enableAutoSyncOnScreenOpened = _discoverySettings.enableAutoSyncOnScreenOpened;
@@ -165,7 +165,7 @@ class ForwardServerNotifier extends _$ForwardServerNotifier {
     final tokenSource = CancelTokenSource();
     _forwardConnectTokenSource = tokenSource;
     late final Future<void> task;
-    task = _connectForwardServerOnce(tokenSource, startDiscovery).whenComplete(() {
+    task = _connectForwardServerOnce(tokenSource, discovery).whenComplete(() {
       if (identical(_forwardConnectFuture, task)) {
         _forwardConnectFuture = null;
       }
