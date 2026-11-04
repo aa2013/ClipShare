@@ -208,6 +208,19 @@ Platform.isXXXX 统一替换为 core/constants/platform_constants.dart 中的get
 
 **目录组织**：领域内模型/枚举放 `enums/`、`models/`、`utils`、`constants`、`extensions` 子目录，不在领域根目录平铺；一个类型一个文件
 
+## 4.6 自定义 analyzer 插件（依赖方向 lint）
+
+分层依赖方向由 `tools/clipshare_dependency_lint` 本地插件强制，规则 `dependency_direction` 与 `default_text_style_font_rule` 均按 ERROR 级别报告。
+
+**关键注意事项**：
+
+* 插件的 `analysis_server_plugin` 与 `analyzer` 依赖版本必须与项目 Flutter 内置分析服务器自洽；升级 Flutter / Dart 后必须同步核对插件 `pubspec.yaml`，并重新执行 `dart pub get`。
+* 分析服务器加载插件时会按其自身要求的 `analysis_server_plugin` 版本反查本插件。依赖无法解析时，插件会被**静默跳过**，规则完全不参与分析，`dart analyze` 与 IDE 均显示“无问题”，且不一定是缓存问题。
+* 因此**不允许仅凭 `flutter analyze` / IDE 全绿就判定分层依赖合规**。怀疑规则失效时，必须用 `dart analyze --verbose <一个已知违规文件>` 检查输出中是否出现 `An error occurred while executing an analyzer plugin`。
+* 修改插件代码或依赖后，必须验证：插件包自身 `dart analyze` 通过、`dart test` 通过，且对一个已知违规文件能实际报出 `dependency_direction`。
+* 插件包的 `analysis_options.yaml` 必须保留，用于终止向上查找，避免继承项目根配置中的 `plugins` 段导致插件递归加载。
+* 手工编辑插件 `pubspec.yaml` 时注意保持 UTF-8 编码，避免中文描述乱码。
+
 # 5. 测试说明
 
 执行测试遵循**最小必要原则**：
