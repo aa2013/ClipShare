@@ -97,16 +97,12 @@ class AppUpdateInfoNotifier extends _$AppUpdateInfoNotifier {
       }
     }
     _lastCheckUpdateTime = now;
-    //提前读取异步流程依赖，避免跨异步间隙访问 ref
-    final appUpdateSettings = _appUpdateSettings;
-    final updateDownloadFileDirPath = _updateDownloadDirPath;
-    final notifyNotifier = _notifyNotifier;
     final logs = await fetchUpdateLogs();
     if (logs.isEmpty) {
       return false;
     }
     final latestVersionCode = logs.first.version.code;
-    if (latestVersionCode == appUpdateSettings.ignoreUpdateVersion && !forceCheck) {
+    if (latestVersionCode == _appUpdateSettings.ignoreUpdateVersion && !forceCheck) {
       return false;
     }
     if (!context.mounted) {
@@ -154,21 +150,21 @@ class AppUpdateInfoNotifier extends _$AppUpdateInfoNotifier {
               selectedType,
               downloadUrl,
               latestVersion,
-              updateDownloadFileDirPath,
+              _updateDownloadDirPath,
             ),
           ),
         ),
       ),
     );
     const notifyKey = 'appUpdate';
-    final notifyId = await notifyNotifier.notify(
+    final notifyId = await _notifyNotifier.notify(
       content: '${TranslationKey.newVersionAvailable.tr} ${logs.first.version}',
       key: notifyKey,
     );
     if (notifyId != null) {
       unawaited(
         Future.delayed(2.s, () {
-          notifyNotifier.cancel(notifyKey, notifyId);
+          _notifyNotifier.cancel(notifyKey, notifyId);
         }),
       );
     }
