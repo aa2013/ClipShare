@@ -85,4 +85,5 @@ enum ConfigKey {
   recordMaxLength,
   takeOverWinV,
   restoreWinVOnExit,
+  schedulerState,
 }

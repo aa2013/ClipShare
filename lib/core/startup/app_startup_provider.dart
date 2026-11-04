@@ -13,6 +13,7 @@ import 'package:clipshare/core/platform/desktop/window/window_control_provider.d
 import 'package:clipshare/core/platform/desktop/window/window_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/runtime/network/network_change_coordinator_provider.dart';
+import 'package:clipshare/core/scheduler/scheduler_provider.dart';
 import 'package:clipshare/core/services/clipboard/app_info_sync_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_service_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
@@ -79,6 +80,7 @@ Future<void> appStartup(Ref ref) async {
     appDbProvider.future,
     //日志开关配置尽早加载，使后续初始化阶段的日志可按开关落盘
     logSettingsProvider.future,
+    schedulerProvider.future,
     notifyProvider.future,
     //region settings
     deviceSettingsProvider.future,
