@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:fake_async/fake_async.dart';
 import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/scheduler/enums/task_run_status.dart';
 import 'package:clipshare/core/scheduler/enums/task_trigger_type.dart';
@@ -87,7 +90,73 @@ ScheduledTask _buildTask({
   );
 }
 
+/// 可阻塞的任务用于验证注销后的异步收尾边界。
+class _BlockingHandler extends TaskHandler {
+  final gate = Completer<void>();
+  int count = 0;
+
+  /// 记录开始次数并等待测试释放，模拟慢速网络请求。
+  @override
+  Future<void> run(TaskContext context) async {
+    count++;
+    await gate.future;
+  }
+}
+
 void main() {
+  test('cancel during immediate execution does not reschedule', () {
+    fakeAsync((async) {
+      final store = _MemoryStateStore();
+      final now = DateTime(2026);
+      final scheduler = _buildScheduler(store: store, clock: () => now.add(async.elapsed));
+      final handler = _BlockingHandler();
+      TaskHandle? handle;
+      scheduler.register(_buildTask(handler: handler, runImmediatelyOnRegister: true)).then((value) => handle = value);
+      async.flushMicrotasks();
+      expect(handler.count, 1);
+      handle!.cancel();
+      handler.gate.complete();
+      async.flushMicrotasks();
+      expect(async.nonPeriodicTimerCount, 0);
+      async.elapse(const Duration(hours: 3));
+      expect(handler.count, 1);
+      expect(store.states, isEmpty);
+      scheduler.dispose();
+    });
+  });
+
+  test('cancel during timer execution does not reschedule', () {
+    fakeAsync((async) {
+      final store = _MemoryStateStore();
+      final now = DateTime(2026);
+      final scheduler = _buildScheduler(store: store, clock: () => now.add(async.elapsed));
+      final handler = _BlockingHandler();
+      TaskHandle? handle;
+      scheduler.register(_buildTask(handler: handler)).then((value) => handle = value);
+      async.flushMicrotasks();
+      async.elapse(const Duration(hours: 1));
+      expect(handler.count, 1);
+      handle!.cancel();
+      handler.gate.complete();
+      async.flushMicrotasks();
+      expect(async.nonPeriodicTimerCount, 0);
+      async.elapse(const Duration(hours: 3));
+      expect(handler.count, 1);
+      scheduler.dispose();
+    });
+  });
+
+  test('old handle cannot unregister replacement task', () async {
+    final scheduler = _buildScheduler(store: _MemoryStateStore(), clock: () => DateTime(2026));
+    final old = await scheduler.register(_buildTask(handler: _RecordingHandler()));
+    final replacement = _RecordingHandler();
+    await scheduler.register(_buildTask(handler: replacement));
+    await old.cancel();
+    expect(scheduler.isRegistered('test-task'), isTrue);
+    await scheduler.runNow('test-task');
+    expect(replacement.count, 1);
+    scheduler.dispose();
+  });
   group('SchedulerImpl 注册与注销', () {
     test('注册后 isRegistered 为 true，注销后为 false', () async {
       final store = _MemoryStateStore();

@@ -2,7 +2,6 @@ import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'loading.dart';
 
@@ -40,13 +39,41 @@ class _DownloadDialogState extends State<DownloadDialog> {
   final tag = 'DownloadDialog';
   bool cancel = false;
 
-  Future _downloadFile(void Function(bool success) onComplete) async {
+  bool _closing = false;
+
+  /// 只移除下载窗口所属 route，不影响后续覆盖在其上的提示窗口。
+  void _closeOwnRoute() {
+    if (_closing || !mounted) {
+      return;
+    }
+    _closing = true;
+    final route = ModalRoute.of(context);
+    final navigator = Navigator.of(context);
+    if (route == null || !route.isActive) {
+      return;
+    }
+    if (route.isCurrent) {
+      navigator.pop();
+    } else {
+      navigator.removeRoute(route);
+    }
+  }
+
+  @override
+  void dispose() {
+    cancel = true;
+    dio.close(force: true);
+    super.dispose();
+  }
+
+  /// 下载完成仅成功回调一次；取消或异常均不能进入成功安装流程。
+  Future<void> _downloadFile(void Function(bool success) onComplete) async {
     try {
       await dio.download(
         widget.url,
         widget.savePath,
         onReceiveProgress: (received, total) {
-          if (total != -1) {
+          if (mounted && !cancel && total > 0) {
             // 计算进度百分比
             final p = (received / total * 100);
             setState(() {
@@ -56,22 +83,20 @@ class _DownloadDialogState extends State<DownloadDialog> {
         },
       );
     } catch (err, stack) {
-      if (!mounted) {
+      if (!mounted || cancel) {
         return;
       }
-      context.pop();
-      if (!cancel) {
-        widget.onError?.call(err, stack);
-        error = true;
-      }
-    } finally {
-      if (!error) {
-        if (mounted) {
-          Navigator.of(context).pop();
-        }
-        onComplete(true);
-      }
+      error = true;
+      _closeOwnRoute();
+      widget.onError?.call(err, stack);
+      return;
     }
+    if (!mounted || cancel) {
+      return;
+    }
+    // 完成回调同步读取下载选项，随后精确关闭所属窗口。
+    onComplete(true);
+    _closeOwnRoute();
   }
 
   @override
@@ -88,9 +113,9 @@ class _DownloadDialogState extends State<DownloadDialog> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      context.pop();
+                      cancel = true;
+                      _closeOwnRoute();
                       try {
-                        cancel = true;
                         dio.close(force: true);
                       } catch (err, stack) {
                         logger.error(tag, 'error: $error. $stack');

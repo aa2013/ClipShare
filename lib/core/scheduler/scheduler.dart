@@ -87,6 +87,10 @@ class SchedulerImpl implements Scheduler {
     _tasks[key] = registered;
     final now = clock();
     final state = await stateStore.read(key);
+    // 读取持久化期间可能被同 key 注册替换或整体释放。
+    if (!_isActive(registered)) {
+      return TaskHandle(() async {});
+    }
     registered.lastScheduledAt = state.lastScheduledAt;
     registered.lastRunAt = state.lastRunAt;
     if (task.runImmediately) {
@@ -96,7 +100,7 @@ class SchedulerImpl implements Scheduler {
       await _scheduleNext(registered, now);
     }
     logger.debug(tag, "task '$key' registered, runOnMissed=${task.runOnMissed}, runImmediately=${task.runImmediately}");
-    return TaskHandle(() => _unregister(key));
+    return TaskHandle(() => _unregister(registered));
   }
 
   @override
@@ -136,9 +140,12 @@ class SchedulerImpl implements Scheduler {
   /// 执行任务并同步状态中的上次执行时间。
   Future<TaskResult> _execute(_RegisteredTask registered, TaskTriggerType triggerType, DateTime? scheduledAt) async {
     final key = registered.task.key;
+    if (!_isActive(registered)) {
+      return TaskResult.skipped(key, 'task unregistered');
+    }
     final context = TaskContext(key: key, triggerType: triggerType, scheduledAt: scheduledAt);
     final result = await executor.execute(registered.task, context);
-    if (result.status != TaskRunStatus.failed) {
+    if (_isActive(registered) && result.status != TaskRunStatus.failed) {
       registered.lastRunAt = clock();
       await stateStore.write(key, TaskState(lastScheduledAt: registered.lastScheduledAt, lastRunAt: registered.lastRunAt));
     }
@@ -147,7 +154,7 @@ class SchedulerImpl implements Scheduler {
 
   /// 计算并设置下一次定时触发，触发点无法计算时停止该任务调度。
   Future<void> _scheduleNext(_RegisteredTask registered, DateTime now) async {
-    if (_disposed) {
+    if (!_isActive(registered)) {
       return;
     }
     final key = registered.task.key;
@@ -185,6 +192,9 @@ class SchedulerImpl implements Scheduler {
 
   /// 推进已处理计划点并持久化，不刷新上次执行时间。
   Future<void> _advanceScheduledAt(_RegisteredTask registered, DateTime scheduledAt) async {
+    if (!_isActive(registered)) {
+      return;
+    }
     registered.lastScheduledAt = scheduledAt;
     await stateStore.write(registered.task.key, TaskState(lastScheduledAt: scheduledAt, lastRunAt: registered.lastRunAt));
   }
@@ -222,7 +232,7 @@ class SchedulerImpl implements Scheduler {
   ///
   /// 回调内异常必须在此捕获，否则会变成未处理的异步错误，导致后续任务不再排期。
   Future<void> _onTimer(_RegisteredTask registered, DateTime scheduledAt) async {
-    if (_disposed) {
+    if (!_isActive(registered)) {
       return;
     }
     final key = registered.task.key;
@@ -242,12 +252,18 @@ class SchedulerImpl implements Scheduler {
     registered?.timer = null;
   }
 
-  /// 注销任务：移除注册项并取消定时器。
-  Future<void> _unregister(String key) async {
-    final registered = _tasks.remove(key);
-    if (registered == null) {
+  /// 判断注册实例仍属当前任务，防止注销或替换后的在途执行重新排期。
+  bool _isActive(_RegisteredTask registered) {
+    return !_disposed && identical(_tasks[registered.task.key], registered);
+  }
+
+  /// 仅注销句柄所属实例，旧句柄不能移除同 key 的新注册。
+  Future<void> _unregister(_RegisteredTask registered) async {
+    if (!_isActive(registered)) {
       return;
     }
+    final key = registered.task.key;
+    _tasks.remove(key);
     registered.timer?.cancel();
     registered.timer = null;
     logger.debug(tag, "task '$key' unregistered");

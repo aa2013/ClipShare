@@ -7,6 +7,7 @@ import 'package:clipshare/core/platform/channels/android/android_channel_provide
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';
 import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
+import 'package:clipshare/features/app_update/widgets/app_update_listener.dart';
 import 'package:clipshare/l10n/l10n_provider.dart';
 import 'package:clipshare/routing/router.dart';
 import 'package:clipshare/shared/extensions/context_extension.dart';
@@ -107,7 +108,7 @@ class _ClipShareAppState extends ConsumerState<ClipShareApp> {
                     style: const TextStyle(fontSize: 12),
                   ),
                 ],
-                child: child ?? const SizedBox.shrink(),
+                child: AppUpdateListener(child: child ?? const SizedBox.shrink()),
               ),
             ),
             onThemeChanged: () async {

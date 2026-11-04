@@ -1,4 +1,5 @@
-import 'package:clipshare/features/settings/providers/app_update_info_provider.dart';
+import 'package:clipshare/core/runtime/app_update/app_update_provider.dart';
+import 'package:clipshare/core/runtime/app_update/enums/app_update_check_status.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
 import 'package:clipshare/shared/utils/snackbar.dart';
@@ -19,9 +20,7 @@ class _CheckUpdateButtonState extends ConsumerState<CheckUpdateButton> {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      onPressed: () {
-        _checkUpdate();
-      },
+      onPressed: loading ? null : _checkUpdate,
       child: Visibility(
         replacement: Text(TranslationKey.checkUpdate.tr),
         visible: loading,
@@ -36,15 +35,20 @@ class _CheckUpdateButtonState extends ConsumerState<CheckUpdateButton> {
     );
   }
 
-  ///发起更新检查并按结果提示
+  /// 手动检查忽略跳过版本设置；更新弹窗统一交由根层事件监听展示。
   Future<void> _checkUpdate() async {
     setState(() {
       loading = true;
     });
     try {
-      final appUpdateInfo = ref.read(appUpdateInfoProvider.notifier);
-      final hasNewest = await appUpdateInfo.showUpdateInfo(context, forceCheck: true);
-      if (!hasNewest && mounted) {
+      final updater = ref.read(appUpdateProvider.notifier);
+      final result = await updater.checkUpdate(forceCheck: true);
+      if (!mounted) {
+        return;
+      }
+      if (result.status == .failed) {
+        await dialogManager.tips(context, text: result.error.toString());
+      } else if (result.status == .upToDate) {
         snackbar.success(context, TranslationKey.alreadyNewestAppVersion.tr);
       }
     } catch (err) {
