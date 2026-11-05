@@ -36,7 +36,7 @@ final class TrayNotifierProvider
   TrayNotifier create() => TrayNotifier();
 }
 
-String _$trayNotifierHash() => r'13bc543e36823f454f601a5d2c90b04a9bf838fe';
+String _$trayNotifierHash() => r'0524c9318bc27935438687d322b667f5096580d4';
 
 /// 桌面端系统托盘服务。
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/default_settings_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/platform/desktop/hotkey/windows_win_v_takeover.dart';
@@ -28,7 +29,7 @@ class HotKeyNotifier extends _$HotKeyNotifier {
   /// 退出程序通知展示时长，到时自动取消
   static final exitAppNotifyDuration = 2.s;
 
-  final _hotkeyMap = <HotKeyType, HotKey>{};
+  Map<HotKeyType, HotKey> get _registeredHotKeys => state.requireValue;
 
   HotkeySettings get _hotKeySettings => ref.read(hotkeySettingsProvider).requireValue;
 
@@ -36,23 +37,32 @@ class HotKeyNotifier extends _$HotKeyNotifier {
 
   NotifyNotifier get _notify => ref.read(notifyProvider.notifier);
 
+  /// 完成平台初始化后返回注册表，确保 .future 不会被中途发布的状态提前完成。
   @override
-  Future<void> build() async {
+  Future<Map<HotKeyType, HotKey>> build() async {
     ref.onDispose(_dispose);
     if (!isDesktop) {
-      return;
+      return const {};
     }
-    await _init();
+    return _init();
   }
 
   /// 获取指定类型当前已注册的热键
   HotKey? getByType(HotKeyType type) {
-    return _hotkeyMap[type];
+    return _registeredHotKeys[type];
   }
 
   /// 历史弹窗热键
   Future<void> registerHistoryWindow(HotKey key) async {
     await unRegister(HotKeyType.historyWindow);
+    await _registerHistoryWindow(key);
+    if (ref.mounted) {
+      state = AsyncData(Map.unmodifiable({..._registeredHotKeys, HotKeyType.historyWindow: key}));
+    }
+  }
+
+  /// 向平台注册 [key] 及其回调，供初始化和运行期共用，不发布状态。
+  Future<void> _registerHistoryWindow(HotKey key) async {
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
@@ -171,12 +181,19 @@ class HotKeyNotifier extends _$HotKeyNotifier {
         // multiWindowService.removeHideWindow(window.windowId, MultiWindowTag.history);
       },
     );
-    _hotkeyMap[HotKeyType.historyWindow] = key;
   }
 
   /// 同步文件热键
   Future<void> registerFileSync(HotKey key) async {
     await unRegister(HotKeyType.fileSender);
+    await _registerFileSync(key);
+    if (ref.mounted) {
+      state = AsyncData(Map.unmodifiable({..._registeredHotKeys, HotKeyType.fileSender: key}));
+    }
+  }
+
+  /// 向平台注册 [key] 及其回调，供初始化和运行期共用，不发布状态。
+  Future<void> _registerFileSync(HotKey key) async {
     await hotKeyManager.register(
       key,
       keyDownHandler: (hotKey) async {
@@ -280,7 +297,6 @@ class HotKeyNotifier extends _$HotKeyNotifier {
         //   ..show();
       },
     );
-    _hotkeyMap[HotKeyType.fileSender] = key;
   }
 
   /// 显示主窗口热键
@@ -296,7 +312,9 @@ class HotKeyNotifier extends _$HotKeyNotifier {
         await windowManager.setAlwaysOnTop(false);
       },
     );
-    _hotkeyMap[HotKeyType.showMainWindows] = key;
+    if (ref.mounted) {
+      state = AsyncData(Map.unmodifiable({..._registeredHotKeys, HotKeyType.showMainWindows: key}));
+    }
   }
 
   /// 退出程序热键
@@ -306,7 +324,8 @@ class HotKeyNotifier extends _$HotKeyNotifier {
       key,
       keyDownHandler: (hotKey) async {
         logger.debug(tag, 'ExitApp HotKey Down');
-        final notifyId = await _notify.notify(content: TranslationKey.exitAppViaHotKey.tr, key: exitAppNotifyKey);
+        final content = TranslationKey.exitAppViaHotKey.trParams({'appName': appName});
+        final notifyId = await _notify.notify(content: content, key: exitAppNotifyKey);
         if (notifyId != null) {
           await Future.delayed(exitAppNotifyDuration);
           _notify.cancel(exitAppNotifyKey, notifyId);
@@ -314,23 +333,29 @@ class HotKeyNotifier extends _$HotKeyNotifier {
         unawaited(_tray.exitApp());
       },
     );
-    _hotkeyMap[HotKeyType.exitApp] = key;
+    if (ref.mounted) {
+      state = AsyncData(Map.unmodifiable({..._registeredHotKeys, HotKeyType.exitApp: key}));
+    }
   }
 
-  /// 注销指定类型的热键
+  /// 注销 [type] 的平台热键；仅在成功后移除对应运行态。
   Future<void> unRegister(HotKeyType type) async {
-    var key = _hotkeyMap[type];
+    final key = _registeredHotKeys[type];
     if (key == null) {
       return;
     }
-    _hotkeyMap.remove(type);
     await hotKeyManager.unregister(key);
+    if (ref.mounted && identical(_registeredHotKeys[type], key)) {
+      state = AsyncData(Map.unmodifiable({..._registeredHotKeys}..remove(type)));
+    }
   }
 
-  /// 注销全部热键
+  /// 平台注销全部热键后清空运行态，失败时保留登记信息。
   Future<void> unRegisterAll() async {
-    _hotkeyMap.clear();
     await hotKeyManager.unregisterAll();
+    if (ref.mounted) {
+      state = const AsyncData({});
+    }
   }
 
   /// 退出前释放全部热键，并按用户设置恢复 Win+V，避免接管状态在 Explorer 中长期残留。
@@ -358,20 +383,24 @@ class HotKeyNotifier extends _$HotKeyNotifier {
   }
 
   /// 启动初始化：先确保 Win+V 接管状态与注册表一致，再按配置注册热键。
-  Future<void> _init() async {
-    await unRegisterAll();
+  Future<Map<HotKeyType, HotKey>> _init() async {
+    final keys = <HotKeyType, HotKey>{};
+    await hotKeyManager.unregisterAll();
     await _ensureWinVTakeover();
     final hotKeySettings = _hotKeySettings;
     //接管 Win+V 时历史弹窗固定使用 Win+V
     final historyWindowHotKeys = hotKeySettings.takeOverWinV ? winVHistoryWindowKeys : hotKeySettings.historyWindowHotKeys;
     if (historyWindowHotKeys.isNotEmpty) {
       final hotKey = toSystemHotKey(historyWindowHotKeys);
-      await registerHistoryWindow(hotKey);
+      await _registerHistoryWindow(hotKey);
+      keys[HotKeyType.historyWindow] = hotKey;
     }
     if (hotKeySettings.syncFileHotKeys.isNotEmpty) {
       final hotKey = toSystemHotKey(hotKeySettings.syncFileHotKeys);
-      await registerFileSync(hotKey);
+      await _registerFileSync(hotKey);
+      keys[HotKeyType.fileSender] = hotKey;
     }
+    return Map.unmodifiable(keys);
   }
 
   /// 接管开关开启但注册表未禁用 Win+V 时写回注册表并重启 Explorer，仅 Windows 生效。
@@ -391,10 +420,9 @@ class HotKeyNotifier extends _$HotKeyNotifier {
     }
   }
 
-  /// 服务释放时注销全部热键
   Future<void> _dispose() async {
     try {
-      await unRegisterAll();
+      await hotKeyManager.unregisterAll();
     } catch (err, stack) {
       logger.error(tag, err, stack);
     }

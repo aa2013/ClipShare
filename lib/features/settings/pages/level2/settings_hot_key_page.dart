@@ -123,7 +123,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
 
   List<SettingEntry> buildHotKeyEntries(BuildContext context, WidgetRef ref) {
     final hotkeySettings = ref.watch(hotkeySettingsProvider).requireValue;
-    final configDao = ref.read(appDbProvider).requireValue.configDao;
+    final registeredHotKeys = ref.watch(hotKeyProvider).value ?? const {};
     return [
       SettingCard(
         searchKeys: const [
@@ -148,49 +148,37 @@ class SettingsHotKeyPage extends SettingsSectionView {
             );
           }
           final hotKeyService = ref.read(hotKeyProvider.notifier);
-          final desc = hotKeyService.getByType(HotKeyType.historyWindow)?.desc;
+          final desc = registeredHotKeys[HotKeyType.historyWindow]?.desc;
+          DialogController? editorController;
           final dialog = HotKeyEditorDialog(
             hotKeyType: HotKeyType.historyWindow,
             initContent: desc ?? '',
             clearable: true,
             onDone: (hotKey, keyCodes) {
-              hotKeyService.registerHistoryWindow(hotKey)
-                  .then((v) async {
-                //设置为新值
-                await configDao.addOrUpdate(ConfigKey.historyWindowHotKeys, keyCodes);
-                ref.invalidate(hotkeySettingsProvider);
-              })
-                  .catchError((err) {
-                if (!context.mounted) {
-                  return;
-                }
-                dialogManager.tips(
-                  context,
-                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({'err': err}),
-                );
-              });
+              _saveHotKey(
+                context,
+                ref,
+                register: () => hotKeyService.registerHistoryWindow(hotKey),
+                configKey: ConfigKey.historyWindowHotKeys,
+                keyCodes: keyCodes,
+                updateTray: false,
+              );
             },
             onClear: () {
-              dialogManager.tips(
+              _clearHotKey(
                 context,
-                text: TranslationKey.clearHotKeyConfirm.tr,
-                actions: DialogActions(
-                  cancel: const DialogAction(),
-                  confirm: DialogAction(
-                    onPressed: () async {
-                      await configDao.addOrUpdate(ConfigKey.historyWindowHotKeys, '');
-                      ref.invalidate(hotkeySettingsProvider);
-                      hotKeyService.unRegister(HotKeyType.historyWindow);
-                    },
-                  ),
-                ),
+                ref,
+                type: HotKeyType.historyWindow,
+                configKey: ConfigKey.historyWindowHotKeys,
+                editor: editorController!,
+                updateTray: false,
               );
             },
           );
           if (desc == null) {
             return TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(TranslationKey.create.tr),
             );
@@ -199,7 +187,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
             message: TranslationKey.modify.tr,
             child: TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(desc),
             ),
@@ -220,49 +208,37 @@ class SettingsHotKeyPage extends SettingsSectionView {
         value: hotkeySettings.syncFileHotKeys,
         action: (v) {
           final hotKeyService = ref.read(hotKeyProvider.notifier);
-          final desc = hotKeyService.getByType(HotKeyType.fileSender)?.desc;
+          final desc = registeredHotKeys[HotKeyType.fileSender]?.desc;
+          DialogController? editorController;
           final dialog = HotKeyEditorDialog(
             hotKeyType: HotKeyType.fileSender,
             initContent: desc ?? '',
             clearable: true,
             onDone: (hotKey, keyCodes) {
-              hotKeyService.registerFileSync(hotKey)
-                  .then((v) async {
-                //设置为新值
-                await configDao.addOrUpdate(ConfigKey.syncFileHotKeys, keyCodes);
-                ref.invalidate(hotkeySettingsProvider);
-              })
-                  .catchError((err) {
-                if (!context.mounted) {
-                  return;
-                }
-                dialogManager.tips(
-                  context,
-                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({'err': err}),
-                );
-              });
+              _saveHotKey(
+                context,
+                ref,
+                register: () => hotKeyService.registerFileSync(hotKey),
+                configKey: ConfigKey.syncFileHotKeys,
+                keyCodes: keyCodes,
+                updateTray: false,
+              );
             },
             onClear: () {
-              dialogManager.tips(
+              _clearHotKey(
                 context,
-                text: TranslationKey.clearHotKeyConfirm.tr,
-                actions: DialogActions(
-                  cancel: const DialogAction(),
-                  confirm: DialogAction(
-                    onPressed: () async {
-                      await configDao.addOrUpdate(ConfigKey.syncFileHotKeys, '');
-                      ref.invalidate(hotkeySettingsProvider);
-                      hotKeyService.unRegister(HotKeyType.fileSender);
-                    },
-                  ),
-                ),
+                ref,
+                type: HotKeyType.fileSender,
+                configKey: ConfigKey.syncFileHotKeys,
+                editor: editorController!,
+                updateTray: false,
               );
             },
           );
           if (desc == null) {
             return TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(TranslationKey.create.tr),
             );
@@ -271,7 +247,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
             message: TranslationKey.modify.tr,
             child: TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(desc),
             ),
@@ -285,54 +261,37 @@ class SettingsHotKeyPage extends SettingsSectionView {
         value: hotkeySettings.showMainWindows,
         action: (v) {
           final hotKeyService = ref.read(hotKeyProvider.notifier);
-          final desc = hotKeyService.getByType(HotKeyType.showMainWindows)?.desc;
+          final desc = registeredHotKeys[HotKeyType.showMainWindows]?.desc;
+          DialogController? editorController;
           final dialog = HotKeyEditorDialog(
             hotKeyType: HotKeyType.showMainWindows,
             initContent: desc ?? '',
             clearable: desc != null,
             onDone: (hotKey, keyCodes) {
-              hotKeyService.registerShowMainWindow(hotKey)
-                  .then((v) async {
-                //设置为新值
-                await configDao.addOrUpdate(ConfigKey.showMainWindowHotKeys, keyCodes);
-                ref.invalidate(hotkeySettingsProvider);
-                //更新托盘菜单
-                final tray = ref.read(trayProvider.notifier);
-                await tray.updateTrayMenus(false);
-              })
-                  .catchError((err) {
-                if (!context.mounted) {
-                  return;
-                }
-                dialogManager.tips(
-                  context,
-                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({'err': err}),
-                );
-              });
+              _saveHotKey(
+                context,
+                ref,
+                register: () => hotKeyService.registerShowMainWindow(hotKey),
+                configKey: ConfigKey.showMainWindowHotKeys,
+                keyCodes: keyCodes,
+                updateTray: true,
+              );
             },
             onClear: () {
-              dialogManager.tips(
+              _clearHotKey(
                 context,
-                text: TranslationKey.clearHotKeyConfirm.tr,
-                actions: DialogActions(
-                  cancel: const DialogAction(),
-                  confirm: DialogAction(
-                    onPressed: () async {
-                      await configDao.addOrUpdate(ConfigKey.showMainWindowHotKeys, '');
-                      ref.invalidate(hotkeySettingsProvider);
-                      hotKeyService.unRegister(HotKeyType.showMainWindows);
-                      final tray = ref.read(trayProvider.notifier);
-                      await tray.updateTrayMenus(false);
-                    },
-                  ),
-                ),
+                ref,
+                type: HotKeyType.showMainWindows,
+                configKey: ConfigKey.showMainWindowHotKeys,
+                editor: editorController!,
+                updateTray: true,
               );
             },
           );
           if (desc == null) {
             return TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(TranslationKey.create.tr),
             );
@@ -341,7 +300,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
             message: TranslationKey.modify.tr,
             child: TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(desc),
             ),
@@ -355,54 +314,37 @@ class SettingsHotKeyPage extends SettingsSectionView {
         value: hotkeySettings.exitAppHotKeys,
         action: (v) {
           final hotKeyService = ref.read(hotKeyProvider.notifier);
-          final desc = hotKeyService.getByType(HotKeyType.exitApp)?.desc;
+          final desc = registeredHotKeys[HotKeyType.exitApp]?.desc;
+          DialogController? editorController;
           final dialog = HotKeyEditorDialog(
             hotKeyType: HotKeyType.exitApp,
             initContent: desc ?? '',
             clearable: desc != null,
             onDone: (hotKey, keyCodes) {
-              hotKeyService.registerExitApp(hotKey)
-                  .then((v) async {
-                //设置为新值
-                await configDao.addOrUpdate(ConfigKey.exitAppHotKeys, keyCodes);
-                ref.invalidate(hotkeySettingsProvider);
-                //更新托盘菜单
-                final tray = ref.read(trayProvider.notifier);
-                await tray.updateTrayMenus(false);
-              })
-                  .catchError((err) {
-                if (!context.mounted) {
-                  return;
-                }
-                dialogManager.tips(
-                  context,
-                  text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({'err': err}),
-                );
-              });
+              _saveHotKey(
+                context,
+                ref,
+                register: () => hotKeyService.registerExitApp(hotKey),
+                configKey: ConfigKey.exitAppHotKeys,
+                keyCodes: keyCodes,
+                updateTray: true,
+              );
             },
             onClear: () {
-              dialogManager.tips(
+              _clearHotKey(
                 context,
-                text: TranslationKey.clearHotKeyConfirm.tr,
-                actions: DialogActions(
-                  cancel: const DialogAction(),
-                  confirm: DialogAction(
-                    onPressed: () async {
-                      await configDao.addOrUpdate(ConfigKey.exitAppHotKeys, '');
-                      ref.invalidate(hotkeySettingsProvider);
-                      hotKeyService.unRegister(HotKeyType.exitApp);
-                      final tray = ref.read(trayProvider.notifier);
-                      await tray.updateTrayMenus(false);
-                    },
-                  ),
-                ),
+                ref,
+                type: HotKeyType.exitApp,
+                configKey: ConfigKey.exitAppHotKeys,
+                editor: editorController!,
+                updateTray: true,
               );
             },
           );
           if (desc == null) {
             return TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(TranslationKey.create.tr),
             );
@@ -411,7 +353,7 @@ class SettingsHotKeyPage extends SettingsSectionView {
             message: TranslationKey.modify.tr,
             child: TextButton(
               onPressed: () {
-                dialogManager.open(context, dialog);
+                editorController = dialogManager.open(context, dialog);
               },
               child: Text(desc),
             ),
@@ -428,6 +370,85 @@ class SettingsHotKeyPage extends SettingsSectionView {
       ...buildWinVTakeOverEntries(context, ref),
       ...buildHotKeyEntries(context, ref),
     ];
+  }
+
+  /// 执行 [register] 后持久化 [configKey]；[updateTray] 指定是否同步托盘标签。
+  Future<void> _saveHotKey(
+    BuildContext context,
+    WidgetRef ref, {
+    required Future<void> Function() register,
+    required ConfigKey configKey,
+    required String keyCodes,
+    required bool updateTray,
+  }) async {
+    // 保存容器而非在异步完成后访问 WidgetRef，页面关闭不应中断配置同步。
+    final container = ProviderScope.containerOf(context, listen: false);
+    final configDao = ref.read(appDbProvider).requireValue.configDao;
+    try {
+      await register();
+      await configDao.addOrUpdate(configKey, keyCodes);
+      container.invalidate(hotkeySettingsProvider);
+      if (updateTray) {
+        await container.read(hotkeySettingsProvider.future);
+        final tray = container.read(trayProvider.notifier);
+        await tray.updateTrayMenus(false);
+      }
+    } catch (err, stack) {
+      logger.error(_tag, err, stack);
+      if (!context.mounted) {
+        return;
+      }
+      await dialogManager.tips(
+        context,
+        text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({'err': err.toString()}),
+      );
+    }
+  }
+
+  /// 确认后注销 [type] 并清空 [configKey]，持久化成功才关闭指定 [editor]。
+  /// [updateTray] 为 true 时等待新配置加载后同步托盘标签。
+  Future<void> _clearHotKey(
+    BuildContext context,
+    WidgetRef ref, {
+    required HotKeyType type,
+    required ConfigKey configKey,
+    required DialogController editor,
+    required bool updateTray,
+  }) async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    final configDao = ref.read(appDbProvider).requireValue.configDao;
+    final hotKeyService = ref.read(hotKeyProvider.notifier);
+    await dialogManager.tips(
+      context,
+      text: TranslationKey.clearHotKeyConfirm.tr,
+      actions: DialogActions(
+        cancel: const DialogAction(),
+        confirm: DialogAction(
+          onPressed: () async {
+            try {
+              await hotKeyService.unRegister(type);
+              await configDao.addOrUpdate(configKey, '');
+              container.invalidate(hotkeySettingsProvider);
+              await editor.close();
+              if (updateTray) {
+                await container.read(hotkeySettingsProvider.future);
+                final tray = container.read(trayProvider.notifier);
+                await tray.updateTrayMenus(false);
+              }
+            } catch (err, stack) {
+              logger.error(_tag, err, stack);
+              if (!context.mounted) {
+                return;
+              }
+              await dialogManager.tips(
+                context,
+                text: TranslationKey.hotKeySettingsSaveKeysFailedText.trParams({'err': err.toString()}),
+              );
+            }
+          },
+        ),
+      ),
+    );
   }
 
   /// 开启 Win+V 接管后立即写入注册表，并注册固定的历史弹窗快捷键。

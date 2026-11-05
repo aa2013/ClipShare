@@ -70,9 +70,14 @@ class TrayNotifier extends _$TrayNotifier with TrayListener {
     await _init();
     ref.listen(
       hotkeySettingsProvider,
-      (previous, next) => updateTrayMenus(),
+      (previous, next) {
+        if (next.isLoading || next.hasError) {
+          return;
+        }
+        updateTrayMenus(false);
+      },
     );
-    ref.listen(uiLocaleProvider, (previous, next) => updateTrayMenus());
+    ref.listen(uiLocaleProvider, (previous, next) => updateTrayMenus(false));
   }
 
   /// 初始化托盘
@@ -306,7 +311,7 @@ class TrayNotifier extends _$TrayNotifier with TrayListener {
   @override
   Future<void> onTrayIconRightMouseDown() async {
     if (isLinux) {
-      await updateTrayMenus();
+      await updateTrayMenus(false);
       return;
     }
     await trayManager.popUpContextMenu();
