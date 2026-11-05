@@ -11,6 +11,9 @@ enum AppInitStatus {
 
   /// 已完成初始化
   initialized,
+
+  /// UI已初始化完成
+  uiReady,
 }
 
 ///ClipShare 运行时配置

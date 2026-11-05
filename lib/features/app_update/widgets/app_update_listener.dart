@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:clipshare/core/constants/app_constants.dart';
-import 'package:clipshare/core/runtime/app_state/app_state.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/runtime/app_update/app_update_provider.dart';
 import 'package:clipshare/core/runtime/app_update/enums/app_update_check_status.dart';
@@ -13,7 +12,7 @@ import 'package:clipshare/shared/utils/log.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// 根层更新事件消费者；先订阅，再在启动完成后开启自动检查。
+/// 根层更新事件消费者；订阅更新结果并在鉴权结束后展示提示。
 class AppUpdateListener extends ConsumerStatefulWidget {
   final Widget child;
 
@@ -37,23 +36,10 @@ class _AppUpdateListenerState extends ConsumerState<AppUpdateListener> {
     final updater = ref.read(appUpdateProvider.notifier);
     _subscription = updater.events.listen(_onResult);
     ref.listenManual(appStateProvider, (previous, next) {
-      if (next.initStatus == .initialized && previous?.initStatus != .initialized) {
-        unawaited(_startAutomaticChecks());
-      }
       if (!next.authenticating) {
         _schedulePresentation();
       }
     }, fireImmediately: true);
-  }
-
-  /// 调度注册失败只记录日志，不让启动过程出现未处理的异步异常。
-  Future<void> _startAutomaticChecks() async {
-    try {
-      final updater = ref.read(appUpdateProvider.notifier);
-      await updater.startAutomaticChecks();
-    } catch (error, stack) {
-      logger.error(_tag, '自动更新检查注册失败: $error', stack);
-    }
   }
 
   /// 自动失败不打扰用户；可展示结果只保留最近一次。

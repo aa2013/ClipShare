@@ -30,7 +30,6 @@ class _StateNotifier extends AppStateNotifier {
 /// 保留真实广播语义，但不访问网络或注册计时器。
 class _Updater extends AppUpdateNotifier {
   final controller = StreamController<AppUpdateCheckResult>.broadcast();
-  int starts = 0;
 
   @override
   void build() {
@@ -39,11 +38,6 @@ class _Updater extends AppUpdateNotifier {
 
   @override
   Stream<AppUpdateCheckResult> get events => controller.stream;
-
-  @override
-  Future<void> startAutomaticChecks() async {
-    starts++;
-  }
 }
 
 /// 系统通知不是 Widget 测试对象，不调用平台插件。
@@ -72,7 +66,7 @@ void main() {
     DialogManager.suppressTips = null;
   });
 
-  testWidgets('订阅先于启动注册，锁定时暂存并在解锁后展示', (tester) async {
+  testWidgets('订阅先于启动，锁定时暂存并在解锁后展示', (tester) async {
     final updater = _Updater();
     final appState = _StateNotifier();
     var locked = true;
@@ -84,10 +78,6 @@ void main() {
       notifyProvider.overrideWith(_Notify.new),
     ], child: MaterialApp(navigatorKey: navigatorKey,
       builder: (_, child) => AppUpdateListener(child: child!), home: const Scaffold())));
-    expect(updater.starts, 0);
-    appState.updateInitStatus(AppInitStatus.initialized);
-    await tester.pump();
-    expect(updater.starts, 1);
     updater.controller.add(_available());
     await tester.pumpAndSettle();
     expect(find.byType(AppUpdateDialog), findsNothing);

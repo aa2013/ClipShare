@@ -8,10 +8,6 @@ import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/runtime/app_update/app_update_provider.dart';
 import 'package:clipshare/core/runtime/app_update/enums/app_update_check_status.dart';
 import 'package:clipshare/core/runtime/app_update/models/app_update_check_result.dart';
-import 'package:clipshare/core/scheduler/models/scheduled_task.dart';
-import 'package:clipshare/core/scheduler/models/task_result.dart';
-import 'package:clipshare/core/scheduler/scheduler.dart';
-import 'package:clipshare/core/scheduler/scheduler_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/settings/app_update/app_update_settings.dart';
@@ -37,41 +33,12 @@ class _DeviceInfo implements LocalDeviceInfo {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-/// 记录注册配置并允许控制注册完成时机。
-class _Scheduler implements Scheduler {
-  final tasks = <ScheduledTask>[];
-  final handles = <TaskHandle>[];
-  Completer<void>? registration;
-
-  /// 记录任务，异步屏障用于覆盖注册中释放场景。
-  @override
-  Future<TaskHandle> register(ScheduledTask task) async {
-    tasks.add(task);
-    await registration?.future;
-    final handle = TaskHandle(() async {});
-    handles.add(handle);
-    return handle;
-  }
-
-  @override
-  bool isRegistered(String key) => tasks.any((task) => task.key == key);
-
-  /// 未使用的手动调度不能影响测试。
-  @override
-  Future<TaskResult> runNow(String key) async => TaskResult.skipped(key, 'unused');
-
-  /// 测试不创建真实定时器。
-  @override
-  void dispose() {}
-}
-
 /// 构造独立依赖容器，避免访问平台插件及真实数据库。
-ProviderContainer _container({String? ignored, Locale locale = const Locale('zh'), Scheduler? scheduler}) {
+ProviderContainer _container({String? ignored, Locale locale = const Locale('zh')}) {
   return ProviderContainer(overrides: [
     localDeviceInfoProvider.overrideWith((ref) async => _DeviceInfo()),
     appUpdateSettingsProvider.overrideWith((ref) async => AppUpdateSettings(ignoreUpdateVersion: ignored)),
     uiLocaleProvider.overrideWithValue(locale),
-    if (scheduler != null) schedulerProvider.overrideWith((ref) async => scheduler),
   ]);
 }
 
@@ -184,32 +151,6 @@ void main() {
       container.dispose();
       async.flushMicrotasks();
     });
-  });
-
-  test('automatic registration is idempotent and cancels on dispose', () async {
-    final scheduler = _Scheduler();
-    final container = _container(scheduler: scheduler);
-    final notifier = container.read(appUpdateProvider.notifier);
-    await Future.wait([notifier.startAutomaticChecks(), notifier.startAutomaticChecks()]);
-    expect(scheduler.tasks.length, 1);
-    final task = scheduler.tasks.single;
-    expect(task.runImmediately, isTrue);
-    final now = DateTime(2026);
-    expect(task.schedule.nextRun(now), now.add(const Duration(hours: 2)));
-    container.dispose();
-    expect(scheduler.handles.single.cancelled, isTrue);
-  });
-
-  test('disposal during registration cancels the late handle', () async {
-    final scheduler = _Scheduler()..registration = Completer<void>();
-    final container = _container(scheduler: scheduler);
-    final start = container.read(appUpdateProvider.notifier).startAutomaticChecks();
-    await Future<void>.delayed(Duration.zero);
-    expect(scheduler.tasks.length, 1);
-    container.dispose();
-    scheduler.registration!.complete();
-    await start;
-    expect(scheduler.handles.single.cancelled, isTrue);
   });
 
   test('disposal suppresses in-flight completion events', () async {

@@ -1,4 +1,5 @@
 import 'package:clipshare/core/constants/platform_constants.dart';
+import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/startup/app_startup_provider.dart';
 import 'package:clipshare/routing/app_routes.dart';
@@ -56,6 +57,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       context.replaceNamed(
         shouldUserGuide ? AppRoutes.userGuide.name : AppRoutes.home.name,
       );
+      final appStateNotifier = ref.read(appStateProvider.notifier);
+      appStateNotifier.updateInitStatus(.uiReady);
     });
   }
 

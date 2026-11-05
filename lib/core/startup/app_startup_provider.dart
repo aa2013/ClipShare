@@ -122,6 +122,9 @@ Future<void> appStartup(Ref ref) async {
   ref.read(ruleSyncProvider);
   ref.read(scriptModuleSyncProvider);
 
+  // 固定定时任务注册表，需在进入 UI 前挂载，才能在 uiReady 后立即注册任务
+  ref.read(schedulerRegistryProvider);
+
   // 数据清理服务
   ref.read(dataCleanupProvider);
 

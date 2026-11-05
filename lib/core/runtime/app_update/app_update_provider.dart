@@ -9,11 +9,6 @@ import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/runtime/app_update/enums/app_update_check_status.dart';
 import 'package:clipshare/core/runtime/app_update/models/app_update_check_result.dart';
-import 'package:clipshare/core/runtime/app_update/utils/app_update_task_handler.dart';
-import 'package:clipshare/core/scheduler/models/scheduled_task.dart';
-import 'package:clipshare/core/scheduler/schedule/interval_schedule.dart';
-import 'package:clipshare/core/scheduler/scheduler.dart';
-import 'package:clipshare/core/scheduler/scheduler_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/settings/app_update/app_update_settings.dart';
@@ -41,15 +36,12 @@ class AppUpdateNotifier extends _$AppUpdateNotifier {
   final _events = StreamController<AppUpdateCheckResult>.broadcast();
   final _pending = <bool, Future<AppUpdateCheckResult>>{};
   Future<void> _tail = Future.value();
-  Future<void>? _automaticStart;
-  TaskHandle? _taskHandle;
   http.Client? _activeClient;
   bool _disposed = false;
 
   Future<LocalDeviceInfo> get _deviceInfo => ref.read(localDeviceInfoProvider.future);
   Future<AppUpdateSettings> get _settings => ref.read(appUpdateSettingsProvider.future);
   Future<AppDatabase> get _database => ref.read(appDbProvider.future);
-  Future<Scheduler> get _scheduler => ref.read(schedulerProvider.future);
   Locale get _locale => ref.read(uiLocaleProvider);
 
   Stream<AppUpdateCheckResult> get events => _events.stream;
@@ -149,48 +141,10 @@ class AppUpdateNotifier extends _$AppUpdateNotifier {
     }
   }
 
-  /// 幂等注册立即执行及两小时周期检查，注册失败时允许再次启动。
-  Future<void> startAutomaticChecks() {
-    return _automaticStart ??= _startAutomaticChecks();
-  }
-
-  /// 在异步注册前后检查生命周期
-  Future<void> _startAutomaticChecks() async {
-    try {
-      if (_disposed) {
-        return;
-      }
-      final scheduler = await _scheduler;
-      if (_disposed) {
-        return;
-      }
-      //注册任务
-      final handle = await scheduler.register(ScheduledTask(
-        key: automaticTaskKey,
-        schedule: const IntervalSchedule(automaticInterval),
-        handler: AppUpdateTaskHandler(() => checkUpdate()),
-        runImmediately: true,
-        runOnMissed: false,
-      ));
-      if (_disposed) {
-        await handle.cancel();
-      } else {
-        _taskHandle = handle;
-      }
-    } catch (_) {
-      _automaticStart = null;
-      rethrow;
-    }
-  }
-
   void _dispose() {
     _disposed = true;
     _activeClient?.close();
     _activeClient = null;
     unawaited(_events.close());
-    final handle = _taskHandle;
-    if (handle != null) {
-      unawaited(handle.cancel());
-    }
   }
 }
