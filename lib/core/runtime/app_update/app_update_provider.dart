@@ -27,7 +27,7 @@ part 'app_update_provider.g.dart';
 /// 无界面的更新运行时，统一调度、并发检查与结果广播。
 @Riverpod(keepAlive: true)
 class AppUpdateNotifier extends _$AppUpdateNotifier {
-  static const automaticTaskKey = 'app_update';
+  static const schedulerKey = 'app_update';
   static const automaticInterval = Duration(hours: 2);
   static const requestTimeout = Duration(seconds: 30);
   static const _defaultInfoFile = 'version-info.json';

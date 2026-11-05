@@ -72,12 +72,26 @@ void main() {
     appState.updateInitStatus(AppInitStatus.initialized);
     appState.updateInitStatus(AppInitStatus.uiReady);
     await Future<void>.delayed(Duration.zero);
-    final task = scheduler.tasks.single;
-    expect(task.key, AppUpdateNotifier.automaticTaskKey);
+    final task = scheduler.tasks.firstWhere((item) => item.key == AppUpdateNotifier.schedulerKey);
     expect(task.runImmediately, isTrue);
     expect(task.runOnMissed, isFalse);
     final now = DateTime(2026);
     expect(task.schedule.nextRun(now), now.add(AppUpdateNotifier.automaticInterval));
+    container.dispose();
+  });
+
+  test('进入 uiReady 后注册日志清理任务', () async {
+    final scheduler = _FakeScheduler();
+    final container = _container(scheduler);
+    container.listen(schedulerRegistryProvider, (_, _) {});
+    await container.read(schedulerRegistryProvider.future);
+    container.read(appStateProvider.notifier).updateInitStatus(AppInitStatus.uiReady);
+    await Future<void>.delayed(Duration.zero);
+    final task = scheduler.tasks.firstWhere((item) => item.key == 'log_cleanup');
+    expect(task.runImmediately, isTrue);
+    expect(task.runOnMissed, isFalse);
+    // 每天零点触发：白天启动时下一跳为次日零点
+    expect(task.schedule.nextRun(DateTime(2026, 1, 1, 8, 30)), DateTime(2026, 1, 2));
     container.dispose();
   });
 
@@ -93,7 +107,7 @@ void main() {
     appState.updateInitStatus(AppInitStatus.initialized);
     appState.updateInitStatus(AppInitStatus.uiReady);
     await Future<void>.delayed(Duration.zero);
-    expect(scheduler.tasks.length, 1);
+    expect(scheduler.tasks.length, 2);
     container.dispose();
   });
 

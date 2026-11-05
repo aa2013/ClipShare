@@ -4,12 +4,14 @@ import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/runtime/app_update/app_update_provider.dart';
-import 'package:clipshare/core/runtime/app_update/utils/app_update_task_handler.dart';
 import 'package:clipshare/core/scheduler/models/scheduled_task.dart';
+import 'package:clipshare/core/scheduler/schedule/cron_schedule.dart';
 import 'package:clipshare/core/scheduler/schedule/interval_schedule.dart';
+import 'package:clipshare/core/scheduler/schedule/simple_task_handler.dart';
 import 'package:clipshare/core/scheduler/scheduler.dart';
 import 'package:clipshare/core/scheduler/task_executor.dart';
 import 'package:clipshare/core/scheduler/task_state_store.dart';
+import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/utils/log.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -65,6 +67,7 @@ Future<void> _registerAll(Ref ref, Scheduler scheduler) async {
   // 固定任务清单：新增任务时在此追加
   final tasks = <ScheduledTask>[
     _buildAppUpdateTask(ref),
+    _buildLogCleanupTask(),
   ];
   logger.debug(SchedulerImpl.tag, 'register fixed tasks: ${tasks.map((item) => item.key).join(', ')}');
   for (final task in tasks) {
@@ -77,11 +80,36 @@ Future<void> _registerAll(Ref ref, Scheduler scheduler) async {
 }
 
 /// 应用更新检查任务：注册即检查一次，之后按固定周期轮询。
+///
+/// 检查结果以异常形式上报，交由调度器按失败记录。
 ScheduledTask _buildAppUpdateTask(Ref ref) {
   return ScheduledTask(
-    key: AppUpdateNotifier.automaticTaskKey,
+    key: AppUpdateNotifier.schedulerKey,
     schedule: const IntervalSchedule(AppUpdateNotifier.automaticInterval),
-    handler: AppUpdateTaskHandler(() => ref.read(appUpdateProvider.notifier).checkUpdate()),
+    handler: SimpleTaskHandler((_) async {
+      final appUpdate = ref.read(appUpdateProvider.notifier);
+      final result = await appUpdate.checkUpdate();
+      if (result.status == .failed) {
+        Error.throwWithStackTrace(result.error!, result.stackTrace!);
+      }
+    }),
+    runImmediately: true,
+    runOnMissed: false,
+  );
+}
+
+/// 日志清理任务：每天零点触发并延迟一秒执行，启动时立即执行一次。
+///
+/// 停机期间跨过的零点不补跑，下一次零点照常清理。
+ScheduledTask _buildLogCleanupTask() {
+  return ScheduledTask(
+    key: Log.schedulerKey,
+    //每天 0 点执行
+    schedule: CronSchedule('0 0 * * *'),
+    handler: SimpleTaskHandler((_) async {
+      await Future.delayed(1.s);
+      await logger.cleanupLogs();
+    }),
     runImmediately: true,
     runOnMissed: false,
   );
