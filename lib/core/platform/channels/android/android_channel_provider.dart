@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/tables/history.dart';
+import 'package:clipshare/core/platform/android/android_external_file_receive_provider.dart';
 import 'package:clipshare/core/platform/channels/android/events/screen_opened_event.dart';
 import 'package:clipshare/core/services/history/history_event.dart';
 import 'package:clipshare/core/services/history/history_recorder_provider.dart';
@@ -12,16 +13,12 @@ import 'package:clipshare/core/settings/quick/quick_settings_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/enums/history_content_type.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
-import 'package:clipshare/shared/models/drop/my_drop_item.dart';
 import 'package:clipshare/shared/utils/log.dart';
-import 'package:clipshare/shared/utils/snackbar.dart';
 import 'package:clipshare_clipboard_listener/clipboard_manager.dart';
 import 'package:clipshare_clipboard_listener/enums.dart';
-import 'package:desktop_drop/desktop_drop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:uri_file_reader/uri_file_reader.dart';
 
 import 'android_channel_method.dart';
 

@@ -2,6 +2,7 @@ import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/core/startup/app_startup_provider.dart';
+import 'package:clipshare/features/file_transfer/providers/external_file_entry_provider.dart';
 import 'package:clipshare/routing/app_routes.dart';
 import 'package:clipshare/shared/constants/assets.dart';
 import 'package:clipshare/shared/utils/log.dart';
@@ -27,6 +28,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
     super.initState();
+    //先激活外部文件事件消费，保证启动期到达的系统分享/打开文件事件必有消费者
+    ref.read(externalFileEntryProvider);
     ref.listenManual<AsyncValue<void>>(appStartupProvider, _handleStartupChanged);
   }
 

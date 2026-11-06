@@ -16,9 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // todo 以下发送入口暂未接入，待基础链路跑通后再补：
-// 1. Android 系统分享入口（android_channel_method_call.dart 的 _handleIncomingDropItems）
-// 2. 多窗口文件发送（multi_window_channel_method_call.dart 的 MultiWindowMethod.syncFiles）
-// 说明：首页整窗拖拽已接入（home_page.dart 的 DropTarget）
+// 多窗口文件发送（multi_window_channel_method_call.dart 的 MultiWindowMethod.syncFiles）
+// 说明：首页整窗拖拽与 Android 系统分享/打开文件入口已接入（home_page.dart 的 DropTarget、external_file_entry_provider.dart）
 
 /// 文件传输页：历史记录、接收进度、发送进度三个 Tab。
 /// 新建发送遮罩与整窗拖拽在首页层级，本页保留"添加"入口。

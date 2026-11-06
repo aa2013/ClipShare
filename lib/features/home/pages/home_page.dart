@@ -46,9 +46,6 @@ class _HomeState extends ConsumerState<HomePage> {
   static const notShowCompactPageKeys = [rulesPageKey];
   static const navIconSize = 20.0;
 
-  ///文件传输页在 pages 中的固定位置
-  static const fileTransferPageIndex = 2;
-
   late final List<Widget> pages;
 
   @override

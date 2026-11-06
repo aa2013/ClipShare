@@ -46,11 +46,15 @@ class SendComposeNotifier extends _$SendComposeNotifier {
     state = state.copyWith(overlayVisible: false);
   }
 
-  /// 追加待发文件，同一路径只保留一个条目
+  /// 追加待发文件
   void addFiles(List<PendingTransferFile> files) {
-    final merged = [...state.files];
+    final existing = state.files;
+    final merged = <PendingTransferFile>[...existing];
+    final seenPaths = <String>{
+      for (final item in existing) item.filePath,
+    };
     for (final file in files) {
-      if (!merged.any((item) => item.filePath == file.filePath)) {
+      if (seenPaths.add(file.filePath)) {
         merged.add(file);
       }
     }

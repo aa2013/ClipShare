@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
+import 'package:clipshare/core/platform/android/android_external_file_receive_provider.dart';
 import 'package:clipshare/core/platform/android/screenshot_detect_provider.dart';
 import 'package:clipshare/core/platform/channels/android/android_channel_provider.dart';
 import 'package:clipshare/core/platform/channels/clip/clip_channel_provider.dart';
@@ -196,6 +197,8 @@ void _initChannels(Ref ref) {
 }
 
 Future<void> _initAndroid(Ref ref) async {
+  //外部文件接收（系统分享/系统打开文件）预热，尽早激活事件生产者
+  ref.read(androidExternalFileReceiveProvider);
   final channel = ref.read(androidChannelProvider.notifier);
   final floatSettings = await ref.read(floatWindowSettingsProvider.future);
   final logSettings = await ref.read(logSettingsProvider.future);
