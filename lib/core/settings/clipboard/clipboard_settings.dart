@@ -7,9 +7,6 @@ class ClipboardSettings {
   ///来源记录
   final bool sourceRecord;
 
-  ///Android 通过dumpsys记录来源（兜底）
-  final bool sourceRecordViaDumpsys;
-
   ///Android 新数据来后发送广播
   final bool sendBroadcastOnAdd;
 
@@ -28,7 +25,6 @@ class ClipboardSettings {
   const ClipboardSettings({
     this.stopListeningOnScreenClosed = false,
     this.sourceRecord = false,
-    this.sourceRecordViaDumpsys = false,
     this.sendBroadcastOnAdd = false,
     this.isExcludeFormat = true,
     this.recordMaxLength = 200000,

@@ -27,9 +27,7 @@ import 'package:clipshare/core/settings/forward/forward_settings_provider.dart';
 import 'package:clipshare/core/settings/notification/notification_settings_provider.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/enums/history_content_type.dart';
-import 'package:clipshare/shared/extensions/number_extension.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
-import 'package:clipshare/shared/extensions/time_extension.dart';
 import 'package:clipshare/shared/models/module.dart';
 import 'package:clipshare/shared/models/op_method.dart';
 import 'package:clipshare/shared/models/rule/rule_apply_result.dart';
@@ -66,8 +64,6 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
   OperationRecordDao get _opRecordDao => ref.read(appDbProvider).requireValue.operationRecordDao;
 
   RulesExecutorNotifier get _rulesExecutor => ref.read(rulesExecutorProvider.notifier);
-
-  ClipboardSourceNotifier get _sourceNotifier => ref.read(clipboardSourceProvider.notifier);
 
   MessageSenderNotifier get _messageSender => ref.read(messageSenderProvider.notifier);
 
@@ -321,54 +317,6 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
       }
     }
 
-    //region update source on Android
-    if (isAndroid && shouldSync && _clipboardSettings.sourceRecordViaDumpsys) {
-      var start = DateTime.now();
-      unawaited(
-        clipboardManager.getLatestWriteClipboardSource().then((source) async {
-          logger.debug(tag, 'source $source');
-          if (source == null) return;
-          //一般获取时间不会超过2s，超过该时间视为无效
-          final isTimeout = source.isTimeout(2000);
-          logger.debug(tag, 'source time: ${source.time?.toString()}, timeout: $isTimeout');
-          var end = DateTime.now();
-          logger.debug(tag, 'source: ${source.name}, offset: ${end.difference(start).inMilliseconds}');
-          if (isTimeout) {
-            return;
-          }
-          final offset = 500.ms;
-          final historyCreateTime = DateTime.parse(history.time);
-          //如果获取的最新的剪贴板时间不在指定的误差时间，则跳过 todo 考虑提供设置项自行设置
-          if (!(source.time?.isWithinRange(offset, historyCreateTime) ?? false)) {
-            logger.debug(tag, 'latest write clipboard source not in range(${offset.inMilliseconds}ms) time: ${source.time}, id: ${source.id}');
-            return;
-          }
-          //更新来源
-          history = history.copyWith(source: Value(source.id));
-          // add source icon
-          await _sourceNotifier.addOrUpdate(
-            AppInfo(
-              id: _idGenerator.nextId(),
-              appId: source.id,
-              devId: _self.guid,
-              name: source.name,
-              iconB64: source.iconB64!,
-            ),
-            true,
-          );
-          await _historyDao.updateHistorySourceAndNotify(
-            history.id,
-            source.id,
-            _idGenerator,
-            _self,
-            _syncPushNotifier,
-          );
-          final event = HistoryDeltaEvent(history: history, operation: OpMethod.update);
-          _deltaIn.add(event);
-        }),
-      );
-    }
-    //endregion
     final tags = <String>{};
     tags.addAll(applyResult?.tags ?? {});
     switch (contentType) {

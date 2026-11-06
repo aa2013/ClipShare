@@ -53,7 +53,6 @@ enum ConfigKey {
   clickToPaste,
   enableAutoSyncOnScreenOpened,
   sourceRecord,
-  sourceRecordViaDumpsys,
   notifyOnDevDisconn,
   notifyOnDevConn,
   autoSyncMissingData,

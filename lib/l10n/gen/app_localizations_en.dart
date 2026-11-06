@@ -1740,22 +1740,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clipboardSettingsSourceRecordDialogContent =>
-      'Source detection has two cases: foreground copies and background copies from other apps. Foreground copies rely on Accessibility. Background copies can be identified through dumpsys, with a delay of a few hundred milliseconds.\n\nSource detection is not always exact. It mainly depends on Accessibility and may occasionally tag the wrong app.';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysTitle =>
-      'Background Source via dumpsys';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysTitleTooltip => 'Info';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysDialogContent =>
-      'Background copies may be misidentified. Use dumpsys to check which app wrote to the clipboard and correct the source.';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysAndroidDesc =>
-      'Requires Root or Shizuku and adds a delay of a few hundred milliseconds.';
+      'Source detection uses Accessibility to identify the current app.\n\nDetection is not always accurate. Background copies and other cases may be attributed to the wrong app.';
 
   @override
   String get source => 'Source';

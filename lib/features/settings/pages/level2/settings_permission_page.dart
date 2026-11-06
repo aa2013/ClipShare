@@ -147,10 +147,27 @@ class SettingsPermissionPage extends SettingsSectionView {
         ),
         show: (v) => isAndroid && v,
         onTap: () async {
-          await permissionHandler.requestAccessibilityPermission(context);
-          //自动写入 secure settings 后系统服务列表可能稍后才同步，等待后再复查一次
-          await Future.delayed(1.s);
-          ref.invalidate(permissionInfoProvider);
+          try {
+            await permissionHandler.requestAccessibilityPermission(context);
+            if (!context.mounted) {
+              return;
+            }
+            // 自动授权无需离开页面，通过结果提示反馈已生效的权限。
+            final granted = ref.read(permissionInfoProvider).requireValue.hasAccessibilityPermission;
+            if (granted) {
+              snackbar.success(context, TranslationKey.requestSuccess.tr);
+            }
+            //自动写入 secure settings 后系统服务列表可能稍后才同步，等待后再复查一次
+            await Future.delayed(1.s);
+            if (context.mounted) {
+              ref.invalidate(permissionInfoProvider);
+            }
+          } catch (err, stack) {
+            logger.error(tag, err, stack);
+            if (context.mounted) {
+              snackbar.warn(context, TranslationKey.requestFailed.tr);
+            }
+          }
         },
       ),
       SettingCard(

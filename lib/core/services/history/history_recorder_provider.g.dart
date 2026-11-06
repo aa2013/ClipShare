@@ -34,7 +34,7 @@ final class HistoryRecorderNotifierProvider
 }
 
 String _$historyRecorderNotifierHash() =>
-    r'ca6269d1c55dca5636628172fcb6a8978707b813';
+    r'c7b1c387248cd4a37418e1041f33797a8dddca12';
 
 abstract class _$HistoryRecorderNotifier extends $AsyncNotifier<void> {
   FutureOr<void> build();

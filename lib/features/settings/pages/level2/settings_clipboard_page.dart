@@ -1,4 +1,5 @@
 
+import 'package:clipshare/core/constants/app_constants.dart';
 import 'package:clipshare/core/constants/platform_constants.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/runtime/app_state/app_state_provider.dart';
@@ -14,6 +15,8 @@ import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/extensions/string_extension.dart';
 import 'package:clipshare/shared/models/dialog_actions.dart';
 import 'package:clipshare/shared/utils/dialog.dart';
+import 'package:clipshare/shared/utils/log.dart';
+import 'package:clipshare/shared/utils/snackbar.dart';
 import 'package:clipshare/shared/widgets/dialogs/text_edit_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -35,6 +38,7 @@ class SettingsClipboardPage extends SettingsSectionView {
     ];
   }
 
+  /// 构建剪贴板设置；来源检测保留开启意愿，缺少权限时引导授权。
   @override
   List<SettingEntry> buildSettingEntries(BuildContext context, WidgetRef ref) {
     final clipboardSettings = ref.watch(clipboardSettingsProvider).requireValue;
@@ -127,9 +131,24 @@ class SettingsClipboardPage extends SettingsSectionView {
                   actions: DialogActions(
                     confirm: DialogAction(
                       text: TranslationKey.goAuthorize.tr,
-                      onPressed: () {
-                        //todo 权限请求
-                        // controller.requestAccessibilityPermissionAndRefresh();
+                      onPressed: () async {
+                        try {
+                          final permissionNotifier = ref.read(permissionInfoProvider.notifier);
+                          await permissionNotifier.requestAccessibilityPermission(context);
+                          if (!context.mounted) {
+                            return;
+                          }
+                          // 仅在权限已生效时提示成功，跳转系统设置不代表已经授权。
+                          final granted = ref.read(permissionInfoProvider).requireValue.hasAccessibilityPermission;
+                          if (granted) {
+                            snackbar.success(context, TranslationKey.requestSuccess.tr);
+                          }
+                        } catch (err, stack) {
+                          logger.error('SettingsClipboardPage', err, stack);
+                          if (context.mounted) {
+                            snackbar.warn(context, TranslationKey.requestFailed.tr);
+                          }
+                        }
                       },
                     ),
                     cancel: const DialogAction(),
@@ -147,54 +166,6 @@ class SettingsClipboardPage extends SettingsSectionView {
           );
         },
         show: (v) => !isIOS,
-      ),
-      SettingCard(
-        searchKeys: const [
-          TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle,
-          TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc,
-          TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip,
-        ],
-        title: Row(
-          children: [
-            Text(
-              TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitle.tr,
-              maxLines: 1,
-            ),
-            const SizedBox(width: 5),
-            Tooltip(
-              message: TranslationKey.clipboardSettingsSourceRecordViaDumpsysTitleTooltip.tr,
-              child: GestureDetector(
-                child: const MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: Icon(
-                    Icons.info_outline,
-                    color: Colors.blueGrey,
-                    size: 15,
-                  ),
-                ),
-                onTap: () {
-                  dialogManager.tips(
-                    context,
-                    text: TranslationKey.clipboardSettingsSourceRecordViaDumpsysDialogContent.tr,
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-        description: Text(TranslationKey.clipboardSettingsSourceRecordViaDumpsysAndroidDesc.tr),
-        value: clipboardSettings.sourceRecordViaDumpsys,
-        action: (v) {
-          return Switch(
-            value: v,
-            onChanged: (checked) async {
-              await HapticFeedback.mediumImpact();
-              await configDao.addOrUpdate(.sourceRecordViaDumpsys, checked.toString());
-              ref.invalidate(clipboardSettingsProvider);
-            },
-          );
-        },
-        show: (v) => isAndroid && clipboardSettings.sourceRecord,
       ),
       SettingCard(
         searchKeys: const [
@@ -224,7 +195,9 @@ class SettingsClipboardPage extends SettingsSectionView {
                   dialogManager.tips(
                     context,
                     selectable: true,
-                    text: TranslationKey.sendBroadcastOnAddDataTips.tr,
+                    text: TranslationKey.sendBroadcastOnAddDataTips.trParams({
+                      'kOnHistoryChangedBroadcastAction': kOnHistoryChangedBroadcastAction,
+                    }),
                   );
                 },
               ),

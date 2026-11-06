@@ -1670,22 +1670,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get clipboardSettingsSourceRecordDialogContent =>
-      '来源检测分为两种：前台复制和其他app后台复制，前台复制需要借助无障碍权限来检测，后台复制可通过dumpsys来获取（有数百毫秒的延迟）。\n\n来源检测不能保证完全准确，主要通过无障碍识别，有可能会误标记到其他应用上面';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysTitle =>
-      '通过 dumpsys 记录后台复制来源';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysTitleTooltip => '说明';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysDialogContent =>
-      '如果有应用在后台复制有可能会误识别，通过 dumpsys 检测是谁写入了剪贴板以纠正';
-
-  @override
-  String get clipboardSettingsSourceRecordViaDumpsysAndroidDesc =>
-      '需要 Root 或 Shizuku 权限，同时会有数百毫秒的延迟';
+      '来源检测需要借助无障碍权限识别当前应用。\n\n来源检测不能保证完全准确，后台复制等场景可能会误标记到其他应用上面。';
 
   @override
   String get source => '来源';

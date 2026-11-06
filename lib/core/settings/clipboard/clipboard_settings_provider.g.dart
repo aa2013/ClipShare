@@ -52,4 +52,4 @@ final class ClipboardSettingsProvider
   }
 }
 
-String _$clipboardSettingsHash() => r'9968a7dc6c31f99bcaa23cbe3a2803582db4da39';
+String _$clipboardSettingsHash() => r'1eef96d3b48e3a186e94a908a6ad3d3b2993b2d5';

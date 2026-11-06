@@ -34,7 +34,7 @@ final class PermissionInfoNotifierProvider
 }
 
 String _$permissionInfoNotifierHash() =>
-    r'60a9cfb13434d625b4ceb367d498fdb632990c04';
+    r'2a94cfc89015bd76184707810f37a9241b349369';
 
 abstract class _$PermissionInfoNotifier extends $AsyncNotifier<PermissionInfo> {
   FutureOr<PermissionInfo> build();

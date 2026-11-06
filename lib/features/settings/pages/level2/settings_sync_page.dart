@@ -104,7 +104,7 @@ class SettingsSyncPage extends SettingsSectionView {
           TranslationKey.syncSettingsStoreImg2PicturesTitle.tr,
           maxLines: 1,
         ),
-        description: Text(TranslationKey.syncSettingsStoreImg2PicturesDesc.tr),
+        description: Text(TranslationKey.syncSettingsStoreImg2PicturesDesc.trParams({'appName': appName})),
         value: syncSettings.saveToPictures,
         action: (v) {
           return Switch(

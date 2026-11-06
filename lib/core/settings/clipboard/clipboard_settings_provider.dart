@@ -21,10 +21,6 @@ Future<ClipboardSettings> clipboardSettings(Ref ref) async {
       false,
     ),
     sourceRecord: await configDao.getConfigByKey(ConfigKey.sourceRecord, isDesktop),
-    sourceRecordViaDumpsys: await configDao.getConfigByKey(
-      ConfigKey.sourceRecordViaDumpsys,
-      false,
-    ),
     sendBroadcastOnAdd: await configDao.getConfigByKey(
       ConfigKey.sendBroadcastOnAdd,
       false,

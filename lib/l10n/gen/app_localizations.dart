@@ -3262,32 +3262,8 @@ abstract class AppLocalizations {
   /// translated key: clipboardSettingsSourceRecordDialogContent
   ///
   /// In en, this message translates to:
-  /// **'Source detection has two cases: foreground copies and background copies from other apps. Foreground copies rely on Accessibility. Background copies can be identified through dumpsys, with a delay of a few hundred milliseconds.\n\nSource detection is not always exact. It mainly depends on Accessibility and may occasionally tag the wrong app.'**
+  /// **'Source detection uses Accessibility to identify the current app.\n\nDetection is not always accurate. Background copies and other cases may be attributed to the wrong app.'**
   String get clipboardSettingsSourceRecordDialogContent;
-
-  /// translated key: clipboardSettingsSourceRecordViaDumpsysTitle
-  ///
-  /// In en, this message translates to:
-  /// **'Background Source via dumpsys'**
-  String get clipboardSettingsSourceRecordViaDumpsysTitle;
-
-  /// translated key: clipboardSettingsSourceRecordViaDumpsysTitleTooltip
-  ///
-  /// In en, this message translates to:
-  /// **'Info'**
-  String get clipboardSettingsSourceRecordViaDumpsysTitleTooltip;
-
-  /// translated key: clipboardSettingsSourceRecordViaDumpsysDialogContent
-  ///
-  /// In en, this message translates to:
-  /// **'Background copies may be misidentified. Use dumpsys to check which app wrote to the clipboard and correct the source.'**
-  String get clipboardSettingsSourceRecordViaDumpsysDialogContent;
-
-  /// translated key: clipboardSettingsSourceRecordViaDumpsysAndroidDesc
-  ///
-  /// In en, this message translates to:
-  /// **'Requires Root or Shizuku and adds a delay of a few hundred milliseconds.'**
-  String get clipboardSettingsSourceRecordViaDumpsysAndroidDesc;
 
   /// translated key: source
   ///

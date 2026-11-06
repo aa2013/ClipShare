@@ -98,8 +98,14 @@ class PermissionInfoNotifier extends _$PermissionInfoNotifier with WidgetsBindin
     return _ignoreBatteryHandler.request(context);
   }
 
-  Future<void> requestAccessibilityPermission(BuildContext context) {
-    return _accessibilityHandler.request(context);
+  /// 请求无障碍权限并刷新状态；自动授权不一定触发应用恢复事件。
+  Future<void> requestAccessibilityPermission(BuildContext context) async {
+    await _accessibilityHandler.request(context);
+    final permissionInfo = await _updatePermissionInfo();
+    if (!ref.mounted) {
+      return;
+    }
+    state = AsyncData(permissionInfo);
   }
 
   Future<void> requestSmsPermission(BuildContext context) {
