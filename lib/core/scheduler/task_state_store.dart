@@ -51,7 +51,7 @@ class TaskStateStore {
     }
     final states = <String, TaskState>{};
     try {
-      final raw = await configDao.getConfigByKey(ConfigKey.schedulerState, '');
+      final raw = await configDao.getConfigByKey(ConfigKey.scheduler, '');
       if (raw.isNotEmpty) {
         final decoded = jsonDecode(raw);
         if (decoded is Map<String, dynamic>) {
@@ -73,7 +73,7 @@ class TaskStateStore {
     _cache = states;
     final json = jsonEncode(states.map((key, value) => MapEntry(key, value.toJson())));
     try {
-      await configDao.addOrUpdate(ConfigKey.schedulerState, json);
+      await configDao.addOrUpdate(ConfigKey.scheduler, json);
     } catch (err, stack) {
       logger.error(tag, 'persist scheduler state failed. $err', stack);
     }

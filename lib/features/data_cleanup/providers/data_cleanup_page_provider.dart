@@ -428,16 +428,16 @@ class DataCleanupPageNotifier extends _$DataCleanupPageNotifier {
     }
   }
 
-  /// 保存自动清理配置并重设定时器
+  /// 保存自动清理配置并同步全局调度器中的清理任务
   Future<void> saveAutoCleanConfig(BuildContext context) async {
     final nextTime = state.nextExecTime;
     if (nextTime == null) {
-      dialogManager.tips(context, text: TranslationKey.errorCronTips.tr);
+      await dialogManager.tips(context, text: TranslationKey.errorCronTips.tr);
       return;
     }
     final cfg = _config;
     if (cfg == null) {
-      dialogManager.tips(context, text: TranslationKey.pleaseSaveFilterConfig.tr);
+      await dialogManager.tips(context, text: TranslationKey.pleaseSaveFilterConfig.tr);
       return;
     }
     final cron = _buildCron();
@@ -452,13 +452,13 @@ class DataCleanupPageNotifier extends _$DataCleanupPageNotifier {
       if (!context.mounted) {
         return;
       }
-      dialogManager.tips(context, text: TranslationKey.saveSuccess.tr);
-      await _dataCleanup.initAutoClean();
+      await dialogManager.tips(context, text: TranslationKey.saveSuccess.tr);
+      await _dataCleanup.configureAutoClean();
     } catch (err, stack) {
       if (!context.mounted) {
         return;
       }
-      dialogManager.tips(context, text: '${TranslationKey.saveFailed.tr}\n$err\n$stack');
+      await dialogManager.tips(context, text: '${TranslationKey.saveFailed.tr}\n$err\n$stack');
     }
   }
 
@@ -525,6 +525,6 @@ class DataCleanupPageNotifier extends _$DataCleanupPageNotifier {
   /// 持久化清理配置并刷新只读配置 provider
   Future<void> _saveConfig(DataCleanupConfig config) async {
     await _db.configDao.addOrUpdate(.cleanDataConfig, config.toString());
-    ref.invalidate(dataCleanupConfigProvider);
+    final _ = await ref.refresh(dataCleanupConfigProvider.future);
   }
 }

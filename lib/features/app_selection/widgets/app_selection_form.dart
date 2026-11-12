@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:clipshare/core/database/tables/app_info.dart';
-import 'package:clipshare/core/models/local_app_info.dart';
+import 'package:clipshare/core/services/clipboard/local_app_info.dart';
 import 'package:clipshare/l10n/translation_key.dart';
 import 'package:clipshare/shared/extensions/context_extension.dart';
 import 'package:clipshare/shared/extensions/list_extension.dart';

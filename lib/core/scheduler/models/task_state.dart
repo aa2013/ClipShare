@@ -1,3 +1,5 @@
+import 'package:clipshare/shared/extensions/time_extension.dart';
+
 /// 单个任务的调度状态。
 ///
 /// 描述处理进度
@@ -35,8 +37,8 @@ class TaskState {
 
   Map<String, dynamic> toJson() {
     return {
-      'lastScheduledAt': lastScheduledAt?.toIso8601String(),
-      'lastRunAt': lastRunAt?.toIso8601String(),
+      'lastScheduledAt': lastScheduledAt?.format(),
+      'lastRunAt': lastRunAt?.format(),
     };
   }
 }

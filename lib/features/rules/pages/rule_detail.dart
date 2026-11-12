@@ -1,8 +1,8 @@
 import 'package:clipshare/core/database/tables/app_info.dart';
 import 'package:clipshare/core/database/tables/device.dart';
 import 'package:clipshare/core/extensions/context_extension.dart';
-import 'package:clipshare/core/models/local_app_info.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
+import 'package:clipshare/core/services/clipboard/local_app_info.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/rules/lua/template.dart';
 import 'package:clipshare/core/services/rules/rules_provider.dart';

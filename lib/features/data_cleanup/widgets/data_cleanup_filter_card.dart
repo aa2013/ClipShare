@@ -1,7 +1,7 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart' show CalendarDatePicker2Type, CalendarDatePicker2WithActionButtonsConfig;
 import 'package:clipshare/core/database/tables/device.dart';
-import 'package:clipshare/core/models/local_app_info.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
+import 'package:clipshare/core/services/clipboard/local_app_info.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/features/app_selection/app_selection_entry.dart';
 import 'package:clipshare/features/app_selection/widgets/app_info_groups_view.dart';

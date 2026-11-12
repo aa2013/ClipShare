@@ -7,7 +7,6 @@ import 'package:clipshare/core/database/dao/app_info_dao.dart';
 import 'package:clipshare/core/database/dao/operation_record_dao.dart';
 import 'package:clipshare/core/database/tables/app_info.dart';
 import 'package:clipshare/core/database/tables/operation_record.dart';
-import 'package:clipshare/core/models/local_app_info.dart';
 import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
@@ -19,6 +18,8 @@ import 'package:flutter/foundation.dart';
 import 'package:get_apps/get_apps.dart' show GetApps;
 import 'package:get_apps/models.dart' as get_apps;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import 'local_app_info.dart';
 
 part 'clipboard_source_provider.g.dart';
 

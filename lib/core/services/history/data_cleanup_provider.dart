@@ -4,6 +4,11 @@ import 'dart:io';
 import 'package:clipshare/core/database/app_database.dart';
 import 'package:clipshare/core/database/app_database_provider.dart';
 import 'package:clipshare/core/database/extensions/history_extension.dart';
+import 'package:clipshare/core/scheduler/models/scheduled_task.dart';
+import 'package:clipshare/core/scheduler/schedule/cron_schedule.dart';
+import 'package:clipshare/core/scheduler/schedule/simple_task_handler.dart';
+import 'package:clipshare/core/scheduler/scheduler.dart';
+import 'package:clipshare/core/scheduler/scheduler_provider.dart';
 import 'package:clipshare/core/services/clipboard/clipboard_source_provider.dart';
 import 'package:clipshare/core/services/device/device_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
@@ -68,7 +73,11 @@ class DataCleanupNotifier extends _$DataCleanupNotifier {
   /// 级联删除的单批最大数量，防止 SQL in 子句元素过多。
   static const deleteBatchSize = 1000;
 
-  Timer? _cleanTimer;
+  /// 固定任务标识，本服务按此 key 向全局调度器注册自动清理任务。
+  static const schedulerKey = 'data_cleanup';
+
+  /// 已注册的自动清理任务句柄，null 表示当前没有挂载调度任务。
+  TaskHandle? _taskHandle;
 
   AppDatabase get _db => ref.read(appDbProvider).requireValue;
 
@@ -84,13 +93,16 @@ class DataCleanupNotifier extends _$DataCleanupNotifier {
 
   DataCleanupConfig? get _config => ref.read(dataCleanupConfigProvider).requireValue;
 
+  Future<Scheduler> get _scheduler => ref.read(schedulerProvider.future);
+
   @override
   Future<void> build() async {
+    // 任务由调度器统一释放，句柄仅作本地记录
     ref.onDispose(() {
-      _cleanTimer?.cancel();
+      _taskHandle = null;
     });
-    // 启动即恢复自动清理定时器（错过的执行时间会立即补跑）
-    await initAutoClean();
+    // 调度器与配置均可从库中恢复，启动时直接按配置对齐调度状态
+    await configureAutoClean();
   }
 
   /// 解析清理的时间范围。
@@ -193,53 +205,55 @@ class DataCleanupNotifier extends _$DataCleanupNotifier {
     }
   }
 
-  /// 初始化/重设自动清理定时器，保存自动清理配置后需重新调用。
-  /// 错过的执行时间会立即静默补跑并滚动更新上/下次执行时间。
-  Future<void> initAutoClean() async {
-    _cleanTimer?.cancel();
-    final cfg = _config;
-    if (cfg == null || !cfg.autoClean) {
-      logger.debug(tag, 'clean data config not found or disable auto clean');
+  /// 按已保存的自动清理配置对齐全局调度器中的任务：开启时注册，关闭或配置无效时注销
+  Future<void> configureAutoClean() async {
+    final cfg = await ref.read(dataCleanupConfigProvider.future);
+    final cron = cfg?.cron;
+    if (cfg == null || !cfg.autoClean || cron == null) {
+      await _cancelAutoCleanTask();
+      logger.debug(tag, 'auto clean disabled, task unregistered');
       return;
     }
-    final cron = cfg.cron;
-    final nextTime = cfg.nextCleanTime;
-    if (cron == null || nextTime == null) {
-      // 配置不完整（如手动改库），无法调度
-      logger.error(tag, 'auto clean config missing cron/nextCleanTime');
-      return;
-    }
-    final now = DateTime.now();
-    // 已经错过上次执行时间则立即执行
-    if (now.isAfter(nextTime)) {
-      try {
-        await _cleanByConfig(cfg);
-        logger.debug(tag, 'auto clean data success.');
-        final newNextTime = CronUtil.getNextTime(cron);
-        await _saveConfig(
-          cfg.copyWith(
-            lastCleanTime: now,
-            nextCleanTime: newNextTime,
-          ),
-        );
-      } catch (err, stack) {
-        logger.debug(tag, 'auto clean data failed. $err $stack');
-      }
-    }
-    // 设置定时器
-    final newNextTime = CronUtil.getNextTime(cron);
-    if (newNextTime == null) {
+    final schedule = CronSchedule(cron);
+    if (schedule.nextRun(DateTime.now()) == null) {
+      // cron 非法时不能保留旧任务，否则旧表达式会继续触发清理
+      await _cancelAutoCleanTask();
       logger.error(tag, "invalid cron '$cron', skip scheduling");
       return;
     }
-    logger.debug(tag, 'set clean data timer, next execute time: $newNextTime');
-    final diff = now.difference(newNextTime);
-    _cleanTimer = Timer(Duration(seconds: diff.inSeconds.abs() + 1), () => initAutoClean());
+    final scheduler = await _scheduler;
+    final task = ScheduledTask(
+      key: schedulerKey,
+      schedule: schedule,
+      handler: SimpleTaskHandler((_) => cleanBySavedConfig()),
+      // 启动或重设调度时补跑一次，等价于原实现「错过执行时间立即执行」
+      runOnMissed: true,
+      runImmediately: false,
+    );
+    // 同 key 重复注册由调度器覆盖旧任务，不会残留两个定时器
+    final handle = await scheduler.register(task);
+    _taskHandle = handle;
+    logger.debug(tag, 'auto clean task registered, cron=$cron');
   }
 
-  /// 按已保存配置构建清理参数并静默执行。
+  /// 注销已挂载的自动清理任务；未注册时无副作用。
+  Future<void> _cancelAutoCleanTask() async {
+    final handle = _taskHandle;
+    _taskHandle = null;
+    await handle?.cancel();
+  }
+
+  /// 按当前保存的清理配置执行一次自动清理并回写执行时间。
+  ///
   /// 配置中不含来源 App 与日期范围，自动清理仅按标签/设备/类型/天数过滤。
-  Future<void> _cleanByConfig(DataCleanupConfig cfg) async {
+  /// 回收孤儿设备失败不影响已完成的删除，只在日志中记录；清理本身抛异常时
+  /// 不写回执行时间，交由调度器记录失败，避免界面显示为执行成功。
+  Future<void> cleanBySavedConfig() async {
+    final cfg = _config;
+    if (cfg == null) {
+      logger.warn(tag, 'clean data config not found, skip auto clean');
+      return;
+    }
     final timeRange = resolveCleanTimeRange(
       useDaysFilter: cfg.saveDays != null,
       saveDays: cfg.saveDays ?? 0,
@@ -254,12 +268,34 @@ class DataCleanupNotifier extends _$DataCleanupNotifier {
       removeFiles: cfg.removeFiles,
       saveTop: cfg.saveTopData,
     );
-    await cleanData(params);
+    final cnt = await deleteCascade(params);
+    // 历史已删除即视为本次清理生效，孤儿设备回收属于可失败的收尾步骤
+    try {
+      await _recycleOrphanDevices(params.devIds);
+    } catch (err, stack) {
+      logger.warn(tag, 'recycle orphan devices failed after auto clean. $err $stack');
+    }
+    logger.debug(tag, 'auto clean data success, deleted $cnt histories');
+    await _updateCleanTime(cfg);
   }
 
-  /// 持久化清理配置并刷新只读配置 provider。
+  /// 回写最近一次清理与下次清理时间。
+  ///
+  /// 以库中最新配置为基准，只改写这两个字段，避免清理期间用户保存的其它配置被本次结果覆盖。
+  Future<void> _updateCleanTime(DataCleanupConfig fallback) async {
+    // 重新读库而非使用执行开始时的快照，清理耗时期间用户可能已保存新配置
+    final current = await ref.read(dataCleanupConfigProvider.future);
+    final base = current ?? fallback;
+    final config = base.copyWith(
+      lastCleanTime: DateTime.now(),
+      nextCleanTime: CronUtil.getNextTime(base.cron ?? ''),
+    );
+    await _saveConfig(config);
+  }
+
+  /// 持久化清理配置并等待只读配置 provider 重建完成，避免后续读取拿到旧配置。
   Future<void> _saveConfig(DataCleanupConfig config) async {
     await _db.configDao.addOrUpdate(ConfigKey.cleanDataConfig, config.toString());
-    ref.invalidate(dataCleanupConfigProvider);
+    final _ = await ref.refresh(dataCleanupConfigProvider.future);
   }
 }

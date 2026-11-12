@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:clipshare/core/models/local_app_info.dart';
+import 'package:clipshare/core/services/clipboard/local_app_info.dart';
 import 'package:clipshare/features/app_selection/pages/app_selection_page.dart';
 import 'package:clipshare/features/app_selection/widgets/app_selection_form.dart';
 import 'package:clipshare/l10n/translation_key.dart';
