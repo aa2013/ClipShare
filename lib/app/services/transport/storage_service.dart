@@ -1226,13 +1226,17 @@ class StorageService extends GetxService
         final ipList = (json["ipList"] as List<dynamic>).cast();
         final port = json["port"] as int;
         for (var ip in ipList) {
+          Socket? probeSocket;
           try {
-            await Socket.connect(ip, port, timeout: 500.ms);
+            probeSocket = await Socket.connect(ip, port, timeout: 500.ms);
             diffNetwork = false;
             //与目标设备同一网络，跳过
             break;
           } catch (err) {
             //ignore
+          } finally {
+            // 探活结束销毁连接，避免 CLOSE_WAIT 占用端口不释放
+            probeSocket?.destroy();
           }
         }
       } catch (err, stack) {
