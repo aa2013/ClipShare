@@ -67,7 +67,7 @@ class ClipNativeDragItemWrapper extends StatelessWidget {
               'type': 'clipshare-history-${clip.data.type.toLowerCase()}',
             },
           );
-          item.add(Formats.fileUri(file.uri));
+          item.add(Formats.fileUri(file!.uri));
           if (clip.isImage) {
             item.add(Formats.png.lazy(file.readAsBytes));
           }
