@@ -363,7 +363,7 @@ class ZhCNTranslation extends AbstractTranslations {
       case TranslationKey.sendFile:
         return "文件发送";
       case TranslationKey.hotKeySettingsFileDesc:
-        return "将选定的文件同步到其他设备（桌面无效）";
+        return "将选定的文件同步到其他设备";
       case TranslationKey.syncSettingsGroupName:
         return "同步";
       case TranslationKey.syncSettingsSmsPermissionRequired:

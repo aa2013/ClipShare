@@ -407,7 +407,7 @@ class EnUSTranslation extends AbstractTranslations {
       case TranslationKey.sendFile:
         return "Send File";
       case TranslationKey.hotKeySettingsFileDesc:
-        return "Send selected files to other devices; desktop selection is unsupported";
+        return "Send selected files to other devices;";
       case TranslationKey.syncSettingsGroupName:
         return "Sync";
       case TranslationKey.syncSettingsSmsPermissionRequired:
