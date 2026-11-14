@@ -30,3 +30,11 @@ linter:
 formatter:
   page-width: 120
   trailing_commas: preserve
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
+    - linux/**

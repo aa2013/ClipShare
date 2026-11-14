@@ -113,6 +113,9 @@ class StorageService extends GetxService
 
   /// 补拉缺失数据的冷却时长：同设备距上次补拉过近则直接跳过，避免反复全量扫描。
   static const _reloadMissingCoolDown = Duration(seconds: 60);
+
+  /// 探活直连交接的冷却时长：握手持续失败时避免每 30s 心跳重复建连打对端。
+  static const _directHandoffCoolDown = Duration(minutes: 1);
   static const _baseDirs = [devicesInfoDir, historyDir, appInfoDir];
   static const _minCompatibleWsVersion = SemanticVersion(1, 2, 0);
   static const _incompatibleWsVersionNotifyKey = 'storage-ws-incompatible-version';
@@ -123,6 +126,9 @@ class StorageService extends GetxService
 
   /// 记录各设备最近一次补拉缺失数据的时间，用于心跳节流，避免重复全量扫描。
   final _lastReloadAt = <String, DateTime>{};
+
+  /// 记录各设备最近一次探活直连交接的时间，用于失败冷却；交接成功后移除。
+  final _lastDirectHandoffAt = <String, DateTime>{};
 
   /// 云端已知设备 id 缓存：启动时全量填充、收到 online 时增量补充、stop 时清空。
   /// 作为心跳广播目标集，避免每 30s 重复列举云端设备目录。
@@ -454,6 +460,8 @@ class StorageService extends GetxService
   Future<void> stop() async {
     transportHeartbeatService.stop(_storageOnlineHeartbeatTaskName);
     _cloudDeviceIds.clear();
+    _lastDirectHandoffAt.clear();
+    _lastReloadAt.clear();
     _client = null;
     _lastDate = '';
     connRegService.removeDiscoverListener(this);
@@ -1220,7 +1228,12 @@ class StorageService extends GetxService
       unawaited(_retryPendingAcksForDevice(devId));
     }
     var diffNetwork = true;
-    if (msg.data.isNotNullAndEmpty) {
+    String? reachableIp;
+    int? reachablePort;
+    // 直连交接冷却期内跳过探活：握手持续失败时不再每 30s 产生裸连打对端。
+    final lastHandoff = _lastDirectHandoffAt[msg.targetDevId];
+    final inHandoffCooldown = lastHandoff != null && DateTime.now().difference(lastHandoff) < _directHandoffCoolDown;
+    if (msg.data.isNotNullAndEmpty && !inHandoffCooldown) {
       try {
         final json = jsonDecode(msg.data);
         final ipList = (json["ipList"] as List<dynamic>).cast();
@@ -1229,6 +1242,8 @@ class StorageService extends GetxService
           Socket? probeSocket;
           try {
             probeSocket = await Socket.connect(ip, port, timeout: 500.ms);
+            reachableIp = ip;
+            reachablePort = port;
             diffNetwork = false;
             //与目标设备同一网络，跳过
             break;
@@ -1245,6 +1260,12 @@ class StorageService extends GetxService
     }
 
     if (!diffNetwork) {
+      final ip = reachableIp;
+      final port = reachablePort;
+      // 存在实测可达的直连路径时交给 SocketService 走完整握手建连；仅中转模式保持不走直连。
+      if (ip != null && port != null && !appConfig.onlyForwardMode) {
+        unawaited(_tryDirectConnectFromProbe(msg.targetDevId, ip, port));
+      }
       // 同网段优先让 Socket 接管；若短暂等待后 Socket 未建连，再用存储通道兜底更新在线状态。
       unawaited(
         _fallbackConnectStorageDeviceAfterSocketGracePeriod(msg.targetDevId),
@@ -1281,6 +1302,41 @@ class StorageService extends GetxService
       "fallback connect storage device after socket grace period. targetDevId=$devId",
     );
     await _connectDevice(devId);
+  }
+
+  /// 探活可达后的直连交接：复用 manualConnect 完整握手建连，成功则 socket 接管并回写可达地址。
+  Future<void> _tryDirectConnectFromProbe(
+    String devId,
+    String ip,
+    int port,
+  ) async {
+    final now = DateTime.now();
+    final last = _lastDirectHandoffAt[devId];
+    if (last != null && now.difference(last) < _directHandoffCoolDown) {
+      return;
+    }
+    _lastDirectHandoffAt[devId] = now;
+    // 竞态防御：探活间隙已被 socket 接管则跳过。
+    if (_registry.getProtocol(devId)?.isSocket ?? false) {
+      return;
+    }
+    final sktService = Get.find<SocketService>();
+    final connected = await sktService.manualConnect(
+      ip,
+      port: port,
+      targetDevId: devId,
+    );
+    if (!connected) {
+      return;
+    }
+    _lastDirectHandoffAt.remove(devId);
+    // _onDevConnected 已写 address 字段；internalAddress 因 isInternalIPv4 不含
+    // tailscale 的网段 100.64/10 而漏写，此处按实测可达地址补写，供启动发现/断线重连直接命中。
+    await dbService.deviceDao.updateDeviceInternalAddress(
+      devId,
+      appConfig.userId,
+      "$ip:$port",
+    );
   }
 
   /// 对单个重连设备执行一次缺失数据补拉，复用全量补拉的筛选与读取逻辑。
