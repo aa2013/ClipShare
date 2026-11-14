@@ -40,6 +40,11 @@ on:
         required: true
         default: true
         type: boolean
+      upload_server:
+        description: 'Upload to release server'
+        required: false
+        default: false
+        type: boolean
 jobs:
   # ========================
   # 1️⃣ 并行调用各平台
@@ -156,7 +161,34 @@ jobs:
           name: artifact-${{ steps.tag.outputs.tag_name }}
           path: artifacts/*
           overwrite: true
-          
+
+      # 上传产物到发布服务器：tag 推送触发始终上传；手动执行时勾选 upload_server 才上传。
+      - name: Upload to release server
+        if: ${{ github.event_name == 'push' || inputs.upload_server }}
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          RELEASE_PATH: ${{ secrets.RELEASE_PATH }}
+          TAG_NAME: ${{ steps.tag.outputs.tag_name }}
+        run: |
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ] || [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$RELEASE_PATH" ]; then
+            echo "::error::SSH 上传所需 secrets 未配置：SSH_HOST / SSH_USER / SSH_PRIVATE_KEY / RELEASE_PATH"
+            exit 1
+          fi
+          # 最终目录 = RELEASE_PATH + tag 去掉 v 前缀（忽略大小写）：/path/to + V1.5.4 → /path/to/1.5.4
+          VERSION=$(echo "$TAG_NAME" | sed -E 's/^[vV]//')
+          RELEASE_DIR="${RELEASE_PATH%/}/$VERSION"
+
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          SSH_OPTS=(-i ~/.ssh/id_rsa -o StrictHostKeyChecking=accept-new)
+          # 远端建目录，单引号包裹防远端 shell 解析特殊字符
+          ssh "${SSH_OPTS[@]}" -p "${SSH_PORT:-22}" "$SSH_USER@$SSH_HOST" "mkdir -p '$RELEASE_DIR'"
+          scp "${SSH_OPTS[@]}" -P "${SSH_PORT:-22}" artifacts/* "$SSH_USER@$SSH_HOST:$RELEASE_DIR/"
+          echo "Uploaded to $SSH_USER@$SSH_HOST:$RELEASE_DIR"
   notify:
     needs: [windows, android, linux, macos, ios, release]
     runs-on: ubuntu-latest
