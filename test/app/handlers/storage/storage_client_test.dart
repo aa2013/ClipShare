@@ -115,6 +115,7 @@ class _FakeStorageClient extends StorageClient {
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    bool createDir = false,
   }) async {
     return true;
   }

@@ -372,11 +372,16 @@ class WebDAVClient extends StorageClient {
     );
   }
 
+  /// 先直接上传文件，失败后按需级联创建父目录并重试一次。
+  ///
+  /// 部分 WebDAV 服务端（如 Apache mod_dav）不会在 PUT 时自动补建中间目录，
+  /// 目标目录缺失时会直接返回 403，因此 [createDir] 为 true 时启用目录回退。
   @override
   Future<bool> uploadFile(
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    bool createDir = false,
   }) async {
     path = path.unixPath;
     try {
@@ -385,16 +390,53 @@ class WebDAVClient extends StorageClient {
         return false;
       }
       final filePath = _toClientPath(path, isDirectory: false);
-      StorageClient.recordClientInvoke('uploadFile', path: path);
-      await _client.putFileStream(filePath, file, onProgress: onProgress);
-      return true;
+      try {
+        await _uploadFileRequest(path, filePath, file, onProgress);
+        return true;
+      } catch (err) {
+        if (!createDir) {
+          rethrow;
+        }
+        // 目标目录可能因父目录缺失而上传失败，先补齐目录再重试。
+        final dir = (path.split(Constants.unixDirSeparate)..removeLast())
+            .join(Constants.unixDirSeparate);
+        if (!await createDirectory(dir)) {
+          rethrow;
+        }
+      }
+      try {
+        await _uploadFileRequest(path, filePath, file, onProgress);
+        return true;
+      } catch (retryErr, retryStack) {
+        _logStorageError('uploadFile', retryErr, retryStack, <String, Object?>{
+          'path': path,
+          'localFilePath': localFilePath,
+          'createDir': createDir,
+          'fallback': 'createDirectory',
+        });
+        return false;
+      }
     } catch (err, stack) {
       _logStorageError('uploadFile', err, stack, <String, Object?>{
         'path': path,
         'localFilePath': localFilePath,
+        'createDir': createDir,
       });
       return false;
     }
+  }
+
+  /// 直接向 WebDAV 服务端发送一次文件上传请求。
+  ///
+  /// [path] 为公开存储路径，[filePath] 为已转换的客户端路径。
+  Future<void> _uploadFileRequest(
+    String path,
+    String filePath,
+    File file,
+    StorageProgressFunc? onProgress,
+  ) async {
+    StorageClient.recordClientInvoke('uploadFile', path: path);
+    await _client.putFileStream(filePath, file, onProgress: onProgress);
   }
 
   @override

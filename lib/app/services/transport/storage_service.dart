@@ -1892,6 +1892,7 @@ class StorageService extends GetxService
         storageFilePath,
         filePath,
         onProgress: onStorageProgressSync,
+        createDir: true,
       );
       if (!result) {
         //update sync file progress

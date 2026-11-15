@@ -347,6 +347,7 @@ class AliyunOssClient extends StorageClient {
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    bool createDir = false,
   }) async {
     path = normalizeStoragePath(path);
     final filePath = _objectKey(path);

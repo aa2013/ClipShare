@@ -881,6 +881,7 @@ class SettingsController extends GetxController with WidgetsBindingObserver impl
               int percentage = (count * 100 / total).toInt();
               loadingController.update(percentage);
             },
+            createDir: true,
           );
           await dialog.close();
           if(uploadSuccess){

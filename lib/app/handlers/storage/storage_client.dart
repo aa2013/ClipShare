@@ -158,10 +158,12 @@ abstract class StorageClient {
   /// [path] - 目标存储路径
   /// [localFilePath] - 本地文件路径
   /// [onProgress] - 可选进度回调
+  /// [createDir] - 如果父目录不存在是否自动创建（默认为false），对象存储忽略该字段
   Future<bool> uploadFile(
     String path,
     String localFilePath, {
     StorageProgressFunc? onProgress,
+    bool createDir = false,
   });
 
   /// 下载文件到本地
