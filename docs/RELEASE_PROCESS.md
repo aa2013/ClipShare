@@ -29,10 +29,13 @@ git log <上个版本tag>..HEAD --oneline
 ### 4.1 下载表格
 `docs/docs/zh-CN/history_version.md`、`docs/docs/en-US/history_version.md`
 - 表格 10 行链接全部替换版本号 + build 号（例 `1.5.2+29` → `1.5.3+30`）
-- URL 模式：
-  - 桌面端：`.../releases/clipshare/{ver}/clipshare-{ver}+{build}-{platform}.{ext}`
+- **注意：1.5.4 及更早官网表格为旧命名（文件名含平台后缀、ipa 用 `-` 分隔），替换时勿照抄旧行文件名，以下方 URL 模式为准**
+- URL 模式（以 CI 实际产出为准，build-all 的 Rename 步骤会去掉产物文件名中的 `-windows/-linux/-macos` 后缀）：
+  - Windows：`.../releases/clipshare/{ver}/clipshare-{ver}+{build}-setup.exe` / `.zip`
+  - Linux：`.../{ver}/clipshare-{ver}+{build}.AppImage` / `.deb` / `.rpm`
+  - MacOS：`.../{ver}/clipshare-{ver}+{build}.dmg`
   - Android：`.../{ver}/app-arm64-v8a-release-v{ver}.apk`（arm64-v8a / armeabi-v7a / x86_64）
-  - iOS：`.../{ver}/clipshare-{ver}-{build}-nosign.ipa`
+  - iOS：`.../{ver}/clipshare-{ver}+{build}-nosign.ipa`
 
 ### 4.2 更新日志区块（同上两个 history_version.md）
 - 最新版本区块前插入 `### 🏷️ vX.Y.Z - <发布日期>`
