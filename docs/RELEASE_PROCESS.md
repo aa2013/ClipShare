@@ -15,6 +15,7 @@
 git log <上个版本tag>..HEAD --oneline
 ```
 - 只保留用户可感知的变更，剔除纯技术细节
+- **基线以上过官网的上一版本为准**（对应官方 `vX.Y.Z` tag）；临时构建 tag（如 `v1.5.4-0908`、`v1.5.4-downgrade-linux-glibc`）不算版本边界，官方 tag 与临时 tag 之间的提交同样纳入筛选
 - 措辞参考此前版本更新日志，保持一致风格
 
 ## 3. 更新 Flutter 项目内更新日志
@@ -60,6 +61,21 @@ git log <上个版本tag>..HEAD --oneline
   `node -e "JSON.parse(require('fs').readFileSync('<json>','utf8'))"`
 - grep 检查下载表格 / downloads 无上一版本号残留
 
-## 6. 提交
+## 6. GitHub Release 发布说明
+
+发版时在 GitHub Release 正文粘贴中英双语说明，**不落盘为文件**，直接复制以下格式：
+
+```markdown
+
+（中文区：第 3 步定稿条目原样罗列，含 emoji，顺序 ✨新增 → 🛠️修复 → ⚡优化，平铺不分平台小节）
+
+（英文区：条目与官网 en-US 区块措辞一致，同样顺序；英文条目不带平台前缀，平台专属条目行尾补 ` (<平台>)`）
+```
+
+- 条目措辞以第 3 步/updateLogs 定稿为准，勿重新措辞
+- "Full Changelog" 对比链接由 GitHub 按 tag 自动生成，无需手写
+- 正文保持简短纯文本风格，不写大标题与日期
+
+## 7. 提交
 - ClipShareDoc 改动提交到其独立仓库
 - clipshare 改动（pubspec、assets/md、docs/RELEASE_PROCESS.md）提交到 clipshare 仓库
