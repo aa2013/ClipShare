@@ -214,6 +214,7 @@ class HistoryRecorderNotifier extends _$HistoryRecorderNotifier {
     if (extracted.isNotNullAndEmpty) {
       //提取内容不为空，尝试复制
       await clipboardManager.copy(ClipboardContentType.text, extracted!);
+      history = history.copyWith(extracted: Value(extracted));
     }
     switch (type) {
       case HistoryContentType.image:
