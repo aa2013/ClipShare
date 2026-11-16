@@ -1,4 +1,9 @@
-﻿const String luaTemplateRule = '''
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// 修改 src/ 内 Lua 源文件后运行 dart run tools/generate_lua_templates.dart。
+
+/// 内置 Lua 模板，来源：template_rule.lua。
+//language=lua
+const String luaTemplateRule = r'''
 -- 内容
 local content = params.content
 -- 返回结果
@@ -19,3 +24,4 @@ return {
   isFinalRule = false,
 }
 ''';
+

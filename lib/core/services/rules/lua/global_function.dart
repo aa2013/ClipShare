@@ -1,7 +1,9 @@
-﻿
-import 'modules.dart';
+// GENERATED CODE - DO NOT MODIFY BY HAND.
+// 修改 src/ 内 Lua 源文件后运行 dart run tools/generate_lua_templates.dart。
 
-const String luaGlobalFun = """
+/// 内置 Lua 模板，来源：global_function.lua。
+//language=lua
+const String luaGlobalFun = r'''
 -- 沙箱全局访问异常
 function sandboxGlobalAccessError(_, k)
   error("global '" .. k .. "' is readonly, try use 'local " .. k .. "' instead", 2)
@@ -34,7 +36,138 @@ end
 -- 用户脚本池
 __userscripts_map = {}
 -- 自定义模块
-$luaCustomModules
+__customModules = {
+  json = table_readonly({
+    encode = function(...)
+      return json.encode(...)
+    end,
+    decode = function(...)
+      return json.decode(...)
+    end,
+  }),
+  http = table_readonly({
+    getAsync = async(function(url, options)
+      local t = task.create()
+      options = options or {}
+      options.method = 'get'
+      __httpRequest(url, json.encode(options), nil, function(result)
+        local ok, value = pcall(json.decode, result)
+        if ok then
+          t.result = value
+        else
+          t.error = value
+        end
+        t:done()
+      end)
+      return await(t)
+    end),
+    postAsync = async(function(url, options, body)
+      local t = task.create()
+      options = options or {}
+      options.method = 'post'
+      local data = nil
+      if body then
+        -- todo pcall
+        data = json.encode(body)
+      end
+      __httpRequest(url, json.encode(options), data, function(result)
+        local ok, value = pcall(json.decode, result)
+        if ok then
+          t.result = value
+        else
+          t.error = value
+        end
+        t:done()
+      end)
+      return t
+    end),
+    putAsync = async(function(url, options, body)
+      local t = task.create()
+      options = options or {}
+      options.method = 'put'
+      local data = nil
+      if body then
+        data = json.encode(body)
+      end
+      __httpRequest(url, json.encode(options), data, function(result)
+        local ok, value = pcall(json.decode, result)
+        if ok then
+          t.result = value
+        else
+          t.error = value
+        end
+        t:done()
+      end)
+      return t
+    end),
+    deleteAsync = async(function(url, options, body)
+      local t = task.create()
+      options = options or {}
+      options.method = 'delete'
+      local data = nil
+      if body then
+        data = json.encode(body)
+      end
+      __httpRequest(url, json.encode(options), data, function(result)
+        local ok, value = pcall(json.decode, result)
+        if ok then
+          t.result = value
+        else
+          t.error = value
+        end
+        t:done()
+      end)
+      return t
+    end)
+  }),
+  notify = __notify,
+  ContentType = table_readonly({
+    sms = 'sms',
+    text = 'text',
+    image = 'image',
+    notification = 'notification',
+  }),
+  self = table_readonly({
+    devId = __devId,
+    devName = __devName,
+  }),
+  app = table_readonly({
+    versionName = __versionName,
+    versionNumber = __versionNumber,
+  }),
+  Platform = table_readonly({
+    isAndroid = __platformIsAndroid,
+    isIOS = __platformIsIOS,
+    isWindows = __platformIsWindows,
+    isMacOS = __platformIsMacOS,
+    isLinux = __platformIsLinux,
+  }),
+  android = table_readonly({
+    toast = __androidToast,
+    sendHistoryChangedBroadcast = __androidSendHistoryChangedBroadcast,
+  }),
+  crypto = table_readonly({
+    calcMD5 = __calcMD5,
+    calcSHA1 = __calcSHA1,
+    calcSHA256 = __calcSHA256,
+  }),
+  base64 = table_readonly({
+    encode = __base64Encode,
+    decode = __base64Decode,
+  }),
+  regex = table_readonly({
+     match = __regexMatch,
+     matchGroups = __regexMatchGroups,
+  }),
+  async = async,
+  await = await,
+  task = table_readonly({
+    async = async,
+    await = await,
+    create = task.create,
+  })
+}
+
 -- 全局变量
 __devId = '{{devId}}'
 __devName = '{{devName}}'
@@ -65,7 +198,7 @@ function _run_user_sandbox_method(taskId, script_hash, paramsJson)
     returnResult = tostring(scriptResult)
   end
   __onLuaAsyncResult(taskId, returnResult)
-end 
+end
 function run_user_sandbox_method(taskId, script_hash, paramsJson)
   local awaiter = async(_run_user_sandbox_method)(taskId, script_hash, paramsJson)
   awaiter:onCompleted(function()
@@ -76,4 +209,5 @@ function run_user_sandbox_method(taskId, script_hash, paramsJson)
   return awaiter
 end
 print('success')
-""";
+''';
+
