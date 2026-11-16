@@ -131,8 +131,9 @@ class SettingsForwardPage extends SettingsSectionView {
                 enabled: v != .server,
                 onSelected: () async {
                   Future<void> setup() async {
-                    await _setForwardWay(ref, .server);
+                    // 切换配置前先停止旧存储中转。
                     await storageService.stop();
+                    await _setForwardWay(ref, .server);
                     if (!forwardSettings.enable || forwardSettings.serverConfig == null) {
                       //若无配置，关闭中转
                       await _setEnableForward(ref, false);
@@ -156,8 +157,10 @@ class SettingsForwardPage extends SettingsSectionView {
                     if (shouldDisableForRootPath) {
                       _showRootPathForwardWarn(context);
                     }
-                    await _setForwardWay(ref, .webdav);
+                    // 无论目标是否已配置，都先停止旧中转。
                     await forwardServer.disConnectForwardServer();
+                    await storageService.stop();
+                    await _setForwardWay(ref, .webdav);
                     if (!forwardSettings.enable || forwardSettings.webdavConfig == null) {
                       //若无配置，关闭中转
                       await _setEnableForward(ref, false);
@@ -167,7 +170,7 @@ class SettingsForwardPage extends SettingsSectionView {
                       await _disableStorageForwardForRootPath(ref);
                       return;
                     }
-                    unawaited(storageService.restart());
+                    unawaited(storageService.start());
                   }
 
                   _confirmForwardWayChangeIfNeeded(context, forwardSettings, setup);
@@ -185,8 +188,10 @@ class SettingsForwardPage extends SettingsSectionView {
                     if (shouldDisableForRootPath) {
                       _showRootPathForwardWarn(context);
                     }
-                    await _setForwardWay(ref, .s3);
+                    // 无论目标是否已配置，都先停止旧中转。
                     await forwardServer.disConnectForwardServer();
+                    await storageService.stop();
+                    await _setForwardWay(ref, .s3);
                     if (!forwardSettings.enable || forwardSettings.s3Config == null) {
                       //若无配置，关闭中转
                       await _setEnableForward(ref, false);
@@ -196,7 +201,7 @@ class SettingsForwardPage extends SettingsSectionView {
                       await _disableStorageForwardForRootPath(ref);
                       return;
                     }
-                    unawaited(storageService.restart());
+                    unawaited(storageService.start());
                   }
 
                   _confirmForwardWayChangeIfNeeded(context, forwardSettings, setup);
