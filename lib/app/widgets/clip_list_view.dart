@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'history_locator.dart';
 
 import 'package:clipshare/app/data/models/keyboard_shortcut.dart';
 import 'package:clipshare/app/utils/extensions/history_data_extension.dart';
@@ -51,6 +52,7 @@ part 'clip_list_view/clip_list_item_renderer.dart';
 class ClipListView extends StatefulWidget {
   final List<ClipData> list;
   final void Function() onRefreshData;
+  final bool filtered;
   final bool enableRouteSearch;
   final BorderRadiusGeometry? detailBorderRadius;
   final Future<List<ClipData>> Function(int minId)? onLoadMoreData;
@@ -66,6 +68,7 @@ class ClipListView extends StatefulWidget {
     required this.onRefreshData,
     this.onLoadMoreData,
     this.detailBorderRadius,
+    this.filtered = false,
     this.enableRouteSearch = false,
     required this.onUpdate,
     required this.onRemove,
@@ -97,6 +100,7 @@ class ClipListViewState extends State<ClipListView>
   var _showBackToTopButton = false;
   final String tag = "ClipListView";
   final _selectionController = ClipMultiSelectionController();
+  int? _anchor;
   MenuController codeMenuController = MenuController();
 
   bool get isBigScreen =>
@@ -122,6 +126,7 @@ class ClipListViewState extends State<ClipListView>
   @override
   void didUpdateWidget(covariant ClipListView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.filtered) _anchor = null;
     final tailId = widget.list.isEmpty ? null : widget.list.last.data.id;
     if (_lastListTailId != tailId) {
       _lastListTailId = tailId;
@@ -409,7 +414,10 @@ class ClipListViewState extends State<ClipListView>
             },
           ),
         ],
-        child: _buildBody(),
+        child: _anchor == null ? _buildBody() : HistoryLocator(
+          key: ValueKey(_anchor), id: _anchor!, load: HistoryLocator.query,
+          columns: appConfig.showMoreItemsInRow && !appConfig.isSmallScreen ? max(2, MediaQuery.sizeOf(context).width ~/ 395) : 1,
+          card: (clip, _) => renderClip(clip),),
       ),
       floatingActionButtonLocation: ExpandableFab.location,
       floatingActionButton: _buildFloatingActionButton(),

@@ -101,6 +101,9 @@ set_target_properties(${BINARY_NAME}
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
+# Configure secondary engines before desktop_multi_window constructs their views.
+target_sources(desktop_multi_window_plugin PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/secondary_view.cc")
+set_property(TARGET desktop_multi_window_plugin APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--wrap=fl_view_new")
 
 foreach(plugin ${FLUTTER_PLUGIN_LIST})
   # Flutter copies plugin build outputs into the bundle as files, so their

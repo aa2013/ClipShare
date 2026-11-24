@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:clipshare/app/widgets/history_locator.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -263,6 +264,8 @@ class SplashController extends GetxController {
       var args = jsonDecode(call.arguments);
       var method = MultiWindowMethod.values.byName(call.method);
       switch (method) {
+        case MultiWindowMethod.locateHistory:
+          return jsonEncode(await HistoryLocator.query(args['id'], args['offset']));
         case MultiWindowMethod.getHistories:
           int fromId = args["fromId"];
           final filter = SearchFilter.fromJson(args["filter"]);

@@ -68,6 +68,12 @@ import 'package:path/path.dart' as p;
 final _noScreenshot = NoScreenshot.instance;
 
 class ConfigService extends GetxService {
+  final _historyHighlightMs = 1200.obs;
+  int get historyHighlightMs => _historyHighlightMs.value;
+  Future<void> setHistoryHighlightMs(int ms) async {
+    await configDao.addOrUpdate(ConfigKey.historyHighlightMs, ms.toString());
+    _historyHighlightMs.value = ms;
+  }
   ConfigDao get configDao => Get.find<DbService>().configDao;
 
   RuleDao get ruleDao => Get.find<DbService>().ruleDao;
@@ -657,6 +663,7 @@ class ConfigService extends GetxService {
   ///加载配置信息
   Future<void> loadConfigs() async {
     var cfg = configDao;
+    _historyHighlightMs.value = await cfg.getConfigByKey(ConfigKey.historyHighlightMs,1200);
     final int defaultPort;
     if (kDebugMode) {
       defaultPort = Constants.port - 1;

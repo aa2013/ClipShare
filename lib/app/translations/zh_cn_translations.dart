@@ -6,6 +6,8 @@ class ZhCNTranslation extends AbstractTranslations {
   @override
   String translate(TranslationKey key) {
     switch (key) {
+      case TranslationKey.viewInHistory: return '在历史记录中查看';
+      case TranslationKey.historyHighlight: return '定位高亮时长（0 秒关闭）';
       case TranslationKey.unitWord:
         return "字";
       case TranslationKey.dialogCancelText:

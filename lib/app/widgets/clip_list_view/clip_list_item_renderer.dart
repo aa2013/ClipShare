@@ -1,8 +1,14 @@
 part of '../clip_list_view.dart';
 
 extension _ClipListItemRenderer on ClipListViewState {
-  Widget renderItem(int i) {
-    var item = widget.list[i];
+  Widget renderItem(int i) => renderClip(widget.list[i]);
+  Widget renderClip(ClipData item) {
+    final controller = widget.parentController;
+    final VoidCallback? locate = widget.filtered && controller is HistoryController ? () {
+      homeCtrl.showingHistorySearch.value = false;
+      HistoryLocator.reveal(controller.filterController, () => controller.refreshData(showLoading: false),
+        () => setState(() => _anchor = item.data.id));
+    } : null;
     onRemoveClicked(ClipData item) {
       final onlyDeleteLocal = false.obs;
       Global.showTipsDialog(
@@ -38,6 +44,7 @@ extension _ClipListItemRenderer on ClipListViewState {
             child: ClipDetailDialog(
               dlgContext: context,
               clip: data,
+              onLocate: locate,
               onUpdate: widget.onUpdate,
               onRemoveClicked: onRemoveClicked,
             ),
@@ -47,8 +54,9 @@ extension _ClipListItemRenderer on ClipListViewState {
     }
 
     return ClipDataCard(
-      clip: widget.list[i],
-      imageMode: widget.imageMasonryGridViewLayout,
+      clip: item,
+      onLocate: locate,
+      imageMode: _anchor == null && widget.imageMasonryGridViewLayout,
       routeToSearchOnClickChip: widget.enableRouteSearch,
       selectMode: _selectionController.enabled,
       selected: _selectionController.contains(item),
@@ -56,7 +64,7 @@ extension _ClipListItemRenderer on ClipListViewState {
         if (_selectionController.enabled) {
           _toggleSelectState(item);
         } else {
-          var data = widget.list[i];
+          var data = item;
           if (isBigScreen) {
             homeCtrl.pushDrawer(
               widget: ClipboardDetailDrawer(clipData: data),
@@ -79,7 +87,7 @@ extension _ClipListItemRenderer on ClipListViewState {
         _refreshState();
       },
       onMoreActionsTap: (){
-        showClipBottomSheet(widget.list[i]);
+        showClipBottomSheet(item);
       },
       onLongPress: () {
         _enableSelectMode();
@@ -88,11 +96,11 @@ extension _ClipListItemRenderer on ClipListViewState {
         _refreshState();
       },
       onDoubleTap: () async {
-        if (widget.list[i].isFile) {
-          await OpenFile.open(widget.list[i].data.content);
+        if (item.isFile) {
+          await OpenFile.open(item.data.content);
           return;
         }
-        History history = widget.list[i].data;
+        History history = item.data;
         history.copyContent(context: context, showFeedback: true);
       },
       onUpdate: widget.onUpdate,

@@ -27,7 +27,7 @@ class HistoryPage extends GetView<HistoryController> {
               HistoryFilter(
                 controller: controller.filterController,
                 showFillColor: PlatformExt.isDesktop || !isSmallScreen,
-                showSearchRow: !isSmallScreen,
+                showSearchRow: PlatformExt.isDesktop || !isSmallScreen,
               ),
               const SizedBox(height: 5),
               Expanded(
@@ -47,6 +47,7 @@ class HistoryPage extends GetView<HistoryController> {
                               controller.refreshData(showLoading: false);
                             },
                             enableRouteSearch: true,
+                            filtered: controller.hasActiveFilter,
                             onLoadMoreData: controller.loadData,
                             imageMasonryGridViewLayout: controller.listContentType == HistoryContentType.image,
                             onUpdate: () {

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:clipshare/app/widgets/history_locator.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -64,6 +65,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
   List<CompactClipData> _list = [];
   bool _loadNewData = false;
   bool _loading = true;
+  int? _anchor;
   bool _showBackToTopButton = false;
   final multiWindowService = Get.find<MultiWindowChannelService>();
   final multiWindowConfigService = Get.find<MultiWindowConfigService>();
@@ -246,6 +248,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     bool loadMore = false,
     bool showLoading = false,
   }) async {
+    if (!loadMore) _anchor = null;
     if (loadMore) {
       setState(() {
         _loadNewData = true;
@@ -336,6 +339,59 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
     }
   }
 
+  Widget buildCard(CompactClipData item) {
+    return ClipDataCardCompact(
+      onLocate: historyFilterController.filter.toString() == SearchFilter().toString() ? null : () {
+        HistoryLocator.reveal(historyFilterController, refresh, () => setState(() => _anchor = item.data.data.id));
+      },
+      devName: item.devName,
+      clip: item.data,
+      clickToPaste: multiWindowConfigService.clickToPaste,
+      selectMode: _selectionController.enabled,
+      selected: _selectionController.contains(item.data),
+      onCopied: _closeIfPreferenceEnabled,
+      onTap: () {
+        if (_selectionController.enabled) {
+          _selectionController.toggleItem(item.data);
+          _refreshState();
+        }
+      },
+      onLongPress: () {
+        _enableSelectMode();
+        _selectionController.toggleItem(item.data);
+        HapticFeedback.mediumImpact();
+        _refreshState();
+      },
+      onToggleSelected: () {
+        if (!_selectionController.enabled) {
+          _enableSelectMode();
+        }
+        HapticFeedback.mediumImpact();
+        _selectionController.selectRange(
+          _list
+              .map((entry) => entry.data)
+              .toList(growable: false),
+          item.data,
+        );
+        _refreshState();
+      },
+      onTopChanged: (int id, bool isTop) {
+        multiWindowService.updateHistoryTop(0, id, isTop);
+      },
+      onDelete: (int id) {
+        multiWindowService.deleteHistory(0, id);
+        setState(() {
+          _list.removeWhere(
+            (entry) => entry.data.data.id == id,
+          );
+          _selectionController.removeMissingItems(
+            _list.map((entry) => entry.data),
+          );
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final canMergeCopy = _selectionController.canMergeCopy;
@@ -364,7 +420,10 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                 ),
               ),
             Expanded(
-              child: RefreshIndicator(
+              child: _anchor != null ? HistoryLocator(key: ValueKey(_anchor), id: _anchor!,
+                load: (id, offset) async => jsonDecode(await DesktopMultiWindow.invokeMethod(0, MultiWindowMethod.locateHistory.name, jsonEncode({'id': id, 'offset': offset}))),
+                card: (clip, name) => buildCard(CompactClipData(data: clip, devName: name)),
+              ) : RefreshIndicator(
                 onRefresh: () => Future.wait<void>([loadSearchCondition(), refresh()]),
                 child: ConditionWidget(
                   visible: _loading,
@@ -376,53 +435,7 @@ class _HistoryWindowState extends State<HistoryWindow> with WindowListener, Wind
                       physics: const AlwaysScrollableScrollPhysics(),
                       itemBuilder: (ctx, idx) {
                         final item = _list[idx];
-                        return ClipDataCardCompact(
-                          devName: item.devName,
-                          clip: item.data,
-                          clickToPaste: multiWindowConfigService.clickToPaste,
-                          selectMode: _selectionController.enabled,
-                          selected: _selectionController.contains(item.data),
-                          onCopied: _closeIfPreferenceEnabled,
-                          onTap: () {
-                            if (_selectionController.enabled) {
-                              _selectionController.toggleItem(item.data);
-                              _refreshState();
-                            }
-                          },
-                          onLongPress: () {
-                            _enableSelectMode();
-                            _selectionController.toggleItem(item.data);
-                            HapticFeedback.mediumImpact();
-                            _refreshState();
-                          },
-                          onToggleSelected: () {
-                            if (!_selectionController.enabled) {
-                              _enableSelectMode();
-                            }
-                            HapticFeedback.mediumImpact();
-                            _selectionController.selectRange(
-                              _list
-                                  .map((entry) => entry.data)
-                                  .toList(growable: false),
-                              item.data,
-                            );
-                            _refreshState();
-                          },
-                          onTopChanged: (int id, bool isTop) {
-                            multiWindowService.updateHistoryTop(0, id, isTop);
-                          },
-                          onDelete: (int id) {
-                            multiWindowService.deleteHistory(0, id);
-                            setState(() {
-                              _list.removeWhere(
-                                (entry) => entry.data.data.id == id,
-                              );
-                              _selectionController.removeMissingItems(
-                                _list.map((entry) => entry.data),
-                              );
-                            });
-                          },
-                        );
+                        return buildCard(item);
                       },
                     ),
                     child: EmptyContent(),

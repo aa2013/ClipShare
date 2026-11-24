@@ -1,4 +1,5 @@
 enum MultiWindowMethod {
+  locateHistory,
   getHistories,
   getAllDevices,
   getAllTagNames,

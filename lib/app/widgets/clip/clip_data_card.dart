@@ -30,6 +30,7 @@ import 'package:get/get.dart';
 import 'package:open_file_plus/open_file_plus.dart';
 
 class ClipDataCard extends StatefulWidget {
+  final VoidCallback? onLocate;
   final ClipData clip;
   final void Function()? onTap;
   final void Function()? onLongPress;
@@ -44,6 +45,7 @@ class ClipDataCard extends StatefulWidget {
   final bool selected;
 
   const ClipDataCard({
+    this.onLocate,
     required this.clip,
     required this.onUpdate,
     required this.onRemoveClicked,
@@ -268,6 +270,7 @@ class _ClipDataCardState extends State<ClipDataCard>
   void showMenu(Offset? position) {
     final menu = ContextMenu(
       entries: [
+        if (widget.onLocate != null) MenuItem(label: TranslationKey.viewInHistory.tr, icon: Icons.manage_search, onSelected: widget.onLocate!),
         MenuItem(
           label: widget.clip.data.top
               ? TranslationKey.cancelTopUp.tr

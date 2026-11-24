@@ -6,6 +6,8 @@ class EnUSTranslation extends AbstractTranslations {
   @override
   String translate(TranslationKey key) {
     switch (key) {
+      case TranslationKey.viewInHistory: return 'View in history';
+      case TranslationKey.historyHighlight: return 'History highlight duration (0 disables)';
       case TranslationKey.unitWord:
         return "words";
       case TranslationKey.dialogCancelText:
