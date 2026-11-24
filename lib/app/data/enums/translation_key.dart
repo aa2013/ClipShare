@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
 enum TranslationKey {
+  viewInHistory,
+  historyHighlight,
   unitWord,
   dialogCancelText,
   dialogAuthorizationButtonText,

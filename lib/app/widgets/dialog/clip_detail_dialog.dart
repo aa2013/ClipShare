@@ -37,12 +37,14 @@ import 'package:open_file_plus/open_file_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ClipDetailDialog extends StatefulWidget {
+  final VoidCallback? onLocate;
   final ClipData clip;
   final VoidCallback onUpdate;
   final BuildContext dlgContext;
   final void Function(ClipData item) onRemoveClicked;
 
   const ClipDetailDialog({
+    this.onLocate,
     required this.clip,
     required this.onUpdate,
     required this.onRemoveClicked,
@@ -250,6 +252,7 @@ class ClipDetailDialogState extends State<ClipDetailDialog> {
               ],
             ),
 
+            if (widget.onLocate != null) ListTile(leading: const Icon(Icons.manage_search), title: Text(TranslationKey.viewInHistory.tr), onTap: () { Navigator.pop(context); widget.onLocate!(); }),
             /// 标签栏
             Row(
               children: [

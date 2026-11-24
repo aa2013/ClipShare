@@ -1,5 +1,6 @@
 ///如果此处进行了修改或删除，需要在 [ConfigBackupHandler] 中做兼容
 enum ConfigKey {
+  historyHighlightMs,
   port,
   localName,
   startMini,

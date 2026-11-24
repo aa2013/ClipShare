@@ -20,6 +20,7 @@ class ClipDataCardCompact extends StatefulWidget {
   static const double selectedBorderRadius = 12;
 
   final String devName;
+  final VoidCallback? onLocate;
   final ClipData clip;
   final void Function(int id, bool isTop) onTopChanged;
   final void Function(int id) onDelete;
@@ -34,6 +35,7 @@ class ClipDataCardCompact extends StatefulWidget {
 
   const ClipDataCardCompact({
     super.key,
+    this.onLocate,
     required this.clip,
     required this.devName,
     required this.onTopChanged,
@@ -63,6 +65,7 @@ class _ClipDataCardCompactState extends State<ClipDataCardCompact> with TickerPr
     final clip = widget.clip;
     final menu = ContextMenu(
       entries: [
+        if (widget.onLocate != null) MenuItem(label: TranslationKey.viewInHistory.tr, icon: Icons.manage_search, onSelected: widget.onLocate!),
         MenuItem(
           label: clip.data.top
               ? TranslationKey.cancelTopUp.tr

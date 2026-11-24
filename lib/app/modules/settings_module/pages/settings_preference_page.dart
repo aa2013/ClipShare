@@ -38,6 +38,16 @@ class SettingsPreferencePage extends SettingsSectionView {
   List<SettingEntry> buildCommonEntries(BuildContext context) {
     return [
       SettingCard(
+        title: Text(TranslationKey.historyHighlight.tr),
+        value: appConfig.historyHighlightMs,
+        action: (_) => DropdownButton<int>(
+          value: appConfig.historyHighlightMs,
+          items: [0,600,1200,2400].map((ms) => DropdownMenuItem(value: ms,
+            child: Text(ms == 0 ? '0 s' : '${ms/1000} s'))).toList(),
+          onChanged: (ms) { if(ms != null) appConfig.setHistoryHighlightMs(ms); },
+        ),
+      ),
+      SettingCard(
         searchKeys: const [
           TranslationKey.preferenceSettingsRememberWindowSize,
           TranslationKey.preferenceSettingsWindowSizeRecordValue,

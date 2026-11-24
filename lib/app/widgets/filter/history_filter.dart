@@ -109,14 +109,15 @@ class HistoryFilterController {
   }
 
   void resetFilter({SearchFilter? filter}) {
+    _searchDebounce?.cancel();
     filter ??= SearchFilter();
     content.value = filter.content;
     textController.text = filter.content;
     startDate.value = filter.startDate;
     endDate.value = filter.endDate;
-    selectedTags.addAll(filter.tags);
-    selectedDevIds.addAll(filter.devIds);
-    selectedAppIds.addAll(filter.appIds);
+    selectedTags.assignAll(filter.tags);
+    selectedDevIds.assignAll(filter.devIds);
+    selectedAppIds.assignAll(filter.appIds);
     onlyNoSync.value = filter.onlyNoSync;
     selectedType.value = filter.type;
   }
