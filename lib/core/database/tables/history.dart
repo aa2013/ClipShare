@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:clipshare/core/runtime/snowflake/id_provider.dart';
 import 'package:clipshare/core/services/device/local_device_info_provider.dart';
 import 'package:clipshare/shared/enums/history_content_type.dart';
@@ -41,6 +43,15 @@ History emptyHistory({
 History simpleHistory(Ref ref, HistoryContentType type, String content) {
   final idGenerator = ref.read(idProvider);
   final localDeviceInfo = ref.read(localDeviceInfoProvider).requireValue;
+  var size = content.length;
+  if (type == .file || type == .image) {
+    final file = File(content);
+    if (file.existsSync()) {
+      size = file.lengthSync();
+    } else {
+      size = 0;
+    }
+  }
   return History(
     id: idGenerator.nextId(),
     uid: 0,
@@ -50,7 +61,7 @@ History simpleHistory(Ref ref, HistoryContentType type, String content) {
     devId: localDeviceInfo.baseDeviceInfo.guid,
     top: false,
     sync: false,
-    size: content.length,
+    size: size,
     extracted: null,
   );
 }

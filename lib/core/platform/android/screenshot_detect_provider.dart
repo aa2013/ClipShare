@@ -68,7 +68,7 @@ class ScreenshotDetectNotifier extends _$ScreenshotDetectNotifier {
     _historyRecorder.emitRaw(
       RawHistoryEvent(
         history: simpleHistory(ref, .image, path),
-        sync: false,
+        sync: true,
         source: null,
       ),
     );
