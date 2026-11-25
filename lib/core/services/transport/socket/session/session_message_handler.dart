@@ -167,6 +167,9 @@ Future<void> _onDevicePairing(SessionNotifier self, MessageData msg, String? add
   await self.onDevicePaired(dev, verify, address);
   //返回配对结果
   await self.sendData(dev, .paired, {'result': verify}, false);
+  if (verify && self._syncSettings.autoSyncMissingData) {
+    unawaited(self.requestMissingData(dev.guid));
+  }
   self._pendingPairingAddresses.removeWhere((v) {
     return v == address;
   });
@@ -184,6 +187,9 @@ Future<void> _onDevicePaired(SessionNotifier self, MessageData msg, String? addr
   final dev = msg.send;
   bool result = msg.data['result'];
   await self.onDevicePaired(dev, result, address);
+  if (result && self._syncSettings.autoSyncMissingData) {
+    unawaited(self.requestMissingData(dev.guid));
+  }
   self._pendingPairingAddresses.removeWhere((v) => v == address);
 }
 
